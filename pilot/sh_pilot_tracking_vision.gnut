@@ -1,0 +1,771 @@
+global function TrackingVision_GetPriorityForPOIType
+global function TrackingVision_GetOffsetForPOI
+                                        
+          
+                                                
+                                                
+                                                             
+      
+          
+                                                                   
+      
+                                      
+      
+
+const vector TRACKING_ICON_OFFSET = <0,0,16>
+const vector TRACKING_ICON_OFFSET_SHORT = <0,0,8>
+const vector TRACKING_ICON_DEATH_OFFSET = <0,0,40>                                   
+global const TRACKING_DAMAGE_SOURCE_INDEX = 2	                           
+global const TRACKING_DIST_INDEX = 3			                           
+
+                                        
+                                                                   
+                                                                                        
+                                                         
+                                                
+                                                                                                 
+                                                     
+                                                    
+      
+
+                                                                           
+                                                                                                                                         
+global enum eTrackingVisionNetworkedPOITypes
+{
+	DROPPOD,
+	TITANFALL,
+	TITAN_EMBARK,
+	TITAN_DISEMBARK,
+	DOOR_USE,
+	DOOR_DESTROYED,
+	PLAYER_CLASS_DEPLOYABLE,
+	PLAYER_DEATH,
+	PLAYER_KILLER,
+	PLAYER_HEAL,
+	PLAYER_RELOAD,
+	PLAYER_STARTBLEEDOUT,
+	PLAYER_TOOK_DAMAGE,
+	PLAYER_FIRE_WEAPON_BULLET,
+	PLAYER_FIRE_WEAPON_GRENADE,
+	PLAYER_OPENDROPPOD,
+	PLAYER_LOOTBIN_USED,
+	PLAYER_TRAVERSAL_ZIPLINE_START,
+	PLAYER_TRAVERSAL_ZIPLINE_STOP,
+	PLAYER_TRAVERSAL_FOOTPRINT,
+	PLAYER_TRAVERSAL_SLIDE,
+	PLAYER_TRAVERSAL_MANTLE,
+	PLAYER_TRAVERSAL_JUMP_DOWN_START,
+	PLAYER_TRAVERSAL_JUMP_DOWN_STOP,
+	PLAYER_TRAVERSAL_LAUNCH_PAD,
+	PLAYER_ABILITIES_PHASE_DASH_START,
+	PLAYER_ABILITIES_PHASE_DASH_STOP,
+	PLAYER_ABILITIES_SMOKE,
+	PLAYER_ABILITIES_GAS,
+	PLAYER_LOOT_PICKUP,
+	PLAYER_LOOT_PICKUP_AMMO,
+	PLAYER_LOOT_PICKUP_ARMOR,
+	PLAYER_LOOT_PICKUP_ATTACHMENT,
+	PLAYER_LOOT_PICKUP_WEAPON,
+	PLAYER_LOOT_PICKUP_GRENADE,
+	PLAYER_LOOT_PICKUP_JUMPKIT,
+	PLAYER_LOOT_PICKUP_HEALTH,
+	PLAYER_LOOT_PICKUP_HELMET,
+	PLAYER_LOOT_PICKUP_BACKPACK,
+                  
+                              
+      
+	PLAYER_LOOT_PICKUP_INCAPSHIELD,
+                      
+	PLAYER_LOOT_PICKUP_DATAKNIFE,
+      
+	                                  
+	                                
+	PLAYER_LOOT_EXCHANGE_ARMOR,
+	PLAYER_LOOT_EXCHANGE_WEAPON,
+	PLAYER_LOOT_EXCHANGE_JUMPKIT,
+	PLAYER_LOOT_EXCHANGE_HELMET,
+	PLAYER_LOOT_EXCHANGE_BACKPACK,
+                  
+                                
+      
+	PLAYER_LOOT_EXCHANGE_INCAPSHIELD,
+	PLAYER_LOOT_DROP,
+	PLAYER_LOOT_DROP_AMMO,
+	PLAYER_LOOT_DROP_ARMOR,
+	PLAYER_LOOT_DROP_ATTACHMENT,
+	PLAYER_LOOT_DROP_WEAPON,
+	PLAYER_LOOT_DROP_GRENADE,
+	PLAYER_LOOT_DROP_JUMPKIT,
+	PLAYER_LOOT_DROP_HEALTH,
+	PLAYER_LOOT_DROP_HELMET,
+	PLAYER_LOOT_DROP_BACKPACK,
+                  
+                            
+      
+	PLAYER_LOOT_DROP_INCAPSHIELD,
+                      
+	PLAYER_LOOT_DROP_DATAKNIFE,
+      
+	                                
+	                              
+
+	PLAYER_ABILITY_DIRTY_BOMB,
+	PLAYER_ABILITY_DEPLOYABLE_MEDIC,
+	PLAYER_ABILITY_JUMP_PAD,
+	PLAYER_ABILITY_BUBBLE_BUNKER,
+	PLAYER_ABILITY_TESLA_TRAP,
+	PLAYER_ABILITY_TROPHY_SYSTEM,
+               
+                            
+      
+                                        
+                              
+                                        
+      
+	PLAYER_ABILITY_PHASE_GATE,
+               
+                              
+      
+	PLAYER_ABILITY_TRANSLOCATION_TOSS,
+	PLAYER_ABILITY_TRANSLOCATION_TELEPORT,
+	PLAYER_ABILITY_BLACK_MARKET,
+	PLAYER_ABILITY_COVER_WALL,
+	PLAYER_ABILITY_TURRET,
+	PLAYER_ABILITY_BLACK_HOLE,
+	PLAYER_ABILITY_SPACE_ELEVATOR,
+	PLAYER_TRAVERSAL_ELEVATOR_ENTER,
+	PLAYER_TRAVERSAL_ELEVATOR_EXIT,
+	PLAYER_LOOT_PICKUP_GADGET,
+	PLAYER_LOOT_EXCHANGE_GADGET,
+	PLAYER_LOOT_DROP_GADGET,
+	PLAYER_LOOT_ABILITY_VOID_RING,
+	PLAYER_ABILITY_MORTAR_RING_START,
+	PLAYER_ABILITY_MORTAR_RING_END,
+	PLAYER_ABILITY_KNUCKLE_CLUSTER,
+	PLAYER_ABILITY_VALK_PASSIVE_START,
+	PLAYER_ABILITY_VALK_PASSIVE_END,
+	PLAYER_ABILITY_VALK_TACTICAL,
+	PLAYER_ABILITY_VALK_ULTIMATE_START,
+	PLAYER_ABILITY_VALK_ULTIMATE_END,
+	PLAYER_ABILITY_FOCUS_OF_ATTENTION,
+	PLAYER_ABILITY_ECHO_LOCATOR,
+              
+	PLAYER_ABILITY_MAGGIE_RIOT_DRILL_START,
+	PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END,
+	PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START,
+	PLAYER_ABILITY_MAGGIE_WRECKING_BALL_PATH,
+	PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END,
+      
+	PLAYER_ABILITY_ASH_DATAKNIFE_USED,
+	PLAYER_ABILITY_ASH_ENEMY_TETHERED,
+	PLAYER_ABILITY_ASH_PORTAL_ENTER,
+	PLAYER_ABILITY_ASH_PORTAL_EXIT,
+
+	_count,
+}
+
+                                
+   
+  	         
+  	    
+  	       
+  	     
+  	          
+  	    
+   
+                                        
+      
+ 
+                                          
+      
+      
+
+
+                                        
+                                      
+ 
+                                                         
+
+                            
+
+          
+                                                                        
+      
+ 
+      
+
+int function TrackingVision_GetPriorityForPOIType( int poiEventID )
+{
+                                       
+                                   
+      
+	switch ( poiEventID )
+	{
+		case eTrackingVisionNetworkedPOITypes.DROPPOD:
+		case eTrackingVisionNetworkedPOITypes.TITANFALL:
+		case eTrackingVisionNetworkedPOITypes.TITAN_EMBARK:
+		case eTrackingVisionNetworkedPOITypes.TITAN_DISEMBARK:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_OPENDROPPOD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITIES_SMOKE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITIES_GAS:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_DIRTY_BOMB:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_DEPLOYABLE_MEDIC:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_JUMP_PAD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_BUBBLE_BUNKER:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TESLA_TRAP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TROPHY_SYSTEM:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_COVER_WALL:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TURRET:
+               
+                                                                   
+      
+                                        
+                                                                     
+                                                                               
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_PHASE_GATE:
+               
+                                                                     
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_BLACK_MARKET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_BLACK_HOLE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_ABILITY_VOID_RING:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_DEATH:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_KILLER:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MORTAR_RING_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MORTAR_RING_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_KNUCKLE_CLUSTER:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_TACTICAL:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_ULTIMATE_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_ULTIMATE_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_FOCUS_OF_ATTENTION:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ECHO_LOCATOR:
+              
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END:
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_ENTER:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_EXIT:
+			return eTrackingPOIPriority.MAX
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_SPACE_ELEVATOR:
+		case eTrackingVisionNetworkedPOITypes.DOOR_USE:
+		case eTrackingVisionNetworkedPOITypes.DOOR_DESTROYED:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ZIPLINE_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ZIPLINE_STOP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_HEAL:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_STARTBLEEDOUT:
+			return eTrackingPOIPriority.VERY_HIGH
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_RELOAD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TOOK_DAMAGE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_FIRE_WEAPON_BULLET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_FIRE_WEAPON_GRENADE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOTBIN_USED:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ELEVATOR_ENTER:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ELEVATOR_EXIT:
+              
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_PATH:
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_ENEMY_TETHERED:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_DATAKNIFE_USED:
+			return eTrackingPOIPriority.HIGH
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_ARMOR:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_WEAPON:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_JUMPKIT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_BACKPACK:
+                  
+                                                                     
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_INCAPSHIELD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_ARMOR:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_WEAPON:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_JUMPKIT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_HELMET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_BACKPACK:
+                  
+                                                                       
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_INCAPSHIELD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_ARMOR:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_WEAPON:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_JUMPKIT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_HELMET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_BACKPACK:
+                  
+                                                                   
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_INCAPSHIELD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_PASSIVE_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_PASSIVE_END:
+			return eTrackingPOIPriority.NORMAL
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_MANTLE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_JUMP_DOWN_STOP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_LAUNCH_PAD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITIES_PHASE_DASH_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITIES_PHASE_DASH_STOP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_AMMO:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_ATTACHMENT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_GRENADE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_HEALTH:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_HELMET:
+                      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_DATAKNIFE:
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_AMMO:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_ATTACHMENT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_GRENADE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_HEALTH:
+                      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_DATAKNIFE:
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_GADGET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_GADGET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_GADGET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TRANSLOCATION_TOSS:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TRANSLOCATION_TELEPORT:
+			return eTrackingPOIPriority.LOW
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_FOOTPRINT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_SLIDE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_JUMP_DOWN_START:
+			return eTrackingPOIPriority.VERY_LOW
+
+		default:
+			Assert( 0, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
+			break
+	}
+	unreachable
+}
+
+vector function TrackingVision_GetOffsetForPOI( int poiEventID )
+{
+	switch ( poiEventID )
+	{
+		case eTrackingVisionNetworkedPOITypes.DROPPOD:
+		case eTrackingVisionNetworkedPOITypes.TITAN_EMBARK:
+		case eTrackingVisionNetworkedPOITypes.TITAN_DISEMBARK:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_HEAL:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_RELOAD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_STARTBLEEDOUT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TOOK_DAMAGE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_FIRE_WEAPON_BULLET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_FIRE_WEAPON_GRENADE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_OPENDROPPOD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOTBIN_USED:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ZIPLINE_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ZIPLINE_STOP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TESLA_TRAP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_KILLER:
+			return TRACKING_ICON_OFFSET
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_DEATH:
+			return TRACKING_ICON_DEATH_OFFSET
+
+		case eTrackingVisionNetworkedPOITypes.TITANFALL:
+		case eTrackingVisionNetworkedPOITypes.DOOR_USE:
+		case eTrackingVisionNetworkedPOITypes.DOOR_DESTROYED:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_DEPLOYABLE_MEDIC:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_ENEMY_TETHERED:
+			return <0,0,0>
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_FOOTPRINT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_SLIDE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_MANTLE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_JUMP_DOWN_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_JUMP_DOWN_STOP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_LAUNCH_PAD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITIES_PHASE_DASH_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITIES_PHASE_DASH_STOP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITIES_SMOKE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITIES_GAS:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_AMMO:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_ARMOR:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_ATTACHMENT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_WEAPON:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_GRENADE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_JUMPKIT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_HEALTH:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_HELMET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_BACKPACK:
+                  
+                                                                     
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_INCAPSHIELD:
+                      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_DATAKNIFE:
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_ARMOR:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_WEAPON:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_JUMPKIT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_HELMET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_BACKPACK:
+                  
+                                                                       
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_INCAPSHIELD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_AMMO:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_ARMOR:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_ATTACHMENT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_WEAPON:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_GRENADE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_JUMPKIT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_HEALTH:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_HELMET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_BACKPACK:
+                  
+                                                                   
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_INCAPSHIELD:
+                      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_DATAKNIFE:
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TRANSLOCATION_TOSS:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TRANSLOCATION_TELEPORT:
+			return TRACKING_ICON_OFFSET_SHORT
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_DIRTY_BOMB:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_BLACK_MARKET:
+			return < 0, 0, 54.0 >
+
+               
+                                                                     
+      
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_BUBBLE_BUNKER:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_COVER_WALL:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TURRET:
+
+               
+                                                                   
+      
+
+                                        
+                                                                     
+                                                                               
+      
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_ABILITY_VOID_RING:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_GADGET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_GADGET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_GADGET:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ECHO_LOCATOR:
+              
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_PATH:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END:
+      
+			return < 0, 0, 24.0 >
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_BLACK_HOLE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_SPACE_ELEVATOR:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ELEVATOR_ENTER:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ELEVATOR_EXIT:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_JUMP_PAD:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_PHASE_GATE:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MORTAR_RING_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MORTAR_RING_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_KNUCKLE_CLUSTER:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_PASSIVE_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_PASSIVE_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_TACTICAL:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_ULTIMATE_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_DATAKNIFE_USED:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_ENTER:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_EXIT:
+			return < 0, 0, 32.0 >
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_ULTIMATE_END:
+			return < 0, 0, 48.0 >
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_FOCUS_OF_ATTENTION:
+			return < 0, 0, 0.0 >
+
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TROPHY_SYSTEM:
+			return < 0, 0, 8.0 >
+
+		default:
+			Assert( 0, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
+			break
+	}
+	unreachable
+}
+
+                                        
+                                                                                                        
+ 
+                                                                  
+              
+                                        
+              
+                                       
+              
+                                                                                
+              
+                                              
+              
+                                                        
+              
+
+            
+ 
+
+          
+                                                               
+ 
+                                                                      
+        
+
+                                          
+                                                                                        
+ 
+
+                                                                                                   
+ 
+                                                                      
+ 
+                                         
+                                                                                          
+ 
+                                  
+                                     
+                          
+        
+
+                                            
+
+                                                                  
+                                                                                                 
+                                                                                
+
+             
+                                         
+   
+                                      
+                                  
+                           
+   
+  
+
+                                                                       
+                                    
+                                      
+  
+                                
+   
+               
+                                                               
+   
+             
+  
+
+                                          
+ 
+      
+
+          
+                                                                                                            
+                                                                                                                                                     
+ 
+                                                                            
+                                                                                                                     
+                  
+                               
+                           
+                                                              
+                                                                                                     
+
+                                                   
+                             
+                                
+                                    
+                                                                             
+                             
+                
+
+                                                                                                        
+                 
+                                 
+                                                                                                                       
+                                                                                         
+                                                                               
+
+                                                            
+
+            
+ 
+
+                                                                                         
+ 
+                                          
+ 
+
+                                                                                      
+ 
+                                              
+                                          
+                                                   
+
+             
+                       
+   
+                                           
+                  
+   
+  
+
+                    
+                                     
+
+                        
+                                                                                                     
+                                 
+  
+             
+
+                                                                         
+           
+
+                                                     
+                            
+   
+                                       
+           
+   
+
+       
+  
+
+                   
+                                                       
+
+                                           
+ 
+
+                                                                                          
+ 
+          
+                                       
+  
+                
+        
+  
+
+                                                                      
+                                  
+                                     
+                                                        
+                                                                       
+                                                        
+                            
+                                      
+                        
+                   
+                                                       
+
+                                                     
+  
+                                          
+           
+
+                                            
+                                                                            
+
+                                                            
+       
+  
+
+                                                                 
+                                                                                                                                                   
+      
+
+                                  
+                                     
+        
+
+                       
+                     
+        
+      
+          
+                       
+        
+      
+                                                                    
+                                                             
+                                                            
+                              
+        
+
+                                             
+                                                                                     
+          
+                                                                          
+      
+      
+ 
+
+                                                                                                            
+ 
+                        
+        
+
+                               
+                                
+                                 
+
+             
+                              
+   
+                         
+                  
+
+                          
+                   
+   
+  
+
+                     
+                         
+
+                                                     
+                                                                         
+                                                                                                    
+
+                                                                       
+                                         
+                       
+
+                                           
+ 
+
+                                                    
+ 
+                   
+                                                                   
+                                                                                                                                            
+                                                         
+                                        
+
+                             
+                                        
+                                             
+                                                       
+  
+                                                                               
+                                 
+             
+  
+ 
+      
+      
+
+

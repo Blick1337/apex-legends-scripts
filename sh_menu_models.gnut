@@ -1,0 +1,4796 @@
+  
+#if CLIENT
+global function Menu_GetCameraTarget
+global function UICallback_MenuModels_UIScriptHasReset
+#endif
+
+#if CLIENT || SERVER
+const string STORE_BACKGROUND_ENT_NAME = "store_inspect_bg_target"
+const asset STORE_BACKGROUND_SMOKE_MODEL = $"mdl/levels_terrain/mp_lobby/mp_lobby_bundle_store_smoke.rmdl"
+const asset STORE_BACKGROUND_GEO_MODEL = $"mdl/levels_terrain/mp_lobby/mp_lobby_bundle_store_bg.rmdl"
+
+const asset ARENAS_BACKGROUND_SMOKE_MODEL = $"mdl/levels_terrain/mp_lobby/mp_character_select_smoke.rmdl"
+const asset ARENAS_BACKGROUND_GEO_MODEL = $"mdl/levels_terrain/mp_lobby/mp_character_select_geo.rmdl"
+#endif                    
+
+#if CLIENT
+const float CARD_TAG_SCALE = 0.0                                              
+
+const float DEFAULT_DOF_NEAR_START = 7.5
+const float DEFAULT_DOF_NEAR_END = 7.7
+const float DEFAULT_DOF_FAR_START = 2000.0
+const float DEFAULT_DOF_FAR_END = 2000.0
+const float TRANSITION_DURATION = 0.25
+
+const float DEFAULT_MAX_TURN_SPEED = 270.0
+
+global const asset CHARACTER_BASE_EFFECT = $"P_menu_char_base_rarity"
+                 
+const asset SHADOW_TRAIL_FX = $"P_Bshadow_body"
+const asset SHADOW_EYE_FX = $"P_BShadow_eye"
+      
+
+const asset ARENAS_ROOM_SPARKS = $"P_menu_arena_BG_embers_fall"
+const vector ARENAS_ROOM_SPARKS_COLOR = <255, 124, 60>
+
+const array<asset> STORE_BACKGROUND_FX_TIERS =
+[
+	$"P_store_BG_bundle_T1",
+	$"P_store_BG_bundle_T2",
+	$"P_store_BG_bundle_T3",
+	$"P_store_BG_bundle_T4",
+	$"P_store_BG_bundle_T5",
+]
+         
+                                                    
+        
+
+global const vector MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR = <102, 120, 242>
+
+const vector PLAYER_INFO_OFFSET = <0, 0, 74>
+
+const vector WEAPON_BASE_ANGLES = <0, 180, 0>
+const float[2] WEAPON_BASE_ROTATION_DELTA = [-35.2458, -14.5691]
+
+const float STORE_ITEM_ROTATE_SPEED = 1.5
+const float[2] STORE_ITEM_BASE_ROTATION_DELTA = [0.0, 0.0]
+
+global struct MenuCharacterDef
+{
+	ItemFlavor ornull characterSkin = null
+	                 
+}
+
+global struct MenuModelData
+{
+	entity      poseEnt
+	entity      model
+	entity      subModel
+	entity      mover
+	vector      baseOrigin
+	vector      baseAngles
+	float[2]    baseRotationDelta = [0, 0]
+	float[2]    rotationDelta
+	float[2]	rotationVel
+	float       maxTurnSpeed = DEFAULT_MAX_TURN_SPEED
+	string      bodyAnim
+
+	ItemFlavor& skinFlavor
+}
+
+global struct CameraZoomData
+{
+	entity mover
+	vector startPos
+	vector endPos
+	float  maxDist
+	vector normVec
+	float  lastVal = 0.0
+}
+
+struct PartyMemberDisplayThreadData
+{
+	entity             posRef
+	string             idleActivity
+	bool               displayThreadActive = false
+	ItemFlavor ornull  character
+	ItemFlavor ornull  skin
+	entity             body
+
+	bool               partyMemberSeenThisUpdate
+	float ornull       partyMemberFirstSeenTime = null
+	PartyMember&       partyMemberInfo
+	CommunityUserInfo& userInfo
+	bool               isReady
+	bool               isLeader
+	bool               isFocused
+
+	bool isDirty
+}
+
+enum eCameraTargetNames
+{
+	default_camera_target,
+	play_camera_target,
+	play_camera_target_shifted,
+	close_character_camera_target,
+	customize_character_camera_target,
+	customize_weapon_camera_target,
+	battlepass_camera_target,
+	battlepass_3_camera_target,
+	collection_event_camera_target,
+	store_inspect_camera_target,
+	club_landing_camera_target,
+}
+
+struct PresentationDef
+{
+	MenuModelData ornull modelData = null
+	bool                 useCharacterOffsets = false
+	float                maxYawDegrees = 360.0
+	float                maxPitchDegrees = 0
+
+	float fov = DEFAULT_FOV
+	float dofNearStart = DEFAULT_DOF_NEAR_START
+	float dofNearEnd = DEFAULT_DOF_NEAR_END
+	float dofFarStart = DEFAULT_DOF_FAR_START
+	float dofFarEnd = DEFAULT_DOF_FAR_END
+
+	float csmTexelScale1 = 1.0
+	float csmTexelScale2 = 1.0
+	float csmStartDistance = 0.0
+
+	array<entity> lights
+
+	void functionref() startFunc
+	void functionref() endFunc
+
+	int cameraTargetName = eCameraTargetNames.play_camera_target
+}
+
+struct LightDef
+{
+	vector origin = <0, 0, 0>
+	vector angles = <0, 0, 0>
+	vector color = <1, 1, 1>
+	float  brightness = 2.0
+	float  distance = 300.0
+	float  innerCone = 10.0
+	float  outerCone = 30.0
+	float  halfBrightFrac = 0.75
+	float  specularIntensity = 1.0
+	float  emitterRadius = 0
+	bool   castShadows = true
+	bool   pbrFalloff = true
+}
+
+struct MenuModelFlashDef
+{
+	float fillIntensityScalar = 10
+	float outlineIntensityScalar = 300
+	float fadeInTime = 0.01
+	float fadeOutTime = 0.1
+	float lifeTime = 0.5
+	float outlineRadius = 2
+}
+#endif          
+
+struct
+{
+	#if UI
+		int  activePresentationType = ePresentationType.INACTIVE
+	#endif      
+
+	#if CLIENT
+		entity defaultCameraTarget
+		entity playCameraTarget
+		entity closeCharacterCameraTarget
+		entity customizeCharacterCameraTarget
+		entity customizeWeaponCameraTarget
+		entity battlepassCameraTarget
+		entity storeInspectCameraTarget
+
+		entity storeInspectRefEnt
+
+		entity								currentCameraTarget
+		table<int, entity>                  cameraTargets
+		table< int, table<string, vector> > cameraStartOriginsAngles
+		entity                              cameraMover
+		bool                                cameraZoomedToGunCharm = false
+		bool                                cameraZoomModelInitialized = false
+		CameraZoomData                      cameraZoomData
+
+		float charmVerticalOffset = 0.0
+
+		float[2] mouseRotateDelta
+		float    mouseWheelNewValue = 0.0
+		float    mouseWheelLastValue = 0.0
+		bool     mouseWheelPauseInput = false
+
+		entity storeBackgroundModelGeo
+		entity storeBackgroundModelSmoke
+		entity arenasBackgroundModelGeo
+		entity arenasBackgroundModelSmoke
+		string storePlayingAudioAlias
+		int    storeBackgroundFXHandle = -1
+
+		int arenasRankedBackgroundFXHandle = -1
+
+		MenuModelData playCharacter
+		MenuModelData customizeCharacter
+		MenuModelData customizeWeapon
+		MenuModelData questGoalModelData
+		MenuModelData storeInspectModelData
+                
+                                
+                      
+
+		int baseFXHandle = -1
+
+		array<entity>                               teammateRefEnts
+		table<entity, bool>                         teammateRefEntsUsedMap
+		table<entity, string>                       teammateRefEntIdleAnimMap
+		table<string, PartyMemberDisplayThreadData> partyMemberUidCharacterDataMap
+		bool                                        isTrackPartyMembersAndDisplayModelsThreadRunning = false
+
+		MenuModelData ornull activeModelData = null
+
+		float lastZoomTime
+
+		int                                      previousPresentationType = ePresentationType.INACTIVE
+		int                                      currentPresentationType = ePresentationType.INACTIVE
+		int                                      desiredPresentationType = ePresentationType.INACTIVE
+		bool                                     presentationTypeInitialized = false
+		PresentationDef[ePresentationType.COUNT] presentationData
+
+		MenuModelFlashDef[eMenuModelFlashType.COUNT] menuModelFlashData
+
+		NestedGladiatorCardHandle& bannerHandle
+		var                        topo
+		var                        rui
+		string                     nestedRuiArgName
+		int                        videoChannel = -1
+		table<string, PakHandle>   pakHandles
+
+		table< string, array<LightDef> >  lightingConfigs
+
+		table signalDummy
+
+		bool initializedMenuModels = false
+		bool modelTurnEnabled = true
+		bool neverRotateModel = false                                                                                                                
+
+		array<entity> dimmedEnts
+
+		bool uiscriptHasReset
+
+		#if DEV
+			bool   DEV_previewSelfAsParty = false
+			string DEV_characterOffsetCharacter = ""
+			vector DEV_characterOffset = <0, 0, 0>
+		#endif       
+	#endif          
+
+	array<void functionref()> mouseWheelDownCallbacks
+	array<void functionref()> mouseWheelUpCallbacks
+} file
+
+#if CLIENT
+global function ClMenuModels_Init
+global function TurntableUpdateAnglesFromInput
+global function TurntableSetCameraZoomPos
+global function ModelData_SetModel
+global function ModelData_SetMover
+global function ModelData_SetBaseAngles
+global function ModelData_SetRotationDelta
+
+global function SetPresentationType
+global function RefreshPresentationType
+
+global function UpdateMenuCharacterModel
+
+global function ClearAllCharacterPreview
+
+global function UpdateMouseRotateDelta
+global function GetMouseRotationDelta
+
+global function CameraZoomThread
+global function CameraZoomThreadEnd
+
+global function UpdateMenuWithPartyMembers
+
+global function UIToClient_PreviewCharacterEmote
+global function UIToClient_PreviewCharacterSkin
+global function UIToClient_PreviewCharacterSkinFromCharacterSkinPanel
+global function UIToClient_PreviewWeaponSkin
+global function UIToClient_PreviewStoreItem
+                
+                                         
+                      
+global function UIToClient_ResetWeaponRotation
+global function UIToClient_PartyMemberGetFocus
+global function UIToClient_PartyMemberLoseFocus
+global function UIToClient_QuestGoalPresentation
+global function UIToClient_QuestGoalPresentationUpdateHighlight
+global function UIToClient_LoadItemInspectPakFile
+global function UIToClient_UnloadItemInspectPakFile
+
+global function DisableModelTurn
+global function EnableModelTurn
+
+global function GetAttachmentOriginOffset
+
+global function ShMenuModels_ClientToUI_OnMouseWheel
+
+global function FlashMenuModel
+
+#if DEV
+global function DEV_TweakPlayCamera
+global function DEV_TweakCharacterCamera
+global function DEV_TweakWeaponCamera
+global function DEV_TweakStoreInspectCamera
+global function DEV_TogglePreviewParty
+global function DEV_ScaleModel
+global function DEV_TweakCharacterOffset
+global function DEV_SpinActiveMenuModelLinearly
+global function DEV_SpinActiveMenuModelSmoothly
+global function ApplyEventPositioning
+#endif       
+
+global function UIToClient_PROTO_UpdateClientWithLocalClientUID
+#endif          
+
+const STICK_ROTATE_SPEED = 2.0                          
+
+#if UI
+const MOUSE_ROTATE_SPEED = 1.0                               
+
+global function ShMenuModels_UIInit
+
+global function RunMenuClientFunction
+global function UI_SetPresentationType
+
+global function UICodeCallback_MouseMovementCapture
+global function OnMouseWheelDown
+global function OnMouseWheelUp
+
+global function ClientToUI_PROTO_UpdateClientWithLocalClientUID
+
+global function TrackIsOverScrollBar
+#endif      
+
+#if SERVER
+                               
+#endif         
+
+
+#if CLIENT || UI
+global function AddCallback_OnMouseWheelDown
+global function AddCallback_OnMouseWheelUp
+global function RemoveCallback_OnMouseWheelDown
+global function RemoveCallback_OnMouseWheelUp
+global function IsCallbackRegistered_OnMouseWheelDown
+global function IsCallbackRegistered_OnMouseWheelUp
+#endif
+
+
+#if UI
+void function ShMenuModels_UIInit()
+{
+	RegisterButtonPressedCallback( MOUSE_WHEEL_DOWN, OnMouseWheelDown )
+	RegisterButtonPressedCallback( MOUSE_WHEEL_UP, OnMouseWheelUp )
+}
+#endif
+
+#if SERVER
+                               
+ 
+	                                                                                                                           
+	                                             
+	                                           
+	                                              
+	                                            
+ 
+#endif
+
+#if CLIENT
+void function ClMenuModels_Init()
+{
+	PrecacheParticleSystem( CHARACTER_BASE_EFFECT )
+                  
+		PrecacheParticleSystem( SHADOW_TRAIL_FX )
+		PrecacheParticleSystem( SHADOW_EYE_FX )
+       
+
+	foreach ( asset fxTierAsset in STORE_BACKGROUND_FX_TIERS )
+		PrecacheParticleSystem( fxTierAsset )
+
+	PrecacheModel( STORE_BACKGROUND_SMOKE_MODEL )
+	PrecacheModel( STORE_BACKGROUND_GEO_MODEL )
+	         
+	  	                                          
+	        
+
+	PrecacheParticleSystem( ARENAS_ROOM_SPARKS )
+
+	RegisterSignal( "ChangedTeam" )
+	RegisterSignal( "EndSetPresentationType" )
+	RegisterSignal( "UpdateMenuCharacterModelInternal" )
+	RegisterSignal( "StopDisplayPartyMemberModelThread" )
+	RegisterSignal( "ApplyLightingConfig" )
+	RegisterSignal( "EndGunCharmCameraZoom" )
+	RegisterSignal( "EndGunCharmScaleLerp" )
+	RegisterSignal( "EndCameraZoom" )
+	RegisterSignal( "EndArenasRankedBackgroundFX" )
+	RegisterSignal( "EndPendingItemInspectThreads" )
+
+	AddCallback_OnClientScriptInit( OnClientScriptInit )
+	AddCallback_FullUpdate( OnFullUpdate )
+	AddCallback_EntitiesDidLoad( EntitiesDidLoad )
+}
+
+void function OnClientScriptInit( entity player )
+{
+	thread InitMenuEntities()
+	thread ModelRotationThread()
+}
+
+void function OnFullUpdate()
+{
+	UpdateMenuWithPartyMembers()
+}
+
+bool function MenuMapEntitiesExist()
+{
+	array<string> entNames =
+	[
+		"default_camera_target",
+
+		"play_camera_target",
+		"play_character_ref",
+		"play_teammate1_ref",
+		"play_teammate2_ref",
+
+		"close_character_camera_target",
+
+		"customize_character_camera_target",
+		"customize_character_ref",
+		"customize_character_skin_ref",
+
+		"customize_weapon_camera_target",
+		"customize_weapon_ref",
+
+		"store_inspect_ref",
+
+		"club_landing_camera_target"
+		"club_landing_discovery_ref"
+		"club_landing_lobby_ref"
+		"club_landing_marvin"
+	]
+
+	foreach ( name in entNames )
+	{
+		if ( GetEntArrayByScriptName( name ).len() != 1 )
+			return false
+	}
+
+	return true
+}
+
+void function ApplyEventPositioning()
+{
+	array<entity> ents
+	ents.append( GetEntByScriptName( "play_camera_target" ) )
+	ents.append( GetEntByScriptName( "play_character_ref" ) )
+	ents.append( GetEntByScriptName( "play_teammate1_ref" ) )
+	ents.append( GetEntByScriptName( "play_teammate2_ref" ) )
+
+	foreach ( ent in ents )
+		ent.SetOrigin( ent.GetOrigin() + <0, 5120, 0> )
+}
+
+void function InitTeammatePosition( string scriptName, string idle )
+{
+	entity ent = GetEntByScriptName( scriptName )
+
+	file.teammateRefEnts.append( ent )
+	file.teammateRefEntsUsedMap[ent] <- false
+	file.teammateRefEntIdleAnimMap[ent] <- idle
+}
+
+void function EnableModelTurn()
+{
+	file.modelTurnEnabled = true
+}
+
+void function DisableModelTurn()
+{
+	file.modelTurnEnabled = false
+}
+
+void function EnableTurnLockout()
+{
+	file.neverRotateModel = true
+}
+
+void function DisableTurnLockout()
+{
+	file.neverRotateModel = false
+}
+
+const float STICK_DEADZONE = 0.1
+
+void function TurntableUpdateEntityAngles( MenuModelData modelData )
+{
+	float[2] rotationDelta   = ModelData_GetRotationDelta( modelData )
+	                                                                
+	vector baseAngles        = ModelData_GetBaseAngles( modelData )
+	vector pitchTowardCamera = AnglesCompose( baseAngles + <0, -90, 0>, AnglesCompose( <rotationDelta[1], 0, 0>, <0, 90, 0> ) )
+	vector newAng            = AnglesCompose( pitchTowardCamera, <0, rotationDelta[0], 0> )
+
+	ModelData_GetMover( modelData ).SetAngles( newAng )
+}
+
+float function StepTowardsZero(float vel, float amount)
+{
+	if (vel > 0.0)
+		return vel > amount ? (vel - amount) : 0.0
+	else if (vel < 0.0)
+		return vel < amount ? (vel + amount) : 0.0
+
+	return 0.0
+}
+
+bool function TurntableUpdateAnglesFromInput( MenuModelData modelData, float maxYawDegrees, float maxPitchDegrees, bool useCurrentMoverAnglesAsDelta = false )
+{
+	if ( file.neverRotateModel )
+		return false
+
+	float[2] currentRotationDelta = ModelData_GetRotationDelta( modelData )
+	float[2] rotationDelta
+	float maxTurnSpeed            = ModelData_GetMaxTurnSpeed( modelData )
+
+	if ( file.modelTurnEnabled || GetDpadNavigationActive() )
+	{
+		if ( IsControllerModeActive() )
+		{
+			float stickXRaw         = clamp( InputGetAxis( ANALOG_RIGHT_X ), -1.0, 1.0 )
+			float stickXRemappedAbs = (fabs( stickXRaw ) < STICK_DEADZONE) ? 0.0 : ((fabs( stickXRaw ) - STICK_DEADZONE) / (1.0 - STICK_DEADZONE))
+			float stickX            = EaseIn( stickXRemappedAbs ) * (stickXRaw < 0.0 ? -1.0 : 1.0)
+			modelData.rotationVel[0] += stickX * maxTurnSpeed * FrameTime() * STICK_ROTATE_SPEED
+			
+			float stickYRaw         = clamp( InputGetAxis( ANALOG_RIGHT_Y ), -1.0, 1.0 )
+			float stickYRemappedAbs = (fabs( stickYRaw ) < STICK_DEADZONE) ? 0.0 : ((fabs( stickYRaw ) - STICK_DEADZONE) / (1.0 - STICK_DEADZONE))
+			float stickY            = EaseIn( stickYRemappedAbs ) * (stickYRaw < 0.0 ? -1.0 : 1.0)
+			modelData.rotationVel[1] -= stickY * maxTurnSpeed * FrameTime() * STICK_ROTATE_SPEED
+		}
+		else
+		{
+			modelData.rotationVel[0] += file.mouseRotateDelta[0]
+			file.mouseRotateDelta[0] = 0                                                   
+
+			modelData.rotationVel[1] -= file.mouseRotateDelta[1]
+			file.mouseRotateDelta[1] = 0                                                  
+		}
+	}
+
+	rotationDelta[0] = currentRotationDelta[0] + (modelData.rotationVel[0] * FrameTime()) % 360.0
+	rotationDelta[1] = currentRotationDelta[1] + (modelData.rotationVel[1] * FrameTime()) % 360.0
+
+	float velDecay = 180 * FrameTime()
+	float dampX = max(fabs(modelData.rotationVel[0]) / 60.0, 0.1)
+	float dampY = max(fabs(modelData.rotationVel[1]) / 60.0, 0.1)
+	modelData.rotationVel[0] = clamp(StepTowardsZero(modelData.rotationVel[0], velDecay * dampX), -maxTurnSpeed, maxTurnSpeed)
+	modelData.rotationVel[1] = clamp(StepTowardsZero(modelData.rotationVel[1], velDecay * dampY), -maxTurnSpeed, maxTurnSpeed)
+
+	if ( maxYawDegrees < 360.0 )
+	{
+		float minRotationDelta = 0 - (maxYawDegrees / 2)
+		float maxRotationDelta = maxYawDegrees / 2
+
+		if (rotationDelta[0] < minRotationDelta || rotationDelta[0] > maxRotationDelta)
+		{
+			rotationDelta[0] = clamp( rotationDelta[0], minRotationDelta, maxRotationDelta )
+			modelData.rotationVel[0] = 0.0
+		}
+	}
+
+	if ( maxPitchDegrees < 360.0 )
+	{
+		float minRotationDelta = 0 - (maxPitchDegrees / 2)
+		float maxRotationDelta = maxPitchDegrees / 2
+
+		if (rotationDelta[1] < minRotationDelta || rotationDelta[1] > maxRotationDelta)
+		{
+			rotationDelta[1] = clamp( rotationDelta[1], minRotationDelta, maxRotationDelta )
+			modelData.rotationVel[1] = 0.0
+		}
+	}
+
+	if ( currentRotationDelta[0] == rotationDelta[0] && currentRotationDelta[1] == rotationDelta[1] )
+		return false
+
+	if ( useCurrentMoverAnglesAsDelta )
+	{
+		float moverY      = ModelData_GetMover( modelData ).GetAngles().y
+		float baseAnglesY = ModelData_GetBaseAngles( modelData ).y
+		currentRotationDelta[0] = AnglesCompose( <0, moverY, 0>, <0, baseAnglesY * -1.0, 0> ).y
+		currentRotationDelta[1] = ModelData_GetMover( modelData ).GetAngles().x * -1
+	}
+	else
+	{
+		currentRotationDelta[0] = rotationDelta[0]
+		currentRotationDelta[1] = rotationDelta[1]
+	}
+
+	TurntableUpdateEntityAngles( modelData )
+	return true
+}
+
+void function TurntableSetCameraZoomPos( CameraZoomData data, float maxPercentIncrement = 0.01 )
+{
+	const float MOVETO_SPEED = 50.0
+
+	float normalizedTriggerInput = 0.0
+	float newVal                 = 0.0
+	float newIncrement           = 0.0
+
+	if ( IsControllerModeActive() )
+	{
+		float maxDistIncrement = (maxPercentIncrement * 4.0) * data.maxDist
+
+		float stickLTriggerRaw         = clamp( InputGetAxis( ANALOG_L_TRIGGER ), -1.0, 1.0 )
+		float stickLTriggerRemappedAbs = (fabs( stickLTriggerRaw ) < STICK_DEADZONE) ? 0.0 : ((fabs( stickLTriggerRaw ) - STICK_DEADZONE) / (1.0 - STICK_DEADZONE))
+		float stickLTrigger            = EaseIn( stickLTriggerRemappedAbs ) * (stickLTriggerRaw < 0.0 ? -1.0 : 1.0)
+
+		float stickRTriggerRaw         = clamp( InputGetAxis( ANALOG_R_TRIGGER ), -1.0, 1.0 )
+		float stickRTriggerRemappedAbs = (fabs( stickRTriggerRaw ) < STICK_DEADZONE) ? 0.0 : ((fabs( stickRTriggerRaw ) - STICK_DEADZONE) / (1.0 - STICK_DEADZONE))
+		float stickRTrigger            = EaseIn( stickRTriggerRemappedAbs ) * (stickRTriggerRaw < 0.0 ? -1.0 : 1.0)
+
+		if ( stickLTrigger > 0 && stickRTrigger > 0 )
+			normalizedTriggerInput = 0.0
+
+		if ( stickLTrigger > 0 )
+			normalizedTriggerInput = stickLTrigger * -1.0
+
+		else if ( stickRTrigger > 0 )
+			normalizedTriggerInput = stickRTrigger
+
+		if ( normalizedTriggerInput == 0.0 )
+			return
+
+		newIncrement = normalizedTriggerInput * maxDistIncrement
+
+		newVal = Clamp( data.lastVal + newIncrement, 0.0, data.maxDist )
+
+		float distChange = fabs( newVal - data.lastVal )
+		if ( distChange < 0.001 )
+			return
+
+		vector destination = data.startPos + (data.normVec * newVal)
+		data.mover.SetOrigin( destination )
+	}
+	else
+	{
+		float maxDistIncrement = maxPercentIncrement * data.maxDist
+
+		float delta = file.mouseWheelNewValue - file.mouseWheelLastValue
+
+		if ( delta == 0.0 )
+			return
+
+		file.mouseWheelNewValue = Clamp( file.mouseWheelNewValue, -100.0, 100.0 )
+		newIncrement = delta * maxDistIncrement
+		file.mouseWheelLastValue = file.mouseWheelNewValue
+
+		newVal = Clamp( data.lastVal + newIncrement, 0.0, data.maxDist )
+		float distChange = fabs( newVal - data.lastVal )
+		if ( distChange < 0.001 )
+			return
+
+		vector destination = data.startPos + (data.normVec * newVal)
+
+		float moveToDuration = distChange / MOVETO_SPEED
+
+		data.mover.NonPhysicsStop()
+		data.mover.NonPhysicsMoveTo( destination, moveToDuration, moveToDuration * 0.33, moveToDuration * 0.33 )
+	}
+
+	data.lastVal = newVal
+}
+
+void function InitPresentationData()
+{
+	                                                                                                                    
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.INACTIVE]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = DEFAULT_FOV
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 1.0
+		pd.csmTexelScale2 = 1.0
+		pd.csmStartDistance = 0.0
+		pd.lights = []
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.PLAY]
+		pd.modelData = file.playCharacter
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 15.5
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 9000
+		pd.dofFarEnd = 9000
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_PLAY
+		pd.endFunc = EndPresentation_PLAY
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.PLAY_SHIFTED]
+		pd.modelData = file.playCharacter
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 15.5
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 2000
+		pd.dofFarEnd = 2000
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_PLAY
+		pd.endFunc = EndPresentation_PLAY
+		pd.cameraTargetName = eCameraTargetNames.play_camera_target_shifted
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.CHARACTER_SELECT]
+		pd.modelData = file.customizeCharacter
+		pd.useCharacterOffsets = true
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 50
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 200.0
+		pd.dofFarEnd = 300.0
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = GetEntArrayByScriptName( "close_character_light" )
+		pd.startFunc = StartPresentation_CHARACTER_SELECT
+		pd.cameraTargetName = eCameraTargetNames.close_character_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.CHARACTER_SKIN]
+		pd.modelData = file.customizeCharacter
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 360
+		pd.maxPitchDegrees = 0
+		pd.fov = 50
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 200.0
+		pd.dofFarEnd = 300.0
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_CHARACTER_SKIN
+		pd.endFunc = EndPresentation_CHARACTER_SKIN
+		pd.cameraTargetName = eCameraTargetNames.customize_character_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.CHARACTER_CARD]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 50
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 200.0
+		pd.dofFarEnd = 300.0
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_CHARACTER_CARD
+		pd.cameraTargetName = eCameraTargetNames.customize_character_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.CHARACTER_QUIPS]
+		pd.modelData = file.customizeCharacter
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 360
+		pd.maxPitchDegrees = 0
+		pd.fov = 50
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 200.0
+		pd.dofFarEnd = 300.0
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_CHARACTER_QUIPS
+		pd.endFunc = EndPresentation_CHARACTER_QUIPS
+		pd.cameraTargetName = eCameraTargetNames.customize_character_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.HOLOSPRAYS]
+		pd.modelData = file.customizeCharacter
+		pd.useCharacterOffsets = true
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 50
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = GetEntArrayByScriptName( "close_character_light" )
+		pd.startFunc = StartPresentation_HOLOSPRAYS
+		pd.cameraTargetName = eCameraTargetNames.close_character_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.WEAPON_CATEGORY]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 50
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 200.0
+		pd.dofFarEnd = 300.0
+		pd.csmTexelScale1 = 1.0
+		pd.csmTexelScale2 = 1.0
+		pd.csmStartDistance = 0.0
+		pd.lights = []
+		pd.cameraTargetName = eCameraTargetNames.customize_weapon_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.WEAPON_SKIN]
+		pd.modelData = file.customizeWeapon
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 80
+		pd.maxPitchDegrees = 80
+		pd.fov = 50
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 200.0
+		pd.dofFarEnd = 300.0
+		pd.csmTexelScale1 = 1.0
+		pd.csmTexelScale2 = 1.0
+		pd.csmStartDistance = 0.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_WEAPON_SKIN
+		pd.endFunc = EndPresentation_WEAPON_SKIN
+		pd.cameraTargetName = eCameraTargetNames.customize_weapon_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.WEAPON_CHARMS]
+		pd.modelData = file.customizeWeapon
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 60             
+		pd.maxPitchDegrees = 50          
+		pd.fov = 50
+		pd.dofNearStart = 3.5
+		pd.dofNearEnd = 5.0
+		pd.dofFarStart = 20.0
+		pd.dofFarEnd = 30.0
+		pd.csmTexelScale1 = 1.0
+		pd.csmTexelScale2 = 1.0
+		pd.csmStartDistance = 0.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_WEAPON_CHARMS
+		pd.endFunc = EndPresentation_WEAPON_CHARMS
+		pd.cameraTargetName = eCameraTargetNames.customize_weapon_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.STORE]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = DEFAULT_FOV
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 1.0
+		pd.csmTexelScale2 = 1.0
+		pd.csmStartDistance = 0.0
+		pd.lights = []
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.NO_MODELS]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 15
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 1.0
+		pd.csmTexelScale2 = 1.0
+		pd.csmStartDistance = 0.0
+		pd.lights = []
+		pd.cameraTargetName = eCameraTargetNames.default_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.BATTLE_PASS]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 15.5
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_BATTLE_PASS
+		pd.endFunc = EndPresentation_BATTLE_PASS
+		pd.cameraTargetName = eCameraTargetNames.battlepass_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.BATTLE_PASS_3]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 15.5
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_BATTLE_PASS
+		pd.endFunc = EndPresentation_BATTLE_PASS
+		pd.cameraTargetName = eCameraTargetNames.battlepass_3_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.COLLECTION_EVENT]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 15.5
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.cameraTargetName = eCameraTargetNames.collection_event_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.QUEST_PANEL]
+		pd.modelData = file.questGoalModelData
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 360
+		pd.maxPitchDegrees = 0
+		pd.fov = 15.5
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_QUEST_GOAL
+		pd.endFunc = EndPresentation_QUEST_GOAL
+		pd.cameraTargetName = eCameraTargetNames.battlepass_3_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.STORE_INSPECT]
+		pd.modelData = file.storeInspectModelData
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 360
+		pd.maxPitchDegrees = 0
+		pd.fov = 15.5
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_STORE_INSPECT
+		pd.endFunc = EndPresentation_STORE_INSPECT
+		pd.cameraTargetName = eCameraTargetNames.store_inspect_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.CLUB_LANDING]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 45
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 400.0
+		pd.dofFarEnd = 1500.0
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.startFunc = StartPresentation_CLUBS_LANDING
+		                                            
+		pd.cameraTargetName = eCameraTargetNames.club_landing_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.CLUB_DISCOVERY]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 0
+		pd.maxPitchDegrees = 0
+		pd.fov = 45
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = 400.0
+		pd.dofFarEnd = 1500.0
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = GetEntArrayByScriptName( "club_discovery_light" )
+		pd.startFunc = StartPresentation_CLUBS_DISCOVERY
+		                                            
+		pd.cameraTargetName = eCameraTargetNames.club_landing_camera_target
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.ARENAS_RANKED]
+		pd.modelData = null
+		pd.useCharacterOffsets = false
+		pd.maxYawDegrees = 360
+		pd.maxPitchDegrees = 0
+		pd.fov = 12.0
+		pd.dofNearStart = DEFAULT_DOF_NEAR_START
+		pd.dofNearEnd = DEFAULT_DOF_NEAR_END
+		pd.dofFarStart = DEFAULT_DOF_FAR_START
+		pd.dofFarEnd = DEFAULT_DOF_FAR_END
+		pd.csmTexelScale1 = 0.22
+		pd.csmTexelScale2 = 0.55
+		pd.csmStartDistance = 70.0
+		pd.lights = []
+		pd.cameraTargetName = eCameraTargetNames.store_inspect_camera_target
+		pd.startFunc = StartArenasRankedBackground
+		pd.endFunc = EndArenasRankedBackground
+	}
+
+                
+  
+                                                                       
+                                      
+                                
+                        
+                        
+             
+                                          
+                                      
+                        
+                      
+                          
+                          
+                            
+                
+                                          
+                                      
+                                                                            
+  
+                      
+}
+
+void function InitMenuModelFlashData()
+{
+	{
+		MenuModelFlashDef fd = file.menuModelFlashData[eMenuModelFlashType.DEFAULT]
+		fd.fillIntensityScalar    = 10
+		fd.outlineIntensityScalar = 300
+		fd.fadeInTime             = 0.01
+		fd.fadeOutTime            = 0.5
+		fd.lifeTime               = 0.1
+		fd.outlineRadius          = 2
+	}
+
+	{
+		MenuModelFlashDef fd = file.menuModelFlashData[eMenuModelFlashType.CHARACTER_SELECT]
+		fd.fillIntensityScalar    = 10
+		fd.outlineIntensityScalar = 300
+		fd.fadeInTime             = 0.01
+		fd.fadeOutTime            = 0.25
+		fd.lifeTime               = 0.1
+		fd.outlineRadius          = 2
+	}
+
+	{
+		MenuModelFlashDef fd = file.menuModelFlashData[eMenuModelFlashType.VICTORY_SEQUENCE]
+		fd.fillIntensityScalar    = 5
+		fd.outlineIntensityScalar = 10
+		fd.fadeInTime             = 0.01
+		fd.fadeOutTime            = 0.3
+		fd.lifeTime               = 0.1
+		fd.outlineRadius          = 2
+	}
+
+	{
+		MenuModelFlashDef fd = file.menuModelFlashData[eMenuModelFlashType.LOOT_CEREMONY_LOW_RARITY]
+		fd.fillIntensityScalar    = 5000
+		fd.outlineIntensityScalar = 1
+		fd.fadeInTime             = 0.2
+		fd.fadeOutTime            = 0.75
+		fd.lifeTime               = 1
+		fd.outlineRadius          = 1
+	}
+
+	{
+		MenuModelFlashDef fd = file.menuModelFlashData[eMenuModelFlashType.LOOT_CEREMONY_HIGH_RARITY]
+		fd.fillIntensityScalar    = 5000
+		fd.outlineIntensityScalar = 1
+		fd.fadeInTime             = 0.75
+		fd.fadeOutTime            = 1
+		fd.lifeTime               = 2
+		fd.outlineRadius          = 1
+	}
+
+	{
+		MenuModelFlashDef fd = file.menuModelFlashData[eMenuModelFlashType.LOOT_CEREMONY_QUICK]
+		fd.fillIntensityScalar    = 25
+		fd.outlineIntensityScalar = 1
+		fd.fadeInTime             = 0.1
+		fd.fadeOutTime            = 0.25
+		fd.lifeTime               = 0.35
+		fd.outlineRadius          = 1
+	}
+
+	{
+		MenuModelFlashDef fd = file.menuModelFlashData[eMenuModelFlashType.BATTLEPASS]
+		fd.fillIntensityScalar    = 10
+		fd.outlineIntensityScalar = 300
+		fd.fadeInTime             = 0.01
+		fd.fadeOutTime            = 0.3
+		fd.lifeTime               = 0.1
+		fd.outlineRadius          = 2
+	}
+
+	{
+		MenuModelFlashDef fd = file.menuModelFlashData[eMenuModelFlashType.QUEST_MODEL_PIECE]
+		fd.fillIntensityScalar    = 10
+		fd.outlineIntensityScalar = 300
+		fd.fadeInTime             = 0.01
+		fd.fadeOutTime            = 5.5
+		fd.lifeTime               = 0.1
+		fd.outlineRadius          = 2
+	}
+}
+
+void function StartPresentation_PLAY()
+{
+	if ( file.presentationData[file.previousPresentationType].startFunc != StartPresentation_PLAY )
+	{
+		ModelData_SetAnim( file.playCharacter, "ACT_MP_MENU_LOBBY_CENTER_IDLE" )
+		UpdateMenuCharacterModel( GetLocalClientPlayer(), -1 )
+
+		thread TrackPartyMembersAndDisplayModelsThread()
+	}
+
+	AddCallback_OnPartyUpdated( UpdateMenuWithPartyMembers )
+}
+
+void function EndPresentation_PLAY()
+{
+	RemoveCallback_OnPartyUpdated( UpdateMenuWithPartyMembers )
+}
+
+void function StartPresentation_CHARACTER_SELECT()
+{
+	ModelData_SetPoseEntity( file.customizeCharacter, GetEntByScriptName( "customize_character_ref" ) )                                                                                           
+	ModelData_SetAnim( file.customizeCharacter, "ACT_MP_MENU_LOBBY_SELECT_IDLE" )
+	UpdateMenuCharacterModel( GetLocalClientPlayer(), -1 )
+	ApplyLightingConfig( "character_close" )
+}
+
+void function StartPresentation_CHARACTER_SKIN()
+{
+	ModelData_GetMover( file.customizeCharacter ).SetOrigin( GetEntByScriptName( "customize_character_skin_ref" ).GetOrigin() )
+	ModelData_SetAnim( file.customizeCharacter, "ACT_MP_MENU_LOBBY_SELECT_IDLE" )
+
+	if ( !EffectDoesExist( file.baseFXHandle ) )
+	{
+		file.baseFXHandle = StartParticleEffectInWorldWithHandle( GetParticleSystemIndex( CHARACTER_BASE_EFFECT ), ModelData_GetMover( file.customizeCharacter ).GetOrigin() + <0, 0, -1.2>, <-2.2, 0, 0> )
+		EffectSetDontKillForReplay( file.baseFXHandle )
+	}
+
+	UpdateMenuCharacterModel( GetLocalClientPlayer(), -1 )
+
+	thread EnableLobbyMenuCameraZoom()
+}
+
+void function EndPresentation_CHARACTER_SKIN()
+{
+	CameraZoomThreadEnd()
+
+	if ( EffectDoesExist( file.baseFXHandle ) )
+		EffectStop( file.baseFXHandle, true, false )
+}
+
+void function StartPresentation_CHARACTER_CARD()
+{
+	ModelData_GetMover( file.customizeCharacter ).SetOrigin( GetEntByScriptName( "customize_character_skin_ref" ).GetOrigin() + <0, 0, -500> )
+	UpdateMenuCharacterModel( GetLocalClientPlayer(), -1 )
+}
+
+void function StartPresentation_CHARACTER_QUIPS()
+{
+	ModelData_GetMover( file.customizeCharacter ).SetOrigin( GetEntByScriptName( "customize_character_skin_ref" ).GetOrigin() )
+	ModelData_SetAnim( file.customizeCharacter, "ACT_MP_MENU_LOBBY_SELECT_IDLE" )
+
+	if ( !EffectDoesExist( file.baseFXHandle ) )
+	{
+		file.baseFXHandle = StartParticleEffectInWorldWithHandle( GetParticleSystemIndex( CHARACTER_BASE_EFFECT ), ModelData_GetMover( file.customizeCharacter ).GetOrigin() + <0, 0, -1.2>, <-2.2, 0, 0> )
+		EffectSetDontKillForReplay( file.baseFXHandle )
+	}
+
+	UpdateMenuCharacterModel( GetLocalClientPlayer(), -1 )
+}
+
+void function EndPresentation_CHARACTER_QUIPS()
+{
+	Signal( ModelData_GetModel( file.customizeCharacter ), SIGNAL_STARTING_EMOTE )
+
+	if ( EffectDoesExist( file.baseFXHandle ) )
+		EffectStop( file.baseFXHandle, true, false )
+}
+
+void function StartPresentation_HOLOSPRAYS()
+{
+
+}
+
+void function StartPresentation_QUIP_WHEEL()
+{
+	ApplyLightingConfig( "character_quip" )
+}
+
+void function StartPresentation_WEAPON_SKIN()
+{
+	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
+	entity charm       = GetCharmForWeaponEntity( weaponModel )
+
+	weaponModel.Show()
+
+	if ( IsValid( charm ) )
+		charm.Show()
+
+	if ( file.previousPresentationType != ePresentationType.WEAPON_CHARMS )
+	{
+		thread EnableLobbyMenuCameraZoom()
+	}
+}
+
+void function EndPresentation_WEAPON_SKIN()
+{
+	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
+	entity weaponMover = ModelData_GetMover( file.customizeWeapon )
+	weaponModel.Hide()
+
+	entity charm = GetCharmForWeaponEntity( weaponModel )
+	if ( IsValid( charm ) )
+		charm.Hide()
+
+	bool desireWeaponCharmPresentation = file.desiredPresentationType == ePresentationType.WEAPON_CHARMS
+
+	if ( !desireWeaponCharmPresentation )
+	{
+		                       
+		Signal( level, "EndGunCharmCameraZoom" )
+
+		CameraZoomThreadEnd()
+
+		                  
+		weaponMover.SetOrigin( ModelData_GetBaseOrigin( file.customizeWeapon ) )
+
+		                   
+		int cameraTargetIndex    = eCameraTargetNames.customize_weapon_camera_target
+		entity cameraTarget      = file.cameraTargets[ cameraTargetIndex ]
+		vector cameraStartOrigin = file.cameraStartOriginsAngles[ cameraTargetIndex ]["origin"]
+		vector cameraStartAngles = file.cameraStartOriginsAngles[ cameraTargetIndex ]["angles"]
+
+		cameraTarget.SetOrigin( cameraStartOrigin )
+		cameraTarget.SetAngles( cameraStartAngles )
+	}
+}
+
+
+void function StartPresentation_WEAPON_CHARMS()
+{
+	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
+	entity charm       = GetCharmForWeaponEntity( weaponModel )
+
+	weaponModel.Show()
+
+	if ( IsValid( charm ) )
+		charm.Show()
+
+	float[2] charmBaseRotationDelta
+	charmBaseRotationDelta[0] = -30.0
+	charmBaseRotationDelta[1] = 0.0
+	ModelData_SetBaseAngles( file.customizeWeapon, <0, 140, 0> )
+	ModelData_SetBaseRotationDelta( file.customizeWeapon, charmBaseRotationDelta )
+}
+
+void function EndPresentation_WEAPON_CHARMS()
+{
+	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
+	entity charm       = GetCharmForWeaponEntity( weaponModel )
+
+	weaponModel.Hide()
+
+	if ( IsValid( charm ) )
+		charm.Hide()
+
+	ModelData_SetBaseAngles( file.customizeWeapon, WEAPON_BASE_ANGLES )
+	ModelData_SetBaseRotationDelta( file.customizeWeapon, WEAPON_BASE_ROTATION_DELTA )
+}
+
+void function StartPresentation_BATTLE_PASS()
+{
+	BattlePassLightsOn()
+}
+
+void function EndPresentation_BATTLE_PASS()
+{
+	BattlePassLightsOff()
+}
+
+void function StartPresentation_STORE_INSPECT()
+{
+	file.storeBackgroundModelGeo.Show()
+	file.storeBackgroundModelSmoke.Show()
+}
+
+void function EndPresentation_STORE_INSPECT()
+{
+	file.storeBackgroundModelGeo.Hide()
+	file.storeBackgroundModelSmoke.Hide()
+
+	ClearStoreInspectItem()
+	CameraZoomThreadEnd()
+}
+
+void function StartArenasRankedBackground()
+{
+	thread StartArenasRankedBackgroundFX()
+}
+
+void function StartArenasRankedBackgroundFX( )
+{
+	EndSignal( level, "EndArenasRankedBackgroundFX" )
+	FlagWait( "EntitiesDidLoad" )
+
+	file.arenasBackgroundModelGeo.Show()
+	file.arenasBackgroundModelSmoke.Show()
+
+	if ( IsValid( file.arenasBackgroundModelSmoke ) )
+		file.arenasBackgroundModelSmoke.SetSkin( GetArenasSmokeSkinIndex() )
+
+	if ( IsValid( file.arenasBackgroundModelGeo ) )
+		file.arenasBackgroundModelGeo.SetSkin( GetArenasBackgroundSkinIndex() )
+
+	entity targetBackground   = GetEntByScriptName( STORE_BACKGROUND_ENT_NAME )
+
+	if ( EffectDoesExist( file.arenasRankedBackgroundFXHandle ) )
+		EffectStop( file.arenasRankedBackgroundFXHandle, true, false )
+
+	file.arenasRankedBackgroundFXHandle = StartParticleEffectInWorldWithHandle( GetParticleSystemIndex( ARENAS_ROOM_SPARKS ), targetBackground.GetOrigin(), targetBackground.GetAngles() )
+	EffectSetControlPointVector( file.arenasRankedBackgroundFXHandle, 1, ARENAS_ROOM_SPARKS_COLOR )
+	EffectSetDontKillForReplay( file.arenasRankedBackgroundFXHandle )
+
+	int FXHandle = file.arenasRankedBackgroundFXHandle
+
+	OnThreadEnd(
+		function() : ( FXHandle )
+		{
+			if ( EffectDoesExist( FXHandle ) )
+				EffectStop( FXHandle, true, false )
+
+			file.arenasBackgroundModelGeo.Hide()
+			file.arenasBackgroundModelSmoke.Hide()
+		}
+	)
+
+	WaitForever()
+}
+
+void function EndArenasRankedBackground()
+{
+	Signal( level, "EndArenasRankedBackgroundFX" )
+}
+
+                              
+                          
+                       
+void function StartPresentation_CLUBS_DISCOVERY()
+{
+	printf( "ClubBackgroundDebug: Marvin should be up close" )
+	entity mrvn = GetEntByScriptName( "club_landing_marvin" )
+	entity ref = GetEntByScriptName( "club_landing_discovery_ref" )
+	mrvn.SetOrigin( ref.GetOrigin() )
+	mrvn.SetAngles( ref.GetAngles() )
+	                                 
+	mrvn.Anim_Play( "mrvn_underworld_idle" )
+	ApplyLightingConfig( "clubs_discovery" )
+}
+
+void function Mrvn_PlayIdleAfterSalutingThread( entity mrvn )
+{
+	while ( mrvn.IsSequenceFinished() )
+		WaitFrame()
+
+	mrvn.Anim_Play( "mrvn_underworld_idle" )
+}
+
+void function StartPresentation_CLUBS_LANDING()
+{
+	printf( "ClubBackgroundDebug: Marvin should be at the bar!" )
+	entity mrvn = GetEntByScriptName( "club_landing_marvin" )
+	entity ref = GetEntByScriptName( "club_landing_lobby_ref" )
+	mrvn.SetOrigin( ref.GetOrigin() )
+	mrvn.SetAngles( ref.GetAngles() )
+	mrvn.Anim_Play( "mrvn_underworld_bartender" )
+}
+
+                
+                                         
+ 
+                                                                                          
+                                                                                                                                           
+
+                                                                 
+                              
+                    
+
+                                                                     
+                               
+                     
+ 
+
+                                       
+ 
+                                                                 
+                              
+                    
+
+                                                                     
+                               
+                     
+
+                                                                                                
+                                                                                                                            
+ 
+                      
+
+void function EnableLobbyMenuCameraZoom()
+{
+	const float ZOOM_DISTANCE_CHARACTER_SKIN = 72.0
+	const float ZOOM_DISTANCE_INSPECT_CHARACTER_SKIN = 160.0
+
+	const float ZOOM_DISTANCE_WEAPON_SKIN = 24.0
+	const float ZOOM_DISTANCE_INSPECT_WEAPON_SKIN = 53.333333
+
+	const float ZOOM_DISTANCE_WEAPON_CHARM = 100.0
+	const float ZOOM_DISTANCE_INSPECT_WEAPON_CHARM = 222.222222
+	const float ZOOM_DISTANCE_INSPECT_MELEE_SKIN = 133.333333
+
+	EndSignal( level, "EndCameraZoom" )
+
+	                                                    
+	while( !file.cameraZoomModelInitialized )
+		WaitFrame()
+
+	vector focalPoint
+	float maxZoomDistance
+	int cameraTargetIndex
+
+	if ( file.desiredPresentationType == ePresentationType.CHARACTER_SKIN )
+	{
+		entity characterModel = ModelData_GetModel( file.customizeCharacter )
+
+		ItemFlavor skinFlavor      = ModelData_GetSkinFlavor( file.customizeCharacter )
+		ItemFlavor characterFlavor = CharacterSkin_GetCharacterFlavor( skinFlavor )
+		vector offset              = CharacterClass_GetMenuZoomOffset( characterFlavor )
+
+		focalPoint = characterModel.GetAttachmentOrigin( characterModel.LookupAttachment( "HEADSHOT" ) ) + offset
+		maxZoomDistance = ZOOM_DISTANCE_CHARACTER_SKIN
+		cameraTargetIndex = eCameraTargetNames.customize_character_camera_target
+	}
+	else if ( file.desiredPresentationType == ePresentationType.WEAPON_SKIN )
+	{
+		ItemFlavor skinFlavor     = ModelData_GetSkinFlavor( file.customizeWeapon )
+		ItemFlavor weaponFlavor   = WeaponSkin_GetWeaponFlavor( skinFlavor )
+		ItemFlavor categoryFlavor = WeaponItemFlavor_GetCategory( weaponFlavor )
+		vector menuZoomOffset     = WeaponCategoryFlavor_GetMenuZoomOffset( categoryFlavor )
+
+		focalPoint = ModelData_GetMover( file.customizeWeapon ).GetOrigin() + menuZoomOffset
+
+		maxZoomDistance = ZOOM_DISTANCE_WEAPON_SKIN
+		cameraTargetIndex = eCameraTargetNames.customize_weapon_camera_target
+	}
+	else if ( file.desiredPresentationType == ePresentationType.STORE_INSPECT )
+	{
+		entity model        = ModelData_GetModel( file.storeInspectModelData )
+		ItemFlavor itemFlav = ModelData_GetSkinFlavor( file.storeInspectModelData )
+		int itemType        = ItemFlavor_GetType( itemFlav )
+		switch ( itemType )
+		{
+			case eItemType.character_skin:
+				ItemFlavor characterFlavor = CharacterSkin_GetCharacterFlavor( itemFlav )
+				focalPoint = model.GetAttachmentOrigin( model.LookupAttachment( "HEADFOCUS" ) )
+				maxZoomDistance = ZOOM_DISTANCE_INSPECT_CHARACTER_SKIN
+				break
+
+			case eItemType.weapon_skin:
+				ItemFlavor weaponFlavor = WeaponSkin_GetWeaponFlavor( itemFlav )
+				ItemFlavor categoryFlavor = WeaponItemFlavor_GetCategory( weaponFlavor )
+				focalPoint = model.GetAttachmentOrigin( model.LookupAttachment( "MENU_ROTATE" ) )
+				maxZoomDistance = ZOOM_DISTANCE_INSPECT_WEAPON_SKIN
+				break
+
+			case eItemType.weapon_charm:
+				focalPoint = GetCharmForWeaponEntity( model ).GetWorldSpaceCenter()
+				maxZoomDistance = ZOOM_DISTANCE_INSPECT_WEAPON_CHARM
+				break
+
+			case eItemType.melee_skin:
+				focalPoint = model.GetAttachmentOrigin( model.LookupAttachment( "MENU_ROTATE" ) )
+				maxZoomDistance = ZOOM_DISTANCE_INSPECT_MELEE_SKIN
+				break
+
+			default:                                      
+				return
+		}
+		cameraTargetIndex = eCameraTargetNames.store_inspect_camera_target
+	}
+
+	                                                             
+
+	entity cameraTarget      = file.cameraTargets[ cameraTargetIndex ]
+	vector cameraStartOrigin = file.cameraStartOriginsAngles[ cameraTargetIndex ]["origin"]
+	vector cameraStartAngles = file.cameraStartOriginsAngles[ cameraTargetIndex ]["angles"]
+
+	file.cameraZoomData.mover.SetOrigin( cameraStartOrigin )
+	file.cameraZoomData.mover.SetAngles( cameraStartAngles )
+	cameraTarget.SetParent( file.cameraZoomData.mover )
+
+	vector normVec = Normalize( focalPoint - cameraStartOrigin )
+	file.cameraZoomData.startPos = cameraStartOrigin
+	file.cameraZoomData.endPos = file.cameraZoomData.startPos + (normVec * maxZoomDistance)
+	file.cameraZoomData.maxDist = maxZoomDistance
+	file.cameraZoomData.normVec = normVec
+
+	OnThreadEnd(
+		function () : ( cameraTarget, cameraStartOrigin, cameraStartAngles )
+		{
+			cameraTarget.ClearParent()
+			cameraTarget.SetOrigin( cameraStartOrigin )
+			cameraTarget.SetAngles( cameraStartAngles )
+			file.cameraZoomModelInitialized = false
+		}
+	)
+
+	waitthread CameraZoomThread( file.cameraZoomData )
+}
+
+void function InitMenuEntities()
+{
+	printf( "InitMenuEntitiesDebug: InitMenuEntities() START" )
+	#if DEV
+		if ( BuildingCubeMaps() )
+			return
+	#endif
+
+	Assert( MenuMapEntitiesExist() )
+	
+	bool eventLobbyOverride = GetCurrentPlaylistVarBool( "lobby_event_positioning_override", false )
+	                                                    
+                     
+		if ( CalEvent_IsActive( GetItemFlavorByAsset( $"settings/itemflav/calevent/s11e01/collection.rpak" ), GetUnixTimestamp() ) || eventLobbyOverride )
+			ApplyEventPositioning()
+      
+                           
+                          
+       
+
+	InitPresentationData()
+	InitMenuModelFlashData()
+
+	InitTeammatePosition( "play_teammate1_ref", "ACT_MP_MENU_LOBBY_LEFT_IDLE" )
+	InitTeammatePosition( "play_teammate2_ref", "ACT_MP_MENU_LOBBY_RIGHT_IDLE" )
+
+	file.cameraZoomData.mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", <0, 0, 0>, <0, 0, 0> )
+
+	file.cameraTargets.clear()
+	file.cameraStartOriginsAngles.clear()
+	foreach ( string scriptName, int eNumIdx in eCameraTargetNames )
+	{
+		entity targetEnt = GetEntByScriptName( scriptName )
+		file.cameraTargets[ eNumIdx ] <- targetEnt
+		file.cameraStartOriginsAngles[ eNumIdx ] <- { origin = targetEnt.GetOrigin(), angles = targetEnt.GetAngles() }
+	}
+
+	clGlobal.menuCamera = CreateClientSidePointCamera( <0, 0, 0>, <0, 0, 0>, DEFAULT_FOV )
+
+	                                       
+	EHI localPlayerEHI = WaitForLocalClientEHI()
+	if ( IsSpectator( GetLocalClientPlayer() ) && !IsPrivateMatchLobby() )
+	{
+		printf( "InitMenuEntitiesDebug: InitMenuEntities() Return: Local Client is Spectator" )
+		return               
+	}
+
+	if ( IsLobby() || IsPrivateMatchLobby() )
+	{
+		entity localPlayer = GetLocalClientPlayer()
+		localPlayer.SetMenuCameraEntityWithAudio( clGlobal.menuCamera )                         
+	}
+
+	entity refEnt
+	entity model
+	float[2] baseRotationDelta
+
+	refEnt = GetEntByScriptName( "play_character_ref" )
+	ModelData_SetBaseOrigin( file.playCharacter, refEnt.GetOrigin() )
+	ModelData_SetBaseAngles( file.playCharacter, refEnt.GetAngles() )
+	model = CreateMenuModel( file.playCharacter, $"mdl/dev/empty_model.rmdl" )
+	ItemFlavor character     = LoadoutSlot_WaitForItemFlavor( localPlayerEHI, Loadout_Character() )
+	ItemFlavor characterSkin = LoadoutSlot_WaitForItemFlavor( localPlayerEHI, Loadout_CharacterSkin( character ) )
+	CharacterSkin_Apply( model, characterSkin )
+	model.SetAlive( true )
+
+	refEnt = GetEntByScriptName( "customize_character_ref" )
+	ModelData_SetBaseOrigin( file.customizeCharacter, refEnt.GetOrigin() )
+	ModelData_SetBaseAngles( file.customizeCharacter, <0, -120, 0> )
+	baseRotationDelta[0] = 0
+	baseRotationDelta[1] = 0
+	ModelData_SetBaseRotationDelta( file.customizeCharacter, baseRotationDelta )
+	model = CreateMenuModel( file.customizeCharacter, $"mdl/dev/empty_model.rmdl" )
+	ModelData_CreateMover( file.customizeCharacter )
+	CharacterSkin_Apply( model, characterSkin )
+	model.SetAlive( true )
+
+	refEnt = GetEntByScriptName( "customize_weapon_ref" )
+	ModelData_SetBaseOrigin( file.customizeWeapon, refEnt.GetOrigin() )
+	ModelData_SetBaseAngles( file.customizeWeapon, WEAPON_BASE_ANGLES )
+	ModelData_SetBaseRotationDelta( file.customizeWeapon, WEAPON_BASE_ROTATION_DELTA )
+	model = CreateMenuModel( file.customizeWeapon, $"mdl/dev/empty_model.rmdl" )
+	model.kv.rendercolor = "0 0 0 255"                                          
+	ModelData_CreateMover( file.customizeWeapon )
+	ItemFlavor weapon     = GetAllWeaponItemFlavors()[0]
+	ItemFlavor weaponSkin = LoadoutSlot_GetItemFlavor( localPlayerEHI, Loadout_WeaponSkin( weapon ) )
+	WeaponCosmetics_Apply( model, weaponSkin, null )
+
+	refEnt = GetEntByScriptName( "store_inspect_ref" )
+	file.storeInspectRefEnt = refEnt
+	ModelData_SetBaseOrigin( file.storeInspectModelData, refEnt.GetOrigin() )
+	ModelData_SetBaseAngles( file.storeInspectModelData, refEnt.GetAngles() )
+	ModelData_SetBaseRotationDelta( file.storeInspectModelData, baseRotationDelta )
+	model = CreateMenuModel( file.storeInspectModelData, $"mdl/dev/empty_model.rmdl" )
+	ModelData_CreateMover( file.storeInspectModelData )
+
+	                
+	refEnt = GetEntByScriptName( "battlepass_right_ref" )                     
+	ModelData_SetBaseOrigin( file.questGoalModelData, refEnt.GetOrigin() )
+	ModelData_SetBaseAngles( file.questGoalModelData, <0, -115, 0> )
+	model = CreateMenuModel( file.questGoalModelData, $"mdl/dev/empty_model.rmdl" )
+	CreateMenuSubModel( file.questGoalModelData, $"mdl/dev/empty_model.rmdl" )
+	ModelData_CreateMover( file.questGoalModelData )
+
+                
+                                                                                   
+                                                                     
+                                                               
+                                                                              
+                                               
+                      
+
+	                                                            
+	                                                              
+	                                                               
+
+	InitBattlePassLights()
+	InitLightingConfigs()
+
+	file.initializedMenuModels = true
+	printf( "InitMenuEntitiesDebug: InitMenuEntities() END" )
+}
+
+void function EntitiesDidLoad()
+{
+	#if CLIENT
+		entity targetBackground = GetEntByScriptName( STORE_BACKGROUND_ENT_NAME )
+
+		vector offset            = <0, 0, 24>
+		UISize screenSize        = GetScreenSize()
+		float nearestAspectRatio = GetNearestAspectRatio( screenSize.width, screenSize.height )
+		if ( nearestAspectRatio > 2.25 )
+			offset += <0, 25, 0>
+
+		file.storeBackgroundModelGeo = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), STORE_BACKGROUND_GEO_MODEL )
+		file.storeBackgroundModelGeo.kv.solid = 0
+		file.storeBackgroundModelGeo.kv.disableshadows = 1
+		file.storeBackgroundModelGeo.kv.fadedist = -1
+		file.storeBackgroundModelGeo.MakeSafeForUIScriptHack()
+		file.storeBackgroundModelGeo.Hide()
+
+		file.storeBackgroundModelSmoke = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), STORE_BACKGROUND_SMOKE_MODEL )
+		file.storeBackgroundModelSmoke.kv.solid = 0
+		file.storeBackgroundModelSmoke.kv.disableshadows = 1
+		file.storeBackgroundModelSmoke.kv.fadedist = -1
+		file.storeBackgroundModelSmoke.MakeSafeForUIScriptHack()
+		file.storeBackgroundModelSmoke.Hide()
+
+		file.arenasBackgroundModelGeo = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), ARENAS_BACKGROUND_GEO_MODEL )
+		file.arenasBackgroundModelGeo.kv.solid = 0
+		file.arenasBackgroundModelGeo.kv.disableshadows = 1
+		file.arenasBackgroundModelGeo.kv.fadedist = -1
+		file.arenasBackgroundModelGeo.MakeSafeForUIScriptHack()
+		file.arenasBackgroundModelGeo.Hide()
+
+		file.arenasBackgroundModelSmoke = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), ARENAS_BACKGROUND_SMOKE_MODEL )
+		file.arenasBackgroundModelSmoke.kv.solid = 0
+		file.arenasBackgroundModelSmoke.kv.disableshadows = 1
+		file.arenasBackgroundModelSmoke.kv.fadedist = -1
+		file.arenasBackgroundModelSmoke.MakeSafeForUIScriptHack()
+		file.arenasBackgroundModelSmoke.Hide()
+	#endif
+}
+
+entity function CreateMenuModel_( MenuModelData modelData, asset modelAsset, bool isMainModel )
+{
+	vector origin     = <0, 0, 0>
+	vector angles     = <0, 0, 0>
+	vector baseOrigin = ModelData_GetBaseOrigin( modelData )
+	vector baseAngles = ModelData_GetBaseAngles( modelData )
+
+	if ( baseOrigin != origin )
+		origin = baseOrigin
+
+	if ( baseAngles != angles )
+		angles = baseAngles
+
+	entity oldModel = isMainModel ? ModelData_GetModel( modelData ) : ModelData_GetSubModel( modelData )
+	if ( IsValid( oldModel ) )
+		oldModel.Destroy()
+
+	entity model = CreateClientSidePropDynamic( origin, angles, modelAsset )
+	model.SetVisibleForLocalPlayer( 0 )
+	model.MakeSafeForUIScriptHack()
+	if ( isMainModel )
+		ModelData_SetModel( modelData, model )
+	else
+		ModelData_SetSubModel( modelData, model )
+
+	return model
+}
+entity function CreateMenuModel( MenuModelData modelData, asset modelAsset )
+{
+	return CreateMenuModel_( modelData, modelAsset, true )
+}
+entity function CreateMenuSubModel( MenuModelData modelData, asset modelAsset )
+{
+	return CreateMenuModel_( modelData, modelAsset, false )
+}
+
+void function UpdateMenuCharacterModel( entity player, int overrideCharacterFlavorNetworkIndex = -1 )
+{
+	if ( player != GetLocalClientPlayer() )
+		return
+
+	thread UpdateMenuCharacterModelInternal( overrideCharacterFlavorNetworkIndex )
+}
+
+                                                                                                                          
+void function UpdateMenuCharacterModelInternal( int overrideCharacterFlavorNetworkIndex )
+{
+	Signal( file.signalDummy, "UpdateMenuCharacterModelInternal" )
+	EndSignal( file.signalDummy, "UpdateMenuCharacterModelInternal" )
+
+	while ( !file.initializedMenuModels )                                                                        
+		WaitFrame()
+
+	EHI playerEHI = LocalClientEHI()
+	LoadoutSlot_WaitForItemFlavor( playerEHI, Loadout_Character() )
+
+	ItemFlavor character
+	if ( overrideCharacterFlavorNetworkIndex == -1 )
+		character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
+	else
+		character = GetItemFlavorByNetworkIndex_DEPRECATED( overrideCharacterFlavorNetworkIndex )
+
+	#if DEV
+		if ( GetBugReproNum() == 1747 )                                                                                                                                   
+			character = GetItemFlavorByHumanReadableRef( "character_dummie"  )
+	#endif
+
+	LoadoutSlot_WaitForItemFlavor( playerEHI, Loadout_CharacterSkin( character ) )
+
+	clGlobal.currentMenuPilotModels.characterSkin = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_CharacterSkin( character ) )
+	                                                      
+
+	if ( file.presentationData[ file.currentPresentationType ].useCharacterOffsets && file.presentationData[ file.currentPresentationType ].modelData != null )
+	{
+		entity refEnt = ModelData_GetPoseEntity( expect MenuModelData( file.presentationData[ file.currentPresentationType ].modelData ) )
+		vector base   = refEnt.GetOrigin()
+		vector offset = CharacterClass_GetGalleryModelOffset( character )
+		#if DEV
+			if ( ItemFlavor_GetHumanReadableRef( character ) == file.DEV_characterOffsetCharacter )
+				offset = file.DEV_characterOffset
+		#endif       
+#if NX_PROG || PC_PROG_NX_UI
+	ModelData_GetMover( expect MenuModelData( file.presentationData[ file.currentPresentationType ].modelData ) ).SetOrigin( base + offset + (IsNxHandheldMode() ? <15,10,0> : <0,0,0> ) )
+#else
+	ModelData_GetMover( expect MenuModelData( file.presentationData[ file.currentPresentationType ].modelData ) ).SetOrigin( base + offset )
+#endif
+
+	}
+
+	bool doTransitionFX = (file.currentPresentationType == ePresentationType.CHARACTER_SKIN)
+	UpdateCharacterModelDisplay( file.playCharacter, doTransitionFX )
+	UpdateCharacterModelDisplay( file.customizeCharacter, doTransitionFX )
+}
+
+void function UIToClient_PreviewCharacterEmote( int index, int overrideCharacterFlavorNetworkIndex )
+{
+	UpdateMenuCharacterModel( GetLocalClientPlayer(), overrideCharacterFlavorNetworkIndex )
+
+	ItemFlavor flav = GetItemFlavorByGUID( index )
+
+	string anim3p     = CharacterQuip_GetAnim3p( flav )
+
+	entity model = ModelData_GetModel( file.customizeCharacter )
+	if ( model.Anim_HasActivity( anim3p ) || model.Anim_HasSequence( anim3p ) )
+	{
+		thread ModelPerformEmote( model, flav, ModelData_GetMover( file.customizeCharacter ), false )
+	}
+
+	if ( clGlobal.previewMenuPilotModels.characterSkin != null && EffectDoesExist( file.baseFXHandle ) )
+		EffectSetControlPointVector( file.baseFXHandle, 1, ItemFlavor_GetQualityColor( flav ) )
+}
+
+                
+                                                                                                  
+ 
+                                                               
+
+                                                                
+                                                               
+                       
+                                  
+                             
+                                                           
+                        
+
+                                                                                           
+                                             
+                                      
+
+                                                                                             
+
+                                                                  
+  
+                             
+                                                                        
+                              
+                             
+                                                                                                             
+  
+ 
+                      
+
+void function UIToClient_PreviewCharacterSkin( int index, int overrideCharacterFlavorNetworkIndex )
+{
+	clGlobal.previewMenuPilotModels.characterSkin = GetItemFlavorByNetworkIndex_DEPRECATED( index )
+
+	if ( clGlobal.previewMenuPilotModels.characterSkin != null )
+		ModelData_SetSkinFlavor( file.customizeCharacter, expect ItemFlavor( clGlobal.previewMenuPilotModels.characterSkin ) )
+
+	UpdateMenuCharacterModel( GetLocalClientPlayer(), overrideCharacterFlavorNetworkIndex )
+
+	if ( clGlobal.previewMenuPilotModels.characterSkin != null && EffectDoesExist( file.baseFXHandle ) )
+		EffectSetControlPointVector( file.baseFXHandle, 1, ItemFlavor_GetQualityColor( expect ItemFlavor( clGlobal.previewMenuPilotModels.characterSkin ) ) )
+}
+
+void function UIToClient_PreviewCharacterSkinFromCharacterSkinPanel( int index, int overrideCharacterFlavorNetworkIndex )
+{
+	UIToClient_PreviewCharacterSkin( index, overrideCharacterFlavorNetworkIndex )
+	file.cameraZoomModelInitialized = true
+}
+
+void function TransitionStoreBackgroundColors( ItemFlavor itemFlav )
+{
+	int rarityIdx     = 0                                            
+	vector flashColor = MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR / 255
+
+	if ( ItemFlavor_HasQuality( itemFlav ) )
+	{
+		rarityIdx = ItemFlavor_GetQuality( itemFlav )
+		flashColor = ItemFlavor_GetQualityColor( itemFlav ) / 255
+	}
+
+	if ( IsValid( file.storeBackgroundModelSmoke ) )
+		file.storeBackgroundModelSmoke.SetSkin( rarityIdx )
+
+	if ( IsValid( file.storeBackgroundModelGeo ) )
+		file.storeBackgroundModelGeo.SetSkin( rarityIdx )
+
+	entity model         = ModelData_GetModel( file.storeInspectModelData )
+	bool includeChildren = true
+	bool depthDiscard    = false
+                 
+                                                                    
+                       
+	thread FlashMenuModel( model, eMenuModelFlashType.DEFAULT, flashColor, includeChildren, depthDiscard )
+}
+
+#if CLIENT
+void function TransitionStoreBackgroundFX( ItemFlavor itemFlav )
+{
+	EndSignal( level, "EndSetPresentationType" )
+
+	int rarityIdx      = 0                            
+	vector rarityColor = MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR
+
+	if ( ItemFlavor_HasQuality( itemFlav ) )
+	{
+		rarityIdx = ItemFlavor_GetQuality( itemFlav )
+		rarityColor = GetFXRarityColorForUnlockable( rarityIdx )
+	}
+
+	    
+	Assert( rarityIdx < STORE_BACKGROUND_FX_TIERS.len(), "Couldn't find particle beam asset based on rarity: " + rarityIdx )
+	asset particleAssetRarity = STORE_BACKGROUND_FX_TIERS[rarityIdx]
+	entity targetBackground   = GetEntByScriptName( STORE_BACKGROUND_ENT_NAME )
+
+	if ( EffectDoesExist( file.storeBackgroundFXHandle ) )
+		EffectStop( file.storeBackgroundFXHandle, true, false )
+
+	file.storeBackgroundFXHandle = StartParticleEffectInWorldWithHandle( GetParticleSystemIndex( particleAssetRarity ), targetBackground.GetOrigin(), targetBackground.GetAngles() )
+
+	EffectSetControlPointVector( file.storeBackgroundFXHandle, 1, rarityColor )
+	EffectSetDontKillForReplay( file.storeBackgroundFXHandle )
+
+	int FXHandle = file.storeBackgroundFXHandle
+
+	OnThreadEnd(
+		function() : ( FXHandle )
+		{
+			if ( EffectDoesExist( FXHandle ) )
+				EffectStop( FXHandle, true, false )
+		}
+	)
+
+	WaitForever()
+}
+#endif
+
+void function UpdateCharacterModelDisplay( MenuModelData modelData, bool doTransitionFX )
+{
+	if ( !file.initializedMenuModels )                                                                        
+		return
+
+	if ( clGlobal.currentMenuPilotModels.characterSkin == null )                                                           
+		return
+
+	entity model         = ModelData_GetModel( modelData )
+	string lastModelAnim = modelData.bodyAnim
+	asset lastModelAsset = model.GetModelName()
+
+	ItemFlavor ornull characterSkin = clGlobal.previewMenuPilotModels.characterSkin
+	if ( characterSkin == null )
+		characterSkin = clGlobal.currentMenuPilotModels.characterSkin
+	CharacterSkin_Apply( model, expect ItemFlavor( characterSkin ) )
+
+	foreach ( entity child in model.GetChildren() )
+	{
+		if ( child.GetModelName() == BLOODHOUND_BIRD_MDL )
+		{
+			CharacterSkin_CheckBloodhoundRavenSkin ( child, model )
+		}
+	}
+
+	                                                                                    
+	                                                            
+	                       
+	  	                                                   
+
+	bool modelChanged = model.GetModelName() != lastModelAsset
+	                                                   
+	if ( modelChanged )                  
+	{
+		model = CreateMenuModel( modelData, model.GetModelName() )
+		entity mover = ModelData_GetMover( modelData )
+		if ( mover != null )
+		{
+			model.SetOrigin( mover.GetOrigin() )
+			model.SetAngles( mover.GetAngles() )
+			model.SetParent( mover )
+		}
+		CharacterSkin_Apply( model, expect ItemFlavor( characterSkin ) )
+
+		if ( model.Anim_HasActivity( modelData.bodyAnim ) || model.Anim_HasSequence( modelData.bodyAnim ) )
+			ModelData_SetAnim( modelData, modelData.bodyAnim )
+		else if ( modelData == file.playCharacter )
+			ModelData_SetAnim( modelData, "ACT_MP_MENU_LOBBY_CENTER_IDLE" )
+		else
+			ModelData_SetAnim( modelData, "ACT_MP_MENU_LOBBY_SELECT_IDLE" )
+		                               
+	}
+
+	if ( model == ModelData_GetModel( file.customizeCharacter ) && doTransitionFX )
+	{
+		vector flashColor = ItemFlavor_HasQuality( expect ItemFlavor( characterSkin ) ) ? ItemFlavor_GetQualityColor( expect ItemFlavor( characterSkin ) ) / 255 : MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR / 255
+		thread FlashMenuModel( model, eMenuModelFlashType.DEFAULT, flashColor )
+	}
+}
+
+
+void function UIToClient_PartyMemberGetFocus( string partyMemberUID )
+{
+	if ( partyMemberUID in file.partyMemberUidCharacterDataMap )
+	{
+		file.partyMemberUidCharacterDataMap[partyMemberUID].isDirty = true
+		file.partyMemberUidCharacterDataMap[partyMemberUID].isFocused = true
+	}
+}
+
+
+void function UIToClient_PartyMemberLoseFocus( string partyMemberUID )
+{
+	if ( partyMemberUID in file.partyMemberUidCharacterDataMap )
+	{
+		file.partyMemberUidCharacterDataMap[partyMemberUID].isDirty = true
+		file.partyMemberUidCharacterDataMap[partyMemberUID].isFocused = false
+	}
+}
+
+
+void function UpdateMenuWithPartyMembers()
+{
+	thread TrackPartyMembersAndDisplayModelsThread()
+}
+
+void function TrackPartyMembersAndDisplayModelsThread()
+{
+	if ( file.isTrackPartyMembersAndDisplayModelsThreadRunning )
+		return
+	file.isTrackPartyMembersAndDisplayModelsThreadRunning = true
+
+	                                                                       
+	while ( !file.initializedMenuModels )
+		WaitFrame()
+
+	OnThreadEnd( function() : () {
+		foreach ( string partyMemberUid, PartyMemberDisplayThreadData partyMemberDisplayThreadData in file.partyMemberUidCharacterDataMap )
+		{
+			if ( partyMemberDisplayThreadData.displayThreadActive )
+			{
+				Signal( partyMemberDisplayThreadData, "StopDisplayPartyMemberModelThread" )
+				Assert( partyMemberDisplayThreadData.displayThreadActive == false )
+			}
+		}
+	} )
+
+	bool didPartyMemberJoinOrLeave       = true
+	bool didPartyMemberReadyStatusChange = true
+
+	while ( true )
+	{
+		foreach ( string partyMemberUid, PartyMemberDisplayThreadData partyMemberDisplayThreadData in file.partyMemberUidCharacterDataMap )
+		{
+			partyMemberDisplayThreadData.partyMemberSeenThisUpdate = false
+		}
+
+		Party party           = GetParty()
+		                           
+		string localClientUid = PROTO_GetLocalClientUIDFromUIVM()
+
+		#if DEV
+			if ( file.DEV_previewSelfAsParty )
+			{
+				party.members.clear()
+				for ( int i = 0; i < 2; i++ )
+				{
+					PartyMember fakeMember
+					fakeMember.name = (i == 0 ? "MR_VERY_FAKE" : "MRS_VERY_FAKE")
+					fakeMember.uid = string(i)
+					fakeMember.hardware = "FAKE"
+					party.members.append( fakeMember )
+				}
+			}
+		#endif       
+
+		foreach ( PartyMember partyMemberInfo in party.members )
+		{
+			if ( partyMemberInfo.uid == localClientUid )
+				continue
+
+			PartyMemberDisplayThreadData partyMemberDisplayThreadData
+			if ( partyMemberInfo.uid in file.partyMemberUidCharacterDataMap )
+			{
+				partyMemberDisplayThreadData = file.partyMemberUidCharacterDataMap[partyMemberInfo.uid]
+				partyMemberDisplayThreadData.partyMemberInfo = partyMemberInfo
+			}
+			else
+			{
+				partyMemberDisplayThreadData.partyMemberInfo = partyMemberInfo
+				file.partyMemberUidCharacterDataMap[partyMemberInfo.uid] <- partyMemberDisplayThreadData
+				file.partyMemberUidCharacterDataMap[partyMemberInfo.uid].isLeader = partyMemberInfo.uid == party.originatorUID
+				didPartyMemberJoinOrLeave = true
+			}
+
+			if ( partyMemberInfo.hardware != "FAKE" )
+			{
+				CommunityUserInfo ornull userInfoOrNull = GetUserInfo( partyMemberInfo.hardware, partyMemberInfo.uid )
+				if ( userInfoOrNull != null )
+					partyMemberDisplayThreadData.userInfo = expect CommunityUserInfo( userInfoOrNull )
+			}
+			partyMemberDisplayThreadData.userInfo.charData.resize( ePlayerStryderCharDataArraySlots.COUNT, 0 )                                                   
+
+			partyMemberDisplayThreadData.partyMemberSeenThisUpdate = true
+			if ( partyMemberDisplayThreadData.partyMemberFirstSeenTime == null )
+				partyMemberDisplayThreadData.partyMemberFirstSeenTime = Time()
+		}
+
+		array<string> partyMembersToRemove = []
+		foreach ( string partyMemberUid, PartyMemberDisplayThreadData partyMemberDisplayThreadData in file.partyMemberUidCharacterDataMap )
+		{
+			bool shouldDestroyModel = false
+			bool shouldModelBeShown = false                                                                                                             
+
+			if ( partyMemberDisplayThreadData.partyMemberSeenThisUpdate )
+			{
+				shouldModelBeShown = true
+
+				if ( partyMemberDisplayThreadData.isReady != partyMemberDisplayThreadData.partyMemberInfo.ready || partyMemberDisplayThreadData.isDirty )
+				{
+					partyMemberDisplayThreadData.isReady = partyMemberDisplayThreadData.partyMemberInfo.ready
+					partyMemberDisplayThreadData.isDirty = false
+					didPartyMemberReadyStatusChange = true
+				}
+
+				ItemFlavor ornull characterOrNull = null
+				ItemFlavor ornull skinOrNull      = null
+				#if DEV
+					if ( file.DEV_previewSelfAsParty )
+					{
+						characterOrNull = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_Character() )
+						skinOrNull = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_CharacterSkin( expect ItemFlavor(characterOrNull) ) )
+					}
+				#endif
+
+				if ( characterOrNull == null )
+				{
+					int characterGUID = partyMemberDisplayThreadData.userInfo.charData[ePlayerStryderCharDataArraySlots.CHARACTER]
+					if ( IsValidItemFlavorGUID( characterGUID ) )
+					{
+						ItemFlavor candidateFlavor = GetItemFlavorByGUID( characterGUID )
+						if ( ItemFlavor_GetType( candidateFlavor ) == eItemType.character )
+							characterOrNull = candidateFlavor
+					}
+				}
+
+				                                                                                                              
+				if ( characterOrNull == null && partyMemberDisplayThreadData.character == null
+				&& partyMemberDisplayThreadData.partyMemberFirstSeenTime != null && Time() > expect float(partyMemberDisplayThreadData.partyMemberFirstSeenTime) + 1.5 )
+				{
+					array<string> defaultCandidates = [
+						"character_bangalore", "character_bloodhound", "character_caustic",
+						"character_gibraltar", "character_lifeline", "character_mirage",
+						"character_octane", "character_pathfinder", "character_wraith"]
+					defaultCandidates.randomize()
+					foreach ( string candidate in defaultCandidates )
+					{
+						if ( IsValidItemFlavorHumanReadableRef( candidate ) )
+						{
+							characterOrNull = GetItemFlavorByHumanReadableRef( candidate )
+							skinOrNull = GetDefaultItemFlavorForLoadoutSlot( EHI_null, Loadout_CharacterSkin( expect ItemFlavor( characterOrNull ) ) )
+						}
+					}
+				}
+
+				if ( skinOrNull == null )
+				{
+					int skinGUID = partyMemberDisplayThreadData.userInfo.charData[ePlayerStryderCharDataArraySlots.CHARACTER_SKIN]
+					if ( IsValidItemFlavorGUID( skinGUID ) )
+					{
+						ItemFlavor skin = GetItemFlavorByGUID( skinGUID )
+						if ( ItemFlavor_GetType( skin ) == eItemType.character_skin )
+							skinOrNull = skin
+					}
+				}
+
+				if ( characterOrNull != null && partyMemberDisplayThreadData.character != characterOrNull )
+				{
+					shouldDestroyModel = true
+					partyMemberDisplayThreadData.character = characterOrNull
+					partyMemberDisplayThreadData.skin = null
+				}
+				if ( skinOrNull != null && partyMemberDisplayThreadData.skin != skinOrNull )
+				{
+					shouldDestroyModel = true
+					partyMemberDisplayThreadData.skin = skinOrNull
+				}
+			}
+			else
+			{
+				shouldDestroyModel = true
+				partyMembersToRemove.append( partyMemberDisplayThreadData.partyMemberInfo.uid )
+			}
+
+			if ( shouldDestroyModel && partyMemberDisplayThreadData.displayThreadActive )
+			{
+				Signal( partyMemberDisplayThreadData, "StopDisplayPartyMemberModelThread" )
+				Assert( !partyMemberDisplayThreadData.displayThreadActive )
+			}
+
+			if ( shouldModelBeShown && !partyMemberDisplayThreadData.displayThreadActive )
+			{
+				entity refEnt = null
+				string idleActivity
+				foreach ( entity candidateRefEnt in file.teammateRefEnts )
+				{
+					if ( file.teammateRefEntsUsedMap[candidateRefEnt] )
+						continue                
+
+					file.teammateRefEntsUsedMap[candidateRefEnt] = true                             
+					refEnt = candidateRefEnt
+					idleActivity = file.teammateRefEntIdleAnimMap[candidateRefEnt]
+
+					break
+				}
+				Assert( refEnt != null && IsValid( refEnt ), "Party too big for lobby model display!" )
+
+				partyMemberDisplayThreadData.posRef = refEnt
+				partyMemberDisplayThreadData.idleActivity = idleActivity
+
+				thread DisplayPartyMemberModelThread( partyMemberDisplayThreadData )
+				Assert( partyMemberDisplayThreadData.displayThreadActive )
+			}
+		}
+
+		foreach ( string partyMemberToRemove in partyMembersToRemove )
+		{
+			delete file.partyMemberUidCharacterDataMap[partyMemberToRemove]
+			didPartyMemberJoinOrLeave = true
+		}
+
+		if ( didPartyMemberJoinOrLeave || didPartyMemberReadyStatusChange || file.uiscriptHasReset )
+		{
+			printt( "TellUIToUpdateInviteButtons" )
+			TellUIToUpdateInviteButtons()
+			didPartyMemberJoinOrLeave = false
+			didPartyMemberReadyStatusChange = false
+			file.uiscriptHasReset = false
+		}
+
+		WaitFrame()
+	}
+}
+
+void function TellUIToUpdateInviteButtons()
+{
+	string leftSpotUID      = ""
+	string leftSpotEAID     = ""
+	string leftSpotHardware = ""
+	string leftSpotUnspoofedHardware = ""
+	string leftSpotName     = ""
+	bool leftSpotInMatch    = false
+
+	string rightSpotUID      = ""
+	string rightSpotEAID     = ""
+	string rightSpotHardware = ""
+	string rightSpotUnspoofedHardware = ""
+	string rightSpotName     = ""
+	bool rightSpotInMatch    = false
+
+	                                                                                                               
+	foreach ( string partyMemberUid, PartyMemberDisplayThreadData partyMemberDisplayThreadData in file.partyMemberUidCharacterDataMap )
+	{
+		if ( partyMemberDisplayThreadData.posRef == file.teammateRefEnts[0] && file.teammateRefEntsUsedMap[file.teammateRefEnts[0]] )
+		{
+			leftSpotUID = partyMemberUid
+			leftSpotEAID = partyMemberDisplayThreadData.partyMemberInfo.eaid
+			leftSpotHardware = partyMemberDisplayThreadData.partyMemberInfo.hardware
+			leftSpotUnspoofedHardware = partyMemberDisplayThreadData.partyMemberInfo.unspoofedHardware
+			leftSpotName = partyMemberDisplayThreadData.partyMemberInfo.name
+			leftSpotInMatch = PartyMemberInMatch( partyMemberDisplayThreadData.partyMemberInfo )
+		}
+		else if ( partyMemberDisplayThreadData.posRef == file.teammateRefEnts[1] && file.teammateRefEntsUsedMap[file.teammateRefEnts[1]] )
+		{
+			rightSpotUID = partyMemberUid
+			rightSpotEAID = partyMemberDisplayThreadData.partyMemberInfo.eaid
+			rightSpotHardware = partyMemberDisplayThreadData.partyMemberInfo.hardware
+			rightSpotUnspoofedHardware = partyMemberDisplayThreadData.partyMemberInfo.unspoofedHardware
+			rightSpotName = partyMemberDisplayThreadData.partyMemberInfo.name
+			rightSpotInMatch = PartyMemberInMatch( partyMemberDisplayThreadData.partyMemberInfo )
+		}
+	}
+
+	RunUIScript( "ClientToUI_PartyMemberJoinedOrLeft", leftSpotUID, leftSpotEAID, leftSpotHardware, leftSpotUnspoofedHardware, leftSpotName, leftSpotInMatch, rightSpotUID, rightSpotEAID, rightSpotHardware, rightSpotUnspoofedHardware, rightSpotName, rightSpotInMatch )
+
+	                               
+	                                                                                                              
+	                                                                                                               
+	                                                                                          
+}
+
+bool function PartyMemberInMatch( PartyMember partyMemberInfo )
+{
+	CommunityUserInfo ornull userInfoOrNull = GetUserInfo( partyMemberInfo.hardware, partyMemberInfo.uid )
+	if ( userInfoOrNull != null )
+	{
+		CommunityUserInfo userInfo = expect CommunityUserInfo(userInfoOrNull)
+		return userInfo.charData[ePlayerStryderCharDataArraySlots.PLAYER_IN_MATCH] == 1
+	}
+	return false
+}
+
+void function DisplayPartyMemberModelThread( PartyMemberDisplayThreadData data )
+{
+	data.displayThreadActive = true
+	EndSignal( data, "StopDisplayPartyMemberModelThread" )
+
+	data.body = CreateClientSidePropDynamic( data.posRef.GetOrigin(), data.posRef.GetAngles(), $"mdl/dev/empty_model.rmdl" )
+	data.body.MakeSafeForUIScriptHack()
+
+	if ( data.skin != null )
+	{
+		CharacterSkin_Apply( data.body, expect ItemFlavor( data.skin ) )
+		data.body.Anim_Play( data.idleActivity )
+	}
+
+	data.isReady = data.partyMemberInfo.ready
+
+	OnThreadEnd( function() : ( data ) {
+		data.displayThreadActive = false
+
+		file.teammateRefEntsUsedMap[data.posRef] = false                    
+		data.posRef = null
+		data.idleActivity = ""
+		data.isReady = data.partyMemberInfo.ready
+
+		if ( IsValid( data.body ) )
+		{
+			array<entity> models = GetEntityAndImmediateChildren( data.body )
+			foreach ( m in models )
+			{
+				if ( file.dimmedEnts.contains( m ) )
+				{
+					file.dimmedEnts.fastremovebyvalue( m )
+				}
+			}
+
+			data.body.Destroy()
+			data.body = null
+		}
+	} )
+
+	bool wasInMatch = PartyMemberInMatch( data.partyMemberInfo )
+	bool firstTime  = true
+
+	while ( 1 )
+	{
+		bool inMatch = PartyMemberInMatch( data.partyMemberInfo ) && !data.isReady
+
+		if ( inMatch != wasInMatch || firstTime )
+		{
+			wasInMatch = inMatch
+			firstTime = false
+			TellUIToUpdateInviteButtons()
+		}
+
+		if ( inMatch )
+		{
+			array<entity> models = GetEntityAndImmediateChildren( data.body )
+			foreach ( m in models )
+			{
+				if ( !file.dimmedEnts.contains( m ) )
+				{
+					MenuModelHighlightInMatch( m )
+					file.dimmedEnts.append( m )
+				}
+			}
+		}
+		else
+		{
+			array<entity> models = GetEntityAndImmediateChildren( data.body )
+			foreach ( m in models )
+			{
+				if ( file.dimmedEnts.contains( m ) )
+				{
+					MenuModelHighlightClear( m )
+					file.dimmedEnts.fastremovebyvalue( m )
+				}
+			}
+		}
+
+		WaitFrame()
+	}
+}
+
+
+void function UIToClient_ResetWeaponRotation()
+{
+	ModelData_ResetRotation( file.customizeWeapon )
+}
+
+
+void function UIToClient_PreviewWeaponSkin( int skinFlavorIndex, int charmFlavorIndex, bool shouldHighlightWeapon )
+{
+	if ( !file.initializedMenuModels )                                                                        
+		return
+
+	ItemFlavor weaponSkin   = GetItemFlavorByNetworkIndex_DEPRECATED( skinFlavorIndex )
+	ItemFlavor weaponFlavor = WeaponSkin_GetWeaponFlavor( weaponSkin )
+	ModelData_SetSkinFlavor( file.customizeWeapon, weaponSkin )
+
+	ItemFlavor charmFlavor = GetItemFlavorByNetworkIndex_DEPRECATED( charmFlavorIndex )
+
+	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
+	entity weaponMover = ModelData_GetMover( file.customizeWeapon )
+
+	                       
+	WeaponCosmetics_Apply( weaponModel, weaponSkin, charmFlavor )
+
+	bool isReactive = WeaponSkin_DoesReactToKills( weaponSkin )
+
+	                    
+	if ( isReactive )
+		MenuWeaponModel_ApplyReactiveSkinBodyGroup( weaponSkin, weaponFlavor, weaponModel )
+	else
+		ShowDefaultBodygroupsOnFakeWeapon( weaponModel, WeaponItemFlavor_GetClassname( weaponFlavor ) )
+
+	MenuWeaponModel_ClearReactiveEffects( weaponModel )
+	if ( isReactive )
+	{
+		MenuWeaponModel_StartReactiveEffects( weaponModel, weaponSkin )
+		                                              
+		                                                
+	}
+
+	weaponModel.Anim_SetPaused( true )
+
+	                                                                                         
+	file.cameraZoomModelInitialized = true
+
+	                              
+	float armoryScale = WeaponItemFlavor_GetArmoryScale( weaponFlavor )
+
+	if ( ShouldScaleWeaponAndCharmForPreview() )
+	{
+		Signal( level, "EndGunCharmScaleLerp" )
+		ScaleWeaponSkinAndCharm( weaponModel, charmFlavor, armoryScale )
+	}
+
+	                                            
+	bool shouldZoomIn = file.currentPresentationType == ePresentationType.WEAPON_CHARMS && !file.cameraZoomedToGunCharm
+
+	                 
+	bool shouldZoomOut = file.currentPresentationType == ePresentationType.WEAPON_SKIN && file.cameraZoomedToGunCharm
+
+	if ( shouldZoomIn || shouldZoomOut )
+	{
+		if ( shouldZoomIn )
+			thread ZoomInCameraToWeaponCharm( weaponModel, weaponMover, armoryScale )
+		else
+			thread ZoomOutCameraToWeaponSkin( weaponModel, charmFlavor, weaponMover, armoryScale )
+	}
+	else
+	{
+		bool useCharmAttachment = file.currentPresentationType == ePresentationType.WEAPON_CHARMS ? true : false
+		SetWeaponSkinLocalOffset( weaponModel, useCharmAttachment )
+	}
+
+	                                      
+	if ( shouldHighlightWeapon )
+	{
+		vector flashColor = ItemFlavor_HasQuality( weaponSkin ) ? ItemFlavor_GetQualityColor( weaponSkin ) / 255 : MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR / 255
+		thread FlashMenuModel( weaponModel, eMenuModelFlashType.DEFAULT, flashColor, false )
+	}
+
+	if ( !WeaponCharm_IsTheEmpty( charmFlavor ) )
+	{
+		entity charmEntity = GetCharmForWeaponEntity( weaponModel )
+		vector flashColor = ItemFlavor_HasQuality( charmFlavor ) ? ItemFlavor_GetQualityColor( charmFlavor ) / 255 : MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR / 255
+		thread FlashMenuModel( charmEntity, eMenuModelFlashType.DEFAULT, flashColor )
+	}
+}
+
+void function UpdateModelsforStoreItem( vector origin, vector moverAngles, vector modelAngles, asset modelAsset, float modelScale )
+{
+	ModelData_SetBaseOrigin( file.storeInspectModelData, origin )
+	ModelData_SetBaseAngles( file.storeInspectModelData, moverAngles )
+	entity model = CreateMenuModel( file.storeInspectModelData, modelAsset )
+	if ( IsValid( file.storeInspectModelData.mover ) )
+	{
+		file.storeInspectModelData.mover.Destroy()
+		ModelData_CreateMover( file.storeInspectModelData )
+	}
+	ModelData_SetBaseAngles( file.storeInspectModelData, modelAngles )
+	model.SetModelScale( modelScale )
+}
+
+void function UpdateStoreItemDisplay_ApexPack( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.account_pack )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, -4.5>
+	vector angles = refEnt.GetAngles()
+
+	asset modelAsset = GRXPack_GetTickModel( item )
+	const float modelScale = 1.111111
+
+	UpdateModelsforStoreItem( origin, angles, AnglesCompose( angles, <0, 135, 0> ), modelAsset, modelScale )
+
+	string skin = GRXPack_GetTickModelSkin( item )
+	entity model = ModelData_GetModel( file.storeInspectModelData )
+	model.SetSkin( model.GetSkinIndexByName( skin ) )
+}
+
+void function UpdateStoreItemDisplay_Character( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.character )
+
+	ItemFlavor characterSkin = CharacterClass_GetDefaultSkin( item )
+	UpdateStoreItemDisplay_CharacterSkin( characterSkin )
+}
+
+void function UpdateStoreItemDisplay_CharacterSkin( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.character_skin )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, -38> + CharacterClass_GetItemInspectOffset( CharacterSkin_GetCharacterFlavor( item ) )
+	vector angles = refEnt.GetAngles()
+
+	asset modelAsset = CharacterSkin_GetBodyModel( item )
+	const float modelScale = 1.555556
+
+	UpdateModelsforStoreItem( origin, angles, angles, modelAsset, modelScale )
+
+	entity model = ModelData_GetModel( file.storeInspectModelData )
+	entity mover = ModelData_GetMover( file.storeInspectModelData )
+	CharacterSkin_Apply( model, item )
+	thread PlayAnim( model, "ACT_MP_MENU_LOOT_CEREMONY_IDLE", mover )
+}
+
+void function UpdateStoreItemDisplay_WeaponSkin( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.weapon_skin )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 26.6>
+	vector angles = refEnt.GetAngles()
+
+	ItemFlavor weapon = WeaponSkin_GetWeaponFlavor( item )
+	asset modelAsset = WeaponSkin_GetViewModel( item )
+	float modelScale = WeaponItemFlavor_GetItemInspectScale( weapon ) * 3.555556
+
+	UpdateModelsforStoreItem( origin, angles, angles, modelAsset, modelScale )
+
+	entity model = ModelData_GetModel( file.storeInspectModelData )
+	model.Anim_SetPaused( true )
+	WeaponCosmetics_Apply( model, item, null )
+
+	vector extraRotation = <11, -45, 0>
+	vector originOffset = GetAttachmentOriginOffset( model, "MENU_ROTATE", extraRotation )
+	model.SetLocalOrigin( originOffset )
+	model.SetLocalAngles( extraRotation )
+
+	if ( WeaponSkin_DoesReactToKills( item ) )
+		MenuWeaponModel_ApplyReactiveSkinBodyGroup( item, weapon, model )
+	else
+		ShowDefaultBodygroupsOnFakeWeapon( model, WeaponItemFlavor_GetClassname( weapon ) )
+}
+
+void function UpdateStoreItemDisplay_WeaponCharm( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.weapon_charm )
+
+	const vector WEAPON_CHARM_ANGLES = <-5, -140, -2>
+
+	entity refEnt = file.storeInspectRefEnt
+	vector angles = refEnt.GetAngles() + <-7, 1, -3>
+	vector origin = refEnt.GetOrigin() + <4, 0, 39.6> + -3.6 * AnglesToRight( angles )
+
+	const float modelScale = 9.333333
+
+	UpdateModelsforStoreItem( origin, angles, AnglesCompose( angles, WEAPON_CHARM_ANGLES ), $"mdl/weapons/alternator_smg/ptpov_alternator_smg.rmdl", modelScale )
+
+	entity weaponEnt = ModelData_GetModel( file.storeInspectModelData )
+	weaponEnt.SetSkin( weaponEnt.GetSkinIndexByName( "charm_preview_black" ) )
+	weaponEnt.Anim_SetPaused( true )
+	weaponEnt.SetLocalOrigin( GetAttachmentOriginOffset( weaponEnt, "CHARM", WEAPON_CHARM_ANGLES ) )
+	weaponEnt.SetLocalAngles( WEAPON_CHARM_ANGLES )
+	ShowDefaultBodygroupsOnFakeWeapon( weaponEnt, "mp_weapon_alternator_smg" )
+	WeaponCosmetics_Apply( weaponEnt, null, item )
+
+	entity charmEnt = GetCharmForWeaponEntity( weaponEnt )
+	charmEnt.SetModelScale( modelScale )
+	SetWeaponSkinLocalOffset( weaponEnt, true )
+}
+
+void function UpdateStoreItemDisplay_BannerCard( ItemFlavor item )
+{
+	int itemType = ItemFlavor_GetType( item )
+	Assert( itemType == eItemType.gladiator_card_frame || itemType == eItemType.gladiator_card_stance )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 30.3>
+	vector angles = refEnt.GetAngles()
+	vector placardAngles = AnglesCompose( angles, <0, 180, 0> )
+
+	const asset ruiAsset = $"ui/loot_ceremony_glad_card.rpak"
+	const float ruiAspectRatio = 528.0 / 912.0
+	const float ruiHeight = 105.386667
+	const float ruiWidth = ruiHeight * ruiAspectRatio
+
+	var topo = CreateRUITopology_Worldspace( origin, placardAngles, ruiWidth, ruiHeight )
+	var rui  = RuiCreate( ruiAsset, topo, RUI_DRAW_VIEW_MODEL, 0 )
+
+	int gcardPresentation = itemType == eItemType.gladiator_card_frame ? eGladCardPresentation.FRONT_CLEAN : eGladCardPresentation.FRONT_STANCE_ONLY
+
+	NestedGladiatorCardHandle nestedGCHandleFront = CreateNestedGladiatorCard( rui, "card", eGladCardDisplaySituation.MENU_LOOT_CEREMONY_ANIMATED, gcardPresentation )
+	ChangeNestedGladiatorCardOwner( nestedGCHandleFront, LocalClientEHI() )
+
+	if ( itemType == eItemType.gladiator_card_frame )
+	{
+		ItemFlavor character = GladiatorCardFrame_GetCharacterFlavor( item )
+		SetNestedGladiatorCardOverrideCharacter( nestedGCHandleFront, character )
+		SetNestedGladiatorCardOverrideFrame( nestedGCHandleFront, item )
+	}
+	else
+	{
+		ItemFlavor character = GladiatorCardStance_GetCharacterFlavor( item )
+		SetNestedGladiatorCardOverrideCharacter( nestedGCHandleFront, character )
+		SetNestedGladiatorCardOverrideStance( nestedGCHandleFront, item )
+
+		ItemFlavor characterDefaultFrame = GetDefaultItemFlavorForLoadoutSlot( EHI_null, Loadout_GladiatorCardFrame( character ) )
+		SetNestedGladiatorCardOverrideFrame( nestedGCHandleFront, characterDefaultFrame )
+	}
+
+	RuiSetBool( rui, "battlepass", true )
+	RuiSetInt( rui, "rarity", ItemFlavor_GetQuality( item ) )
+
+	file.topo = topo
+	file.rui = rui
+	file.bannerHandle = nestedGCHandleFront
+}
+
+void function UpdateStoreItemDisplay_Badge( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.gladiator_card_badge )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 28.75>
+	vector angles = refEnt.GetAngles()
+	vector placardAngles = AnglesCompose( angles, <0, 180, 0> )
+
+	const asset ruiAsset = $"ui/world_space_badge.rpak"
+	const float ruiAspectRatio = 670.0 / 670.0
+	const float ruiHeight = 44.666667
+	const float ruiWidth = ruiHeight * ruiAspectRatio
+
+	var topo = CreateRUITopology_Worldspace( origin, placardAngles, ruiWidth, ruiHeight )
+	var rui  = RuiCreate( ruiAsset, topo, RUI_DRAW_VIEW_MODEL, 0 )
+
+	file.nestedRuiArgName = "badge"
+	ItemFlavor dummy
+	CreateNestedGladiatorCardBadge( rui, file.nestedRuiArgName, LocalClientEHI(), item, 0, dummy, 0 )
+	RuiSetBool( rui, "isVisible", true )
+	RuiSetBool( rui, "battlepass", true )                                                                             
+
+	file.topo = topo
+	file.rui = rui
+}
+
+void function UpdateStoreItemDisplay_Quip( ItemFlavor item )
+{
+	int itemType = ItemFlavor_GetType( item )
+	Assert( itemType == eItemType.gladiator_card_intro_quip || itemType == eItemType.gladiator_card_kill_quip )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 23.25>
+	vector angles = refEnt.GetAngles()
+	vector placardAngles = AnglesCompose( angles, <0, 180, 0> )
+
+	const float ruiAspectRatio = 390.0 / 208.0
+	#if NX_PROG
+		const float ruiHeight = 25.422218                         
+	#else
+		const float ruiHeight = 21.031111
+	#endif
+	const float ruiWidth = ruiHeight * ruiAspectRatio
+
+	const asset modelAsset  = $"mdl/menu/loot_ceremony_quip_bg.rmdl"
+	const float modelHeight = 208.0
+	const float modelScale  = ruiHeight / modelHeight
+
+	UpdateModelsforStoreItem( origin, angles, angles, modelAsset, modelScale )
+
+	asset ruiAsset
+	ItemFlavor character
+	string labelText = ""
+	string audioAlias = ""
+
+	if ( itemType == eItemType.gladiator_card_intro_quip )
+	{
+		ruiAsset   = $"ui/loot_reward_intro_quip.rpak"
+		character  = CharacterIntroQuip_GetCharacterFlavor( item )
+		labelText  = "#LOOT_QUIP_INTRO"
+		audioAlias = CharacterIntroQuip_GetVoiceSoundEvent( item )
+	}
+	else
+	{
+		ruiAsset   = $"ui/loot_reward_kill_quip.rpak"
+		character  = CharacterKillQuip_GetCharacterFlavor( item )
+		labelText  = "#LOOT_QUIP_KILL"
+		audioAlias = CharacterKillQuip_GetVictimVoiceSoundEvent( item )
+	}
+
+	var topo = CreateRUITopology_Worldspace( origin + <0, 0, (ruiHeight * 0.5)>, placardAngles, ruiWidth, ruiHeight )
+	var rui  = RuiCreate( ruiAsset, topo, RUI_DRAW_WORLD, 0 )
+
+	RuiSetBool( rui, "isVisible", true )
+	RuiSetBool( rui, "battlepass", true )
+	RuiSetInt( rui, "rarity", ItemFlavor_GetQuality( item ) )
+	RuiSetImage( rui, "portraitImage", CharacterClass_GetGalleryPortrait( character ) )
+	RuiSetString( rui, "quipTypeText", labelText )
+	RuiTrackFloat( rui, "level", null, RUI_TRACK_SOUND_METER, 0 )
+
+	                     
+	if ( audioAlias != "" )
+	{
+		file.storePlayingAudioAlias = audioAlias
+		EmitSoundOnEntity( GetLocalClientPlayer(), audioAlias )
+	}
+
+	file.topo = topo
+	file.rui = rui
+}
+
+                                                                                              
+                                                                                                                                                            
+void function UpdateStoreItemDisplay_Holospray( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.emote_icon )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <-5, -121, -31.0>
+	vector angles = refEnt.GetAngles()
+
+	const asset modelAsset = HOLO_SPRAY_BASE
+	const float modelScale = 1.0
+
+	UpdateModelsforStoreItem( origin, angles, angles, modelAsset, modelScale )
+	entity model = ModelData_GetModel( file.storeInspectModelData )
+	model.MakeSafeForUIScriptHack()
+	model.SetDoDestroyCallback( true )
+	thread CreateClientSideEmoteIcon( model, ItemFlavor_GetGUID( item ), Time(), true )
+}
+
+void function UpdateStoreItemDisplay_Finisher( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.character_execution )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 31>
+	vector angles = refEnt.GetAngles()
+	vector placardAngles = AnglesCompose( angles, <0, 180, 0> )
+
+	const asset ruiAsset = $"ui/finisher_video.rpak"
+	const float ruiAspectRatio = 1920.0 / 1080.0
+	const float ruiHeight = 52
+	const float ruiWidth = ruiHeight * ruiAspectRatio
+
+	var topo = CreateRUITopology_Worldspace( origin, placardAngles, ruiWidth, ruiHeight )
+	var rui = RuiCreate( ruiAsset, topo, RUI_DRAW_VIEW_MODEL, 0 )
+	int videoChannel = ReserveVideoChannel()
+
+	RuiSetInt( rui, "channel", videoChannel )
+	StartVideoOnChannel( videoChannel, CharacterExecution_GetExecutionVideo( item ), true, 0.0 )
+
+	file.topo = topo
+	file.rui = rui
+	file.videoChannel = videoChannel
+}
+
+void function UpdateStoreItemDisplay_SkydiveEmote( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.skydive_emote )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 31>
+	vector angles = refEnt.GetAngles()
+	vector placardAngles = AnglesCompose( angles, <0, 180, 0> )
+
+	const asset ruiAsset = $"ui/finisher_video.rpak"
+	const float ruiAspectRatio = 1920.0 / 1080.0
+	const float ruiHeight = 52
+	const float ruiWidth = ruiHeight * ruiAspectRatio
+
+	var topo = CreateRUITopology_Worldspace( origin, placardAngles, ruiWidth, ruiHeight )
+	var rui = RuiCreate( ruiAsset, topo, RUI_DRAW_VIEW_MODEL, 0 )
+	int videoChannel = ReserveVideoChannel()
+
+	RuiSetInt( rui, "channel", videoChannel )
+	StartVideoOnChannel( videoChannel, SkydiveEmote_GetVideo( item ), true, 0.0 )
+
+	file.topo = topo
+	file.rui = rui
+	file.videoChannel = videoChannel
+}
+
+void function UpdateStoreItemDisplay_StatTracker( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.gladiator_card_stat_tracker )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 23.25>
+	vector angles = refEnt.GetAngles()
+	vector placardAngles = AnglesCompose( angles, <0, 180, 0> )
+
+	const asset ruiAsset = $"ui/loot_ceremony_stat_tracker.rpak"
+	const float ruiAspectRatio = 288.0 / 112.0
+	const float ruiHeight = 23.25
+	const float ruiWidth = ruiHeight * ruiAspectRatio
+
+	const asset modelAsset = $"mdl/menu/loot_ceremony_stat_tracker_bg.rmdl"
+	const float modelHeight = 230.0
+	const float modelScale = ruiHeight / modelHeight
+
+	UpdateModelsforStoreItem( origin, angles, angles, modelAsset, modelScale )
+
+	var topo = CreateRUITopology_Worldspace( origin + <0, 0, (ruiHeight * 0.5)>, placardAngles, ruiWidth, ruiHeight )
+	var rui = RuiCreate( ruiAsset, topo, RUI_DRAW_WORLD, 0 )
+
+	ItemFlavor character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+
+	RuiSetBool( rui, "isVisible", true )
+	RuiSetBool( rui, "battlepass", true )
+	RuiSetInt( rui, "rarity", ItemFlavor_GetQuality( item ) )
+	UpdateRuiWithStatTrackerData( rui, "tracker", LocalClientEHI(), character, -1, item, null, true )
+	RuiSetColorAlpha( rui, "trackerColor0", GladiatorCardStatTracker_GetColor0( item ), 1.0 )
+
+	file.topo = topo
+	file.rui = rui
+}
+
+void function UpdateStoreItemDisplay_MusicPack( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.music_pack )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 23.25>
+	vector angles = refEnt.GetAngles()
+	vector placardAngles = AnglesCompose( angles, <0, 180, 0> )
+
+	const asset ruiAsset = $"ui/loot_reward_intro_quip.rpak"
+	const float ruiAspectRatio = 390.0 / 208.0
+	const float ruiHeight = 21.031111
+	const float ruiWidth = ruiHeight * ruiAspectRatio
+
+	const asset modelAsset = $"mdl/menu/loot_ceremony_quip_bg.rmdl"
+	const float modelHeight = 208.0
+	const float modelScale = ruiHeight / modelHeight
+
+	UpdateModelsforStoreItem( origin, angles, angles, modelAsset, modelScale )
+
+	var topo = CreateRUITopology_Worldspace( origin + <0, 0, (ruiHeight * 0.5)>, placardAngles, ruiWidth, ruiHeight )
+	var rui = RuiCreate( ruiAsset, topo, RUI_DRAW_WORLD, 0 )
+	file.topo = topo
+	file.rui = rui
+
+	RuiSetBool( rui, "isVisible", true )
+	RuiSetBool( rui, "battlepass", true )
+	RuiSetInt( rui, "rarity", ItemFlavor_GetQuality( item ) )
+	RuiSetImage( rui, "portraitImage", MusicPack_GetPortraitImage( item ) )
+	RuiSetFloat( rui, "portraitBlend", MusicPack_GetPortraitBlend( item ) )
+	RuiSetString( rui, "quipTypeText", "#MUSIC_PACK" )
+	RuiTrackFloat( rui, "level", null, RUI_TRACK_SOUND_METER, 0 )
+
+	                     
+	string audioAlias = MusicPack_GetPreviewMusic( item )
+	if ( audioAlias != "" )
+	{
+		file.storePlayingAudioAlias = audioAlias
+		EmitSoundOnEntity( GetLocalClientPlayer(), audioAlias )
+	}
+}
+
+void function UpdateStoreItemDisplay_Loadscreen( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.loadscreen )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 31>
+	vector angles = refEnt.GetAngles()
+	vector placardAngles = AnglesCompose( angles, <0, 180, 0> )
+
+	const asset ruiAsset = $"ui/world_space_loadscreen.rpak"
+	const float ruiAspectRatio = 1920.0 / 1080.0
+	const float ruiHeight = 44.444444
+	const float ruiWidth = ruiHeight * ruiAspectRatio
+
+	const asset modelAsset  = $"mdl/menu/generic_1920_1080_bg.rmdl"
+	const float modelHeight = 1080.0
+	const float modelScale  = ruiHeight / modelHeight
+
+	UpdateModelsforStoreItem( origin, angles, angles, modelAsset, modelScale )
+
+	var topo = CreateRUITopology_Worldspace( origin + <0, -1, 0>, placardAngles, ruiWidth, ruiHeight )                                                               
+	var rui = RuiCreate( ruiAsset, topo, RUI_DRAW_WORLD, 0 )
+
+	RuiSetImage( rui, "loadscreenImage", $"" )
+
+	file.topo = topo
+	file.rui = rui
+
+	void functionref() onLoadedFunc = void function() : ( item, rui )
+	{
+		RuiSetImage( rui, "loadscreenImage", Loadscreen_GetLoadscreenImageAsset( item ) )
+	}
+
+	thread LoadItemInspectPakFileAndContinue( item, onLoadedFunc )
+}
+
+void function LoadItemInspectPakFileAndContinue( ItemFlavor item, void functionref() onLoadedFunc )
+{
+	EndSignal( level, "EndPendingItemInspectThreads" )
+
+	PakHandle pakHandle = LoadItemInspectPakFile( item )
+	if ( !pakHandle.isAvailable )
+		WaitSignal( pakHandle, "PakFileLoaded" )
+
+	onLoadedFunc()
+}
+
+PakHandle function LoadItemInspectPakFile( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.loadscreen )
+
+	string pakName = Loadscreen_GetRPakName( item )
+	if ( pakName in file.pakHandles )                     
+		return file.pakHandles[ pakName ]
+
+	                                      
+	PakHandle pakHandle = RequestPakFile( pakName )
+	file.pakHandles[ pakName ] <- pakHandle
+
+	return pakHandle
+}
+
+void function UIToClient_LoadItemInspectPakFile( SettingsAssetGUID itemFlavorGUID )
+{
+	ItemFlavor item = GetItemFlavorByGUID( itemFlavorGUID )
+	LoadItemInspectPakFile( item )
+}
+
+void function UIToClient_UnloadItemInspectPakFile()
+{
+	foreach ( pakName, handle in file.pakHandles )
+	{
+		if ( handle.isAvailable )
+		{
+			                                        
+			ReleasePakFile( handle )
+		}
+	}
+
+	file.pakHandles.clear()
+}
+
+void function UpdateStoreItemDisplay_MeleeSkin( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.melee_skin )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 28.75> + MeleeSkin_GetItemInspectOffset( item )
+	vector angles = refEnt.GetAngles()
+
+	asset modelAsset = MeleeSkin_GetMenuModel( item )
+	float modelScale = MeleeSkin_GetItemInspectScale( item ) * 4.444444
+
+	UpdateModelsforStoreItem( origin, angles, angles, modelAsset, modelScale )
+	entity model = ModelData_GetModel( file.storeInspectModelData )
+
+	vector extraRotation = MeleeSkin_GetMenuModelRotation( item )
+	vector originOffset = GetAttachmentOriginOffset( model, "MENU_ROTATE", extraRotation )
+	model.SetLocalOrigin( originOffset )
+	model.SetLocalAngles( extraRotation )
+
+	asset animSeq = MeleeSkin_GetMenuAnimSeq( item )
+	if ( animSeq != $"" )
+		model.Anim_Play( animSeq )
+}
+
+void function UpdateStoreItemDisplay_ApexCoins( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.apex_coins )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, 28.75>
+	vector angles = refEnt.GetAngles()
+	vector placardAngles = AnglesCompose( angles, <0, 180, 0> )
+
+	const asset ruiAsset = $"ui/world_space_store_inspect_apex_coins.rpak"
+	const float ruiAspectRatio = 760.0 / 1173.0
+	const float ruiHeight = 91.233333
+	const float ruiWidth = ruiHeight * ruiAspectRatio
+
+	const asset nestedRuiAsset = $"ui/apex_coins_card.rpak"
+
+	var topo = CreateRUITopology_Worldspace( origin, placardAngles, ruiWidth, ruiHeight )
+	var rui  = RuiCreate( ruiAsset, topo, RUI_DRAW_VIEW_MODEL, 0 )
+	string nestedRuiArgName = "card"
+	var nestedRui = RuiCreateNested( rui, nestedRuiArgName, nestedRuiAsset )
+
+	asset cardBaseImage = Entitlement_GetSKUStoreApexCoinCardBaseImage( item )
+	asset cardTierImage = Entitlement_GetSKUStoreApexCoinTierImage( item )
+	string cardCoinValue = Entitlement_GetSKUStoreApexCoinAmount( item )
+
+	RuiSetImage( nestedRui, "baseImage", cardBaseImage )
+	RuiSetImage( nestedRui, "tierImage", cardTierImage )
+	RuiSetString( nestedRui, "coinValueText", cardCoinValue )
+
+	file.topo = topo
+	file.rui = rui
+	file.nestedRuiArgName = nestedRuiArgName
+}
+
+void function UpdateStoreItemDisplay_StandingEmote( ItemFlavor item )
+{
+	Assert( ItemFlavor_GetType( item ) == eItemType.character_emote )
+
+	ItemFlavor ornull character = CharacterQuip_GetCharacterFlavor( item )
+	Assert( character != null )
+	expect ItemFlavor( character )
+
+	entity refEnt = file.storeInspectRefEnt
+	vector origin = refEnt.GetOrigin() + <0, 0, -12>
+	vector angles = refEnt.GetAngles()
+
+	ItemFlavor characterSkin = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_CharacterSkin( character ) )
+	asset modelAsset = CharacterSkin_GetBodyModel( characterSkin )
+	float modelScale = 1.0
+
+	UpdateModelsforStoreItem( origin, angles, angles, modelAsset, modelScale )
+
+	string anim3p = CharacterQuip_GetAnim3p( item )
+	entity model = ModelData_GetModel( file.storeInspectModelData )
+	entity mover = ModelData_GetMover( file.storeInspectModelData )
+
+	CharacterSkin_Apply( model, characterSkin )
+
+	if ( model.Anim_HasSequence( anim3p ) )
+		thread ModelPerformEmote( model, item, mover, false )
+}
+
+                
+                                                               
+ 
+                                                          
+
+                                        
+                                                
+                                   
+
+                                      
+                       
+
+                                                                           
+
+                                                                
+                                                                
+
+                               
+ 
+                      
+
+
+void function UIToClient_PreviewStoreItem( SettingsAssetGUID itemFlavorGUID )
+{
+	ClearStoreInspectItem()
+
+	ItemFlavor item = GetItemFlavorByGUID( itemFlavorGUID )
+
+	ModelData_SetSkinFlavor( file.storeInspectModelData, item )                                                            
+	EnableModelTurn()
+	DisableTurnLockout()
+
+	bool autoRotate = true
+
+	#if DEV
+		if ( InputIsButtonDown( KEY_LSHIFT ) )
+		{
+			string locedName = Localize( ItemFlavor_GetLongName( item ) )
+			printt( "\"" + locedName + "\" grx ref is: " + GetGlobalSettingsString( item._____INTERNAL_settingsAsset, "grxRef" ) )
+		}
+	#endif       
+
+	switch ( ItemFlavor_GetType( item ) )
+	{
+		case eItemType.account_pack:
+			UpdateStoreItemDisplay_ApexPack( item )
+			break
+
+		case eItemType.character:
+			UpdateStoreItemDisplay_Character( item )
+			break
+
+		case eItemType.character_skin:
+			UpdateStoreItemDisplay_CharacterSkin( item )
+			break
+
+		case eItemType.weapon_skin:
+			UpdateStoreItemDisplay_WeaponSkin( item )
+			break
+
+		case eItemType.weapon_charm:
+			autoRotate = false
+			UpdateStoreItemDisplay_WeaponCharm( item )
+			break
+
+		case eItemType.gladiator_card_stance:
+		case eItemType.gladiator_card_frame:
+			autoRotate = false
+			DisableModelTurn()
+			UpdateStoreItemDisplay_BannerCard( item )
+			break
+
+		case eItemType.gladiator_card_badge:
+			UpdateStoreItemDisplay_Badge( item )
+			break
+
+		case eItemType.gladiator_card_intro_quip:
+		case eItemType.gladiator_card_kill_quip:
+			autoRotate = false
+			DisableModelTurn()
+			EnableTurnLockout()
+			UpdateStoreItemDisplay_Quip( item )
+			break
+
+		case eItemType.apex_coins:
+			UpdateStoreItemDisplay_ApexCoins( item )
+			break
+
+		case eItemType.emote_icon:
+			autoRotate = false
+			DisableModelTurn()
+			EnableTurnLockout()
+			UpdateStoreItemDisplay_Holospray( item )
+			break
+
+		case eItemType.character_execution:
+			autoRotate = false
+			DisableModelTurn()
+			EnableTurnLockout()
+			UpdateStoreItemDisplay_Finisher( item )
+			break
+
+		case eItemType.skydive_emote:
+			autoRotate = false
+			DisableModelTurn()
+			EnableTurnLockout()
+			UpdateStoreItemDisplay_SkydiveEmote( item )
+			break
+
+		case eItemType.gladiator_card_stat_tracker:
+			autoRotate = false
+			DisableModelTurn()
+			EnableTurnLockout()
+			UpdateStoreItemDisplay_StatTracker( item )
+			break
+
+		case eItemType.music_pack:
+			autoRotate = false
+			DisableModelTurn()
+			EnableTurnLockout()
+			UpdateStoreItemDisplay_MusicPack( item )
+			break
+
+		case eItemType.melee_skin:
+			UpdateStoreItemDisplay_MeleeSkin( item )
+			break
+
+		case eItemType.loadscreen:
+			autoRotate = false
+			DisableModelTurn()
+			EnableTurnLockout()
+			UpdateStoreItemDisplay_Loadscreen( item )
+			break
+
+		case eItemType.character_emote:
+			autoRotate = false
+			UpdateStoreItemDisplay_StandingEmote( item )
+			break
+
+                
+                         
+                     
+                     
+                      
+                                         
+        
+                      
+	}
+
+	ModelData_ResetRotation( file.storeInspectModelData )
+	ModelData_SetBaseRotationDelta( file.storeInspectModelData, STORE_ITEM_BASE_ROTATION_DELTA )
+
+	if ( autoRotate )
+	{
+		entity mover = ModelData_GetMover( file.storeInspectModelData )
+		if ( IsValid( mover ) )
+			mover.NonPhysicsRotate( <0, 0, -1>, STORE_ITEM_ROTATE_SPEED )
+	}
+
+	                                                                                         
+	file.cameraZoomModelInitialized = true
+
+	                                                                                                      
+	file.storeInspectCameraTarget = file.cameraTargets[eCameraTargetNames.store_inspect_camera_target]
+
+	TransitionStoreBackgroundColors( item )
+	thread TransitionStoreBackgroundFX( item )
+
+	thread EnableLobbyMenuCameraZoom()
+}
+
+
+void function ClearStoreInspectItem()
+{
+	Signal( level, "EndPendingItemInspectThreads" )
+
+	CameraZoomThreadEnd()
+
+	if ( IsValid( file.storeInspectModelData.model ) )
+	{
+		foreach ( entity ent in GetEntityAndAllChildren( file.storeInspectModelData.model ) )
+		{
+			if ( IsValid( ent ) )
+				ent.Destroy()
+		}
+	}
+
+	entity mover = ModelData_GetMover( file.storeInspectModelData )
+	if( IsValid( mover ) )
+	{
+		mover.SetOrigin( ModelData_GetBaseOrigin( file.storeInspectModelData ) )
+		mover.SetAngles( ModelData_GetBaseAngles( file.storeInspectModelData ) )
+	}
+
+	                                     
+	CleanupNestedGladiatorCard( file.bannerHandle )
+
+	if ( file.nestedRuiArgName != "" )
+	{
+		RuiDestroyNestedIfAlive( file.rui, file.nestedRuiArgName )
+		file.nestedRuiArgName = ""
+	}
+
+	if ( file.rui != null )
+		RuiDestroyIfAlive( file.rui )
+
+	if ( file.topo != null )
+	{
+		RuiTopology_Destroy( file.topo )
+		file.topo = null
+	}
+
+	if ( file.videoChannel != -1 )
+	{
+		ReleaseVideoChannel( file.videoChannel )
+		file.videoChannel = -1
+	}
+
+	if ( file.storePlayingAudioAlias != "" )
+	{
+		StopSoundOnEntity( GetLocalClientPlayer(), file.storePlayingAudioAlias )
+		file.storePlayingAudioAlias = ""
+	}
+}
+
+
+void function SetWeaponSkinLocalOffset( entity weaponModel, bool useCharmAttachment )
+{
+	string attachmentName = "MENU_ROTATE"
+	vector originOffset   = <0, 0, 0>
+	vector angleOffset    = <0, 0, 0>
+
+	if ( useCharmAttachment )
+	{
+		if ( weaponModel.LookupAttachment( "CHARM" ) > 0 )
+		{
+			attachmentName = "CHARM"
+			originOffset = <0, 0, file.charmVerticalOffset>
+		}
+	}
+
+	vector attachmentOffset = GetAttachmentOriginOffset( weaponModel, attachmentName, angleOffset )
+	weaponModel.SetLocalOrigin( attachmentOffset + originOffset )
+	weaponModel.SetLocalAngles( angleOffset )
+}
+
+bool function ShouldScaleWeaponAndCharmForPreview()
+{
+	bool shouldScale = false
+
+	if ( file.currentPresentationType == ePresentationType.WEAPON_CHARMS )
+	{
+		                                                                  
+		                                                                                       
+		if ( !file.cameraZoomedToGunCharm )
+			shouldScale = true
+	}
+	else
+	{
+		                                                                                                          
+		if ( !file.cameraZoomedToGunCharm )
+			shouldScale = true
+	}
+
+	return shouldScale
+}
+
+
+void function ScaleWeaponSkinAndCharm( entity weaponModel, ItemFlavor charmFlavor, float scale )
+{
+	weaponModel.SetModelScale( scale )
+
+	if ( !WeaponCharm_IsTheEmpty( charmFlavor ) )
+	{
+		entity charmEntity = GetCharmForWeaponEntity( weaponModel )
+		charmEntity.SetModelScale( scale )
+	}
+}
+
+
+const float CHARM_CAMERA_ZOOM_DURATION = 0.15
+
+
+void function ZoomInCameraToWeaponCharm( entity model, entity mover, float armoryScale )
+{
+	Signal( level, "EndGunCharmCameraZoom" )
+
+	const float FORWARD_OFFSET = -12.0
+	const float RIGHT_OFFSET = -1.0
+
+	file.cameraZoomedToGunCharm = true
+
+	                                
+	entity cameraTarget        = file.cameraTargets[ eCameraTargetNames.customize_weapon_camera_target ]
+	vector cameraCurrentPos    = cameraTarget.GetOrigin()
+	vector cameraCurrentAngles = cameraTarget.GetAngles()
+
+	CameraZoomThreadEnd()
+
+	cameraTarget.SetOrigin( cameraCurrentPos )
+	cameraTarget.SetAngles( cameraCurrentAngles )
+
+	int attachID = model.LookupAttachment( "MENU_ROTATE" )
+	if ( model.LookupAttachment( "CHARM" ) > 0 )
+		attachID = model.LookupAttachment( "CHARM" )
+
+	vector charmOrigin = model.GetAttachmentOrigin( attachID )
+	float multiplier   = GraphCapped( armoryScale, 0.5, 2.0, 0.5, 1.8 )                                                                          
+
+	                                                              
+	model.ClearParent()
+	mover.SetOrigin( charmOrigin )
+	model.SetParent( mover )
+
+	file.charmVerticalOffset = GraphCapped( armoryScale, 0.5, 2.0, 0.35, 1.5 )
+	SetWeaponSkinLocalOffset( model, true )
+
+	                                           
+	file.cameraZoomData.mover.SetOrigin( cameraTarget.GetOrigin() )
+	cameraTarget.SetParent( file.cameraZoomData.mover )
+
+	vector cameraDestination = charmOrigin + (cameraTarget.GetForwardVector() * (FORWARD_OFFSET * multiplier)) + (cameraTarget.GetRightVector() * (RIGHT_OFFSET * multiplier))
+
+	file.cameraZoomData.mover.NonPhysicsMoveTo( cameraDestination, CHARM_CAMERA_ZOOM_DURATION, 0.0, CHARM_CAMERA_ZOOM_DURATION * 0.25 )
+}
+
+
+void function ZoomOutCameraToWeaponSkin( entity model, ItemFlavor charmFlavor, entity mover, float armoryScale )
+{
+	Signal( level, "EndGunCharmCameraZoom" )
+	EndSignal( level, "EndGunCharmCameraZoom" )
+
+	file.cameraZoomedToGunCharm = false
+
+	                                           
+	file.cameraZoomData.mover.NonPhysicsStop()
+
+	                                          
+	int cameraTargetIndex    = eCameraTargetNames.customize_weapon_camera_target
+	entity cameraTarget      = file.cameraTargets[ cameraTargetIndex ]
+	vector cameraStartOrigin = file.cameraStartOriginsAngles[ cameraTargetIndex ]["origin"]
+
+	                                                                                                                  
+	string attachmentName = "MENU_ROTATE"
+	int attachID          = model.LookupAttachment( attachmentName )
+	vector attachOrigin   = model.GetAttachmentOrigin( attachID )
+	model.ClearParent()
+	mover.SetOrigin( attachOrigin )
+	model.SetParent( mover )
+
+	                                                                                              
+	OnThreadEnd(
+		function () : ( cameraTarget, mover )
+		{
+			file.cameraZoomData.mover.NonPhysicsStop()
+			mover.NonPhysicsStop()
+
+			cameraTarget.ClearParent()
+			thread EnableLobbyMenuCameraZoom()
+		}
+	)
+
+	                      
+	file.cameraZoomData.mover.NonPhysicsMoveTo( cameraStartOrigin, CHARM_CAMERA_ZOOM_DURATION, 0.0, CHARM_CAMERA_ZOOM_DURATION * 0.25 )
+
+	                                                                                                                                                                     
+	mover.NonPhysicsMoveTo( ModelData_GetBaseOrigin( file.customizeWeapon ), CHARM_CAMERA_ZOOM_DURATION, 0.0, CHARM_CAMERA_ZOOM_DURATION * 0.25 )
+
+	                                                                                                                                  
+	                                                                                                   
+	                                                                                                                                                     
+	thread LerpWeaponSkinScale( model, charmFlavor, model.GetModelScale(), armoryScale, mover, ModelData_GetBaseOrigin( file.customizeWeapon ), CHARM_CAMERA_ZOOM_DURATION )
+
+	wait CHARM_CAMERA_ZOOM_DURATION
+}
+
+
+void function LerpWeaponSkinScale( entity weaponModel, ItemFlavor charmFlavor, float start, float end, entity mover, vector moverEnd, float duration )
+{
+	EndSignal( level, "EndGunCharmCameraZoom" )
+	EndSignal( level, "EndGunCharmScaleLerp" )
+
+	                                                                                                
+	float startTime     = Time()
+	float totalDistance = DistanceSqr( mover.GetOrigin(), moverEnd )
+	float scaleOffset   = end - start
+
+	                                                                                                                                        
+	while( startTime + duration > Time() )
+	{
+		float multiplier = Graph( DistanceSqr( mover.GetOrigin(), moverEnd ), totalDistance, 0.0, 0.0, 1.0 )
+		float scale      = start + (scaleOffset * multiplier)
+
+		ScaleWeaponSkinAndCharm( weaponModel, charmFlavor, scale )
+		SetWeaponSkinLocalOffset( weaponModel, false )
+
+		WaitFrame()
+	}
+
+	                                           
+	ScaleWeaponSkinAndCharm( weaponModel, charmFlavor, end )
+	SetWeaponSkinLocalOffset( weaponModel, false )
+}
+
+
+
+
+void function StartPresentation_QUEST_GOAL()
+{
+	entity questModel = ModelData_GetModel( file.questGoalModelData )
+	if ( IsValid( questModel ) )
+		questModel.Show()
+
+	entity subModel = ModelData_GetSubModel( file.questGoalModelData )
+	if ( IsValid( subModel ) )
+		subModel.Show()
+}
+
+void function EndPresentation_QUEST_GOAL()
+{
+	entity questModel = ModelData_GetModel( file.questGoalModelData )
+	if ( IsValid( questModel ) )
+		questModel.Hide()
+
+	entity subModel = ModelData_GetSubModel( file.questGoalModelData )
+	if ( IsValid( subModel ) )
+		subModel.Hide()
+
+	                       
+}
+
+void function SetBodyGroupsForQuestModel( ItemFlavor quest, entity model, int piecesToShowMask )
+{
+	for ( int index = 0; index < 9; index++ )
+	{
+		string bgName = format( "%s%d", "piece", (index + 1) )
+		int bgIndex   = model.FindBodygroup( bgName )
+		if ( bgIndex < 0 )
+		{
+			Warning( "%s() - Couldn't find bodygroup '%s' in quest model: %s", FUNC_NAME(), bgName, string( model.GetModelName() ) )
+			continue
+		}
+
+		bool shouldShow = ((piecesToShowMask & (1 << index)) != 0)
+		model.SetBodygroupModelByIndex( bgIndex, (shouldShow ? 1 : 0) )
+	}
+}
+
+void function UIToClient_QuestGoalPresentation( SettingsAssetGUID questItemFlavGUID, int missionsDone, float modelScale, vector offset, string sceneRefName )
+{
+	if ( missionsDone <= 0 )
+		return
+
+	MenuModelData ornull modelData = GetActiveModelData()
+	if ( modelData == null )
+		return
+	expect MenuModelData( modelData )
+
+	entity sceneRef = GetEntByScriptName( sceneRefName )
+
+	ItemFlavor quest = GetItemFlavorByGUID( questItemFlavGUID )
+
+	if ( missionsDone < 3 )
+		ModelData_SetBaseAngles( modelData, <0, -35, 0> )
+	else
+		ModelData_SetBaseAngles( modelData, <0, -120, 0> )
+
+	TurntableUpdateEntityAngles( modelData )
+
+	asset questModelAsset = SeasonQuest_GetGoalModel( quest )
+
+	         
+	{
+		entity model = ModelData_GetModel( modelData )
+		model.SetModel( questModelAsset )
+		model.SetModelScale( modelScale )
+		int mask = ((1 << missionsDone) - 1)
+		SetBodyGroupsForQuestModel( quest, model, mask )
+	}
+	            
+	{
+		entity subModel = ModelData_GetSubModel( modelData )
+		subModel.SetModel( questModelAsset )
+		subModel.SetModelScale( modelScale )
+		SetBodyGroupsForQuestModel( quest, subModel, 0 )
+	}
+
+	entity mover = ModelData_GetMover( modelData )
+	mover.SetOrigin( sceneRef.GetOrigin() + offset )
+
+	                                                                                                                                             
+	  
+		                             
+		 
+			                                                    
+
+			                                   
+
+			                                                                         
+			                                                                     
+
+			                                                                  
+			                                                                                       
+			                                                                                       
+
+			                                                        
+			                                                        
+			                                                   
+
+			                                                            
+			                                                
+			                                                                                         
+			                                               
+			                                     
+
+			            
+				                                                                    
+				 
+					                          
+					                                           
+					                                           
+					                                       
+				 
+			 
+
+			                                                  
+		   
+	  
+}
+
+void function UIToClient_QuestGoalPresentationUpdateHighlight( SettingsAssetGUID questItemFlavGUID, int missionsDone, int highlightIndex, bool doSpecial )
+{
+	if ( missionsDone <= 0 )
+		return
+
+	MenuModelData ornull md = GetActiveModelData()
+	if ( md == null )
+		return
+	expect MenuModelData( md )
+
+	if ( doSpecial )
+	{
+		missionsDone = minint( missionsDone, (highlightIndex + 1) )
+		highlightIndex = -1
+	}
+
+	int mainMask      = ((1 << missionsDone) - 1)
+	int highlightMask = (highlightIndex >= 0) ? (1 << highlightIndex) : 0
+	mainMask = (mainMask & ~highlightMask)
+
+	ItemFlavor quest = GetItemFlavorByGUID( questItemFlavGUID )
+	entity model     = ModelData_GetModel( md )
+	if ( IsValid( model ) )
+		SetBodyGroupsForQuestModel( quest, model, mainMask )
+	UpdateGlowyPieces( quest, md, highlightMask )
+}
+
+void function UpdateGlowyPieces( ItemFlavor quest, MenuModelData md, int highlightMask )
+{
+	thread function() : (quest, md, highlightMask)
+	{
+		entity subModel = ModelData_GetSubModel( md )
+		if ( !IsValid( subModel ) )
+			return
+
+		SetBodyGroupsForQuestModel( quest, subModel, highlightMask )
+
+		if ( highlightMask != 0 )
+		{
+			vector flashColor = <0.0, 0.2, 1.0>
+			thread FlashMenuModel( subModel, eMenuModelFlashType.QUEST_MODEL_PIECE, flashColor )
+		}
+	}()
+}
+
+MenuModelData ornull function GetActiveModelData()
+{
+	return file.activeModelData
+}
+
+void function ModelData_SetModel( MenuModelData modelData, entity model )
+{
+	modelData.model = model
+}
+
+void function ModelData_SetSubModel( MenuModelData modelData, entity model )
+{
+	modelData.subModel = model
+}
+
+entity function ModelData_GetModel( MenuModelData modelData )
+{
+	return modelData.model
+}
+
+entity function ModelData_GetSubModel( MenuModelData modelData )
+{
+	return modelData.subModel
+}
+
+entity function ModelData_CreateMover( MenuModelData modelData )
+{
+	Assert( modelData.model != null )
+
+	vector origin = modelData.model.GetOrigin()
+	vector angles = modelData.model.GetAngles()
+	entity mover  = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
+	mover.MakeSafeForUIScriptHack()
+	mover.Hide()
+
+	if ( IsValid( modelData.subModel ) )
+		modelData.subModel.SetParent( mover )
+	modelData.model.SetParent( mover )
+	modelData.mover = mover
+
+	return mover
+}
+
+entity function ModelData_GetMover( MenuModelData modelData )
+{
+	return modelData.mover
+}
+
+void function ModelData_SetMover( MenuModelData modelData, entity mover )
+{
+	modelData.mover = mover
+}
+
+entity function ModelData_GetPoseEntity( MenuModelData modelData )
+{
+	return modelData.poseEnt
+}
+
+void function ModelData_SetPoseEntity( MenuModelData modelData, entity poseEnt )
+{
+	modelData.poseEnt = poseEnt
+}
+
+vector function ModelData_GetBaseOrigin( MenuModelData modelData )
+{
+	return modelData.baseOrigin
+}
+
+void function ModelData_SetBaseOrigin( MenuModelData modelData, vector baseOrigin )
+{
+	modelData.baseOrigin = baseOrigin
+}
+
+vector function ModelData_GetBaseAngles( MenuModelData modelData )
+{
+	return modelData.baseAngles
+}
+
+void function ModelData_SetBaseAngles( MenuModelData modelData, vector baseAngles )
+{
+	modelData.baseAngles = baseAngles
+}
+
+float[2] function ModelData_GetBaseRotationDelta( MenuModelData modelData )
+{
+	return modelData.baseRotationDelta
+}
+
+void function ModelData_SetBaseRotationDelta( MenuModelData modelData, float[2] baseRotationDelta )
+{
+	modelData.baseRotationDelta[0] = baseRotationDelta[0]
+	modelData.baseRotationDelta[1] = baseRotationDelta[1]
+}
+
+float[2] function ModelData_GetRotationDelta( MenuModelData modelData )
+{
+	return modelData.rotationDelta
+}
+
+void function ModelData_SetRotationDelta( MenuModelData modelData, float[2] rotationDelta )
+{
+	modelData.rotationDelta[0] = rotationDelta[0]
+	modelData.rotationDelta[1] = rotationDelta[1]
+	TurntableUpdateEntityAngles( modelData )
+}
+
+void function ModelData_SetRotationVelocity( MenuModelData modelData, float[2] rotationVelocity )
+{
+	modelData.rotationVel[0] = rotationVelocity[0]
+	modelData.rotationVel[1] = rotationVelocity[1]
+}
+
+float function ModelData_GetMaxTurnSpeed( MenuModelData modelData )
+{
+	return modelData.maxTurnSpeed
+}
+
+void function ModelData_SetMaxTurnSpeed( MenuModelData modelData, float maxTurnSpeed )
+{
+	modelData.maxTurnSpeed = maxTurnSpeed
+}
+
+void function ModelData_SetAnim( MenuModelData modelData, string anim )
+{
+	modelData.bodyAnim = anim
+	ModelData_GetModel( modelData ).Anim_Play( anim )
+}
+
+void function ModelData_SetSkinFlavor( MenuModelData modelData, ItemFlavor weaponOrCharacterSkinFlavor )
+{
+	modelData.skinFlavor = weaponOrCharacterSkinFlavor
+}
+
+ItemFlavor function ModelData_GetSkinFlavor( MenuModelData modelData )
+{
+	return modelData.skinFlavor
+}
+
+vector function GetAttachmentOriginOffset( entity ent, string attachName, vector angles )
+{
+	int attachIndex = ent.LookupAttachment( attachName )
+	ent.SetAngles( angles )
+	vector worldOrigin = ent.GetAttachmentOrigin( attachIndex )
+	vector localOffset = ent.GetOrigin() - worldOrigin
+
+	return localOffset
+}
+
+void function ClearAllCharacterPreview( entity player )
+{
+	clGlobal.previewMenuPilotModels.characterSkin = null
+	                                               
+	UpdateCharacterModelDisplay( file.playCharacter, false )
+	UpdateCharacterModelDisplay( file.customizeCharacter, false )
+}
+
+void function RefreshPresentationType()
+{
+	if ( IsLootCeremonyActive() || IsSpecialItemPresentationModeActive() )
+		return
+
+	file.presentationTypeInitialized = false
+	SetPresentationType( GetLocalClientPlayer(), file.desiredPresentationType, false )
+}
+
+void function SetPresentationType( entity player, int presentationType, bool interpolate )
+{
+	Assert( IsLobby() || IsPrivateMatchLobby() )
+
+	thread SetPresentationTypeThread( player, presentationType, interpolate )
+}
+
+void function SetPresentationTypeThread( entity player, int desiredPresentationType, bool interpolate )
+{
+	Signal( level, "EndSetPresentationType" )
+	EndSignal( level, "EndSetPresentationType" )
+
+	file.previousPresentationType = file.currentPresentationType
+	file.desiredPresentationType = desiredPresentationType
+
+	while ( !file.initializedMenuModels )
+		WaitFrame()
+
+	if ( GetCurrentPlaylistVarBool( "workaround_r5dev_68883_2019_02_04", true ) )
+	{
+		                                         
+		player = GetLocalClientPlayer()
+		Assert( IsValid( player ) )
+		if ( IsValid( player ) )
+			SetMenuCamera( player, desiredPresentationType, interpolate )
+	}
+
+	if ( file.presentationTypeInitialized && desiredPresentationType == file.currentPresentationType )
+		return
+
+	if ( file.presentationData[ file.currentPresentationType ].endFunc != null )
+		file.presentationData[ file.currentPresentationType ].endFunc()
+
+	file.currentPresentationType = desiredPresentationType
+
+	if ( !file.presentationTypeInitialized )
+		file.presentationTypeInitialized = true
+
+	if ( file.presentationData[ desiredPresentationType ].startFunc != null )
+		file.presentationData[ desiredPresentationType ].startFunc()
+
+	if ( GetCurrentPlaylistVarBool( "workaround_r5dev_68883_2019_02_04", true ) )
+	{
+		player = GetLocalClientPlayer()
+		SetMenuCamera( player, desiredPresentationType, interpolate )
+	}
+	else
+	{
+		if ( IsValid( player ) )
+			SetMenuCamera( player, desiredPresentationType, interpolate )
+	}
+
+	MenuModelData ornull lastActiveModelData = file.activeModelData
+	file.activeModelData = file.presentationData[ desiredPresentationType ].modelData
+
+	if ( lastActiveModelData != null )
+		ModelData_ResetRotation( expect MenuModelData( lastActiveModelData ) )
+}
+
+void function SetMenuCamera( entity player, int presentationType, bool interpolate )
+{
+	if ( presentationType == ePresentationType.INACTIVE )
+	{
+		SetMapSetting_CsmTexelScale( 1.0, 1.0 )
+		SetMapSetting_CsmStartDistance( 0.0 )
+		ApplyDOF( presentationType, false )
+
+		if ( IsValid( clGlobal.clientCamera ) )
+			player.SetMenuCameraEntityWithAudio( clGlobal.clientCamera )
+		else
+			player.ClearMenuCameraEntity()
+		printt( "Clearing menu camera" )
+		player.SetScriptMenuOff()
+		return
+	}
+
+	player.SetScriptMenuOn()
+
+	float fov = file.presentationData[ presentationType ].fov
+	player.SetMenuCameraEntityWithAudio( clGlobal.menuCamera )
+
+	int cameraTargetName = file.presentationData[ presentationType ].cameraTargetName
+	entity cameraTarget  = file.cameraTargets[ cameraTargetName ]
+	clGlobal.menuCamera.SetTarget( cameraTarget, fov, interpolate, EASING_CUBIC_INOUT, TRANSITION_DURATION )
+	file.currentCameraTarget = cameraTarget
+
+	               
+	                
+	                 
+	                   
+	                
+	                 
+	                   
+	                 
+	                  
+	                    
+	                
+	                 
+	                   
+
+	if ( interpolate )
+		printt( "Interpolating menu camera to:", GetEnumString( "ePresentationType", presentationType ) )
+	else
+		printt( "Snapping menu camera to:", GetEnumString( "ePresentationType", presentationType ) )
+
+	ApplyDOF( presentationType, interpolate )
+
+	#if CONSOLE_PROG
+		const float texelNorm = 2.0
+	#else
+		const float texelNorm = 1.0
+	#endif
+
+	float csmTexelScale1   = file.presentationData[ presentationType ].csmTexelScale1 * texelNorm
+	float csmTexelScale2   = file.presentationData[ presentationType ].csmTexelScale2 * texelNorm
+	float csmStartDistance = file.presentationData[ presentationType ].csmStartDistance
+
+	                                                                                     
+	                                                              
+	SetMapSetting_CsmTexelScale( csmTexelScale1, csmTexelScale2 )
+	SetMapSetting_CsmStartDistance( csmStartDistance )
+}
+
+void function ApplyDOF( int presentationType, bool interpolate = false )
+{
+	float nearStart = file.presentationData[ presentationType ].dofNearStart
+	float nearEnd   = file.presentationData[ presentationType ].dofNearEnd
+	float farStart  = file.presentationData[ presentationType ].dofFarStart
+	float farEnd    = file.presentationData[ presentationType ].dofFarEnd
+
+	if ( interpolate )
+	{
+		DoF_LerpNearDepth( nearStart, nearEnd, TRANSITION_DURATION )
+		DoF_LerpFarDepth( farStart, farEnd, TRANSITION_DURATION )
+	}
+	else
+	{
+		DoF_SetNearDepth( nearStart, nearEnd )
+		DoF_SetFarDepth( farStart, farEnd )
+	}
+
+	DoFSetDilateInfocus( true )                                                                    
+}
+
+void function ModelRotationThread()
+{
+	for ( ; ; )
+	{
+		WaitFrame()
+
+		if ( file.activeModelData == null )
+			continue
+
+		MenuModelData modelData = expect MenuModelData( file.activeModelData )
+		if ( ModelData_GetMover( modelData ) == null )
+			continue
+
+		float maxYawDegrees   = file.presentationData[ file.currentPresentationType ].maxYawDegrees
+		float maxPitchDegrees = file.presentationData[ file.currentPresentationType ].maxPitchDegrees
+
+		float[2] currentRotationDelta = ModelData_GetRotationDelta( modelData )
+		bool didTurn                  = TurntableUpdateAnglesFromInput( modelData, maxYawDegrees, maxPitchDegrees )
+
+		if ( didTurn )
+		{
+			if ( file.desiredPresentationType == ePresentationType.STORE_INSPECT )
+			{
+				file.storeInspectModelData.mover.NonPhysicsStop()
+				currentRotationDelta = ModelData_GetRotationDelta( modelData )
+			}
+		}
+	}
+}
+
+void function ModelData_ResetRotation( MenuModelData modelData )
+{
+	entity mover = ModelData_GetMover( modelData )
+	if ( mover == null )
+		return
+
+	float[2] rotationVel = [0, 0]
+	ModelData_SetRotationVelocity( modelData, rotationVel )
+	ModelData_SetRotationDelta( modelData, ModelData_GetBaseRotationDelta( modelData ) )
+	TurntableUpdateEntityAngles( modelData )
+}
+
+void function UpdateMouseRotateDelta( entity player, float deltaX, float deltaY )
+{
+	file.mouseRotateDelta[0] = deltaX
+	file.mouseRotateDelta[1] = deltaY
+}
+
+float[2] function GetMouseRotationDelta()
+{
+	return file.mouseRotateDelta
+}
+
+const float MOUSE_WHEEL_VALUE_INCREMENT = 25.0
+
+void function CameraZoomThread( CameraZoomData zoomData )
+{
+	EndSignal( level, "EndCameraZoom" )
+
+	AddCallback_OnMouseWheelDown( UpdateMenuMouseWheelDown )
+	AddCallback_OnMouseWheelUp( UpdateMenuMouseWheelUp )
+
+	OnThreadEnd(
+		function () : ( zoomData )
+		{
+			zoomData.lastVal = 0.0
+			zoomData.mover.NonPhysicsStop()
+
+			RemoveCallback_OnMouseWheelDown( UpdateMenuMouseWheelDown )
+			RemoveCallback_OnMouseWheelUp( UpdateMenuMouseWheelUp )
+			ClearMenuMouseWheelValues()
+			ShouldPauseMenuMouseWheelValues( false )
+		}
+	)
+
+	while( true )
+	{
+		if ( file.modelTurnEnabled || IsControllerModeActive() )
+		{
+			ShouldPauseMenuMouseWheelValues( false )
+			TurntableSetCameraZoomPos( zoomData )
+		}
+		else
+		{
+			ShouldPauseMenuMouseWheelValues( true )
+		}
+
+		WaitFrame()
+	}
+}
+
+void function CameraZoomThreadEnd()
+{
+	Signal( level, "EndCameraZoom" )
+}
+
+void function UpdateMenuMouseWheelUp()
+{
+	if ( file.mouseWheelPauseInput )
+		return
+
+	file.mouseWheelNewValue += MOUSE_WHEEL_VALUE_INCREMENT
+}
+
+void function UpdateMenuMouseWheelDown()
+{
+	if ( file.mouseWheelPauseInput )
+		return
+
+	file.mouseWheelNewValue -= MOUSE_WHEEL_VALUE_INCREMENT
+}
+
+void function ClearMenuMouseWheelValues()
+{
+	file.mouseWheelNewValue = 0.0
+	file.mouseWheelLastValue = 0.0
+}
+
+void function ShouldPauseMenuMouseWheelValues( bool shouldPause )
+{
+	file.mouseWheelPauseInput = shouldPause
+}
+
+#if DEV
+void function DEV_TweakPlayCamera( vector origin, vector angles, float fov )
+{
+	file.playCameraTarget.SetOrigin( origin )
+	file.playCameraTarget.SetAngles( angles )
+	clGlobal.menuCamera.SetTarget( file.playCameraTarget, fov, false, EASING_LINEAR, 0.0001 )
+}
+
+void function DEV_TweakCharacterCamera( vector origin, vector angles, float fov )
+{
+	file.customizeCharacterCameraTarget.SetOrigin( origin )
+	file.customizeCharacterCameraTarget.SetAngles( angles )
+	clGlobal.menuCamera.SetTarget( file.customizeCharacterCameraTarget, fov, false, EASING_LINEAR, 0.0001 )
+}
+
+void function DEV_TweakWeaponCamera( vector origin, vector angles, float fov )
+{
+	file.customizeWeaponCameraTarget.SetOrigin( origin )
+	file.customizeWeaponCameraTarget.SetAngles( angles )
+	clGlobal.menuCamera.SetTarget( file.customizeWeaponCameraTarget, fov, false, EASING_LINEAR, 0.0001 )
+}
+
+void function DEV_TweakStoreInspectCamera( vector origin, vector angles, float fov )
+{
+	file.storeInspectCameraTarget.SetOrigin( origin )
+	file.storeInspectCameraTarget.SetAngles( angles )
+	clGlobal.menuCamera.SetTarget( file.storeInspectCameraTarget, fov, false, EASING_LINEAR, 0.0001 )
+}
+
+void function DEV_TogglePreviewParty()
+{
+	file.DEV_previewSelfAsParty = !file.DEV_previewSelfAsParty
+}
+
+void function DEV_ScaleModel( float scale )
+{
+	MenuModelData modelData = expect MenuModelData( file.activeModelData )
+	entity model            = ModelData_GetModel( modelData )
+	if ( model == null )
+		return
+
+	model.SetModelScale( scale )
+
+	vector angleOffset    = <0, 0, 0>
+	string attachmentName = "MENU_ROTATE"
+	vector originOffset   = GetAttachmentOriginOffset( model, attachmentName, angleOffset )
+
+	model.SetLocalOrigin( originOffset )
+	model.SetLocalAngles( angleOffset )
+	model.Anim_SetPaused( true )
+}
+
+
+void function DEV_RotateModel( float totalTimeInSeconds, float anglesToSpinInDegrees, bool cubic )
+{
+	MenuModelData modelData = expect MenuModelData( file.activeModelData )
+	entity mover = ModelData_GetMover( modelData )
+
+	vector currAngles = mover.GetAngles()
+
+	float startTime = Time()
+	float currTime = startTime
+	float endTime = startTime + totalTimeInSeconds
+	float startRotation = currAngles.y
+	float endRotation = startRotation + anglesToSpinInDegrees
+	float currRotation = startRotation
+
+	while ( currTime < endTime )
+	{
+		currTime = Time()
+		float timeElapsed = currTime - startTime
+		float interp = timeElapsed / totalTimeInSeconds
+
+		if ( cubic )
+			interp = Smooth01( interp )
+
+		currRotation = interp * startRotation + (1 - interp) * endRotation
+		currAngles.y = currRotation
+		mover.SetAngles( currAngles )
+
+		WaitFrame()
+	}
+
+	currAngles.y = endRotation
+	mover.SetAngles( currAngles )
+}
+
+void function DEV_SpinActiveMenuModelLinearly( float totalTimeInSeconds, float anglesToSpinInDegrees )
+{
+	thread DEV_RotateModel( totalTimeInSeconds, anglesToSpinInDegrees, false )
+}
+
+void function DEV_SpinActiveMenuModelSmoothly( float totalTimeInSeconds, float anglesToSpinInDegrees )
+{
+	thread DEV_RotateModel( totalTimeInSeconds, anglesToSpinInDegrees, true )
+}
+
+void function DEV_TweakCharacterOffset( string character, vector offset )
+{
+	file.DEV_characterOffsetCharacter = character
+	file.DEV_characterOffset = offset
+}
+#endif       
+#endif          
+
+#if UI
+void function RunMenuClientFunction( string func, var arg1 = null, var arg2 = null, var arg3 = null )
+{
+	if ( !CanRunClientScript() )
+		return
+
+	if ( arg1 == null )
+		RunClientScript( func, GetLocalClientPlayer() )
+	else if ( arg2 == null )
+		RunClientScript( func, GetLocalClientPlayer(), arg1 )
+	else if ( arg3 == null )
+		RunClientScript( func, GetLocalClientPlayer(), arg1, arg2 )
+	else
+		RunClientScript( func, GetLocalClientPlayer(), arg1, arg2, arg3 )
+}
+
+void function UI_SetPresentationType( int newPresentationType, bool interpolate = false )
+{
+	                            
+	  	      
+
+	RunClientScript( "SetPresentationType", GetLocalClientPlayer(), newPresentationType, interpolate )
+
+	file.activePresentationType = newPresentationType
+
+	if ( newPresentationType == ePresentationType.PLAY )
+		RunClientScript( "UpdateMenuWithPartyMembers" )
+}
+
+void function UICodeCallback_MouseMovementCapture( var capturePanel, int deltaX, int deltaY )
+{
+	float screenScaleXModifier = 1920.0 / GetScreenSize().width                             
+	float mouseXRotateDelta    = deltaX * screenScaleXModifier * MOUSE_ROTATE_SPEED
+	                                                                                                                     
+
+	float screenScaleYModifier = 1080.0 / GetScreenSize().height                             
+	float mouseYRotationDelta  = deltaY * screenScaleYModifier * MOUSE_ROTATE_SPEED
+
+	RunMenuClientFunction( "UpdateMouseRotateDelta", mouseXRotateDelta, mouseYRotationDelta )
+}
+
+void function TrackIsOverScrollBar( var listPanel )
+{
+	EndSignal( uiGlobal.signalDummy, "TrackIsOverScrollBar" )
+
+	var scrollPanel      = Hud_GetChild( listPanel, "ScrollPanel" )
+	bool rotationEnabled = true
+
+	while ( true )
+	{
+		var focus       = GetFocus()
+		var focusParent = focus == null ? null : Hud_GetParent( focus )
+		bool isOverList = focus == listPanel || focusParent == listPanel || focusParent == scrollPanel
+
+		if ( rotationEnabled && isOverList )
+		{
+			rotationEnabled = false
+			RunClientScript( "DisableModelTurn" )
+		}
+		else if ( !rotationEnabled && !isOverList )
+		{
+			rotationEnabled = true
+			RunClientScript( "EnableModelTurn" )
+		}
+
+		WaitFrame()
+	}
+}
+#endif      
+
+
+
+
+    
+                              
+    
+
+#if CLIENT
+string PROTO_localClientUid
+#endif
+
+#if CLIENT
+string function PROTO_GetLocalClientUIDFromUIVM()
+{
+	try
+	{
+		                                                                                     
+		RunUIScript( "ClientToUI_PROTO_UpdateClientWithLocalClientUID" )
+	}
+	catch ( e ) {}
+	return PROTO_localClientUid
+}
+#endif
+
+
+#if UI
+void function ClientToUI_PROTO_UpdateClientWithLocalClientUID()
+{
+	RunClientScript( "UIToClient_PROTO_UpdateClientWithLocalClientUID", GetPlayerUID() )
+}
+#endif
+
+
+#if CLIENT
+void function UIToClient_PROTO_UpdateClientWithLocalClientUID( string localClientUid )
+{
+	PROTO_localClientUid = localClientUid
+}
+#endif
+
+
+#if CLIENT
+void function FlashMenuModel( entity model, int flashType, vector flashColor, bool includeChildren = true, bool depthDiscard = false )
+{
+	WaitFrame()                      
+
+	                                                                               
+	while ( true )
+	{
+		if ( !IsValid( model ) )
+			return
+
+		if ( model.HasModel() )
+			break
+
+		WaitFrame()
+	}
+
+	MenuModelFlashDef fd = file.menuModelFlashData[flashType]
+	int fill    = HIGHLIGHT_FILL_MENU_MODEL_REVEAL
+	int outline = HIGHLIGHT_OUTLINE_MENU_MODEL_REVEAL
+
+	if ( depthDiscard )
+	{
+		fill    = HIGHLIGHT_FILL_MENU_MODEL_REVEAL_DEPTH_DISCARD
+		outline = HIGHLIGHT_OUTLINE_MENU_MODEL_REVEAL_DEPTH_DISCARD
+	}
+
+	model.Highlight_ResetFlags()
+	model.Highlight_SetVisibilityType( HIGHLIGHT_VIS_ALWAYS )
+	model.Highlight_SetCurrentContext( HIGHLIGHT_CONTEXT_NEUTRAL )
+	int highlightState = model.Highlight_GetState( HIGHLIGHT_CONTEXT_NEUTRAL )
+	model.Highlight_SetFunctions( HIGHLIGHT_CONTEXT_NEUTRAL, fill, true, outline, fd.outlineRadius, highlightState, false )
+	model.Highlight_SetParam( HIGHLIGHT_CONTEXT_NEUTRAL, 0, flashColor )
+	model.Highlight_SetParam( HIGHLIGHT_CONTEXT_NEUTRAL, 1, <fd.fillIntensityScalar, fd.outlineIntensityScalar, 0> )
+	model.Highlight_SetFadeInTime( fd.fadeInTime )
+	model.Highlight_SetFadeOutTime( fd.fadeOutTime )
+	model.Highlight_StartOn()
+	model.Highlight_SetLifeTime( fd.lifeTime )
+
+	if ( includeChildren )
+	{
+		WaitFrame()                      
+
+		if ( !IsValid( model ) )
+			return
+
+		array<entity> hierachy = GetEntityAndImmediateChildren( model )
+		hierachy.removebyvalue( model )
+		foreach ( entity childEnt in hierachy )
+		{
+			childEnt.Highlight_ResetFlags()
+			childEnt.Highlight_SetVisibilityType( HIGHLIGHT_VIS_ALWAYS )
+			childEnt.Highlight_SetCurrentContext( HIGHLIGHT_CONTEXT_NEUTRAL )
+			int childHighlightState = childEnt.Highlight_GetState( HIGHLIGHT_CONTEXT_NEUTRAL )
+			childEnt.Highlight_SetFunctions( HIGHLIGHT_CONTEXT_NEUTRAL, fill, true, outline, fd.outlineRadius, childHighlightState, false )
+			childEnt.Highlight_SetParam( HIGHLIGHT_CONTEXT_NEUTRAL, 0, flashColor )
+			childEnt.Highlight_SetParam( HIGHLIGHT_CONTEXT_NEUTRAL, 1, <fd.fillIntensityScalar, fd.outlineIntensityScalar, 0> )
+			childEnt.Highlight_SetFadeInTime( fd.fadeInTime )
+			childEnt.Highlight_SetFadeOutTime( fd.fadeOutTime )
+			childEnt.Highlight_StartOn()
+			childEnt.Highlight_SetLifeTime( fd.lifeTime )
+		}
+	}
+}
+
+
+void function MenuModelHighlightInMatch( entity model )
+{
+	model.Highlight_ResetFlags()
+	model.Highlight_SetVisibilityType( HIGHLIGHT_VIS_ALWAYS )
+	model.Highlight_SetCurrentContext( HIGHLIGHT_CONTEXT_NEUTRAL )
+	int highlightId = model.Highlight_GetState( HIGHLIGHT_CONTEXT_NEUTRAL )
+	model.Highlight_SetFunctions( HIGHLIGHT_CONTEXT_NEUTRAL, HIGHLIGHT_FILL_LOBBY_IN_MATCH, true, HIGHLIGHT_OUTLINE_NONE, 1.0, highlightId, false )
+	model.Highlight_SetParam( HIGHLIGHT_CONTEXT_NEUTRAL, 0, <0, 0, 0> )
+	model.Highlight_SetParam( HIGHLIGHT_CONTEXT_NEUTRAL, 1, <1000, 1, 0> )
+
+	model.Highlight_SetFadeInTime( 0.0 )
+	model.Highlight_SetFadeOutTime( 0.0 )
+	model.Highlight_StartOn()
+}
+
+
+void function MenuModelHighlightClear( entity model )
+{
+	const int HIGHLIGHT_FILL_NONE = 0
+
+	int highlightId = model.Highlight_GetState( HIGHLIGHT_CONTEXT_NEUTRAL )
+	model.Highlight_SetFunctions( HIGHLIGHT_CONTEXT_NEUTRAL, HIGHLIGHT_FILL_NONE, true, HIGHLIGHT_OUTLINE_NONE, 1.0, highlightId, false )
+	model.Highlight_SetLifeTime( 0.0 )
+}
+
+
+void function InitLightingConfigs()
+{
+	                                                                           
+
+	array<LightDef> closeCharacterLightDefs
+	{
+		LightDef data
+		data.origin = <2867.89, -134.069, 170.419>
+		data.angles = <22.5474, 42.2214, -44.3234>
+		data.color = <1.00, 1.00, 1.00>
+		data.brightness = 5.5
+		data.distance = 400.0
+		data.innerCone = 5.0
+		data.outerCone = 12.0
+		data.halfBrightFrac = 0.7
+		data.specularIntensity = 1.0
+		data.emitterRadius = 0.0
+		data.castShadows = true
+		data.pbrFalloff = true
+		closeCharacterLightDefs.append( data )
+	}
+	{
+		LightDef data
+		data.origin = <3206.24, -92.319, 78.169>
+		data.angles = <2.4512, 123.1417, 23.9838>
+		data.color = <1.00, 0.85, 0.74>
+		data.brightness = 0.17
+		data.distance = 300.0
+		data.innerCone = 10.0
+		data.outerCone = 40.0
+		data.halfBrightFrac = 0.7
+		data.specularIntensity = 0.0
+		data.emitterRadius = 0.0
+		data.castShadows = true
+		data.pbrFalloff = true
+		closeCharacterLightDefs.append( data )
+	}
+	{
+		LightDef data
+		data.origin = <3197.28, 122.74, 152.19>
+		data.angles = <42.55, 211.37, 139.18>
+		data.color = <0.67, 0.88, 1.00>
+		data.brightness = 4.0
+		data.distance = 600.0
+		data.innerCone = 30.0
+		data.outerCone = 30.0
+		data.halfBrightFrac = 0.7
+		data.specularIntensity = 1.0
+		data.emitterRadius = 0
+		data.castShadows = true
+		data.pbrFalloff = false
+		closeCharacterLightDefs.append( data )
+	}
+	{
+		LightDef data
+		data.origin = <3160.64, 111.607, 20.2458>
+		data.angles = <-6.39107, 217.06, 142.943>
+		data.color = <0.49, 0.81, 1.00>
+		data.brightness = 0.0
+		data.distance = 600.0
+		data.innerCone = 30.0
+		data.outerCone = 30.0
+		data.halfBrightFrac = 0.7
+		data.specularIntensity = 1.0
+		data.emitterRadius = 0
+		data.castShadows = true
+		data.pbrFalloff = false
+		closeCharacterLightDefs.append( data )
+	}
+	CreateLightingConfig( "character_close", closeCharacterLightDefs )
+
+	array<LightDef> quipCharacterLightDefs
+	{
+		LightDef data
+		data.origin = <2867.89, -134.069, 170.419>
+		data.angles = <22.5474, 42.2214, -44.3234>
+		data.color = <1.00, 1.00, 1.00>
+		data.brightness = 13.0
+		data.distance = 400.0
+		data.innerCone = 5.0
+		data.outerCone = 12.0
+		data.halfBrightFrac = 0.7
+		data.specularIntensity = 1.0
+		data.emitterRadius = 0.0
+		data.castShadows = true
+		data.pbrFalloff = true
+		quipCharacterLightDefs.append( data )
+	}
+	{
+		LightDef data
+		data.origin = <3206.24, -92.319, 78.169>
+		data.angles = <2.4512, 123.1417, 23.9838>
+		data.color = <1.00, 0.85, 0.74>
+		data.brightness = 0.40
+		data.distance = 300.0
+		data.innerCone = 10.0
+		data.outerCone = 40.0
+		data.halfBrightFrac = 0.7
+		data.specularIntensity = 0.0
+		data.emitterRadius = 0.0
+		data.castShadows = true
+		data.pbrFalloff = true
+		quipCharacterLightDefs.append( data )
+	}
+	{
+		LightDef data
+		data.origin = <3200.64, 145.482, 102.121>
+		data.angles = <25.4136, 201.258, 126.687>
+		data.color = <0.67, 0.88, 1.00>
+		data.brightness = 2.0
+		data.distance = 600.0
+		data.innerCone = 30.0
+		data.outerCone = 30.0
+		data.halfBrightFrac = 0.7
+		data.specularIntensity = 1.0
+		data.emitterRadius = 0
+		data.castShadows = true
+		data.pbrFalloff = false
+		quipCharacterLightDefs.append( data )
+	}
+	{
+		LightDef data
+		data.origin = <3160.64, 111.607, 20.2458>
+		data.angles = <-6.39107, 217.06, 142.943>
+		data.color = <0.49, 0.81, 1.00>
+		data.brightness = 0.0
+		data.distance = 600.0
+		data.innerCone = 30.0
+		data.outerCone = 30.0
+		data.halfBrightFrac = 0.7
+		data.specularIntensity = 1.0
+		data.emitterRadius = 0
+		data.castShadows = true
+		data.pbrFalloff = false
+		quipCharacterLightDefs.append( data )
+	}
+	CreateLightingConfig( "character_quip", quipCharacterLightDefs )
+
+	array<LightDef> clubDiscoveryLightDefs
+	{
+		LightDef data
+		data.origin = <11663.1, 152, 60.2025>
+		data.angles = <9.20086, -142.385+90.0, -164.979>
+		data.color = <0.89, 0.95, 1.00>
+		data.brightness = 2
+		data.distance = 300.0
+		data.innerCone = 20.0
+		data.outerCone = 35.0
+		data.halfBrightFrac = 0.3
+		data.specularIntensity = 1.0
+		data.emitterRadius = 0.0
+		data.castShadows = false
+		data.pbrFalloff = false
+		clubDiscoveryLightDefs.append( data )
+	}
+	{
+		LightDef data
+		data.origin = <11676.1, -14.9999, 83.2025>
+		data.angles = <21.1973, -48.3328+90.0, -161.484>
+		data.color = <0.89, 0.95, 1.00>
+		data.brightness = 2
+		data.distance = 200.0
+		data.innerCone = 20.0
+		data.outerCone = 35.0
+		data.halfBrightFrac = 0.3
+		data.specularIntensity = 1.0
+		data.emitterRadius = 0.0
+		data.castShadows = false
+		data.pbrFalloff = false
+		clubDiscoveryLightDefs.append( data )
+	}
+	{
+		LightDef data
+		data.origin = <11832.1, 40.1003, 183.879>
+		data.angles = <68.9399, 72.9451+90.0, 115.242>
+		data.color = <0.99, 0.91, 0.66>
+		data.brightness = 30
+		data.distance = 275.0
+		data.innerCone = 1.0
+		data.outerCone = 20.0
+		data.halfBrightFrac = 0.3
+		data.specularIntensity = 0.6
+		data.emitterRadius = 0.0
+		data.castShadows = true
+		data.pbrFalloff = false
+		clubDiscoveryLightDefs.append( data )
+	}
+	CreateLightingConfig( "clubs_discovery", clubDiscoveryLightDefs )
+}
+
+
+void function CreateLightingConfig( string name, array<LightDef> lightDefs )
+{
+	file.lightingConfigs[ name ] <- lightDefs
+}
+
+
+void function ApplyLightingConfig( string name )
+{
+	thread ApplyLightingConfigThread( name )
+}
+
+void function ApplyLightingConfigThread( string name )
+{
+	Signal( file.signalDummy, "ApplyLightingConfig" )
+	EndSignal( file.signalDummy, "ApplyLightingConfig" )
+
+	while ( !file.initializedMenuModels )                                                                        
+		WaitFrame()
+
+	foreach ( index, light in file.presentationData[ file.currentPresentationType ].lights )
+	{
+		                                                                                                                      
+
+		LightDef lightDef = file.lightingConfigs[name][index]
+		#if DEV
+			                                                                                       
+		#endif       
+
+		light.SetTweakLightOrigin( lightDef.origin )
+		light.SetTweakLightAngles( lightDef.angles )
+		light.SetTweakLightColor( lightDef.color )
+		light.SetTweakLightBrightness( lightDef.brightness )
+		light.SetTweakLightDistance( lightDef.distance )
+		light.SetTweakLightInnerCone( lightDef.innerCone )
+		light.SetTweakLightCone( lightDef.outerCone )
+		light.SetTweakLightHalfBrightFrac( lightDef.halfBrightFrac )
+		light.SetTweakLightSpecIntensity( lightDef.specularIntensity )
+		light.SetLightEmitRadius( lightDef.emitterRadius )
+		light.SetTweakLightRealtimeShadows( lightDef.castShadows )
+		light.SetTweakLightPBRFalloff( lightDef.pbrFalloff )
+		light.SetTweakLightUpdateShadowsEveryFrame( true )
+	}
+}
+
+                 
+void function SpawnShadowEyeEffects()
+{
+	foreach ( ent in GetEntArrayByScriptName( "lobby_background_character" ) )
+	{
+		                                                                   
+
+		                                                      
+		  	                                                      
+
+		                                                  
+		   
+		  	                                                                                                                                            
+		  	                                                                                           
+		   
+
+		array<string> attachNames = [ "EYE_L", "EYE_R" ]
+
+		foreach ( attachName in attachNames )
+		{
+			if ( ent.LookupAttachment( attachName ) > 0 )
+			{
+				StartParticleEffectOnEntity( ent, GetParticleSystemIndex( SHADOW_EYE_FX ), FX_PATTACH_POINT_FOLLOW, ent.LookupAttachment( attachName ) )
+				                                                                                                
+			}
+		}
+	}
+}
+                       
+
+#if DEV
+void function DrawLightDebug( vector origin, vector angles, vector color, float dist )
+{
+	vector endOrigin = origin + AnglesToForward( angles ) * dist
+
+	DebugDrawArrow( origin, endOrigin, 4, int(color.x * 255), int(color.y * 255), int(color.z * 255), true, 999999 )
+}
+#endif       
+#endif          
+
+
+#if UI
+void function OnMouseWheelDown( var unused )
+{
+	foreach ( void functionref() cb in file.mouseWheelDownCallbacks )
+		cb()
+
+	if ( CanRunClientScript() )
+		RunClientScript( "ShMenuModels_ClientToUI_OnMouseWheel", true )
+}
+
+
+void function OnMouseWheelUp( var unused )
+{
+	foreach ( void functionref() cb in file.mouseWheelUpCallbacks )
+		cb()
+
+	if ( CanRunClientScript() )
+		RunClientScript( "ShMenuModels_ClientToUI_OnMouseWheel", false )
+}
+#endif
+
+
+#if CLIENT
+void function ShMenuModels_ClientToUI_OnMouseWheel( bool isDown )
+{
+	foreach ( void functionref() cb in (isDown ? file.mouseWheelDownCallbacks : file.mouseWheelUpCallbacks) )
+		cb()
+}
+#endif
+
+
+#if CLIENT || UI
+void function AddCallback_OnMouseWheelDown( void functionref() cb )
+{
+	Assert( !file.mouseWheelDownCallbacks.contains( cb ) )
+	file.mouseWheelDownCallbacks.append( cb )
+}
+void function RemoveCallback_OnMouseWheelDown( void functionref() cb )
+{
+	Assert( file.mouseWheelDownCallbacks.contains( cb ) )
+	file.mouseWheelDownCallbacks.removebyvalue( cb )
+}
+void function AddCallback_OnMouseWheelUp( void functionref() cb )
+{
+	Assert( !file.mouseWheelUpCallbacks.contains( cb ) )
+	file.mouseWheelUpCallbacks.append( cb )
+}
+void function RemoveCallback_OnMouseWheelUp( void functionref() cb )
+{
+	Assert( file.mouseWheelUpCallbacks.contains( cb ) )
+	file.mouseWheelUpCallbacks.removebyvalue( cb )
+}
+
+bool function IsCallbackRegistered_OnMouseWheelUp( void functionref() cb )
+{
+	return file.mouseWheelUpCallbacks.contains( cb )
+}
+
+bool function IsCallbackRegistered_OnMouseWheelDown( void functionref() cb )
+{
+	return file.mouseWheelDownCallbacks.contains( cb )
+}
+#endif                
+
+#if CLIENT
+entity function Menu_GetCameraTarget()
+{
+	return file.currentCameraTarget
+}
+#endif
+
+#if CLIENT
+void function UICallback_MenuModels_UIScriptHasReset()
+{
+	file.uiscriptHasReset = true
+}
+#endif

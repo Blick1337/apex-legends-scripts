@@ -1,0 +1,516 @@
+untyped
+
+global function Flags_Init
+global function FlagInit
+global function FlagSet
+global function FlagClear
+global function FlagEnd
+global function FlagClearEnd
+global function Flag
+global function FlagToggle
+global function FlagWait
+global function FlagWaitAll
+global function FlagWaitWithTimeout
+global function FlagWaitClearWithTimeout
+global function FlagWaitAny
+global function FlagWaitClear
+global function FlagWaitClearAll
+global function FlagWaitClearAllArray
+global function FlagWaitClearAny
+global function GetFlagsFromString
+global function GetFlagsFromField
+global function FlagExists
+global function FlagSetOnFlag
+global function FlagClearOnFlag
+global function GetTriggerEnabled
+
+#if SERVER
+	                                     
+
+	      
+	 
+		                  
+	      
+#endif
+
+
+struct
+{
+	table<string,bool> flags
+} shFile
+
+void function Flags_Init()
+{
+	#if DEV
+		                         
+	#endif
+
+	#if SERVER
+	                                                   
+	#endif
+
+	RegisterSignal( "deathflag" )
+}
+
+void function FlagInit( string msg, bool isSet = false )
+{
+	                                                 
+	if ( msg in shFile.flags )
+		return
+
+	Assert( !( msg.find_olduntyped( " " ) ), "Can not have spaces in the name of a flag: " + msg )
+	shFile.flags[ msg ] <- isSet
+	RegisterSignal( msg )
+}
+
+void function FlagSet( string msg )
+{
+	Assert( msg in shFile.flags, "flag " + msg + " not initialized yet" )
+
+	#if DEV
+		                     
+		  	                                
+	#endif
+
+	__FlagSetValue( msg, true )
+}
+
+void function FlagClear( string msg )
+{
+	Assert( msg in shFile.flags, "flag " + msg + " not initialized yet" )
+
+	__FlagSetValue( msg, false )
+}
+
+void function FlagEnd( string msg )
+{
+		Assert( msg in shFile.flags, "flag " + msg + " not initialized yet" )
+	Assert( !Flag( msg ), "Flag " + msg + " was already set!!" )
+
+	EndSignal( level, msg )
+}
+
+void function FlagClearEnd( string msg )
+{
+		Assert( msg in shFile.flags, "flag " + msg + " not initialized yet" )
+	Assert( Flag( msg ), "Flag " + msg + " is not already set!!" )
+
+	EndSignal( level, msg )
+}
+
+bool function Flag( string msg )
+{
+		Assert( msg in shFile.flags, "flag " + msg + " not initialized yet" )
+
+	return shFile.flags[ msg ]
+}
+
+void function FlagToggle( string msg )
+{
+	if ( Flag( msg ) )
+	{
+		FlagClear( msg )
+	}
+	else
+	{
+		FlagSet( msg )
+	}
+}
+
+                                                
+void function FlagWait( string msg )
+{
+		Assert( msg in shFile.flags, "flag " + msg + " not initialized yet" )
+
+	while ( !shFile.flags[ msg ] )
+	{
+		WaitSignal( level, msg )
+	}
+}
+
+                                                
+void function FlagWaitAll( ... )
+{
+	array<string> args
+	for ( int i = 0; i < vargc; i++ )
+	{
+		args.append( expect string( vargv[i] ) )
+	}
+
+	bool loop = true
+
+	while ( loop )
+	{
+		foreach ( msg in args )
+		{
+			FlagWait( msg )
+		}
+
+		loop = false
+
+		                                                              
+		foreach ( i, msg in args )
+		{
+			if ( Flag( msg ) )
+				continue
+
+			loop = true
+			break
+		}
+	}
+}
+
+                                                
+void function FlagWaitWithTimeout( string flag, float timeout )
+{
+	string newFlag = "FlagWaitAny" + UniqueString()
+	FlagInit( newFlag )
+	thread __FlagWaitAny( flag, newFlag )
+	thread __FlagWaitTime( timeout, newFlag )
+
+	FlagWait( newFlag )
+}
+
+void function FlagWaitClearWithTimeout( string flag, float timeout )
+{
+	string newFlag = "FlagWaitClearAny" + UniqueString()
+	FlagInit( newFlag )
+	thread __FlagWaitClearAny( flag, newFlag )
+	thread __FlagWaitTime( timeout, newFlag )
+
+	FlagWait( newFlag )
+}
+
+void function __FlagWaitTime( float timeout, string newFlag )
+{
+	EndSignal( level, newFlag )
+
+	Wait( timeout )
+
+	FlagSet( newFlag )
+}
+
+                                                
+void function FlagWaitAny( ... )
+{
+	string newFlag = "FlagWaitAny" + UniqueString()
+	FlagInit( newFlag )
+
+	array<string> args
+	for ( int i = 0; i < vargc; i++ )
+	{
+		args.append( expect string( vargv[i] ) )
+	}
+
+	foreach ( msg in args )
+	{
+		thread __FlagWaitAny( msg, newFlag )
+	}
+
+	FlagWait( newFlag )
+}
+
+                                                
+void function FlagWaitClear( string msg )
+{
+	Assert( msg in shFile.flags, "flag " + msg + " not initialized yet" )
+
+	while ( shFile.flags[ msg ] )
+	{
+		WaitSignal( level, msg )
+	}
+}
+
+                                                
+void function FlagWaitClearAll( ... )
+{
+	array<string> args
+	for ( int i = 0; i < vargc; i++ )
+	{
+		args.append( expect string( vargv[i] ) )
+	}
+	waitthread FlagWaitClearAllArray( args )
+}
+
+void function FlagWaitClearAllArray( array<string> flags )
+{
+	bool loop = true
+
+	while ( loop )
+	{
+		foreach ( flag in flags )
+		{
+			FlagWaitClear( flag )
+		}
+
+		loop = false
+
+		                                                              
+		foreach ( flag in flags )
+		{
+			if ( !Flag( flag ) )
+				continue
+
+			loop = true
+			break
+		}
+	}
+}
+
+                                                
+void function FlagWaitClearAny( ... )
+{
+	string newFlag = "FlagWaitAny" + UniqueString()
+	FlagInit( newFlag )
+
+	array<string> args
+	for ( int i = 0; i < vargc; i++ )
+	{
+		args.append( expect string( vargv[i] ) )
+	}
+
+	foreach ( msg in args )
+	{
+		thread __FlagWaitClearAny( msg, newFlag )
+	}
+
+	FlagWait( newFlag )
+}
+
+                                                                       
+void function __FlagWaitAny( string msg, string newFlag )
+{
+	EndSignal( level, newFlag )
+
+	FlagWait( msg )
+
+	FlagSet( newFlag )
+}
+
+                                                                       
+void function __FlagWaitClearAny( string msg, string newFlag )
+{
+	EndSignal( level, newFlag )
+
+	FlagWaitClear( msg )
+
+	FlagSet( newFlag )
+}
+
+void function __FlagSetValue( string msg, bool val )
+{
+	if ( shFile.flags[ msg ] == val )
+		return
+
+	shFile.flags[ msg ] = val
+
+ 	#if SERVER
+	                                        
+	#endif
+
+	                                                                         
+	Signal( level, msg )
+}
+
+array<string> function GetFlagsFromString( string str )
+{
+	return GetTrimmedSplitString( str, "," )
+}
+
+bool function GetTriggerEnabled( entity trigger )
+{
+	array<string> flags
+
+	bool enabled
+
+	if ( trigger.HasKey( "scr_flagTrueAny" ) )
+	{
+		flags = GetFlagsFromField( trigger, "scr_flagTrueAny" )
+
+		enabled = false
+		foreach ( msg in flags )
+		{
+			if ( Flag( msg ) )
+			{
+				enabled = true
+				break
+			}
+		}
+
+		if ( !enabled )
+			return false
+	}
+
+	if ( trigger.HasKey( "scr_flagTrueAll" ) )
+	{
+		flags = GetFlagsFromField( trigger, "scr_flagTrueAll" )
+
+		enabled = true
+		foreach ( msg in flags )
+		{
+			if ( !Flag( msg ) )
+			{
+				enabled = false
+				break
+			}
+		}
+
+		if ( !enabled )
+			return false
+	}
+
+	if ( trigger.HasKey( "scr_flagFalseAny" ) )
+	{
+		flags = GetFlagsFromField( trigger, "scr_flagFalseAny" )
+
+		enabled = false
+		foreach ( msg in flags )
+		{
+			if ( !Flag( msg ) )
+			{
+				enabled = true
+				break
+			}
+		}
+
+		if ( !enabled )
+			return false
+	}
+
+	if ( trigger.HasKey( "scr_flagFalseAll" ) )
+	{
+		flags = GetFlagsFromField( trigger, "scr_flagFalseAll" )
+
+		enabled = true
+		foreach ( msg in flags )
+		{
+			if ( Flag( msg ) )
+			{
+				enabled = false
+				break
+			}
+		}
+
+		if ( !enabled )
+			return false
+	}
+
+	return true
+}
+
+array<string> function GetFlagsFromField( entity ent, string field )
+{
+	return split( ent.kv[ field ], " " )
+}
+
+#if SERVER
+                                               
+ 
+	                                     
+		      
+
+	                                    
+		      
+
+	                                        
+ 
+
+                                                      
+ 
+	                              
+	                                                                        
+	                                                                                
+
+	                                            
+	                
+	                
+	                   
+ 
+
+                                                 
+ 
+	                                
+
+	           
+	             
+	                       
+	 
+		                                                
+		                                            
+		                                              
+		                                                      
+	 
+	    
+	 
+		                                            
+		                                                 
+		                        
+	 
+	                                                                                             
+	                
+
+	                                     
+		                               
+
+	                                                                                         
+	                                       
+
+	                                                                                                                                      
+	                       
+		      
+
+	                                                                                                                                                                               
+	                                 
+	                                                                                                                                   
+		                                                      
+
+	                                                                                      
+	                                                      
+	                                                  
+
+	                                                                                                       
+
+	                                                                                
+	                                           
+	 
+		                                               
+		               
+	 
+ 
+#endif
+
+
+bool function FlagExists( string msg )
+{
+	                                                 
+	if ( msg in shFile.flags )
+		return true
+
+	return false
+}
+
+void function FlagSetOnFlag( string flagset, string flagwait, float delay = 0 )
+{
+	thread _ThreadFlagSetOnFlag( flagset, flagwait, delay )
+}
+
+void function _ThreadFlagSetOnFlag( string flagset, string flagwait, float delay )
+{
+	FlagWait( flagwait )
+
+	if ( delay )
+		wait delay
+
+	FlagSet( flagset )
+}
+
+void function FlagClearOnFlag( string flagclear, string flagwait )
+{
+	thread _ThreadFlagClearOnFlag( flagclear, flagwait )
+}
+
+void function _ThreadFlagClearOnFlag( string flagclear, string flagwait )
+{
+	FlagWait( flagwait )
+	FlagClear( flagclear )
+}

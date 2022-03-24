@@ -1,0 +1,413 @@
+untyped
+
+global function PlayAnimTeleport
+global function PlayAnim
+global function PlayAnimOnly
+global function GetAnim
+global function HasAnim
+global function SetAnim
+global function GetAnimStartInfo
+global function GetRefPosition
+global function __PlayAnim
+global function TeleportToAnimStart
+global function ClAnim_Init
+
+const bool SCRIPT_ANIM_DEBUG = false
+
+void function ClAnim_Init()
+{
+	                                                                          
+	                                                                                      
+	AddGlobalAnimEventTokenize( "enable_fx_group", ClGlobalAnimEvent_EnableFxGroup )
+	AddGlobalAnimEventTokenize( "disable_fx_group", ClGlobalAnimEvent_DisableFxGroup )
+	AddGlobalAnimEventTokenize( "playImpactFXTable", ClGlobalAnimEvent_playImpactFXTable )
+	AddGlobalAnimEventTokenize( "playImpactFXTableNoRot", ClGlobalAnimEvent_playImpactFXTableNoRot )
+	AddGlobalAnimEventTokenize( "playScreenFX_concussion", ClGlobalAnimEvent_playScreenFx_concussion )
+	AddGlobalAnimEventTokenize( "mirage_holo_fx_start", ClGlobalAnimEvent_mirage_holo_fx_start )
+	AddGlobalAnimEventTokenize( "mirage_holo_fx_end", ClGlobalAnimEvent_mirage_holo_fx_end )
+
+	PrecacheParticleSystem( $"P_screenfx_concusion" )
+}
+
+                
+void function PlayAnimTeleport( entity guy, string animation_name, reference = null, optionalTag = null, float initialTime = -1.0 )
+{
+	if ( !reference )
+		reference = guy
+
+	TeleportToAnimStart( guy, animation_name, reference, optionalTag )
+	__PlayAnim( guy, animation_name, reference, optionalTag, 0 )
+	if ( initialTime > 0 )
+		guy.Anim_SetInitialTime( initialTime )
+	WaittillAnimDone( guy )
+}
+
+                
+void function PlayAnim( entity guy, string animation_name, reference = null, optionalTag = null, float blendTime = DEFAULT_SCRIPTED_ANIMATION_BLEND_TIME, float initialTime = -1.0 )
+{
+	__PlayAnim( guy, animation_name, reference, optionalTag, blendTime )
+	if ( initialTime > 0 )
+		guy.Anim_SetInitialTime( initialTime )
+
+	WaittillAnimDone( guy )
+}
+
+                     
+void function PlayAnimOnly( entity guy, string animation_name )
+{
+	guy.Anim_PlayOnly( animation_name )
+	WaittillAnimDone( guy )
+}
+
+string function GetAnim( entity guy, string animation )
+{
+	if ( !( "anims" in guy.s ) )
+		return animation
+
+	if ( !( animation in guy.s.anims ) )
+		return animation
+
+	return expect string( guy.s.anims[ animation ] )
+}
+
+bool function HasAnim( entity guy, string animation )
+{
+	if ( !( "anims" in guy.s ) )
+		return false
+
+	return animation in guy.s.anims
+}
+
+void function SetAnim( entity guy, string name, string animation )
+{
+	if ( !( "anims" in guy.s ) )
+		guy.s.anims <- {}
+
+	Assert( !( name in guy.s.anims ), guy + " already has set anim " + name )
+
+	guy.s.anims[ name ] <- animation
+}
+
+AnimRefPoint function GetAnimStartInfo( entity ent, string animAlias, entity animref )
+{
+	string animData = GetAnim( ent, animAlias )
+	AnimRefPoint animStartInfo = ent.Anim_GetStartForRefPoint( animData, animref.GetOrigin(), animref.GetAngles() )
+
+	return animStartInfo
+}
+
+table function GetRefPosition( entity reference )
+{
+	Assert( reference.HasKey( "model" ) && reference.kv.model != "", "Tried to play an anim relative to " + reference + " but it has no model/ref attachment." )
+
+	table position = {}
+	int attach_id
+	attach_id = reference.LookupAttachment( "REF" )
+
+	if ( attach_id )
+	{
+		position.origin <- reference.GetAttachmentOrigin( attach_id )
+		position.angles <- reference.GetAttachmentAngles( attach_id )
+	}
+
+	return position
+}
+
+                
+void function __PlayAnim( entity guy, string animation_name, reference = null, optionalTag = null, float blendTime = DEFAULT_SCRIPTED_ANIMATION_BLEND_TIME )
+{
+	Assert( IsValid_ThisFrame( guy ), "Invalid ent sent to PlayAnim " + animation_name )
+	string animation = GetAnim( guy, animation_name )
+
+	                       	                                                
+
+	if ( reference )
+	{
+		if ( reference == guy )
+		{
+			table position = GetRefPosition( expect entity( reference ) )
+			vector origin = expect vector( position.origin )
+			vector angles = expect vector( position.angles )
+
+			guy.Anim_PlayWithRefPoint( animation, origin, angles, blendTime )
+
+			return
+		}
+
+		if ( optionalTag )
+		{
+			if ( typeof( reference ) == "vector" )
+			{
+				Assert( typeof( optionalTag ) == "vector", "Expected angles but got " + optionalTag )
+
+				guy.Anim_PlayWithRefPoint( animation, reference, optionalTag, blendTime )
+
+				return
+			}
+
+			Assert( typeof( optionalTag ) == "string", "Passed invalid optional tag " + optionalTag )
+
+			if ( guy.GetParent() == reference )
+			{
+				guy.Anim_Play( animation )
+			}
+			else
+			{
+				expect entity( reference )
+				int attachIndex = reference.LookupAttachment( optionalTag )
+				vector origin = reference.GetAttachmentOrigin( attachIndex )
+				vector angles = reference.GetAttachmentAngles( attachIndex )
+
+				                                                                                             
+				                                    
+				                                    
+
+				guy.Anim_PlayWithRefPoint( animation, origin, angles, blendTime )
+			}
+			return
+		}
+	}
+	else
+	{
+		Assert( optionalTag == null, "Reference was null, but optionalTag was not. Did you mean to set the tag?" )
+	}
+
+	if ( reference != null && guy.GetParent() == reference )
+	{
+		guy.Anim_Play( animation )
+
+		return
+	}
+
+    if ( !reference )
+	    reference = guy
+
+	expect entity( reference )
+
+    vector origin = reference.GetOrigin()
+    vector angles = reference.GetAngles()
+
+	guy.Anim_PlayWithRefPoint( animation, origin, angles, blendTime )
+}
+
+void function TeleportToAnimStart( entity guy, string animation_name, reference, optionalTag = null )
+{
+	return                                                                                     
+
+	expect entity( reference )
+
+	Assert( reference, "NO reference" )
+	string animation = GetAnim( guy, animation_name )
+	table animStartPos
+
+	if ( optionalTag )
+	{
+		                                
+		animStartPos = guy.Anim_GetStartForRefEntity_Old( animation, reference, optionalTag )
+	}
+	else
+	{
+		                                       
+		                           
+		                                       
+		vector origin = reference.GetOrigin()
+		vector angles = reference.GetAngles()
+		animStartPos = guy.Anim_GetStartForRefPoint_Old( animation, origin, angles )
+	}
+
+	                                  
+	animStartPos.origin = ClampToWorldspace( expect vector( animStartPos.origin ) )
+
+	guy.SetOrigin( animStartPos.origin )
+	guy.SetAngles( animStartPos.angles )
+}
+
+void function ClGlobalAnimEvent_EnableFxGroup( entity model, array<string> tokens )
+{
+	                                  
+	Assert( tokens.len() == 2 )
+	string fxGroup = tokens[1]
+	ModelFX_EnableGroup( model, fxGroup )
+}
+
+void function ClGlobalAnimEvent_DisableFxGroup( entity model, array<string> tokens )
+{
+	                                   
+	Assert( tokens.len() == 2 )
+	string fxGroup = tokens[1]
+	ModelFX_DisableGroup( model, fxGroup )
+}
+
+void function ClGlobalAnimEvent_bodyfall_human( entity model )
+{
+	array<string> tokens
+	tokens.append( "bodyfall_human" )
+	tokens.append( "pilot_bodyslam" )
+	tokens.append( "CHESTFOCUS" )
+
+	ClGlobalAnimEvent_playImpactFXTable( model, tokens )
+}
+
+void function ClGlobalAnimEvent_bodyfall_human_small( entity model )
+{
+	array<string> tokens
+	tokens.append( "bodyfall_human_small" )
+	tokens.append( "pilot_bodyslam_small" )
+	tokens.append( "CHESTFOCUS" )
+
+	ClGlobalAnimEvent_playImpactFXTable( model, tokens )
+}
+
+                                        
+void function ClGlobalAnimEvent_playImpactFXTable( entity model, array<string> tokens)
+{
+	Assert( tokens.len() == 3 )
+
+	string TableString = tokens[1]
+	string AttachmentString = tokens[2]
+
+	int impactTableIndex = GetImpactTableIndex( TableString )
+	Assert( impactTableIndex != -1, "Need to set: RegisterImpactTable(" + TableString + ") in sh_anim_events.nut"  )
+
+	int attachID = model.LookupAttachment( AttachmentString )
+	Assert( attachID > 0, "Invalid attachment used in 'ClGlobalAnimEvent_playImpactFXTable' Impact Table: " + TableString + " AttachmentString: " + AttachmentString + " for model:" + model )
+
+	if ( attachID > 0 )
+	{
+		vector origin = model.GetAttachmentOrigin( attachID )
+		vector angles = model.GetAttachmentAngles( attachID )
+		entity ent    = model
+
+		#if SCRIPT_ANIM_DEBUG
+			                                                                                                          
+		#endif
+
+		vector fwd         = AnglesToForward( angles )
+		vector startPos    = origin
+		vector endPos      = origin + (fwd * 64)
+		TraceResults trace = TraceLine( startPos, endPos, ent, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
+
+		#if SCRIPT_ANIM_DEBUG
+			                                                  
+			                                                  
+		#endif
+
+		if ( IsValid( trace.hitEnt ) )
+		{
+			ent.DispatchImpactEffects( trace.hitEnt, startPos, trace.endPos, trace.surfaceNormal, trace.surfaceProp, 0, DMG_MELEE_ATTACK, impactTableIndex, ent, 0 )
+
+			#if SCRIPT_ANIM_DEBUG
+				                                                             
+				                                                                                                          
+			#endif
+		}
+	}
+}
+
+void function ClGlobalAnimEvent_playImpactFXTableNoRot( entity model, array<string> tokens)
+{
+	Assert( tokens.len() == 3 )
+
+	string TableString = tokens[1]
+	string AttachmentString = tokens[2]
+
+	int impactTableIndex = GetImpactTableIndex( TableString )
+	Assert( impactTableIndex != -1, "Need to set: RegisterImpactTable(" + TableString + ") in sh_anim_events.nut"  )
+
+	int attachID = model.LookupAttachment( AttachmentString )
+	Assert( attachID > 0, "Invalid attachment used in 'ClGlobalAnimEvent_playImpactFXTable' Impact Table: " + TableString + " AttachmentString: " + AttachmentString + " for model:" + model )
+
+	if ( attachID > 0 )
+	{
+		vector origin = model.GetAttachmentOrigin( attachID )
+
+		vector angles = model.GetAttachmentAngles( attachID )
+		entity ent    = model
+
+		#if SCRIPT_ANIM_DEBUG
+			                                                                                                          
+		#endif
+
+		vector startPos            = origin
+		vector endOrigin           = <origin.x, origin.y, -MAX_WORLD_COORD_BUFFER >
+		array <entity> ignoreArray = []
+		if ( IsValid( model ) )
+			ignoreArray.append( model )
+
+		TraceResults trace = TraceLine( origin, endOrigin, ignoreArray, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE, model )
+
+		#if SCRIPT_ANIM_DEBUG
+			                                                  
+			                                                     
+		#endif
+
+		if ( IsValid( trace.hitEnt ) )
+		{
+			ent.DispatchImpactEffects( trace.hitEnt, startPos, trace.endPos, trace.surfaceNormal, trace.surfaceProp, 0, DMG_MELEE_ATTACK, impactTableIndex, ent, 0 )
+
+			#if SCRIPT_ANIM_DEBUG
+				                                                             
+				                                                                                                          
+			#endif
+		}
+	}
+}
+
+
+void function ClGlobalAnimEvent_playScreenFx_concussion( entity player, array<string> tokens )
+{
+	                                                    
+	Assert( tokens.len() == 1 )
+
+	if ( !player.IsPlayer() )
+		return
+
+	entity localViewPlayer = GetLocalViewPlayer()
+	if ( player != localViewPlayer )
+		return
+
+	int index = GetParticleSystemIndex( $"P_screenfx_concusion" )
+
+	if ( IsValid( localViewPlayer.GetCockpit() ) )
+	{
+		                             
+		int fxID1 = StartParticleEffectOnEntity( localViewPlayer, index, FX_PATTACH_POINT_FOLLOW, localViewPlayer.GetCockpit().LookupAttachment( "CAMERA" ) )
+
+		                      
+		EffectSetIsWithCockpit( fxID1, true )
+	}
+}
+
+const MIRAGE_HOLO_FLASH_FX = $"P_mirage_holo_flash"
+const MIRAGE_HOLO_TRAIL_FX = $"P_mirage_holo_trail"
+
+void function ClGlobalAnimEvent_mirage_holo_fx_start( entity model, array<string> tokens )
+{
+	Assert( tokens.len() == 2 )
+
+	thread PROTO_FadeModelAlphaOverTime( model, 0.5, 0, 255 )
+
+	string AttachmentString = tokens[1]
+	int attachIndex = model.LookupAttachment( AttachmentString )
+
+	StartParticleEffectOnEntity( model, GetParticleSystemIndex( MIRAGE_HOLO_FLASH_FX ), FX_PATTACH_POINT, attachIndex )
+	StartParticleEffectOnEntity( model, GetParticleSystemIndex( MIRAGE_HOLO_TRAIL_FX ), FX_PATTACH_POINT_FOLLOW, attachIndex )
+}
+
+void function ClGlobalAnimEvent_mirage_holo_fx_end( entity model, array<string> tokens )
+{
+	Assert( tokens.len() == 2 )
+
+	thread PROTO_FadeModelAlphaOverTime( model, 0.5, 255, 0 )
+
+	string AttachmentString = tokens[1]
+
+	if ( AttachmentString == "NONE" )
+		return
+
+	int attachIndex = model.LookupAttachment( AttachmentString )
+	StartParticleEffectOnEntity( model, GetParticleSystemIndex( MIRAGE_HOLO_FLASH_FX ), FX_PATTACH_POINT, attachIndex )
+
+}
+
+

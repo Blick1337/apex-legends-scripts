@@ -1,0 +1,312 @@
+global struct TitanBindings
+{
+	void functionref( entity ) PlayerPressed_Eject
+	void functionref( entity ) PlayerPressed_EjectEnable
+}
+
+global struct SegmentedHealthBar
+{
+	var healthBarAnchor
+	var healthBarParent
+	var healthBar
+	var healthBarBack
+	var healthBarDoomed
+}
+
+global struct BurnMeterHudStruct
+                                                                      
+{
+	var   burnMeterProgressBar
+	var   burnMeterRewardTypeIcon
+	var   burnMeterLabel
+	int   burnMeterRewardID
+	float burnMeterRewardProgress
+}
+
+
+                                               
+global struct ClientEntityStruct
+{
+	EHIScriptStruct& ehiss
+
+	              
+	entity mainVGUI
+	entity body
+
+	bool hudVisible = false
+
+	               
+	var rodeoAlertIcon
+	var rodeoAlertLabel
+	var safeArea
+	var safeAreaCenter
+	var screen
+
+	var missileImpactLabel
+	var rodeoLabel
+	var rebootTimer
+
+	var overheadRui
+
+	table<string, AnimEventData> animEventDataForEntity
+	table<string, TokenizedAnimEventData> tokenizedAnimEventDataForEntity
+	array                        emergencyIcons
+	array                        emergencyRings
+
+	float localPingBeginTime = -999.0
+	int   predictedUseCount = 0
+	bool  predictedUseSuccess = true
+
+	float lastVocalizedCommsTime = -999.0
+
+	array<DamageHistoryStruct>       recentDamageHistory
+	string functionref( entity ent ) entTextOverrideCallback
+
+	bool functionref( entity player, entity ent, int useFlags ) canUseEntityCallback = null
+
+	array<void functionref( entity ent, entity player, int useInputType )> onUseEntityCallbacks
+	array<void functionref( entity vehicle )>                              onVehicleLaunchCallbacks
+	array<void functionref( entity vehicle )>                              onVehicleCollideCallbacks
+	array<void functionref( entity vehicle )>                              onPlayerUseButtonPressed
+	array<void functionref( entity vehicle )>                              onPlayerUseButtonReleased
+	array<void functionref( entity )>                                      onEntityDestroyedCallbacks
+
+	string enemyHighlight = ""
+
+	bool  isSelected
+	float lastUseTime
+	bool  isBusy
+
+	int __itemFlavorNetworkId
+	int charmItemFlavorNetworkId
+
+	                               
+	void functionref( entity, entity, var )                    Callback_VortexTriggerBulletHit
+	void functionref( entity, entity, entity, entity, vector ) Callback_VortexTriggerProjectileHit
+
+                 
+                                              
+                                                                                                    
+                            
+                           
+
+	int cameraMaxRangeFXHandle = -1
+
+	bool                       eyeForQuality_isScanned
+	bool                       blackMarket_haveSeenReady
+	bool                       ignorePingTrace = false
+
+	string clientEntMinimapClassName
+	int    clientEntMinimapCustomState
+	int    clientEntMinimapFlags
+	float  clientEntMinimapScale = 1.0
+	int    clientEntMinimapZOrder
+
+	int deathBoxMenu_lastSeenClipCount
+
+
+	EncodedEHandle ornull gladCardPropOwnerPlayerEEH = null
+	ItemFlavor ornull     animWindowCosmeticItemFlavor = null
+	ItemFlavor ornull     animWindowSkinItemFlavor = null
+                        
+                          
+       
+}
+
+
+global struct TitanCockpitRUI
+{
+	var rui
+	int drawGroup = RUI_DRAW_COCKPIT
+}
+
+
+                                               
+global struct ClientPlayerStruct
+{
+	entity                  rodeoBatteryCrosshairEntity
+	BurnMeterHudStruct[ 1 ] burnMeterHudStructs
+
+	float grenadePulloutTime
+
+	                                                                                                                                  
+	bool isDisembarking = false
+
+	float disembarkPressTime
+	float ejectEnableTime
+	float ejectPressTime
+	int   ejectPressCount
+	bool  playerScriptsInitialized
+
+	int smartCoreKills = 0
+
+	entity previousWeapon
+
+	entity knife = null
+
+	float nextAllowWarningTime = 0.0
+
+	entity previousRiderEnt = null
+	bool   allowCoreMessages = true
+
+	string            sayLineLatestSound
+	float             sayLineLatestTime = -99.0
+	int               lastSaidCommsAction
+	int               lastCanceledCommsAction
+	table<int, float> commActionFlavorDebounceTimes
+	float             commActionFlavorGlobalDebounceTime = -30.0
+
+	array<TitanCockpitRUI> titanCockpitRUIs
+	entity                 cryptoActiveCamera
+	bool                   isInExtendedUse = false
+	table<string, int>     requiredLootTypes = {}
+
+	string lastEventNotificationText
+
+	int mapPingTicketID = -1
+
+	array<int> freefallContrailFXHandles
+	int        freefallWindEffectHandle = -1
+
+	float nextTraceCheckTime
+
+	bool classActuallyChanged
+
+	table<entity, int> reconScannedByThisPlayerRefCount
+	                                                                      
+	                                                                  
+	                                                                   
+	                
+	table<entity, var> reconScanRUIs
+	                                                                         
+	                                      
+
+
+	float lastTimeDeactivatedJetpack
+	float nextAllowUseValkUltTime
+	bool inSkydiveAfterUlt
+
+                         
+                                    
+                          
+       
+}
+
+
+
+                                                
+global struct ClientAIStruct
+{
+	int gruntVoiceIndex = 0
+                    
+		entity primaryWaypoint
+		entity secondaryWaypoint
+       
+}
+
+
+
+                                
+global struct ClientWeaponStruct
+{
+	float startChargeTime = 0.0
+	bool  wasCharged = false
+	bool  initialized = false
+                             
+                                   
+                                          
+       
+
+	entity     weaponOwner
+	array<int> statusEffects
+	float      lastFireTime
+
+	float PROTO_lastFireAttemptTime = -1.0
+
+	bool useRapidHitbeep = false
+
+	string activeOptic = ""
+	var    sentinelEnergizeHintRui = null
+
+	            
+	entity translocate_predictedInitialProjectile = null
+	entity translocate_predictedRedirectedProjectile = null
+	table ornull translocate_impactRumbleObj = null
+	                   
+	bool   translocate_isADSForced = false
+
+                 
+                                 
+       
+
+
+	array<WeaponMissileMultipleTargetData>   valkTac_targetData
+	float                      valkUltStartTime
+	array<entity>			   valkAlliesWaitingForLaunch
+}
+
+
+                                   
+global struct ClientProjectileStruct
+{
+	vector savedOrigin
+	vector savedDir
+	float  savedShotTime
+	int    projectileBounceCount = 0
+	float  detonateDist
+	bool   useHighDetailCollisionTraceForPlaceStickyEnt = false
+
+                             
+                                   
+                                 
+                                        
+       
+
+
+	vector valkTacMissileStartPos
+	EHI valkTacGrenadeEHI
+
+	bool                                                  isPlanted = false
+	void functionref( entity, DeployableCollisionParams ) bounceFunc
+	void functionref( entity, DeployableCollisionParams ) deployFunc
+}
+
+
+                                   
+global struct ClientTitanSoulStruct
+{
+}
+
+
+                                    
+global struct ClientPlayerDecoyStruct
+{
+	array<int> particleIndexes
+	bool       decoyHasStealthPassive = false
+}
+
+            
+global struct ClientPlayerWaypoint
+{
+	var ruiMinimap
+	var ruiFullmap
+	var ruiHud
+
+	array<int> fxHandles
+
+	bool isHiddenOnLocalHUD = false
+	bool haveConfirmed
+
+	entity highlightEnt
+
+	int                           objectiveGroupIndex = -1
+	string                        objectiveGroupName
+	bool                          objectiveGroup_thisWasVisible = false
+	void functionref( entity wp ) objectiveGroupOnVisibleTrueFunc = null
+	void functionref( entity wp ) objectiveGroupOnVisibleFalseFunc = null
+}
+
+global struct ClientFirstPersonProxyStruct
+{
+	entity battery
+}

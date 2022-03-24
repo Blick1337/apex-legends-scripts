@@ -1,0 +1,318 @@
+global function ShWeapons_LevelInit
+
+global function RegisterWeaponForUse
+
+global function WeaponItemFlavor_GetClassname
+global function WeaponItemFlavor_GetCategory
+global function WeaponItemFlavor_GetStatsCategory
+global function WeaponItemFlavor_GetArmoryScale
+global function WeaponItemFlavor_GetLootCeremonyScale
+global function WeaponItemFlavor_GetBattlePassScale
+global function WeaponItemFlavor_GetItemInspectScale
+global function WeaponItemFlavor_GetHudIcon
+global function WeaponCategoryFlavor_GetStatsKey
+global function WeaponCategoryFlavor_GetMenuZoomOffset
+global function GetWeaponItemFlavorByClass
+global function GetAllWeaponItemFlavors
+global function GetAllWeaponCategories
+global function GetWeaponsInCategory
+global function GetAllWeaponsInCategory
+global function MainWeapon_GetIsShippingWeapon
+
+#if SERVER || CLIENT
+global function ShowDefaultBodygroupsOnFakeWeapon
+#endif
+
+
+                      
+                      
+                      
+                      
+                      
+  
+
+                                                                                                    
+
+global const string WEAPON_STAT_CATEGORY_GOLD_WEAPON = "crate_unique"
+
+                       
+                       
+                       
+                       
+                       
+struct FileStruct_LifetimeLevel
+{
+	table<string, ItemFlavor> weaponClassnameItemFlavorMap
+}
+FileStruct_LifetimeLevel& fileLevel
+
+
+
+                        
+                        
+                        
+                        
+                        
+#if SERVER || CLIENT || UI
+void function ShWeapons_LevelInit()
+{
+	FileStruct_LifetimeLevel newFileLevel
+	fileLevel = newFileLevel
+
+	#if SERVER && DEV
+		                                               
+	#endif
+
+	#if (SERVER || CLIENT)                                                                                                             
+		PrecacheWeapon( $"weapon_cubemap" )
+	#endif
+
+	AddCallback_RegisterRootItemFlavors( void function() {
+		foreach ( asset weaponAsset in GetBaseItemFlavorsFromArray( "weapons" ) )
+			RegisterItemFlavorFromSettingsAsset( weaponAsset )
+
+		foreach ( asset categoryAsset in GetBaseItemFlavorsFromArray( "weaponCategories" ) )
+			RegisterItemFlavorFromSettingsAsset( categoryAsset )
+	} )
+	AddCallback_OnItemFlavorRegistered( eItemType.loot_main_weapon, OnItemFlavorRegistered_WeaponItemFlavor )
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+void function OnItemFlavorRegistered_WeaponItemFlavor( ItemFlavor weaponFlavor )
+{
+	string classname = WeaponItemFlavor_GetClassname( weaponFlavor )
+	fileLevel.weaponClassnameItemFlavorMap[classname] <- weaponFlavor
+
+	RegisterWeaponForUse( classname )
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+void function RegisterWeaponForUse( string weaponClassname )
+{
+	                                                                   
+	#if SERVER || CLIENT
+		PrecacheWeapon( weaponClassname )
+		RegisterWeaponDamageSource( weaponClassname )
+	#endif
+}
+#endif
+
+
+
+                          
+                          
+                          
+                          
+                          
+string function WeaponItemFlavor_GetClassname( ItemFlavor weapon )
+{
+	Assert( ItemFlavor_GetType( weapon ) == eItemType.loot_main_weapon )
+
+	return GetGlobalSettingsString( ItemFlavor_GetAsset( weapon ), "entityClassname" )
+}
+
+
+ItemFlavor ornull function GetWeaponItemFlavorByClass( string classname )
+{
+	if ( classname in fileLevel.weaponClassnameItemFlavorMap )
+		return fileLevel.weaponClassnameItemFlavorMap[classname]
+
+	return null
+}
+
+
+ItemFlavor function WeaponItemFlavor_GetCategory( ItemFlavor weapon )
+{
+	Assert( ItemFlavor_GetType( weapon ) == eItemType.loot_main_weapon )
+
+	return GetItemFlavorByAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( weapon ), "category" ) )
+}
+
+
+string function WeaponItemFlavor_GetStatsCategory( ItemFlavor weapon )
+{
+	Assert( ItemFlavor_GetType( weapon ) == eItemType.loot_main_weapon )
+
+	return GetGlobalSettingsString( ItemFlavor_GetAsset( weapon ), "statsCategory" )
+}
+
+
+float function WeaponItemFlavor_GetArmoryScale( ItemFlavor weapon )
+{
+	Assert( ItemFlavor_GetType( weapon ) == eItemType.loot_main_weapon )
+
+	return GetGlobalSettingsFloat( ItemFlavor_GetAsset( weapon ), "armoryScale" )
+}
+
+
+float function WeaponItemFlavor_GetLootCeremonyScale( ItemFlavor weapon )
+{
+	Assert( ItemFlavor_GetType( weapon ) == eItemType.loot_main_weapon || ItemFlavor_GetType( weapon ) == eItemType.melee_skin )
+
+	return GetGlobalSettingsFloat( ItemFlavor_GetAsset( weapon ), "lootCeremonyScale" )
+}
+
+
+float function WeaponItemFlavor_GetBattlePassScale( ItemFlavor weapon )
+{
+	Assert( ItemFlavor_GetType( weapon ) == eItemType.loot_main_weapon || ItemFlavor_GetType( weapon ) == eItemType.melee_skin)
+
+	return GetGlobalSettingsFloat( ItemFlavor_GetAsset( weapon ), "battlePassScale" )
+}
+
+
+float function WeaponItemFlavor_GetItemInspectScale( ItemFlavor weapon )
+{
+	Assert( ItemFlavor_GetType( weapon ) == eItemType.loot_main_weapon )
+
+	return GetGlobalSettingsFloat( ItemFlavor_GetAsset( weapon ), "itemInspectScale" )
+}
+
+
+asset function WeaponItemFlavor_GetHudIcon( ItemFlavor weapon )
+{
+	string weaponName = WeaponItemFlavor_GetClassname( weapon )
+
+	return GetWeaponInfoFileKeyFieldAsset_Global( weaponName, "hud_icon" )
+}
+
+
+vector function WeaponCategoryFlavor_GetMenuZoomOffset( ItemFlavor weaponCategory )
+{
+	Assert( ItemFlavor_GetType( weaponCategory ) == eItemType.weapon_category )
+
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( weaponCategory ), "menuZoomOffset" )
+}
+
+
+string function WeaponCategoryFlavor_GetStatsKey( ItemFlavor weaponCategory )
+{
+	Assert( ItemFlavor_GetType( weaponCategory ) == eItemType.weapon_category )
+
+	return GetGlobalSettingsString( ItemFlavor_GetAsset( weaponCategory ), "statsKey" )
+}
+
+
+array<ItemFlavor> function GetAllWeaponItemFlavors()
+{
+	return GetAllItemFlavorsOfType( eItemType.loot_main_weapon )
+}
+
+
+array<ItemFlavor> function GetAllWeaponCategories()
+{
+	return GetAllItemFlavorsOfType( eItemType.weapon_category )
+}
+
+
+array<ItemFlavor> function GetWeaponsInCategory( ItemFlavor category )
+{
+	Assert( ItemFlavor_GetType( category ) == eItemType.weapon_category )
+
+	array<ItemFlavor> allWeapons = GetAllItemFlavorsOfType( eItemType.loot_main_weapon )
+	array<ItemFlavor> categoryWeapons
+
+	entity player = null
+	#if UI
+		player = GetLocalClientPlayer()
+	#elseif CLIENT
+		player = GetLocalClientPlayer()
+	#endif
+
+	foreach ( weapon in allWeapons )
+	{
+		if ( !ItemFlavor_ShouldBeVisible( weapon, player ) )
+			continue
+
+		if ( WeaponItemFlavor_GetCategory( weapon ) == category )
+			categoryWeapons.append( weapon )
+	}
+
+	return categoryWeapons
+}
+
+
+array<ItemFlavor> function GetAllWeaponsInCategory( ItemFlavor category )
+{
+	Assert( ItemFlavor_GetType( category ) == eItemType.weapon_category )
+
+	array<ItemFlavor> allWeapons = GetAllItemFlavorsOfType( eItemType.loot_main_weapon )
+	array<ItemFlavor> categoryWeapons
+
+	foreach ( weapon in allWeapons )
+	{
+		if ( WeaponItemFlavor_GetCategory( weapon ) == category )
+			categoryWeapons.append( weapon )
+	}
+
+	return categoryWeapons
+}
+
+
+bool function MainWeapon_GetIsShippingWeapon( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.loot_main_weapon )
+
+	return GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "shippingWeapon" )
+}
+
+
+
+#if SERVER || CLIENT
+void function ShowDefaultBodygroupsOnFakeWeapon( entity ent, string weaponClassName )
+{
+	SetBodyGroupsForWeaponConfig( ent, weaponClassName, [] )
+	if ( weaponClassName == "mp_weapon_bow" )
+	{
+		int idx = ent.FindBodygroup( "release_aid" )
+		if ( idx < 0 )
+			return
+
+		ent.SetBodygroupModelByIndex( idx, 1 )
+	}
+}
+#endif
+
+
+                      
+                                                                               
+   
+  	                                          
+  	 
+  		                                               
+  		                          
+  		 
+  			                                                 
+  		 
+  	 
+   
+        
+
+
+
+                   
+                   
+                   
+                   
+                   
+#if SERVER && DEV
+                                   
+ 
+	                                                      
+	                                
+	                                    
+
+	                                                          
+	 
+		                                                           
+		                                                                         
+	 
+	                                                                                                                                                    
+ 
+#endif
+
+

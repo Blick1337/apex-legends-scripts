@@ -1,0 +1,14 @@
+
+global function DevGameModes_Init
+
+                  
+                                                             
+
+ 
+      
+
+void function DevGameModes_Init()
+{
+                  
+      
+}

@@ -1,0 +1,396 @@
+global function CloneScriptDamageInfo
+global function GetWeaponClassNameFromDamageInfo
+global function GetWeaponClassNameFromDamageInfoClone
+
+
+global function IsInstantDeath
+global function IsTitanCrushDamage
+global function IsMaxRangeShot
+global function IsMidRangeShot
+global function IsSuicide
+
+#if SERVER
+                                      
+                                 
+                                             
+                               
+                           
+#endif
+
+#if CLIENT
+global function ServerCallback_QuickDeathRumble
+#endif
+
+global struct ScriptDamageInfoClone
+{
+	                                                                                            
+	                                                                                                   
+	entity attacker
+	entity inflictor
+	entity weapon
+	bool forceKill
+	float damage
+	float damageCriticalHitScale
+	float damageShieldScale
+	vector damagePosition
+	int hitGroup
+	int hitBox
+	                     
+	int damageType
+	int customDamageType
+	int damageSourceIdentifier
+	float viewPunchMultiplier
+	float distFromAttackOrigin
+	float distFromExplosionCenter
+	vector damageForce
+	vector damageForceDirection
+	bool isRagdollAllowed
+	int damageFlags
+	string ornull damageWeaponName
+	bool shouldRecordStatsForWeapon
+}
+
+ScriptDamageInfoClone function CloneScriptDamageInfo( var src )
+{
+	ScriptDamageInfoClone dest
+	dest.attacker = DamageInfo_GetAttacker( src )
+	dest.inflictor = DamageInfo_GetInflictor( src )
+	dest.weapon = DamageInfo_GetWeapon( src )
+	dest.forceKill = DamageInfo_GetForceKill( src )
+	dest.damage = DamageInfo_GetDamage( src )
+	dest.damageCriticalHitScale = DamageInfo_GetDamageCriticalHitScale( src )
+	dest.damageShieldScale = DamageInfo_GetDamageShieldScale( src )
+	dest.damagePosition = DamageInfo_GetDamagePosition( src )
+	dest.hitGroup = DamageInfo_GetHitGroup( src )
+	dest.hitBox = DamageInfo_GetHitBox( src )
+	                                                       
+	dest.damageType = DamageInfo_GetDamageType( src )
+	dest.customDamageType = DamageInfo_GetCustomDamageType( src )
+	dest.damageSourceIdentifier = DamageInfo_GetDamageSourceIdentifier( src )
+	dest.viewPunchMultiplier = DamageInfo_GetViewPunchMultiplier( src )
+	dest.distFromAttackOrigin = DamageInfo_GetDistFromAttackOrigin( src )
+	dest.distFromExplosionCenter = DamageInfo_GetDistFromExplosionCenter( src )
+	dest.damageForce = DamageInfo_GetDamageForce( src )
+	dest.damageForceDirection = DamageInfo_GetDamageForceDirection( src )
+	dest.isRagdollAllowed = DamageInfo_IsRagdollAllowed( src )
+	dest.damageFlags = DamageInfo_GetDamageFlags( src )
+	dest.damageWeaponName = DamageInfo_GetDamageWeaponName( src )
+	dest.shouldRecordStatsForWeapon = DamageInfo_ShouldRecordStatsForWeapon( src )
+	return dest
+}
+
+#if SERVER || CLIENT
+string ornull function GetWeaponClassNameFromDamageInfo( var damageInfo )
+{
+	string ornull damageWeaponNameOrNull = DamageInfo_GetDamageWeaponName( damageInfo )
+	if ( damageWeaponNameOrNull != null && damageWeaponNameOrNull != "" )
+		return damageWeaponNameOrNull
+
+	entity weapon = DamageInfo_GetWeapon( damageInfo )
+	if ( IsValid( weapon ) )
+		return weapon.GetWeaponClassName()
+
+	entity inflictor = DamageInfo_GetInflictor( damageInfo )
+	if ( IsValid( inflictor ) && inflictor.IsProjectile() )
+		return inflictor.ProjectileGetWeaponClassName()
+
+	int damageSourceID = DamageInfo_GetDamageSourceIdentifier( damageInfo )
+	if ( DamageSourceIDHasString( damageSourceID ) )
+		return DamageSourceIDToString( damageSourceID )
+
+	return null
+}
+#endif
+
+#if SERVER || CLIENT
+string ornull function GetWeaponClassNameFromDamageInfoClone( ScriptDamageInfoClone dic )
+{
+	if ( dic.damageWeaponName != null && dic.damageWeaponName != "" )
+		return dic.damageWeaponName
+
+	if ( IsValid( dic.weapon ) )
+		return dic.weapon.GetWeaponClassName()
+
+	if ( IsValid( dic.inflictor ) && dic.inflictor.IsProjectile() )
+		return dic.inflictor.ProjectileGetWeaponClassName()
+
+	if ( DamageSourceIDHasString( dic.damageSourceIdentifier ) )
+		return DamageSourceIDToString( dic.damageSourceIdentifier )
+
+	return null
+}
+#endif
+
+#if SERVER
+
+                                                             
+ 
+	                                                  
+	             
+		                                                                                 
+
+	                                                        
+	                 
+		            
+	                                
+		            
+
+	                                                                                              
+ 
+
+                                                      
+ 
+	                                                  
+	             
+		                                                             
+
+	                                                        
+	                 
+		            
+	                                
+		            
+
+	                                                                          
+ 
+
+                                                              
+ 
+	                                                      
+	                                               
+	                                                       
+
+	                                            
+		          
+
+	                                                                                                    
+		          
+
+	                                                         
+ 
+
+                                                                                                                                                                                               
+ 
+	                                                                                                                                          
+	                         
+	 
+		                                                                 
+			           
+
+		                                               
+		                                           
+		                                               
+		                                               
+		                                                                                                             
+		                                                                       
+			                                                                                     
+		                                                             
+		                                                 
+	 
+
+	                                                     
+		            
+
+	                                                                                                
+		            
+
+	                                
+		            
+
+	                                                   
+		            
+
+  	                          
+  	 
+  		            
+  		                   
+  		                                                         
+  		                                                                           
+  		  	            
+  	 
+                 
+                                                          
+              
+      
+
+	                          
+
+	                        
+	 
+		                                                      
+
+		                                    
+			            
+
+		                                 
+	 
+	                                                            
+	 
+		                                                             
+
+		                                    
+			            
+
+		                                              
+	 
+
+	            
+ 
+
+                                                       
+ 
+	                                                   
+
+	                                                                    
+		            
+
+	                     
+	 
+		                                                                                     
+		                                                                                               
+			            
+	 
+
+	           
+ 
+
+#endif          
+
+float function GetWeaponHeadshotDistance( entity weapon )
+{
+	return weapon.GetWeaponSettingFloat( eWeaponVar.headshot_distance )
+}
+
+float function GetProjectileHeadshotDistance( entity projectile )
+{
+	return projectile.GetProjectileWeaponSettingFloat( eWeaponVar.headshot_distance )
+}
+
+bool function IsMaxRangeShot( var damageInfo )
+{
+	entity weapon = DamageInfo_GetWeapon( damageInfo )
+	entity inflictor = DamageInfo_GetInflictor( damageInfo )
+
+	int nearDamage
+	int farDamage
+	float headshotDistance = 0
+
+	if ( IsValid( weapon ) )
+	{
+		nearDamage = weapon.GetWeaponSettingInt( eWeaponVar.damage_near_value )
+		farDamage = weapon.GetWeaponSettingInt( eWeaponVar.damage_far_value )
+		headshotDistance = GetWeaponHeadshotDistance( weapon )
+	}
+	else
+	{
+		weapon = inflictor
+		if ( !IsValid( weapon ) || !weapon.IsProjectile() )
+			return false
+
+		nearDamage = weapon.GetProjectileWeaponSettingInt( eWeaponVar.damage_near_value )
+		farDamage = weapon.GetProjectileWeaponSettingInt( eWeaponVar.damage_far_value )
+		headshotDistance = GetProjectileHeadshotDistance( weapon )
+	}
+
+	if ( farDamage >= nearDamage )                                                                                        
+		return false
+
+	if ( DamageInfo_GetDistFromAttackOrigin( damageInfo ) > headshotDistance )
+		return true
+
+	return false
+}
+
+bool function IsMidRangeShot( var damageInfo )
+{
+	entity weapon = DamageInfo_GetWeapon( damageInfo )
+	entity inflictor = DamageInfo_GetInflictor( damageInfo )
+
+	float nearDist
+	float farDist
+	if ( IsValid( weapon ) )
+	{
+		nearDist = weapon.GetWeaponSettingFloat( eWeaponVar.damage_near_distance )
+		farDist = weapon.GetWeaponSettingFloat( eWeaponVar.damage_far_distance )
+	}
+	else
+	{
+		weapon = inflictor
+		if ( !IsValid( weapon ) || !weapon.IsProjectile() )
+			return false
+
+		nearDist = weapon.GetProjectileWeaponSettingFloat( eWeaponVar.damage_near_distance )
+		farDist = weapon.GetProjectileWeaponSettingFloat( eWeaponVar.damage_far_distance )
+	}
+
+	if ( farDist <= nearDist )                                                                                        
+		return false
+
+	                                                                                                  
+	if ( DamageInfo_GetDistFromAttackOrigin( damageInfo ) > nearDist )
+		return true
+
+	return false
+}
+
+bool function IsInstantDeath( var damageInfo )
+{
+	int damageSourceID = DamageInfo_GetDamageSourceIdentifier( damageInfo )
+
+	switch ( damageSourceID )
+	{
+		case eDamageSourceId.titan_execution:
+		case eDamageSourceId.human_execution:
+		case eDamageSourceId.fall:
+		case eDamageSourceId.splat:
+		case eDamageSourceId.lasergrid:
+		case eDamageSourceId.indoor_inferno:
+		case damagedef_suicide:
+			return true
+
+		default:
+			return false
+	}
+
+	unreachable
+}
+
+bool function IsTitanCrushDamage( var damageInfo )
+{
+	                                                            
+	if ( DamageInfo_GetDamageSourceIdentifier( damageInfo ) == damagedef_titan_step )
+		return true
+
+	return false
+}
+
+bool function IsSuicide( entity attacker, entity victim, int damageSourceId )
+{
+	if ( attacker == victim )
+		return true
+
+	if ( damageSourceId == damagedef_suicide )
+		return true
+
+	if ( damageSourceId == eDamageSourceId.outOfBounds )
+		return true
+
+	if ( damageSourceId == eDamageSourceId.deathField )
+		return true
+
+                               
+                                                            
+                                                                        
+              
+       
+
+	return false
+}
+
+#if CLIENT
+void function ServerCallback_QuickDeathRumble()
+{
+	entity player = GetLocalClientPlayer()
+	if ( IsValid( player ) )
+		Rumble_Play( "QuickDeath", { position = player.GetOrigin() } )
+}
+#endif          

@@ -1,0 +1,615 @@
+global function ClientMusic_SharedInit
+global function ClientMusic_RegisterNetworking
+  
+global function ClientMusic_PlayCustomTrackOnClient
+global function ClientMusic_StopCustomTrackOnClient
+
+#if CLIENT
+global function ClientMusic_RequestStingerForNewZone
+
+#if DEV
+global function ClientMusic_PrintStatus
+#endif           
+#endif          
+
+#if SERVER
+                                                
+                                                
+#endif          
+
+global enum eMusicTrack
+{
+	ZoneTransitionStingers_Survival,
+	ZoneTransitionStingers_Quest,
+
+	GeneralCombatLow,
+	GeneralCombatHigh,
+
+	GeneralWaitingForPlayers,
+	GeneralMatchIntro,
+
+	  
+	ObjectiveComplete,
+	GetToTheLZ,
+	GetOnTheDropship,
+	GetOnTheDropshipLong,
+	DropshipSafe,
+	DropshipMissed,
+	DrillExtraction45sec,
+	DrillExtraction80sec,
+
+
+	  
+	TetraBossFight,
+
+	  
+	QuestBunker_HatchOpen,
+	QuestBunker_1stFloor,
+	QuestBunker_2ndFloor,
+	QuestBunker_EndAnim,
+
+	_count
+}
+
+const array<string> [eMusicTrack._count] s_TracksMap =
+[
+	                                     		["music_skyway_17_slonedies"],
+
+	      
+
+	                                  			["Music_Quest_NewZone"],
+
+	                      					["Music_Quest_EncounterEnemy"],
+	                       					["Music_Quest_CombatActive"],
+
+	                             			["music_timeshift_elevator_bossanova"],
+	                      					["music_tday_02_intro"],
+
+	  
+	                       					["music_mp_freeagents_outro_win"],
+	                						["music_s2s_04_maltabattle_alt"],
+	                      					["Music_Quest_DropshipHasArrived"],
+	                          				["Music_Quest_DropshipHasArrived_Long"],
+	                  						["Music_Quest_Success"],
+	                    					["Music_Quest_Failure"],
+	                          				["Music_Quest_DrillPlaced_Short"],
+	                          				["Music_Quest_DrillPlaced_Long"],
+
+	                    					["Music_PvE_BossBattle"],
+
+	                           				["Music_Quest_Bunker_HatchOpen"],
+	                          				["Music_Quest_Bunker_FirstFloor"],
+	                          				["Music_Quest_Bunker_SecondFloor"],
+	                         				["Music_Quest_Bunker_EndAnimation"],
+
+	  	                    					     
+]
+
+enum eMusicLevel
+{
+	None,
+	Ambient,
+
+	EnemyNear,
+	CombatLow,
+	CombatHigh,
+	WaitingForPlayers,
+	MatchIntro,
+
+	CustomTrack,
+
+	_count
+}
+
+enum eMusicFlag
+{
+	IntroMusicShouldKeepPlaying =	(1 << 0)
+}
+
+
+#if CLIENT
+
+struct TrackPlayData
+{
+	int shufflePos = 999
+	array<int> shuffledIndices
+
+	int lastIndex = -1
+}
+TrackPlayData[eMusicTrack._count] s_TrackPlayDatas
+
+int s_lastPlayedMuscTrackDEBUG = -1
+string function GetNextShuffledTrackFor( int musicTrack )
+{
+	s_lastPlayedMuscTrackDEBUG = musicTrack
+	Assert( (musicTrack >= 0) && (musicTrack < eMusicTrack._count) )
+	if ( s_TracksMap[musicTrack].len() == 0 )
+		return ""
+
+	TrackPlayData tpd = s_TrackPlayDatas[musicTrack]
+	array<int> indices = tpd.shuffledIndices
+
+	++(tpd.shufflePos)
+	if ( tpd.shufflePos >= indices.len() )
+	{
+		tpd.shufflePos = 0
+
+		                 
+		{
+
+			int length = s_TracksMap[musicTrack].len()
+			indices.resize( length )
+			for ( int idx = 0; idx < length; ++idx )
+				indices[idx] = idx
+			indices.randomize()
+
+			              
+			if ( (length > 1) && (indices[0] == tpd.lastIndex) )
+				indices.reverse()
+		}
+	}
+
+	tpd.lastIndex = indices[tpd.shufflePos]
+	return s_TracksMap[musicTrack][tpd.lastIndex]
+}
+
+bool s_zoneStingerRequested = false
+float s_zoneStingerRequestedTime
+void function ClientMusic_RequestStingerForNewZone( int zoneId )
+{
+	s_zoneStingerRequested = true
+	s_zoneStingerRequestedTime = Time()
+}
+
+float function GetStartTimeForAlias( string alias )
+{
+	                 
+	   
+	  	                            
+	  		           
+	   
+	return 0.0
+}
+
+var[2] s_lastPlayedHandles = [null, null]
+string[2] s_lastPlayedAliasesDEBUG = ["", ""]
+void function StartPlayingMusic_( string musicAlias, int idx )
+{
+	if ( musicAlias == "" )
+		return
+	entity player = GetLocalViewPlayer()
+	if ( !IsValid( player ) )
+		return
+
+	float seekTime = GetStartTimeForAlias( musicAlias )
+	if ( seekTime > 0.0001 )
+		s_lastPlayedHandles[idx] = EmitSoundOnEntityWithSeek( player, musicAlias, seekTime )
+	else
+		s_lastPlayedHandles[idx] = EmitSoundOnEntity( player, musicAlias )
+	SetPlayThroughKillReplay( s_lastPlayedHandles[idx] )
+	s_lastPlayedAliasesDEBUG[idx] = musicAlias
+
+	printf( "%s() - '%s'", FUNC_NAME(), musicAlias )
+}
+void function StopPlayingMusic()
+{
+	for ( int idx = 0; idx < s_lastPlayedHandles.len(); ++idx )
+	{
+		if ( s_lastPlayedHandles[idx] != null )
+			StopSound( s_lastPlayedHandles[idx] )
+		s_lastPlayedHandles[idx] = null
+	}
+}
+void function StartPlayingMusicA( string musicAlias )
+{
+	StartPlayingMusic_( musicAlias, 0 )
+}
+void function StartPlayingMusicB( string musicAlias )
+{
+	StartPlayingMusic_( musicAlias, 1 )
+}
+
+int s_cachedAnswer = 0
+float s_cachedAnswerTime = -999.0
+float s_cachedAnswerTimeWasLastTrue = -999.0
+int function CountEnemiesNearby()
+{
+	if ( !IsPVEMode() )
+		return 0
+
+	if ( (Time() - s_cachedAnswerTime) < 5.0 )
+		return s_cachedAnswer
+
+	entity player = GetLocalViewPlayer()
+	if ( !IsValid( player ) )
+		return 0
+
+	array<entity> NPCs = GetNPCArrayEx( "any", TEAM_ANY, player.GetTeam(), player.GetOrigin(), 3000.0 )
+	s_cachedAnswer = NPCs.len()
+	s_cachedAnswerTime = Time()
+	if ( s_cachedAnswer > 0 )
+		s_cachedAnswerTimeWasLastTrue = Time()
+	return s_cachedAnswer
+}
+float function CountEnemiesNearbyTimeSinceValid()
+{
+	return (Time() - s_cachedAnswerTimeWasLastTrue)
+}
+
+float function GetEffectiveDeltaSince( float timeThen )
+{
+	if ( timeThen <= 0.0001 )
+		return 999999.0
+
+	return (Time() - timeThen)
+}
+
+bool function CombatTriggeredCheck( entity player, bool requireHighIntensity )
+{
+	if ( !IsPVEMode() )
+		return false
+
+	if ( !requireHighIntensity )
+	{
+		if ( GetEffectiveDeltaSince( NPCs_GetLastTimePlayerSpotted( player ) ) < 10.0 )
+			return true
+	}
+
+	if ( GetEffectiveDeltaSince( player.GetLastTimeDamagedByNPC() ) < 10.0 )
+		return true
+	if ( GetEffectiveDeltaSince( player.GetLastTimeDidDamageToNPC() ) < 10.0 )
+		return true
+
+	return false
+}
+
+const float NEARBY_FRIENDLY_RANGE = 3000.0
+bool function AnyNearbyFriendlyIsCombatTriggered_( entity player, bool requireHighIntensity )
+{
+	if ( !IsPVEMode() )
+		return false
+
+	array<entity> teamPlayers = GetPlayerArrayEx( "any", player.GetTeam(), TEAM_ANY, player.GetOrigin(), NEARBY_FRIENDLY_RANGE )
+	foreach ( teamPlayer in teamPlayers )
+	{
+		if ( CombatTriggeredCheck( teamPlayer, requireHighIntensity ) )
+			return true
+	}
+
+	return false
+}
+bool function AnyNearbyFriendlyIsCombatTriggered_HighIntensity( entity player )
+{
+	return AnyNearbyFriendlyIsCombatTriggered_( player, true )
+}
+bool function AnyNearbyFriendlyIsCombatTriggered_LowIntensity( entity player )
+{
+	return AnyNearbyFriendlyIsCombatTriggered_( player, false )
+}
+
+bool function AnyNearbyFriendlyIsBleedingOut( entity player )
+{
+	array<entity> teamPlayers = GetPlayerArrayEx( "any", player.GetTeam(), TEAM_ANY, player.GetOrigin(), NEARBY_FRIENDLY_RANGE )
+	foreach ( teamPlayer in teamPlayers )
+	{
+		if ( Bleedout_IsBleedingOut( teamPlayer ) )
+			return true
+	}
+
+	return false
+}
+
+bool function MyTeamIsDeadMyWholeTeamIsDead( entity player )
+{
+	foreach ( teamPlayer in GetPlayerArrayOfTeam( player.GetTeam() ) )
+	{
+		if ( IsAlive( teamPlayer ) )
+			return false
+
+		if ( MissionCheckpoints_GetRespawnsLeftForPlayer( teamPlayer ) > 0 )
+			return false
+	}
+	return true
+}
+
+bool s_customTrackIsPlaying = false
+void function StartPlayingCustomTrack( int musicTrack )
+{
+	StopPlayingCustomTrack()
+	EndSignal( clGlobal.levelEnt, "ClientMusic_CustomTrackStop" )
+
+	string alias = GetNextShuffledTrackFor( musicTrack )
+	if ( alias == "" )
+		return
+
+	StartPlayingMusicA( alias )
+	s_customTrackIsPlaying = true
+
+	OnThreadEnd(
+		function() : ()
+		{
+			s_customTrackIsPlaying = false
+		}
+	)
+
+	if ( s_lastPlayedHandles[0] != null )
+		WaitSignal( s_lastPlayedHandles[0], "OnSoundFinished" )
+}
+
+void function StopPlayingCustomTrack()
+{
+	Signal( clGlobal.levelEnt, "ClientMusic_CustomTrackStop" )
+	Assert( s_customTrackIsPlaying == false )
+}
+
+int s_queuedCustomTrack = -1
+int function GetDesiredMusicLevel( int levelNow )
+{
+	if ( !IsPVEMode() )
+		return eMusicLevel.None
+
+	entity player = GetLocalViewPlayer()
+	if ( !IsValid( player ) )
+		return eMusicLevel.Ambient
+
+	int gameState = GetGameState()
+  	                                                                                                                               
+  		                             
+	if ( (gameState >= eGameState.Playing) && MyTeamIsDeadMyWholeTeamIsDead( player ) )
+		return eMusicLevel.None
+
+	if ( (s_queuedCustomTrack >= 0) || s_customTrackIsPlaying )
+		return eMusicLevel.CustomTrack
+
+  	                                                
+  		                                    
+
+	if ( (levelNow != eMusicLevel.CombatHigh) && AnyNearbyFriendlyIsCombatTriggered_HighIntensity( player ) && (CountEnemiesNearby() >= 2) )
+	{
+		return eMusicLevel.CombatHigh
+	}
+	else if ( (levelNow != eMusicLevel.CombatHigh) && (levelNow != eMusicLevel.CombatLow) && AnyNearbyFriendlyIsCombatTriggered_LowIntensity( player ) && (CountEnemiesNearby() >= 1) )
+	{
+		return eMusicLevel.CombatLow
+	}
+	else if ( (levelNow == eMusicLevel.CombatHigh) || (levelNow == eMusicLevel.CombatLow) )
+	{
+		if ( CountEnemiesNearby() >= 1 )
+			return levelNow
+		if ( CountEnemiesNearbyTimeSinceValid() < 10.0 )
+			return levelNow
+		if ( AnyNearbyFriendlyIsBleedingOut( player ) )
+			return levelNow
+		if ( GetEffectiveDeltaSince( NPCs_GetLastTimePlayerSpotted( player ) ) < 10.0 )
+			return levelNow
+	}
+
+	                           
+	  	                            
+
+	return eMusicLevel.Ambient
+}
+
+int s_musicLevel = eMusicLevel.None
+void function ClientMusicFRAME()
+{
+	int oldMusicLevel = s_musicLevel
+	int newMusicLevel = GetDesiredMusicLevel( s_musicLevel )
+	if ( (newMusicLevel != s_musicLevel) || ((newMusicLevel == eMusicLevel.CustomTrack) && (s_queuedCustomTrack > 0)) )
+	{
+		bool oldMusicWasCombat = ((oldMusicLevel == eMusicLevel.CombatLow) || (oldMusicLevel == eMusicLevel.CombatHigh))
+		bool newMusicIsCombat = ((newMusicLevel == eMusicLevel.CombatLow) || (newMusicLevel == eMusicLevel.CombatHigh))
+		if ( !(oldMusicWasCombat && newMusicIsCombat) )
+			StopPlayingMusic()
+
+		if ( newMusicLevel == eMusicLevel.CustomTrack )
+		{
+			thread StartPlayingCustomTrack( s_queuedCustomTrack )
+			s_queuedCustomTrack = -1
+		}
+		else if ( IsPVEMode() )
+		{
+			if ( newMusicLevel == eMusicLevel.EnemyNear )
+			{
+				  
+			}
+			else if ( (newMusicLevel == eMusicLevel.CombatLow) || (newMusicLevel == eMusicLevel.CombatHigh) )
+			{
+				if ( oldMusicLevel != eMusicLevel.CombatLow )
+					StartPlayingMusicA( GetNextShuffledTrackFor( eMusicTrack.GeneralCombatLow ) )
+				if ( newMusicLevel == eMusicLevel.CombatHigh )
+					StartPlayingMusicB( GetNextShuffledTrackFor( eMusicTrack.GeneralCombatHigh ) )
+			}
+			else if ( newMusicLevel == eMusicLevel.WaitingForPlayers )
+			{
+				StartPlayingMusicA( GetNextShuffledTrackFor( eMusicTrack.GeneralWaitingForPlayers ) )
+			}
+			else if ( newMusicLevel == eMusicLevel.MatchIntro )
+			{
+				StartPlayingMusicA( GetNextShuffledTrackFor( eMusicTrack.GeneralMatchIntro ) )
+			}
+			else if ( newMusicLevel == eMusicLevel.Ambient )
+			{
+			}
+		}
+
+		if ( IsPVEMode() )
+			s_musicLevel = newMusicLevel
+	}
+
+	if ( s_zoneStingerRequested && (s_musicLevel == eMusicLevel.Ambient || s_musicLevel == eMusicLevel.None) )
+	{
+		float timeSinceRequest = (Time() - s_zoneStingerRequestedTime)
+		if ( timeSinceRequest < 10.0 )
+			StartPlayingMusicA( GetNextShuffledTrackFor( IsPVEMode() ? eMusicTrack.ZoneTransitionStingers_Quest : eMusicTrack.ZoneTransitionStingers_Survival ) )
+
+		s_zoneStingerRequested = false
+	}
+
+	                
+#if DEV
+	if ( GetConVarInt( "pve_debug" ) != 0 )
+	{
+		string text = GetClientMusicStatusLine()
+		DebugScreenTextWithColor( 0.65, 0.985, GetClientMusicStatusLine(), <128, 128, 168> )
+
+		entity player = GetLocalViewPlayer()
+		if ( IsPVEMode() && IsValid( player ) )
+		{
+			string npcText = "Last Spotted: Never"
+			float delta = 99.9
+			float lastSpotted = NPCs_GetLastTimePlayerSpotted( player )
+			if ( lastSpotted > 0.0 )
+			{
+				delta = (Time() - lastSpotted)
+				npcText = format( "Last Spotted: %.0f", delta )
+			}
+			vector color = GraphCappedVector( delta, 0.0, 2.0, <255, 128, 168>, <128, 128, 168> )
+			DebugScreenTextWithColor( 0.05, 0.985, npcText, color )
+		}
+
+		string freelanceText
+		if ( IsPVEMode() )
+		{
+			int phase = FreelanceMode_GetCurrentPhase()
+			freelanceText = format( "eFreelanceModePhase.%s (#%d) ", GetNameForEnum( eFreelanceModePhase, phase ), phase )
+		}
+		DebugScreenTextWithColor( 0.25, 0.985,
+			                                                                                                                                                                                                                                                                                                     
+			format( "eGameState.%s (%d)  %s t:%.0f", GetNameForEnum( eGameState, GetGameState() ), GetGameState(), freelanceText, Time() ),
+			<128, 128, 168> )
+	}
+#endif           
+}
+
+
+bool s_isRunning = false
+bool s_inFrame = false
+bool s_inLoopWaitFrame = false
+float s_startTime = -999.0
+float s_lastFrameTime = 0
+void function ClientMusicFrameThread()
+{
+	Assert( !s_isRunning )
+	s_isRunning = true
+	s_startTime = Time()
+
+	WaitFrame()
+
+	while ( true )
+	{
+#if DEV
+		float preFrameTime = Time()
+#endif       
+
+		s_inFrame = true
+		s_lastFrameTime = Time()
+		ClientMusicFRAME()
+		s_inFrame = false
+
+#if DEV
+		float postFrameTime = Time()
+		Assert( preFrameTime == postFrameTime, format( "ClientMusicFRAME() stalled for %.2f seconds. Should have no waits.", (postFrameTime - preFrameTime) ) )
+#endif       
+
+		s_inLoopWaitFrame = true
+		WaitFrame()
+		s_inLoopWaitFrame = false
+	}
+}
+
+#if DEV
+void function ClientMusic_PrintStatus()
+{
+	printf( "running: %s, mid-frame: %s, in-waitframe: %s, startTime: %.2f, lastFrameTime: %.2f, timeNow: %.2f", (s_isRunning ? "yes" : "no"), (s_inFrame ? "yes" : "no"), (s_inLoopWaitFrame ? "yes" : "no"), s_startTime, s_lastFrameTime, Time() )
+	printf( "status: %s", GetClientMusicStatusLine() )
+}
+#endif           
+
+string function GetDebugNameForMusicLevel( int musicLevel )
+{
+	foreach( string key, int val in eMusicLevel )
+	{
+		if ( val == musicLevel )
+			return key
+	}
+	return ""
+}
+
+string function GetDebugNameForMusicTrack( int musicTrack )
+{
+	foreach( string key, int val in eMusicTrack )
+	{
+		if ( val == musicTrack )
+			return key
+	}
+	return ""
+}
+
+#if DEV
+string function GetClientMusicStatusLine()
+{
+	  	             
+	return format( "'%s',   latest - %s::'%s','%s'", GetDebugNameForMusicLevel( s_musicLevel ), GetDebugNameForMusicTrack( s_lastPlayedMuscTrackDEBUG ), s_lastPlayedAliasesDEBUG[0], s_lastPlayedAliasesDEBUG[1] )
+}
+#endif           
+#endif          
+
+const string FUNCNAME_PLAYCUSTOMTRACKONCLIENT = "ClientMusic_PlayCustomTrackOnClient"
+const string FUNCNAME_STOPCUSTOMTRACKONCLIENT = "ClientMusic_StopCustomTrackOnClient"
+
+void function ClientMusic_RegisterNetworking()
+{
+	Remote_RegisterClientFunction( FUNCNAME_PLAYCUSTOMTRACKONCLIENT, "entity", "int", -1, eMusicTrack._count )
+	Remote_RegisterClientFunction( FUNCNAME_STOPCUSTOMTRACKONCLIENT, "entity" )
+}
+
+void function ClientMusic_PlayCustomTrackOnClient( entity player, int musicTrack )
+{
+	Assert( (musicTrack >= 0) && (musicTrack < eMusicTrack._count) )
+
+#if SERVER
+	                                                                                             
+	                                                                                             
+#else
+	printf( "%s() - recieved for musicTrack:%d", FUNC_NAME(), musicTrack )
+	s_queuedCustomTrack = musicTrack
+#endif
+}
+
+void function ClientMusic_StopCustomTrackOnClient( entity player )
+{
+#if SERVER
+	                                                                                 
+#else
+	printf( "%s() - received.", FUNC_NAME() )
+	StopPlayingCustomTrack()
+#endif
+}
+
+void function ClientMusic_SharedInit()
+{
+#if CLIENT
+	RegisterSignal( "ClientMusic_CustomTrackStop" )
+	thread ClientMusicFrameThread()
+#endif          
+}
+
+
+#if SERVER
+                                                                
+ 
+	                                        
+	                             
+		                                                         
+ 
+
+                                                
+ 
+	                                        
+	                             
+		                                             
+ 
+#endif          
+
+

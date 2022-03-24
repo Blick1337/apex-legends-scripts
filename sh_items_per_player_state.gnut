@@ -1,0 +1,602 @@
+global function ShItemPerPlayerState_LevelInit
+
+#if SERVER
+                                                     
+                                                           
+                                            
+                                                
+#endif
+
+#if CLIENT
+global function ServerToClient_OnItemFlavorNewnessChanged
+#endif
+
+#if UI
+global function Newness_IsItemFlavorNew
+global function Newness_IfNecessaryMarkItemFlavorAsNoLongerNewAndInformServer
+global function Newness_ReverseQuery_Setup
+global function Newness_ReverseQuery_GetNewCount
+global function Newness_AddCallbackAndCallNow_OnRerverseQueryUpdated
+global function Newness_RemoveCallback_OnRerverseQueryUpdated
+
+global function ClientToUI_OnItemFlavorNewnessChanged
+global function MarkAllItemsAsViewed
+global function MarkAllItemsOfTypeAsViewed
+#endif
+
+#if CLIENT || UI
+global function Newness_TEMP_MarkItemAsNewAndInformServer
+#endif
+
+#if UI && DEV
+global function DEV_Newness_ReverseQueryTest
+global function DEV_Newness_DumpSparseList
+#endif
+
+
+const int NUM_NEW_ITEM_FLAVORS_TO_PERSIST = 80
+
+
+typedef OnNewnessReverseQueryUpdatedCallbackType void functionref( int newCount, var optionalArg )
+global struct OnNewnessReverseQueryUpdatedCallbackStruct
+{
+	OnNewnessReverseQueryUpdatedCallbackType cb
+	var                                      optionalArg = null
+}
+
+global struct Newness_ReverseQuery
+{
+	              
+	array<Newness_ReverseQuery> queryDependencies
+	array<ItemFlavor>           itemFlavDependencies
+
+	                 
+	bool                                              isSetUp = false
+	array<Newness_ReverseQuery>                       dependentsList
+	int                                               newCount
+	array<OnNewnessReverseQueryUpdatedCallbackStruct> onChangeCallbackList
+}
+
+
+
+                       
+                       
+                       
+                       
+                       
+struct FileStruct_LifetimeLevel
+{
+	#if UI
+		table<ItemFlavor, bool>                         newItemFlavorSet
+		table<ItemFlavor, array<Newness_ReverseQuery> > itemFlavorReverseQueryShallowDependentListMap
+	#endif
+}
+FileStruct_LifetimeLevel& fileLevel
+
+
+
+                        
+                        
+                        
+                        
+                        
+void function ShItemPerPlayerState_LevelInit()
+{
+	FileStruct_LifetimeLevel newFileLevel
+	fileLevel = newFileLevel
+
+	#if SERVER
+		       
+			                                                 
+		      
+	#endif
+
+	#if UI
+		AddCallback_OnPersistentDataReady( OnPersistentDataReady )
+	#endif
+
+	#if SERVER || CLIENT
+		Remote_RegisterClientFunction( "ServerToClient_OnItemFlavorNewnessChanged", "int", -INT_MAX, INT_MAX, "bool" )
+	#endif
+}
+
+
+
+                          
+                          
+                          
+                          
+                          
+#if SERVER
+                                                                                                                                      
+ 
+	                                                 
+		                                                                                              
+			                                         
+
+	                                      
+	                                                
+		                                                                                                  
+
+	                                                                          
+	                                                                                                
+	 
+		                                                                                                                     
+
+		                      
+			                      
+
+		                      
+		                                                  
+		 
+			                              
+			 
+				                
+				       
+					                         
+						        
+					                                                                                                                                                               
+				      
+			 
+
+		 
+
+		                
+			        
+
+		                             
+	 
+
+	                                      
+	 
+		                           
+		                          
+			                                                                                                                                          
+	 
+
+	                                                                                                
+	 
+		                             
+		                                           
+			                                           
+		    
+			               
+
+		                                                                                              
+	 
+
+	                                                
+	 
+		                                                        
+		                                                                                                
+	 
+ 
+#endif
+#if SERVER
+                                                                                                  
+ 
+	                                                                          
+	                                                                                                
+	 
+		                                                                                                                     
+		                         
+		 
+			                                                                                    
+			                                                                                                 
+			     
+		 
+	 
+ 
+#endif
+
+
+#if UI
+bool function Newness_IsItemFlavorNew( ItemFlavor flavor )
+{
+	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
+
+	return (flavor in fileLevel.newItemFlavorSet)
+}
+#endif
+
+
+#if UI
+void function Newness_IfNecessaryMarkItemFlavorAsNoLongerNewAndInformServer( ItemFlavor flavor )
+{
+	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
+
+	                                                                                                                           
+	if ( !(flavor in fileLevel.newItemFlavorSet) )
+		return
+
+	delete fileLevel.newItemFlavorSet[flavor]
+
+	if ( flavor in fileLevel.itemFlavorReverseQueryShallowDependentListMap )
+	{
+		array<Newness_ReverseQuery> shallowDependentList = fileLevel.itemFlavorReverseQueryShallowDependentListMap[flavor]
+		array<Newness_ReverseQuery> affectedQueriesList  = []
+		UpdateReverseQueryDependents( shallowDependentList, -1, affectedQueriesList )
+
+		foreach ( Newness_ReverseQuery affectedQuery in affectedQueriesList )
+		{
+			foreach ( OnNewnessReverseQueryUpdatedCallbackStruct cbs in affectedQuery.onChangeCallbackList )
+				cbs.cb( affectedQuery.newCount, cbs.optionalArg )
+		}
+	}
+
+	SettingsAssetGUID guid = ItemFlavor_GetGUID( flavor )
+	Remote_ServerCallFunction("ClientCallback_newness_clear", guid )
+}
+
+array<ItemFlavor> function Newness_GetNewItemFlavorSet()
+{
+	array<ItemFlavor> itemFlavorArray
+	foreach (ItemFlavor flav, bool b in fileLevel.newItemFlavorSet)
+		itemFlavorArray.append( flav )
+
+	return itemFlavorArray
+}
+
+                             
+void function MarkAllItemsAsViewed( var button )
+{
+	array<ItemFlavor> itemFlavorArray = Newness_GetNewItemFlavorSet()
+	foreach ( ItemFlavor iFlavor in itemFlavorArray )
+		Newness_IfNecessaryMarkItemFlavorAsNoLongerNewAndInformServer( iFlavor )
+}
+
+bool function MarkAllItemsOfTypeAsViewed( int categoryType )
+{
+	bool itemsMarkedAsViewed = false
+	array<ItemFlavor> itemFlavorArray = Newness_GetNewItemFlavorSet()
+	foreach ( ItemFlavor iFlavor in itemFlavorArray )
+	{
+		int flavorCategoryType = ItemFlavor_GetTypeUICategory( iFlavor )
+		if ( ( flavorCategoryType != eItemTypeUICategory.NONE ) && ( flavorCategoryType == categoryType ) )
+		{
+			Newness_IfNecessaryMarkItemFlavorAsNoLongerNewAndInformServer( iFlavor )
+			itemsMarkedAsViewed = true
+		}
+	}
+	return itemsMarkedAsViewed
+}
+#endif
+
+
+#if CLIENT || UI
+void function Newness_TEMP_MarkItemAsNewAndInformServer( ItemFlavor flavor )
+{
+	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
+
+	                         
+	SettingsAssetGUID guid = ItemFlavor_GetGUID( flavor )
+
+	Remote_ServerCallFunction( "ClientCallback_temp_newness_mark", guid )
+}
+#endif
+
+
+#if UI
+int function Newness_ReverseQuery_GetNewCount( Newness_ReverseQuery rq )
+{
+	return rq.newCount
+}
+#endif
+
+
+#if UI
+void function Newness_ReverseQuery_Setup(
+		Newness_ReverseQuery rq,
+		array<Newness_ReverseQuery> queryDependencies,
+		array<ItemFlavor> itemFlavDependencies )
+{
+	Assert( !rq.isSetUp, "Called Newness_ReverseQuery_Setup twice on 1 Newness_ReverseQuery struct" )
+	rq.queryDependencies = queryDependencies
+	rq.itemFlavDependencies = itemFlavDependencies
+	rq.isSetUp = true
+	rq.newCount = 0
+
+	foreach ( Newness_ReverseQuery dependency in rq.queryDependencies )
+	{
+		dependency.dependentsList.append( rq )
+		Assert( dependency.dependentsList.len() < 10, "probably leaking Newness_ReverseQuery structs" )
+		rq.newCount += dependency.newCount
+	}
+
+	foreach ( ItemFlavor dependency in rq.itemFlavDependencies )
+	{
+		array<Newness_ReverseQuery> itemFlavorShallowDependentList
+		if ( dependency in fileLevel.itemFlavorReverseQueryShallowDependentListMap )
+			itemFlavorShallowDependentList = fileLevel.itemFlavorReverseQueryShallowDependentListMap[dependency]
+		else
+			fileLevel.itemFlavorReverseQueryShallowDependentListMap[dependency] <- itemFlavorShallowDependentList
+
+		itemFlavorShallowDependentList.append( rq )
+		                                                                                                      
+
+		if ( dependency in fileLevel.newItemFlavorSet )
+			rq.newCount += 1
+	}
+
+	foreach ( OnNewnessReverseQueryUpdatedCallbackStruct cbs in rq.onChangeCallbackList )
+	{
+		cbs.cb( rq.newCount, cbs.optionalArg )
+	}
+}
+#endif
+
+
+        
+                                                                       
+   
+  	                                                                                                                
+  	                                                                                                                                                                              
+  	                  
+  
+  	                                                                   
+  		                                             
+  
+  	                                                            
+  	 
+  		                                                                                                                                
+  		                                                  
+  	 
+   
+        
+
+
+#if UI
+void function Newness_AddCallbackAndCallNow_OnRerverseQueryUpdated( Newness_ReverseQuery rq, OnNewnessReverseQueryUpdatedCallbackType cb, var optionalArg = null )
+{
+	#if ASSERTING
+		int foundIndex = -1
+		foreach ( int index, OnNewnessReverseQueryUpdatedCallbackStruct cbs in rq.onChangeCallbackList )
+		{
+			if ( cbs.cb == cb && cbs.optionalArg == optionalArg )
+			{
+				foundIndex = index
+				break
+			}
+		}
+		Assert( foundIndex == -1, "Tried to add a callback that was already added" )
+	#endif
+	OnNewnessReverseQueryUpdatedCallbackStruct cbs
+	cbs.cb = cb
+	cbs.optionalArg = optionalArg
+	rq.onChangeCallbackList.append( cbs )
+	Assert( rq.onChangeCallbackList.len() < 10, "probably leaking Newness_ReverseQuery callbacks by calling AddCallback but not RemoveCallback" )
+	cb( rq.newCount, optionalArg )
+}
+#endif
+
+
+#if UI
+void function Newness_RemoveCallback_OnRerverseQueryUpdated( Newness_ReverseQuery rq, OnNewnessReverseQueryUpdatedCallbackType cb, var optionalArg = null )
+{
+	int foundIndex = -1
+	foreach ( int index, OnNewnessReverseQueryUpdatedCallbackStruct cbs in rq.onChangeCallbackList )
+	{
+		if ( cbs.cb == cb && cbs.optionalArg == optionalArg )
+		{
+			foundIndex = index
+			break
+		}
+	}
+	Assert( foundIndex != -1, "Tried to remove a callback that was not added" )
+
+	if ( foundIndex >= 0 )
+		rq.onChangeCallbackList.fastremove( foundIndex )
+}
+#endif
+
+
+
+                   
+                   
+                   
+                   
+                   
+#if SERVER
+                                                                     
+ 
+	                                     
+	 
+		                                                                             
+		      
+	 
+
+	                                                           
+ 
+#endif
+
+
+#if SERVER
+                                                                         
+ 
+	                                                                                                 
+	                                     
+	 
+		                                                                             
+		      
+	 
+
+	                                             
+	                                                             
+ 
+#endif
+
+
+#if UI
+array<Newness_ReverseQuery> function OnItemFlavorNewnessChanged( ItemFlavor flavor, bool isNew, bool shouldRunCallbacks )
+{
+	                                                                                                                                                                          
+	if ( isNew == (flavor in fileLevel.newItemFlavorSet) )
+	{
+		                                                                                                                 
+		return []
+	}
+
+	fileLevel.newItemFlavorSet[flavor] <- true
+
+	array<Newness_ReverseQuery> affectedQueriesList = []
+	if ( flavor in fileLevel.itemFlavorReverseQueryShallowDependentListMap )
+	{
+		array<Newness_ReverseQuery> shallowDependentList = fileLevel.itemFlavorReverseQueryShallowDependentListMap[flavor]
+		UpdateReverseQueryDependents( shallowDependentList, isNew ? 1 : -1, affectedQueriesList )
+
+		if ( shouldRunCallbacks )
+		{
+			foreach ( Newness_ReverseQuery affectedQuery in affectedQueriesList )
+			{
+				foreach ( OnNewnessReverseQueryUpdatedCallbackStruct cbs in affectedQuery.onChangeCallbackList )
+					cbs.cb( affectedQuery.newCount, cbs.optionalArg )
+			}
+		}
+	}
+	return affectedQueriesList
+}
+#endif
+
+
+#if UI
+void function UpdateReverseQueryDependents( array<Newness_ReverseQuery> dependentList, int delta, array<Newness_ReverseQuery> affectedQueriesList )
+{
+	foreach ( Newness_ReverseQuery dependent in dependentList )
+	{
+		dependent.newCount += delta
+
+		affectedQueriesList.append( dependent )
+
+		UpdateReverseQueryDependents( dependent.dependentsList, delta, affectedQueriesList )
+	}
+}
+#endif
+
+
+#if UI
+void function OnPersistentDataReady( entity _unused )
+{
+	#if DEV
+		if ( DEV_ShouldIgnorePersistence() )
+			return
+	#endif
+
+	array<Newness_ReverseQuery> affectedQueriesList      = []
+	table<Newness_ReverseQuery, bool> affectedQueriesSet = {}
+
+	int sparseListSize = PersistenceGetArrayCount( "newItemFlavorSparseList" )
+	for ( int sparseListSlotIndex = 0; sparseListSlotIndex < sparseListSize; sparseListSlotIndex++ )
+	{
+		SettingsAssetGUID guid = GetPersistentVarAsInt( "newItemFlavorSparseList[" + sparseListSlotIndex + "]" )
+		if ( guid == 0 )
+			continue
+
+		if ( !IsValidItemFlavorGUID( guid ) )
+		{
+			Warning( "Player had invalid item flavor GUID in their persistent sparse newness set: " + guid )
+			continue
+		}
+
+		ItemFlavor flav                                              = GetItemFlavorByGUID( guid )
+		array<Newness_ReverseQuery> affectedQueriesListForThisFlavor = []
+		affectedQueriesListForThisFlavor = OnItemFlavorNewnessChanged( flav, true, false )
+		foreach ( Newness_ReverseQuery affectedQuery in affectedQueriesListForThisFlavor )
+		{
+			if ( (affectedQuery in affectedQueriesSet) )
+				continue
+
+			affectedQueriesList.append( affectedQuery )
+			affectedQueriesSet[affectedQuery] <- true
+		}
+	}
+
+	foreach ( Newness_ReverseQuery affectedQuery in affectedQueriesList )
+	{
+		foreach ( OnNewnessReverseQueryUpdatedCallbackStruct cbs in affectedQuery.onChangeCallbackList )
+			cbs.cb( affectedQuery.newCount, cbs.optionalArg )
+	}
+}
+#endif
+
+
+#if CLIENT
+void function ServerToClient_OnItemFlavorNewnessChanged( int guid, bool isNew )
+{
+	RunUIScript( "ClientToUI_OnItemFlavorNewnessChanged", guid, isNew )
+}
+#endif
+
+
+#if UI
+void function ClientToUI_OnItemFlavorNewnessChanged( int guid, bool isNew )
+{
+	ItemFlavor flavor = GetItemFlavorByGUID( guid )
+	OnItemFlavorNewnessChanged( flavor, isNew, true )
+}
+#endif
+
+
+#if SERVER && DEV && !SP
+                                     
+ 
+	                                           
+	                                                                                                   
+	                           
+ 
+#endif
+
+
+#if UI && DEV
+void function DEV_Newness_ReverseQueryTest()
+{
+	Newness_ReverseQuery charactersRQ
+	Newness_ReverseQuery_Setup( charactersRQ, [], GetAllCharacters() )
+	Newness_ReverseQuery weaponSkinsRQ
+	Newness_ReverseQuery_Setup( weaponSkinsRQ, [], GetAllItemFlavorsOfType( eItemType.weapon_skin ) )
+	Newness_ReverseQuery combinedRQ
+	Newness_ReverseQuery_Setup( combinedRQ, [charactersRQ, weaponSkinsRQ], [] )
+	Newness_ReverseQuery superCombinedRQ
+	Newness_ReverseQuery_Setup( superCombinedRQ, [combinedRQ], [ GetItemFlavorByHumanReadableRef( "character_skin_lifeline_common_05" ) ] )
+
+	Newness_AddCallbackAndCallNow_OnRerverseQueryUpdated( charactersRQ, void function( int newCount, var unused ) {
+		printf( "NEWNESS TEST: charactersRQ    = %d", newCount )
+	} )
+	Newness_AddCallbackAndCallNow_OnRerverseQueryUpdated( weaponSkinsRQ, void function( int newCount, var unused ) {
+		printf( "NEWNESS TEST: weaponSkinsRQ   = %d", newCount )
+	} )
+	Newness_AddCallbackAndCallNow_OnRerverseQueryUpdated( combinedRQ, void function( int newCount, var unused ) {
+		printf( "NEWNESS TEST: combinedRQ      = %d", newCount )
+	} )
+	Newness_AddCallbackAndCallNow_OnRerverseQueryUpdated( superCombinedRQ, void function( int newCount, var unused ) {
+		printf( "NEWNESS TEST: superCombinedRQ = %d", newCount )
+	} )
+}
+
+void function DEV_Newness_DumpSparseList( entity player )
+{
+	int sparseListSize = PersistenceGetArrayCount( "newItemFlavorSparseList" )
+	for ( int sparseListSlotIndex = 0; sparseListSlotIndex < sparseListSize; sparseListSlotIndex++ )
+	{
+		SettingsAssetGUID storedGuid = player.GetPersistentVarAsInt( "newItemFlavorSparseList[" + sparseListSlotIndex + "]" )
+
+		if ( storedGuid == 0 )
+			continue              
+
+		ItemFlavor ornull flavor = GetItemFlavorOrNullByGUID( storedGuid )
+
+		printt( "entry in player's persistent newness sparse list:", DEV_DescItemFlavor( GetItemFlavorOrNullByGUID( storedGuid ), false ) )
+		if ( flavor != null )
+		{
+			expect ItemFlavor( flavor )
+
+			array<LoadoutEntry> slots = GetAppropriateLoadoutSlotsForItemFlavor( flavor )
+			foreach( slot in slots )
+			{
+				printt( "\tIsItemFlavorUnlockedForLoadoutSlot", IsItemFlavorUnlockedForLoadoutSlot( ToEHI(player), slot, flavor ) )
+			}
+		}
+	}
+}
+#endif
+
+

@@ -1,0 +1,272 @@
+
+#if CLIENT
+global function TrackFirstPersonGunShield
+#endif
+
+#if SERVER
+                                                   
+                                                  
+                                        
+
+                               
+ 
+	                         
+	                               
+	                               
+	                                      
+	                     
+	                                  
+	                    
+	                       
+	                       
+	                  
+	            
+	              
+	                
+	                            
+	                               
+	                                              
+	                                                           
+	                        
+	                       
+	                           
+
+	           
+	                                    
+	                          
+	                      
+	                                   
+ 
+
+                                                                    
+                                                                    
+
+                                                                        
+                                        
+                                                                           
+ 
+	                         
+
+	                                                              
+	               
+		           
+
+	                                                                                                                                                                                                
+	                                                                   
+	                            
+
+	                   
+	                                        
+
+	                   
+		                  
+
+	                                
+		                                         
+
+	                       
+	 
+		                                 
+		                                               
+	 
+
+	                            
+
+	                                        
+	                                     
+	                                          
+
+	                       
+	 
+		                                                   
+	 
+	    
+	 
+		                                          
+	 
+
+	                                
+		                                                               
+	                                    
+		                                                                       
+
+	                                
+	                                                                
+
+	                                                    
+	                                          
+
+	                         
+		                                           
+
+	                  
+ 
+
+                                                             
+                                                                          
+ 
+	                   	                                                      
+	                                                                                                                            
+		                                                                                                 
+
+	                     
+
+	                                                                   
+
+	                   
+		                  
+
+	                                
+		                                         
+
+	                          
+	 
+		                                 
+		                                               
+	 
+
+	                                        
+	                                     
+	                                          
+
+	                       
+		                                                   
+	    
+		                                          
+
+	                                
+	                                                                
+
+	                                                    
+
+	                                          
+
+	                         
+		                                           
+
+	                  
+ 
+
+                                                                                  
+ 
+	                                                                                            
+	                     
+	                            
+
+	                                                                                                          
+
+	                            
+	 
+		                                                                             
+		                                                                
+
+		                                          
+		 
+			                   
+			                    
+			                                                                                                                                                                    
+
+			                      
+			                                
+
+			                                                                                                                                
+				                                 
+
+			                        
+
+			                      
+			                                         
+			                                      
+
+			                       
+			 
+				                       
+				                                     
+			 
+
+			                                                                               
+		 
+	 
+	    
+	 
+		                                                                            
+			                                                                                             
+
+		                          
+		                            
+		 
+			                                             
+			                                                
+			                                                           
+		 
+
+		                                                                      
+		                                                                                           
+			                                               
+
+		                                   
+		                          
+
+		               
+		 
+			                           
+			                                         
+		 
+	 
+ 
+#endif              
+
+#if CLIENT
+void function TrackFirstPersonGunShield( entity vortexWeapon, asset shieldEffect, string attachment )
+{
+	thread TrackFirstPersonGunShield_Thread( vortexWeapon, shieldEffect, attachment )
+}
+
+void function TrackFirstPersonGunShield_Thread( entity vortexWeapon, asset shieldFX, string attachment )
+{
+	vortexWeapon.EndSignal( "OnDestroy" )
+	vortexWeapon.EndSignal( "OnChargeEnd" )
+
+	table<string,int> e
+	e["fxHandle"] <- -1
+
+	OnThreadEnd(
+		function() : ( e )
+		{
+			if ( e["fxHandle"] != -1 )
+				EffectStop( e["fxHandle"], true, false )
+		}
+	)
+
+	while ( true )
+	{
+		entity vortexSphere = vortexWeapon.GetWeaponUtilityEntity()
+
+		if ( IsValid( vortexSphere ) )
+		{
+			float healthFrac = GetHealthFrac( vortexSphere ) * 0.01
+			if ( e["fxHandle"] == -1 )
+				e["fxHandle"] = vortexWeapon.PlayWeaponEffectReturnViewEffectHandle( shieldFX, $"", attachment )
+
+			UpdateShieldColor( healthFrac, e["fxHandle"] )
+		}
+		else if ( e["fxHandle"] != -1 )
+		{
+			EffectStop( e["fxHandle"], true, false )
+			e["fxHandle"] = -1
+		}
+
+		WaitFrame()
+	}
+
+	WaitForever()
+}
+
+void function UpdateShieldColor( float shieldFrac, int fxHandle )
+{
+	vector colorVec = GetShieldTriLerpColor( 1.0 - shieldFrac )
+
+	if ( EffectDoesExist( fxHandle ) )
+		EffectSetControlPointVector( fxHandle, 1, colorVec )
+}
+#endif              

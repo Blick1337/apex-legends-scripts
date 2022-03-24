@@ -1,0 +1,415 @@
+untyped
+
+global function MinimapShared_Init
+global function GetMinimapMaterial
+
+const MINIMAP_MINION_SCALE = 0.035
+const MINIMAP_MINION_SCALE_COOP = 0.021
+
+                                                                               
+                                                                                                
+                                                                         
+
+#if SERVER
+                                   
+                                            
+                                          
+                                        
+                                   
+
+#endif
+
+struct
+{
+	array<asset> minimapRuis
+	bool         allowRegisterMinimapRuis
+} file
+
+
+global enum eMinimapObject_info_hardpoint
+{
+	DEFAULT,
+	COUNT
+}
+
+
+global enum eMinimapObject_prop_script
+{
+	DEFAULT,
+	SPAWNZONE_MIL,
+	SPAWNZONE_IMC,
+	FD_HARVESTER,
+	OBJECTIVE_AREA,
+	ARC_TRAP,
+	TROPHY_SYSTEM,
+	BLACK_MARKET,
+	DIRTY_BOMB,
+	DEPLOYABLE_MEDIC,
+	PHASE_GATE,
+               
+		VAULT_PANEL,
+		VAULT_PANEL_OPEN,
+		VAULT_KEY,
+       
+	SURVEY_BEACON,
+	CRYPTO_DRONE,
+	RAMPART_WALL,
+	RAMPART_TURRET,
+	HOVERTANK,
+	HOVERTANK_DESTINATION,
+                         
+        
+       
+	RESPAWN_CHAMBER,
+	RESPAWN_DNA,
+                          
+		TRAIN,
+		                 
+		                   
+       
+                       
+        
+       
+                      
+                       
+       
+                       
+              
+                          
+       
+                 
+		CRAFTING_HARVESTER,
+		CRAFTING_WORKBENCH,
+		CRAFTING_WORKBENCH_LIMITED,
+		CRAFTING_ZONE,
+       
+                        
+		CASH_STATION,
+		LOOT_BIN,
+       
+                      
+		HOVER_VEHICLE_SPAWNPOINT,
+       
+                          
+		CAMPFIRE,
+       
+                                               
+                   
+       
+                              
+              
+       
+                      
+                            
+                
+       
+
+                         
+		CONTROL_OBJECTIVE,
+       
+                       
+                
+       
+
+	RISING_WALL_DOWN,
+	RISING_WALL_MOVING,
+	RISING_WALL_UP,
+
+                            
+		PROWLER_CAMP,
+		SPIDER_CAMP,
+       
+
+                                
+		PLAYER_DUMMY,
+       
+
+	COUNT
+}
+
+global enum eMinimapObject_npc
+{
+	DEFAULT,
+	AI_TDM_AI,
+	AI_PVEOBJECTIVE,
+	FD_TURRET,
+	COUNT
+}
+
+global enum eMinimapObject_npc_titan
+{
+	DEFAULT,
+	AT_BOUNTY_BOSS,
+	COUNT
+}
+
+void function MinimapShared_Init()
+{
+	level.minimapMaterials <- {}
+	level.minimapMaterialsIndexes <- []
+	level.allowRegisterMinimapMaterials <- true
+	file.allowRegisterMinimapRuis = true
+
+	RegisterMinimapMaterial( "minimap_default", $"vgui/hud/minimap_default" )
+
+	                                                                               
+	                                                                                 
+	                                                                           
+
+	                                                                                   
+	                                                                                             
+	                                                                                       
+
+	                                                                                   
+	                                                                                             
+	                                                                                       
+
+	                                                                                   
+	                                                                                             
+	                                                                                       
+
+	                                                                                             
+	                                                                                               
+	                                                                                         
+
+	                                                                                   
+	                                                                                     
+	                                                                               
+
+	                                                                                  
+	                                                                           
+	                                                                     
+
+	                                                                                        
+	                                                                                       
+	                                                                                 
+
+	                                                                                   
+	                                                                             
+	                                                                       
+
+	                                                                                    
+	                                                                               
+	                                                                         
+
+	                                                                                               
+	                                                                                             
+	                                                                                            
+
+	                                                                                               
+	                                                                                             
+	                                                                                            
+
+	                                                                                               
+	                                                                                             
+	                                                                                            
+
+	                                                                                               
+	                                                                                             
+	                                                                                            
+
+	                                                                                               
+	                                                                                             
+	                                                                                            
+
+	            
+	                     
+	                                                    
+	                                                                    
+	                                                                 
+	                                                                  
+	                                                               
+	                                                               
+	                                                                   
+	                                                                
+	                                                                
+	                                                          
+
+	                                                                           
+	                                                                        
+	                                                           
+	                                                        
+
+	                 
+	                                                         	                                                                  
+	                                                             
+	                                                                      
+	                                                                     
+	                                                                        
+	                                                                 
+	                                                                    
+	                                                                    
+	                                                               
+	                                                                  
+	                                                              
+	                                                              
+	                                                              
+	                                                              
+
+	                                
+	        
+	        
+
+	level.allowRegisterMinimapMaterials = false
+	file.allowRegisterMinimapRuis = false
+}
+
+
+void function RegisterMinimapRuiAsset( asset ruiAsset )
+{
+	Assert( file.allowRegisterMinimapRuis )
+
+	file.minimapRuis[file.minimapRuis.len()] = ruiAsset
+}
+
+
+void function RegisterMinimapMaterial( string materialRef, asset material )
+{
+	Assert( !(materialRef in level.minimapMaterials) )
+	Assert( level.allowRegisterMinimapMaterials )
+
+	level.minimapMaterials[ materialRef ] <- material
+
+	            
+	                     
+	  	                                    
+	        
+	        
+}
+
+
+asset function GetMinimapMaterial( string materialRef )
+{
+	return expect asset( level.minimapMaterials[ materialRef ] )
+}
+
+const MINIMAP_TITAN_SCALE = 0.3
+const MINIMAP_PILOT_SCALE = 0.15
+                  
+const MINIMAP_TITAN_SCALE_COOP = 0.13
+const MINIMAP_PILOT_SCALE_COOP = 0.13
+
+void function UpdatePlayerMinimapMaterials( entity player )
+{
+	float titanscale = MINIMAP_TITAN_SCALE
+	float pilotscale = MINIMAP_PILOT_SCALE
+	                                                                    
+	                                                                     
+	                                                              
+	                                                               
+	                                                              
+
+	player.Minimap_SetClampToEdge( true )
+	player.Minimap_SetAlignUpright( false )
+	if ( player.IsTitan() )
+	{
+		                     
+		  	                                                           
+		  	                                                           
+		  	                    
+		  	                                                                
+		  	                  
+		  		                                                     
+		        
+
+		player.Minimap_SetObjectScale( titanscale )
+		player.Minimap_SetZOrder( MINIMAP_Z_PLAYER )
+	}
+	else
+	{
+		                     
+		  	                                                           
+		  	                                                           
+		  	                    
+		  	                                                                
+		  	                  
+		  		                                                                     
+		        
+
+		player.Minimap_SetObjectScale( pilotscale )
+		player.Minimap_SetZOrder( MINIMAP_Z_PLAYER )
+	}
+
+	                     
+	  	                                                                
+	        
+}
+
+#if SERVER
+                                           
+ 
+	                                        
+	                                                                                                                                             
+   
+
+                                         
+ 
+	                
+	                   
+
+	                                
+	                                                 
+
+	                                                                                                                     
+   
+
+                                               
+ 
+	                    
+	 
+		                                                    
+
+		                                   
+	 
+	                           
+	 
+		                                                
+		  	                                                        
+		                                                       
+		  	                                                          
+
+		                                   
+	 
+	    
+	 
+		                                                  
+
+		                                   
+	 
+
+	                                      
+ 
+
+                                                                                                                                                          
+ 
+	                                                                                                                                
+ 
+
+                                               
+ 
+	                          
+	                           
+
+	                                                       
+		            
+
+	                                                       
+		            
+
+	                                                       
+		            
+
+	           
+ 
+
+                                                                                                                                                   
+ 
+	                                                    
+	 
+		                             
+		 
+			                                                                                          
+		 
+	 
+ 
+#endif          

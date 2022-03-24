@@ -1,0 +1,576 @@
+
+global function DeathHints_Init
+
+global function GetDeathHintCount
+
+#if SERVER
+                                           
+
+                               
+#endif
+
+#if CLIENT
+global function ServerCallback_ShowDeathHint
+global function DeathHintDisplay
+global function GetHintFromId
+#endif
+
+const int NUM_CLASS_NAME_COLUMNS = 5
+
+const DEATH_HINT_COLOR = <0,0,0>
+const DEATH_HINT_BGALPHA = 0.5
+const DEATH_HINT_COLOR_FRIENDLY = <0.34,0.59,0.86>
+const DEATH_HINT_COLOR_ENEMY = <1,0.36,0.12>
+
+global const int MAX_DEATH_HINTS = 512
+
+
+                                                
+enum eHints
+{
+	titan_class
+	is_pilot
+	pilot_slide
+	custom
+	weapon
+	self_damage
+	npc_title
+	damage_source_id
+	damage_def
+
+	total
+}
+
+
+struct DeathHint
+{
+	int id
+	string hint
+}
+
+struct DeathHintGroup
+{
+	array<DeathHint> hints
+	float weight
+}
+
+struct
+{
+	array<table<string, array<DeathHint> > > deathHints
+	array<string> indexToHintString
+	table<string,int> hintStringToIndex
+	var deathHintRUI
+	int numForcedSelfHints
+} file
+
+void function DeathHints_Init()
+{
+	#if SERVER
+	                                                        
+	                                     
+	#endif
+
+	file.numForcedSelfHints = RandomIntRangeInclusive( 3, 4 )
+
+	var dataTable = GetDataTable( $"datatable/death_hints_mp.rpak" )
+
+	int numRows = GetDataTableRowCount( dataTable )
+
+	Assert( numRows < MAX_DEATH_HINTS, "Death hints datatable has " + numRows + " entries which is more than max " + MAX_DEATH_HINTS + " entries. You need to increase MAX_DEATH_HINTS" )
+	file.deathHints.resize( eHints.total )
+
+	int sourceColumn = GetDataTableColumnByName( dataTable, "source" )
+	int classNameColumn = GetDataTableColumnByName( dataTable, "className" )
+	int locStringColumn = GetDataTableColumnByName( dataTable, "locString" )
+	int mapNameColumn = GetDataTableColumnByName( dataTable, "mapName" )
+
+	#if !UI
+		int gameModeColumn = GetDataTableColumnByName( dataTable, "gameMode" )
+		string currGameMode = GameRules_GetGameMode()
+	#endif
+
+	string currMapName
+
+	#if SERVER || CLIENT
+	currMapName = GetMapName()
+	#endif
+
+	#if UI
+	currMapName = uiGlobal.loadedLevel
+	#endif
+
+	for ( int i = 0; i < numRows; i++ )
+	{
+		string sourceName = GetDataTableString( dataTable, i, sourceColumn )
+		string className = GetDataTableString( dataTable, i, classNameColumn )
+		string locString = GetDataTableString( dataTable, i, locStringColumn )
+		string mapName = GetDataTableString( dataTable, i, mapNameColumn )
+
+		#if DEV
+		if ( !( sourceName in eHints ) )
+		{
+			Warning( "Unhandled death hint source " + sourceName )
+			continue
+		}
+		#endif
+
+		if ( mapName != "" && mapName != currMapName )
+			continue
+
+		#if !UI
+			string gameMode = GetDataTableString( dataTable, i, gameModeColumn )
+			if ( gameMode != "" && gameMode != currGameMode )
+				continue
+		#endif
+
+		int source = eHints[ sourceName ]
+		int index
+
+		if ( locString in file.hintStringToIndex )
+		{
+			index = file.hintStringToIndex[ locString ]
+		}
+		else
+		{
+			index = file.indexToHintString.len()
+			file.hintStringToIndex[ locString ] <- index
+			file.indexToHintString.append( locString )
+		}
+
+		DeathHint dh
+		dh.id = index
+		dh.hint = locString
+
+		if ( !( className in file.deathHints[ source ] ) )
+			file.deathHints[ source ][ className ] <- [ dh ]
+		else
+			file.deathHints[ source ][ className ].append( dh )
+	}
+}
+
+int function GetDeathHintCount()
+{
+	return file.indexToHintString.len()
+}
+
+array<DeathHintGroup> function GetHintGroupsWithWeighting( int source, array<string> classNames, array<float> groupWeights )
+{
+	array<DeathHintGroup> hintGroups
+
+	foreach ( index, className in classNames )
+	{
+		if ( !( className in file.deathHints[ source ] ) )
+			continue
+
+		DeathHintGroup hg
+
+		foreach ( hint in file.deathHints[ source ][ className ] )
+		{
+			hg.hints.append( hint )
+		}
+		hg.weight = groupWeights[ index ]
+
+		if ( hg.hints.len() )
+			hintGroups.append( hg )
+	}
+
+	return hintGroups
+}
+
+DeathHintGroup ornull function GetHintGroup_OrNull( int source, string className )
+{
+	if ( !( className in file.deathHints[ source ] ) )
+		return null
+
+	DeathHintGroup hg
+	foreach ( hint in file.deathHints[ source ][ className ] )
+	{
+		hg.hints.append( hint )
+	}
+	hg.weight = 0
+
+	if ( !hg.hints.len() )
+		return null
+
+	return hg
+}
+
+array<DeathHintGroup> function GetHintGroups( int source, string classname )
+{
+	DeathHintGroup ornull deathHintGroup = GetHintGroup_OrNull( source, classname )
+	if ( deathHintGroup != null )
+	{
+		expect DeathHintGroup( deathHintGroup )
+		return [ deathHintGroup ]
+	}
+
+	return []
+}
+
+#if SERVER
+                                                      
+ 
+	                                                              
+ 
+
+                                                                       
+ 
+	                                                                                                 
+	                                                                                  
+	                                   
+	             
+ 
+
+                                                              
+ 
+	                           
+
+	                                          
+		            
+
+	                                   
+		            
+
+	                                                      
+
+	                                                                               
+	                                       
+	                                                                   
+		            
+
+	                                                                               
+	                                                           
+
+	              
+	                                                  
+		                
+	    
+		                  
+
+	                          
+		            
+
+	                                                                                              
+
+	                        
+		            
+
+	                                                                                  
+	                                   
+	                                                                               
+	           
+ 
+
+                                                                            
+ 
+	                  
+	                                   
+	 
+		                                        
+		 
+			                              
+		 
+	 
+	              
+ 
+
+                                                                              
+ 
+	                     
+	                         
+
+	                                                  
+		                                             
+
+	                                                      
+	                      
+	 
+		                                           
+	 
+
+	                                              
+	                      
+	 
+		                                           
+	 
+
+	                                                   
+	                      
+	 
+		                                           
+	 
+
+	                                                   
+	                      
+	 
+		                                           
+	 
+
+	                                    
+
+	                                                                         
+ 
+
+
+                                                                                                               
+ 
+	                                     
+
+	                                                         
+	                                          
+	 
+		                                                       
+		                         
+			        
+		                                                                                                        
+		                             
+			        
+
+		                                       
+		                                        
+	 
+
+	                      
+ 
+
+                                                                               
+ 
+	                         
+	                             
+	                                                                        
+	 
+		                                 
+			        
+		                                        
+	 
+	                         
+ 
+
+                                                                               
+ 
+	                         
+	                             
+	                                                                        
+	 
+		                                 
+			        
+		                                        
+	 
+	                         
+ 
+
+
+                                                                                                        
+ 
+	                                                      
+	                                             
+
+	                                                                                                              
+	                                      
+
+	                     
+	                         
+
+	                                                      
+	 
+		                                             
+		                          
+	 
+
+	                                                          
+	                      
+	 
+		                                           
+		                                                                                                                                                            
+		                                                                                         
+	 
+
+	                                                  
+	                      
+	 
+		                                           
+		                                                                                                                                                          
+		                                                                                         
+	 
+
+	                                                       
+	                      
+	 
+		                                           
+		                                                                                                                                
+	 
+
+	                                                       
+	                      
+	 
+		                                           
+		                                                                                                                                
+	 
+
+	                                                                                                                         
+	 
+		                                                             
+		                            
+		 
+			                           
+			                                      
+			 
+				                            
+				                          
+			 
+		 
+	 
+
+	                                                                         
+ 
+
+                                                                                           
+ 
+	                          
+	                         
+
+	                               
+	                                        
+	                            
+	                          
+
+  
+	                                                                      
+	                      
+	 
+		                                                
+		                          
+	 
+
+	                                                             
+	                            
+	 
+		                           
+		                                           
+		 
+			                                 
+			                          
+		 
+	 
+
+	                                            
+	 
+		                                                                        
+		                                                                             
+		 
+			                                        
+			                          
+		 
+	 
+  
+
+	                                                                                 
+ 
+
+                                                                                                               
+ 
+	                                                                                  
+	            
+	                                   
+
+	                                    
+	 
+		                                  
+		 
+			                                                                              
+			 
+				                                             
+				                                
+			 
+
+			                                                     
+			 
+				                                                    
+					                                      
+			 
+		 
+	 
+
+	                                                                                                
+	               
+	                                      
+
+	                                              
+	 
+		                                                     
+		 
+			                                    
+			                                   
+		 
+
+		                                            
+			                                         
+	 
+
+	                                                                                        
+	                       
+
+	                                              
+	 
+		                                           
+		 
+			                                                    
+			 
+				                                             
+				                    
+			 
+
+			                                                     
+				                              
+		 
+	 
+
+	                               
+ 
+#endif          
+
+#if CLIENT
+void function ServerCallback_ShowDeathHint( int hintId )
+{
+	thread ShowDeathHintThread( GetHintFromId( hintId ) )
+}
+
+string function GetHintFromId( int hintId )
+{
+	return file.indexToHintString[ hintId ]
+}
+
+void function ShowDeathHintThread( string hint )
+{
+	                                                                                          
+	WaitSignal( clGlobal.levelEnt, "LocalClientPlayerRespawned" )
+
+	wait 0.5
+
+	DeathHintDisplay( hint )
+}
+
+void function DeathHintDisplay( string hint )
+{
+	if ( file.deathHintRUI != null )
+		RuiDestroyIfAlive( file.deathHintRUI )
+
+	if ( IsWatchingReplay() )                                                          
+		return
+
+	if ( !DeathHintsSettingIsEnabled() )
+		return
+
+	if ( GetConVarInt( "hud_setting_showTips" ) == 0 )
+		return
+
+	file.deathHintRUI = CreatePermanentCockpitRui( $"ui/death_hint_mp.rpak" )
+
+	RuiSetResolutionToScreenSize( file.deathHintRUI )
+	RuiSetString( file.deathHintRUI, "hintText", hint )
+	RuiSetGameTime( file.deathHintRUI, "startTime", Time() )
+	RuiSetFloat3( file.deathHintRUI, "bgColor", DEATH_HINT_COLOR )
+	RuiSetFloat( file.deathHintRUI, "bgAlpha", DEATH_HINT_BGALPHA )
+}
+#endif          
+

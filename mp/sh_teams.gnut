@@ -1,0 +1,205 @@
+global function GetPlayerTitansOnTeam
+global function GetPlayerTitansReadyOnTeam
+                    
+global function SHTeams_Init
+global function GetMaxDistForAllianceMemberProximity
+global function GetAllAllianceMembersInProximity
+global function GetAllianceTeams_Array
+global function GetPlayerArray_AllianceMembers_Alive
+
+#if CLIENT
+global function ManageTeamProximity_IconVisibility_Thread
+#endif          
+struct {
+	float maxDistAllianceProximity
+} file
+
+void function SHTeams_Init()
+{
+	file.maxDistAllianceProximity = GetCurrentPlaylistVarFloat( "max_dist_proximity_alliance_members", 20.0 )
+}
+
+float function GetMaxDistForAllianceMemberProximity()
+{
+	return file.maxDistAllianceProximity
+}
+                          
+
+                                                        
+array<entity> function GetPlayerTitansOnTeam( int team )
+{
+	PerfStart( 92 )
+	array<entity> teamTitans
+	array<entity> players
+
+	#if CLIENT
+		players = GetPlayerArrayOfTeam( team )
+	#else
+		players = GetConnectingAndConnectedPlayerArray()
+	#endif
+
+	foreach ( entity player in players )
+	{
+		if ( player.GetTeam() == team )
+		{
+			if ( player.IsTitan() && IsAlive( player ) )
+				teamTitans.append( player )
+			else if ( IsAlive( player.GetPetTitan() ) )
+				teamTitans.append( player.GetPetTitan() )
+		}
+	}
+
+	PerfEnd( 92 )
+	return teamTitans
+}
+
+
+array<entity> function GetPlayerTitansReadyOnTeam( int team )
+{
+	array<entity> teamTitansReady
+	array<entity> players
+
+	#if CLIENT
+		players = GetPlayerArrayOfTeam( team )
+	#else
+		players = GetConnectingAndConnectedPlayerArray()
+	#endif
+
+	foreach ( entity player in players )
+	{
+		if ( player.GetTeam() != team )
+			continue
+
+		if ( player.IsTitan() && IsAlive( player ) )
+			continue
+
+		if ( IsAlive( player.GetPetTitan() ) )
+			continue
+
+  
+		                                                 
+		                                                
+			        
+
+		                                                     
+			        
+
+		                                                      
+			        
+  
+
+		if ( !IsAlive( player ) && IsPlayerEliminated( player ) )
+			continue
+
+		teamTitansReady.append( player )
+	}
+
+	return teamTitansReady
+}
+
+                    
+                                                          
+array<entity> function GetAllAllianceMembersInProximity( int team, vector origin )
+{
+	array<entity> allianceMembersInProximity = []
+
+	foreach ( playerAlive in GetPlayerArray_Alive() )
+	{
+		int playerAliveTeam = playerAlive.GetTeam()
+		if ( playerAliveTeam != team && IsFriendlyTeam( team, playerAliveTeam ) && IsPositionWithinRadius( GetMaxDistForAllianceMemberProximity(), origin, playerAlive.GetOrigin() ) )
+			allianceMembersInProximity.append( playerAlive )
+	}
+
+	return allianceMembersInProximity
+}
+
+                           
+array<entity> function GetPlayerArray_AllianceMembers_Alive( int playerTeam )
+{
+	array<entity> allianceMembers = []
+
+	foreach ( playerAlive in GetPlayerArray_Alive() )
+	{
+		int playerAliveTeam = playerAlive.GetTeam()
+		if ( playerAliveTeam != playerTeam && IsFriendlyTeam( playerTeam, playerAliveTeam ) )
+			allianceMembers.append( playerAlive )
+	}
+
+	return allianceMembers
+}
+
+                         
+array<int> function GetAllianceTeams_Array( int playerTeam )
+{
+	array<int> uniqueAllianceTeams
+
+	foreach ( playerAlive in GetPlayerArray_Alive() )
+	{
+		int playerAliveTeam = playerAlive.GetTeam()
+		if ( !uniqueAllianceTeams.contains( playerAliveTeam ) && playerAliveTeam != playerTeam && IsFriendlyTeam( playerTeam, playerAliveTeam ) )
+			uniqueAllianceTeams.append( playerAliveTeam )
+	}
+
+	return uniqueAllianceTeams
+}
+
+#if CLIENT
+                                                                                                                                                                      
+                                                                                                                     
+void function ManageTeamProximity_IconVisibility_Thread( entity ent, var rui, bool isFullMapRui, bool ruiHasBuiltInDistTracking )
+{
+	entity player = GetLocalClientPlayer()
+	                                                                     
+	if ( !IsUsingProximityAllianceMembers() || !IsValid( player ) || !IsValid( ent ) )
+		return
+
+	                                                                    
+	if ( GetCurrentPlaylistVarBool( "disable_minimap", false ) )
+		return
+
+	int playerTeam = player.GetTeam()
+	int entTeam = ent.GetTeam()
+
+	                                                                                                                                              
+	if ( playerTeam == entTeam || !IsFriendlyTeam( playerTeam, entTeam ) || entTeam == 0 )
+		return
+
+	float maxProximity = GetMaxDistForAllianceMemberProximity()
+
+	                                                                                                                               
+	entity entOwner = ent.GetOwner()
+	if ( IsValid( entOwner ) )
+	{
+		if ( entOwner.IsPlayer() && IsPositionWithinRadius( maxProximity, player.GetOrigin(), entOwner.GetOrigin() ) )
+			return
+
+	}
+
+	if ( ruiHasBuiltInDistTracking )
+	{
+		RuiSetFloat( rui, "maxDrawDistance", maxProximity )
+		return
+	}
+
+	while ( IsValid( player ) && IsValid( ent ) && IsValid( rui ) )
+	{
+		if ( IsPositionWithinRadius( maxProximity, player.GetOrigin(), ent.GetOrigin() ) )
+		{
+			if ( isFullMapRui )
+			{
+				RuiSetVisible( rui, Fullmap_IsVisible() )
+			}
+			else
+			{
+				RuiSetVisible( rui, true )
+			}
+		}
+		else
+		{
+			RuiSetVisible( rui, false )
+		}
+		WaitFrame()
+	}
+}
+#endif          
+                          

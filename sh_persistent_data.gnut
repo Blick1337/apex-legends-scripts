@@ -1,0 +1,725 @@
+global function ShPersistentData_LevelInit_Begin
+global function ShPersistentData_LevelInit_Finish
+
+#if SERVER
+                                                            
+                                                       
+                                      
+                                     
+#endif
+
+#if SERVER || CLIENT || UI
+global function AddCallback_OnPersistentDataReady
+global function GetPersistentIntArray
+global function IsPersistenceBitSet
+global function IsAnyPersistenceBitSet
+#endif
+
+#if (SERVER || CLIENT || UI) && DEV
+global function DEV_ShouldIgnorePersistence
+#endif
+
+#if SERVER && DEV
+                                        
+                                                                  
+                                   
+                                       
+                                     
+                                           
+                                         
+                                           
+                                             
+                                        
+                                         
+                                          
+                                         
+                                           
+                                         
+                                           
+                                                    
+                                                     
+                                                     
+                                                       
+                                                     
+                                                      
+                                                        
+#endif
+
+#if CLIENT
+global function ServerToClient_OnPersistentDataReady
+#endif
+
+#if UI
+global function ClientToUI_OnPersistentDataReady
+#endif
+
+#if DEV
+global bool dev_should_ignore_persistence = false
+global function SetShouldIgnorePersistence
+#endif
+
+                      
+                      
+                      
+                      
+                      
+
+#if SERVER
+                                                                                                                        
+       
+                                                          
+      
+#endif
+
+#if SERVER || CLIENT || UI
+global typedef OnPersistentDataReadyCallbackType void functionref( entity player )
+#endif
+
+
+
+                       
+                       
+                       
+                       
+                       
+
+struct FileStruct_LifetimeLevel
+{
+	#if SERVER
+		                                                                                   
+		       
+			                                                     
+		      
+	#endif
+
+	array<OnPersistentDataReadyCallbackType> onPersistentDataReadyCallbacks
+}
+FileStruct_LifetimeLevel& fileLevel
+
+
+
+                         
+                         
+                         
+                         
+                         
+#if DEV
+void function SetShouldIgnorePersistence()
+{
+	dev_should_ignore_persistence = GetConVarBool( "loadouts_ignore_persistence" )
+}
+#endif
+
+void function ShPersistentData_LevelInit_Begin()
+{
+	FileStruct_LifetimeLevel newFileLevel
+	fileLevel = newFileLevel
+
+	#if DEV
+		SetShouldIgnorePersistence()
+	#endif
+
+	#if SERVER
+		       
+			                                             
+			                                                                                       
+		      
+		                                                                           
+	#endif
+
+	#if SERVER || CLIENT
+		Remote_RegisterClientFunction( "ServerToClient_OnPersistentDataReady" )
+	#endif
+}
+
+
+void function ShPersistentData_LevelInit_Finish()
+{
+	#if SERVER && DEV
+		                                                                        
+	#endif
+}
+
+
+#if SERVER && DEV
+                                 
+ 
+	                                                                  
+	                                                             
+	                                                  
+	                             
+ 
+#endif
+
+
+#if SERVER
+                                                                                               
+ 
+ 
+#endif
+
+
+                       
+                       
+                       
+                       
+                       
+
+#if (SERVER || CLIENT || UI) && DEV
+bool function DEV_ShouldIgnorePersistence()
+{
+	return dev_should_ignore_persistence                                                  
+}
+#endif
+
+
+#if SERVER && DEV
+                                                                     
+ 
+	                                                                                        
+	                                            
+ 
+
+                        
+ 
+	               
+	               
+	                     
+	                  
+ 
+                         
+ 
+	                                             
+	                                                    
+	                                                            
+	                                                       
+	                                                 
+ 
+                       
+ 
+	                  
+	                         
+	                  
+	                         
+ 
+                                            
+                                                   
+                                                
+                                                       
+                                                    
+                                                           
+                                                         
+                                                                                   
+
+                                                                    
+ 
+	                         
+	                        
+	                           
+	                          
+	                        
+	                                      
+	                               
+	                              
+
+	                                                                         
+	 
+		    
+		                                                                                                                                      
+		                                                                                                                                  
+	 
+
+	                        
+	                                                              
+	                                                              
+	                                                              
+	                                                              
+	                                                              
+	                                                              
+
+	                                                     
+	 
+		                  
+		                          
+			                                     
+		                                       
+		                    
+		                               
+		 
+			                                                
+		 
+		                                                                                        
+		                                          
+		 
+			                                                                                                                                                     
+		 
+		                           
+	 
+
+	                                                         
+	 
+		                  
+		                                     
+		                                         
+		                       
+		                                               
+		   
+		  	                                                         
+		   
+		                       
+		                                                 
+		 
+			                       
+				                                  
+			                                                                      
+			                                                                          
+				                                                      
+			   
+			                                            
+			 
+				                                                                                                                                 
+				                                                                                                                            
+			 
+		 
+		                             
+	 
+
+	                                                              
+	 
+		                  
+		                                      
+		                                                     
+		                       
+		                                                
+		   
+		  	                                                         
+		   
+		                        
+		                                                  
+		 
+			                       
+				                                  
+			                                                                       
+			                                                                          
+				                                                      
+			   
+			                                            
+			 
+				                                                                                                                                 
+				                                                                                                                            
+			 
+		 
+		                                                     
+	 
+
+	                  
+	                                                              
+
+	                         
+	                               
+		                                                                                                               
+
+	               
+	                                          
+	 
+		                    
+		              
+		  		                                                                                                                                                               
+		  		                        
+		  		       
+	 
+	                                                     
+
+	          
+ 
+
+                                                                                                    
+ 
+	                                                               
+	                                                                              
+	                                         
+
+	     
+		                                                                                
+		                                                                                           
+		                                                    
+
+		                                   
+		 
+			                                                                                                                                                              
+			           
+		 
+
+		                                                                                               
+		                      
+		                    
+		 
+			                             
+		 
+		    
+		 
+			                                                      
+			                                                                                     
+		 
+
+		                                                           
+		                      
+		 
+			                                                                                                                                 
+			                                                                                                                        
+			                                                                                                                                 
+			                                                                      
+			                  
+			 
+				                                                                                                                                                    
+				           
+			 
+			                                                                                 
+		 
+
+		                     
+		 
+			                                                                                                                             
+			                                                                                 
+
+			                                                                                                                 
+			                                 
+			                                      
+			                                  
+			                                      
+
+			                    
+			                                    
+			                                                       
+			                                   
+
+			                            
+			                                      
+			                       
+			                    
+
+			                                            
+		 
+	     
+		                     
+		 
+			                                                                                
+			                                                                                               
+			                    
+			                                                       
+			                                               
+			                                                         
+			                                          
+			                    
+		 
+	      
+ 
+
+                                                                                  
+ 
+	                                                                       
+ 
+
+                                                                                                                         
+ 
+	                                                                                            
+	                                                                   
+	                  
+	             
+	             
+	                       
+	                           
+	                                
+	                              
+ 
+                                                                         
+ 
+	                                                                                                
+	                                                                                                                                      
+	                    
+	             
+	                       
+	                       
+	                               
+	                                         
+	                                                
+ 
+                                     
+ 
+	                                                                                                                                      
+	                                                                                                             
+	                                                                      
+	                                                                                                          
+	                                                
+ 
+                                                                             
+ 
+	                                                                                                         
+	                                                                                                                                          
+	                     
+	              
+	                        
+	                        
+	                                
+	                                          
+	                                                
+ 
+                                         
+ 
+	                                                                                                                                              
+	                                                                                                            
+	                                                                          
+	                                                                                                              
+	                                                
+ 
+                                                              
+ 
+	                                                                                                                                                                              
+	                                                                                                                                                     
+	                                                                         
+	                                                                           
+ 
+                                                                                                                          
+ 
+	                                                                                                                                                                         
+	                                                                                                                  
+	                   
+	                     
+	                     
+	                                 
+	                           
+	                                                                                                                                 
+	                                                             
+ 
+                                                                          
+ 
+	                                                         
+ 
+                                                                           
+ 
+	                                         
+ 
+                                                                            
+ 
+	                                                           
+ 
+                                                                           
+ 
+	                                                          
+ 
+                                                                                            
+ 
+	                                                            
+ 
+                                                                                            
+ 
+	                                                                                                  
+	                                                            
+ 
+                                                                                                
+ 
+	                                                                                                          
+	                                                              
+ 
+                                                                                                  
+ 
+	                                                                         
+ 
+                                                                                                   
+ 
+	                                                             
+ 
+                                                                                                   
+ 
+	                                                                          
+ 
+                                                                                                                        
+ 
+	                                                                                                          
+	                                                                              
+ 
+                                                                                                           
+ 
+	                                                                                                               
+	                                                                              
+ 
+                                                                                                            
+ 
+	                                                                                                               
+	                                                                               
+ 
+                                                                                                                                 
+ 
+	                                                                                                               
+	                                                                                                          
+	                                                                                   
+ 
+#endif                 
+
+
+
+                          
+                          
+                          
+                          
+                          
+
+#if SERVER
+                                                                                                   
+ 
+	                                                                                                       
+	                                                           
+ 
+#endif
+
+
+#if SERVER || CLIENT || UI
+void function AddCallback_OnPersistentDataReady( OnPersistentDataReadyCallbackType cb )
+{
+	Assert( !fileLevel.onPersistentDataReadyCallbacks.contains( cb ), "Callback already registered" )
+	fileLevel.onPersistentDataReadyCallbacks.append( cb )
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+                                                 
+array<int> function GetPersistentIntArray( entity player, string variableName )
+{
+	array<int> arr
+	int size = PersistenceGetArrayCount( variableName )
+
+	for ( int i = 0; i < size; i++ )
+	{
+		int element = player.GetPersistentVarAsInt( variableName + "[" + i + "]" )
+
+		arr.append( element )
+	}
+
+	return arr
+}
+#endif
+
+
+#if SERVER
+                                                                                                                                                                    
+                                                                                         
+ 
+	                                                   
+
+	                                
+	 
+		                     
+			     
+
+		                                                               
+	 
+ 
+#endif
+
+
+#if SERVER
+                                                                                                     
+ 
+	                                  
+
+	                              
+	                              
+
+	                                 
+
+	                                                                                                                                            
+	                                                        
+
+	                                                               
+	                 
+		                                                                     
+	    
+		                                                                    
+ 
+#endif
+
+
+#if SERVER || CLIENT || UI
+bool function IsPersistenceBitSet( entity player, string persistenceVar, int bitIndex )
+{
+	int arrayIndex = bitIndex / 32
+	int bitOffset  = bitIndex % 32
+
+	int decimalValue = 1 << bitOffset
+
+	Assert( arrayIndex < PersistenceGetArrayCount( persistenceVar ), "Need to increase the array size of the persistenceVar " + persistenceVar )
+	persistenceVar = persistenceVar + "[" + arrayIndex + "]"
+
+	return ((player.GetPersistentVarAsInt( persistenceVar ) & decimalValue) != 0)
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+bool function IsAnyPersistenceBitSet( entity player, string persistenceVar )
+{
+	int arrayCount = PersistenceGetArrayCount( persistenceVar )
+	for ( int i = 0; i < arrayCount; i++ )
+	{
+		if ( player.GetPersistentVarAsInt( persistenceVar + "[" + i + "]" ) > 0 )
+			return true
+	}
+	return false
+}
+#endif
+
+
+
+                   
+                   
+                   
+                   
+                   
+
+#if SERVER
+                                                                           
+ 
+	                                                                             
+	                                                            
+
+	                                              
+
+	                                          
+	 
+		                                                                                                       
+		 
+			                                                
+		 
+
+		                                                               
+	 
+
+	                                                                                           
+		            
+
+	                                                                               
+ 
+#endif
+
+
+#if CLIENT
+void function ServerToClient_OnPersistentDataReady()
+{
+	RunUIScript( "ClientToUI_OnPersistentDataReady" )
+
+	foreach( OnPersistentDataReadyCallbackType cb in fileLevel.onPersistentDataReadyCallbacks )
+		cb( GetLocalClientPlayer() )
+}
+#endif
+
+
+#if UI
+void function ClientToUI_OnPersistentDataReady()
+{
+	foreach( OnPersistentDataReadyCallbackType cb in fileLevel.onPersistentDataReadyCallbacks )
+		cb( GetLocalClientPlayer() )
+}
+#endif
+
+

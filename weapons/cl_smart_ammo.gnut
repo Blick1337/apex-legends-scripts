@@ -1,0 +1,759 @@
+untyped
+
+global function SmartAmmoClient_Init
+
+global function SmartAmmo_LockedOntoWarningHUD_Update
+
+global function SmartAmmo_SetStatusWarning
+global function SmartAmmo_ClearStatusWarning
+
+global function SmartAmmo_SetVerticalOffset
+
+const SMART_AMMO_VICTIM_LOCKED_SOUND = "Titan_Cockpit_TitanLocking_Warning"                                                                       
+
+
+                                            
+  				                		    
+                                            
+
+                                                                                
+                                                                     
+                                                                           
+                                                    
+                                         
+   
+
+struct
+{
+	bool initialized = false
+
+	entity        lockonHudForceWeapon
+	array<entity> lockingMissiles
+
+	var lockon_hud
+	int verticalOffset
+
+	string statusWarning = ""
+} file
+
+void function SmartAmmoClient_Init()
+{
+	RegisterSignal( "SmartAmmoStatusWarning" )
+
+	AddCallback_OnClientScriptInit( SmartAmmoClient_AddClient )
+	AddCallback_KillReplayStarted( ClearLockonHudForceWeapon )
+}
+
+
+void function SmartAmmoClient_AddClient( entity player )
+{
+	var rui = CreateCockpitPostFXRui( $"ui/lockon_hud.rpak", HUD_Z_BASE )
+	file.lockon_hud = rui
+}
+
+
+void function SmartAmmo_SetStatusWarning( string warningText, float duration = 0.0 )
+{
+	file.statusWarning = warningText
+
+	if ( duration )
+		thread SmartAmmo_ClearStatusWarning( duration )
+}
+
+
+void function SmartAmmo_ClearStatusWarning( float duration = 0.0 )
+{
+	if ( duration > 0.0 )
+	{
+		Assert( IsNewThread() )
+
+		Signal( GetLocalClientPlayer(), "SmartAmmoStatusWarning" )
+		EndSignal( GetLocalClientPlayer(), "SmartAmmoStatusWarning" )
+
+		wait duration
+	}
+
+	file.statusWarning = ""
+}
+
+void function SmartAmmo_SetVerticalOffset( int offset )
+{
+	file.verticalOffset = offset
+}
+
+
+                                                                                                                                                         
+void function SmartAmmo_LockedOntoWarningHUD_Update()
+{
+	RuiSetInt( file.lockon_hud, "verticalOffset", file.verticalOffset )
+
+	entity player = GetLocalViewPlayer()
+
+	float previousLockedFraction = 0.0
+	float lockedFraction         = 0.0
+	array<entity> highestFractionSources
+	#if SMART_AMMO
+		                                                                              
+		                                                              
+		                                                                       
+	#endif
+
+	array<entity> lockingWeapons
+	array<entity> lockingEnemies
+	foreach ( weapon in highestFractionSources )
+	{
+		if ( IsValid( weapon ) )
+		{
+			entity weaponOwner = weapon.GetWeaponOwner()
+			if ( IsValid( weaponOwner )
+			&& GetWeaponDamageNear( weapon, player ) > 0 )
+			{
+				lockingWeapons.append( weapon )
+				lockingEnemies.append( weaponOwner )
+			}
+		}
+	}
+
+	entity activeLockingWeapon
+	entity highestLockSource
+
+	entity foundMissile = null
+	foreach ( missile in file.lockingMissiles )
+	{
+		if ( IsValid( missile ) )
+		{
+			foundMissile = missile
+			break
+		}
+	}
+
+	ArrayRemoveInvalid( file.lockingMissiles )
+
+	if ( foundMissile != null && IsValid( file.lockonHudForceWeapon ) )
+	{
+		activeLockingWeapon = file.lockonHudForceWeapon
+		highestLockSource = foundMissile                                        
+		lockingEnemies.append( highestLockSource )
+		lockedFraction = 1.0
+	}
+	else if ( lockingWeapons.len() > 0 )
+	{
+		activeLockingWeapon = lockingWeapons[0]
+		highestLockSource = activeLockingWeapon.GetWeaponOwner()
+	}
+	else
+	{
+		                                           
+		vector borderColor = <1, 1, 1>
+
+		if ( file.statusWarning != "" )
+		{
+			RuiSetString( file.lockon_hud, "lockMessage", file.statusWarning )
+			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
+		}
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.lockon_detected ) )
+		{
+			                           
+			RuiSetString( file.lockon_hud, "lockMessage", "#LOCKON_WARNING" )
+			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
+
+			                              
+			if ( StatusEffect_GetSeverity( player, eStatusEffect.crypto_tt_scanned_visual ) )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "HUD_SPOTTED_CRYPTO_TT" )
+				RuiSetFloat3( file.lockon_hud, "borderColor", < 0.21, 0.79, 0.34> )                    
+			}
+		}
+		                                                                                                                                                                                                  
+		   
+		  	                                                                       
+		  	                                                                 
+		  	                                                
+		  	                                                 
+		  	                                                 
+		  	                                                
+		  	                                                
+		   
+		else if ( (StatusEffect_GetSeverity( player, eStatusEffect.camera_detected )
+			|| StatusEffect_GetSeverity( player, eStatusEffect.maphack_detected )
+			|| StatusEffect_GetSeverity( player, eStatusEffect.sonar_detected )
+               
+                                                                             
+                    
+                        
+			|| StatusEffect_GetSeverity( player, eStatusEffect.mortar_ring_reveal ))
+                             
+                            
+                                                                                                                             
+                                                                                                          
+                                 
+			&& !player.IsCloaked( true ) )
+		{
+			RuiSetFloat3( file.lockon_hud, "borderColor", <1, .36, .31> )                       
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+
+			if ( StatusEffect_GetSeverity( player, eStatusEffect.spawnkilling_detected ) )
+				RuiSetString( file.lockon_hud, "lockMessage", "#SPAWNKILLING_DETECTED" )
+			else if ( StatusEffect_GetSeverity( player, eStatusEffect.damage_received_multiplier ) )
+				RuiSetString( file.lockon_hud, "lockMessage", "#VULNERABLE_WARNING" )
+			else if ( StatusEffect_GetSeverity( player, eStatusEffect.maphack_detected ) )
+				RuiSetString( file.lockon_hud, "lockMessage", "#MAPHACK_WARNING" )
+			else if ( StatusEffect_GetSeverity( player, eStatusEffect.camera_detected ) )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#CAMERA_WARNING" )
+				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_crypto" )
+				RuiSetFloat3( file.lockon_hud, "borderColor", <.21, .79, .34> )                   
+			}
+			else if ( StatusEffect_GetSeverity( player, eStatusEffect.mirage_detected ) )
+			 {
+				 RuiSetString( file.lockon_hud, "lockMessage", "#BAMBOOZLED_WARNING" )
+				 RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_mirage" )
+				 RuiSetFloat3( file.lockon_hud, "borderColor", <1, .98, .447> )                   
+			 }
+			else if ( StatusEffect_GetSeverity( player, eStatusEffect.seer_detected ) )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#SEER_DETECTED_WARNING" )
+				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_seer" )
+				vector color = GetKeyColor( COLORID_HUD_SEER_DEFAULT )
+				vector scaledColor = <color.x/255.0, color.y/255.0, color.z/255.0>
+				RuiSetFloat3( file.lockon_hud, "borderColor", scaledColor )
+			}
+                  
+                                                                                      
+    
+                                                                            
+                                                                                     
+    
+                       
+                           
+			else if ( StatusEffect_GetSeverity( player, eStatusEffect.mortar_ring_reveal ) )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#FUSE_MORTAR_DETECTED_WARNING" )
+				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_fuse" )
+			}
+                                
+			else
+			{
+				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_bloodhound" )
+				RuiSetString( file.lockon_hud, "lockMessage", "#SONAR_WARNING" )
+			}
+
+
+			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+		}
+                
+                                                                                           
+   
+                                                                                  
+                                                                                                                                          
+                                                   
+                                                    
+                                                    
+                                                   
+                                                   
+                                                       
+   
+      
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.sonar_blocked ) )
+		{
+			RuiSetString( file.lockon_hud, "lockMessage", "#SONAR_WARNING_BLOCKED" )
+			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
+		}
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.placing_phase_tunnel ) > 0.0 )
+		{
+			                                                                        
+			                                                                                                                                                                         
+			RuiSetString( file.lockon_hud, "lockMessage", "#PHASE_TUNNEL_STATUS_DISTANCE" )
+			RuiSetGameTime( file.lockon_hud, "lockEndTime", Time() + (100 * StatusEffect_GetSeverity( player, eStatusEffect.placing_phase_tunnel )) )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+
+			                                                                                                                                            
+			RuiSetFloat3( file.lockon_hud, "borderColor", <1, 0.846873462, 0.0722718611> )
+		}
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.tethered ) )
+		{
+			RuiSetString( file.lockon_hud, "lockMessage", "#TETHER_WARNING" )
+			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
+		}
+		                                                                                                                                                                                                                                                                  
+		   
+		  	                                                               
+		  	                                                                                                                          
+		  	                                                
+		  	                                                 
+		  	                                                 
+		  	                                                
+		  	                                                
+		   
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.device_detected ) )
+		{
+			float detectWeight      = StatusEffect_GetSeverity( player, eStatusEffect.device_detected )
+			float deviceDetectCount = RoundToNearestInt( ((detectWeight) * 100) - 2 )
+
+			               
+
+			if ( deviceDetectCount == -1 )
+			{
+				RuiSetBool( file.lockon_hud, "isVisible", false )
+				                                                                                 
+				return
+			}
+			else if ( deviceDetectCount == 0 )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#DEVICE_DETECTED_WARNING_ZERO" )
+			}
+			else if ( deviceDetectCount == 1 )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#DEVICE_DETECTED_WARNING" )
+				borderColor = <1.0, 0.0, 0.0>
+			}
+			else if ( deviceDetectCount <= 10 )
+			{
+				string text = Localize( "#DEVICES_DETECTED_WARNING", deviceDetectCount )
+				RuiSetString( file.lockon_hud, "lockMessage", text )
+				borderColor = <1.0, 0.0, 0.0>
+			}
+			else
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#DEVICES_DETECTED_WARNING_MANY" )
+				borderColor = <1.0, 0.0, 0.0>
+			}
+
+			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
+		}
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.hunt_mode ) > 0.0 )
+		{
+			RuiSetString( file.lockon_hud, "lockMessage", "#HUNT_MODE_STATUS" )
+			RuiSetGameTime( file.lockon_hud, "lockEndTime", Time() + StatusEffect_GetTimeRemaining( player, eStatusEffect.hunt_mode ) )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+
+			                                                                                                                                            
+			RuiSetFloat3( file.lockon_hud, "borderColor", <1, 0.846873462, 0.0722718611> )
+		}
+                
+                                                                                
+   
+                                                                       
+                                                                                                                               
+                                                   
+                                                    
+                                                    
+                                                   
+                                                   
+                                                       
+                                                              
+   
+      
+                
+                                                                               
+   
+                                                                      
+                                                                                                                              
+                                                   
+                                                    
+                                                    
+                                                   
+                                                   
+                                                       
+                                                              
+   
+                                                                             
+   
+                                                                    
+                                                                                                                            
+                                                   
+                                                    
+                                                    
+                                                   
+                                                   
+                                                       
+                                                              
+   
+      
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.device_blocked ) )
+		{
+			float blockWeight        = StatusEffect_GetSeverity( player, eStatusEffect.device_blocked )
+			float deviceBlockedCount = RoundToNearestInt( ((blockWeight) * 100) - 1 )
+
+			                                                        
+			if ( deviceBlockedCount > 0 )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#DEVICE_DETECTED_BLOCKED_WARNING" )
+
+				RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
+				RuiSetBool( file.lockon_hud, "isVisible", true )
+				RuiSetBool( file.lockon_hud, "northLock", false )
+				RuiSetBool( file.lockon_hud, "southLock", false )
+				RuiSetBool( file.lockon_hud, "westLock", false )
+				RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+			}
+			else
+			{
+				RuiSetBool( file.lockon_hud, "isVisible", false )
+			}
+			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
+		}
+                            
+                                                          
+   
+                                                                                                                                          
+                                                                 
+                                                   
+                                                    
+                                                    
+                                                   
+                                                   
+                                                       
+                                                            
+   
+      
+                      
+                                                                                    
+   
+                                                                                 
+                                                   
+                                                    
+                                                    
+                                                   
+                                                   
+                                                       
+
+                                                                                                                                               
+                                                                  
+   
+                            
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.revealed_by_ash ) )
+		{
+			RuiSetString( file.lockon_hud, "lockMessage", "#PAS_ASH_REVEALED" )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_ash" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", <1.0, 0.0, 0.0> )
+		}
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.revealing_enemies ) )
+		{
+			int playerCount = int( RoundToNearestInt ( ( StatusEffect_GetSeverity( player, eStatusEffect.revealing_enemies ) - 0.1 ) * 10.0 ) )
+			if ( playerCount > 1 )
+				RuiSetString( file.lockon_hud, "lockMessage", Localize( "#PAS_ASH_REVEALING_ENEMIES_MULTIPLE", playerCount ) )
+			else if ( playerCount == 1 )
+				RuiSetString( file.lockon_hud, "lockMessage", Localize( "#PAS_ASH_REVEALING_ENEMIES_SINGLE" ) )
+			else
+				RuiSetString( file.lockon_hud, "lockMessage", Localize( "#PAS_ASH_REVEALING_ENEMIES_NONE" ) )
+
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", <1.0, 0.0, 0.0> )
+		}
+              
+                                                                             
+   
+                                                             
+
+                                                                                                                                 
+                                                   
+                                                    
+                                                    
+                                                   
+                                                   
+                                                       
+                                                                                       
+                                                                
+   
+      
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.heartbeat_sensor_heartbeat_revealed ) )
+		{
+			RuiSetString( file.lockon_hud, "lockMessage", "#HEARTBEAT_REVEALED" )
+
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_seer" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", <.8, 0, 0> )            
+		}
+
+		else if ( StatusEffect_GetSeverity( player, eStatusEffect.echo_locator_scanned ) )
+		{
+			RuiSetString( file.lockon_hud, "lockMessage", "#ECHO_LOCATOR_DETECTED" )
+
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", PARIAH_PURPLE )
+		}
+                 
+                                                                               
+    
+                                                                         
+
+                                                    
+                                                     
+                                                     
+                                                    
+                                                    
+                                                                                                      
+                                                                     
+                                                       
+                                                                                                                     
+    
+      
+		else
+		{
+			RuiSetBool( file.lockon_hud, "isVisible", false )
+		}
+
+		return
+	}
+
+	                                                                  
+
+	float reqFracForDetection = TARGET_SET_FRACTION
+	if ( lockedFraction > TARGET_SET_FRACTION && IsValid( highestLockSource ) )
+	{
+		float delay = SmartAmmo_GetWarningIndicatorDelay( activeLockingWeapon )
+		if ( delay )
+		{
+			reqFracForDetection = delay
+		}
+		else
+		{
+			string weaponclass = expect string( activeLockingWeapon.GetNetworkedClassName() )
+			                                                            
+			   
+			                                                                           
+			   
+		}
+
+		Assert( activeLockingWeapon != null )
+	}
+
+	if ( lockedFraction == 1.0 && lockedFraction > reqFracForDetection )
+	{
+		ShowLockedOntoWarningHUD( player, lockingEnemies, activeLockingWeapon, true )
+
+		if ( previousLockedFraction < 1.0 )
+		{
+			if ( !("playingVictimLockedSound" in player.s) )
+			{
+				EmitSoundOnEntity( player, SMART_AMMO_VICTIM_LOCKED_SOUND )
+				player.s.playingVictimLockedSound <- true
+			}
+		}
+	}
+	else if ( lockedFraction > reqFracForDetection )
+	{
+		ShowLockedOntoWarningHUD( player, lockingEnemies, activeLockingWeapon, false )
+
+		if ( "playingVictimLockedSound" in player.s )
+		{
+			StopSoundOnEntity( player, SMART_AMMO_VICTIM_LOCKED_SOUND )
+			delete player.s.playingVictimLockedSound
+		}
+	}
+	else
+	{
+		if ( "playingVictimLockedSound" in player.s )
+		{
+			StopSoundOnEntity( player, SMART_AMMO_VICTIM_LOCKED_SOUND )
+			delete player.s.playingVictimLockedSound
+		}
+	}
+}
+
+
+void function ClearLockonHudForceWeapon()
+{
+	file.lockonHudForceWeapon = null
+	file.lockingMissiles = []
+}
+
+
+void function ShowLockedOntoWarningHUD( entity player, array<entity> lockingEnemies, entity activeLockingWeapon, bool isLocked )
+{
+	string displayStr
+	if ( isLocked )
+		displayStr = MakeLockedOnWarningDisplayString( lockingEnemies, activeLockingWeapon )
+	else
+		displayStr = MakeLockingOnWarningDisplayString( lockingEnemies, activeLockingWeapon )
+
+	table showArrows = GetActiveLockQuadrants( player, lockingEnemies )
+
+	RuiSetBool( file.lockon_hud, "isVisible", true )
+	RuiSetString( file.lockon_hud, "lockMessage", displayStr )
+
+	RuiSetBool( file.lockon_hud, "northLock", showArrows.forward )
+	RuiSetBool( file.lockon_hud, "southLock", showArrows.back )
+	RuiSetBool( file.lockon_hud, "westLock", showArrows.left )
+	RuiSetBool( file.lockon_hud, "eastLock", showArrows.right )
+}
+
+
+table function GetActiveLockQuadrants( entity player, array<entity> lockingEnemies )
+{
+	vector playerOrg = player.GetOrigin()
+	table arrows
+	arrows.forward    <- false
+	arrows.back    <- false
+	arrows.left    <- false
+	arrows.right    <- false
+
+	foreach ( enemy in lockingEnemies )
+	{
+		vector org = enemy.GetOrigin()
+
+		vector playerOrg2D = <playerOrg.x, playerOrg.y, 0>
+		vector lockOrg2D   = <org.x, org.y, 0>
+
+		vector forward   = player.GetViewVector()
+		vector forward2D = <forward.x, forward.y, 0>
+
+		vector right   = player.GetViewRight()
+		vector right2D = <right.x, right.y, 0>
+
+		vector orgDiff = Normalize( lockOrg2D - playerOrg2D )
+
+		float dotForward = DotProduct( forward2D, orgDiff )
+		float deg        = DotToAngle( dotForward )
+
+		float dotRight = DotProduct( right2D, orgDiff )
+
+		                       
+
+		                                                                                
+		                                                               
+		                                                                                                                                           
+
+		string dir
+		if ( dotForward >= 0 && dotRight >= 0 )                 
+			dir = deg <= 45 ? "forward" : "right"
+		else if ( dotForward > 0 && dotRight < 0 )             
+			dir = deg <= 45 ? "forward" : "left"
+		else if ( dotForward <= 0 && dotRight >= 0 )         
+			dir = deg <= 135 ? "right" : "back"
+		else                                                 
+			dir = deg <= 135 ? "left" : "back"
+
+		if ( !arrows[ dir ] )
+			arrows[ dir ] <- true
+	}
+
+	return arrows
+}
+
+
+string function MakeLockingOnWarningDisplayString( array<entity> lockingEnemies, entity activeLockingWeapon )
+{
+	if ( lockingEnemies.len() > 1 )
+	{
+		return "#HUD_ENEMY_MULTIPLE_LOCKING"
+	}
+	else
+	{
+		Assert( IsValid( activeLockingWeapon ) )
+		string activeLockingWeaponType = activeLockingWeapon.GetWeaponClass()
+		if ( activeLockingWeaponType == "human" )
+		{
+			if ( lockingEnemies[0].IsNPC() )
+				return "#HUD_ENEMY_LOCKING"
+			else
+				return "#HUD_ENEMY_PILOT_LOCKING"
+		}
+		else if ( activeLockingWeaponType == "titan" )
+			return "#HUD_ENEMY_TITAN_LOCKING"
+		else if ( activeLockingWeaponType == "drone" )
+			return "#HUD_ENEMY_DRONE_LOCKING"
+		else
+			Assert( false, " weaponClass field is neither human nor titan!" )
+	}
+
+	unreachable
+}
+
+                                                                
+string function MakeLockedOnWarningDisplayString( array<entity> lockingEnemies, entity activeLockingWeapon )
+{
+	if ( lockingEnemies.len() > 1 )
+	{
+		return "#HUD_ENEMY_MULTIPLE_LOCK"
+	}
+	else
+	{
+		Assert( IsValid( activeLockingWeapon ) )
+		string activeLockingWeaponType = activeLockingWeapon.GetWeaponClass()
+		if ( activeLockingWeaponType == "human" )
+		{
+			if ( lockingEnemies[0].IsNPC() )
+				return "#HUD_ENEMY_LOCK"
+			else
+				return "#HUD_ENEMY_PILOT_LOCK"
+		}
+		else if ( activeLockingWeaponType == "titan" )
+			return "#HUD_ENEMY_TITAN_LOCK"
+		else
+			Assert( false, " weaponClass field is neither human nor titan!" )
+	}
+
+	unreachable
+}

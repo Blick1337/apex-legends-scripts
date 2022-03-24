@@ -1,0 +1,95 @@
+  
+
+
+             
+             
+             
+             
+             
+                  
+
+global typedef EncodedEHandle int
+global const EncodedEHandle EncodedEHandle_null = 0
+
+#if SERVER
+
+                         
+                                
+
+#elseif CLIENT || UI
+
+global typedef EHI EncodedEHandle
+global const EHI EHI_null = EncodedEHandle_null
+
+#endif
+
+
+#if SERVER || CLIENT || UI
+global struct EHIScriptStruct
+{
+	EHI ehi
+
+	                      
+	bool isPlayer = false
+	bool isConnected = false
+	string name = ""
+	int  team = TEAM_INVALID
+	int  teamMemberIndex
+	int platformID = -1
+	#if CLIENT || UI
+		bool   isLocalClientPlayer = false
+	#endif
+
+	           
+	#if SERVER
+		                        
+		                                  
+		                                      
+	#endif
+	#if SERVER || CLIENT || UI
+		table<int, array<void functionref( EHI, ItemFlavor )> > itemFlavorLoadoutSlotChangedCallbacksMap
+	#endif
+	#if CLIENT
+		array<int> netVarsLastSeenValuesMap
+	#endif
+	#if UI
+		array<int> loadoutSlotsLastSeenContentsMap
+	#endif
+
+	             
+	#if SERVER
+		             
+	#endif
+
+	        
+	#if SERVER
+		                          
+		                                                                       
+		                       
+	#endif
+
+	                                                                                  
+	int rankScore = -1                                   
+	int rankedLadderPosition = -1                                         
+
+                        
+		int arenasRankScore = 0                                
+		int arenasRankedLadderPosition = -1                                         
+       
+
+	       
+	string clubName = ""
+	string clubTag = ""
+	string clubLogo = ""
+}
+#endif
+
+
+#if SERVER
+                                    
+#elseif CLIENT || UI
+global typedef EHISignalDummy EHIScriptStruct
+#endif
+
+
+

@@ -1,0 +1,155 @@
+
+                                 
+#if SERVER
+                                             
+                                               
+                                                   
+#endif
+global function GetPersistentLastGameTypeFlag
+
+global struct postGamePlayerDef
+{
+	string name
+	string xuid
+	int callsignIconIndex
+	array<int> scores
+}
+
+global struct postGameTeamDef
+{
+	string faction
+	int score
+	int maxTeamSize
+	array<postGamePlayerDef> playersData
+}
+
+global struct postGameDataDef
+{
+	int gameMode
+	int map
+	int myTeam
+	string myXuid
+	table<int, postGameTeamDef> teamsData
+}
+
+global enum eGameType
+{
+	SQUADS = (1 << 0),
+	RANKED = (1 << 1),
+	SOLO = (1 << 2),
+}
+
+#if SERVER
+                                                                      
+ 
+	       
+	                                    
+		      
+	      
+
+	                                                                                 
+	                                                                              
+ 
+
+                                                                        
+ 
+	       
+		                                    
+			      
+	      
+
+	                                                                                 
+	                                                                               
+ 
+
+                                                                  
+ 
+	       
+		                                    
+			      
+	      
+
+	                              
+		                                               
+	 
+ 
+#endif              
+
+bool function GetPersistentLastGameTypeFlag( entity player, int flag )
+{
+	#if DEV
+		if ( DEV_ShouldIgnorePersistence() )
+			return false
+	#endif
+	
+	return (player.GetPersistentVarAsInt( "lastGameTypeFlags" ) & flag) != 0
+}
+
+
+
+                                            
+   
+  	                                      
+  
+  	                            
+  	                                                                           
+  	                                                                                       
+  	                                                                               
+  	                                                                     
+  
+  	                                                                           
+  	                                                                            
+  	                                                                                                
+  
+  	            
+  	 
+  		                           
+  		                                     
+  		                                                                                           
+  		                                                                           
+  		                                                            
+  		                                               
+  
+  		                            
+  		                                      
+  		                                                                                             
+  		                                                                             
+  		                                                                 
+  		                                                    
+  	 
+  	    
+  	 
+  		                        
+  		                                  
+  		                                                             
+  		                                     
+  	 
+  
+  	                   
+   
+
+                                                                                          
+   
+  	                                      
+  
+  	                                                                   
+  	                                                                          
+  
+  	                                      
+  	 
+  		                                                                                       
+  
+  		                                                                                                     
+  		 
+  			                            
+  			                                                                                                    
+  			                                                                                                    
+  			                                                                                                                  
+  
+  			                                               
+  				                                                                                                                        
+  
+  			                                         
+  		 
+  	 
+   

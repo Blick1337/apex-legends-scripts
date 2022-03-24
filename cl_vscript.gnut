@@ -1,0 +1,10 @@
+                                                                                 
+
+global function UniqueString
+
+int __uniqueStringId = 0
+
+string function UniqueString( string str = "" )
+{
+	return str + "_us" + __uniqueStringId++
+}

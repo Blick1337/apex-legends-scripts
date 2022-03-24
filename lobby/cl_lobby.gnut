@@ -1,0 +1,80 @@
+
+global function Lobby_AddLocalPlayer
+global function AddCallback_OnPlayerAddedToLobby
+global function Lobby_SetBannerSkin
+
+const int LOBBY_BANNER_DEFAULT_SKIN_INDEX = 0
+const int LOBBY_BANNER_ARENAS_SKIN_INDEX = 1
+const int LOBBY_BANNER_CONTROL_SKIN_INDEX = 2
+
+struct
+{
+	array<void functionref( entity )> onPlayerAddedToLobbyCallbacks
+
+	entity lobbyBanner = null
+} file
+
+void function Lobby_AddLocalPlayer()
+{
+	entity player = GetLocalClientPlayer()
+	Assert( IsValid( player ) )
+
+	player.FreezeControlsOnClient()
+	player.HideCrosshairNames()
+
+	SetStandardAbilityBindingsForPilot( player )
+	RefreshPresentationType()
+
+                 
+	                                                                                        
+	                                                                    
+	                                                      
+	RunUIScript( "Lobby_EnableMinimapCoordsOnConnect", player.GetPlayerName() )
+      
+
+	foreach ( func in file.onPlayerAddedToLobbyCallbacks )
+		func( player )
+
+	CacheLobbyBannerEnt()
+
+	thread ManageJitterVFX_Thread()
+}
+
+void function AddCallback_OnPlayerAddedToLobby( void functionref( entity ) onPlayerAddedToLobbyCallback )
+{
+	Assert( ! ( file.onPlayerAddedToLobbyCallbacks.contains( onPlayerAddedToLobbyCallback ) ), "Attempted to add same callback to onPlayerAddedToLobbyCallbacks twice." )
+
+	file.onPlayerAddedToLobbyCallbacks.append( onPlayerAddedToLobbyCallback )
+}
+
+void function CacheLobbyBannerEnt()
+{
+	array<entity> ents = GetEntArrayByScriptName( "lobby_banner" )
+	if( ents.len() > 0 )
+		file.lobbyBanner = ents[0]
+}
+
+void function Lobby_SetBannerSkin( string playlist )
+{
+	if( file.lobbyBanner == null )
+	{
+		                                        
+		CacheLobbyBannerEnt()
+
+		if( file.lobbyBanner == null )
+		{
+			Warning( "Lobby_SetBannerSkin - No lobby_banner entity found!" )
+			return
+		}
+	}
+
+	int skinIndex = LOBBY_BANNER_DEFAULT_SKIN_INDEX
+	if( playlist != "" && GetPlaylistGamemodeByIndex( playlist, 0 ) == GAMEMODE_ARENAS )
+		skinIndex = LOBBY_BANNER_ARENAS_SKIN_INDEX
+                         
+	else if ( playlist != "" && GetPlaylistGamemodeByIndex( playlist, 0 ) == GAMEMODE_CONTROL )
+		skinIndex = LOBBY_BANNER_CONTROL_SKIN_INDEX
+       
+
+	file.lobbyBanner.SetSkin( skinIndex )
+}

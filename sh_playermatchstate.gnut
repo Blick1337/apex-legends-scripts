@@ -1,0 +1,76 @@
+
+global function PlayerMatchState_RegisterNetworking
+global function PlayerMatchState_GetFor
+global function AddCallback_OnPlayerMatchStateChanged
+
+#if SERVER
+                                    
+#endif          
+
+#if CLIENT
+global function PlayerMatchState_RuiTrackInt
+#endif          
+
+const string NV_PLAYERMATCHSTATE = "nv_PlayerMatchState"
+
+global enum ePlayerMatchState
+{
+	TRAINING,
+	STAGING_AREA,
+	SKYDIVE_PRELAUNCH,
+	SKYDIVE_FALLING,
+	NORMAL
+}
+
+struct
+{
+	array<void functionref( entity, int, int )> s_playerMatchStateChangedCallbacks
+} file
+
+
+void function PlayerMatchState_RegisterNetworking()
+{
+	RegisterNetworkedVariable( NV_PLAYERMATCHSTATE, SNDC_PLAYER_EXCLUSIVE, SNVT_INT, ePlayerMatchState.NORMAL )
+
+#if CLIENT
+	RegisterNetworkedVariableChangeCallback_int( NV_PLAYERMATCHSTATE, OnPlayerMatchStateChanged )
+#endif          
+}
+
+void function AddCallback_OnPlayerMatchStateChanged( void functionref( entity, int, int ) func )
+{
+	Assert( !file.s_playerMatchStateChangedCallbacks.contains( func ) )
+	file.s_playerMatchStateChangedCallbacks.append( func )
+}
+
+int function PlayerMatchState_GetFor( entity player )
+{
+	int result = player.GetPlayerNetInt( NV_PLAYERMATCHSTATE )
+	return result
+}
+
+#if SERVER
+                                                                         
+ 
+	                                                            
+	                                                               
+	                                                                                                
+		                                          
+ 
+#endif          
+
+#if CLIENT
+void function OnPlayerMatchStateChanged( entity player, int oldValue, int newValue )
+{
+	if ( oldValue == newValue )
+		return
+
+	foreach ( void functionref( entity, int, int ) func in file.s_playerMatchStateChangedCallbacks )
+		func( player, oldValue, newValue )
+}
+
+void function PlayerMatchState_RuiTrackInt( var rui, string argName, entity player )
+{
+	RuiTrackInt( rui, argName, player, RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( NV_PLAYERMATCHSTATE ) )
+}
+#endif          

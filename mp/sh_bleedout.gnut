@@ -1,0 +1,673 @@
+global function BleedoutShared_Init
+global function Bleedout_GetBleedoutTime
+global function Bleedout_GetFirstAidTime
+global function Bleedout_GetFirstAidTimeSelf
+global function Bleedout_GetFirstAidHealPercent
+global function Bleedout_GetForceWeaponHolster
+global function Bleedout_GetDeathOnTeamBleedout
+global function Bleedout_ShouldAIMissPlayer
+global function Bleedout_GetAIMissChance
+global function Bleedout_GetSelfResEnabled
+global function Bleedout_IsBleedoutLogicActive
+global function Bleedout_IsBleedingOut
+global function Bleedout_PlayerCanRes
+global function Bleedout_PlayerCanBeRessed
+global function Bleedout_PlayerCanSelfRes
+global function Bleedout_PlayerInValidSeldResState
+global function Bleedout_GetPlayerBleedoutType
+global function Bleedout_GetPlayerBleedoutTypeCount
+global function Bleedout_GetRevivingPlayer
+                        
+global function Bleedout_GetHasInfiniteSelfRes
+global function Bleedout_GetCanForceBleedoutTimeout
+                              
+
+global function BleedoutState_GetPlayerBleedoutState
+
+global function Bleedout_CheckPlayerUseTargetDist
+
+#if SERVER
+                                                    
+                                                                      
+#endif          
+#if DEV
+global function Bleedout_OverrideBleedoutTime
+#endif
+
+                        
+const float BLEEDOUT_TIME_LV1 = 90.0
+const float BLEEDOUT_TIME_LV2 = 60.0
+const float BLEEDOUT_TIME_LV3 = 30.0
+const float BLEEDOUT_TIME_LV4 = 15.0
+
+global const float DEFAULT_FIRSTAID_TIME = 6.0
+const float DEFAULT_FIRSTAID_TIME_SELF = -1.0
+const float DEFAULT_FIRSTAID_HEAL_PERCENT = 0.2
+const float DEFAULT_AI_BLEEDING_PLAYER_MISS_CHANCE = 0.0
+const bool DEFAULT_FORCE_WEAPON_HOLSTER = true
+const bool DEFAULT_DEATH_ON_TEAM_BLEEDOUT = true
+
+                      
+const float MEDIC_FIRSTAID_TIME = 4.5
+const float GIB_DOME_REVIVE_TIME = 4.5
+global const float VOID_RING_REVIVE_TIME = 4.5
+global const float VOID_RING_SELF_REVIVE_TIME = 9
+global const bool VOID_RING_CAN_FAST_REVIVE = true
+              
+                                             
+                                                       
+      
+                        
+global const float INFINITE_SELFRES_REVIVE_TIME = 12.0
+                              
+
+global enum eReviveTypes
+{
+	FRIENDLY
+	RECRUIT
+	COUNT
+	SELF
+}
+
+struct BleedoutData
+{
+	float bleedoutTime
+	float firstAidTime
+	float firstAidTimeSelf
+	float firstAidHealPercent
+	float aiBleedingPlayerMissChance
+	bool  forceHolster
+	bool  forceDeathOnTeamBleedout
+	bool  enableSelfRes
+}
+
+struct
+{
+	bool                bleedoutLogicActive = false
+                        
+	bool 				hasInfiniteSelfRes = false
+	bool				canForceBleedoutTimeout = false
+                              
+	array<BleedoutData> bleedoutTypes
+
+	#if SERVER
+		                                                                               
+	#endif          
+} file
+
+void function BleedoutShared_Init()
+{
+	PrecacheWeapon( "mp_weapon_incap_shield" )
+
+
+	                            
+	BleedoutData defData
+	defData.bleedoutTime = GetCurrentPlaylistVarFloat( "survival_bleedout_time_1", BLEEDOUT_TIME_LV1 )
+	defData.firstAidTime = DEFAULT_FIRSTAID_TIME                                                                               
+	defData.firstAidTimeSelf = DEFAULT_FIRSTAID_TIME_SELF
+	defData.firstAidHealPercent = DEFAULT_FIRSTAID_HEAL_PERCENT
+	defData.aiBleedingPlayerMissChance = DEFAULT_AI_BLEEDING_PLAYER_MISS_CHANCE
+	defData.forceHolster = DEFAULT_FORCE_WEAPON_HOLSTER
+	defData.forceDeathOnTeamBleedout = DEFAULT_DEATH_ON_TEAM_BLEEDOUT
+	defData.enableSelfRes = (defData.firstAidTimeSelf >= 0)
+	file.bleedoutTypes.append( defData )
+
+	BleedoutData defData2
+	defData2.bleedoutTime = GetCurrentPlaylistVarFloat( "survival_bleedout_time_2", BLEEDOUT_TIME_LV2 )
+	defData2.firstAidTime = DEFAULT_FIRSTAID_TIME                                                                               
+	defData2.firstAidTimeSelf = DEFAULT_FIRSTAID_TIME_SELF
+	defData2.firstAidHealPercent = DEFAULT_FIRSTAID_HEAL_PERCENT
+	defData2.aiBleedingPlayerMissChance = DEFAULT_AI_BLEEDING_PLAYER_MISS_CHANCE
+	defData2.forceHolster = DEFAULT_FORCE_WEAPON_HOLSTER
+	defData2.forceDeathOnTeamBleedout = DEFAULT_DEATH_ON_TEAM_BLEEDOUT
+	defData2.enableSelfRes = (defData2.firstAidTimeSelf >= 0)
+	file.bleedoutTypes.append( defData2 )
+
+	BleedoutData defData3
+	defData3.bleedoutTime = GetCurrentPlaylistVarFloat( "survival_bleedout_time_3", BLEEDOUT_TIME_LV3 )
+	defData3.firstAidTime = DEFAULT_FIRSTAID_TIME                                                                               
+	defData3.firstAidTimeSelf = DEFAULT_FIRSTAID_TIME_SELF
+	defData3.firstAidHealPercent = DEFAULT_FIRSTAID_HEAL_PERCENT
+	defData3.aiBleedingPlayerMissChance = DEFAULT_AI_BLEEDING_PLAYER_MISS_CHANCE
+	defData3.forceHolster = DEFAULT_FORCE_WEAPON_HOLSTER
+	defData3.forceDeathOnTeamBleedout = DEFAULT_DEATH_ON_TEAM_BLEEDOUT
+	defData3.enableSelfRes = (defData3.firstAidTimeSelf >= 0)
+	file.bleedoutTypes.append( defData3 )
+
+	BleedoutData defData4
+	defData4.bleedoutTime = GetCurrentPlaylistVarFloat( "survival_bleedout_time_4", BLEEDOUT_TIME_LV4 )
+	defData4.firstAidTime = DEFAULT_FIRSTAID_TIME                                                                               
+	defData4.firstAidTimeSelf = DEFAULT_FIRSTAID_TIME_SELF
+	defData4.firstAidHealPercent = DEFAULT_FIRSTAID_HEAL_PERCENT
+	defData4.aiBleedingPlayerMissChance = DEFAULT_AI_BLEEDING_PLAYER_MISS_CHANCE
+	defData4.forceHolster = DEFAULT_FORCE_WEAPON_HOLSTER
+	defData4.forceDeathOnTeamBleedout = DEFAULT_DEATH_ON_TEAM_BLEEDOUT
+	defData4.enableSelfRes = (defData4.firstAidTimeSelf >= 0)
+	file.bleedoutTypes.append( defData4 )
+
+	#if CLIENT
+		AddCreateCallback( "player", OnPlayerCreated )
+		if ( GetCurrentPlaylistVarBool( "bleedout_ping_los_block_enabled", true ) )
+			AddCallback_OnPingCreatedByAnyPlayer( OnPingCreatedByAnyPlayer_TrackCrosshairTarget )
+	#elseif SERVER
+		                                             
+                          
+			                                                            
+                                
+	#endif
+                         
+		file.hasInfiniteSelfRes = GetCurrentPlaylistVarBool( "bleedout_has_infinite_self_res", false )
+		file.canForceBleedoutTimeout = GetCurrentPlaylistVarBool( "bleedout_can_force_bleedout_timeout", false )
+                               
+
+	AddCallback_CheckPlayerCanUse( CheckPlayerCanUse )
+
+	file.bleedoutLogicActive = true
+}
+
+bool function CheckPlayerCanUse( entity player, entity target )
+{
+	if ( !Bleedout_IsBleedingOut( player ) )
+		return true
+
+	if ( target.GetNetworkedClassName() == "prop_door" || target.GetScriptName() == "survival_door_plain" )
+		return true
+
+	return false
+}
+
+const float REVIVE_RANGE = 112
+const float REVIVE_RANGE_SQ = REVIVE_RANGE * REVIVE_RANGE
+const float REVIVE_RANGE_Z_MAX = 70.0
+const float REVIVE_RANGE_Z_MIN = 48.0
+
+const float EXECUTION_ANGLE_UP_DOWN_DEVIATION_MIN = 25
+const float EXECUTION_ANGLE_UP_DOWN_DEVIATION_MAX = 35                 
+const float EXECUTION_ANGLE_UP_DOWN_DEVIATION_RANGE = EXECUTION_ANGLE_UP_DOWN_DEVIATION_MAX - EXECUTION_ANGLE_UP_DOWN_DEVIATION_MIN
+const float EXECUTION_ANGLE_LEFT_RIGHT_DEVIATION_MIN = 25
+const float EXECUTION_ANGLE_LEFT_RIGHT_DEVIATION_MAX = 65
+const float EXECUTION_ANGLE_LEFT_RIGHT_DEVIATION_RANGE = EXECUTION_ANGLE_LEFT_RIGHT_DEVIATION_MAX - EXECUTION_ANGLE_LEFT_RIGHT_DEVIATION_MIN
+const float EXECUTION_RANGE = 90
+const float EXECUTION_RANGE_SQ = EXECUTION_RANGE * EXECUTION_RANGE
+
+const bool DEBUG_REVIVE_RANGE = false
+const int DEBUG_REVIVE_COLOR_R = 200
+const int DEBUG_REVIVE_COLOR_G = 200
+const int DEBUG_REVIVE_COLOR_B = 50
+const float DEBUG_REVIVE_VECTOR_LENGTH = 50.0
+const float DEBUG_REVIVE_ARROW_SIZE = 4
+
+bool function Bleedout_CanRevivePlayer( entity reviver, entity victim, int useFlags )
+{
+	if ( !Bleedout_PlayerCanRes( reviver ) )
+		return false
+
+	if ( !Bleedout_PlayerCanBeRessed( victim ) )
+		return false
+
+	bool tryingToRevive = (IsFriendlyTeam( reviver.GetTeam(), victim.GetTeam() ) || IsRecruitMode())
+
+	vector victimPos          = victim.GetOrigin()
+	vector revivorEyePos      = reviver.UseableEyePosition( victim )
+	vector reviverPos         = reviver.GetOrigin()
+	vector reviverToVictim    = victimPos - reviverPos
+	vector reviverEyeToVictim = victimPos - revivorEyePos
+
+	float reviverToVictimSq = LengthSqr( reviverToVictim )
+
+	if ( DEBUG_REVIVE_RANGE )
+	{
+		DebugDrawLine( revivorEyePos, victimPos, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, true, 0.3 )
+		DebugDrawLine( reviverPos, victimPos, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, true, 0.3 )
+	}
+
+	                                                                                                 
+	                                                                                                                                                                          
+	if ( !tryingToRevive )
+	{
+		if ( reviverToVictimSq > EXECUTION_RANGE_SQ )
+			return false
+
+		float reviveRangeFrac = (1.0 + DotProduct( reviver.GetViewForward(), Normalize( reviverEyeToVictim ) )) * 0.5
+
+		vector reviverViewForward                             = reviver.GetViewForward()
+		vector reviverRight                                   = reviver.GetViewRight()
+		float reviverEyeToVictimOntoRight                     = DotProduct( reviverEyeToVictim, reviverRight )
+		vector reviverEyeToVictimOntoForwardUpPlane           = reviverEyeToVictim - (reviverEyeToVictimOntoRight * reviverRight)
+		vector reviverEyeToVictimOntoForwardUpPlaneNormalized = Normalize( reviverEyeToVictimOntoForwardUpPlane )
+
+		vector reviverEyeToVictimOntoXYPlane           = <reviverEyeToVictim.x, reviverEyeToVictim.y, 0>
+		vector reviverEyeToVictimOntoXYPlaneNormalized = Normalize( reviverEyeToVictimOntoXYPlane )
+		vector reviverViewForwardOntoXYPlane           = <reviverViewForward.x, reviverViewForward.y, 0>
+		vector reviverViewForwardOntoXYNormalized      = Normalize( reviverViewForwardOntoXYPlane )
+
+		if ( DEBUG_REVIVE_RANGE )
+		{
+			DebugDrawArrow( revivorEyePos, revivorEyePos + reviver.GetUpVector() * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, true, 0.3 )
+			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverViewForward * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, true, 0.3 )
+			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverEyeToVictimOntoForwardUpPlaneNormalized * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, 200, 50, 50, true, 0.3 )
+			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverEyeToVictimOntoXYPlaneNormalized * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, 50, 200, 50, true, 0.3 )
+			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverViewForwardOntoXYNormalized * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, 50, 200, 50, true, 0.3 )
+		}
+
+		float distanceFrac              = 1 - reviverToVictimSq / EXECUTION_RANGE_SQ                                                                                                                         
+		float finalUpDownAngleThreshold = EXECUTION_ANGLE_UP_DOWN_DEVIATION_MIN + distanceFrac * EXECUTION_ANGLE_UP_DOWN_DEVIATION_RANGE
+
+		float upDownAngle = acos( DotProduct( reviverViewForward, reviverEyeToVictimOntoForwardUpPlaneNormalized ) ) * 180 / PI
+		if ( upDownAngle > finalUpDownAngleThreshold )
+			return false
+
+		float leftRightAngle               = acos( DotProduct( reviverViewForwardOntoXYNormalized, reviverEyeToVictimOntoXYPlaneNormalized ) ) * 180 / PI
+		float finalLeftRightAngleThreshold = EXECUTION_ANGLE_LEFT_RIGHT_DEVIATION_MIN + distanceFrac * EXECUTION_ANGLE_LEFT_RIGHT_DEVIATION_RANGE
+		if ( leftRightAngle > finalLeftRightAngleThreshold )
+			return false
+
+		                                                                                                                              
+		if ( !IsValidSyncedMeleeTarget( reviver, null, null, victim ) )
+			return false
+	}
+	else
+	{
+		float reviveRangeFrac = (1.0 + DotProduct( reviver.GetViewForward(), Normalize( reviverToVictim ) )) * 0.5
+		float reviveRange     = reviveRangeFrac * REVIVE_RANGE
+
+		if ( DEBUG_REVIVE_RANGE )
+			DebugDrawTrigger( victimPos, reviveRange, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, 0.3, true )
+
+		if ( !Bleedout_CheckPlayerUseTargetDist( reviver, victim ) )
+			return false
+
+		                                                                                                         
+		float maxZDiff = GraphCapped( reviverToVictimSq, 0, REVIVE_RANGE_SQ, REVIVE_RANGE_Z_MAX, REVIVE_RANGE_Z_MIN )
+		if ( fabs( reviverToVictim.z ) > maxZDiff )
+			return false
+
+		                                              
+		if ( !PlayerMelee_IsExecutionReachable( reviver, victim, 0.15 ) )
+			return false
+	}
+
+	return true
+}
+
+void function OnPlayerCreated( entity player )
+{
+	SetCallback_CanUseEntityCallback( player, Bleedout_CanRevivePlayer )
+}
+
+                        
+#if SERVER
+                                                                                                                  
+                                                                                      
+ 
+	                                                                                                                      
+		                                                
+ 
+#endif          
+                              
+
+float function Bleedout_GetBleedoutTime( entity player )
+{
+                
+                                                     
+  
+                                    
+  
+       
+
+	                                                            
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+	return file.bleedoutTypes[ type ].bleedoutTime
+}
+
+#if DEV
+void function Bleedout_OverrideBleedoutTime( entity player, float time )
+{
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+	file.bleedoutTypes[ type ].bleedoutTime = time
+}
+#endif
+
+float function Bleedout_GetFirstAidTime( entity player )
+{
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+
+#if SERVER
+	                                                                                                                                                                     
+	 
+		                                                                                   
+	 
+#endif
+	                
+	                                                         
+	   
+	  	                           
+	   
+	        
+	if ( GibraltarIsInDome( player ) && GetCurrentPlaylistVarInt( "gibraltar_fast_revive", 1 ) == 1 )
+		return GIB_DOME_REVIVE_TIME
+
+	return file.bleedoutTypes[ type ].firstAidTime
+}
+
+
+float function Bleedout_GetFirstAidTimeSelf( entity player )
+{
+		if ( (StatusEffect_GetSeverity( player, eStatusEffect.ring_immunity ) > 0) && GetCurrentPlaylistVarBool( "heatshield_allow_fast_revive", VOID_RING_CAN_FAST_REVIVE) )
+		{
+			return GetCurrentPlaylistVarFloat( "heatshield_self_revive_time", VOID_RING_SELF_REVIVE_TIME)
+		}
+
+               
+                                                                                          
+   
+                                          
+   
+       
+
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+	return file.bleedoutTypes[ type ].firstAidTimeSelf
+}
+
+
+float function Bleedout_GetFirstAidHealPercent( entity player )
+{
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+	return file.bleedoutTypes[ type ].firstAidHealPercent
+}
+
+
+bool function Bleedout_GetForceWeaponHolster( entity player )
+{
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+	return file.bleedoutTypes[ type ].forceHolster
+}
+
+
+bool function Bleedout_GetDeathOnTeamBleedout( entity player )
+{
+                         
+		if ( Control_IsModeEnabled() )
+			return false
+                               
+
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+	return file.bleedoutTypes[ type ].forceDeathOnTeamBleedout
+}
+
+
+bool function Bleedout_ShouldAIMissPlayer( entity player )
+{
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+	return file.bleedoutTypes[ type ].aiBleedingPlayerMissChance > 0
+}
+
+
+float function Bleedout_GetAIMissChance( entity player )
+{
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+	return file.bleedoutTypes[ type ].aiBleedingPlayerMissChance
+}
+
+
+entity function Bleedout_GetRevivingPlayer( entity player )
+{
+	Assert( Bleedout_IsBleedingOut( player ), "Tried to call function on a player who isn't bleeding out" )
+	return player.GetPlayerNetEnt( "revivePlayerHealer" )
+}
+
+
+bool function Bleedout_GetSelfResEnabled( entity player )
+{
+                 
+                                                             
+                                                                                
+              
+
+                                              
+                                                           
+              
+       
+
+	                                          
+	if ( PlayerHasPassive( player, ePassives.PAS_SELF_REVIVE ) )
+		return true
+
+                         
+		if ( Bleedout_GetHasInfiniteSelfRes() )
+			return true
+                               
+
+	int type = player.GetPlayerNetInt( "bleedoutType" )
+	return file.bleedoutTypes[ type ].enableSelfRes
+}
+
+
+                                                                    
+bool function Bleedout_IsBleedoutLogicActive()
+{
+	return file.bleedoutLogicActive
+}
+
+
+bool function Bleedout_IsBleedingOut( entity player )
+{
+	if ( !player.IsPlayer() )
+		return false
+
+	return BleedoutState_GetPlayerBleedoutState( player ) != BS_NOT_BLEEDING_OUT
+}
+
+
+bool function Bleedout_PlayerCanRes( entity player )
+{
+	if ( !player.IsPlayer() )
+		return false
+
+	if ( Bleedout_IsBleedingOut( player ) )
+		return false
+
+	if ( !__PlayerInValidResState( player ) )
+		return false
+
+	if ( player.GetWeaponDisableFlags() == WEAPON_DISABLE_FLAGS_ALL )
+		return false
+
+	if ( IsValid( player.GetActiveWeapon( eActiveInventorySlot.mainHand ) ) && player.GetActiveWeapon( eActiveInventorySlot.mainHand ).IsWeaponOffhand() )
+		return false
+
+		if ( StatusEffect_GetSeverity( player, eStatusEffect.interrupted ) > 0.0 )
+			return false
+
+
+	return true
+}
+
+bool function __PlayerInValidResState( entity player )
+{
+	if ( player.ContextAction_IsActive() )
+		return false
+
+	if ( !player.IsOnGround() )
+		return false
+
+	if ( player.IsPhaseShiftedOrPending() )
+		return false
+
+	if ( IsValid( player.GetParent() ) )
+		return false
+
+	if ( player.ContextAction_IsMeleeExecution() )
+		return false
+
+	return true
+}
+
+bool function Bleedout_PlayerInValidSeldResState( entity player )
+{
+	if ( !player.IsPlayer() )
+		return false
+
+	if ( !__PlayerInValidResState( player ) )
+		return false
+
+	return true
+}
+
+bool function Bleedout_PlayerCanBeRessed( entity player )
+{
+	if ( !player.IsPlayer() )
+		return false
+
+	if ( player.GetPlayerNetTime( "reviveEndTime" ) != 0.0 )
+		return false
+
+	if ( !__PlayerInValidResState( player ) )
+		return false
+
+	if ( BleedoutState_GetPlayerBleedoutState( player ) != BS_BLEEDING_OUT )
+		return false
+
+	return true
+}
+
+
+bool function Bleedout_PlayerCanSelfRes( entity player )
+{
+	if ( !Bleedout_PlayerCanBeRessed( player ) )
+		return false
+
+	bool hasSelfRes = false
+
+	if ( PlayerHasPassive( player, ePassives.PAS_SELF_REVIVE ) )
+		hasSelfRes = true
+
+                 
+                                                                                
+                    
+
+                                                           
+                    
+       
+
+	if ( !hasSelfRes )
+		return false
+
+	return true
+}
+
+
+int function Bleedout_GetPlayerBleedoutType( entity player )
+{
+	return player.GetPlayerNetInt( "bleedoutType" )
+}
+
+
+int function Bleedout_GetPlayerBleedoutTypeCount()
+{
+	return file.bleedoutTypes.len()
+}
+
+#if SERVER
+                                                                                                                    
+ 
+	                                                                                                                                                                                           
+	                                                                  
+ 
+
+                                                                                 
+ 
+	                         
+		      
+
+	                                                             
+	                           
+		      
+
+	                                   
+
+	                                                                      
+	 
+		                                
+	 
+ 
+#endif          
+
+
+int function BleedoutState_GetPlayerBleedoutState( entity player )
+{
+	return player.GetBleedoutState()
+}
+
+#if CLIENT
+void function OnPingCreatedByAnyPlayer_TrackCrosshairTarget( entity pingingPlayer, int pingType, entity focusEnt, vector pingLoc, entity wayPoint )
+{
+	if ( pingType != ePingType.BLEEDOUT && pingType != ePingType.RESPAWN_BANNER )
+			return
+
+	                                                
+	if ( !IsAlive( GetLocalClientPlayer() ) )
+		return
+
+	thread TrackCrosshairTargetForPing( wayPoint )
+}
+
+                                                                                      
+                                                                                            
+                                              
+void function TrackCrosshairTargetForPing( entity wayPoint )
+{
+	EndSignal( wayPoint, "OnDestroy" )
+
+	bool wasVisible = true
+	while ( IsValid( wayPoint ) )
+	{
+		bool isVisible = true
+
+		if ( GetAimAssistCurrentTarget() != null )
+		{
+			vector eyePos        = GetLocalViewPlayer().EyePosition()
+			vector vecToTarget   = Normalize( GetAimAssistCurrentTarget().GetWorldSpaceCenter() - eyePos )
+			vector vecToWaypoint = Normalize( wayPoint.GetOrigin() - eyePos )
+			isVisible = vecToTarget.Dot( vecToWaypoint ) < 0.998
+		}
+
+		if ( isVisible != wasVisible )
+		{
+			if ( wayPoint.wp.ruiHud != null )
+				RuiSetBool( wayPoint.wp.ruiHud, "isHidden", !isVisible )
+		}
+
+		wasVisible = isVisible
+		wait 0.1
+	}
+}
+#endif
+
+const float BLEEDOUT_MAX_USE_DIST2_MOD = 64 * 64
+bool function Bleedout_CheckPlayerUseTargetDist( entity player, entity useTarget )
+{
+	vector eyePos = player.UseableEyePosition( useTarget )
+	vector eyePos2D = <eyePos.x, eyePos.y, 0.0>
+	vector useOrigin = useTarget.GetOrigin()
+	vector useOrigin2D = <useOrigin.x, useOrigin.y, 0.0>
+	float vertDist = player.GetOrigin().z - useTarget.GetOrigin().z
+	if ( (DistanceSqr( eyePos2D, useOrigin2D ) > REVIVE_RANGE_SQ) || ((vertDist * vertDist) > BLEEDOUT_MAX_USE_DIST2_MOD) )
+		return false
+
+	return true
+}
+
+                        
+                                                                            
+bool function Bleedout_GetHasInfiniteSelfRes()
+{
+	return file.hasInfiniteSelfRes
+}
+
+                                                                                                         
+bool function Bleedout_GetCanForceBleedoutTimeout()
+{
+	return file.canForceBleedoutTimeout
+}
+                              

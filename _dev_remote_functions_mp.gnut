@@ -1,0 +1,17 @@
+global function Dev_RemoteFunctions_Init
+global function Dev_RemoteStrings_Init
+
+void function Dev_RemoteFunctions_Init()
+{
+                   
+                                                    
+
+                                                                     
+                         
+}
+
+void function Dev_RemoteStrings_Init()
+{
+                   
+                         
+}

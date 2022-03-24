@@ -1,0 +1,1213 @@
+untyped
+
+global function FlightpathShared_Init
+global function GetAttachPoints
+global function GetPreviewPoint
+global function GetAnalysisOffset
+global function MaskTester
+global function GetAnalysisForModel
+global function HasAnalysisForModel
+global function CopyAttachPoint
+global function IsActiveNodeAnalysis
+
+global function AddDropshipFlightAnalysis
+
+#if DEV && SERVER
+                              
+#endif
+
+global const DROP_MIN_X = 0.0
+global const ANALYSIS_STEPS = 8                                                              
+global const ANALYSIS_YAW_STEP = 360.0 / ANALYSIS_STEPS
+global const SPAWNPOINT_USE_TIME = 10.0                       
+global const MAX_ANALYSIS_COUNT = 64                                                                           
+
+global const DROPSHIP_VERTICAL = "dropship_flyer_attack_vertical_successful"
+global const DROPSHIP_STRAFE = "gd_goblin_zipline_strafe"
+global const DROPSHIP_FLYER_ATTACK_ANIM = "dropship_flyer_attack"
+global const DROPSHIP_FLYER_ATTACK_ANIM_VERTICAL = "dropship_flyer_attack_vertical"
+global const DROPSHIP_DROP_ANIM = "gd_goblin_zipline_strafe"
+global const DROPSHIP_MODEL = $"mdl/vehicle/goblin_dropship/goblin_dropship.rmdl"
+global const DROPSHIP_MODEL_OLD = $"mdl/vehicle/goblin_dropship/goblin_dropship.rmdl"
+                       
+                                                                                                
+      
+
+global const AIRDROP_BASE_ANIM = "dp_droppod_idle"
+global const HOTDROP_TURBO_ANIM = "at_hotdrop_drop_2knee_turbo"
+global const TURBO_WARP_FX = $"P_warp_in_atlas"
+global const TURBO_WARP_COMPANY = $"hotdrop_hld_warp"
+
+global const FX_GUNSHIP_CRASH_EXPLOSION_ENTRANCE = $"veh_gunship_warp_FULL"
+global const FX_GUNSHIP_CRASH_EXPLOSION_EXIT = $"veh_gunship_warp_OUT_FULL"
+
+global const float WARPFALL_SOUND_DELAY = 1.1
+global const float WARPFALL_FX_DELAY = 0.9
+
+global enum eFlightPathAnalysisIndex
+{
+	DROPPOD_AIRDROP_BASE_ANIM = 0,
+	CARE_PACKAGE_AIRDROP_IDLE = 1,
+	RESPAWN_DROPSHIP_FLYIN_MOVE = 2,
+                        
+                            
+       
+	UNUSED4 = 4,
+	UNUSED5 = 5,
+	UNUSED6 = 6,
+}
+
+global struct NodeFP
+{
+	vector origin
+	vector angles
+	string name
+	int    uniqueID
+	vector attachOrigin
+	vector attachAngles
+	vector vec
+	float  dot
+
+	float  fraction
+	string attachName
+	float  rating
+}
+
+global struct DropTable
+{
+	table<string, table<string, NodeFP> > nodes
+	bool                                  valid
+}
+
+global struct CallinData
+{
+	vector origin
+	float  yaw
+	bool   yawSet
+
+	int    team
+	entity owner
+	vector ownerEyePos
+	bool   ownerEyePosSet
+
+	float                                            dist
+	string                                           squadname
+	int                                              style
+	bool                                             styleSet
+	int                                              dropshipHealth
+	bool                                             success
+	array<entity functionref( int, vector, vector )> npcSpawnFuncs
+
+	DropTable dropTable
+	entity    dropship
+
+	                             
+	string side = "both"
+	string anim
+	string customSnd
+	bool   forcedPosition = false
+}
+
+global struct SpawnPointFP
+{
+	bool   valid
+	vector origin
+	vector angles
+	int    node
+}
+
+global struct AttachPoint
+{
+	vector origin
+	vector angles
+	string name
+	int    node
+}
+
+global NodeFP NullNodeFP
+
+global struct FlightPath
+{
+	vector                             mins
+	vector                             maxs
+	int                                traceMask = TRACE_MASK_NPCWORLDSTATIC
+	string                             idleAnim
+	bool                               hasIdleAnim = false
+	bool                               useNPC = false
+	string                             npcClass = ""
+	table<string, array<AttachPoint> > deployAttach
+	array<int>                         nodes
+	asset                              model
+	string                             anim
+	int                                iterator
+	int                                hull
+	array<AttachPoint>                 points
+	AttachPoint                        preview
+}
+
+
+#if SERVER
+                                       
+                                   
+                       
+                                          
+      
+                                         
+                                        
+                                          
+                               
+                                           
+                                   
+                                             
+
+                                    
+                                    
+                                    
+
+                                    
+
+                                        
+                                  
+                                             
+                                   
+
+
+      
+ 
+	                                                                                     
+	                                                                                            
+
+	                                                    
+
+	                                                 
+	                                               
+
+	                                     
+	                                      
+	                                       
+	                                         
+	                                                      
+      
+#endif          
+
+struct
+{
+	table<asset, table<string, FlightPath> > flightAnalysis
+	array<string>                            dropshipDropoffAnims
+	bool                                     activeNodeAnalysis = false
+} shFile
+
+
+void function FlightpathShared_Init()
+{
+	FlagInit( "DisableDropships", false )
+
+	FlagInit( "DogFights" )
+	FlagInit( "FlyerPickupAnalysis" )
+	FlagInit( "StratonFullAttack" )
+
+	level.drawAnalysisPreview <- false
+
+	level.testHardPoints <- []
+	level.testFlagSpawnPoints <- []
+	level.titanfallBlockers <- []
+
+	level.superCallinOffset <- {}
+	level.superCallinOffset[ DROPSHIP_MODEL ] <- 700.0
+	level.superCallinOffset[ DROPSHIP_MODEL_OLD ] <- 700.0
+
+	shFile.dropshipDropoffAnims.append( DROPSHIP_STRAFE )
+	                                                                               
+	shFile.dropshipDropoffAnims.append( DROPSHIP_VERTICAL )
+
+	                                                                                                                          
+
+	RegisterSignal( "ClearDisableTitanfall" )
+
+	level.spawnPointsInUse <- {}
+	level.disallowedTitanfalls <- {}
+
+	AddCallback_EntitiesDidLoad( EntitiesDidLoad )
+}
+
+#if SERVER
+                         
+                                      
+     
+                                        
+      
+#endif
+
+void function EntitiesDidLoad()
+{
+	if ( IsMenuLevel() )
+		return
+
+	#if SERVER
+		                                          
+
+		 
+			                                                                                                           
+
+			                           
+
+			                                                                            
+			                                            
+			                                            
+			                                                                                                                              
+
+			                                                 
+			                                                               
+			                                                         
+		 
+
+		 
+			                                                        
+			                                                                         
+			                                                                                                                        
+			                                                                                                 
+			                                            
+			                                            
+			                                                                                                                              
+
+			                                                 
+			                                                                
+			                                                         
+		 
+
+                         
+    
+                                                               
+                                                                                                        
+                                                                                     
+                                                
+                                                
+                                                                                                                                  
+
+                                          
+                                                                          
+                                                             
+    
+        
+
+	#endif         
+}
+
+#if SERVER
+
+                                                          
+ 
+	                                                                                      
+ 
+
+                                                      
+ 
+	                                                       
+	                 
+	            
+ 
+
+#endif
+
+void function DrawAnalysis( FlightPath flightPath )
+{
+	array<AttachPoint> points = flightPath.points
+	for ( int i = 1; i < points.len(); i++ )
+	{
+		AttachPoint point1 = points[i - 1]
+		AttachPoint point2 = points[i]
+		DebugDrawLine( point1.origin, point2.origin, 255, 0, 0, true, 15.0 )
+	}
+}
+
+
+bool function HasAnalysisForModel( asset model, string animation )
+{
+	if ( !(model in shFile.flightAnalysis) )
+		return false
+	return animation in shFile.flightAnalysis[ model ]
+}
+
+
+FlightPath function GetAnalysisForModel( asset model, string animation )
+{
+	Assert( model in shFile.flightAnalysis )
+	Assert( animation in shFile.flightAnalysis[ model ] )
+
+	return shFile.flightAnalysis[ model ][ animation ]
+}
+
+
+void function InitFlightAnalysis( FlightPath flightPath )
+{
+	flightPath.deployAttach[ "left" ] <- []
+	flightPath.deployAttach[ "right" ] <- []
+}
+
+
+FlightPath function CreateFlightAnalysis( asset model, string anim, table<string, array<string> > attachments, string event = "" )
+{
+	FlightPath Table
+	InitializeFlightAnalysis( Table, model, anim, attachments, event )
+	return Table
+}
+
+
+FlightPath function CreateFlightAnalysisNPC( asset model, string anim, table<string, array<string> > attachments, string event = "" )
+{
+	FlightPath Table
+	Table.npcClass = "npc_dropship"
+	Table.useNPC = true
+	InitializeFlightAnalysis( Table, model, anim, attachments, event )
+	return Table
+}
+
+
+FlightPath function InitializeFlightAnalysis( FlightPath Table, asset model, string anim, table<string, array<string> > attachments, string event = "" )
+{
+	InitFlightAnalysis( Table )
+	if ( !(model in shFile.flightAnalysis) )
+	{
+		shFile.flightAnalysis[ model ] <- {}
+	}
+
+	Assert( !(anim in shFile.flightAnalysis[ model ]), "Already added " + anim + " to flight flightPath for " + model )
+
+
+	Table.model = model
+	Table.anim = anim
+
+	entity dropship = CreatePropDynamic( model, <0, 0, 0>, <0, 0, 0> )
+
+	                                                                                                                                                 
+	#if SERVER
+		                   
+		 
+			                  
+			                                         
+			                         
+			                          
+		 
+	#endif
+
+	Table.points = FillFlightAnalysisPoints( dropship, anim )
+	if ( Table.points.len() )
+		CopyAttachPoint( Table.points.top(), Table.preview )
+
+	if ( event != "" )
+	{
+		FillDeployForAnalysisForEvent( dropship, anim, event, Table, attachments )
+	}
+
+	  
+	                           
+	                                            
+	 
+		                                                                            
+	 
+	  
+
+	dropship.Destroy()
+
+	                      
+	shFile.flightAnalysis[ model ][ anim ] <- Table
+	return Table
+}
+
+
+void function CopyAttachPoint( AttachPoint source, AttachPoint destination )
+{
+	destination.origin = source.origin
+	destination.angles = source.angles
+	destination.name = source.name
+}
+
+
+void function DrawAnalysisArray( Array )
+{
+	array< table<string, int> > colors
+	colors.append( { r = 255, g = 155, b = 10 } )
+	colors.append( { r = 55, g = 55, b = 250 } )
+
+	int index = 0
+	table<string, int> color
+	for ( int i = 0; i + 1 < Array.len(); i++ )
+	{
+		index++
+		index %= colors.len()
+		color = colors[ index ]
+		DebugDrawLine( Array[i].origin, Array[i + 1].origin, color.r, color.g, color.b, true, 15.0 )
+	}
+}
+
+
+array<AttachPoint> function FillFlightAnalysisPoints( entity dropship, string anim )
+{
+	dropship.Hide()
+
+	                                                                                              
+	string attachName = "ORIGIN"
+	int attachIndex   = dropship.LookupAttachment( attachName )
+	if ( attachIndex == 0 )
+	{
+		attachName = "OFFSET"
+		attachIndex = dropship.LookupAttachment( attachName )
+		if ( attachIndex == 0 )
+			return []
+	}
+
+	float duration = dropship.GetSequenceDuration( anim )
+	int steps      = int( duration * 1.5 )
+	float time, ratio
+	array<AttachPoint> Array
+
+	if ( !steps )
+	{
+		Attachment result = dropship.Anim_GetAttachmentAtTime( anim, attachName, 0.0 )
+
+		AttachPoint point
+		vector pos = result.position
+		if ( pos.z < DROP_MIN_X )
+			pos.z = DROP_MIN_X
+
+		point.origin = pos
+		point.angles = result.angle
+
+		Array.append( point )
+		return Array
+	}
+
+	for ( int i = 0; i <= steps; i++ )
+	{
+		ratio = float( i ) / float( steps )
+		time = duration * ratio
+		Attachment result = dropship.Anim_GetAttachmentAtTime( anim, attachName, time )
+
+		AttachPoint point
+		vector pos = result.position
+		if ( pos.z < DROP_MIN_X )
+			pos.z = DROP_MIN_X
+
+		point.origin = pos
+		point.angles = result.angle
+
+		Array.append( point )
+	}
+
+	table removed
+	for ( int i = 1; i + 1 < Array.len(); i++ )
+	{
+		vector pR = Array[ i - 1 ].origin
+		vector p  = Array[ i ].origin
+		vector pF = Array[ i + 1 ].origin
+
+		vector vec1 = pR - pF
+		vector vec2 = pR - p
+
+		vec1.Norm()
+		vec2.Norm()
+
+		float dot = DotProduct( vec1, vec2 )
+
+		if ( dot > 0.998 )
+			removed[ Array[i] ] <- true
+	}
+
+	for ( int i = 0; i < Array.len(); i++ )
+	{
+		if ( Array[i] in removed )
+		{
+			Array.remove( i )
+			i--
+		}
+	}
+
+	return Array
+}
+
+
+void function AddIdleAnimation( FlightPath flightPath, string anim )
+{
+	flightPath.idleAnim = anim
+	flightPath.hasIdleAnim = true
+}
+
+
+void function AddAnalysisTraceMask( FlightPath flightPath, int mask )
+{
+	flightPath.traceMask = mask
+}
+
+
+void function AddBoundingMaxs( FlightPath flightPath, vector maxs )
+{
+	flightPath.maxs = maxs
+}
+
+
+void function AddBoundingMins( FlightPath flightPath, vector mins )
+{
+	flightPath.mins = mins
+}
+
+
+void function AddAnalysisIterator( FlightPath flightPath, int iterator )
+{
+	flightPath.iterator = iterator
+}
+
+
+array<AttachPoint> function GetAttachPoints( FlightPath flightPath, string side )
+{
+	return flightPath.deployAttach[ side ]
+}
+
+
+void function AddPreviewPoint( FlightPath flightPath, vector org, vector ang )
+{
+	                           
+	  	                  
+	AttachPoint point = flightPath.preview
+	point.origin = org
+	point.angles = ang
+}
+
+
+Point function GetPreviewPoint( FlightPath flightPath )
+{
+	Point point
+	point.origin = flightPath.preview.origin
+	point.angles = flightPath.preview.angles
+	return point
+}
+
+
+void function FillDeployForAnalysisForEvent( entity dropship, string anim, string event, FlightPath Table, table<string, array<string> > attachments )
+{
+	float frac = dropship.GetScriptedAnimEventCycleFrac( anim, event )
+	Assert( frac != -1, " event " + event + " does not exist in animation " + anim )
+	if ( !frac )
+		return
+
+	float duration    = dropship.GetSequenceDuration( anim )
+	float time        = duration * frac
+	Attachment result = dropship.Anim_GetAttachmentAtTime( anim, "ORIGIN", time )
+
+	AttachPoint point = Table.preview
+	point.origin = result.position
+	point.angles = result.angle
+
+	if ( attachments.len() )
+	{
+		Table.deployAttach = {}
+
+		foreach ( side, attachArray in attachments )
+		{
+			Table.deployAttach[ side ] <- []
+			for ( int i = 0; i < attachArray.len(); i++ )
+			{
+				string attach = attachArray[i]
+				result = dropship.Anim_GetAttachmentAtTime( anim, attach, time )
+
+				AttachPoint pos
+				pos.origin = result.position
+				pos.angles = result.angle
+				pos.name = attach
+
+				Table.deployAttach[ side ].append( pos )
+			}
+		}
+	}
+}
+
+#if SERVER
+                                                                                                                    
+ 
+	                                              
+	                      
+ 
+
+                                                                                    
+ 
+	                                                                                           
+
+	                                       
+ 
+
+                                                                                                               
+ 
+	                                                     
+ 
+
+                                                                    
+ 
+	                                                    
+ 
+
+                                                                                    
+ 
+	                                                                                
+ 
+#endif          
+
+
+vector function GetAnalysisOffset( FlightPath flightPath )
+{
+	if ( flightPath.model in level.superCallinOffset )
+		return <0, 0, level.superCallinOffset[ flightPath.model ]>
+
+	return <0, 0, 0>
+}
+
+
+void function MaskTester( int mask )
+{
+	printt( "called from " + DumpPreviousFunction() )
+	table Table
+	Table[" CONTENTS_EMPTY				"] <- CONTENTS_EMPTY
+	Table[" CONTENTS_SOLID				"] <- CONTENTS_SOLID
+	Table[" CONTENTS_WINDOW				"] <- CONTENTS_WINDOW
+	Table[" CONTENTS_AUX				"] <- CONTENTS_AUX
+	Table[" CONTENTS_GRATE				"] <- CONTENTS_GRATE
+	Table[" CONTENTS_SLIME				"] <- CONTENTS_SLIME
+	Table[" CONTENTS_WATER				"] <- CONTENTS_WATER
+	Table[" CONTENTS_WINDOW_NOCOLLIDE	"] <- CONTENTS_WINDOW_NOCOLLIDE
+	Table[" CONTENTS_OPAQUE				"] <- CONTENTS_OPAQUE
+	Table[" CONTENTS_TESTFOGVOLUME		"] <- CONTENTS_TESTFOGVOLUME
+	Table[" CONTENTS_PHYSICSCLIP		"] <- CONTENTS_PHYSICSCLIP
+	Table[" CONTENTS_NOGRAPPLE			"] <- CONTENTS_NOGRAPPLE
+	Table[" CONTENTS_IGNORE_NODRAW_OPAQUE	"] <- CONTENTS_IGNORE_NODRAW_OPAQUE
+	Table[" CONTENTS_MOVEABLE				"] <- CONTENTS_MOVEABLE
+	Table[" CONTENTS_PLAYERCLIP			"] <- CONTENTS_PLAYERCLIP
+	Table[" CONTENTS_MONSTERCLIP			"] <- CONTENTS_MONSTERCLIP
+	Table[" CONTENTS_BLOCKLOS				"] <- CONTENTS_BLOCKLOS
+	Table[" CONTENTS_NOCLIMB				"] <- CONTENTS_NOCLIMB
+	Table[" CONTENTS_TITANCLIP			"] <- CONTENTS_TITANCLIP
+	Table[" CONTENTS_BULLETCLIP			"] <- CONTENTS_BULLETCLIP
+	Table[" CONTENTS_MONSTER				"] <- CONTENTS_MONSTER
+	Table[" CONTENTS_DEBRIS				"] <- CONTENTS_DEBRIS
+	Table[" CONTENTS_DETAIL				"] <- CONTENTS_DETAIL
+	Table[" CONTENTS_TRANSLUCENT			"] <- CONTENTS_TRANSLUCENT
+	Table[" CONTENTS_OCCLUDESOUND			"] <- CONTENTS_OCCLUDESOUND
+	Table[" CONTENTS_SOUNDTRIGGER			"] <- CONTENTS_SOUNDTRIGGER
+	Table[" CONTENTS_HITBOX				"] <- CONTENTS_HITBOX
+
+	foreach ( key, val in Table )
+	{
+		if ( val & mask )
+			printt( "found " + key )
+	}
+}
+
+
+#if SERVER
+                                                                             
+ 
+	                                                      
+
+	                                                  
+	                                                          
+
+	                                               
+
+	                                  
+	                                       
+
+	                                               
+
+	                                
+		                   
+	    
+		                          
+
+	                 
+	                                                  
+	                                   
+
+	                        
+	 
+		                       
+		                                              
+	 
+	    
+	 
+		                                                     
+		                                             
+
+		                                                           
+		 
+			                                     
+			 
+				                                                   
+				                                                                                           
+
+				                                          
+			 
+
+			                                          
+		 
+	 
+
+	            
+ 
+#endif          
+
+
+array<table> function FillFlightAnalysisPoints2( entity dropship, string anim )
+{
+	dropship.Hide()
+
+	array<table> Array
+
+	                                                                                              
+	int attachIndex = dropship.LookupAttachment( "ORIGIN" )
+	if ( attachIndex == 0 )
+		return Array
+
+	float duration = dropship.GetSequenceDuration( anim )
+	int steps      = int( duration * 15 )
+	float time, ratio
+
+	int stepper = int( steps * 0.98 )
+	printt( "stepper " + stepper )
+
+	for ( int i = 0; i <= steps; i++ )
+	{
+		ratio = i / float( steps )
+		time = duration * ratio
+		Attachment result = dropship.Anim_GetAttachmentAtTime( anim, "ORIGIN", time )
+
+		table point
+		vector pos = result.position
+		if ( pos.z < DROP_MIN_X )
+			pos.z = DROP_MIN_X
+
+		                    
+		point.origin <- pos
+		point.angles <- result.angle
+		point.skip <- stepper > 0 && i % stepper == 0
+
+		Array.append( point )
+	}
+
+	for ( ; ; )
+	{
+		bool smoothed = false
+		for ( int i = 1; i + 1 < Array.len(); i++ )
+		{
+			if ( Array[i].skip )
+				continue
+
+			vector pR = expect vector( Array[ i - 1 ].origin )
+			vector p  = expect vector( Array[ i ].origin )
+			vector pF = expect vector( Array[ i + 1 ].origin )
+
+			vector vec1  = p - pR
+			vector vec2  = p - pF
+			float length = Length( vec1 ) + Length( vec2 )
+
+			vec1.Norm()
+			vec2.Norm()
+
+			float dot = DotProduct( vec1, vec2 )
+
+			                    
+			if ( length < 100 )
+			{
+				if ( dot < -0.8 )
+				{
+					                        
+					Array.remove( i )
+					i--
+					smoothed = true
+					continue
+				}
+			}
+			else if ( length < 1000 )
+			{
+				if ( dot < -0.99 )
+				{
+					                        
+					Array.remove( i )
+					i--
+					smoothed = true
+					continue
+				}
+			}
+			else if ( length < 4000 )
+			{
+				if ( dot < -0.995 )
+				{
+					                        
+					Array.remove( i )
+					i--
+					smoothed = true
+					continue
+				}
+			}
+			else
+			{
+				if ( dot < -0.999 )
+				{
+					                        
+					Array.remove( i )
+					i--
+					smoothed = true
+					continue
+				}
+			}
+		}
+
+		if ( !smoothed )
+			break
+	}
+
+	return Array
+}
+
+#if SERVER
+
+                                                                         
+ 
+	                                                                                                                                          
+	                                                 
+ 
+
+                                         
+ 
+	                              
+
+	                                                   
+		      
+
+	                                                                       
+	                                                                                  
+
+	                             
+	                                
+	                   
+
+	                                                   
+	 
+		                                 
+		 
+			                                                                   
+			                                         
+			               
+			                        
+			                      
+			                        
+			                          
+		 
+	 
+
+	                                         
+	 
+		                                
+		                              
+		                             
+
+		                           
+		 
+			                                                                                
+			                       
+			 
+				                
+				                                                
+				                                               
+			 
+		 
+
+		                       
+		 
+			                                                                                                                                                                                                      
+		 
+	 
+
+	                                                     
+		              
+
+	                                             
+		      
+
+	               
+	                                                            
+		      
+
+	                                    
+	                                                                             
+	                         
+	                                                  
+	 
+		                                                                               
+		                                
+		 
+			                       
+			     
+		 
+	 
+
+	                            
+		      
+
+	                                                                                   
+	                                     
+ 
+
+                                                                        
+ 
+	                                          
+	 
+		                                      
+	 
+
+	                                                 
+	                                                      
+ 
+
+                                                                       
+ 
+	                                                              
+	 
+		                                                 
+			           
+	 
+
+	            
+ 
+
+                                                                    
+ 
+	                 
+	                                           
+		                                                 
+	    
+		                     
+	                                                                                
+	                                              
+	                                                                          
+
+	                                                               
+	                                                            
+	                                        
+ 
+
+
+                       
+                                                                                           
+ 
+                                        
+              
+
+                                                          
+ 
+                                
+
+                                                                                    
+ 
+	                                       
+		            
+
+	                                                                               
+	                                            
+ 
+
+                                                                                     
+ 
+	          
+		                                                    
+			            
+	      
+
+	                                                                               
+	                                                     
+ 
+
+                                                         
+ 
+	        
+	                                                                               
+
+	                                          
+	                                                 
+	                                   
+	                                                  
+
+	             
+	                       
+	                      
+
+	                     
+	                                          
+	 
+		                                      
+		                                               
+		                                
+	 
+
+	                                           
+
+	            
+	                                               
+	 
+		                                    
+		                                                                         
+			        
+
+		                                          
+		 
+			                                                                                                                                             
+			                                                     
+			 
+				                                                                          
+				      
+			 
+			    
+			 
+				                                                                          
+			 
+		 
+	 
+
+	                                                     
+ 
+
+                       
+                                                                                    
+ 
+         
+                                                                             
+
+                                           
+                                                  
+                                    
+                                                   
+
+              
+                        
+                       
+
+                      
+                                           
+  
+                                        
+                                                 
+                           
+  
+
+                                            
+
+             
+                                                
+  
+                                      
+                                                                           
+           
+
+                                            
+   
+                                                                                                                                                
+                                                        
+    
+                                                                                                  
+                                                    
+                                                    
+
+                                                                  
+                                                                 
+                                                                    
+          
+    
+       
+    
+                                                                                   
+    
+   
+  
+
+                                                      
+ 
+                                
+
+                                                                                            
+ 
+	                                                     
+	                            
+	                                          
+	                                        
+	                                                                                                                         
+
+	            
+ 
+
+#endif          
+
+
+bool function IsActiveNodeAnalysis()
+{
+	return shFile.activeNodeAnalysis
+}
+
+#if SERVER
+
+                                                                                            
+ 
+	                                                         
+	                                       
+	 
+		                                  
+		                   
+		           
+		 
+			                                                                                    
+			                     
+			 
+				                             
+			 
+		 
+
+		                                                  
+			        
+
+		                 
+	 
+ 
+
+                                                                          
+ 
+	                                                      
+ 
+
+                                                          
+ 
+	                                                   
+	                                                
+ 
+
+                                                     
+ 
+	                                                   
+		            
+
+	                                                      
+ 
+#endif          
+
+void function AddDropshipFlightAnalysis( int index, asset model, string anim, bool functionref( FlightPath, vector, float ) analysisFunc, string event = "" )
+{
+	shFile.dropshipDropoffAnims.append( anim )
+
+	                                              
+	  	                                          
+
+	#if SERVER
+		                                         
+
+		                                                                      
+		                                                
+		                                              
+		                                                       
+		                                                                
+	#endif
+}
+

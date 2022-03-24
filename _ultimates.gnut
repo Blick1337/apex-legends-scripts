@@ -1,0 +1,231 @@
+global function Ultimates_RegisterNetworking
+
+#if SERVER
+                              
+                                             
+                                           
+                                            
+#endif          
+
+#if CLIENT
+global function SCB_OnUltimateReady
+global function SCB_OnUltimateReadyAfterManualCharge
+#endif          
+
+                            
+global function GetCommsActionForUltReady
+      
+
+const string FUNCNAME_OnUltimateReady = "SCB_OnUltimateReady"
+const string FUNCNAME_OnUltimateReadyAfterManualCharge = "SCB_OnUltimateReadyAfterManualCharge"
+void function Ultimates_RegisterNetworking()
+{
+	Remote_RegisterClientFunction( FUNCNAME_OnUltimateReady )
+	Remote_RegisterClientFunction( FUNCNAME_OnUltimateReadyAfterManualCharge )
+}
+
+
+#if SERVER
+                                  			     
+                                        	   
+                                    		   
+
+                                			    
+
+
+                              
+ 
+	                                                                 
+
+	                      
+	 
+		                                                                     
+		                                                                                   
+		                                                                                                                  
+		                                  
+		 
+			                    
+			 
+				                                                                               
+				                                                                           
+				                                                                                   
+				                                                               
+			 
+
+			                
+			 
+				                                                                           
+				                                                                       
+				                                                                           
+				                                                           
+			 
+
+			                                                                  
+		 
+	 
+
+	                    
+	 
+		                                                                    
+		                                                                                 
+		                                                                                                                 
+	 
+ 
+
+                                                          
+ 
+	                                                                                                   
+	                                 
+	 
+		                                        
+		                                                    
+		                                 
+	 
+ 
+
+                                                                                                               
+ 
+	                                  
+		                                                                               
+ 
+
+                 
+                 
+                                                                 
+ 
+	                    
+		      
+
+	                                                                     
+	                                  
+		      
+
+	                                                         
+	                                                            
+	                         
+		      
+
+	                                                        
+	                                                      
+	                           
+		                                                                                  
+ 
+
+                                                                                                                   
+ 
+	                       
+		      
+
+	                                                                                        
+	                                                         
+	                                                                     
+	                                                                    
+	                                          
+
+	                                                                                                                                                                      
+ 
+
+                                                                             
+ 
+	                                     
+	                                                      
+	                         
+		      
+	                           
+		      
+
+	                                                
+		      
+
+	                                                    
+	                                                   
+	                                                         
+	                                                         
+	                                                                     
+	                                                                    
+	                                          
+
+	                                                                                                                                                           
+ 
+
+                                                               
+ 
+	                                                  
+	                                                  
+ 
+#endif              
+
+                            
+int function GetCommsActionForUltReady( entity player )
+{
+	if ( !IsValid( player ) )
+		return eCommsAction.BLANK
+
+	entity ultWeapon = player.GetOffhandWeapon( OFFHAND_INVENTORY )
+	if ( !IsValid( ultWeapon ) )
+		return eCommsAction.BLANK
+
+	int ammo = ultWeapon.GetWeaponPrimaryClipCount()
+	int maxAmmo =ultWeapon.GetWeaponPrimaryClipCountMax()
+	float frac = clamp( (float( ammo ) / float( maxAmmo )), 0.0, 1.0 )
+
+	if ( frac >= 0.99 )
+		return eCommsAction.QUICKCHAT_ULTIMATE_READY_FULL
+	if ( frac >= 0.85 )
+		return eCommsAction.QUICKCHAT_ULTIMATE_READY_ALMOST
+	return eCommsAction.QUICKCHAT_ULTIMATE_READY_NOT
+}
+                                  
+
+#if SERVER
+                                               
+                                                                          
+ 
+	                         
+		      
+	                                              
+		                                         
+
+	                      
+	                                                          
+	 
+		                                                                                                                                
+		      
+	 
+
+	                                                                        
+	                                                                 
+	                                            
+ 
+#endif              
+
+#if CLIENT
+void function SCB_OnUltimateReady()
+{
+	entity player = GetLocalViewPlayer()
+	if ( !IsAlive( player ) )
+		return
+
+                             
+		AddOnscreenPromptFunction( "quickchat", CreateQuickchatFunction( eCommsAction.QUICKCHAT_ULTIMATE_READY_FULL, player.GetOffhandWeapon( OFFHAND_ULTIMATE ) ), 6.0, Localize( "#PING_SAY_ULTIMATE_READY_FULL" ) )
+                                   
+}
+
+void function SCB_OnUltimateReadyAfterManualCharge()
+{
+	entity player = GetLocalViewPlayer()
+	if ( !IsAlive( player ) )
+		return
+
+	entity ultimateAbility = player.GetOffhandWeapon( OFFHAND_INVENTORY )
+	if ( !IsValid( ultimateAbility ) )
+		return
+
+	string readySound = ultimateAbility.GetWeaponSettingString( eWeaponVar.sound_weapon_ready )
+	if ( readySound == "" )
+		readySound = "survival_ui_ultimate_ready"
+	asset icon = ultimateAbility.GetWeaponSettingAsset( eWeaponVar.hud_icon )
+	string details = IsControllerModeActive() ? "Press %offhand1% + %ping%" : "Press %offhand4%"
+	AnnouncementMessageSweep( player, "Ultimate is Ready", details, <255,135,10>, icon, readySound, 3.0 )
+}
+#endif          

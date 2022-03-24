@@ -1,0 +1,168 @@
+  
+
+global const DEPLOYABLE_THROW_POWER = 500.0
+global const DEPLOYABLE_BOUNCE_DOT = 0.7
+
+global function ThrowDeployable
+global function OnProjectileCollision_weapon_deployable
+                     
+global function OnProjectileCollision_weapon_deployable_LDOV
+global function OnProjectileCollision_weapon_deployable_noVehicles
+                           
+
+entity function ThrowDeployable(
+entity weapon, WeaponPrimaryAttackParams attackParams, float throwPower,
+void functionref( entity, DeployableCollisionParams ) deployFunc,
+void functionref( entity, DeployableCollisionParams ) bounceFunc,
+vector ornull angularVelocity )
+{
+	#if CLIENT
+		if ( !weapon.ShouldPredictProjectiles() )
+			return null
+	#endif
+
+	entity weaponOwner = weapon.GetWeaponOwner()
+
+	vector attackPos = attackParams.pos
+
+	vector angles   = VectorToAngles( attackParams.dir )
+	vector velocity = GetDeployableThrowVelocity( weaponOwner, angles, throwPower )
+	if ( angularVelocity == null )
+		angularVelocity = <600, 300, 0>                                         
+	expect vector( angularVelocity )
+
+	float fuseTime = 0.0               
+
+	bool isPredicted = PROJECTILE_PREDICTED
+	if ( weaponOwner.IsNPC() )
+		isPredicted = PROJECTILE_NOT_PREDICTED
+
+	WeaponFireGrenadeParams fireGrenadeParams
+	fireGrenadeParams.pos = attackPos
+	fireGrenadeParams.vel = velocity
+	fireGrenadeParams.angVel = angularVelocity
+	fireGrenadeParams.fuseTime = fuseTime
+	fireGrenadeParams.scriptTouchDamageType = damageTypes.explosive
+	fireGrenadeParams.scriptExplosionDamageType = damageTypes.explosive
+	fireGrenadeParams.clientPredicted = isPredicted
+	fireGrenadeParams.lagCompensated = true
+	fireGrenadeParams.useScriptOnDamage = true
+	entity projectile = weapon.FireWeaponGrenade( fireGrenadeParams )
+
+	if ( projectile )
+	{
+		#if SERVER
+			                             
+			 
+				                                
+				                                                 
+			 
+
+			                                                    
+			                                              
+			                                                   
+			                                  
+			                                                      
+		#endif
+		projectile.proj.deployFunc = deployFunc
+		projectile.proj.bounceFunc = bounceFunc
+	}
+
+	return projectile
+}
+
+
+vector function GetDeployableThrowVelocity( entity player, vector baseAngles, float throwPower )
+{
+	vector forward = AnglesToForward( baseAngles )
+
+	if ( throwPower != 1.0 )
+	{
+		baseAngles += <-8, 0, 0>
+		if ( baseAngles.x < 80 )
+			throwPower = GraphCapped( baseAngles.x, 0, 80, throwPower, throwPower * 3 )
+	}
+
+	vector velocity = forward * throwPower
+	return velocity
+}
+
+
+void function OnProjectileCollision_weapon_deployableInternal( entity projectile, DeployableCollisionParams cp )
+{
+	#if SERVER
+		                                
+			      
+
+		                                                 
+		 
+			                                       
+			 
+				                                            
+				                        
+				 
+					                                             
+					                                                                                                                        
+					                                         
+				 
+			 
+
+			                    
+		 
+		                                       
+		                                                  
+	#endif
+
+	PlantStickyEntityThatBouncesOffWalls( projectile, cp, DEPLOYABLE_BOUNCE_DOT, <90, 0, 0> )
+}
+void function OnProjectileCollision_weapon_deployable( entity projectile, vector pos, vector normal, entity hitEnt, int hitBox, bool isCritical, bool isPassthrough )
+{
+	DeployableCollisionParams cp
+	cp.pos = pos
+	cp.normal = normal
+	cp.hitEnt = hitEnt
+	cp.hitBox = hitBox
+	cp.isCritical = isCritical
+	cp.deployableFlags = 0
+
+	OnProjectileCollision_weapon_deployableInternal( projectile, cp )
+}
+
+                     
+void function OnProjectileCollision_weapon_deployable_noVehicles( entity projectile, vector pos, vector normal, entity hitEnt, int hitBox, bool isCritical, bool isPassthrough )
+{
+	DeployableCollisionParams cp
+	cp.pos = pos
+	cp.normal = normal
+	cp.hitEnt = hitEnt
+	cp.hitBox = hitBox
+	cp.isCritical = isCritical
+	cp.deployableFlags = eDeployableFlags.VEHICLES_NO_STICK
+
+	OnProjectileCollision_weapon_deployableInternal( projectile, cp )
+}
+void function OnProjectileCollision_weapon_deployable_LDOV( entity projectile, vector pos, vector normal, entity hitEnt, int hitBox, bool isCritical, bool isPassthrough )
+{
+	DeployableCollisionParams cp
+	cp.pos = pos
+	cp.normal = normal
+	cp.hitEnt = hitEnt
+	cp.hitBox = hitBox
+	cp.isCritical = isCritical
+	cp.deployableFlags = eDeployableFlags.VEHICLES_LARGE_DEPLOYABLE
+
+	OnProjectileCollision_weapon_deployableInternal( projectile, cp )
+}
+                           
+
+            
+                                                                                             
+   
+  	                                   
+  	                                  
+  	                                
+  	                               
+   
+        
+
+

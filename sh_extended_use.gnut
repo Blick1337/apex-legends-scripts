@@ -1,0 +1,325 @@
+global function ExtendedUse
+
+#if SERVER
+                                
+#endif
+
+#if CLIENT
+global function DefaultExtendedUseRui
+global function ExtendedUseTextOverride
+#endif
+
+global enum eExtendedUseRuiType
+{
+	COCKPIT,
+	FULLSCREEN
+}
+
+global struct ExtendedUseSettings
+{
+	void functionref( entity ent, entity player, ExtendedUseSettings settings ) successFunc
+	void functionref( entity ent, entity player, ExtendedUseSettings settings ) failureFunc
+	void functionref( entity ent, entity player, ExtendedUseSettings settings ) startFunc
+	void functionref( entity ent, entity player, ExtendedUseSettings settings ) endFunc
+
+	int    useInputFlag = IN_USE_LONG
+	string loopSound
+	string successSound
+	float  duration = 1.0
+	entity entityArg = null
+	bool   requireMatchingUseEnt = false
+	int    disableWeaponTypes = 0         
+
+	#if CLIENT
+		string                                                                               hint
+		string                                                                               holdHint = "%use_long%"
+		int                                                                                  displayRuiType = eExtendedUseRuiType.COCKPIT
+		asset                                                                                displayRui
+		void functionref( entity ent, entity player, var rui, ExtendedUseSettings settings ) displayRuiFunc
+		asset                                                                                icon
+		bool                                                                                 successPlayPickupEffect = false
+		float                                                                                serverStartTime = 0.0
+	#endif
+	#if SERVER
+		                  
+		                                                                                                                 
+		                    
+		                 
+		                              
+	#endif
+}
+
+struct
+{
+	#if CLIENT
+		var extendedUseRui
+	#endif
+} file
+
+#if SERVER
+                                
+ 
+	                                      
+ 
+#endif
+
+
+void function ExtendedUse( entity ent, entity player, ExtendedUseSettings settings, bool shouldSetBusy = true )
+{
+	ent.EndSignal( "OnDestroy" )
+	player.EndSignal( "OnContinousUseStopped" )
+	player.EndSignal( "OnDeath" )
+	player.EndSignal( "BleedOut_OnStartDying" )
+
+	if ( player.p.isInExtendedUse )
+		return
+
+	if ( ent.e.isBusy )
+		return
+
+	if ( shouldSetBusy )
+		ent.e.isBusy = true
+	player.p.isInExtendedUse = true
+
+	if ( settings.startFunc != null )
+		settings.startFunc( ent, player, settings )
+
+	#if CLIENT
+		var rui
+		if ( settings.displayRuiType == eExtendedUseRuiType.FULLSCREEN )
+		{
+			rui = CreateFullscreenRui( settings.displayRui )
+		}
+		else
+		{
+			rui = CreateCockpitRui( settings.displayRui )
+		}
+
+		settings.displayRuiFunc( ent, player, rui, settings )
+		file.extendedUseRui = rui
+		entity localViewPlayer = GetLocalViewPlayer()
+
+		OnThreadEnd(
+			function() : ( rui )
+			{
+				file.extendedUseRui = null
+				RuiDestroy( rui )
+			}
+		)
+	#endif
+
+	table<string, bool> e
+	e["success"] <- false
+
+	#if CLIENT
+		if ( settings.loopSound != "" && (!IsValid( localViewPlayer ) || localViewPlayer.DoesShareRealms( player )) )
+			EmitSoundOnEntity( ent, settings.loopSound )
+	#endif
+
+	int oldUsableValue
+
+	#if SERVER
+		                                     
+
+		                             
+		 
+			                                     
+			                                   
+				                                           
+			    
+				                                  
+		 
+		                               
+		 
+			                         
+		 
+		                            
+		 
+			                 
+		 
+	#endif
+
+	                                    
+	  	                                                                       
+
+	OnThreadEnd(
+		function() : ( e, ent, player, settings, oldUsableValue )
+		{
+			if ( settings.endFunc != null )
+				settings.endFunc( ent, player, settings )
+
+			if ( IsValid( ent ) )
+			{
+				ent.e.isBusy = false
+				if ( settings.loopSound != "" )
+					StopSoundOnEntity( ent, settings.loopSound )
+			}
+
+			if ( IsValid( player ) )
+			{
+				thread TryClearPlayerExtendedUse( player, settings.useInputFlag )
+			}
+
+			#if SERVER
+				                        
+				 
+					                             
+					 
+						                                
+					 
+					                               
+					 
+						                        
+					 
+				 
+
+				                            
+				 
+					                     
+					 
+						                                                   
+							      
+
+						               
+						                               
+						                                    
+					 
+				 
+
+				                    
+				 
+					                                   
+						                                                    
+				 
+			#endif
+		}
+	)
+
+	waitthread ExtendedUse_TrackContinuousUse( player, ent, settings.duration, settings.useInputFlag, settings.requireMatchingUseEnt )
+
+	if ( settings.successFunc != null )
+		thread settings.successFunc( ent, player, settings )
+
+	if ( settings.loopSound != "" )
+		StopSoundOnEntity( ent, settings.loopSound )
+
+#if CLIENT
+	if ( !IsValid( localViewPlayer ) || localViewPlayer.DoesShareRealms( player ) )
+	{
+		if ( settings.successSound != "" )
+			EmitSoundAtPosition( TEAM_UNASSIGNED, ent.GetOrigin(), settings.successSound )
+	}
+#endif
+#if SERVER
+	                                  
+		                                                                                                  
+#endif
+
+	#if CLIENT
+		if ( settings.successPlayPickupEffect )
+			PlayLootPickupFeedbackFX( ent )
+	#endif          
+
+	e["success"] = true
+}
+
+
+void function ExtendedUse_TrackContinuousUse( entity player, entity useTarget, float useTime, int inputFlags, bool requireMatchingUseEnt )
+{
+	player.EndSignal( "OnDeath" )
+	useTarget.EndSignal( "OnDeath" )
+	useTarget.EndSignal( "OnDestroy" )
+
+	table result = {}
+	result.success <- false
+
+	float maxDist2 = DistanceSqr( player.GetOrigin(), useTarget.GetOrigin() ) + (64 * 64)
+
+	OnThreadEnd
+	(
+		function() : ( player, result )
+		{
+			if ( !result.success )
+			{
+				player.Signal( "OnContinousUseStopped" )
+			}
+		}
+	)
+
+	float endTime = Time() + useTime
+	while ( Time() < endTime )
+	{
+		if ( !UseHeld( player, inputFlags ) )
+			return
+
+		if ( player.IsPhaseShifted() )
+			return
+
+		if ( GetCurrentPlaylistVarBool( "interrupted_stops_extended_use", true ) )
+		{
+			if ( StatusEffect_GetSeverity( player, eStatusEffect.interrupted ) > 0.0 )
+			{
+				return
+			}
+		}
+
+		vector eyePos      = player.UseableEyePosition( useTarget )
+		vector eyePos2D    = <eyePos.x, eyePos.y, 0.0>
+		vector useOrigin   = useTarget.GetOrigin()
+		vector useOrigin2D = <useOrigin.x, useOrigin.y, 0.0>
+		float vertDist     = player.GetOrigin().z - useTarget.GetOrigin().z
+		if ( (DistanceSqr( eyePos2D, useOrigin2D ) > maxDist2) || ((vertDist * vertDist) > maxDist2) )
+			return
+
+		if ( requireMatchingUseEnt && player.GetUseEntity() != useTarget )
+			return
+
+		WaitFrame()
+	}
+
+	result.success = true
+}
+
+bool function UseHeld( entity player, int inputFlag )
+{
+	if ( player.IsInputCommandHeld( inputFlag ) )
+		return true
+
+	return false
+}
+
+void function TryClearPlayerExtendedUse( entity player, int inputFlags )
+{
+	player.EndSignal( "OnDestroy" )
+
+	OnThreadEnd(
+		function () : ( player )
+		{
+			if ( IsValid( player ) )
+			{
+				player.p.isInExtendedUse = false
+			}
+		}
+	)
+
+	while ( UseHeld( player, inputFlags ) )
+		WaitFrame()
+}
+
+#if CLIENT
+void function DefaultExtendedUseRui( entity ent, entity player, var rui, ExtendedUseSettings settings )
+{
+	RuiSetString( rui, "holdButtonHint", settings.holdHint )
+	RuiSetString( rui, "hintText", settings.hint )
+	RuiSetGameTime( rui, "startTime", Time() )
+	RuiSetGameTime( rui, "endTime", Time() + settings.duration )
+}
+
+string function ExtendedUseTextOverride( entity ent )
+{
+	if ( ent.e.isBusy )
+		return " "
+
+	return ""
+}
+#endif

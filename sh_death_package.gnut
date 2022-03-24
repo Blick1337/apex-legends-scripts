@@ -1,0 +1,577 @@
+  
+
+#if SERVER
+       
+#endif
+
+global function Death_Package_Init
+global function PrintDamageFlags
+global function GetDescStringForDamageFlags
+
+#if SERVER
+                        
+
+                                
+                                  
+                                    
+                                   
+
+                                   
+                                         
+
+                        
+
+                                               
+
+                                 
+                                  
+
+                                
+                                  
+
+#endif
+
+const NPC_GRUNT_DEATH = "npc_grunt_death"
+const TITAN_GRUNT_SQUISH = "titan_grunt_squish"
+const TITAN_SPECTRE_SQUISH = "titan_spectre_squish"
+const TURRET_DEATH_FX = $"P_turret_exp_plasma"
+
+int TITAN_EXPLOSION_EFFECT
+const TITAN_EXPLOSION_GROUNDWASH_FX_TABLE = "titan_exp_ground"
+const TITAN_EXPLOSION_GROUNDWASH_HEIGHT = 250
+
+global const GRENADE_INDICATOR_ARROW_MODEL = $"mdl/hud/grenade_indicator/grenade_indicator_arrow.rmdl"
+global const GRENADE_INDICATOR_FRAG_MODEL = $"mdl/hud/grenade_indicator/grenade_indicator_frag.rmdl"
+global const GRENADE_INDICATOR_EMP_MODEL = $"mdl/hud/grenade_indicator/grenade_indicator_shuriken.rmdl"
+
+
+global const GRENADE_INDICATOR_CLUSTER_BOMB_MODEL = $"mdl/hud/grenade_indicator/grenade_indicator_fuse_tactical_grenade.rmdl"
+global const GRENADE_INDICATOR_SONAR_MODEL = $"mdl/hud/grenade_indicator/grenade_indicator_sonar.rmdl"
+global const GRENADE_INDICATOR_BOMB = $"mdl/hud/grenade_indicator/grenade_indicator_bomb.rmdl"
+global const GRENADE_INDICATOR_GENERIC = $"mdl/hud/grenade_indicator/bang_indicator.rmdl"
+global const GRENADE_INDICATOR_TICK_MODEL = $"mdl/hud/grenade_indicator/grenade_indicator_frag_sentry.rmdl"
+global const GRENADE_INDICATOR_STALKER_MODEL = $"mdl/hud/grenade_indicator/bang_indicator.rmdl"
+                         
+                                                                                                 
+                                                                                                        
+      
+             
+                                                                                              
+      
+global const GRENADE_MODEL = $"mdl/weapons/grenades/m20_f_grenade.rmdl"
+global const DAMAGEARROW_MODEL = $"mdl/weapons/bullets/damage_arrow.rmdl"
+
+global enum eThreatIndicatorID
+{
+	GRENADE_INDICATOR_FRAG_MODEL,
+	GRENADE_INDICATOR_SONAR_MODEL,
+	GRENADE_INDICATOR_BOMB,
+                             
+                                  
+       
+	GRENADE_INDICATOR_GENERIC,
+	GRENADE_INDICATOR_ONLY_ARROW,
+                          
+                              
+       
+	GRENADE_INDICATOR_EMP_MODEL
+	GRENADE_INDICATOR_CLUSTER_BOMB_MODEL
+
+}
+
+global const WAYPOINTTYPE_THREAT_INDICATOR = "threat_indicator"
+
+struct
+{
+	table<string, bool> disallowDissolveList
+} file
+
+global enum damageTypes
+{
+	gibs = (DF_GIB)
+	largeCaliberExp = (DF_BULLET | DF_GIB | DF_EXPLOSION)
+	gibBullet = (DF_BULLET | DF_GIB)
+	instant = (DF_INSTANT)
+	dissolve = (DF_DISSOLVE)
+	projectileImpact = (DF_GIB)
+	pinkMist = (DF_GIB)                                                                    
+	ragdoll = (DF_RAGDOLL)
+	arcCannon = (DF_DISSOLVE | DF_GIB | DF_ELECTRICAL)
+	electric = (DF_ELECTRICAL)                                                             
+	explosive = (DF_RAGDOLL | DF_EXPLOSION)
+	bullet = (DF_BULLET)
+	largeCaliber = (DF_BULLET | DF_KNOCK_BACK)
+	shotgun = (DF_BULLET | DF_GIB | DF_SHOTGUN)
+	dissolveForce = (DF_DISSOLVE | DF_KNOCK_BACK | DF_EXPLOSION)
+}
+
+global const array<string> DamageStateBodyGroups =
+[
+	"hip",
+	"front",
+	"left_arm"
+	"right_arm",
+	"left_leg",
+	"right_leg",
+	"hatch",
+	"back",
+	"mainbody",
+]
+
+
+global const table< string, array<string> > DamageStateSkeletonSiblings =
+{
+	                                                                                                                                                    
+	hip = ["front", "torso", "left_leg", "right_leg"],
+	front = ["hatch", "hip", "back", "left_arm", "right_arm"],
+	torso = ["hip", "left_arm", "right_arm"],
+	left_arm = ["front", "torso"],
+	right_arm = ["front", "torso"],
+	left_leg = ["hip"],
+	right_leg = ["hip"],
+	hatch = ["front"],
+	back = ["front"],
+}
+
+
+void function Death_Package_Init()
+{
+	                                                                                                 
+	PrecacheParticleSystem( $"P_headshot_human" )
+	PrecacheParticleSystem( $"P_headshot_pilot" )
+	PrecacheParticleSystem( $"P_headshot_pilot_robot" )
+	PrecacheParticleSystem( $"xo_exp_death" )
+
+	#if SERVER
+		                       
+
+		                                                           
+		                                                             
+		                                                             
+		                                                             
+		                                                             
+		                                                           
+		                                                          
+
+		                                                                  
+		                                                                
+		                                               
+		                                        
+		                                 
+
+		                                    
+			                                 
+
+		                                            
+
+		                                              
+		                                             
+		                                            
+		                                                     
+		                                              
+		                                             
+		                                       
+		                                          
+		                                                
+
+               
+                                                  
+        
+
+		                                  
+
+		                                                        
+		                              
+	#endif
+}
+
+#if SERVER
+                                            
+ 
+ 
+
+                                                                
+ 
+	                                                                                                 
+	                                                   
+		      
+
+	                                                                                                                                     
+
+	                                                  
+ 
+
+                                                 
+ 
+	                                                                                                                        
+	                        
+		            
+
+	                          
+	                                                   
+	                           
+		                                                        
+
+	                          
+	 
+		                                             
+		                                                                    
+
+		                                                             
+
+		                                                                                              
+	 
+
+	                                                    
+	                                                  
+	                                                  
+
+	          
+	                        
+	 
+		                                                  
+
+		                           
+
+		                                                    
+		                                                                                                                                                                                   
+		                                  
+		                                                                 
+		                                                                      
+		                                                 
+
+		                                                                                                                                                                                
+		                               
+		                                                           
+		                                                                
+		                                              
+	 
+	    
+	 
+		                                        
+	 
+
+	           
+ 
+
+                                                        
+ 
+	                                               
+
+	                            
+
+	          
+
+	             
+ 
+
+                                                              
+ 
+	                                
+		      
+
+	                                                                                           
+	                                                 
+		      
+
+	                                                                                      
+		      
+
+	                                                          
+
+	                                                                                                                                        
+
+	                                           
+
+	                         
+	 
+		                                                      
+		                                                     
+	 
+
+	                                    
+	 
+		                      
+		 
+			                                                
+			 
+				                                                           
+				                                                                       
+					             
+
+				      
+			 
+		 
+	 
+
+	                                
+	 
+		                                  
+	 
+
+	                                                  
+	                                                                                 
+	 
+		                                                   
+	 
+
+	                     
+	 
+		                               
+		 
+			                                                                                     
+				                                                    
+			    
+				                                                      
+
+			      
+		 
+	 
+
+	                                    
+	 
+		                    
+		 
+			                  
+			                       
+
+			                           
+		 
+
+		      
+	 
+
+	                            
+	 
+		                                         
+	 
+
+	                                                                                                        
+		                         
+
+	                           
+		                                                   
+	                                     
+		                                                     
+
+	                    
+	 
+		                    
+		 
+			                       
+
+			                           
+			      
+		 
+		    
+		 
+			                                                                                    
+			 
+				                                              
+				 
+					                                        
+				 
+				    
+				 
+					                                    
+				 
+			 
+		 
+
+		                                             
+		 
+			                                              
+			      
+		 
+	 
+
+	                                                                                         
+	 
+		                                                         
+		                                    
+		                                
+		                       
+		                           
+			                    
+
+		                                                 
+		      
+	 
+ 
+
+                                                                                                  
+                                                           
+ 
+	                            
+
+	              
+
+	                                
+	                                             
+ 
+
+
+                                                               
+ 
+	                           
+		            
+
+	                         
+		            
+
+	                   
+	                                                
+	 
+		             
+	 
+
+	             
+ 
+
+                                                                           
+ 
+	                                                         
+	                   
+ 
+
+                                                             
+ 
+	                                                  
+	 
+		                                                         
+		                         
+			        
+		                                                                    
+		                      
+			                                                            
+	 
+ 
+
+                                                      
+ 
+	                                                   
+	                                        
+ 
+
+                                              
+ 
+	                   
+
+	                                           
+		             
+	                                          
+		             
+	                                           
+		             
+	                                          
+		             
+
+	                  
+ 
+
+                                                         
+ 
+	                    
+		                                               
+	    
+		                                                                                                          
+   
+
+
+                                                                          
+ 
+	                                                       
+
+	                                                             
+
+	                                                                          
+		            
+
+	                 
+ 
+
+                                              
+ 
+	                                                           
+ 
+
+                                                
+ 
+	                                                                    
+ 
+
+                                                                       
+ 
+	                                                                
+	                                                                                         
+
+	                                                                                                                                                                                                              
+
+	                                                                 
+		                                                                               
+ 
+#endif
+
+const table<int, string> damageFlagsToNames =
+{
+	[DF_GIB                    ] = "DF_GIB",
+	[DF_DISSOLVE            ] = "DF_DISSOLVE",
+	[DF_INSTANT                ] = "DF_INSTANT",
+	[DF_NO_SELF_DAMAGE        ] = "DF_NO_SELF_DAMAGE",
+	            				                
+	[DF_BYPASS_SHIELD        ] = "DF_BYPASS_SHIELD",
+	[DF_RAGDOLL                ] = "DF_RAGDOLL",
+	[DF_RADIUS_DAMAGE        ] = "DF_RADIUS_DAMAGE",
+	[DF_ELECTRICAL            ] = "DF_ELECTRICAL",
+	[DF_BULLET                ] = "DF_BULLET",
+	[DF_EXPLOSION            ] = "DF_EXPLOSION",
+	[DF_MELEE                ] = "DF_MELEE",
+	                  		                      
+	[DF_KNOCK_BACK            ] = "DF_KNOCK_BACK",
+	                       	                           
+	[DF_DISMEMBERMENT        ] = "DF_DISMEMBERMENT",
+	[DF_MAX_RANGE            ] = "DF_MAX_RANGE",
+	[DF_SHIELD_DAMAGE        ] = "DF_SHIELD_DAMAGE",
+	[DF_CRITICAL            ] = "DF_CRITICAL",
+	[DF_SNIPER                ] = "DF_SNIPER",
+	[DF_HEADSHOT            ] = "DF_HEADSHOT",
+	[DF_VORTEX_REFIRE        ] = "DF_VORTEX_REFIRE",
+	[DF_OVERSHIELD            ] = "DF_OVERSHIELD",
+	[DF_KNOCKDOWN            ] = "DF_KNOCKDOWN",
+	[DF_KILLSHOT            ] = "DF_KILLSHOT",
+	[DF_SHOTGUN                ] = "DF_SHOTGUN",
+	[DF_SKIPS_DOOMED_STATE    ] = "DF_SKIPS_DOOMED_STATE",
+	[DF_DOOMED_HEALTH_LOSS    ] = "DF_DOOMED_HEALTH_LOSS",
+	[DF_SHADOW_DAMAGE        ] = "DF_SHADOW_DAMAGE",
+	                   		                       
+	[DF_NO_HITBEEP            ] = "DF_NO_HITBEEP"
+}
+
+void function PrintDamageFlags( int flags )
+{
+	foreach ( int key, string value in damageFlagsToNames )
+	{
+		if ( flags & key )
+			printt( "Damage Flag: " + value + " was set    (" + key + ")" )
+	}
+}
+
+
+string function GetDescStringForDamageFlags( int flags )
+{
+	string appendedNames
+	int foundCount = 0
+	foreach ( int key, string value in damageFlagsToNames )
+	{
+		if ( !(flags & key) )
+			continue
+
+		if ( foundCount != 0 )
+			appendedNames += ", "
+		appendedNames = value
+
+		foundCount++
+	}
+
+	return ("(" + appendedNames + ")")
+}

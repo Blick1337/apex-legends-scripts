@@ -1,0 +1,38 @@
+global function ClSpectatorModeAudio_Init
+
+
+void function ClSpectatorModeAudio_Init()
+{
+	if ( !IsMenuLevel() )
+	{
+		AddFirstPersonSpectateStartedCallback( EndThirdPersonSpectatingDuck )
+		AddThirdPersonSpectateStartedCallback( StartThirdPersonSpectatingDuck )
+		AddThirdPersonSpectateEndedCallback( EndThirdPersonSpectatingDuck )
+		AddOnSpectatorTargetChangedCallback( SpectatorTargetChanged_UpdateThirdPersonSpectatingDuck )
+		AddCallback_OnYouRespawned( OnYouRespawned )
+	}
+}
+
+void function StartThirdPersonSpectatingDuck( entity player, entity currentTarget )
+{
+	EndThirdPersonSpectatingDuck( player, currentTarget )                                                                                                                    
+	EmitSoundOnEntity( player, "Duck_For_SpectatorFriendlyFire" )
+}
+
+void function EndThirdPersonSpectatingDuck( entity player, entity currentTarget )
+{
+	StopSoundOnEntity( player, "Duck_For_SpectatorFriendlyFire" )
+}
+
+void function SpectatorTargetChanged_UpdateThirdPersonSpectatingDuck( entity player, entity previousTarget, entity currentTarget )
+{
+	if ( currentTarget != null )
+		StartThirdPersonSpectatingDuck( player, currentTarget )                                                           
+	else
+		EndThirdPersonSpectatingDuck( player, currentTarget )                                                         
+}
+
+void function OnYouRespawned()
+{
+	StopSoundOnEntity( GetLocalClientPlayer(), "Duck_For_SpectatorFriendlyFire" )
+}

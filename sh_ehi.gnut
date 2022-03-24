@@ -1,0 +1,938 @@
+  
+                                                                                                              
+
+                                                                        
+                                                                                               
+                                    
+
+                                                                                            
+                                                     
+
+                         
+                 
+      
+
+                                
+
+                                                      
+
+                                                                                
+
+                                                   
+
+  
+
+
+
+#if SERVER || CLIENT || UI
+global function ToEHI
+global function FromEHI
+global function EHIToEncodedEHandle
+global function EncodedEHandleToEHI
+global function EHIHasValidScriptStruct
+global function GetEHIScriptStruct
+global function GetEHIScriptStructFromEncodedEHandle
+global function GetEHISignalDummy
+global function WaitForEHISignalDummy
+global function EHI_IsConnected
+global function EHI_GetName
+global function EEH_GetTeam
+global function EHI_GetTeam
+global function EEH_GetTeamMemberIndex
+global function EHI_GetTeamMemberIndex
+global function GetPlayerEHIArrayOfTeam
+global function GetPlayerSquadSafe
+global function EEHHasValidScriptStruct
+#endif
+
+
+#if CLIENT || UI
+global function IsLocalClientEHIValid
+global function LocalClientEHI
+global function WaitForLocalClientEHI
+global function EHI_GetPlatformID
+#endif
+
+                            
+#if SERVER || CLIENT || UI
+global function ShEHI_LevelInit_Begin
+global function ShEHI_LevelInit_End
+#endif
+#if SERVER
+                                                 
+#endif
+#if CLIENT
+global function ShEHI_OnPlayerCreated
+global function ShEHI_OnPlayerChangedTeam
+global function ShEHI_OnPlayerDisconnected
+global function UIToClient_UIVMIsShuttingDown
+global function UIToClient_UIVMJustStarted
+global function GetPlayerNameFromEHI
+global function GetKillerNameFromEHI
+global function GetPlayerRankScoreFromEHI
+global function GetPlayerLadderPosFromEHI
+                       
+global function GetPlayerArenasRankScoreFromEHI
+global function GetPlayerArenasLadderPosFromEHI
+      
+#endif
+#if UI
+global function ClientToUI_OnPlayerCreatedOrUpdated
+#endif
+
+#if CLIENT
+global function GetPlayerNameUnlessAnonymized
+global function ShouldPlayerNameBeAnonymized
+#endif
+
+
+
+                                
+                                
+                                
+                                
+                                
+#if SERVER || CLIENT || UI
+struct FileStruct_LifetimeLevel
+{
+	table<EncodedEHandle, EHIScriptStruct> eehScriptStructMap = {}
+
+	#if CLIENT || UI
+		EHI                   localClientEHI = EHI_null
+		table<string, string> obfuscatedNameMap
+	#endif
+
+	#if CLIENT
+		bool uiVMIsResetting = false
+	#endif
+
+	table signalDummy
+}
+#endif
+#if SERVER || CLIENT
+FileStruct_LifetimeLevel fileLevel
+#elseif UI
+FileStruct_LifetimeLevel& fileLevel
+#endif
+
+
+
+                         
+                         
+                         
+                         
+                         
+#if SERVER || CLIENT || UI
+void function ShEHI_LevelInit_Begin()
+{
+	#if CLIENT || UI
+		RegisterSignal( "OnLocalClientEHIValid" )
+		RegisterSignal( "EHISignalDummyCreated" )
+	#endif
+
+#if UI
+	FileStruct_LifetimeLevel newFileLevel
+	fileLevel = newFileLevel
+
+	if ( !(uiGlobal.uiShutdownCallbacks.contains( ShEHI_VMShutdown )) )
+		AddUICallback_UIShutdown( ShEHI_VMShutdown )
+#endif
+
+	#if CLIENT
+		AddCallback_GameStateEnter( eGameState.Playing, EHI_GameStatePlaying )
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+void function ShEHI_LevelInit_End()
+{
+	#if UI
+		if ( CanRunClientScript() )
+			RunClientScript( "UIToClient_UIVMJustStarted" )
+	#endif
+}
+#endif
+
+
+#if UI
+void function ShEHI_VMShutdown()
+{
+	if ( CanRunClientScript() )
+		RunClientScript( "UIToClient_UIVMIsShuttingDown" )
+}
+#endif
+
+
+
+                          
+                          
+                          
+                          
+                          
+#if SERVER || CLIENT || UI
+EHI function ToEHI( entity ent )
+{
+	#if SERVER
+		          
+	#elseif CLIENT
+		if ( !IsValid( ent ) )
+			return EHI_null
+
+		return ent.GetEncodedEHandle()
+	#elseif UI
+		Assert( ent == GetLocalClientPlayer() )
+		Assert( fileLevel.localClientEHI != EHI_null )
+		return fileLevel.localClientEHI
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+entity function FromEHI( EHI ent )
+{
+	#if SERVER
+		          
+	#elseif CLIENT
+		if ( ent == EHI_null )
+			return null
+
+		return GetEntityFromEncodedEHandle( ent )
+	#elseif UI
+		Assert( fileLevel.localClientEHI != EHI_null )
+		Assert( ent == fileLevel.localClientEHI )
+		return GetLocalClientPlayer()
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+EncodedEHandle function EHIToEncodedEHandle( EHI ent )
+{
+	#if SERVER
+		                  
+			                          
+		                              
+	#elseif CLIENT || UI
+		return ent
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+EHI function EncodedEHandleToEHI( EncodedEHandle eeh )
+{
+	#if SERVER
+		                                         
+	#elseif CLIENT || UI
+		return eeh
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+bool function EHIHasValidScriptStruct( EHI ent )
+{
+	                                                                                                                    
+	                                        
+
+	#if SERVER
+		                     
+	#elseif CLIENT || UI
+		return (ent != EHI_null && ent in fileLevel.eehScriptStructMap)
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+EHIScriptStruct function GetEHIScriptStruct( EHI ent )
+{
+	#if SERVER
+		                        
+		                  
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return fileLevel.eehScriptStructMap[ent]
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+bool function EEHHasValidScriptStruct( EncodedEHandle ent )
+{
+	return (ent != EncodedEHandle_null && ent in fileLevel.eehScriptStructMap)
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+EHIScriptStruct function GetEHIScriptStructFromEncodedEHandle( EncodedEHandle ent )
+{
+	Assert( ent != EncodedEHandle_null )
+	return fileLevel.eehScriptStructMap[ent]
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+EHISignalDummy function GetEHISignalDummy( EHI ent )
+{
+	#if SERVER
+		                        
+		          
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return fileLevel.eehScriptStructMap[ent]
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+EHISignalDummy function WaitForEHISignalDummy( EHI ent )
+{
+	#if SERVER
+		                        
+		          
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+
+		while ( !(ent in fileLevel.eehScriptStructMap) )
+			WaitSignal( fileLevel.signalDummy, "EHISignalDummyCreated" )
+
+		return fileLevel.eehScriptStructMap[ent]
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+bool function EHI_IsConnected( EHI ent )
+{
+	#if SERVER
+		                        
+		           
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).isConnected
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+string function EHI_GetName( EHI ent )
+{
+	#if SERVER
+		                        
+		                          
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).name
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+int function EEH_GetTeam( EncodedEHandle ent )
+{
+	Assert( ent != EncodedEHandle_null )
+	return GetEHIScriptStructFromEncodedEHandle( ent ).team
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+int function EHI_GetTeam( EHI ent )
+{
+	#if SERVER
+		                        
+		                    
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).team
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+int function EEH_GetTeamMemberIndex( EncodedEHandle ent )
+{
+	Assert( ent != EncodedEHandle_null )
+	return GetEHIScriptStructFromEncodedEHandle( ent ).teamMemberIndex
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+int function EHI_GetTeamMemberIndex( EHI ent )
+{
+	#if SERVER
+		                        
+		                               
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).teamMemberIndex
+	#endif
+}
+#endif
+
+#if SERVER || CLIENT || UI
+int function EHI_GetRankScore( EHI ent )
+{
+	#if SERVER
+		                        
+		                                
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).rankScore
+	#endif
+}
+#endif
+
+#if SERVER || CLIENT || UI
+int function EHI_GetRankedLadderPos( EHI ent )
+{
+	#if SERVER
+		                        
+		                                      
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).rankedLadderPosition
+	#endif
+}
+#endif
+
+                       
+
+#if SERVER || CLIENT || UI
+int function EHI_GetArenasRankScore( EHI ent )
+{
+	#if SERVER
+		                        
+		                                      
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).arenasRankScore
+	#endif
+}
+#endif
+
+#if SERVER || CLIENT || UI
+int function EHI_GetArenasRankedLadderPos( EHI ent )
+{
+	#if SERVER
+		                        
+		                                            
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).arenasRankedLadderPosition
+	#endif
+}
+#endif
+
+                            
+
+#if SERVER || CLIENT || UI
+array<EHI> function GetPlayerEHIArrayOfTeam( int team )
+{
+	#if SERVER
+		                                   
+	#elseif CLIENT || UI
+		array<EHI> out = []
+		foreach ( EHI ehi, EHIScriptStruct ehiss in fileLevel.eehScriptStructMap )
+		{
+			if ( !ehiss.isPlayer )
+				continue
+
+			if ( ehiss.team != team )
+				continue
+
+			out.append( ehi )
+		}
+		return out
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+int function EHI_GetPlatformID( EHI ent )
+{
+	#if SERVER
+		                        
+		                                                   
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).platformID
+	#endif
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+array<EncodedEHandle> function GetPlayerSquadSafe( EncodedEHandle playerEEH, int squadSize )
+{
+	array<EncodedEHandle> out = [playerEEH]                                 
+	if ( EEHHasValidScriptStruct( playerEEH ) )
+	{
+		int team = GetEHIScriptStructFromEncodedEHandle( playerEEH ).team
+		foreach ( EncodedEHandle eeh, EHIScriptStruct ehiss in fileLevel.eehScriptStructMap )
+		{
+			if ( !ehiss.isPlayer )
+				continue
+
+			if ( ehiss.team != team )
+				continue
+
+			if ( eeh == playerEEH )
+				continue
+
+			out.append( eeh )
+		}
+	}
+	out.resize( squadSize, EncodedEHandle_null )
+	return out
+}
+#endif
+
+
+#if CLIENT || UI
+bool function IsLocalClientEHIValid()
+{
+	return (fileLevel.localClientEHI != EHI_null)
+}
+#endif
+
+
+#if CLIENT || UI
+EHI function LocalClientEHI()
+{
+	#if CLIENT
+		Assert( fileLevel.localClientEHI != EHI_null, "LocalClientEHI called too early. The client VM doesn't have the local client player yet." )
+	#elseif UI
+		Assert( fileLevel.localClientEHI != EHI_null, "LocalClientEHI called too early. The UI VM hasn't been told about the local player yet." )
+	#endif
+	return fileLevel.localClientEHI
+}
+#endif
+
+
+#if CLIENT || UI
+EHI function WaitForLocalClientEHI()
+{
+	while ( !IsValidSignal( "OnLocalClientEHIValid" ) )
+		WaitFrame()
+
+	while ( fileLevel.localClientEHI == EHI_null )
+	{
+		#if CLIENT
+			WaitSignal( clGlobal.signalDummy, "OnLocalClientEHIValid" )
+		#elseif UI
+			WaitSignal( uiGlobal.signalDummy, "OnLocalClientEHIValid" )
+		#endif
+	}
+	return fileLevel.localClientEHI
+}
+#endif
+
+
+
+                   
+                   
+                   
+                   
+                   
+#if SERVER
+                                                                
+ 
+	                              
+	                                 
+
+	                               
+ 
+#endif
+
+
+#if SERVER || CLIENT
+void function ShEHI_OnPlayerCreated( entity ent )
+{
+	                                                                        
+
+	EHI ehi            = ToEHI( ent )
+	EncodedEHandle eeh = EHIToEncodedEHandle( ehi )
+
+	EHIScriptStruct ehiss
+
+	#if SERVER
+		                                                         
+			                                                                                                                                
+
+		                                                
+		                   
+
+		                
+		 
+			                                                                        
+				                                        
+			   
+		 
+	#elseif CLIENT
+		if ( eeh in fileLevel.eehScriptStructMap )
+			ehiss = fileLevel.eehScriptStructMap[eeh]
+		ent.e.ehiss = ehiss
+	#endif
+
+	fileLevel.eehScriptStructMap[eeh] <- ehiss
+
+	ehiss.ehi = ehi
+	ehiss.isPlayer = true
+	ehiss.isConnected = true
+	ehiss.name = ent.GetPlayerName()
+	ehiss.team = ent.GetTeam()
+	ehiss.teamMemberIndex = ent.GetTeamMemberIndex()
+	ehiss.platformID = GetHardwareFromName( ent.GetHardwareName() )
+	#if CLIENT
+		ehiss.isLocalClientPlayer = IsLocalClientPlayer( ent )
+
+		if ( fileLevel.localClientEHI == EHI_null && ehiss.isLocalClientPlayer )
+		{
+			fileLevel.localClientEHI = ehi
+			Signal( clGlobal.signalDummy, "OnLocalClientEHIValid" )
+		}
+
+		Signal( fileLevel.signalDummy, "EHISignalDummyCreated" )
+	#endif
+
+	            
+	ShLoadouts_OnPlayerEHICreated( ehi )
+
+	int pID = -1
+	pID = ehiss.platformID
+
+	#if CLIENT
+		Assert( ehi != EHI_null )
+		RunUIScript( "ClientToUI_OnPlayerCreatedOrUpdated", ehi,
+			ehiss.isLocalClientPlayer,
+			ehiss.isConnected,
+			ehiss.name,
+			ehiss.team,
+			ehiss.teamMemberIndex,
+			pID
+		)
+	#endif
+
+	                
+	                                                                           
+}
+#elseif UI
+void function ClientToUI_OnPlayerCreatedOrUpdated( EHI ehi,
+bool isLocalClientPlayer,
+bool isConnected,
+string name,
+int team,
+int teamMemberIndex,
+int intValue
+)
+{
+	EHIScriptStruct ehiss
+	if ( ehi in fileLevel.eehScriptStructMap )
+		ehiss = fileLevel.eehScriptStructMap[ehi]
+	else
+		fileLevel.eehScriptStructMap[ehi] <- ehiss
+
+	ehiss.isPlayer = true
+	ehiss.isConnected = isConnected
+	ehiss.isLocalClientPlayer = isLocalClientPlayer
+	ehiss.name = name
+	ehiss.team = team
+	ehiss.teamMemberIndex = teamMemberIndex
+	ehiss.platformID = intValue
+
+	if ( isLocalClientPlayer )
+	{
+		fileLevel.localClientEHI = ehi
+		Signal( uiGlobal.signalDummy, "OnLocalClientEHIValid" )
+	}
+
+	Signal( fileLevel.signalDummy, "EHISignalDummyCreated" )
+
+	            
+	ShLoadouts_OnPlayerEHICreated( ehi )
+}
+#endif
+
+
+#if SERVER || CLIENT
+void function ShEHI_OnPlayerChangedTeam( entity player, int oldTeam, int newTeam )
+{
+	player.e.ehiss.team = newTeam
+
+	#if CLIENT
+		int pID = -1
+		pID = player.e.ehiss.platformID
+
+		Assert( player.e.ehiss.ehi != EHI_null )
+		RunUIScript( "ClientToUI_OnPlayerCreatedOrUpdated", player.e.ehiss.ehi,
+			player.e.ehiss.isLocalClientPlayer,
+			player.e.ehiss.isConnected,
+			player.e.ehiss.name,
+			player.e.ehiss.team,
+			player.e.ehiss.teamMemberIndex,
+			pID
+		)
+	#endif
+}
+#endif
+
+
+#if CLIENT
+void function ShEHI_OnPlayerDisconnected( entity player )
+{
+	if ( player.e.ehiss.ehi == EHI_null )
+	{
+		Warning( "R5DEV-52416: OnPlayerDisconnected happened before OnPlayerCreated, %s", string(player) )
+		return
+	}
+
+	player.e.ehiss.isConnected = false
+
+	WORKAROUND_PreventScriptErrors( void function() : ( player ) {
+
+		int pID = -1
+		pID = player.e.ehiss.platformID
+
+		RunUIScript( "ClientToUI_OnPlayerCreatedOrUpdated", player.e.ehiss.ehi,
+			player.e.ehiss.isLocalClientPlayer,
+			player.e.ehiss.isConnected,
+			player.e.ehiss.name,
+			player.e.ehiss.team,
+			player.e.ehiss.teamMemberIndex,
+			pID
+		)
+	} )
+}
+#endif
+
+
+#if CLIENT
+void function UIToClient_UIVMIsShuttingDown()
+{
+	fileLevel.uiVMIsResetting = true
+}
+void function UIToClient_UIVMJustStarted()
+{
+	if ( !fileLevel.uiVMIsResetting )
+		return
+
+	fileLevel.uiVMIsResetting = false
+
+	foreach ( EHI ehi, EHIScriptStruct ehiss in fileLevel.eehScriptStructMap )
+	{
+		Assert( ehi != EHI_null )
+
+		int pID = -1
+		pID = ehiss.platformID
+
+		RunUIScript( "ClientToUI_OnPlayerCreatedOrUpdated", ehi,
+			ehiss.isLocalClientPlayer,
+			ehiss.isConnected,
+			ehiss.name,
+			ehiss.team,
+			ehiss.teamMemberIndex,
+			pID
+		)
+
+		ShLoadouts_OnPlayerEHICreated( ehi, true )
+	}
+}
+#endif
+
+
+#if CLIENT
+string function GetObsfuscatedName( EHI playerEHI )
+{
+	string playerName = EHI_GetName( playerEHI )
+	if ( !(playerName in fileLevel.obfuscatedNameMap) )
+	{
+		int randomAppend = RandomIntRange( 1000, 9999 )
+		string obsName   = ""
+
+		LoadoutEntry characterSlot = Loadout_Character()
+		if ( GetGameState() >= eGameState.Playing && LoadoutSlot_IsReady( playerEHI, characterSlot ) )
+		{
+			ItemFlavor ornull characterOrNull = LoadoutSlot_GetItemFlavor( playerEHI, characterSlot )
+			if ( characterOrNull != null )
+				obsName = Localize( ItemFlavor_GetShortName( expect ItemFlavor( characterOrNull ) ) )
+		}
+
+		if ( obsName == "" )
+			obsName = "Player"
+
+		obsName = obsName + string( randomAppend )
+		fileLevel.obfuscatedNameMap[playerName] <- obsName
+	}
+
+	return fileLevel.obfuscatedNameMap[playerName]
+}
+#endif
+
+
+#if CLIENT
+string function GetKillerNameFromEHI( EHI playerEHI )
+{
+	string clubTag = GetPlayerClubTag( playerEHI )
+
+	string playerName = EHI_GetName( playerEHI )
+	if ( (ShouldPlayerNameBeAnonymized( playerEHI ) || !DisplayKillerName()) && playerEHI != LocalClientEHI() && EHI_GetTeam( playerEHI ) != EHI_GetTeam( LocalClientEHI() ) )
+		return GetObsfuscatedName( playerEHI )
+
+	return clubTag + " " + playerName
+}
+#endif
+
+
+#if CLIENT
+string function GetPlayerNameFromEHI( EHI playerEHI )
+{
+	string clubTag = GetPlayerClubTag( playerEHI )
+
+	string playerName = EHI_GetName( playerEHI )
+	if ( (ShouldPlayerNameBeAnonymized( playerEHI ) || !DisplayObituaryName()) && playerEHI != LocalClientEHI() && EHI_GetTeam( playerEHI ) != EHI_GetTeam( LocalClientEHI() ) )
+		return GetObsfuscatedName( playerEHI )
+
+	return clubTag + " " + playerName
+}
+#endif
+
+
+#if CLIENT
+string function GetPlayerClubTag( EHI playerEHI )
+{
+	if ( Clubs_AreObituaryTagsEnabledByPlaylist() == false )
+	{
+		printf( "ClubDataDebug: No Club Tag (Disabled by Playlist)" )
+		return ""
+	}
+
+	string clubTag = ""
+	entity player = FromEHI( playerEHI )
+	if( !IsValid( player ) )
+		return ""
+
+	#if DEV
+	if ( player.IsBot() )
+	{
+		clubTag = ""         
+		return clubTag
+	}
+	#endif
+
+	clubTag = player.GetClubTag()
+	if ( clubTag != "" )
+		clubTag = "[" + clubTag + "]"
+
+	                                                                                                               
+	return clubTag
+}
+#endif
+
+
+#if CLIENT
+void function EHI_GameStatePlaying()
+{
+	fileLevel.obfuscatedNameMap.clear()
+}
+#endif
+
+#if CLIENT
+int function GetPlayerRankScoreFromEHI( EHI playerEHI )
+{
+	int rankScore = EHI_GetRankScore( playerEHI )
+
+	return rankScore
+}
+#endif
+
+#if CLIENT
+int function GetPlayerLadderPosFromEHI( EHI playerEHI )
+{
+	int rankScore = EHI_GetRankedLadderPos( playerEHI )
+
+	return rankScore
+}
+#endif
+
+                       
+
+#if CLIENT
+int function GetPlayerArenasRankScoreFromEHI( EHI playerEHI )
+{
+	int rankScore = EHI_GetArenasRankScore( playerEHI )
+
+	return rankScore
+}
+#endif
+
+#if CLIENT
+int function GetPlayerArenasLadderPosFromEHI( EHI playerEHI )
+{
+	int rankScore = EHI_GetArenasRankedLadderPos( playerEHI )
+
+	return rankScore
+}
+#endif
+
+                            
+
+                                                
+#if CLIENT
+string function GetPlayerNameUnlessAnonymized( EHI playerEHI )
+{
+	if ( ShouldPlayerNameBeAnonymized( playerEHI ) )
+		return GetObsfuscatedName( playerEHI )
+
+	return GetPlayerNameFromEHI( playerEHI )
+}
+
+bool function ShouldPlayerNameBeAnonymized( EHI playerEHI )
+{
+	if ( IsViewingDeathRecap() || IsViewingDeathRecap() || IsViewingSquadSummary() )
+		return false
+
+	if ( IsLobby() )
+		return false
+
+	if ( IsPrivateMatch() )
+		return ShouldPrivateMatchBeAnonymized()
+
+	if ( GetCurrentPlaylistVarBool( "DisablePlayerAnonymity", false ) == true )
+		return false
+
+	entity player = FromEHI( playerEHI )
+	if ( !IsValid( player ) )
+		return false
+
+	return player.GetPlayerNetBool( "anonymizePlayerName" )
+}
+
+bool function ShouldPrivateMatchBeAnonymized()
+{
+	if ( IsPrivateMatchLobby() )
+		return false
+
+	if ( GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR )
+		return false
+
+	return GetConVarBool( CUSTOM_ANONYMOUS_MODE_CONVAR_NAME )
+}
+#endif

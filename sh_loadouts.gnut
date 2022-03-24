@@ -1,0 +1,2797 @@
+  
+#if UI
+global function ShLoadouts_VMInit
+#endif
+
+#if SERVER || CLIENT || UI
+global function ShLoadouts_LevelInit_Begin
+global function ShLoadouts_LevelInit_Finish
+global function ShLoadouts_OnPlayerEHICreated
+#endif
+#if UI
+global function ShLoadouts_LevelShutdown
+#endif
+
+                      
+                      
+
+global function RegisterLoadoutSlot
+
+global function LoadoutSlot_IsReady
+global function LoadoutSlot_GetItemFlavor
+global function LoadoutSlot_GetItemFlavor_ForValidation
+global function LoadoutSlot_GetInteger
+global function LoadoutSlot_WaitForItemFlavor
+global function LoadoutSlot_GetUsableFavorites
+global function LoadoutSlot_GetFavorites
+                                                 
+                                              
+                                                     
+global function LoadoutSlot_GetRawStorageContents
+
+global function AddCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer
+global function AddCallback_IntegerLoadoutSlotDidChange_AnyPlayer
+global function RemoveCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer
+global function RemoveCallback_IntegerLoadoutSlotDidChange_AnyPlayer
+global function AddCallback_ItemFlavorLoadoutSlotDidChange_SpecificPlayer
+global function RemoveCallback_ItemFlavorLoadoutSlotDidChange_SpecificPlayer
+#if SERVER
+                                                      
+                                        
+                                     
+                                           
+                                                        
+                                            
+                                              
+#elseif CLIENT || UI
+global function RequestSetItemFlavorLoadoutSlot
+global function RequestSetItemFlavorLoadoutSlot_WithDuplicatePrevention
+global function RequestSetItemFlavorFavoritesSlot
+global function RequestClearItemFlavorFavoritesSlot
+global function RequestSetFavoredQuip
+global function RequestClearFavoredQuip
+#if DEV
+global function DEV_RequestSetItemFlavorLoadoutSlot
+#endif
+#endif
+global function IsItemFlavorValidForLoadoutSlot
+global function GetValidItemFlavorsForLoadoutSlot
+global function IsItemFlavorUnlockedForLoadoutSlot
+global function GetUnlockedItemFlavorsForLoadoutSlot
+global function GetRandomGoodItemFlavorForLoadoutSlot
+global function GetDefaultItemFlavorForLoadoutSlot
+global function ConvertItemFlavorToLoadoutSlotContentsIndex
+global function IsValidLoadoutSlotContentsIndexForItemFlavor
+global function ConvertLoadoutSlotContentsIndexToItemFlavor
+global function IsValidLoadoutSlotContentsIndex
+
+global function GetAllLoadoutSlots
+global function IsLoadoutSlotActive
+
+#if DEV
+global function DEV_GetValidItemFlavorsForLoadoutSlotForDev
+#endif
+
+                      
+                      
+
+#if SERVER
+                                                      
+                                        
+#endif
+
+#if CLIENT
+global function ServerToClient_LoadoutSlotDidChange
+#endif
+
+#if UI
+global function ClientToUI_RefreshLoadoutSlot
+global function GetLoadoutItemsSortedForMenu
+#endif
+
+                   
+                                               
+        
+
+
+const bool LOADOUT_NETVAR_DEBUG_PRINTS = false
+
+
+
+                      
+                      
+                      
+                      
+                      
+
+global typedef LoadoutEntry_IsSlotLocked bool functionref( EHI playerEHI )
+#if SERVER
+                                                                                         
+                                                                                                                                  
+#endif
+global typedef ItemFlavorLoadoutEntry_IsItemFlavorUnlockedFuncType bool functionref( EHI playerEHI, ItemFlavor itemFlavor, bool shouldIgnoreOtherSlots )
+global typedef ItemFlavorLoadoutSlotDidChangeFuncType void functionref( EHI playerEHI, ItemFlavor flavor )
+global typedef IntegerLoadoutSlotDidChangeFuncType void functionref( EHI playerEHI, int value )
+
+global enum eLoadoutNetworking
+{
+	SERVER_ONLY,                                                                                                      
+	PLAYER_EXCLUSIVE,                                                                                               
+	PLAYER_GLOBAL,                                                                                                            
+}
+
+global enum eLoadoutEntryType
+{
+	ITEM_FLAVOR,
+	INTEGER,
+}
+
+global struct LoadoutEntry
+{
+	int    _____INTERNAL_entryIndex = -1
+	string id = ""
+	int    type = -1
+
+	string pdefSectionKey = "! general"
+	int    stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.INVALID                      
+	int    maxFavoriteCount = 0
+
+	int                                            networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
+	string ornull                                  networkVarName = ""
+	LoadoutEntry_IsSlotLocked                      isSlotLocked = null                                
+	table<LoadoutEntry, table<ItemFlavor, bool> >  isActiveConditions = {}
+	#if SERVER && DEV
+		                                                                                                                                                                                                                     
+	#endif
+	string DEV_category = "Other"
+	string DEV_name = "?"
+	bool   isAllowedToChangeDuringMatch = false
+	int    _____INTERNAL_nvIndex
+
+	                                           
+	ItemFlavor& defaultItemFlavor                                                             
+	ItemFlavor& favoriteItemFlavor                                                             
+
+	array<ItemFlavor>                                   validItemFlavorList = []
+	array<ItemFlavor>                                   validItemFlavorList_CopyForRandomizing
+	ItemFlavorLoadoutEntry_IsItemFlavorUnlockedFuncType isItemFlavorUnlocked = null                                
+	array<ItemFlavorLoadoutSlotDidChangeFuncType>       changeCallbacks_ItemFlavor = []
+	table<ItemFlavor, array<LoadoutEntry> >             _____INTERNAL_dependentsByItemFlav = {}
+	table<ItemFlavor, int>                              _____INTERNAL_itemFlavorNetworkIndexMap = {}
+	table<SettingsAssetGUID, int>                       _____INTERNAL_itemFlavorGUIDNetworkIndexMap = {}
+	table<int, ItemFlavor>                              _____INTERNAL_networkIndexItemFlavorMap = {}
+
+	array<string>                                        _____INTERNAL_favoritePdefKeys = []
+	#if DEV
+		array<ItemFlavor>      _____INTERNAL_DEV_validItemFlavorsForDev = []
+	#endif
+	#if SERVER
+		                                                                   
+	#endif
+
+	                                                   
+	int                                        defaultInteger = INT_MIN
+	int                                        minInteger = 0
+	int                                        maxInteger = 0
+	array<IntegerLoadoutSlotDidChangeFuncType> changeCallbacks_Integer = []
+
+	                                 
+	                                        
+}
+
+
+
+                       
+                       
+                       
+                       
+                       
+const int SLOT_CONTENTS_SENTINEL_INVALID = -9999
+const int SLOT_CONTENTS_SENTINEL_NOTREADY = 0
+const int SLOT_CONTENTS_FIRST_VALID_ITEM = 2
+
+const int PERSISTENT_DATA_INVALID_SENTINEL = 0
+
+struct LoadoutNetworkVarInfo
+{
+	int                    nvIndex
+	string                 fullNetworkVarName
+	int                    type = -1
+	array<LoadoutEntry>    usedByEntries = []
+
+	                                          
+	array<ItemFlavor>      possibleItemFlavorList = []                                                   
+	table<ItemFlavor, int> itemFlavorNetworkIndexMap = {}
+}
+
+struct FileStruct_LifetimeLevel
+{
+	bool                         isInitialized = false
+	array<LoadoutEntry>          loadoutSlotEntries = []
+
+	#if SERVER || CLIENT || UI                                                       
+		table<string, LoadoutNetworkVarInfo> networkVars = {}
+	#endif
+
+	#if SERVER
+		                              
+	#endif
+
+	#if UI
+		table<ItemFlavor, bool> TEMP_filteredItems
+	#endif
+
+	#if SERVER && DEV
+		                                  
+	#endif
+}
+FileStruct_LifetimeLevel& fileLevel
+
+
+
+                         
+                         
+                         
+                         
+                         
+
+#if UI && DEV
+bool DEV_resendAllCacheData = false                      
+#endif
+
+#if UI
+void function ShLoadouts_VMInit()
+{
+	#if UI && DEV
+		if ( IsFullyConnected() )
+			DEV_resendAllCacheData = true
+	#endif
+}
+#endif
+
+
+void function ShLoadouts_LevelInit_Begin()
+{
+	FileStruct_LifetimeLevel newFileLevel
+	fileLevel = newFileLevel
+
+	#if SERVER || CLIENT
+		Remote_RegisterServerFunction( "ClientCallback_loadouts_set", "int", INT_MIN, INT_MAX, "int", INT_MIN, INT_MAX, "int", INT_MIN, INT_MAX )
+		Remote_RegisterServerFunction( "ClientCallback_loadouts_reset_persistent" )
+		Remote_RegisterServerFunction( "ClientCallback_favorites_set", "int", INT_MIN, INT_MAX, "int", INT_MIN, INT_MAX, "int", INT_MIN, INT_MAX )
+		Remote_RegisterServerFunction( "ClientCallback_favorites_clear", "int", INT_MIN, INT_MAX, "int", INT_MIN, INT_MAX )
+	#endif
+
+	#if SERVER
+		                                                    
+		                                                                      
+
+		       
+			                                                
+			                                                                                   
+			                                                                               
+			                                              
+		      
+	#endif
+}
+
+
+void function ShLoadouts_LevelInit_Finish()
+{
+	#if SERVER || CLIENT
+		Remote_RegisterClientFunction( "ServerToClient_LoadoutSlotDidChange", "int", 0, INT_MAX, "int", 0, fileLevel.loadoutSlotEntries.len() )
+	#endif
+
+	foreach ( LoadoutEntry entry in fileLevel.loadoutSlotEntries )
+	{
+		if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+		{
+			Assert( entry.validItemFlavorList.len() > 0, "Entry " + entry.id + " had an empty validItemFlavorList" )
+			Assert( IsItemFlavorStructValid( entry.defaultItemFlavor ), "entry.defaultValue must have a valid value." )
+			                                                                                                                                                                      
+		}
+		else if ( entry.type == eLoadoutEntryType.INTEGER )
+		{
+			Assert( !IsItemFlavorStructValid( entry.defaultItemFlavor ) )
+			Assert( entry.validItemFlavorList.len() == 0 )
+			Assert( entry.isItemFlavorUnlocked == null )
+			Assert( entry.minInteger >= 0 )
+			Assert( entry.maxInteger <= INT_MAX )
+			Assert( entry.maxInteger > entry.minInteger )
+			Assert( entry.defaultInteger >= entry.minInteger && entry.defaultInteger <= entry.maxInteger )
+			#if SERVER
+				                                             
+			#endif
+		}
+
+		array<string> ornull forceResetTo = GetLoadoutSlotForceResetTo( entry )
+		if ( forceResetTo != null )
+		{
+			foreach ( string itemRef in expect array<string>(forceResetTo) )
+			{
+				if ( itemRef == "~default~" || itemRef == "~random~" )
+					continue
+
+				if ( !IsValidItemFlavorHumanReadableRef( itemRef ) )
+				{
+					Warning( "Playlist var 'loadout_slot_%s_force_reset_to' refers unknown to unknown item: '%s'", entry.id, itemRef )
+					continue
+				}
+
+				ItemFlavor itemFlav = GetItemFlavorByHumanReadableRef( itemRef )
+				if ( !entry.validItemFlavorList.contains( itemFlav ) )
+				{
+					printf( "Note: Playlist var 'loadout_slot_%s_force_reset_to' is causing loadout slot '%s' to have new valid item flavor: %s", entry.id, entry.id, itemRef )
+					entry.validItemFlavorList.append( itemFlav )
+				}
+			}
+		}
+
+		RegisterSignal( "Loadout_" + entry.id + "_Ready" )
+
+		if ( entry.networkTo == eLoadoutNetworking.PLAYER_GLOBAL )
+		{
+			#if SERVER || CLIENT
+				int desiredNetworkVarType = (entry.type == eLoadoutEntryType.INTEGER ? SNVT_BIG_INT : SNVT_UNSIGNED_INT)
+			#endif
+
+			Assert( entry.networkVarName != "", "LoadoutEntry.networkVarName must be provided if networkTo is set." )
+			LoadoutNetworkVarInfo nvInfo
+			string fullNetworkVarName = "Loadout_" + expect string(entry.networkVarName)
+			entry.networkVarName = fullNetworkVarName
+			if ( fullNetworkVarName in fileLevel.networkVars )
+			{
+				nvInfo = fileLevel.networkVars[fullNetworkVarName]
+				#if SERVER || CLIENT
+					Assert( nvInfo.type == desiredNetworkVarType )
+				#endif
+			}
+			else
+			{
+				nvInfo.nvIndex = fileLevel.networkVars.len()
+				nvInfo.fullNetworkVarName = fullNetworkVarName
+				fileLevel.networkVars[fullNetworkVarName] <- nvInfo
+				#if SERVER || CLIENT
+					nvInfo.type = desiredNetworkVarType
+					RegisterNetworkedVariable(
+						nvInfo.fullNetworkVarName, SNDC_PLAYER_GLOBAL,
+						nvInfo.type, SLOT_CONTENTS_SENTINEL_NOTREADY
+					)
+				#endif
+
+				#if CLIENT
+					RegisterNetworkedVariableChangeCallback_int( fullNetworkVarName, void function( entity player, int old, int new ) : ( nvInfo )
+					{
+						EHI playerEHI         = ToEHI( player )
+						EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
+
+						#if LOADOUT_NETVAR_DEBUG_PRINTS
+							printf( "### LOADOUT SLOT NV, %s (%s), %s, %d --[%d]-> %d (=%d)",
+								string(player), string(EHI_IsConnected( playerEHI )), nvInfo.fullNetworkVarName,
+								old, ehiss.netVarsLastSeenValuesMap[nvInfo.nvIndex], new, player.GetPlayerNetInt( nvInfo.fullNetworkVarName ) )
+						#endif
+
+						new = player.GetPlayerNetInt( nvInfo.fullNetworkVarName )                                        
+
+						if ( !ehiss.isConnected )
+							return
+
+						if ( new == ehiss.netVarsLastSeenValuesMap[nvInfo.nvIndex] )
+							return
+
+						ehiss.netVarsLastSeenValuesMap[nvInfo.nvIndex] = new
+
+						#if ASSERTING
+							LoadoutEntry ornull found = null
+						#endif
+						foreach ( LoadoutEntry entry in nvInfo.usedByEntries )
+						{
+							if ( IsLoadoutSlotCurrentlyNetworked( playerEHI, entry ) )
+							{
+								#if ASSERTING
+									Assert( found == null, "Attempted to network two loadout slots using the same network variable name at the same time"
+									+ " (slot 1: \"" + expect LoadoutEntry(found).id + "\", slot 2: \"" + entry.id + "\")." )
+									if ( found != null )
+										continue
+									found = entry
+								#endif
+								HandleLoadoutSlotNetworkVarChanged( playerEHI, entry, old, new )
+								#if !ASSERTING
+									break
+								#endif
+							}
+						}
+					} )
+				#endif
+			}
+			         
+			  	                                                                                
+			  	 
+			  		                                                
+			  		                                                
+			  	 
+			        
+
+			entry._____INTERNAL_nvIndex = nvInfo.nvIndex
+
+			nvInfo.usedByEntries.append( entry )
+
+			if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+			{
+				foreach ( int arrayIndex, ItemFlavor itemFlavor in entry.validItemFlavorList )
+				{
+					                                                                                                          
+
+					int networkIndex
+					if ( itemFlavor in nvInfo.itemFlavorNetworkIndexMap )
+					{
+						networkIndex = nvInfo.itemFlavorNetworkIndexMap[itemFlavor]
+					}
+					else
+					{
+						networkIndex = SLOT_CONTENTS_FIRST_VALID_ITEM + arrayIndex
+						Assert( networkIndex < 1000, "Too many possible items in loadout slot: " + entry.id )
+						nvInfo.possibleItemFlavorList.append( itemFlavor )
+						nvInfo.itemFlavorNetworkIndexMap[itemFlavor] <- networkIndex
+					}
+					entry._____INTERNAL_itemFlavorNetworkIndexMap[itemFlavor] <- networkIndex
+					entry._____INTERNAL_itemFlavorGUIDNetworkIndexMap[ItemFlavor_GetGUID( itemFlavor )] <- networkIndex
+					entry._____INTERNAL_networkIndexItemFlavorMap[networkIndex] <- itemFlavor
+				}
+			}
+		}
+		else
+		{
+			if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+			{
+				foreach ( int arrayIndex, ItemFlavor itemFlavor in entry.validItemFlavorList )
+				{
+					                                                                                                        
+
+					int fakeNetworkIndex = SLOT_CONTENTS_FIRST_VALID_ITEM + arrayIndex
+					entry._____INTERNAL_itemFlavorNetworkIndexMap[itemFlavor] <- fakeNetworkIndex
+					entry._____INTERNAL_itemFlavorGUIDNetworkIndexMap[ItemFlavor_GetGUID( itemFlavor )] <- fakeNetworkIndex
+					entry._____INTERNAL_networkIndexItemFlavorMap[fakeNetworkIndex] <- itemFlavor
+				}
+
+				if ( entry.networkTo == eLoadoutNetworking.PLAYER_EXCLUSIVE )
+				{
+					Assert( entry.networkVarName == "", "LoadoutEntry.networkVarName should only be provided if networkTo is PLAYER_GLOBAL." )
+				}
+				else if ( entry.networkTo == eLoadoutNetworking.SERVER_ONLY )
+				{
+					Assert( entry.networkVarName == "", "LoadoutEntry.networkVarName should only be provided if networkTo is PLAYER_GLOBAL." )
+					                                                                                                                            
+				}
+				else Assert( false, "Invalid networkTo setting on loadout slot \"" + entry.id + "\": " + entry.networkTo )
+			}
+		}
+
+		if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+		{
+			Assert( entry.validItemFlavorList.len() > 0, "No item flavors are registered that are valid for loadout slot '" + entry.id + "'" )
+			entry.validItemFlavorList_CopyForRandomizing = clone entry.validItemFlavorList
+			#if DEV
+				entry._____INTERNAL_DEV_validItemFlavorsForDev = clone entry.validItemFlavorList
+				                                    
+			#endif
+
+			#if !ASSERTING
+				                                                          
+				entry._____INTERNAL_networkIndexItemFlavorMap[SLOT_CONTENTS_SENTINEL_INVALID] <- entry.defaultItemFlavor
+				entry._____INTERNAL_networkIndexItemFlavorMap[SLOT_CONTENTS_SENTINEL_NOTREADY] <- entry.defaultItemFlavor
+			#endif
+
+			for ( int favoriteIdx = 0; favoriteIdx < entry.maxFavoriteCount; favoriteIdx++ )
+			{
+				entry._____INTERNAL_favoritePdefKeys.append( format( "%s_fav%02d", entry.id, favoriteIdx ) )
+			}
+		}
+
+		foreach ( LoadoutEntry dependencyEntry, table<ItemFlavor, bool> flavorSet in entry.isActiveConditions )
+		{
+			Assert( dependencyEntry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+			foreach ( ItemFlavor flavor, bool unused in flavorSet )
+			{
+				array<LoadoutEntry> dependentsForFlavor
+				if ( flavor in dependencyEntry._____INTERNAL_dependentsByItemFlav )
+					dependentsForFlavor = dependencyEntry._____INTERNAL_dependentsByItemFlav[flavor]
+				else
+					dependencyEntry._____INTERNAL_dependentsByItemFlav[flavor] <- dependentsForFlavor
+
+				dependentsForFlavor.append( entry )
+			}
+		}
+	}
+
+	#if DEV
+		if ( DEV_ShouldIgnorePersistence() )
+			Warning( "loadouts_ignore_persistence (ConVar) is enabled" )
+	#endif
+
+	fileLevel.isInitialized = true
+
+	               
+	  	                             
+	  		                                                                        
+	        
+}
+
+
+#if UI
+void function ShLoadouts_LevelShutdown()
+{
+	fileLevel.isInitialized = false
+}
+#endif
+
+
+
+                          
+                          
+                          
+                          
+                          
+LoadoutEntry function RegisterLoadoutSlot( int type, string id )
+{
+	Assert( !fileLevel.isInitialized, "Cannot call RegisterLoadoutSlot after initialization has finished." )
+	Assert( type == eLoadoutEntryType.ITEM_FLAVOR || type == eLoadoutEntryType.INTEGER )
+
+	#if ASSERTING
+		foreach ( LoadoutEntry otherEntry in fileLevel.loadoutSlotEntries )
+			Assert( id != otherEntry.id, "Found loadout slots with the same id: " + id )
+	#endif
+
+	LoadoutEntry entry
+	entry._____INTERNAL_entryIndex = fileLevel.loadoutSlotEntries.len()
+	entry.id = id
+	entry.type = type
+	fileLevel.loadoutSlotEntries.append( entry )
+
+	return entry
+}
+
+
+                                                                                                      
+bool function LoadoutSlot_IsReady( EHI playerEHI, LoadoutEntry entry )
+{
+	#if CLIENT
+		if ( !IsLocalClientEHIValid() )
+			return false
+	#endif
+
+	#if CLIENT || UI
+		if ( !IsLoadoutSlotCurrentlyAccessible( playerEHI, entry ) )
+			return false
+	#endif
+
+	return GetLoadoutSlotContentsIndexInternal( playerEHI, entry ) != SLOT_CONTENTS_SENTINEL_NOTREADY
+}
+
+
+ItemFlavor function LoadoutSlot_GetItemFlavor( EHI playerEHI, LoadoutEntry entry, bool ignoreFavoriting = false )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	int slotContentsIndex = SLOT_CONTENTS_SENTINEL_NOTREADY
+#if CLIENT || UI
+	if ( IsLoadoutSlotCurrentlyAccessible( playerEHI, entry ) )
+#endif
+	{
+		slotContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, entry, ignoreFavoriting )
+	}
+
+
+	Assert( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY, "LoadoutSlot_GetItemFlavor used on a loadout slot that was not ready." )
+
+	ItemFlavor flav = ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
+
+	if ( !ignoreFavoriting )
+	{
+		Assert( !ItemFlavor_IsTheFavoriteSentinel( flav ) )
+	}
+
+	return flav
+}
+
+
+ItemFlavor function LoadoutSlot_GetItemFlavor_ForValidation( EHI playerEHI, LoadoutEntry entry )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	int slotContentsIndex = GetLoadoutSlotContentsIndexFromPersistence( playerEHI, entry, eValidation.DONT_ASSERT )
+	if ( slotContentsIndex < SLOT_CONTENTS_FIRST_VALID_ITEM )
+		return entry.defaultItemFlavor
+	return ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
+}
+
+
+int function LoadoutSlot_GetInteger( EHI playerEHI, LoadoutEntry entry )
+{
+	Assert( entry.type == eLoadoutEntryType.INTEGER )
+
+	int slotContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, entry )
+	Assert( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY, "LoadoutSlot_GetItemFlavor used on a loadout slot that was not ready." )
+
+	return entry.minInteger + (slotContentsIndex - SLOT_CONTENTS_FIRST_VALID_ITEM)
+}
+
+#if SERVER
+                                                                                                      
+ 
+	                                        
+
+	                                            
+	                                                                                  
+	                                                                                                         
+ 
+#endif
+
+array<ItemFlavor> function LoadoutSlot_GetFavorites( EHI playerEHI, LoadoutEntry entry )
+{
+	#if CLIENT || UI
+		Assert( playerEHI == LocalClientEHI() )
+	#endif
+
+	array<ItemFlavor> items
+	foreach ( key in entry._____INTERNAL_favoritePdefKeys )
+	{
+		#if SERVER || CLIENT
+			#if CLIENT
+				Assert( playerEHI == LocalClientEHI() )
+			#endif
+			entity player = FromEHI( playerEHI )
+			int guid      = expect int(player.GetPersistentVar( "loadouts." + key ))
+		#endif
+
+		#if UI
+			Assert( playerEHI == LocalClientEHI() )
+			int guid = expect int(GetPersistentVar( "loadouts." + key ))
+		#endif
+
+		if ( guid != 0 && IsValidItemFlavorGUID( guid, eValidation.DONT_ASSERT ) )                                                                                                
+		{
+			ItemFlavor flav = GetItemFlavorByGUID( guid )
+			if ( IsItemFlavorGRXUnlockedForLoadoutSlot( playerEHI, flav ) )
+				items.append( flav )
+		}
+	}
+
+	return items
+}
+
+
+array<ItemFlavor> function LoadoutSlot_GetUsableFavorites( EHI playerEHI, LoadoutEntry entry )
+{
+	array<ItemFlavor> items = LoadoutSlot_GetFavorites( playerEHI, entry )
+
+	if ( items.len() == 0 )
+	{
+		items.append( entry.defaultItemFlavor )
+	}
+
+	return items
+}
+
+
+ItemFlavor function LoadoutSlot_WaitForItemFlavor( EHI playerEHI, LoadoutEntry entry )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	int slotContentsIndex
+	while ( true )
+	{
+		#if SERVER
+			                                                                                                                
+			  	                                                                         
+			   
+		#else
+			                                                                                                                
+			  	                                                             
+			   
+		#endif
+
+#if CLIENT || UI
+		if ( IsLoadoutSlotCurrentlyAccessible( playerEHI, entry ) )
+#endif
+		{
+			slotContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, entry )
+			if ( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY )
+				break
+		}
+
+		WaitSignal( WaitForEHISignalDummy( playerEHI ), "Loadout_" + entry.id + "_Ready" )
+	}
+
+	return ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
+}
+
+
+                                                                                                 
+   
+  	                                                     
+  	                                                                               
+  	                                                           
+  		           
+  
+  	                                                                              
+   
+  
+  
+                                                                                       
+   
+  	                                                 
+  
+  	                                                                               
+  	                                                           
+  		           
+  
+  	                                                                            
+   
+  
+  
+                                                                                                     
+   
+  	                                                     
+  	                     
+  	              
+  	 
+  		          
+  			                                                                                                                      
+  			  	                                                                         
+  			   
+  		     
+  			                                                                                                                      
+  			  	                                                             
+  			   
+  		      
+  		                                                                           
+  		                                                           
+  			     
+  
+  		                                                                              
+  	 
+  
+  	                                                                              
+   
+
+
+int function LoadoutSlot_GetRawStorageContents( EHI playerEHI, LoadoutEntry entry )
+{
+	int slotContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, entry )
+	Assert( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY, "LoadoutSlot_GetRawStorageContents used on a loadout slot that was not ready." )
+
+	if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+	{
+		ItemFlavor flav = ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
+		return ItemFlavor_GetGUID( flav )
+	}
+
+	return slotContentsIndex                             
+}
+
+
+void function AddCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer( LoadoutEntry entry, ItemFlavorLoadoutSlotDidChangeFuncType callback, bool shouldCheckRegistered = true )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	if ( shouldCheckRegistered )
+		Assert( !entry.changeCallbacks_ItemFlavor.contains( callback ), "Tried to add a callback that was already added" )
+	else if ( entry.changeCallbacks_ItemFlavor.contains( callback ) )
+		return
+
+	entry.changeCallbacks_ItemFlavor.append( callback )
+}
+
+
+void function AddCallback_IntegerLoadoutSlotDidChange_AnyPlayer( LoadoutEntry entry, IntegerLoadoutSlotDidChangeFuncType callback )
+{
+	Assert( entry.type == eLoadoutEntryType.INTEGER )
+	Assert( !entry.changeCallbacks_Integer.contains( callback ), "Tried to add a callback that was already added" )
+
+	entry.changeCallbacks_Integer.append( callback )
+}
+
+
+void function RemoveCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer( LoadoutEntry entry, ItemFlavorLoadoutSlotDidChangeFuncType callback, bool shouldCheckRegistered = true )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	if ( shouldCheckRegistered )
+		Assert( entry.changeCallbacks_ItemFlavor.contains( callback ), "Tried to remove a callback that was not added" )
+	else if ( !entry.changeCallbacks_ItemFlavor.contains( callback ) )
+		return
+
+	entry.changeCallbacks_ItemFlavor.fastremovebyvalue( callback )
+}
+
+
+void function RemoveCallback_IntegerLoadoutSlotDidChange_AnyPlayer( LoadoutEntry entry, IntegerLoadoutSlotDidChangeFuncType callback )
+{
+	Assert( entry.type == eLoadoutEntryType.INTEGER )
+	Assert( entry.changeCallbacks_Integer.contains( callback ), "Tried to remove a callback that was not added" )
+
+	entry.changeCallbacks_Integer.fastremovebyvalue( callback )
+}
+
+
+void function AddCallback_ItemFlavorLoadoutSlotDidChange_SpecificPlayer( EHI playerEHI, LoadoutEntry entry, ItemFlavorLoadoutSlotDidChangeFuncType callback, bool shouldCheckRegistered = true )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
+
+	array<ItemFlavorLoadoutSlotDidChangeFuncType> changeCallbacks
+	if ( entry._____INTERNAL_entryIndex in ehiss.itemFlavorLoadoutSlotChangedCallbacksMap )
+		changeCallbacks = ehiss.itemFlavorLoadoutSlotChangedCallbacksMap[entry._____INTERNAL_entryIndex]
+	else
+		ehiss.itemFlavorLoadoutSlotChangedCallbacksMap[entry._____INTERNAL_entryIndex] <- changeCallbacks
+
+	if ( shouldCheckRegistered )
+		Assert( !changeCallbacks.contains( callback ), "Tried to add a callback that was already added" )
+	else if ( changeCallbacks.contains( callback ) )
+		return
+
+	changeCallbacks.append( callback )
+}
+
+
+void function RemoveCallback_ItemFlavorLoadoutSlotDidChange_SpecificPlayer( EHI playerEHI, LoadoutEntry entry, ItemFlavorLoadoutSlotDidChangeFuncType callback, bool shouldCheckRegistered = true )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
+
+	array<ItemFlavorLoadoutSlotDidChangeFuncType> changeCallbacks
+	if ( entry._____INTERNAL_entryIndex in ehiss.itemFlavorLoadoutSlotChangedCallbacksMap )
+		changeCallbacks = ehiss.itemFlavorLoadoutSlotChangedCallbacksMap[entry._____INTERNAL_entryIndex]
+	else
+		ehiss.itemFlavorLoadoutSlotChangedCallbacksMap[entry._____INTERNAL_entryIndex] <- changeCallbacks
+
+	if ( shouldCheckRegistered )
+		Assert( changeCallbacks.contains( callback ), "Tried to remove a callback that was not added" )
+	else if ( !changeCallbacks.contains( callback ) )
+		return
+
+	changeCallbacks.fastremovebyvalue( callback )
+}
+
+
+                                                                       
+   
+  	                                              
+   
+
+
+#if SERVER
+                                                                                                  
+ 
+	                                                     
+	                                                         
+
+	                                                                        
+ 
+#endif
+
+
+#if SERVER
+                                                                                   
+ 
+	                                                 
+
+	                                                                                   
+	                                                                                                       
+
+	                                                                            
+ 
+#endif
+
+
+#if CLIENT || UI
+void function RequestSetItemFlavorLoadoutSlot_WithDuplicatePrevention( EHI playerEHI, array<LoadoutEntry> loadoutEntries, ItemFlavor itemFlavor, int slotIndex = 0 )
+{
+	if ( loadoutEntries.len() > 1 )
+	{
+		                                                                  
+		LoadoutEntry oldSlot
+		ItemFlavor itemInCurrentSlot = LoadoutSlot_GetItemFlavor( LocalClientEHI(), loadoutEntries[ slotIndex ] )
+
+		foreach ( loadoutEntry in loadoutEntries )
+		{
+			ItemFlavor item = LoadoutSlot_GetItemFlavor( LocalClientEHI(), loadoutEntry )
+			if ( item == itemFlavor )
+			{
+				RequestSetItemFlavorLoadoutSlot( LocalClientEHI(), loadoutEntry, itemInCurrentSlot )
+				break
+			}
+		}
+	}
+
+	RequestSetItemFlavorLoadoutSlot( LocalClientEHI(), loadoutEntries[ slotIndex ], itemFlavor )
+}
+void function RequestSetItemFlavorLoadoutSlot( EHI playerEHI, LoadoutEntry entry, ItemFlavor itemFlavor )
+{
+	Assert( playerEHI == LocalClientEHI(), "Tried to use RequestSetLoadoutSlot on a different player" )
+
+	                                 
+
+	int seqNum            = 0                    
+	int slotContentsIndex = ConvertItemFlavorToLoadoutSlotContentsIndex( entry, itemFlavor )
+
+	Remote_ServerCallFunction( "ClientCallback_loadouts_set", seqNum, entry._____INTERNAL_entryIndex, slotContentsIndex )
+}
+
+void function RequestSetItemFlavorFavoritesSlot( EHI playerEHI, LoadoutEntry entry, ItemFlavor itemFlavor, int favIndex )
+{
+	Assert( playerEHI == LocalClientEHI(), "Tried to use RequestSetItemFlavorFavoritesSlot on a different player" )
+
+	                                 
+
+	int slotContentsIndex = ConvertItemFlavorToLoadoutSlotContentsIndex( entry, itemFlavor )
+
+	Remote_ServerCallFunction( "ClientCallback_favorites_set", favIndex, entry._____INTERNAL_entryIndex, slotContentsIndex )
+
+	printf( "loadout favorites change request: %s = %s (%s)", entry.DEV_name, ItemFlavor_GetHumanReadableRef( itemFlavor ), ItemFlavor_GetGUIDString( itemFlavor ) )
+}
+
+void function RequestClearItemFlavorFavoritesSlot( EHI playerEHI, LoadoutEntry entry, int favIndex )
+{
+	Assert( playerEHI == LocalClientEHI(), "Tried to use RequestClearItemFlavorFavoritesSlot on a different player" )
+
+	                                 
+
+	Remote_ServerCallFunction( "ClientCallback_favorites_clear", favIndex, entry._____INTERNAL_entryIndex )
+
+	printf( "loadout favorites clear request: %d", favIndex )
+}
+
+void function RequestSetFavoredQuip( ItemFlavor quipToSet )
+{
+	ItemFlavor character
+	EHI playerEHI = LocalClientEHI()
+
+	#if CLIENT
+		character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
+	#elseif UI
+		character = GetTopLevelCustomizeContext()
+	#endif
+
+	foreach ( loadoutEntry in Loadout_FavoredQuipArrayForCharacter( character ) )
+	{
+		ItemFlavor item = LoadoutSlot_GetItemFlavor( LocalClientEHI(), loadoutEntry )
+		if ( CharacterQuip_IsTheEmpty( item ) )
+		{
+			RequestSetItemFlavorLoadoutSlot( playerEHI, loadoutEntry, quipToSet )
+			return
+		}
+	}
+
+	Assert( 0, "Attempted to set favored quip when no slots exist." )
+}
+
+void function RequestClearFavoredQuip( ItemFlavor quipToClear )
+{
+	ItemFlavor character
+	EHI playerEHI = LocalClientEHI()
+
+	#if CLIENT
+		character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
+	#elseif UI
+		character = GetTopLevelCustomizeContext()
+	#endif
+
+	foreach ( loadoutEntry in Loadout_FavoredQuipArrayForCharacter( character ) )
+	{
+		ItemFlavor item = LoadoutSlot_GetItemFlavor( LocalClientEHI(), loadoutEntry )
+		if ( item == quipToClear )
+		{
+			foreach ( validFlavor in GetValidItemFlavorsForLoadoutSlot( LocalClientEHI(), loadoutEntry ) )
+			{
+				if ( CharacterQuip_IsTheEmpty( validFlavor ) )
+				{
+					RequestSetItemFlavorLoadoutSlot( LocalClientEHI(), loadoutEntry, validFlavor )
+					break
+				}
+			}
+			break
+		}
+	}
+}
+#endif
+
+
+#if (CLIENT || UI) && DEV
+void function DEV_RequestSetItemFlavorLoadoutSlot( EHI playerEHI, LoadoutEntry entry, ItemFlavor itemFlavor )
+{
+	Assert( playerEHI == LocalClientEHI(), "Tried to use DEV_RequestSetLoadoutSlot on a different player" )
+
+	string commandString = "loadouts_devset " + entry.id + " " + ItemFlavor_GetHumanReadableRef( itemFlavor )
+
+	#if CLIENT
+		GetLocalClientPlayer().ClientCommand( commandString )      
+	#elseif UI
+		ClientCommand( commandString )       
+	#endif
+}
+#endif
+
+
+bool function IsItemFlavorValidForLoadoutSlot( EHI playerEHI, LoadoutEntry entry, ItemFlavor itemFlavor )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	                                              
+	return (itemFlavor in entry._____INTERNAL_itemFlavorNetworkIndexMap)
+}
+
+
+array<ItemFlavor> function GetValidItemFlavorsForLoadoutSlot( EHI playerEHI, LoadoutEntry entry )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	Assert( fileLevel.isInitialized )
+	return entry.validItemFlavorList
+}
+
+
+#if DEV
+array<ItemFlavor> function DEV_GetValidItemFlavorsForLoadoutSlotForDev( EHI playerEHI, LoadoutEntry entry )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	Assert( fileLevel.isInitialized )
+	return entry._____INTERNAL_DEV_validItemFlavorsForDev
+}
+#endif
+
+
+string function DEV_DescribeLoadoutSlot( LoadoutEntry entry, int slotContentsIndex, bool doId = true )
+{
+	string out = ""
+	if ( doId )
+	{
+		out += entry.id
+		out += ", "
+	}
+	if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY )
+	{
+		out += "~~not ready"
+	}
+	else if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_INVALID || slotContentsIndex < 0 )
+	{
+		out += format( "~~invalid:%d~~", slotContentsIndex )
+	}
+	else if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+	{
+		if ( IsValidLoadoutSlotContentsIndexForItemFlavor( entry, slotContentsIndex ) )
+		{
+			ItemFlavor flav = ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
+			out += DEV_DescItemFlavor( flav )
+		}
+		else
+		{
+			out += format("~~unmapped index:%d~~", slotContentsIndex)
+		}
+	}
+	else if ( entry.type == eLoadoutEntryType.INTEGER )
+	{
+		out += string(entry.minInteger + (slotContentsIndex - SLOT_CONTENTS_FIRST_VALID_ITEM))
+	}
+	return out
+}
+
+
+bool function IsItemFlavorUnlockedForLoadoutSlot( EHI playerEHI, LoadoutEntry entry, ItemFlavor itemFlavor, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false )
+{
+	#if CLIENT || UI
+		Assert( playerEHI == EHI_null || playerEHI == LocalClientEHI() )
+	#endif
+
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	if ( !ItemFlavor_IsAvailableInPlaylist( itemFlavor ) )
+		return false
+
+	if ( playerEHI == EHI_null )
+		return true
+
+	#if SERVER
+		                        
+		 
+			                             
+				           
+			                                                                                
+		 
+
+                          
+			                                                                                                                                                                            
+			                              
+			 
+				                                        
+					           
+			 
+                                
+	#endif
+
+	if ( entry.isItemFlavorUnlocked != null && !entry.isItemFlavorUnlocked( playerEHI, itemFlavor, shouldIgnoreOtherSlots ) )
+		return false
+
+	                                      
+
+	if ( shouldIgnoreGRX )
+		return true
+
+	return IsItemFlavorGRXUnlockedForLoadoutSlot( playerEHI, itemFlavor )
+}
+
+
+bool function IsItemFlavorGRXUnlockedForLoadoutSlot( EHI playerEHI, ItemFlavor itemFlavor )
+{
+#if SERVER
+	                                                                                    
+		            
+
+	                        
+	 
+		                             
+			           
+		                                                                                
+	 
+#endif
+
+	#if DEV
+		                                                    
+		if ( GetConVarBool( "loadouts_ignore_grx" ) )
+			return true
+	#endif
+
+	entity player = FromEHI( playerEHI )
+	if ( IsLobby() && !ItemFlavor_IsActiveForEdition( itemFlavor, GRX_GetPlayerEdition( player ) ) )
+		return false
+
+	return GRX_IsItemOwnedByPlayer_AllowOutOfDateData( itemFlavor, player )
+}
+
+
+array<ItemFlavor> function GetUnlockedItemFlavorsForLoadoutSlot( EHI playerEHI, LoadoutEntry entry, bool shouldIgnoreOtherSlots )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	array<ItemFlavor> flavors = []
+
+	foreach ( ItemFlavor validItemFlavor in entry.validItemFlavorList )
+	{
+		if ( IsItemFlavorUnlockedForLoadoutSlot( playerEHI, entry, validItemFlavor, false, shouldIgnoreOtherSlots ) )
+			flavors.append( validItemFlavor )
+	}
+
+	return flavors
+}
+
+
+ItemFlavor function GetRandomGoodItemFlavorForLoadoutSlot( EHI playerEHI, LoadoutEntry entry, bool onlyValidateGRX = false, array<ItemFlavor> exceptions = [] )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	array<ItemFlavor> randomListCopy
+	if ( exceptions.len() > 0 )
+	{
+		randomListCopy = clone entry.validItemFlavorList_CopyForRandomizing
+		for ( int i = 0; i < exceptions.len(); i++ )
+		{
+			if ( randomListCopy.contains( exceptions[ i ] ) )
+			{
+				randomListCopy.fastremovebyvalue( exceptions[ i ] )
+			}
+		}
+	}
+	else
+	{
+		randomListCopy = entry.validItemFlavorList_CopyForRandomizing
+	}
+	randomListCopy.randomize()
+
+	foreach ( ItemFlavor flav in randomListCopy )
+	{
+		if ( onlyValidateGRX )
+		{
+			if ( IsItemFlavorGRXUnlockedForLoadoutSlot( playerEHI, flav ) )
+				return flav
+		}
+		else
+		{
+			if ( IsItemFlavorUnlockedForLoadoutSlot( playerEHI, entry, flav ) )
+				return flav
+		}
+	}
+
+	Assert( false, "Could not find a random unlocked item flavor for loadout slot: " + entry.id )
+	unreachable
+}
+
+
+array<LoadoutEntry> function GetAllLoadoutSlots()
+{
+	return fileLevel.loadoutSlotEntries
+}
+
+
+
+                   
+                   
+                   
+                   
+                   
+#if SERVER && DEV
+                                    
+ 
+	                                                                                                                                                                                                   
+	                                                
+		                                                                                                                                                          
+
+	                                                                                                               
+	                                                            
+	                                                            
+	                                                              
+	 
+		                                                     
+		 
+			                                             
+			                                               
+		 
+		                                                         
+	 
+	                                               
+	 
+		                                         
+		                                                                 
+		 
+			                                     
+			                                                  
+			 
+				                                                                      
+			 
+		 
+	 
+	                       
+
+	                                         
+	                                                          
+	                           
+ 
+#endif
+
+
+#if SERVER
+                                                                                          
+ 
+	                                                             
+ 
+#endif
+
+
+#if SERVER && DEV
+                                               
+ 
+	                                                                              
+	                                                                            
+	 
+		                                                                                                    
+	 
+ 
+#endif
+
+
+#if SERVER || CLIENT || UI
+void function ShLoadouts_OnPlayerEHICreated( EHI player, bool thisCallIsHappeningBecauseTheUIVMReset = false )
+{
+	EHIScriptStruct ehiss = GetEHIScriptStruct( player )
+
+#if SERVER
+	       
+		                          
+		 
+			                                                                            
+			 
+				                                                         
+					                                                                                              
+			 
+		 
+	      
+
+	                                                                                         
+
+	                                   
+	 
+		                               
+		                                                                                                 
+	 
+	    
+	 
+		                                                                   
+
+		                                     
+		 
+			                                  
+		 
+	 
+#endif
+
+	#if CLIENT
+		ehiss.netVarsLastSeenValuesMap.resize( fileLevel.networkVars.len(), SLOT_CONTENTS_SENTINEL_NOTREADY )
+	#elseif UI
+		ehiss.loadoutSlotsLastSeenContentsMap.resize( fileLevel.loadoutSlotEntries.len(), SLOT_CONTENTS_SENTINEL_NOTREADY )
+	#endif
+
+	#if CLIENT
+		if ( thisCallIsHappeningBecauseTheUIVMReset )
+		{
+			foreach ( LoadoutEntry entry in fileLevel.loadoutSlotEntries )
+			{
+				if ( !IsLoadoutSlotCurrentlyNetworked( player, entry ) )
+					continue
+
+				int slotContentsIndex = GetLoadoutSlotContentsIndexInternal( player, entry )
+				RunUIScript( "ClientToUI_RefreshLoadoutSlot", player, entry._____INTERNAL_entryIndex, slotContentsIndex )
+			}
+		}
+	#endif
+}
+#endif
+
+
+#if SERVER
+                                                                                                                        
+ 
+	                                
+
+	                                                           
+		                                               
+			                                                
+
+		                                                            
+			                                           
+	   
+
+	                                                                   
+		                                                                
+
+	                                                    
+	                                                                                   
+	  	      
+
+	                                                     
+	                          
+	                          
+	       
+		                                                                  
+		                                                                                             
+		                                                                      
+
+		                                      
+		                                               
+	      
+
+	                                             
+	 
+		                 
+		                    
+	 
+
+	                                                                                                                                     
+ 
+
+                                                                                                                
+ 
+	                                       
+	                                                                                       
+	                                                                                                                
+
+	                                                    
+
+	                               
+	  	      
+
+	                                                     
+	                          
+	                          
+	       
+		                                                                  
+		                                                                                             
+		                                                                      
+
+		                                      
+		                                               
+	      
+
+	                                             
+	 
+		                 
+		                    
+	 
+
+	                                                                                                                          
+ 
+#endif
+
+
+#if SERVER
+                                                                     
+ 
+	                                           
+	 
+		                      
+			                                                                                                         
+		      
+	 
+
+	                                         
+		      
+
+	                                  
+ 
+#endif
+
+#if SERVER
+                                                       
+ 
+	                                                    
+	                         
+		      
+
+	                                      
+	                
+	 
+		                                                 
+	 
+	    
+	 
+		                                                                                                                                                      
+		                                                              
+		 
+			                                         
+				                                  
+		 
+	 
+
+	                                   
+	 
+		                                
+		                                                                                       
+	 
+	    
+	 
+		                                                          
+	 
+
+	                                   
+ 
+#endif
+
+
+#if CLIENT
+void function HandleLoadoutSlotNetworkVarChanged( EHI playerEHI, LoadoutEntry entry, int old, int new )
+{
+	if ( !fileLevel.isInitialized )
+		return
+
+	RefreshLoadoutSlotInternal( playerEHI, entry, null )
+}
+#endif
+
+
+bool function IsValidLoadoutSlotContentsIndex( LoadoutEntry entry, int slotContentsIndex, int validationBehavior = eValidation.DONT_ASSERT )
+{
+	if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR && slotContentsIndex in entry._____INTERNAL_networkIndexItemFlavorMap )
+	{
+		return true
+	}
+
+
+	if ( entry.type == eLoadoutEntryType.INTEGER )
+	{
+		int value = entry.minInteger + (slotContentsIndex - SLOT_CONTENTS_FIRST_VALID_ITEM)
+		if ( value >= entry.minInteger && value <= entry.maxInteger )
+		{
+			return true
+		}
+	}
+
+	Assert( validationBehavior != eValidation.ASSERT, "Invalid loadout slot contents index " + slotContentsIndex + " for " + entry.id )
+	return false
+}
+
+
+bool function IsValidLoadoutSlotContentsIndexForItemFlavor( LoadoutEntry entry, int slotContentsIndex )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_INVALID || slotContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY || slotContentsIndex < SLOT_CONTENTS_FIRST_VALID_ITEM )
+		return false
+
+	return (slotContentsIndex in entry._____INTERNAL_networkIndexItemFlavorMap)
+}
+
+
+ItemFlavor function ConvertLoadoutSlotContentsIndexToItemFlavor( LoadoutEntry entry, int slotContentsIndex )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	Assert( slotContentsIndex != SLOT_CONTENTS_SENTINEL_INVALID, "Invalid loadout slot contents index " + slotContentsIndex + " for " + entry.id )
+	Assert( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY )
+	Assert( slotContentsIndex >= SLOT_CONTENTS_FIRST_VALID_ITEM )
+	Assert( slotContentsIndex in entry._____INTERNAL_networkIndexItemFlavorMap )
+
+	return entry._____INTERNAL_networkIndexItemFlavorMap[slotContentsIndex]
+}
+
+
+int function ConvertItemFlavorToLoadoutSlotContentsIndex( LoadoutEntry entry, ItemFlavor itemFlavor )
+{
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	Assert( itemFlavor in entry._____INTERNAL_itemFlavorNetworkIndexMap )
+	return entry._____INTERNAL_itemFlavorNetworkIndexMap[itemFlavor]
+}
+
+
+int function GetLoadoutSlotContentsIndexInternal( EHI playerEHI, LoadoutEntry entry, bool ignoreFavoriting = false )
+{
+	#if SERVER
+		                                            
+			                                      
+
+		                                                       
+
+		                         
+			                                      
+
+		                                                                                                           
+	#elseif CLIENT || UI
+		if ( !EHIHasValidScriptStruct( playerEHI ) )
+			return SLOT_CONTENTS_SENTINEL_NOTREADY
+
+		int slotContentsIndex
+
+		                                                                                                                             
+
+		if ( entry.networkTo == eLoadoutNetworking.PLAYER_GLOBAL && playerEHI != LocalClientEHI() )
+		{
+			#if CLIENT
+				slotContentsIndex = GetLoadoutSlotContentsIndexFromNetworkVar( playerEHI, entry )
+			#elseif UI
+				slotContentsIndex = GetLoadoutSlotContentsIndexFromCache( playerEHI, entry )
+			#endif
+		}
+		else
+		{
+			Assert( playerEHI == LocalClientEHI(), "Tried to access a loadout slot of a different client (LoadoutEntry.networkTo on '" + entry.id + "' is not PLAYER_GLOBAL)" )
+			slotContentsIndex = GetLoadoutSlotContentsIndexFromPersistence( playerEHI, entry, eValidation.DONT_ASSERT, ignoreFavoriting )
+		}
+
+		if ( !IsContentsIndexValidForLoadoutSlot( playerEHI, entry, slotContentsIndex ) )
+		{
+			return SLOT_CONTENTS_SENTINEL_NOTREADY
+		}
+		return slotContentsIndex
+	#endif
+}
+
+
+#if SERVER || CLIENT || UI
+int function GetLoadoutSlotContentsIndexFromPersistence( EHI playerEHI, LoadoutEntry entry, int validationBehavior = eValidation.ASSERT, bool ignoreFavoriting = false )
+{
+#if DEV
+	if ( DEV_ShouldIgnorePersistence() )
+	{
+		if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+		{
+			ItemFlavor defaultItemFlavor = GetDefaultItemFlavorForLoadoutSlot( playerEHI, entry )
+			return ConvertItemFlavorToLoadoutSlotContentsIndex( entry, defaultItemFlavor )
+		}
+		else if ( entry.type == eLoadoutEntryType.INTEGER )
+		{
+			return SLOT_CONTENTS_FIRST_VALID_ITEM + (entry.defaultInteger - entry.minInteger)
+		}
+	}
+#endif
+
+	#if SERVER || CLIENT
+		entity player         = FromEHI( playerEHI )
+		int slotContentsIndex = expect int(player.GetPersistentVar( "loadouts." + entry.id ))
+	#elseif UI
+		if ( !IsPersistenceAvailable() )
+			return SLOT_CONTENTS_SENTINEL_NOTREADY
+
+		Assert( playerEHI == LocalClientEHI() )
+		int slotContentsIndex = expect int(GetPersistentVar( "loadouts." + entry.id ))
+	#endif
+
+	if ( slotContentsIndex < 0 )                                 
+	{
+		if ( ignoreFavoriting )
+			return ConvertItemFlavorToLoadoutSlotContentsIndex( entry, entry.favoriteItemFlavor )
+		else
+			slotContentsIndex *= -1
+	}
+
+	if ( slotContentsIndex == PERSISTENT_DATA_INVALID_SENTINEL )
+	{
+		#if SERVER
+			                                                                                                                                                             
+		#elseif CLIENT || UI
+			                                                                               
+		#endif
+		return SLOT_CONTENTS_SENTINEL_INVALID
+	}
+
+	if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+	{
+		if ( !(slotContentsIndex in entry._____INTERNAL_itemFlavorGUIDNetworkIndexMap) )
+		{
+			#if SERVER
+				                                                                                                                                                             
+			#elseif CLIENT || UI
+				                                                                               
+			#endif
+			return SLOT_CONTENTS_SENTINEL_INVALID
+		}
+
+		return entry._____INTERNAL_itemFlavorGUIDNetworkIndexMap[slotContentsIndex]
+	}
+	else if ( entry.type == eLoadoutEntryType.INTEGER )
+	{
+		int value = entry.minInteger + (slotContentsIndex - SLOT_CONTENTS_FIRST_VALID_ITEM)
+		if ( value < entry.minInteger || value > entry.maxInteger )
+		{
+			#if SERVER
+				                                                                                                                                                             
+			#elseif CLIENT || UI
+				                                                                               
+			#endif
+			return SLOT_CONTENTS_SENTINEL_INVALID
+		}
+
+		return slotContentsIndex
+	}
+
+	return SLOT_CONTENTS_SENTINEL_INVALID
+}
+#endif
+
+
+#if SERVER || CLIENT
+int function GetLoadoutSlotContentsIndexFromNetworkVar( EHI playerEHI, LoadoutEntry entry, int validationBehavior = eValidation.ASSERT )
+{
+	#if SERVER
+		                                    
+		                                                                      
+	#elseif CLIENT
+		return GetEHIScriptStruct( playerEHI ).netVarsLastSeenValuesMap[entry._____INTERNAL_nvIndex]
+	#endif
+}
+#endif
+
+
+#if UI
+int function GetLoadoutSlotContentsIndexFromCache( EHI playerEHI, LoadoutEntry entry, int validationBehavior = eValidation.ASSERT )
+{
+	return GetEHIScriptStruct( playerEHI ).loadoutSlotsLastSeenContentsMap[entry._____INTERNAL_entryIndex]
+}
+#endif
+
+
+#if SERVER
+                                                                                                                             
+ 
+	                                        
+
+	                                                        
+
+	                                                          
+
+	       
+		                                    
+		 
+			                                                                                                                
+			                        
+		 
+	      
+
+	                                    
+	                                                                                                         
+
+	                                                                                                                                         
+	  	                                                                                                                     
+	   
+
+	                                             
+	                                                    
+
+	                        
+ 
+
+                                                                                                                 
+ 
+	                                      
+	       
+		                
+		 
+			                                    
+			                                                               
+			 
+				                                                                                                    
+			 
+		 
+	      
+
+	                                                        
+
+	                                                     
+	 
+		                                                                                      
+		                                                   
+
+		                          
+		 
+			                                                                                 
+			                                            
+			 
+				                                                
+				                                            
+
+				                           
+			 
+		 
+
+		                                                  
+	 
+
+	       
+		                                    
+		 
+			                                                                                                                
+			                        
+		 
+	      
+
+	                                    
+	                                                                    
+
+	                                                                                                                                         
+	  	                                                                                                                     
+	   
+
+	                                                    
+
+	                        
+ 
+
+                                                                                                         
+ 
+	                                        
+
+	       
+		                                    
+		 
+			                                                                                                                
+			      
+		 
+	      
+
+	                                    
+
+	               
+	                                                  
+	 
+		                                                                                                      
+	 
+
+	                 
+
+	                        
+	                                      
+	 
+		                   
+			                               
+	 
+
+	                                                  
+	 
+		            
+
+		                              
+		 
+			                       
+		 
+
+		                                                                                        
+	 
+
+	                                                                                                                                         
+	  	                                                                                                                     
+	   
+
+	                                             
+	                                                    
+ 
+
+                                                                            
+ 
+	                                                                              
+
+	                                                
+		           
+
+	                                                                   
+
+	                                                                     
+
+	                                
+		           
+
+	                                                                           
+
+	            
+ 
+
+                                                                                         
+ 
+	                 
+		            
+
+	                                                                              
+
+	                                                
+		            
+
+	                                                                           
+
+	           
+ 
+#endif
+
+
+#if SERVER
+                                                                                                               
+ 
+	       
+		                                    
+		 
+			                                                                                                                
+			      
+		 
+	      
+
+	                                                                                                                                                            
+
+	                                      
+
+	                                    
+	                                                                 
+
+	                                                                                                                                      
+	  	                                                                                                                     
+	   
+
+	                                                    
+ 
+#endif
+
+
+#if SERVER || CLIENT || UI
+void function RefreshLoadoutSlotInternal( EHI playerEHI, LoadoutEntry entry, table<LoadoutEntry, bool> ornull refreshedSlotsSet )
+{
+	if ( refreshedSlotsSet != null )
+	{
+		expect table<LoadoutEntry, bool>(refreshedSlotsSet)
+		if ( entry in refreshedSlotsSet )
+			return
+		refreshedSlotsSet[entry] <- true
+	}
+	#if CLIENT || UI
+		LocalClientEHI()                                                                               
+	#endif
+
+	#if SERVER
+		                                                       
+		                         
+			      
+
+		                       
+		   
+		  	                                                                        
+		  		      
+		   
+	#endif
+
+	int slotContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, entry )
+
+	#if SERVER
+		                                    
+		                                                          
+		 
+			                                                          
+			 
+				             
+					                                                                                                               
+						                                                                                         
+							                                                                                              
+							                                                                                                                               
+				      
+
+				                                
+
+				                                                                            
+				                                                                                
+
+				                                    
+					                                                                                                                                             
+			 
+			                                                                  
+			 
+				                                                       
+				                                                                                       
+				                                                                                                                                             
+			 
+		 
+	#elseif CLIENT
+		entity player = FromEHI( playerEHI )
+		                                                                                                                                                                          
+		RunUIScript( "ClientToUI_RefreshLoadoutSlot", playerEHI, entry._____INTERNAL_entryIndex, slotContentsIndex )
+	#endif
+
+	if ( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY && slotContentsIndex != SLOT_CONTENTS_SENTINEL_INVALID )
+	{
+		#if SERVER
+			                                                                                                              
+			  	                                                                                                    
+			   
+		#else
+			                                                                                                              
+			  	                                                                                        
+			   
+		#endif
+		Signal( GetEHISignalDummy( playerEHI ), "Loadout_" + entry.id + "_Ready" )
+	}
+
+	if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY || slotContentsIndex == SLOT_CONTENTS_SENTINEL_INVALID )
+	{
+		  
+	}
+	else if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+	{
+		ItemFlavor slotContents = ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
+
+		if ( IsLoadoutSlotActive( playerEHI, entry ) )
+		{
+			CallItemFlavorLoadoutSlotDidChangeCallbacks( playerEHI, entry, slotContents )
+
+			#if SERVER || CLIENT                                                                                                       
+				if ( slotContents in entry._____INTERNAL_dependentsByItemFlav )
+				{
+					foreach ( LoadoutEntry dependentEntry in entry._____INTERNAL_dependentsByItemFlav[slotContents] )
+					{
+						if ( IsLoadoutSlotActive( playerEHI, dependentEntry, entry ) )
+						{
+							RefreshLoadoutSlotInternal( playerEHI, dependentEntry, refreshedSlotsSet )
+						}
+					}
+				}
+			#endif
+		}
+	}
+	else if ( entry.type == eLoadoutEntryType.INTEGER )
+	{
+		int value = entry.minInteger + (slotContentsIndex - SLOT_CONTENTS_FIRST_VALID_ITEM)
+		if ( IsLoadoutSlotActive( playerEHI, entry ) )
+			CallIntegerLoadoutSlotDidChangeCallbacks( playerEHI, entry, value )
+	}
+}
+#endif
+
+
+#if CLIENT
+void function ServerToClient_LoadoutSlotDidChange( EHI playerEHI, int entryIndex )
+{
+	Assert( playerEHI == LocalClientEHI() )
+
+	LoadoutEntry entry = fileLevel.loadoutSlotEntries[entryIndex]
+
+	RefreshLoadoutSlotInternal( playerEHI, entry, null )
+}
+#endif
+
+
+#if UI
+void function ClientToUI_RefreshLoadoutSlot( EHI playerEHI, int entryIndex, int slotContentsIndex )
+{
+	if ( !fileLevel.isInitialized )
+		return                                                    
+
+	LoadoutEntry entry    = fileLevel.loadoutSlotEntries[entryIndex]
+	EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
+	ehiss.loadoutSlotsLastSeenContentsMap[entryIndex] = slotContentsIndex
+
+	RefreshLoadoutSlotInternal( playerEHI, entry, null )
+}
+
+
+array<ItemFlavor> function TEMP_FilterItemsForGRX( EHI playerEHI, array<ItemFlavor> items )
+{
+	array<ItemFlavor> filteredItems
+
+	foreach ( itemFlavor in items )
+	{
+		if ( ItemFlavor_GetGRXMode( itemFlavor ) == eItemFlavorGRXMode.REGULAR || ItemFlavor_GetGRXMode( itemFlavor ) == eItemFlavorGRXMode.OWNERSHIP_TARGET )
+		{
+			if ( !GRX_AreOffersReady() )
+				continue
+
+			bool shouldShow = false
+			if ( GRX_IsItemCraftable( itemFlavor ) )
+				shouldShow = true
+
+			if ( GRX_IsItemOwnedByPlayer( itemFlavor ) )
+				shouldShow = true
+
+			array<GRXScriptOffer> offers = GRX_GetItemDedicatedStoreOffers( itemFlavor, "recolor" )
+			foreach ( offer in offers )
+			{
+				ItemFlavor ornull prereqFlav = offer.prereq
+				if ( prereqFlav == null )
+					continue
+
+				expect ItemFlavor( prereqFlav )
+
+				if ( offer.prices.len() != 1 )
+					continue
+
+				ItemFlavorBag price = offer.prices[0]
+				if ( price.flavors.len() != 1 )
+					continue
+
+				if ( price.flavors[0] != GRX_CURRENCIES[GRX_CURRENCY_CREDITS] )
+					continue
+
+				shouldShow = GRX_IsInventoryReady() && GRX_IsItemOwnedByPlayer( prereqFlav )
+			}
+
+			if ( !shouldShow )
+				continue
+		}
+
+		filteredItems.append( itemFlavor )
+	}
+
+	return filteredItems
+}
+
+
+array<ItemFlavor> function FilterItemsForVisibility( EHI playerEHI, array<ItemFlavor> items )
+{
+	array<ItemFlavor> filteredItems
+
+	entity player = FromEHI( playerEHI )
+
+	foreach ( item in items )
+	{
+		if ( ItemFlavor_ShouldBeVisible( item, player ) )
+		{
+			filteredItems.append( item )
+		}
+	}
+
+	return filteredItems
+}
+
+array<ItemFlavor> function GetLoadoutItemsSortedForMenu( LoadoutEntry entry, int functionref( ItemFlavor ) sortOrdinalFunc )
+{
+	EHI playerEHI           = LocalClientEHI()
+	array<ItemFlavor> items = GetValidItemFlavorsForLoadoutSlot( playerEHI, entry )
+
+	if ( GetCurrentPlaylistVarBool( "filter_uncraftable_items", true ) )
+		items = TEMP_FilterItemsForGRX( playerEHI, items )
+
+	items = FilterItemsForVisibility( playerEHI, items )
+
+	ItemFlavor equippedItem
+	if ( LoadoutSlot_IsReady( playerEHI, entry ) )
+		equippedItem = LoadoutSlot_GetItemFlavor( playerEHI, entry, true )
+
+	items.sort( int function( ItemFlavor a, ItemFlavor b ) : ( playerEHI, equippedItem, sortOrdinalFunc, entry ) {
+		                                                          
+		                                                          
+		                              
+		  	         
+		                                   
+		  	        
+
+		bool aIsEquipped = (a == equippedItem)
+		bool bIsEquipped = (b == equippedItem)
+		if ( aIsEquipped && !bIsEquipped )
+			return -1
+		else if ( bIsEquipped && !aIsEquipped )
+			return 1
+
+		int itemType = ItemFlavor_GetType( a )
+
+		if ( ItemFlavor_IsTheFavoriteSentinel( equippedItem ) )
+		{
+			array<ItemFlavor> favs = LoadoutSlot_GetFavorites( playerEHI, entry )
+			bool aInFavs           = favs.contains( a )
+			bool bInFavs           = favs.contains( b )
+			if ( aInFavs && !bInFavs )
+				return -1
+			else if ( !aInFavs && bInFavs )
+				return 1
+		}
+
+		if ( ItemFlavor_IsTheFavoriteSentinel( a ) && !ItemFlavor_IsTheFavoriteSentinel( b ) )
+			return -1
+		else if ( !ItemFlavor_IsTheFavoriteSentinel( a ) && ItemFlavor_IsTheFavoriteSentinel( b ) )
+			return 1
+
+		if ( ItemTypeHasDefault( itemType ) )
+		{
+			if ( ItemFlavor_IsTheDefault( a ) && !ItemFlavor_IsTheDefault( b ) )
+				return -1
+			else if ( !ItemFlavor_IsTheDefault( a ) && ItemFlavor_IsTheDefault( b ) )
+				return 1
+		}
+		if ( ItemTypeHasRandom( itemType ) )
+		{
+			if ( ItemFlavor_IsTheRandom( a ) && !ItemFlavor_IsTheRandom( b ) )
+				return -1
+			else if ( !ItemFlavor_IsTheRandom( a ) && ItemFlavor_IsTheRandom( b ) )
+				return 1
+		}
+
+		int aQuality = ItemFlavor_HasQuality( a ) ? ItemFlavor_GetQuality( a ) : -1
+		int bQuality = ItemFlavor_HasQuality( b ) ? ItemFlavor_GetQuality( b ) : -1
+		if ( aQuality > bQuality )
+			return -1
+		else if ( aQuality < bQuality )
+			return 1
+
+		if ( itemType == eItemType.gladiator_card_intro_quip || itemType == eItemType.gladiator_card_kill_quip || itemType == eItemType.weapon_charm )
+			return SortStringAlphabetize( Localize( ItemFlavor_GetLongName( a ) ), Localize( ItemFlavor_GetLongName( b ) ) )
+
+		return sortOrdinalFunc( a ) - sortOrdinalFunc( b )
+	} )
+
+	return items
+}
+#endif      
+
+
+                   
+                                               
+   
+  	                               
+  		      
+  
+  	                
+  	                                            
+  	 
+  		                                                             
+  		 
+  			                                                                                              
+  				                                                          
+  		 
+  	 
+   
+        
+
+
+bool function IsLoadoutSlotActive( EHI playerEHI, LoadoutEntry entry, LoadoutEntry ornull entryToNotCheck = null )
+{
+	#if CLIENT || UI
+		if ( playerEHI != LocalClientEHI() && entry.networkTo != eLoadoutNetworking.PLAYER_GLOBAL )
+			return false
+	#endif
+
+	foreach ( LoadoutEntry dependency, table<ItemFlavor, bool> flavorSet in entry.isActiveConditions )
+	{
+		if ( dependency == entryToNotCheck )
+			continue
+
+		if ( !IsLoadoutSlotActive( playerEHI, dependency ) )
+			return false
+
+		int dependencyContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, dependency )
+		if ( dependencyContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY )
+			return false
+
+		ItemFlavor dependencyContents = ConvertLoadoutSlotContentsIndexToItemFlavor( dependency, dependencyContentsIndex )
+		if ( !(dependencyContents in flavorSet) )
+			return false
+	}
+
+	return true
+}
+
+
+bool function IsLoadoutSlotCurrentlyNetworked( EHI playerEHI, LoadoutEntry entry, LoadoutEntry ornull entryToNotCheck = null )
+{
+	#if CLIENT || UI
+		if ( playerEHI != LocalClientEHI() && entry.networkTo != eLoadoutNetworking.PLAYER_GLOBAL )
+			return false
+	#endif
+
+	if ( entry.networkTo == eLoadoutNetworking.SERVER_ONLY )
+		return false
+
+	return IsLoadoutSlotActive( playerEHI, entry, entryToNotCheck )
+}
+
+
+bool function IsLoadoutSlotCurrentlyAccessible( EHI playerEHI, LoadoutEntry entry, LoadoutEntry ornull entryToNotCheck = null )
+{
+	#if SERVER
+		           
+	#elseif CLIENT || UI
+		if ( playerEHI == LocalClientEHI() )
+		{
+			if ( entry.networkTo != eLoadoutNetworking.SERVER_ONLY )
+				return true
+		}
+
+		if ( entry.networkTo != eLoadoutNetworking.PLAYER_GLOBAL )
+		{
+			return false
+		}
+
+		return IsLoadoutSlotActive( playerEHI, entry, entryToNotCheck )
+	#endif
+}
+
+
+void function CallItemFlavorLoadoutSlotDidChangeCallbacks( EHI playerEHI, LoadoutEntry entry, ItemFlavor slotContents )
+{
+	foreach ( ItemFlavorLoadoutSlotDidChangeFuncType callback in entry.changeCallbacks_ItemFlavor )
+		callback( playerEHI, slotContents )
+
+	EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
+	if ( entry._____INTERNAL_entryIndex in ehiss.itemFlavorLoadoutSlotChangedCallbacksMap )
+	{
+		foreach ( ItemFlavorLoadoutSlotDidChangeFuncType callback in ehiss.itemFlavorLoadoutSlotChangedCallbacksMap[entry._____INTERNAL_entryIndex] )
+			callback( playerEHI, slotContents )
+	}
+}
+
+
+void function CallIntegerLoadoutSlotDidChangeCallbacks( EHI playerEHI, LoadoutEntry entry, int value )
+{
+	foreach ( IntegerLoadoutSlotDidChangeFuncType callback in entry.changeCallbacks_Integer )
+		callback( playerEHI, value )
+}
+
+
+ItemFlavor function GetDefaultItemFlavorForLoadoutSlot( EHI playerEHI, LoadoutEntry entry )
+{
+	return entry.defaultItemFlavor
+}
+
+
+#if SERVER || CLIENT || UI
+bool function IsContentsIndexValidForLoadoutSlot( EHI playerEHI, LoadoutEntry entry, int slotContentsIndex, int validationBehavior = eValidation.DONT_ASSERT )
+{
+	if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_INVALID )
+	{
+		Assert( false || validationBehavior != eValidation.ASSERT, "Tried to assign invalid value to loadout slot." )
+		return false
+	}
+	else if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY )
+	{
+		Assert( false || validationBehavior != eValidation.ASSERT, "Tried to assign invalid value to loadout slot." )
+		return false
+	}
+	else
+	{
+		if ( !IsValidLoadoutSlotContentsIndex( entry, slotContentsIndex, validationBehavior ) )
+		{
+			                      
+			return false
+		}
+
+		if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+		{
+			ItemFlavor itemFlavor = ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
+			if ( !IsItemFlavorValidForLoadoutSlot( playerEHI, entry, itemFlavor ) )
+			{
+				Assert( false || validationBehavior != eValidation.ASSERT, "Tried to assign invalid item value to loadout slot." )
+				return false
+			}
+			return true
+		}
+		else if ( entry.type == eLoadoutEntryType.INTEGER )
+		{
+			return true
+		}
+	}
+
+	Assert( false || validationBehavior != eValidation.ASSERT, "Value is invalid for loadout slot." )
+	return false
+}
+#endif
+
+
+#if SERVER
+                                                                                                                                                                              
+ 
+	                                   
+		                                              
+
+	                                                       
+	                         
+
+	                                                                                
+
+	                                              
+	 
+		                                                                                                                              
+		                                            
+			                         
+	 
+
+	                        
+
+	                                                                                                                           
+		        
+
+	                                  
+	                                                
+	                                                                                  
+	 
+		                                                  
+		 
+			                                                                 
+			 
+				                                                                                                  
+			 
+		 
+		                                                                 
+	 
+	                                   
+ 
+#endif
+
+
+#if SERVER
+                                                                                                                                                            
+ 
+	                     
+
+	                                    
+
+	                                                                                                               
+
+	                                                                       
+
+	                                                       
+
+	                                                                                 
+	 
+		                                 
+			                                                                                                                                            
+
+		                  
+	 
+	                                                       
+	 
+		                                                                                               
+
+		                          
+		 
+			                                                                                               
+			 
+				                                 
+					                                                                                                                                           
+
+				                  
+			 
+		 
+		    
+		 
+			                                                                      
+			 
+				                                 
+					                                                                                                                                           
+
+				                  
+			 
+		 
+	 
+
+	                  
+	 
+		                                 
+		                                   
+			                                                                                                    
+
+		                                                  
+		 
+			                     
+			                           
+			 
+				                            
+				                                                                
+				 
+					                             
+						                                                                      
+					                                 
+						                                                                                                           
+					                                                         
+					 
+						                                                                                                                    
+						        
+					 
+					    
+					 
+						                                                                
+						                                                        
+						                        
+					 
+				 
+				                              
+			 
+       
+			                                                                    
+			 
+				                                                                                                        
+				                                                                                                                     
+			 
+      
+			    
+			 
+				                                                                   
+				                                                              
+				 
+					                                                                                               
+						                                                                                                        
+				 
+				                                                                                                                      
+			 
+
+			                                                                        
+			                                                                                    
+			               
+		 
+		                                                   
+		 
+			                        
+			                           
+			 
+				                       
+				                                                                  
+					                                
+				                                          
+			 
+       
+			                                                                    
+			 
+				                                                                         
+				                                                                                  
+			 
+      
+			    
+			 
+				                                                                                                 
+			 
+
+			                                        
+			                                                                               
+			               
+		 
+	 
+
+	                                          
+	 
+		                                                     
+		                                                                                                            
+		                                                                                                            
+		                                          
+		 
+			                                                                                     
+			               
+		 
+	 
+
+	               
+ 
+#endif
+
+
+#if SERVER || CLIENT || UI
+array<string> ornull function GetLoadoutSlotForceResetTo( LoadoutEntry entry )
+{
+	                                                                                                                                   
+	string playlistVarVal = GetCurrentPlaylistVarString( format( "loadout_slot_%s_force_reset_to", entry.id ), "" )
+
+	if ( playlistVarVal == "" )
+		playlistVarVal = GetCurrentPlaylistVarString( format( "loadout_slot_%s_force_reset_to", entry.DEV_category ), "" )                                       
+
+	array<string> refs = split( playlistVarVal, " " )
+	if ( refs.len() == 0 )
+		return null
+
+	printf( "Warning: loadout slot '%s' is being force reset to one of '%s'.", entry.id, playlistVarVal )
+	return refs
+}
+#endif
+
+
+bool function IsLoadoutSlotLocked( EHI playerEHI, LoadoutEntry entry )
+{
+	if ( entry.isSlotLocked == null )
+		return false
+
+	#if DEV
+		if ( GetCurrentPlaylistVarBool( "dev_loadout_changeable_at_any_time", false ) )
+			return false
+	#endif
+
+                       
+	if ( GetCurrentPlaylistVarBool( "winter_express_loadout_changeable_at_anytime", false ) )
+		return false
+       
+
+                         
+		if ( GetCurrentPlaylistVarBool( "control_loadout_changeable_at_anytime", false ) )
+			return false
+       
+
+                        
+                                                                                   
+               
+       
+
+	return entry.isSlotLocked( playerEHI )
+}
+
+
+#if SERVER
+                                                                                           
+ 
+	                               
+
+	                                                             
+	 
+		                                                                                                                                                    
+		      
+	 
+	                                                             
+
+	                                      
+	                                         
+		      
+
+	                                                                         
+ 
+
+                                                                                                                
+ 
+	                               
+
+	                                                             
+	 
+		                                                                                                                                                    
+		      
+	 
+	                                                             
+
+	                                              
+	 
+		                                                                                                 
+		      
+	 
+
+	                                                                                                     
+	 
+		                             
+		      
+	 
+
+	                                                                                               
+	                                                                          
+	 
+		                                                                                    
+		                                                                                                                                                                          
+		                                                                                                                                                                   
+		      
+	 
+
+	                                      
+	                                         
+		      
+
+	                                                                                   
+
+	      
+ 
+
+                                                                                                             
+ 
+	                               
+
+	                                                               
+	 
+		                                                                                                                                                   
+		      
+	 
+	                                                             
+
+	                                              
+	 
+		                                                                                                
+		      
+	 
+
+	                                                                                                     
+	 
+		                             
+		      
+	 
+
+	                                                                                               
+	                                                                          
+	 
+		                                                                                    
+		                                                                                                                                                                         
+		                                                                                                                                                                  
+		      
+	 
+
+	                                                                        
+ 
+#endif
+
+#if SERVER && DEV
+                                                                                       
+ 
+	                  
+	                                    
+	                                            
+	  
+	                                                                   
+
+	                                    
+	                                    
+	                                                                                 
+	 
+		                                                                                                                                                                                                                
+		      
+	 
+
+	                                                                                                           
+	                                            
+	 
+		                               
+
+		                        
+		                                   
+		                                                                      
+		 
+			                     
+			                                  
+				               
+			                                                         
+			 
+				                                                
+					                                                         
+				    
+					                                                          
+			 
+			               
+				                                       
+		 
+		                                 
+		 
+			                                                                                      
+			        
+		 
+
+		                                         
+
+		                                   
+
+		                                                  
+
+		                                                 
+		 
+			                     
+			                     
+			                                        
+			 
+				                                                                   
+			 
+			                                            
+			 
+				                                                        
+				                                                            
+			 
+			                                                                            
+			 
+				                                                   
+
+				                                                                   
+				                                   
+				 
+					                                                
+						        
+
+					                                     
+					     
+				 
+
+				                                                                        
+				                                                                                                                   
+			 
+			                                                                   
+			 
+				                                                                  
+			 
+			    
+			 
+				                                                                                                               
+				        
+			 
+
+			                                                                     
+				                                                  
+			    
+				                                                                                    
+
+			                                                                                                          
+			 
+				                                                                                                                                                    
+				        
+			 
+
+			                                                
+
+			                                                                       
+
+			                                                                        
+
+			                                                                                           
+		 
+
+		                                                                                    
+	 
+ 
+#endif
+
+#if SERVER
+                                                                       
+ 
+	                                   
+		                                                                                                                
+	    
+		                                                                                                         
+ 
+#endif
+
+#if SERVER
+                                                                              
+ 
+	                                           
+	                               
+	                                                              
+	 
+		                                                                       
+			                                                                                                  
+
+		                   
+		                              
+			                                          
+
+		               
+			        
+
+		              
+	 
+ 
+#endif

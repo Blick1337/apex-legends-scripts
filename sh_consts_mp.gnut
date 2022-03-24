@@ -1,0 +1,15 @@
+  
+
+global const bool THIRD_PERSON_KILL_REPLAY_ALWAYS = false
+global const bool THIRD_PERSON_KILL_REPLAY_PROJECTILES = true
+global const float THIRD_PERSON_KILL_REPLAY_PROJECTILES_MINTIME = 0.3
+
+global struct ShGlobalsMP
+{
+}
+
+global ShGlobalsMP shGlobalMP
+
+
+global const DEFAULT_PILOT_SETTINGS = $"settings/player/mp/pilot_survival_gunner.rpak"
+

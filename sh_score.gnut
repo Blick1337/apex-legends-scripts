@@ -1,0 +1,334 @@
+global function ScoreShared_Init
+
+global function ScoreEvent_FromId
+#if SERVER
+                                          
+#endif
+
+global function GetScoreEvent
+
+global function ScoreEvent_Enable
+global function ScoreEvent_Disable
+global function ScoreEvent_IsEnabled
+global function ScoreEvent_GetEventName
+global function ScoreEvent_SetGameModeRelevant
+global function ScoreEvent_HasDisplayType
+global function ScoreEvent_GetDisplayType
+global function ScoreEvent_SetDisplayType
+global function ScoreEvent_GetMedalIcon
+global function ScoreEvent_SetMedalIcon
+global function ScoreEvent_GetEventId
+global function ScoreEvent_SetPointValue
+global function ScoreEvent_GetPointValue
+global function ScoreEvent_SetSplashText
+global function ScoreEvent_GetSplashText
+global function ScoreEvent_SetMedalText
+global function ScoreEvent_GetMedalText
+global function ScoreEvent_SetPointType
+global function ScoreEvent_GetPointType
+global function ScoreEvent_SetConversation
+global function ScoreEvent_GetConversation
+global function ScoreEvent_GetPriority
+global function ScoreEvent_HasConversation
+global function ScoreEvent_GetConversationDelay
+global function ScoreEvent_SetConversationDelay
+global function ScoreEvent_GetBurnPointValue
+global function ScoreEvent_SetBurnPointValue
+global function ScoreEvent_GetBurnMeterChallengeType
+global function ScoreEvent_IsEarnOverridden
+
+global function SetScoreEventOverrideFunc
+
+global enum eEventDisplayType
+{
+	HIDDEN		= 1 << 0,
+	CENTER 		= 1 << 1,
+	MEDAL		= 1 << 2,
+	CALLINGCARD = 1 << 3,
+	ATTRITION	= 1 << 4,
+	BIG			= 1 << 5,
+	GAMEMODE	= 1 << 6,
+	CHALLENGE	= 1 << 7,
+	MEDAL_FORCED= 1 << 8,
+	SHOW_SCORE	= 1 << 9
+}
+
+global struct ScoreEvent
+{
+	int		eventId = -1
+
+	bool	enabled = true
+
+	string	name = ""
+	string 	splashText = ""
+	string	medalText = ""
+	int		pointValue
+	int		pointType
+	int		displayType
+	asset	medalIcon = $""
+
+	string	conversation = ""
+	int		conversationPriority
+
+	float	conversationDelay = 0.0
+
+	int		burnPointValue = 0
+
+	bool 	eventOverridden = false
+	float 	earnMeterOwnValue = 0.00
+	float 	earnMeterEarnValue = 0.00
+	float 	coreMeterScalar = 1.00                                                            
+}
+
+struct
+{
+	table<string, ScoreEvent> scoreEvents
+	array<string> scoreEventIdToName
+} file
+
+void function ScoreShared_Init()
+{
+	level.scoreCustomColors <- {}
+
+	InitScoreEvents()
+
+	AddCallback_EntitiesDidLoad( EntitiesDidLoad )
+}
+
+void function EntitiesDidLoad()
+{
+#if SERVER
+	                                              
+		                                 
+#elseif CLIENT
+	if ( clGlobal.scoreEventOverrideFunc != null )
+		clGlobal.scoreEventOverrideFunc()
+#endif
+}
+
+                                                                                                 
+void function SetScoreEventOverrideFunc( void functionref() func )
+{
+#if SERVER
+	                                      
+#elseif CLIENT
+	clGlobal.scoreEventOverrideFunc = func
+#endif
+}
+
+void function InitScoreEvents()
+{
+	var dataTable = GetDataTable( $"datatable/score_events.rpak" )
+	int numRows = GetDataTableRowCount( dataTable )
+
+	for ( int i = 0; i < numRows; i++ )
+	{
+		int column = 0
+
+		ScoreEvent event
+
+		event.name = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "name" ) )
+		event.eventId = file.scoreEvents.len()
+
+		event.splashText = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "splashText" ) )
+
+		event.medalText = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "medalText" ) )
+
+		                                                                                                                                
+		                                                                                                                                        
+
+		event.pointType = 0
+		string pointTypeStr = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "pointType" ) )
+		if ( pointTypeStr != "" )
+			event.pointType = scoreEventPointType[ pointTypeStr ]
+
+		string displayTypeStr = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "displayType" ) )
+		if ( displayTypeStr != "" )
+		{
+			array<string> displayTypeSplit = split( displayTypeStr, " " )
+			foreach ( Type in displayTypeSplit )
+			{
+				event.displayType = event.displayType | eEventDisplayType[ Type ]
+			}
+		}
+
+		event.medalIcon = GetDataTableAsset( dataTable, i, GetDataTableColumnByName( dataTable, "medalIcon" ) )
+
+		event.conversation = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "conversation" ) )
+		                                                                                                                                 
+		                               
+		  	                                                             
+
+		file.scoreEventIdToName.append( event.name )
+		file.scoreEvents[ event.name ] <- event
+
+		Assert( file.scoreEventIdToName[ event.eventId ] == event.name )
+	}
+}
+
+ScoreEvent function GetScoreEvent( string eventName )
+{
+	return file.scoreEvents[eventName]
+}
+
+void function ScoreEvent_Enable( ScoreEvent scoreEvent )
+{
+	scoreEvent.enabled = true
+}
+
+void function ScoreEvent_Disable( ScoreEvent scoreEvent )
+{
+	scoreEvent.enabled = false
+}
+
+bool function ScoreEvent_IsEnabled( ScoreEvent scoreEvent )
+{
+	return scoreEvent.enabled
+}
+
+string function ScoreEvent_GetEventName( ScoreEvent scoreEvent )
+{
+	return scoreEvent.name
+}
+
+void function ScoreEvent_SetGameModeRelevant( ScoreEvent scoreEvent )
+{
+	scoreEvent.displayType = scoreEvent.displayType | eEventDisplayType.GAMEMODE
+}
+
+bool function ScoreEvent_HasDisplayType( ScoreEvent scoreEvent, int displayType )
+{
+	return ( scoreEvent.displayType & displayType ) != 0
+}
+
+int function ScoreEvent_GetDisplayType( ScoreEvent scoreEvent )
+{
+	return scoreEvent.displayType
+}
+
+void function ScoreEvent_SetMedalIcon( ScoreEvent scoreEvent, asset medalIcon )
+{
+	scoreEvent.medalIcon = medalIcon
+}
+
+asset function ScoreEvent_GetMedalIcon( ScoreEvent scoreEvent )
+{
+	return scoreEvent.medalIcon
+}
+
+bool function ScoreEvent_IsEarnOverridden( ScoreEvent scoreEvent )
+{
+	return scoreEvent.eventOverridden
+}
+
+void function ScoreEvent_SetDisplayType( ScoreEvent scoreEvent, int displayType )
+{
+	scoreEvent.displayType = displayType
+}
+
+int function ScoreEvent_GetEventId( ScoreEvent scoreEvent )
+{
+	return scoreEvent.eventId
+}
+
+void function ScoreEvent_SetPointValue( ScoreEvent scoreEvent, int value )
+{
+	scoreEvent.pointValue = value
+}
+
+int function ScoreEvent_GetPointValue( ScoreEvent scoreEvent )
+{
+	return scoreEvent.pointValue
+}
+
+void function ScoreEvent_SetSplashText( ScoreEvent scoreEvent, string text )
+{
+	scoreEvent.splashText = text
+}
+
+string function ScoreEvent_GetSplashText( ScoreEvent scoreEvent )
+{
+	return scoreEvent.splashText
+}
+
+void function ScoreEvent_SetMedalText( ScoreEvent scoreEvent, string text )
+{
+	scoreEvent.medalText = text
+}
+
+string function ScoreEvent_GetMedalText( ScoreEvent scoreEvent )
+{
+	return scoreEvent.medalText
+}
+
+void function ScoreEvent_SetPointType( ScoreEvent scoreEvent, int value )
+{
+	scoreEvent.pointType = value
+}
+
+int function ScoreEvent_GetPointType( ScoreEvent scoreEvent )
+{
+	return scoreEvent.pointType
+}
+
+void function ScoreEvent_SetConversation( ScoreEvent scoreEvent, string name, int priority )
+{
+	scoreEvent.conversation = name
+	scoreEvent.conversationPriority = priority
+}
+
+string function ScoreEvent_GetConversation( ScoreEvent scoreEvent )
+{
+	return scoreEvent.conversation
+}
+
+int function ScoreEvent_GetPriority( ScoreEvent scoreEvent )
+{
+	return scoreEvent.conversationPriority
+}
+
+bool function ScoreEvent_HasConversation( ScoreEvent scoreEvent )
+{
+	return scoreEvent.conversation != ""
+}
+
+float function ScoreEvent_GetConversationDelay( ScoreEvent scoreEvent )
+{
+	return scoreEvent.conversationDelay
+}
+
+void function ScoreEvent_SetConversationDelay( ScoreEvent scoreEvent, float value )
+{
+	scoreEvent.conversationDelay = value
+}
+
+int function ScoreEvent_GetBurnPointValue( ScoreEvent scoreEvent )
+{
+	return scoreEvent.burnPointValue
+}
+
+void function ScoreEvent_SetBurnPointValue( ScoreEvent scoreEvent, int value )
+{
+	scoreEvent.burnPointValue = value
+}
+
+string function ScoreEvent_GetBurnMeterChallengeType( ScoreEvent scoreEvent )
+{
+	return ""
+  	                                  
+}
+
+ScoreEvent function ScoreEvent_FromId( int id )
+{
+	string eventName = file.scoreEventIdToName[id]
+	return file.scoreEvents[eventName]
+}
+
+#if SERVER
+                                                                           
+ 
+	                 
+	                        
+	                 
+ 
+#endif          

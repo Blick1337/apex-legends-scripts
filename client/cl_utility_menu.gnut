@@ -1,0 +1,400 @@
+untyped
+
+const string MENU_COLOR_CORRECTION = "materials/correction/menu.raw"
+
+global function CLUtilityMenu_Init
+
+global function InitButtonRCP
+
+global function HudElement
+global function ClientCodeCallback_GetContentScaleFactor
+global function ContentScaledX
+global function ContentScaledY
+global function Anim_EaseIn
+global function Anim_EaseOut
+
+global function UIToClient_SettingsUpdated
+global function AddCallback_OnSettingsUpdated
+
+global function SetMenuOpenState
+global function GetScreenSpace
+
+global function HudElem_SetRuiArg
+
+global var HudElementGroup = null
+
+struct
+{
+	array<void functionref()> settingsUpdatedCallbacks
+	int                       menuColorCorrection = -1
+} file
+
+
+void function CLUtilityMenu_Init()
+{
+	file.menuColorCorrection = ColorCorrection_Register( MENU_COLOR_CORRECTION )
+
+	AddLocalPlayerFunc( SetDefaultBloomScale )
+
+	level.hudElements <- {}
+
+	                                                                                                                           
+	class HudElementGroup
+	{
+		constructor( groupName, ownerHud = null )
+		{
+			Assert( false )
+		}
+
+		function CreateElement( name, _ownerHud = null )
+		{
+			Assert( false )
+		}
+
+		function GetOrCreateElement( name, _ownerHud = null )
+		{
+			Assert( false )
+		}
+
+		function Hide()
+		{
+			Assert( false )
+		}
+
+		function GetBaseX()
+		{
+			Assert( false )
+		}
+
+		function GetBaseY()
+		{
+			Assert( false )
+		}
+
+		function SetColor( arg0 = null, arg1 = null, arg2 = null, arg3 = null )
+		{
+			Assert( false )
+		}
+
+		function SetScale( wScale, hScale )
+		{
+			Assert( false )
+		}
+
+		function SetPos( x, y )
+		{
+			Assert( false )
+		}
+
+		function GetElementsArray()
+		{
+			Assert( false )
+		}
+	}
+}
+
+
+function HudElement( name, ownerHud = null )
+{
+	if ( ownerHud == null || ownerHud == Hud )
+	{
+		ownerHud = Hud
+
+		if ( name in level.hudElements )
+		{
+			return level.hudElements[name]
+		}
+
+		level.hudElements[name] <- ownerHud.HudElement( name )
+		return level.hudElements[name]
+	}
+	else
+	{
+		return ownerHud.HudElement( name )
+	}
+}
+
+
+table<int, float> function ClientCodeCallback_GetContentScaleFactor()
+{
+	UIScaleFactor scaleFactor = GetContentScaleFactor( Hud )
+
+	table<int, float> scaleFactorTable                                                             
+	scaleFactorTable[0] <- scaleFactor.x
+	scaleFactorTable[1] <- scaleFactor.y
+
+	return scaleFactorTable
+}
+
+
+function ContentScaledX( val )
+{
+	return val * GetContentScaleFactor( Hud ).x
+}
+
+
+function ContentScaledY( val )
+{
+	return val * GetContentScaleFactor( Hud ).y
+}
+
+
+void function InitButtonRCP( var button )
+{
+	UIScaleFactor scaleFactor = GetContentScaleFactor( Hud )
+	int width                 = int( float( Hud_GetWidth( button ) ) / scaleFactor.x )
+	int height                = int( float( Hud_GetHeight( button ) ) / scaleFactor.y )
+	RuiSetFloat2( Hud_GetRui( button ), "actualRes", <width, height, 0> )
+}
+
+enum Interpolators_e
+{
+	INTERPOLATOR_LINEAR,
+	INTERPOLATOR_ACCEL,
+	INTERPOLATOR_DEACCEL,
+	INTERPOLATOR_PULSE,
+	INTERPOLATOR_FLICKER,
+	INTERPOLATOR_SIMPLESPLINE,                 
+	INTERPOLATOR_BOUNCE,                        
+
+	INTERPOLATOR_COUNT,
+}
+
+function GetInterpolationFunc( interpolator )
+{
+	switch ( interpolator )
+	{
+		case Interpolators_e.INTERPOLATOR_LINEAR:
+			return Anim_Linear
+
+		case Interpolators_e.INTERPOLATOR_ACCEL:
+			return Anim_EaseIn
+
+		case Interpolators_e.INTERPOLATOR_DEACCEL:
+			return Anim_EaseOut
+
+		case Interpolators_e.INTERPOLATOR_PULSE:
+			return Anim_Linear
+
+		case Interpolators_e.INTERPOLATOR_FLICKER:
+			return Anim_Linear
+
+		case Interpolators_e.INTERPOLATOR_SIMPLESPLINE:
+			return Anim_SCurve
+
+		case Interpolators_e.INTERPOLATOR_BOUNCE:
+			return Anim_Linear
+
+		default:
+			break
+	}
+}
+
+
+function Anim_Linear( x )
+{
+	return x
+}
+
+
+function Anim_EaseInSlow( x )
+{
+	x = x - 1
+	return 1 - (pow( x, 2 ))
+}
+
+
+function Anim_EaseIn( x )
+{
+	x = x - 1
+	return 1 - (pow( x, 6 ))
+}
+
+
+function Anim_EaseOut( x )
+{
+	return pow( x, 6 )
+}
+
+
+function Anim_SCurve( x )
+{
+	return x * x * (3 - 2 * x)
+}
+
+
+function Anim_SCurve2( x )
+{
+	return x * x * x * (10 + x * (6 * x - 15))
+}
+
+
+function Anim_Sin( x )
+{
+	return (1 - cos( PI * x )) / 2
+}
+
+
+void function UIToClient_SettingsUpdated()
+{
+	foreach ( callbackFunc in file.settingsUpdatedCallbacks )
+	{
+		callbackFunc()
+	}
+}
+
+
+void function AddCallback_OnSettingsUpdated( void functionref() callbackFunc )
+{
+	Assert( !file.settingsUpdatedCallbacks.contains( callbackFunc ) )
+	file.settingsUpdatedCallbacks.append( callbackFunc )
+}
+
+
+void function SetDefaultBloomScale( entity player )
+{
+	if ( IsLobby() )
+		SetConVarFloat( "mat_bloomscale", 0.5 )
+	else
+		SetConVarFloat( "mat_bloomscale", 1.0 )
+}
+
+
+void function SetMenuOpenState( int state )
+{
+	clGlobal.isMenuOpen = (state == 1)
+	clGlobal.lastMenuToggleTime = Time()
+	if ( !IsLobby() )
+	{
+		bool wasSoloDialogMenuOpen = clGlobal.isSoloDialogMenuOpen
+
+		clGlobal.isSoloDialogMenuOpen = (state == 2)
+		if ( clGlobal.isSoloDialogMenuOpen != wasSoloDialogMenuOpen )
+			UpdateMainHudVisibility( GetLocalClientPlayer() )
+
+		bool doInGameMenuCC = GetCurrentPlaylistVarBool( "in_game_menu_cc_enabled", false )
+
+		if ( clGlobal.isMenuOpen )
+		{
+			if ( doInGameMenuCC )
+			{
+				ColorCorrection_SetExclusive( file.menuColorCorrection, true )
+				ColorCorrection_SetWeight( file.menuColorCorrection, 1.0 )
+			}
+		}
+		else
+		{
+			DoF_SetNearDepthToDefault()
+			DoF_SetFarDepthToDefault()
+			DoFSetDilateInfocus( false )
+
+			if ( doInGameMenuCC )
+			{
+				ColorCorrection_SetWeight( file.menuColorCorrection, 0.0 )
+				ColorCorrection_SetExclusive( file.menuColorCorrection, false )
+			}
+		}
+	}
+}
+
+
+float[2] function GetScreenSpace( vector origin )
+{
+	UISize screenSize = GetScreenSize()
+	var result = Hud.ToScreenSpace( origin )
+	float[2] coordinates
+	coordinates[0] = float( result[0] )
+	coordinates[1] = float( result[1] )
+	return coordinates
+}
+
+
+void function HudElem_SetRuiArg( var elem, string argName, var argVal, int ruiArgType = -1 )
+{
+	if ( ruiArgType < 0 )
+	{
+		switch ( type( argVal ) )
+		{
+			case "string":
+				ruiArgType = eRuiArgType.STRING
+				break
+
+			case "float":
+				ruiArgType = eRuiArgType.FLOAT
+				break
+
+			case "int":
+				ruiArgType = eRuiArgType.INT
+				break
+
+			case "bool":
+				ruiArgType = eRuiArgType.BOOL
+				break
+
+			case "vector":
+				ruiArgType = eRuiArgType.VECTOR
+				break
+
+			case "asset":
+				ruiArgType = eRuiArgType.ASSET
+				break
+
+			default:
+				Assert( false, "unexpected argument type: " + type( argVal ) )
+		}
+	}
+
+	var rui = Hud_GetRui( elem )
+	RuiSetArgByType( rui, argName, argVal, ruiArgType )
+}
+
+
+void function RuiSetArgByType( var rui, string argName, var argVal, int ruiArgType )
+{
+	switch ( ruiArgType )
+	{
+		case eRuiArgType.STRING:
+			expect string( argVal )
+			RuiSetString( rui, argName, argVal )
+			break
+
+		case eRuiArgType.FLOAT:
+			expect float( argVal )
+			RuiSetFloat( rui, argName, argVal )
+			break
+
+		case eRuiArgType.INT:
+			expect int( argVal )
+			RuiSetInt( rui, argName, argVal )
+			break
+
+		case eRuiArgType.BOOL:
+			expect bool( argVal )
+			RuiSetBool( rui, argName, argVal )
+			break
+
+		case eRuiArgType.VECTOR:
+			expect vector( argVal )
+			RuiSetFloat3( rui, argName, argVal )
+			break
+
+		case eRuiArgType.ASSET:
+			expect asset( argVal )
+			RuiSetAsset( rui, argName, argVal )
+			break
+
+		case eRuiArgType.IMAGE:
+			expect asset( argVal )
+			RuiSetImage( rui, argName, argVal )
+			break
+
+		case eRuiArgType.WALLTIME:
+		case eRuiArgType.GAMETIME:
+			expect float( argVal )
+			RuiSetGameTime( rui, argName, argVal )
+			break
+
+		default:
+			Assert( false, "unexpected argument type: " + type( argVal ) )
+	}
+}

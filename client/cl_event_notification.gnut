@@ -1,0 +1,97 @@
+global function CLEventNotification_Init
+global function ServerCallback_EventNotification
+global function HideEventNotification
+global function AddEventNotificationCallback
+
+void function CLEventNotification_Init()
+{
+	RegisterSignal( "SetEventNotification" )
+}
+
+void function ServerCallback_EventNotification( int eventID, int eHandle, var eventVal )
+{
+	entity ent = (eHandle ? GetEntityFromEncodedEHandle( eHandle ) : null)
+	EventNotification( eventID, ent, eventVal )
+}
+
+void function EventNotification( int eventID, entity ent, var eventVal )
+{
+	entity player = GetLocalClientPlayer()
+
+	switch ( eventID )
+	{
+		case  eEventNotifications.RoundWinningKillReplayCancelled:
+			SetTimedEventNotification( 5.0, "#ROUND_WINNING_KILL_REPLAY_CANCELLED" )
+			break
+
+		case eEventNotifications.Grapple_WasGrappled_ByPilot:
+		case eEventNotifications.Grapple_WasGrappled_ByTitan:
+			SmartAmmo_SetStatusWarning( "#GRAPPLED_WARNING", 3.0 )
+			break
+
+		case eEventNotifications.BLEEDOUT_SelfHealPrompt:
+			                                                                                                       
+			if ( player.p.lastEventNotificationText == "#BLEEDOUT_USE_SELF_RES_DYNAMIC" )
+				player.p.lastEventNotificationText = ""
+			SetTimedEventNotification( 1.0, "#BLEEDOUT_USE_SELF_RES_DYNAMIC" )
+			break
+
+		case eEventNotifications.Clear:
+			HideEventNotification()
+			break
+
+		default:
+			clGlobal.eventNotificationCallbacks[ eventID ]( ent, eventVal )
+			break
+	}
+}
+
+void function SetTimedEventNotification( float duration, string eventText )
+{
+	entity player = GetLocalClientPlayer()
+	printt( "SetTimedEventNotification", duration, eventText, player.p.lastEventNotificationText )
+
+	if ( eventText == player.p.lastEventNotificationText )
+		HidePlayerHint( eventText )
+	else
+		AddPlayerHint( duration, 0.25, $"", eventText )
+	player.p.lastEventNotificationText = eventText
+
+	player.Signal( "SetEventNotification" )
+
+	if ( duration && duration < 9999 )
+		thread HideEventNotificationWithDelay( duration )
+}
+
+void function HideEventNotification()
+{
+	ClearEventNotification()
+}
+
+void function HideEventNotificationWithDelay( float delay )
+{
+	Assert( delay > 0.0 )
+	entity player = GetLocalClientPlayer()
+
+	player.Signal( "SetEventNotification" )
+	player.EndSignal( "SetEventNotification" )
+
+	wait delay
+
+	HideEventNotification()
+}
+
+void function ClearEventNotification()
+{
+	entity player = GetLocalClientPlayer()
+	if ( !player.p.playerScriptsInitialized )
+		return
+
+	HidePlayerHint( player.p.lastEventNotificationText )
+}
+
+void function AddEventNotificationCallback( int eventNotificationID, void functionref( entity, var ) callbackFunc )
+{
+	Assert( !(eventNotificationID in clGlobal.eventNotificationCallbacks), "Already have callbackFunc : " + string( clGlobal.eventNotificationCallbacks[ eventNotificationID ] ) + " associated with eEventNotificationID: " + eventNotificationID )
+	clGlobal.eventNotificationCallbacks[ eventNotificationID ] <- callbackFunc
+}

@@ -1,0 +1,649 @@
+const float FLEX_SCREEN_A_WIDTH = 1200
+const float FLEX_SCREEN_A_HEIGHT =  1200
+const float FLEX_SCREEN_A_INSET = 128.0
+
+global const string SOUND_NEW_KILL_LEADER = "UI_InGame_KillLeader"
+
+global function ClSurvivalCommentary_Init
+global function DEV_ShowAllSpeakerLocations
+global function SurvivalCommentary_GetCurrentSpeakerPrefix
+global function SurvivalCommentary_ClearCurrentSpeakerPrefix
+global function SurvivalCommentary_IsEnabled
+global function GetBattleChatterAlias1P3P
+global function GetBattleChatterAlias1P3PWithTempVoice
+
+global function Dev_Survival_InfoMessageAndCrash
+global function ServerCallback_Survival_PlayCrowdEvent
+global function ServerCallback_Survival_NewKillLeader
+global function ServerCallback_Survival_HighlightedPlayerKilled
+
+                          
+global function ServerCallback_AnnouncePlayerBreaksEnemyShield
+      
+
+struct
+{
+	array<EnvironmentSpeaker> speakers
+	bool isCommentaryPlaying = false
+	string currentCommentaryLinePlaying = ""
+	bool endCircleChantStarted = false
+
+	array<string> crowd_quietLoopAliases = ["survival_crowd_quiet_atmo_lp_01","survival_crowd_quiet_atmo_lp_02","survival_crowd_quiet_atmo_lp_03","survival_crowd_quiet_atmo_lp_04"]
+	array<string> crowd_activeLoopAliases = ["survival_crowd_active_atmo_lp_01","survival_crowd_active_atmo_lp_02","survival_crowd_active_atmo_lp_03","survival_crowd_active_atmo_lp_04"]
+	array<string> crowd_cheerLoopAliases = ["survival_crowd_cheering_lp_01", "survival_crowd_cheering_lp_02", "survival_crowd_cheering_lp_03"]
+	array<string> crowd_ovationLoopAliases = ["survival_crowd_ovation_lp_01", "survival_crowd_ovation_lp_02", "survival_crowd_ovation_lp_03"]
+
+	array<string> crowd_cheerOneshot = ["survival_crowd_cheering_01", "survival_crowd_cheering_02","survival_crowd_cheering_03","survival_crowd_cheering_04"]
+	array<string> crowd_roarOneshot = ["survival_crowd_roar_01", "survival_crowd_roar_02","survival_crowd_roar_03","survival_crowd_roar_04"]
+	array<string> crowd_booOneshot = ["survival_crowd_boo_01","survival_crowd_boo_02","survival_crowd_boo_03","survival_crowd_boo_04"]
+
+	array<string> crowd_chants = ["survival_crowd_chanting"]
+
+	var testFlexScreenRui
+
+	string currentSpeakerPrefix
+
+	bool didPlayerPlacementReview = false
+	bool isEnabled = false
+} file
+
+bool function SurvivalCommentary_IsEnabled()
+{
+	return file.isEnabled
+}
+                                                                                             
+  
+  	                                                                                                                                                                                                                                                  
+  	                                                                                                                                                                                                                                                    
+  	                                                                                                                                                                                                              
+  	                                                                                                                                                                                                            
+  	                                                                                                                                                                                                     
+  	                                                                                                                                                                                             
+  
+                                                                                             
+
+void function ClSurvivalCommentary_Init()
+{
+	ShSurvivalCommentary_Init()
+	ShAmbientDialogue_Init()
+
+	if ( IsPVEMode() )
+		SetUseDialogueVDU( true )
+
+	AddCallback_KillReplayStarted( KillReplayStarted )
+	AddCallback_KillReplayEnded( KillReplayEnded )
+
+	FlagInit( "KillReplayStarted" )
+	FlagInit( "KillReplayComplete" )
+
+	RegisterSignal( "SoundStartingQuiet" )
+	RegisterSignal( "SoundStartingActive" )
+	RegisterSignal( "SoundStartingCheer" )
+	RegisterSignal( "SoundStartingOvation" )
+	RegisterSignal( "SoundStartingChant" )
+
+	file.isEnabled = true
+}
+
+                                                                                   
+  
+  	                                                                             
+  	                                                                                       
+  	                                                                                    
+  	                                                                             
+  	                                                                      
+  	                                                                      
+  
+                                                                                   
+
+void function PlaySoundWithDelay(vector origin, string alias, float delay = 0.0)
+{
+	wait delay
+	EmitSoundAtPosition( TEAM_NPC_FRIENDLY_TO_PLAYERS, origin, alias )
+}
+
+                                                                
+  
+  	                                                                                                                                       
+  	                                                                                                                                                 
+  	                                                                                                                                 
+  	                                                                                                                                     
+  	                                                                                                                                                     
+  	                                                                                                                                         
+  
+                                                                
+
+void function ServerCallback_Survival_PlayCrowdEvent( vector eventOrigin, int eventType)
+{
+	switch(eventType)
+	{
+		case eSurvivalEventType.WINNER_WINNER:
+			string ovationAlias = SelecRandomOvationAlias()
+			float randomDelay = RandomFloatRange(0.25, 1.5)
+
+			for(int i=0;i<file.speakers.len();i++)
+			{
+				thread PlaySoundWithDelay( eventOrigin, ovationAlias, randomDelay )
+				file.speakers[i].crowdOvationAlias = ovationAlias
+				file.speakers[i].ovationLoopSecondsToTimeout = 60 + RandomFloatRange( 0.25, 0.5 )
+				thread SpeakerTrackingTowardsOvationShutdown( i )
+				CommentaryDebugText( eventOrigin, "Ovation", 60 )
+			}
+			break
+		case eSurvivalEventType.PILOT_WOUNDED:
+	  		            
+			                     
+
+			                               
+				      
+
+			                                               
+
+			                                                                  
+			                                                                
+
+			                                        
+			 
+				                                                                                          
+
+				                                                                                                                                            
+				 
+					                               
+
+					                                                          
+					                                            
+					                                                                                                          
+					                                                              
+					                                                 
+					                                                                               
+				 
+				                                                                                                   
+				 
+					                                
+
+					                                                          
+					                                             
+					                                                                                                            
+					                                                               
+					                                                  
+					                                                                                 
+				 
+				                                                    
+				 
+					               
+					 
+						                               
+						                              
+					 
+					    
+					 
+						                               
+						                              
+					 
+
+					                                                          
+					                                            
+					                                                                                                          
+					                                                              
+					                                                 
+					                                                                      
+				 
+				    
+				 
+					                                                 
+					                                                                                                        
+					                                                                                       
+				 
+
+			 
+
+			                                                                            
+			break
+
+		case eSurvivalEventType.PILOT_KILL:
+  			                                        
+			                                               
+			                                               
+
+			                                                                  
+
+			                                       
+			 
+				                                                                  
+
+				                                              
+				 
+					                                                          
+					                                           
+					                                                                                       
+					                                           
+					                                                                                
+
+					                             
+					                                               
+					 
+						                                
+
+						                                                          
+						                                            
+						                                                                                                          
+						                                                              
+						                                                 
+					 
+					    
+					 
+						                                                                                                        
+					 
+				 
+				                                                      
+				 
+					                                                                 
+					                                                     
+					                                                                                                              
+					                                                                
+					                                                   
+					                                                                               
+				 
+			 
+
+			                                                    
+			break
+		case eSurvivalEventType.CIRCLE_MOVES_1MIN:
+			                                 
+			  	      
+
+			entity localViewPlayer = GetLocalViewPlayer()
+
+			if(!IsValid(localViewPlayer))
+				return
+
+			array<int> speakerInRangeIndexes = GetSpeakersInRange(localViewPlayer.GetOrigin())
+
+			string alias = "music_survival_circleclosing_60sec"
+			                                   
+			float randomDelay = RandomFloatRange(2.0, 3.0)
+
+			foreach(index in speakerInRangeIndexes)
+			{
+				CommentaryDebugSphere(file.speakers[index].origin,  200, 50, 50, 5)
+				thread PlaySoundWithDelay(file.speakers[index].origin, alias, randomDelay)
+				file.speakers[index].crowdEndMatchChantAlias = alias
+				thread SpeakerTrackingTowardsChantShutdown(index)
+				CommentaryDebugText(eventOrigin, "Chant Start - Circle Moving in 30 seconds", 30)
+			}
+
+			break
+		case eSurvivalEventType.PLAYERS_ALIVE_5:
+		case eSurvivalEventType.SQUADS_ALIVE_3:
+			if (file.endCircleChantStarted)
+				return
+
+			if (RandomFloatRange(0, 99) > CHANCE_FOR_END_CIRCLE_CHANTING)
+				return
+
+			array<int> speakerInRangeIndexes = GetSpeakersInRange(eventOrigin)
+
+			string alias = "music_survival_circleclosing_60sec"
+			file.endCircleChantStarted = true
+			float randomDelay = RandomFloatRange(2.0, 3.0)
+
+			foreach(index in speakerInRangeIndexes)
+			{
+				CommentaryDebugSphere(file.speakers[index].origin,  200, 50, 50, 5)
+				thread PlaySoundWithDelay(file.speakers[index].origin, alias, randomDelay)
+				file.speakers[index].crowdEndMatchChantAlias = alias
+				thread SpeakerTrackingTowardsEndMatchChantShutdown(index)
+				CommentaryDebugText(eventOrigin, "Chant Start - Low Player Count", STANDARD_CROWD_CHEER_TIME)
+			}
+			break
+	}
+}
+
+void function SpeakerTrackingTowardsQuietShutdown(int index )
+{
+	file.speakers[index].speakerEnt.EndSignal( "SoundStartingQuiet" )
+
+	wait STANDARD_CROWD_QUIET_TIME + RandomFloatRange(0.25, 2.0)
+
+	                      
+
+	                                                          
+	 
+		             
+		                                                                                                          
+	   
+
+	EmitSoundAtPosition( TEAM_NPC_FRIENDLY_TO_PLAYERS, file.speakers[index].origin, file.speakers[index].crowdQuietAlias + "_stop" )
+	WaitFrame()
+	file.speakers[index].crowdQuietAlias = ""
+}
+
+void function SpeakerTrackingTowardsActiveShutdown(int index )
+{
+	file.speakers[index].speakerEnt.EndSignal( "SoundStartingActive" )
+
+	wait STANDARD_CROWD_ACTIVE_TIME + RandomFloatRange(0.25, 2.0)
+
+  	                    
+
+	                                                           
+	 
+		             
+		                                                                                                            
+	   
+
+	EmitSoundAtPosition( TEAM_NPC_FRIENDLY_TO_PLAYERS, file.speakers[index].origin, file.speakers[index].crowdActiveAlias + "_stop" )
+	WaitFrame()
+	file.speakers[index].crowdActiveAlias = ""
+}
+
+void function SpeakerTrackingTowardsCheerShutdown(int index )
+{
+	file.speakers[index].speakerEnt.EndSignal( "SoundStartingCheer" )
+
+	wait STANDARD_CROWD_CHEER_TIME + RandomFloatRange(0.25, 2.0)
+
+	                      
+
+	                                                          
+	 
+		             
+		                                                                                                          
+	   
+
+	EmitSoundAtPosition( TEAM_NPC_FRIENDLY_TO_PLAYERS, file.speakers[index].origin, file.speakers[index].crowdCheerAlias + "_stop" )
+	WaitFrame()
+	file.speakers[index].crowdCheerAlias = ""
+}
+
+void function SpeakerTrackingTowardsOvationShutdown(int index )
+{
+	file.speakers[index].speakerEnt.EndSignal( "SoundStartingOvation" )
+
+	wait STANDARD_CROWD_OVATION_TIME + RandomFloatRange(0.25, 2.0)
+
+  	                    
+
+	                                                            
+	 
+		             
+		                                                                                                              
+	   
+
+	EmitSoundAtPosition( TEAM_NPC_FRIENDLY_TO_PLAYERS, file.speakers[index].origin, file.speakers[index].crowdOvationAlias + "_stop" )
+	wait STANDARD_DELAY_BETWEEN_SPEAKER_OVATIONS
+	file.speakers[index].crowdOvationAlias = ""
+}
+
+void function SpeakerTrackingTowardsChantShutdown(int index )
+{
+	file.speakers[index].speakerEnt.EndSignal( "SoundStartingChant" )
+
+	wait STANDARD_CROWD_CHANT_BEFORE_CIRCLE_CLOSE_TIME
+
+	                      
+
+	                                                          
+	 
+		             
+		                                                                                                          
+	   
+
+	                                                                                                                                  
+	WaitFrame()
+	file.speakers[index].crowdChantAlias = ""
+}
+
+void function SpeakerTrackingTowardsEndMatchChantShutdown(int index )
+{
+	while (GetPlayerArray_Alive().len() > 1)
+	{
+		wait 1
+	}
+}
+
+void function SpeakerTrackingOneShotTimeOut(int index )
+{
+	float tickTime = 0.1
+
+	while (file.speakers[index].oneShotDelayBetweenReuse > 0)
+	{
+		wait tickTime
+
+		file.speakers[index].oneShotDelayBetweenReuse = file.speakers[index].oneShotDelayBetweenReuse - tickTime
+	}
+
+	WaitFrame()
+	file.speakers[index].crowdRoarAlias = ""
+}
+
+string function SelecRandomQuietAlias()
+{
+	return file.crowd_quietLoopAliases[RandomIntRangeInclusive(0, file.crowd_quietLoopAliases.len() - 1)]
+}
+
+string function SelecRandomActiveAlias()
+{
+	return file.crowd_activeLoopAliases[RandomIntRangeInclusive(0, file.crowd_activeLoopAliases.len() - 1)]
+}
+
+string function SelecRandomCheerAlias()
+{
+	return file.crowd_cheerLoopAliases[RandomIntRangeInclusive(0, file.crowd_cheerLoopAliases.len() - 1)]
+}
+
+string function SelecRandomOvationAlias()
+{
+	return file.crowd_ovationLoopAliases[RandomIntRangeInclusive(0, file.crowd_ovationLoopAliases.len() - 1)]
+}
+
+string function SelecRandomChantAlias()
+{
+	return file.crowd_chants[RandomIntRangeInclusive(0, file.crowd_chants.len() - 1)]
+}
+
+string function SelecRandomCrowdOneshot()
+{
+	int randomReaction = RandomIntRangeInclusive(0, 1)
+
+	switch(randomReaction)
+	{
+		case 0:
+			return file.crowd_roarOneshot[RandomIntRangeInclusive(0, file.crowd_roarOneshot.len() - 1)]
+		case 1:
+			return file.crowd_booOneshot[RandomIntRangeInclusive(0, file.crowd_booOneshot.len() - 1)]
+	}
+
+	unreachable
+}
+
+                                                                                   
+  
+                                                                                                                                                                                                
+                                                                                                                                                                                                          
+                                                                                                                                                                                                  
+                                                                                                                                                                                                
+                                                                                                                                                                                                      
+                                                                                                                                                                                            
+  
+                                                                                   
+
+                                                           
+void function Dev_Survival_InfoMessageAndCrash( string msg_title, string msg_body)
+{
+	if ( IsValid( clGlobal.levelEnt ) )                        
+	{
+		AnnouncementData announcement = Announcement_Create( "" )
+		Announcement_SetStyle( announcement, ANNOUNCEMENT_STYLE_KILL_LEADER )
+		Announcement_SetPurge( announcement, true )
+		Announcement_SetOptionalTextArgsArray( announcement, [ msg_title, msg_body ] )
+		Announcement_SetPriority( announcement, 200 )
+		announcement.duration = 10.0
+		AnnouncementFromClass( GetLocalViewPlayer(), announcement )
+	}
+
+	thread Dev_Survival_InfoMessageAndCrashDelayed()
+}
+
+void function Dev_Survival_InfoMessageAndCrashDelayed()
+{
+	wait 4.0
+	Assert( false )
+}
+
+void function ServerCallback_Survival_NewKillLeader( entity killLeader, int numKills )
+{
+	EHI playerEHI = ToEHI( killLeader )
+
+	                                                      
+	if ( playerEHI == EHI_null )
+		return
+
+	string playerName = GetPlayerNameFromEHI( playerEHI )
+	vector playerNameColor = killLeader.GetTeam() == GetLocalViewPlayer().GetTeam() ? GetPlayerInfoColor( killLeader ) : GetKeyColor( COLORID_ENEMY )
+
+	Obituary_Print_Localized( Localize( "#SURVIVAL_NEWKILLLEADER_OBIT", playerName, numKills ), playerNameColor )
+
+	if (GetLocalViewPlayer() == killLeader )
+	{
+		AnnouncementData announcement = Announcement_Create( "" )
+		Announcement_SetStyle( announcement, ANNOUNCEMENT_STYLE_KILL_LEADER )
+		Announcement_SetPurge( announcement, true )
+		Announcement_SetOptionalTextArgsArray( announcement, [Localize("#SURVIVAL_YOUAREKILLLEADER"), Localize( "#SURVIVAL_KILLLEADERKILLS", numKills, GetPlayerInfoColor( killLeader ) ), string( numKills ) ] )
+		Announcement_SetPriority( announcement, 200 )
+		Announcement_SetSoundAlias( announcement, SOUND_NEW_KILL_LEADER )
+		announcement.duration = 4.0
+		AnnouncementFromClass( GetLocalViewPlayer(), announcement )
+	}
+}
+
+
+void function ServerCallback_Survival_HighlightedPlayerKilled(entity killedPlayer, entity killer, int playerType)
+{
+	string playerName
+	vector playerNameColor
+
+	if(IsValid(killedPlayer))
+	{
+		EHI playerEHI = ToEHI( killedPlayer )
+		playerName = GetPlayerNameFromEHI( playerEHI )
+		playerNameColor = killedPlayer.GetTeam() == GetLocalViewPlayer().GetTeam() ? GetPlayerInfoColor( killedPlayer ) : <255, 255, 255>
+
+		entity localClientPlayer = GetLocalClientPlayer()
+
+		if ( playerType == eSurvivalCommentaryPlayerType.CHAMPION )
+		{
+			Obituary_Print_Localized( Localize( "#SURVIVAL_CHAMPION_OBIT", playerName ), playerNameColor )
+			if ( localClientPlayer == killer && killer != killedPlayer )
+				AnnouncementMessageSweep( localClientPlayer, "#SURVIVAL_YOUKILLED_CHAMPION", Localize( killedPlayer.GetPlayerName() ), GetPlayerInfoColor( killedPlayer ) )
+		}
+		else if ( playerType == eSurvivalCommentaryPlayerType.KILLLEADER )
+		{
+			Obituary_Print_Localized( Localize( "#SURVIVAL_KILLLEADER_OBIT", playerName ), playerNameColor )
+			if ( localClientPlayer == killer && killer != killedPlayer )
+				AnnouncementMessageSweep( localClientPlayer, "#SURVIVAL_YOUKILLED_KILLLEADER", Localize( killedPlayer.GetPlayerName() ), GetPlayerInfoColor( killedPlayer ) )
+		}
+	}
+}
+
+                          
+void function ServerCallback_AnnouncePlayerBreaksEnemyShield( entity playerBroken )
+{
+	ItemFlavor char = LoadoutSlot_GetItemFlavor( ToEHI( playerBroken ), Loadout_Character() )
+	string name = Localize( ItemFlavor_GetShortName( char ) )
+
+	string locText = Localize( "#CHAT_BROKE_ENEMY_SHIELD", name )
+	Obituary_Print_Localized( locText , OBITUARY_COLOR_ENEMY )
+}
+      
+
+void function EmitSoundToPlayer_IfValid( entity player, string alias)
+{
+	if (IsValid(player))
+		EmitSoundOnEntity( player, alias)
+}
+
+                                                                                   
+  
+  	                                                                                                                                
+  	                                                                                                                                    
+  	                                                                                                         
+  	                                                                                                    
+  	                                                                                                               
+  	                                                                                                           
+  
+                                                                                   
+
+array<int> function GetSpeakersInRange( vector origin, float maxDistance = MAX_SPEAKER_DISTANCE_FROM_EVENT_FOR_CROWD )
+{
+	array<int> speakersInRangeIndexes
+
+	if (file.speakers.len() == 0)
+		printt("WARNING: You have no speakers setup in your level. Commentary and crowd sounds will not play.")
+
+	float dist
+
+	foreach (index, speaker in file.speakers)
+	{
+		dist = Distance( origin, speaker.origin )
+		if (dist <= maxDistance)
+		{
+			speakersInRangeIndexes.append(index)
+		}
+	}
+
+	return speakersInRangeIndexes
+}
+
+string function GetBattleChatterAlias1P3P( entity player, string aliasSubname, bool firstPerson )
+{
+	string voice = GetPlayerVoice( player )
+	if ( voice == SILENT_PLAYER_VOICE )
+		return ""
+	string perspective = firstPerson ? "1p" : "3p"
+	string result = "diag_mp_" + voice + "_" + aliasSubname + "_" + perspective
+	if ( result in FORBIDDEN_DIALOGUE_EVENT_NAMES )
+		return ""
+	return result
+}
+
+string function GetBattleChatterAlias1P3PWithTempVoice( string aliasSubname, bool firstPerson )
+{
+	string voice = TEMP_VOICE
+	string perspective = firstPerson ? "1p" : "3p"
+	string result = "diag_mp_" + voice + "_" + aliasSubname + "_" + perspective
+	if ( result in FORBIDDEN_DIALOGUE_EVENT_NAMES )
+		return ""
+	return result
+}
+
+string function SurvivalCommentary_GetCurrentSpeakerPrefix()
+{
+	return file.currentSpeakerPrefix
+}
+
+void function SurvivalCommentary_ClearCurrentSpeakerPrefix()
+{
+	file.currentSpeakerPrefix = ""
+}
+
+void function DEV_ShowAllSpeakerLocations(float time = 7, float size = 256)
+{
+	printt("Number of speaker locations: " + file.speakers.len())
+
+	foreach (speaker in file.speakers)
+	{
+		CommentaryDebugSphere(speaker.origin, 50, 50, 200, time, size)
+	}
+}
+
+void function KillReplayStarted()
+{
+	FlagSet( "KillReplayStarted" )
+}
+
+void function KillReplayEnded()
+{
+	FlagSet( "KillReplayComplete" )
+}
+

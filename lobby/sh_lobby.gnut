@@ -1,0 +1,191 @@
+globalize_all_functions
+
+global const string PRIVATE_MATCH_PLAYLIST = "private_match"
+global const int    PRIVATE_MATCH_MAX_PARTY_SIZE = 1
+
+array<string> function GetPrivateMatchModes()
+{
+	array<string> modesArray
+
+	int numModes = GetPlaylistGamemodesCount( PRIVATE_MATCH_PLAYLIST )
+	for ( int modeIndex = 0; modeIndex < numModes; modeIndex++ )
+	{
+		modesArray.append( GetPlaylistGamemodeByIndex( PRIVATE_MATCH_PLAYLIST, modeIndex ) )
+	}
+
+	return modesArray
+}
+
+int function GetPrivateMatchModeIndex( string modeName )
+{
+	int indexForName = 0
+
+	int numModes = GetPlaylistGamemodesCount( PRIVATE_MATCH_PLAYLIST )
+	for ( int modeIndex = 0; modeIndex < numModes; modeIndex++ )
+	{
+		if ( GetPlaylistGamemodeByIndex( PRIVATE_MATCH_PLAYLIST, modeIndex ) != modeName )
+			continue
+
+		indexForName = modeIndex
+		break
+	}
+
+	return indexForName
+}
+
+array<string> function GetPrivateMatchMapsForMode( string modeName )
+{
+	array<string> mapsArray
+
+	int modeIndex = GetPrivateMatchModeIndex( modeName )
+	int numMaps = GetPlaylistGamemodeByIndexMapsCount( PRIVATE_MATCH_PLAYLIST, modeIndex )
+	for ( int mapIndex = 0; mapIndex < numMaps; mapIndex++ )
+	{
+		mapsArray.append( GetPlaylistGamemodeByIndexMapByIndex( PRIVATE_MATCH_PLAYLIST, modeIndex, mapIndex ) )
+	}
+
+	return mapsArray
+}
+
+array<string> function GetPrivateMatchModesForMap( string mapName )
+{
+	array<string> modesArray
+
+	int numModes = GetPlaylistGamemodesCount( PRIVATE_MATCH_PLAYLIST )
+	for ( int modeIndex = 0; modeIndex < numModes; modeIndex++ )
+	{
+		int numMaps = GetPlaylistGamemodeByIndexMapsCount( PRIVATE_MATCH_PLAYLIST, modeIndex )
+		for ( int mapIndex = 0; mapIndex < numMaps; mapIndex++ )
+		{
+			if ( GetPlaylistGamemodeByIndexMapByIndex( PRIVATE_MATCH_PLAYLIST, modeIndex, mapIndex ) != mapName )
+				continue
+
+			modesArray.append( GetPlaylistGamemodeByIndex( PRIVATE_MATCH_PLAYLIST, modeIndex ) )
+		}
+	}
+
+	return modesArray
+}
+
+string function GetPrivateMatchMapForIndex( int index )
+{
+	array<string> mapsArray = GetPrivateMatchMaps()
+
+	if ( index >= mapsArray.len() )
+		return ""
+
+	return mapsArray[index]
+}
+
+string function GetPrivateMatchModeForIndex( int index )
+{
+	array<string> modesArray = GetPrivateMatchModes()
+
+	if ( index >= modesArray.len() )
+		return ""
+
+	return modesArray[index]
+}
+
+int function GetPrivateMatchMapIndex( string mapName )
+{
+	array<string> mapsArray = GetPrivateMatchMaps()
+	for ( int index = 0; index < mapsArray.len(); index++ )
+	{
+		if ( mapsArray[index] == mapName )
+			return index
+	}
+
+	return 0
+}
+
+                                                          
+ 
+	                                                 
+	                                                        
+	 
+		                                    
+			            
+	 
+
+	        
+   
+
+array<string> function GetPrivateMatchMaps()
+{
+	array<string> mapsArray
+
+	int numModes = GetPlaylistGamemodesCount( PRIVATE_MATCH_PLAYLIST )
+	for ( int modeIndex = 0; modeIndex < numModes; modeIndex++ )
+	{
+		int numMaps = GetPlaylistGamemodeByIndexMapsCount( PRIVATE_MATCH_PLAYLIST, modeIndex )
+		for ( int mapIndex = 0; mapIndex < numMaps; mapIndex++ )
+		{
+			string mapName = GetPlaylistGamemodeByIndexMapByIndex( PRIVATE_MATCH_PLAYLIST, modeIndex, mapIndex )
+			if ( mapsArray.contains( mapName ) )
+				continue
+
+			mapsArray.append( mapName )
+		}
+	}
+
+	return mapsArray
+}
+
+bool function MapSettings_SupportsTitans( string mapName )
+{
+	if ( mapName.find_olduntyped( "mp_lf_" ) != null )
+		return false
+
+	if ( mapName.find_olduntyped( "coliseum" ) != null )
+		return false
+
+	return true
+}
+
+bool function MapSettings_SupportsAI( string mapName )
+{
+	if ( mapName.find_olduntyped( "mp_lf_" ) != null )
+		return false
+
+	if ( mapName.find_olduntyped( "coliseum" ) != null )
+		return false
+
+	return true
+}
+
+bool function ModeSettings_RequiresTitans( string modeName )
+{
+	switch ( modeName )
+	{
+		case "lts":
+			return true
+	}
+
+	return false
+}
+
+bool function ModeSettings_RequiresAI( string modeName )
+{
+	switch ( modeName )
+	{
+		case "aitdm":
+		case "at":
+			return true
+	}
+
+	return false
+}
+
+bool function PrivateMatch_IsValidMapModeCombo( string mapName, string modeName )
+{
+	array<string> mapsForMode = GetPrivateMatchMapsForMode( modeName )
+
+	return mapsForMode.contains( mapName )
+}
+
+int function GetCurrentTimeForPersistence()
+{
+	                                                                  
+	return GetUnixTimestamp() + DAILY_RESET_TIME_ZONE_OFFSET * SECONDS_PER_HOUR
+}
