@@ -519,6 +519,11 @@ global enum PerfIndexServer
 	GetRandomSpawnPoint,
 	CleanupServerPets,
 	SniperReconInfo,
+	AreaSonarScan,
+	AreaSonarScanPropsList,
+	AreaSonarScanPropsTrigger,
+	AreaSonarScanTriggers,
+	AreaSonarTargetList,
 
 	DR_GatherData,
 	DR_SendData,
@@ -563,7 +568,6 @@ global const CE_FLAG_WAVE_SPAWNING = 0x0200
 global const CE_FLAG_EOG_STAT_DISPLAY = 0x0400
 global const CE_FLAG_HIDE_PERMANENT_HUD = 0x0800
 
-global const float AREA_SONAR_SCAN_RADIUS = 3000.0
 
                                                                                        
 global const float SONAR_PULSE_SPACE = 400.0
@@ -1242,7 +1246,7 @@ global enum eCommsAction
 	PING_ENEMY_SPOTTED_GENERAL,
 	PING_ENEMY_SPOTTED_SPECIFIC,
                 
-                          
+                             
        
                             
                                     
@@ -1259,6 +1263,12 @@ global enum eCommsAction
 	PING_ENEMY_TETHERED,
                
 		PING_MAGGIE_WRECKING_BALL,
+       
+                  
+                     
+                           
+                   
+                         
        
 	  
 	PING_ENEMY_NPC_SNIPER,
@@ -1851,6 +1861,9 @@ global enum eTooltipStyle
 	CLUB_MEMBER,
 	GLADIATOR_CARD_BADGE,
 	MINI_PROMO_APEX_PACK,
+                      
+                
+      
 }
 
 global struct LootTooltipData
@@ -1872,6 +1885,13 @@ global struct ClubMemberTooltipData
 	bool isOnline
 	bool isInGame
 	bool isInMatch
+}
+
+global struct CustomMatchTooltipData
+{
+	bool isAdmin
+	bool isTeamFull
+	int adminActions
 }
 
 global struct ToolTipData
@@ -1896,6 +1916,8 @@ global struct ToolTipData
 	LootTooltipData & lootPromptData
 
 	ClubMemberTooltipData & clubMemberData
+
+	CustomMatchTooltipData & customMatchData
 }
 
 
@@ -2055,6 +2077,7 @@ global struct DeployableCollisionParams
 global struct ProximityExplodeParams
 {
 	entity hitEnt
+	entity owner
 	vector pos
 	vector dir
 	bool   shouldFlipDir = true

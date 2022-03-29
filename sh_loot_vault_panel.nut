@@ -581,7 +581,7 @@ bool function HasVaultKey( entity player )
 	if ( player.GetPlayerNetBool( "hasDataKnife" ) )
 		return true
                    
-	else if ( player.GetPlayerNetBool( "hasShipKeycard" ) )
+	else if ( GetCurrentPlaylistVarBool( "loot_vaults_enabled", true ) && player.GetPlayerNetBool( "hasShipKeycard" ) )
 		return true
                          
 

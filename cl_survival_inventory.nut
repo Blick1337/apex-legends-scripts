@@ -170,6 +170,7 @@ void function Cl_Survival_InventoryInit()
 	RegisterSignal( "OpenSwapForItem" )
 	RegisterSignal( "ResetInventoryMenu" )
 	RegisterSignal( "BackpackClosed" )
+	RegisterSignal( "GroundListClosed" )
 
 	AddCallback_OnUpdateTooltip( eTooltipStyle.LOOT_PROMPT, OnUpdateLootPrompt )
 	AddCallback_OnUpdateTooltip( eTooltipStyle.WEAPON_LOOT_PROMPT, OnUpdateLootPrompt )
@@ -180,7 +181,9 @@ void function Cl_Survival_InventoryInit()
 	AddLocalPlayerTookDamageCallback( ShowHealHint )
 	AddCallback_OnPlayerConsumableInventoryChanged( ResetInventoryMenu )
 
-	RegisterConCommandTriggeredCallback( "+scriptCommand5", AttemptWeaponSlingSwap )
+                 
+                                                                                 
+      
 }
 
 
@@ -232,6 +235,13 @@ void function ResetInventoryMenuInternal( entity player )
                                                       
                                                                                                   
                                                              
+
+                                                                                
+                                                          
+                                                              
+                                                               
+                                                             
+
        
 
 	PerfEnd( PerfIndexClient.InventoryRefreshTotal )
@@ -548,6 +558,7 @@ void function UIToClient_GroundlistOpened()
 void function UIToClient_GroundlistClosed()
 {
 	entity oldDeathBoxEnt = file.currentGroundListData.deathBox
+	clGlobal.levelEnt.Signal( "GroundListClosed" )
 
 	file.shouldResetGroundItems = true
 	file.currentGroundListData.deathBox = null
@@ -729,6 +740,9 @@ bool function CanOpenInventory( entity player )
 		return false
 
 	if ( Bleedout_IsBleedingOut( player ) )
+		return false
+
+	if ( FiringRange_IsPlayerInFinale() )
 		return false
 
 	return true
@@ -1191,9 +1205,9 @@ void function UICallback_UpdateEquipmentButton( var button )
 			{
 				expect ItemFlavor(weaponItemOrNull)
 
-				if ( IsValidItemFlavorNetworkIndex_DEPRECATED( weapon.GetGrade(), eValidation.DONT_ASSERT ) )
+				if ( IsValidItemFlavorNetworkIndex( weapon.GetGrade(), eValidation.DONT_ASSERT ) )
 				{
-					ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex_DEPRECATED( weapon.GetGrade() )
+					ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( weapon.GetGrade() )
 					RuiSetString( rui, "skinName", ItemFlavor_GetLongName( weaponSkin ) )
 					if ( ItemFlavor_HasQuality( weaponSkin ) )
 						RuiSetInt( rui, "skinTier", ItemFlavor_GetQuality( weaponSkin ) + 1 )
@@ -1210,9 +1224,9 @@ void function UICallback_UpdateEquipmentButton( var button )
 					}
 				}
 
-				if ( IsValidItemFlavorNetworkIndex_DEPRECATED( weapon.GetWeaponCharmIndex(), eValidation.DONT_ASSERT ) )
+				if ( IsValidItemFlavorNetworkIndex( weapon.GetWeaponCharmIndex(), eValidation.DONT_ASSERT ) )
 				{
-					ItemFlavor weaponCharm              = GetItemFlavorByNetworkIndex_DEPRECATED( weapon.GetWeaponCharmIndex() )
+					ItemFlavor weaponCharm              = GetItemFlavorByNetworkIndex( weapon.GetWeaponCharmIndex() )
 					ItemFlavor ornull weaponCharmOrNull = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_WeaponCharm( weaponItemOrNull ) )
 					if ( weaponCharmOrNull != null && weaponCharmOrNull != weaponCharm )
 					{
@@ -3232,13 +3246,14 @@ void function TEMP_UpdatePlayerRui( var rui, entity player )
 void function TEMP_UpdateTeammateRui( var rui, entity ent, entity localPlayer )
 {
 	ent.EndSignal( "OnDestroy" )
+	clGlobal.levelEnt.EndSignal( "BackpackClosed" )
+	clGlobal.levelEnt.EndSignal( "GroundListClosed" )
                          
 		if ( Control_IsModeEnabled())
 		{
 			localPlayer.EndSignal( "Control_PlayerHasChosenRespawn" )
 		}
        
-	clGlobal.levelEnt.EndSignal( "BackpackClosed" )
 
 	ItemFlavor character = LoadoutSlot_WaitForItemFlavor( ToEHI( ent ), Loadout_Character() )
 	asset classIcon      = CharacterClass_GetGalleryPortrait( character )
@@ -3403,89 +3418,81 @@ int function GetCountForLootType( int lootType )
 
 	return typeCount
 }
+                 
+                                                                     
+ 
+                          
+                                                                         
+ 
+
+                                                     
+ 
+                                                
+                                       
+ 
+
+                                                           
+ 
+                                                      
+        
+
+                                                     
+
+                                                                
+  
+                                                                                         
+
+                           
+                                         
+   
+                                         
+                                                            
+    
+                                                                                
+                                                
+     
+                                                    
+      
+                                                                      
+                         
+      
+         
+      
+                                                                              
+                         
+                                                                
+      
+     
+    
+   
+
+                     
+         
 
                                                  
-                                                                                                     
-void function TryLongPressSlingSwap_Think( entity weapon, entity playerUser )
-{
-	ExtendedUseSettings settings
-	settings.duration = 0.3
-	settings.loopSound = "UI_Survival_PickupTicker"
-	settings.displayRui = $"ui/extended_use_hint.rpak"
-	settings.displayRuiFunc = DefaultExtendedUseRui
-	settings.icon = $""
-	settings.hint = "%scriptCommand5%"
-	settings.successFunc = WeaponSlingSwap_Success
-	                             
+   
+                                                                   
 
-	EndSignal( weapon, "OnDestroy" )
-	EndSignal( playerUser, "StartPhaseShift" )
-
-	waitthread ExtendedUse( weapon, playerUser, settings )
-}
-
-void function WeaponSlingSwap_Success( entity weapon, entity player, ExtendedUseSettings settings )
-{
-	if ( IsValid ( player ) )
-		Remote_ServerCallFunction( "ClientCallback_Sur_PickupToSling", weapon )
-}
-
-void function AttemptWeaponSlingSwap( entity player )
-{
-	                                               
-	AttemptWeaponSlingSwap_Think( player )
-}
-
-void function AttemptWeaponSlingSwap_Think( entity player )
-{
-	if ( !TryCharacterButtonCommonReadyChecks( player ) )
-		return
-
-	if ( EquipmentSlot_IsValidForPlayer( "sling_weapon", player ) )
-	{
-		LootData slotData  = EquipmentSlot_GetEquippedLootDataForSlot( player, "sling_weapon" )
-
-		bool didSomething = false
-		if ( IsValid( player.GetUseEntity() ) )
-		{
-			entity lootEnt = player.GetUseEntity()
-			if ( lootEnt.GetNetworkedClassName() == "prop_survival" )
-			{
-				LootData data = SURVIVAL_Loot_GetLootDataByIndex( lootEnt.GetSurvivalInt() )
-				if ( data.lootType == eLootType.MAINWEAPON )
-				{
-					                                                     
-					                                                 
-					   	                                                         
-					      
-					Remote_ServerCallFunction( "ClientCallback_Sur_PickupToSling", lootEnt )
-					didSomething = true
-				}
-			}
-		}
-
-		if ( didSomething )
-			return
-
-		if ( SURVIVAL_Loot_IsRefValid( slotData.ref ) )
-		{
-			Remote_ServerCallFunction( "ClientCallback_Sur_SlingToPrimary" )
-                   
-                                                       
                                       
+    
                                                              
-        
-		}
-		else
-		{
-			array<entity> currentWeapons = SURVIVAL_GetPrimaryWeaponsSorted( player )
-			int slot = WEAPON_INVENTORY_SLOT_PRIMARY_0
-			if ( currentWeapons.len() > 0 )
-			{
-				entity weapon      = currentWeapons[ 0 ]
-				slot = GetWeaponIndex( player, weapon )
-			}
-			Remote_ServerCallFunction( "ClientCallback_Sur_SlingToMainWeaponSlot", slot )
-		}
-	}
-}
+                                                              
+    
+
+   
+      
+   
+                                                                            
+                                             
+                                  
+    
+                                            
+                                           
+                                                              
+    
+                                                                                
+
+   
+  
+ 
+      

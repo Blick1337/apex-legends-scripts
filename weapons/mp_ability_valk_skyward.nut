@@ -107,7 +107,7 @@ void function MpAbilityValkSkyward_Init()
 
 
 	#if SERVER
-		                                                              
+		                                                             
 		                                                        
 		                                                        
 	#else
@@ -400,7 +400,7 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 
 	                                                           
 	                                      
-	                                
+	                                    
 	                                                                                       
 	                                 
 
@@ -553,7 +553,7 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 
 	                                                      
 	                                                                                      
-	                               
+	                                   
 
 	                                                 
 	                                                                                           
@@ -676,7 +676,7 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 	                             
 	                               
 	                                      
-	                                
+	                                    
 	                                                                                       
 
 	                     
@@ -840,7 +840,7 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 	                                                              
 	                                                              
 
-	                               
+	                                   
 	                                                                                      
 
 
@@ -1383,19 +1383,22 @@ void function ClientCodeCallback_OnSkywardLaunchStateChanged( entity owner, bool
 #if SERVER
                                                   
  
-	                                 
-	                                                                                         
+	                                              
+		      
 
-	                                                                                                                                                     
+	                                      
+	                                                                                           
 
-	                                                                                                                                                
+	                                                                                                                                                        
+	                                                                                                                                                   
+	                                                   
 
-	                                                    
+	                                                     
 	 
 		                          
 		               
 		 
-			                                                                
+			                                                                 
 		 
 	 
  
@@ -1660,7 +1663,7 @@ table<string, float> function Helper_GetLaunchParams()
 {
 	table<string, float> res
 	float totalUpTime     = GetValkLaunchTime()
-	float slowUpTime      = (1.0 / 3.0) * totalUpTime
+	float slowUpTime      = GetCurrentPlaylistVarFloat( "valk_ult_slow_up_time", 1.0 / 3.0 * totalUpTime )
 	float fastUpTime      = totalUpTime - slowUpTime
 	float totalUpDistance = GetValkUltMaxHeight()
 	float slowUpDistance  = (1.0 / 20.0) * totalUpDistance

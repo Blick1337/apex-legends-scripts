@@ -8,6 +8,8 @@ global function GetBubbleBunkerRui
 global function GibraltarIsInDome
 global function InDomeShield
 
+global const string GIBRALTAR_DOME_SCRIPTNAME = "gibraltar_dome_shield"
+
 const float BUBBLE_BUNKER_DEPLOY_DELAY = 1.0
 const float BUBBLE_BUNKER_DURATION_WARNING = 5.0
 
@@ -129,6 +131,7 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 		                                   
 		                                                   
 		                                   
+		                                                        
 		                    
 
 		                               

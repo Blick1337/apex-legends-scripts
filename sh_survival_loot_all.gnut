@@ -218,7 +218,7 @@ global const int HAS_DEATHBOX_OVERRIDE_FRIEND_PROFILES_TO_SEND = 3
 #if SERVER
                                                         
                                    
-                                                      
+                                                
                                         
 #endif              
                                    
@@ -476,8 +476,8 @@ void function SURVIVAL_Loot_All_InitShared()
 		{
 			case eLootType.MAINWEAPON:
 				RegisterWeaponForUse( data.baseWeapon )
-				data.pickupString = GetWeaponInfoFileKeyField_GlobalString( data.baseWeapon, "printName" )
-				data.desc = GetWeaponInfoFileKeyField_GlobalString( data.baseWeapon, "description" )
+				data.pickupString = GetWeaponInfoFileKeyField_WithMods_GlobalString( data.baseWeapon, data.baseMods, "printName" )
+				data.desc = GetWeaponInfoFileKeyField_WithMods_GlobalString( data.baseWeapon, data.baseMods, "description" )
 				data.hudIcon = GetWeaponInfoFileKeyFieldAsset_Global( data.baseWeapon, "hud_icon" )
 				data.model = GetWeaponInfoFileKeyFieldAsset_Global( data.baseWeapon, "playermodel" )
 				if ( GetWeaponInfoFileKeyField_Global( data.baseWeapon, "ammo_pool_type" ) != null && GetWeaponInfoFileKeyField_Global( data.baseWeapon, "uses_ammo_pool" ) != false )
@@ -572,6 +572,7 @@ void function SURVIVAL_Loot_All_InitShared()
 					if ( !shouldBeEnabled )
 						file.disabledRefs.append( data.ref )
 				}
+
 				break
 
 			case eLootType.ORDNANCE:
@@ -954,7 +955,6 @@ vector function GetRarityColor( entity ent )
 vector function GetFXRarityColorForTier( int tier )
 {
 	#if SERVER
-		                                                                                                                                    
 		               
 		 
 			                    
@@ -992,7 +992,6 @@ vector function GetFXRarityColorForTier( int tier )
 vector function GetFXRarityColorForUnlockable( int tier )
 {
 	#if SERVER
-		                                                                                                                                    
 		               
 		 
 			                    
@@ -1483,6 +1482,27 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 
  
 
+                         
+                                                                 
+ 
+	                                   
+
+	                                                                                             
+	                                          
+	                                           
+	                                                              
+	                                                    
+	                                                      
+	                                                        
+	                                                                
+	                                                                    
+	                                                                  
+	                                                                      
+	                                                                
+	                                                                    
+ 
+      
+
                                                                                             
  
 	                                          
@@ -1660,13 +1680,16 @@ void function SURVIVAL_Loot_InitRestrictedLoot()
 		RestrictedLootInfo emptyLoot
 		                  
 		file.restrictedLootInfo[ eRestrictedLootTypes.CAUSTIC_TT ] <- emptyLoot
+                    
 		#if SERVER || CLIENT
+
 		file.restrictedLootInfo[ eRestrictedLootTypes.CAUSTIC_TT ].getRestrictedPanel = GetCausticTTCanisterFrameForLoot
 		file.restrictedLootInfo[ eRestrictedLootTypes.CAUSTIC_TT ].isRestrictedPanelLocked = AreCausticTTCanistersClosed
 		#endif
 		#if SERVER
 			                                                                                                                                     
 		#endif
+        
 		#if UI
 			file.restrictedLootInfo[ eRestrictedLootTypes.CAUSTIC_TT ].dialogPopupHeader = "#LOBA_ULT_BLACK_MARKET_CAUSTICTT_CONFIRM_HEADER"
 			file.restrictedLootInfo[ eRestrictedLootTypes.CAUSTIC_TT ].dialogPopupAreYouSure = "#LOBA_ULT_BLACK_MARKET_CAUSTICTT_CONFIRM_BODY"

@@ -172,15 +172,19 @@ global enum eDamageSourceId
 	melee_revenant_scythe
 	mp_weapon_revenant_scythe
 
-                     
-		melee_wattson_gadget
-		mp_weapon_wattson_gadget_primary
-       
+	melee_wattson_gadget
+	mp_weapon_wattson_gadget_primary
 
                      
-                       
-                           
+		melee_crypto_heirloom
+		mp_weapon_crypto_heirloom
        
+	
+                     
+                      
+                          
+       
+	
                                                 
 		melee_shadowsquad_hands
 		melee_shadowroyale_hands
@@ -220,6 +224,9 @@ global enum eDamageSourceId
                           
                         
                                     
+                  
+                      
+       
                           
                              
                                     
@@ -293,6 +300,10 @@ global enum eDamageSourceId
                           
 		spider_melee
 		spider_ranged
+       
+                                 
+		nessie_hug
+		nessie_kiss
        
 	super_spectre_melee
 	titan_execution
@@ -399,14 +410,17 @@ global enum eDamageSourceId
 	mp_weapon_mortar_ring
 	mp_weapon_black_hole
 
+                                 
+                           
+                          
+                         
+       
+
                
                           
                         
        
-              
-                         
-                           
-                          
+                  
                          
                          
                         
@@ -420,6 +434,10 @@ global enum eDamageSourceId
                         
                      
                               
+       
+                
+                      
+                        
        
                         
                        
@@ -537,6 +555,10 @@ void function DamageTypes_Init()
 			[ eDamageSourceId.spider_melee ] = "#DEATH_SPIDER_MELEE",
 			[ eDamageSourceId.spider_ranged ] = "#DEATH_SPIDER_RANGED",
         
+                                  
+			[ eDamageSourceId.nessie_hug ] = "#BABY_NESSIE_TITLE",
+			[ eDamageSourceId.nessie_kiss ] = "#BABY_NESSIE_TITLE",
+        
 		[ eDamageSourceId.super_spectre_melee ] = "#DEATH_SUPER_SPECTRE",
 		[ eDamageSourceId.grunt_melee ] = "#DEATH_GRUNT_MELEE",
 		[ eDamageSourceId.spectre_melee ] = "#DEATH_SPECTRE_MELEE",
@@ -640,15 +662,18 @@ void function DamageTypes_Init()
 		[ eDamageSourceId.melee_revenant_scythe ] = "#DEATH_MELEE_REVENANT_SCYTHE",
 		[ eDamageSourceId.mp_weapon_revenant_scythe ] = "#DEATH_MELEE_REVENANT_SCYTHE",
 		
+		[ eDamageSourceId.melee_wattson_gadget ] = "#DEATH_MELEE_WATTSON_GADGET",
+		[ eDamageSourceId.mp_weapon_wattson_gadget_primary ] = "#DEATH_MELEE_WATTSON_GADGET",
+
+		
                       
-			[ eDamageSourceId.melee_wattson_gadget ] = "#DEATH_MELEE_WATTSON_GADGET",
-			[ eDamageSourceId.mp_weapon_wattson_gadget_primary ] = "#DEATH_MELEE_WATTSON_GADGET",
+			[ eDamageSourceId.melee_crypto_heirloom ] = "#DEATH_MELEE_CRYPTO_HEIRLOOM",
+			[ eDamageSourceId.mp_weapon_crypto_heirloom ] = "#DEATH_MELEE_CRYPTO_HEIRLOOM",
         
 		
-		
                       
-                                                                              
-                                                                                  
+                                                                            
+                                                                               
         
 		
 		[ eDamageSourceId.melee_rampart_wrench ] = "#DEATH_MELEE_RAMPART_WRENCH",

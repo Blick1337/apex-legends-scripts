@@ -35,11 +35,15 @@ void function OnWeaponActivate_weapon_doubletake( entity weapon )
 			                                                                  
 			 
 				                                   
-				                        
+				                          
 			 
 		 
 
 		                                       
+
+		                    
+			      
+
 		                        
 		 
 			                                                                                  

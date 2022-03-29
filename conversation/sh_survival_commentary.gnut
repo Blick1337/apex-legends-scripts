@@ -6,6 +6,7 @@ global function PickCommentaryLineFromBucket
 global function AreWeSquadMembers
 global function TryFindSpeakingPlayerOnTeam
 global function TryFindSpeakingPlayerOnTeamDisallowSelf
+global function TryFindSpeakingPlayerOnTeam_OnlyAllowSpecificCharacters
 global function IsBattleChatterEnabled
 global function ShouldPlayBattleChatter
 global function ShouldStopBattleChatter
@@ -246,7 +247,6 @@ global enum eSurvivalCommentaryBucket
                    
                                     
 
-                   
 	GAMECHANGER_INBOUND,
 	GAMECHANGER_DELIVER,
 	GAMECHANGER_INITIALIZE,
@@ -261,7 +261,6 @@ global enum eSurvivalCommentaryBucket
 	VICTORY_APEX_CHAMP_HAS_FUSE,
 	VICTORY_APEX_CHAMP_SOLO_YOU,
 	VICTORY_APEX_CHAMP_SQUAD_YOU,
-                         
 
 	FIRST_BLOOD_HAS_REV,
 
@@ -311,9 +310,7 @@ global enum eSurvivalHostType
                        
 	ARENAS,
       
-                   
 	MAGGIE,
-      
 	_count
 }
 
@@ -843,10 +840,8 @@ int function ConvertHostStringToEnum( string hostName )
 		case "#HOST_MIRAGE":
 			return eSurvivalHostType.MIRAGE
 
-                   
 		case "#HOST_MAGGIE":
 			return eSurvivalHostType.MAGGIE
-      
 		default:
 			return eSurvivalHostType.INVALID
 	}
@@ -956,6 +951,38 @@ entity function TryFindSpeakingPlayerOnTeamDisallowSelf( int team, entity forbid
 
 	if ( chooseSelfIfSolo && livingTeammateList.len() == 1 && livingTeammateList[0] == forbiddenPlayer )
 		return forbiddenPlayer
+
+	                                                                   
+	return null
+}
+
+                                                                                                                                                                                                                 
+entity function TryFindSpeakingPlayerOnTeam_OnlyAllowSpecificCharacters( int team, array<string> allowedCharactersStringArray )
+{
+	Assert( allowedCharactersStringArray.len() > 0, "Running TryFindSpeakingPlayerOnTeam_OnlyAllowSpecificCharacters with no characters in allowedCharactersStringArray, use TryFindSpeakingPlayerOnTeam instead" )
+
+	array<entity> livingTeammateList = GetPlayerArrayOfTeam_Alive( team )
+
+	livingTeammateList.randomize()
+
+	foreach ( playerOnTeam in livingTeammateList )
+	{
+		                                
+		if ( Bleedout_IsBleedingOut( playerOnTeam ) )
+			continue
+
+		if ( !CanPlayerSpeak( playerOnTeam ) )
+			continue
+
+		if ( !LoadoutSlot_IsReady( ToEHI( playerOnTeam ), Loadout_Character() ) )
+			continue
+
+		string playerOnTeamCharacterName = ItemFlavor_GetHumanReadableRef( LoadoutSlot_GetItemFlavor( ToEHI( playerOnTeam ), Loadout_Character() ) )
+		if ( !( allowedCharactersStringArray.contains( playerOnTeamCharacterName ) ) )
+			continue
+
+		return playerOnTeam
+	}
 
 	                                                                   
 	return null

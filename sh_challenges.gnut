@@ -110,7 +110,6 @@ global function GetLobbyChallengeButtons
 global function GetLobbyStoryChallengeButtons
 global function GetPlayerChallengesWithNewProgress
 global function GetRowsInChallengeProgressDataArray
-global function RefreshChallenges
 global function MaybeAddChallengeClickEventToButton
 global function RemoveChallengeFocusEventToButton
 global function RemoveChallengeClickEventToButton
@@ -451,11 +450,6 @@ void function ShChallenges_LevelInit_PreStats()
 
 	#if UI
 		RegisterSignal( "UINotification_AssignedChallengesDidChange" )
-		if ( !file.initialized )
-		{
-			AddUICallback_OnResolutionChanged( RefreshChallenges )
-		}
-
 		foreach ( var button, void functionref(var) focusHandler in WORKAROUND_challengeButtonToFocusHandlerMap )
 		{
 			if ( IsValid( button ) )
@@ -723,6 +717,7 @@ void function OnChallengeRegistered( ItemFlavor challenge )
 
 	                                                                                   
 
+	                                                                               
 	                                                          
 	 
 		                                                                                
@@ -788,7 +783,7 @@ void function ClientToUI_ChallengeDataDidChange( bool didEventChallengesRefresh 
 	{
 		UpdateFavoriteChallengesCache( GetLocalClientPlayer() )
 		UpdateLobbyChallengeMenu()
-
+		Mythics_UpdateTrackingButton()
 		#if NX_PROG
 			if ( !IsNxHandheldMode() )
 				UpdateMiniPromoPinning()
@@ -937,13 +932,13 @@ void function UpdateLobbyChallengeMenu()
 	UpdateStoryTrackButton( player, storyPrizeTrackButton, currentEvent )
 	UpdateChallengeTags( challengesTags )
 
+	Hud_SetVisible( challengesTags, !IsStoryCategory( challengeCategory ) )
 	Hud_Show( challengesBoxHeader )
 	Hud_Show( allChallengesButton )
 	Hud_Show( challengeCatergoryLeft )
 	Hud_Show( challengeCatergorySelection )
 	Hud_Show( challengeCatergoryRight )
 	Hud_Show( challengesBlur )
-	Hud_Show( challengesTags )
 
 	                                                  
 	  
@@ -3024,7 +3019,7 @@ bool function Challenge_IsChallengesStateInititated( entity player )
 		                                                                                              
 		                                      
 		 
-			                                                                                                  
+			                                                                                            
 			                           
 			 
 				                              
@@ -4848,12 +4843,14 @@ array<ChallengeRewardDisplayData> function GetChallengeRewardDisplayData( ItemFl
 			crdd.tinyLabelPlacementStyle = eTinyLabelPlacementStyle.BOTTOM
 			crdd.tinyLabelText           = FormatAndLocalizeNumber( "1", float( crdd.displayQuantity ), false )
 		}
+                    
 		else if ( ItemFlavor_GetType( flav ) == eItemType.character_skin )
 		{
 			crdd.isMythicSkin = Challenge_GetTimeSpanKind( challenge ) == eChallengeTimeSpanKind.MYTHIC
 			if ( crdd.isMythicSkin )
 				crdd.badgeTier = tierIdx + 1
 		}
+                          
 
 		if ( crdd.tinyLabelText == "" )
 			crdd.tinyLabelText = crdd.displayQuantity > 1 ? FormatAndLocalizeNumber( "1", float( crdd.displayQuantity ), false ) : ""
@@ -6655,15 +6652,6 @@ int function GetCompletedChallengeCount( entity player, array<ItemFlavor> challe
 	}
 
 	return count
-}
-#endif
-
-
-#if UI
-void function RefreshChallenges()
-{
-	if ( CanRunClientScript() )
-		RunClientScript( "ServerToClient_AssignedChallengesDidChange_FromEventsRefresh" )
 }
 #endif
 

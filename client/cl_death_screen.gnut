@@ -244,6 +244,7 @@ void function ServerCallback_ShowDeathScreen()
 void function DeathScreenDelayedSwitchToRecap( float delay ){
 	RunUIScript( "UI_EnableDeathScreenTab", eDeathScreenPanel.DEATH_RECAP, false )
 	wait( delay )
+	HideScoreboard()
 	if(file.isOpen && file.deathRecapDataUpdated)
 	{
 		RunUIScript( "UI_EnableDeathScreenTab", eDeathScreenPanel.DEATH_RECAP, true )
@@ -2346,6 +2347,14 @@ asset function GetGladCardReplacementImageForDamageSourceID( int damageSourceID 
 			return $"rui/death_recap/icon_deathrecap_specialcase_spider_melee"
 
 		case eDamageSourceId.spider_ranged:
+			return $"rui/death_recap/icon_deathrecap_specialcase_spider_ranged"
+                               
+
+                                
+		case eDamageSourceId.nessie_hug:
+			return $"rui/death_recap/icon_deathrecap_specialcase_spider_melee"
+
+		case eDamageSourceId.nessie_kiss:
 			return $"rui/death_recap/icon_deathrecap_specialcase_spider_ranged"
                                
 	}

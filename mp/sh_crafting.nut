@@ -2533,6 +2533,7 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 				                                                   
 					                              
 				                             
+				                                                                                                                                                               
 				                                                                                    
 				                    
 
@@ -3188,6 +3189,8 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 				                                                   
 					                              
 				                                 
+				                                                                                                                                                                  
+				                                                                                                         
 				                    
 
 				                                                                       

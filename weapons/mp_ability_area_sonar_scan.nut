@@ -17,46 +17,31 @@ const asset FX_SONAR_TARGET = $"P_ar_target_sonar"
 
 const int AREA_SCAN_SKIN_INDEX = 9
 
+const float AREA_SONAR_SCAN_RADIUS = 3000.0
 const float AREA_SONAR_SCAN_HUD_FEEDBACK_DURATION = 3.0
 const float AREA_SONAR_SCAN_CONE_FOV = 125.0
+
+const bool AREA_SONAR_PERF_TESTING = false
+
 
 struct
 {
 	int colorCorrection
 	int screeFxHandle
 	float areaSonarScanDuration
+	float areaSonarScanRadius
+	float areaSonarScanRadiusSqr
+	float areaSonarScanFOV
+
 
 #if SERVER
+	                                   
+	                                                            
+
+
 	                                         
 #endif
 } file
-
-void function OnWeaponActivate_ability_area_sonar_scan( entity weapon )
-{
-}
-
-var function OnWeaponPrimaryAttackAnimEvent_ability_area_sonar_scan( entity weapon, WeaponPrimaryAttackParams attackParams )
-{
-	                                              
-	entity weaponOwner = weapon.GetWeaponOwner()
-	Assert ( weaponOwner.IsPlayer() )
-
-	#if SERVER
-		                                                                                  
-		                                                                                                                            
-			                                                                                                                       
-		                                                                                      
-	#endif         
-
-	#if CLIENT
-  		                             
-  			                                                          
-	#endif         
-
-	PlayerUsedOffhand( weaponOwner, weapon )
-
-	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_min_to_fire )
-}
 
 void function MpAbilityAreaSonarScan_Init()
 {
@@ -65,6 +50,9 @@ void function MpAbilityAreaSonarScan_Init()
 	PrecacheParticleSystem( FX_SONAR_TARGET )
 
 	file.areaSonarScanDuration = GetCurrentPlaylistVarFloat( "bloodhound_scan_duration", 3.0 )
+	file.areaSonarScanRadius = GetCurrentPlaylistVarFloat( "area_sonar_scan_radius_override", AREA_SONAR_SCAN_RADIUS )
+	file.areaSonarScanRadiusSqr = file.areaSonarScanRadius * file.areaSonarScanRadius
+	file.areaSonarScanFOV = GetCurrentPlaylistVarFloat( "bloodhound_scan_cone_fov", AREA_SONAR_SCAN_CONE_FOV )
 
 	#if CLIENT
 		PrecacheParticleSystem( AREA_SCAN_ACTIVATION_SCREEN_FX )
@@ -78,10 +66,53 @@ void function MpAbilityAreaSonarScan_Init()
 
 }
 
+void function OnWeaponActivate_ability_area_sonar_scan( entity weapon )
+{
+}
+
+var function OnWeaponPrimaryAttackAnimEvent_ability_area_sonar_scan( entity weapon, WeaponPrimaryAttackParams attackParams )
+{
+	                                              
+	entity weaponOwner = weapon.GetWeaponOwner()
+	Assert ( weaponOwner.IsPlayer() )
+
+	#if SERVER
+		                                                                                  
+		                                                                                                 
+		                                                                                                                      
+		                                                                                      
+	#endif         
+
+	#if CLIENT
+  		                             
+  			                                                          
+	#endif         
+
+	PlayerUsedOffhand( weaponOwner, weapon )
+
+	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_min_to_fire )
+}
+
+
+
+float function AreaSonarScan_GetConeFOV()
+{
+	return file.areaSonarScanFOV
+}
+
 #if SERVER
-                                                                  
+                                           
  
 	                                 
+ 
+
+                                             
+ 
+	                               
+ 
+                                                
+ 
+	                                  
  
 
                                                              
@@ -95,57 +126,181 @@ void function MpAbilityAreaSonarScan_Init()
 
                                                                                                                  
  
+	       
+	                              
+		                                           
+	      
+
 	                            
 	                              
 
-	                                                                                                                     
-	                                                                                                                      
+	                                                                                                      
+	                                                                                                       
 
-	                          
+	                                    
 	                               
 	                       
 
 	                                              
 
-	                                                                                                                                             
-	                             	               
-	                       			                            
-	                             	   
-	                        
-	                         
-	                             
-	                                        
+	                                                                                                   
+	                           	               
+	                     			                            
+	                           	   
 
-	                                                                                                                                         
-	                                                                          
-	                                       
+	              
+	                          
+	                            
 	 
-		                                              
+       
+		                              
+			                                                
+		      
+
+		                                       
+			                              
+		    
+			                           
+
+		                                             
+
+		                                       
+		 
+			                                               
+			                                                  
+		 
+
+		                                                    
+
+		                                                            
+		                                 
+		 
+			                                                     
+		 
+
+		                                      
+		                           
+		 
+			                                                   
+		 
+
+       
+		                              
+			                                              
+      
 	 
+
+	    
+	 
+		       
+		                              
+			                                                  
+		      
+
+		                                                                                                                                      
+		                        
+		                         
+		                             
+		                                        
+		                             	               
+		                       			                            
+		                             	   
+
+
+		                                
+			                                                                                                     
+		    
+			                                                                                       
+
+		                                                                                       
+
+		                                                   
+
+		       
+			                              
+				                                                
+		      
+
+	 
+
+	                            
+	 
+		       
+		                              
+			                                                   
+		      
+
+		                                                                                                  
+		                                       
+		 
+			                                              
+			 
+				                                                                            
+				                                       
+					                            
+
+				                                                    
+			 
+		 
+
+		       
+		                              
+			                                                 
+		      
+	 
+	    
+	 
+		       
+		                              
+			                                                      
+		      
+
+		                                                                                                                                         
+		                                                                                                  
+		                                       
+		 
+			                                              
+			  		                                          
+		 
+
+		       
+		                              
+			                                                    
+		      
+	 
+
+
 
 	            
-		                                     
+		                                                       
 		 
 			                        
 			 
-				                                        
+				                                      
 				 
 					                                             
 					                                                                          
 				 
+
+
+				                                    
+				 
+					                                                                   
+					 
+						                                          
+						                                  
+						                                                                                                                         
+					 
+				 
 			 
-			                 
+			                          
+				                 
+
+			                           
 		 
 	 
 
-	                                
-		                                                                                                     
-	    
-		                                                                                       
 
-	                                                                                       
-
-	                                                   
 
 	                                        
 
@@ -154,7 +309,7 @@ void function MpAbilityAreaSonarScan_Init()
 
 	                                                            
 	                                        
-	                                                                                                                                          
+	                                                                                                                                           
 
 	                                         
 		                                     
@@ -166,12 +321,22 @@ void function MpAbilityAreaSonarScan_Init()
 	                                                                                                                           
 	                                                               
 
-	                                                                                                   
+	                                                                                                 
+
 	                                                                                                                   
 	                                         
 	                                                                                                                         
 
-	                                                
+
+	       
+	                              
+	 
+		                                        
+		          
+	 
+	      
+
+	                                 
  
 
                                                             
@@ -183,9 +348,9 @@ void function MpAbilityAreaSonarScan_Init()
 	                          
 	                                                         
 	                                                              
-	                                                                                                          
+	                                                
 
-	                                                                          
+	                                                                                                   
 	                                                                                                                                                                                                                                                                                                   
 	                                       	                        
 	                                 		                            
@@ -213,17 +378,16 @@ void function MpAbilityAreaSonarScan_Init()
 
 	                                                             
 
-	                                                
+	                                 
  
 
-                                                                                                                                                                               
+                                                                                                                                                                                                     
  
-	                                                                                                          
 	                             
 	 
 		                                    
 		                                      
-			                                                                                                                                                                      
+			                                                                                                                                                                          
 	 
  
 
@@ -235,7 +399,7 @@ void function MpAbilityAreaSonarScan_Init()
 
                                                                                                                                                                                                                                                                   
  
-	                                                                          
+	                                                                                                                              
 	                                            
 		      
 
@@ -247,6 +411,55 @@ void function MpAbilityAreaSonarScan_Init()
 		                           
 
 	                                                  
+ 
+
+                                                                               
+ 
+	                                                     
+		      
+
+	                                    
+		      
+
+
+	                                                   
+	                                                                     
+	                                                                 
+	                 
+		      
+	                               
+
+
+	                                                                                                
+	                                                                   
+	                                                   
+	                           
+		      
+
+	                                                                                                         
+	                         
+		      
+
+	                                       
+	 
+		                                             
+		                                                                           
+	 
+
+	                                                                                                                                                                          
+		                             
+
+	                                       
+	                                               
+	                                                                
+
+	                                                   
+
+	                                                                  
+
+	                                 
+	                                                                                      
+	                                                                                                                   
  
 
                                                                              
@@ -438,7 +651,3 @@ void function ColorCorrection_LerpWeight( int colorCorrection, float startWeight
 
 #endif         
 
-float function AreaSonarScan_GetConeFOV()
-{
-	return GetCurrentPlaylistVarFloat( "bloodhound_scan_cone_fov", AREA_SONAR_SCAN_CONE_FOV )
-}

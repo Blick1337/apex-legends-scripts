@@ -443,7 +443,11 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 
 
 #if SERVER
+                 
+                                                                                                                                                             
+     
                                                                                                                               
+      
  
 	                                                           
 
@@ -537,8 +541,11 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 				                   
 				                                   
 				                                                                                                                                                         
-
+                     
+                                      
+         
 				                                        
+          
 					                     
 				    
 					                       
@@ -566,7 +573,11 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 
 
 #if SERVER
+                 
+                                                                                           
+     
                                                                              
+      
  
 	                                                                                                             
 	 
@@ -574,7 +585,11 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 			        
 
 		                                                     
+                    
+                                                                                                                 
+        
 			                                                                                                    
+         
 		                                                              
 		  	                                                                                                   
 	 

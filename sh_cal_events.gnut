@@ -118,7 +118,10 @@ struct FileStruct_LifetimeLevel
 	table<string, int ornull > playlistOverrides
 
 	ItemFlavor ornull calEventInProcessing
+	ItemFlavor ornull currentActiveSeason
+	table<int, ItemFlavor> currentActiveRankedPeriodsByType
 
+	bool useIsVisible = false
 	                                                      
 }
 FileStruct_LifetimeLevel& fileLevel
@@ -137,6 +140,8 @@ void function ShCalEvent_LevelInit()
 {
 	FileStruct_LifetimeLevel newFileLevel
 	fileLevel = newFileLevel
+
+	fileLevel.useIsVisible = GetCurrentPlaylistVarBool( "use_calevent_is_visible", false )
 
 	#if SERVER
 		       
@@ -162,6 +167,7 @@ void function ShCalEvent_LevelInit()
 				fileLevel.allCalEvents.append( expect ItemFlavor( eventOrNull ) )
 		}
 
+		int now = GetUnixTimestamp()
 		foreach ( ItemFlavor event in fileLevel.allCalEvents )
 		{
 			                  
@@ -220,6 +226,9 @@ void function ShCalEvent_LevelInit()
 				         
 
 				fileLevel.allSeasons.append( event )
+				if ( CalEvent_GetStartUnixTime( event ) <= now && CalEvent_GetFinishUnixTime( event ) > now )
+					fileLevel.currentActiveSeason = event
+
 			}
 
 			if ( IsAnyRankedPeriodFlavor( event ) )
@@ -239,6 +248,9 @@ void function ShCalEvent_LevelInit()
 					printt( "\tsplit:", GetDateTimeString( SharedRankedPeriod_GetFirstSplitEndUnixTime( event ) ) )
 
 				fileLevel.allRankedPeriods.append( event )
+
+				if ( CalEvent_GetStartUnixTime( event ) <= now && CalEvent_GetFinishUnixTime( event ) > now )
+					fileLevel.currentActiveRankedPeriodsByType[ ItemFlavor_GetType( event ) ] <- event
 			}
 
 			if ( eventItemType == eItemType.calevent_login )
@@ -384,11 +396,21 @@ ItemFlavor function GetLatestSeason( int t )
                                                                                                     
 ItemFlavor ornull function GetActiveSeason( int t )
 {
+	if ( fileLevel.currentActiveSeason != null )
+	{
+		ItemFlavor season = expect ItemFlavor( fileLevel.currentActiveSeason )
+		if ( t < CalEvent_GetFinishUnixTime( season ) && t > CalEvent_GetStartUnixTime( season ) )
+			return season
+	}
+
 	                                                                            
 	foreach ( ItemFlavor season in fileLevel.allSeasons )
 	{
 		if ( CalEvent_IsActive( season, t ) )
+		{
+			fileLevel.currentActiveSeason = season
 			return season
+		}
 	}
 	return null
 }
@@ -553,13 +575,22 @@ ItemFlavor function GetLatestRankedPeriodByType( int t, int itemType )
                                                  
 ItemFlavor ornull function GetActiveRankedPeriodByType( int t, int itemType )
 {
+	if ( itemType in fileLevel.currentActiveRankedPeriodsByType )
+	{
+		if ( t < CalEvent_GetFinishUnixTime( fileLevel.currentActiveRankedPeriodsByType[ itemType ] ) && t > CalEvent_GetStartUnixTime( fileLevel.currentActiveRankedPeriodsByType[ itemType ] ) )
+			return fileLevel.currentActiveRankedPeriodsByType[ itemType ]
+	}
+
 	foreach ( ItemFlavor rankedPeriod in fileLevel.allRankedPeriods )
 	{
 		if ( ItemFlavor_GetType( rankedPeriod ) != itemType )
 			continue
 
 		if ( CalEvent_IsActive( rankedPeriod, t ) )
+		{
+			fileLevel.currentActiveRankedPeriodsByType[ itemType ] <- rankedPeriod
 			return rankedPeriod
+		}
 	}
 	return null
 }
@@ -730,7 +761,12 @@ bool function CalEvent_HasStarted( ItemFlavor event, int t )
 {
 	Assert( IsItemFlavorRegistrationFinished() )
 	int startUnixTime = CalEvent_GetStartUnixTime( event )
-	return CalEvent_IsVisible( event, t ) && (t >= startUnixTime)
+	if ( fileLevel.useIsVisible )
+		return CalEvent_IsVisible( event, t ) && (t >= startUnixTime)
+	else
+		return (t >= startUnixTime)
+
+	unreachable
 }
 #endif
 
@@ -739,7 +775,12 @@ bool function CalEvent_HasFinished( ItemFlavor event, int t )
 {
 	Assert( IsItemFlavorRegistrationFinished() )
 	int finishUnixTime = CalEvent_GetFinishUnixTime( event )
-	return CalEvent_IsVisible( event, t ) && (t >= finishUnixTime)
+	if ( fileLevel.useIsVisible )
+		return CalEvent_IsVisible( event, t ) && (t >= finishUnixTime)
+	else
+		return (t >= finishUnixTime)
+
+	unreachable
 }
 #endif
 

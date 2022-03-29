@@ -1,0 +1,54 @@
+global function NET_TraceRoute_Init
+global function NET_TraceRoute_BeginToAddress
+#if SERVER
+                                            
+#endif
+#if CLIENT
+global function NET_TraceRoute_BeginToServer
+#endif
+global function NET_TraceRoute_Print
+global function NET_TraceRoute_End
+
+void function NET_TraceRoute_Init()
+{
+}
+
+int function NET_TraceRoute_BeginToAddress(string address)
+{
+	                  
+	return NetTraceRouteBegin(address)
+}
+#if SERVER
+                                           
+ 
+	        
+ 
+#endif
+
+#if CLIENT
+int function NET_TraceRoute_BeginToServer()
+{
+	return NetTraceRouteBeginToServer()
+}
+#endif
+
+void function NET_TraceRoute_Print(int idx)
+{
+	printt( "Address				         Sent  Received  Loss%  Best  Worst  Last  Average" )
+	array<NetTraceRouteResults> results = NetTraceRouteGetResults(idx)
+	                                                 
+	foreach(NetTraceRouteResults result in results)
+	{
+		var loss = 100;
+		if( result.sent != 0 )
+		{
+			loss -= (float(result.received) / float(result.sent)) * 100;
+		}
+		printf( "%-30s%6d%10d%7d%6d%7d%6d%9d\n", result.address, result.sent, result.received, int(loss), result.bestRttMs, result.worstRttMs, result.lastRttMs, result.averageRttMs )
+	}
+}
+
+void function NET_TraceRoute_End(int idx)
+{
+	NetTraceRouteEnd(idx)
+}

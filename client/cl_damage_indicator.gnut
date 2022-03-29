@@ -168,6 +168,11 @@ bool function ShouldShowMeleeFlashForDamage( float damage, int damageType, int d
 			return false
        
 
+                                 
+		if ( damageSourceId == eDamageSourceId.nessie_hug )
+			return false
+       
+
 	return true
 }
 
@@ -422,20 +427,20 @@ void function DamageIndicatorRui( vector damageOrigin, int arrowType )
 }
 
 
-void function ShowGrenadeArrow( entity player, entity grenade, float damageRadius, float startDelay, bool requireLos = true, bool onlyShowToEnemies = false, vector offset = <0,0,0>, bool grenadeControlsVisiblity = false )
+void function ShowGrenadeArrow( entity player, entity grenade, float damageRadius, float startDelay, bool requireLos = true, int threatIndicatorVisbilityType = eThreatIndicatorVisibility.INDICATOR_SHOW_TO_ALL, vector offset = <0,0,0>, bool grenadeControlsVisiblity = false )
 {
-	thread GrenadeArrowThink( player, grenade, damageRadius, startDelay, requireLos, onlyShowToEnemies ? "enemy" : "any", onlyShowToEnemies, offset, grenadeControlsVisiblity )
+	thread GrenadeArrowThink( player, grenade, damageRadius, startDelay, requireLos, threatIndicatorVisbilityType, offset, grenadeControlsVisiblity )
 }
 
 
 void function AddThreatIndicator( entity waypoint )
 {
 	float radius = waypoint.GetWaypointFloat( 0 )
-	bool onlyShowToEnemies = waypoint.GetWaypointBitfield() == 1
+	int  visibilityType = waypoint.GetWaypointInt( DAMAGEARROW_WP_INT_INDEX_VISIBILITY_TYPE )
 	vector offset = waypoint.GetWaypointVector( 0 )
 
 	entity player = GetLocalViewPlayer()
-	ShowGrenadeArrow( player, waypoint, radius, 0, false, onlyShowToEnemies, offset )
+	ShowGrenadeArrow( player, waypoint, radius, 0, false, visibilityType, offset )
 }
 
 
@@ -450,7 +455,7 @@ vector function GetRandomOriginWithinBounds( entity ent )
 }
 
 
-void function GrenadeArrowThink( entity player, entity grenade, float damageRadius, float startDelay, bool requireLos, string requiredPlayerState = "any", bool onlyShowToEnemies = false, vector visualOffset = <0,0,0>, bool grenadeControlsVisibility = false )
+void function GrenadeArrowThink( entity player, entity grenade, float damageRadius, float startDelay, bool requireLos, int visibilityType = eThreatIndicatorVisibility.INDICATOR_SHOW_TO_ALL, vector visualOffset = <0,0,0>, bool grenadeControlsVisibility = false )
 {
 	EndSignal( grenade, "OnDeath" )                                           
 	EndSignal( grenade, "OnDestroy" )
@@ -541,26 +546,32 @@ void function GrenadeArrowThink( entity player, entity grenade, float damageRadi
 	{
 		cockpit = player.GetCockpit()
 
-		switch ( requiredPlayerState )
+		switch ( visibilityType )
 		{
-			case "any":
+			case eThreatIndicatorVisibility.INDICATOR_SHOW_TO_ALL:
 				shouldBeVisible = true
 				break
 
-			case "pilot":
-				shouldBeVisible = !player.IsTitan()
-				break
+			case eThreatIndicatorVisibility.INDICATOR_SHOW_TO_ENEMIES:
+			case eThreatIndicatorVisibility.INDICATOR_SHOW_TO_SELF:
+			case eThreatIndicatorVisibility.INDICATOR_SHOW_TO_SELF_AND_ENEMIES:
+				if ( grenade instanceof C_PlayerWaypoint )
+				{
+					entity grenadeOwner = grenade.GetWaypointEntity( DAMAGEARROW_WP_ENT_OWNER )
+					int grenadeTeam     = grenade.GetWaypointInt( DAMAGEARROW_WP_INT_INDEX_TEAM )
 
-			case "titan":
-				shouldBeVisible = player.IsTitan()
-				break
+					bool isEnemy = IsEnemyTeam( player.GetTeam(), grenadeTeam )
+					bool isSelf  = IsValid( grenadeOwner ) ? grenadeOwner == player : false
 
-			case "enemy":
-				shouldBeVisible = grenade instanceof C_PlayerWaypoint && IsEnemyTeam( player.GetTeam(), grenade.GetWaypointInt( DAMAGEARROW_WP_INT_INDEX_TEAM ) )
-				break
+					if ( visibilityType == eThreatIndicatorVisibility.INDICATOR_SHOW_TO_ENEMIES )
+						shouldBeVisible = isEnemy
+					else if ( visibilityType == eThreatIndicatorVisibility.INDICATOR_SHOW_TO_SELF_AND_ENEMIES )
+						shouldBeVisible = isSelf || isEnemy
+					else if ( visibilityType == eThreatIndicatorVisibility.INDICATOR_SHOW_TO_SELF )
+						shouldBeVisible = isSelf
+				}
 
-			default:
-				Assert( false, "Invalid player state! Allower states: 'any' 'pilot' 'titan'" )
+				break
 		}
 
 		if ( grenadeControlsVisibility )
@@ -709,10 +720,12 @@ asset function GetIndicatorModel( entity grenade )
 	if ( grenade.GetScriptName() == SONIC_BLAST_THREAT_TARGETNAME )
 		return GRENADE_INDICATOR_GENERIC
 
-              
+                  
                                                                  
                                    
-                   
+                                                                              
+                                   
+                       
 
                
 		if ( grenade.GetTargetName() == RIOT_DRILL_DANGERZONE_TARGETNAME )

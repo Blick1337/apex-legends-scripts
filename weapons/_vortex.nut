@@ -1797,7 +1797,7 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 		  	                                                                                                              
 		  	                                                         
 
-		if ( takesDamage )
+		if ( takesDamage && damage >= 0 )
 		{
 			VortexSphereDrainHealthForDamage( vortexSphere, damage )
 			if ( IsValid( attacker ) && attacker.IsPlayer() )

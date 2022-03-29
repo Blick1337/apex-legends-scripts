@@ -1,8 +1,4 @@
-  
 
-#if SERVER || CLIENT || UI
-global function ShSocial_Init
-#endif
 
 #if SERVER
                                                                  
@@ -73,22 +69,6 @@ struct
 	#endif
 } file
 #endif
-
-
-                         
-                         
-                         
-                         
-                         
-#if SERVER || CLIENT || UI
-void function ShSocial_Init()
-{
-	#if SERVER
-		                                                                                              
-	#endif
-}
-#endif
-
 
                           
                           
@@ -393,30 +373,77 @@ void function Dev_SetFillerFriends( int count )
 		                                                 
 	 
 
-
 	          
 	                                                                                                            
 
-
 	           
-	                                                      
+	                                                                                                                                                                       
 	 
-		                                                                                  
-			        
+		                  
 
-		                                                                                                                                                                
-
-		                                            
-			        
-
-		                                                                              
-					                                                                                                                
-
-		                                              
-
+		                                           
+		                           
 		                                                                                                               
-	 
 
+		                                                                 
+		                                                                                                           
+		                                          
+		                                                                                                               
+
+		                                               
+		                                                                                                               
+
+		                                               
+		                                                                                                               
+
+		                                                
+		                                                                                                               
+
+		                                                   
+		 
+			                                                                                                       
+			                                                                                                               
+
+			                                                                                                           
+			                                                                                                               
+		 
+
+		                                                     
+		 
+			                                                                                                             
+			                                                                                                               
+
+			                                                                                                                  
+			                                                                                                               
+		 
+	 
+	                                                                                                
+	 
+		                                                      
+		 
+			                                                                                  
+				        
+
+			                                                                                                                                                                
+
+			                                            
+				        
+
+			                                                                              
+						                                                                                                                
+
+			                                              
+
+			                                                                                                               
+
+			                                             
+				                                                                                  
+					                                                                                                                                                                                
+
+				                                                                                                                                                                         
+			      
+		 
+	 
 
 	                                            
 	                                                                                                

@@ -554,6 +554,10 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 		LootData weaponData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalClientPlayer(), es.attachmentWeaponSlot )
 		string ammotype = weaponData.ammoType
 
+                   
+                                  
+        
+
 		switch( es.attachmentPoint )
 		{
 			case "mag":

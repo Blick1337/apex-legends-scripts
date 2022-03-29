@@ -427,7 +427,7 @@ void function ShadowAbilitiesClientEffectsEnable( entity player, bool enableFx, 
 		                          		                                                                          	                    
 		                    			      
 		                          		                                                                       		                    
-		                   				           
+		                				                      
 		                       			                                                               				                    
 		                        		       
 		                                       

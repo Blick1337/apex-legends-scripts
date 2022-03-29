@@ -481,6 +481,13 @@ void function TrackingVision_UpdateWaypointPOIDrawing( entity waypoint )
 
 	if ( isVisible && waypointID in file.trackedPOIRui )
 	{
+                          
+			if( Control_IsPlayerInMapCameraView ( localViewPlayer ) )
+			{
+				RuiSetVisible ( file.trackedPOIRui[ waypointID ] , false )
+				return
+			}
+        
 		bool waypointInFocus = waypoint.WaypointIsInFocus()
 		RuiSetBool( file.trackedPOIRui[ waypointID ], "inViewFocus", waypointInFocus )
 
@@ -1061,6 +1068,15 @@ void function TrackingVisionCreatePOIBlueprint( entity waypoint, int poiEventID,
 			waypoint.WaypointAddFlag( WPF_VISBILITY_LOS )
 			waypoint.WaypointSetCheckDist( TRACKING_VISION_DRAW_DIST_MAX )
 			break
+      
+                 
+                                                                                    
+                                                                                  
+                                                                                     
+                                                                                   
+                                                                       
+                                                                 
+        
       
 		default:
 			Assert( 0, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
@@ -1701,6 +1717,33 @@ void function TrackingVision_GetDrawInfo( entity waypoint, TrackingVisionDrawInf
 			break
       
 
+                 
+                                                                                    
+                                                 
+                                                                
+                                                   
+        
+
+                                                                                  
+                                                 
+                                                                
+                                                 
+        
+
+                                                                                     
+                                                  
+                                                                    
+                                                   
+        
+
+                                                                                   
+                                                  
+                                                                  
+                                                 
+        
+
+      
+
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_DATAKNIFE_USED:
 			drawInfo.drawSize = eTrackingPOIDrawSize.SMALL
 			drawInfo.icon = $"rui/hud/poi_icons/poi_ash_vision"
@@ -1809,6 +1852,12 @@ int function GetPingTypeFromPOIType( entity waypoint )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END:
+      
+                 
+                                                                                    
+                                                                                  
+                                                                                     
+                                                                                   
       
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_ENEMY_TETHERED:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_DATAKNIFE_USED:

@@ -2,7 +2,9 @@
 global function StoryChallengeEvents_Init
 global function GetActiveStoryChallengeEvents
 global function GetStoryChallengeEventIfActive
-global function StoryChallengeEvent_GetAppropriateChallengesForPlayer
+global function StoryChallengeEvent_GetStoryChallengesForPlayer
+global function StoryChallengeEvent_GetActiveChallengesForPlayer
+global function StoryChallengeEvent_IsChallengeAvailableForPlayer
 global function StoryChallengeEvent_HasChallengesPopupBeenSeen
 global function StoryChallengeEvent_GetHasChallengesPopupBeenSeenVarNameOrNull
 global function StoryChallengeEvent_GetAutoplayDialogueDataForPlayer
@@ -16,6 +18,12 @@ global function StoryEvent_GetChaptersCount
 global function StoryEvent_GetChapterIsPrologue
 global function StoryChallengeEvent_IsPrologueCompleted
 global function StoryEvent_GetShowInChallengeBoxBool
+global function StoryEvent_GetRadioVignetteBink
+global function StoryEvent_GetRadioVignetteMilesEvent
+#endif
+
+#if SERVER
+                                                           
 #endif
 
 #if UI
@@ -26,6 +34,8 @@ global function StoryEvent_OnLobbyPlayPanelSpecialChallengeClicked
 global function StoryEvent_GetChapterTagString
 global function StoryEvent_GetCompletionReward
 global function StoryEvent_GetPrologueLobbyDesc
+global function StoryEvent_GetPlaylistName
+global function StoryEvent_PlayRadioVignetteForChapter
 #endif
                        
                        
@@ -38,6 +48,12 @@ global function StoryEvent_GetPrologueLobbyDesc
 #endif
 
 #if SERVER || CLIENT || UI
+global struct StoryEventRadioVignetteData
+{
+	string ornull	  radioVignetteBinkOrNull
+	string ornull	  radioVignetteMilesOrNull
+}
+
 global struct StoryEventGroupChallengeData
 {
 	array<ItemFlavor> challengeFlavors
@@ -47,6 +63,8 @@ global struct StoryEventGroupChallengeData
 	int               requiredStartDateUnixTime = -1
 	bool			  isPrologue
 	string ornull	  persistenceVarNamePrologueOrNull
+
+	StoryEventRadioVignetteData vignetteData
 }
 #endif
 
@@ -318,7 +336,26 @@ ItemFlavor ornull function GetStoryChallengeEventIfActive( int t, string challen
 
 
 #if SERVER || CLIENT || UI
-array<ItemFlavor> function StoryChallengeEvent_GetAppropriateChallengesForPlayer( ItemFlavor event, entity player )
+array<ItemFlavor> function StoryChallengeEvent_GetStoryChallengesForPlayer( ItemFlavor event, entity player )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_story_challenges )
+
+	array<ItemFlavor> appropriateChallenges
+
+	if ( !CalEvent_IsActive( event, GetUnixTimestamp() ) )
+		return appropriateChallenges
+
+	foreach ( StoryEventGroupChallengeData groupData in fileLevel.eventChallengesDataMap[ event ] )
+	{
+		appropriateChallenges.extend( groupData.challengeFlavors )
+	}
+
+	return appropriateChallenges
+}
+#endif
+
+#if SERVER || CLIENT || UI
+array<ItemFlavor> function StoryChallengeEvent_GetActiveChallengesForPlayer( ItemFlavor event, entity player )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_story_challenges )
 
@@ -341,6 +378,55 @@ array<ItemFlavor> function StoryChallengeEvent_GetAppropriateChallengesForPlayer
 
 	return appropriateChallenges
 }
+#endif
+
+#if SERVER || CLIENT || UI
+bool function StoryChallengeEvent_IsChallengeAvailableForPlayer( ItemFlavor event, ItemFlavor challenge, entity player )
+{
+	if ( !(challenge in fileLevel.challengeToEventDataMap) )
+		return false
+
+	StoryEventGroupChallengeData data = fileLevel.challengeToEventDataMap[ challenge ]
+	bool challengesGroupIsUnlockedFromDate = data.requiredStartDateUnixTime < UNIX_TIME_FALLBACK_1970 || GetUnixTimestamp() >= data.requiredStartDateUnixTime
+
+	if ( !challengesGroupIsUnlockedFromDate )
+		return false
+
+	return true
+}
+#endif
+
+#if UI
+void function StoryEvent_PlayRadioVignetteForChapter( int chapter )
+{
+	                                                                                   
+	ItemFlavor event = GetItemFlavorByHumanReadableRef( "calevent_s12e04_s12e04_story_challenges" )
+	var challengeGroupBlock  = StoryEvent_GetChapters( event )[chapter]
+	string radioVignetteBink = StoryEvent_GetRadioVignetteBink ( challengeGroupBlock )
+	string radioVignetteMiles = StoryEvent_GetRadioVignetteMilesEvent ( challengeGroupBlock )
+
+	thread PlayVideoMenu( false, radioVignetteBink, radioVignetteMiles, eVideoSkipRule.INSTANT, StoryEvent_OnRadioVignetteFinished )
+}
+
+void function StoryEvent_OnRadioVignetteFinished()
+{
+	Remote_ServerCallFunction( "StoryEvent_OnRadioVignetteFinishedLobbyKick" )
+}
+#endif
+
+#if SERVER
+                                                                          
+ 
+	                            
+	 
+		                                  
+	 
+	    
+	 
+		                           
+		                                
+	 
+ 
 #endif
 
 #if SERVER
@@ -516,7 +602,7 @@ int function StoryEvent_GetChaptersProgress( entity player, ItemFlavor event )
 		int ornull requiredStartDateUnixTimeOrNull = DateTimeStringToUnixTimestamp( requiredStartDate )
 
 		if ( requiredStartDateUnixTimeOrNull == null )
-			Assert( 0, format( "Bad format in playlist for setting 'character_loadouts_daily_cycle_start_date': '%s'", requiredStartDateUnixTimeOrNull ) )
+			Assert( 0, "Null value in playlist for setting 'requiredStartTime'" )
 
 		expect int( requiredStartDateUnixTimeOrNull )
 
@@ -570,7 +656,7 @@ int function StoryEvent_GetActiveChapter( entity player, ItemFlavor event )
 		int ornull requiredStartDateUnixTimeOrNull = DateTimeStringToUnixTimestamp( requiredStartDate )
 
 		if ( requiredStartDateUnixTimeOrNull == null )
-			Assert( 0, format( "Bad format in playlist for setting 'character_loadouts_daily_cycle_start_date': '%s'", requiredStartDateUnixTimeOrNull ) )
+			Assert( 0, "Null value in playlist for setting 'requiredStartTime'" )
 
 		expect int( requiredStartDateUnixTimeOrNull )
 
@@ -660,6 +746,14 @@ bool function StoryEvent_GetShowInChallengeBoxBool ( ItemFlavor event )
 
 	return GetGlobalSettingsBool( ItemFlavor_GetAsset( event ), "showInChallengeBox" )
 }
+string function StoryEvent_GetRadioVignetteBink ( var chapter )
+{
+	return GetSettingsBlockString( chapter, "radioVignetteBk" )
+}
+string function StoryEvent_GetRadioVignetteMilesEvent ( var chapter )
+{
+	return GetSettingsBlockString( chapter, "radioVignetteMilesEvent" )
+}
 #endif                          
 
 
@@ -686,6 +780,10 @@ string function StoryEvent_GetPrologueLobbyDesc ( var chapter )
 {
 	Assert( StoryEvent_GetChapterIsPrologue(chapter) )
 	return GetSettingsBlockString( chapter, "prologueLobbyDesc" )
+}
+string function StoryEvent_GetPlaylistName ( var chapter )
+{
+	return GetSettingsBlockString( chapter, "playlistName" )
 }
 asset function StoryEvent_GetHeaderIcon( ItemFlavor event )
 {

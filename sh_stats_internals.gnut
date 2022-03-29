@@ -1684,8 +1684,6 @@ StatTemplate function RegisterCachedCalculatedStat_Int( StatEnumStruct ornull en
 #if SERVER && DEV
                                      
  
-	                                                                                           
-
 	                                           
 
 	                                                         

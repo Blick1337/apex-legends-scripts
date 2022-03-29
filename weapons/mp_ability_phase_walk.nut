@@ -1,7 +1,6 @@
 global function MpAbilityPhaseWalk_Init
 
 global function OnWeaponActivate_ability_phase_walk
-global function OnWeaponPrimaryAttack_ability_phase_walk
 global function OnWeaponChargeBegin_ability_phase_walk
 global function OnWeaponChargeEnd_ability_phase_walk
 
@@ -47,11 +46,6 @@ void function OnWeaponActivate_ability_phase_walk( entity weapon )
 	}
 }
 
-var function OnWeaponPrimaryAttack_ability_phase_walk( entity weapon, WeaponPrimaryAttackParams attackParams )
-{
-	entity player = weapon.GetWeaponOwner()
-	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
-}
 
 #if SERVER
                                                    
@@ -112,9 +106,7 @@ bool function OnWeaponChargeBegin_ability_phase_walk( entity weapon )
 
 		if ( doStatus )
 		{
-			float amount = GetCurrentPlaylistVarFloat( "wraith_phase_walk_speed_boost_amount", 0.3 )
-			float easeOut = GetCurrentPlaylistVarFloat( "wraith_phase_walk_speed_boost_easeOutFrac", 0.3 )
-			int speedHandle = StatusEffect_AddTimed( player, eStatusEffect.speed_boost, amount, chargeTime, chargeTime*easeOut )
+			int speedHandle = StatusEffect_AddTimed( player, eStatusEffect.speed_boost, 0.3, chargeTime, chargeTime * 0.3 )
 
 			#if SERVER
 			                                            
@@ -131,8 +123,12 @@ bool function OnWeaponChargeBegin_ability_phase_walk( entity weapon )
 	                                   
 
 	                                                         
+
 	#endif
 	PhaseShift( player, 0, chargeTime, PHASETYPE_BALANCE )
+
+	player.Signal( "WreckingBall_CleanupFX" )
+
 	return true
 }
 
@@ -176,7 +172,8 @@ void function OnWeaponChargeEnd_ability_phase_walk( entity weapon )
 		 
 			                                   
 		 
-		                                         
+		                                                                                  
+		                                                                
 		                            
 	#endif
 }

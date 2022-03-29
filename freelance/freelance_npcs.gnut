@@ -472,8 +472,11 @@ float function NPCs_GetLastTimePlayerSpotted( entity player )
 
                     
                                                                                                              
-                                                                                                                            
                                                                                                                         
+       
+
+                            
+                                                                                                                         
        
 
                     
@@ -605,7 +608,7 @@ float function NPCs_GetLastTimePlayerSpotted( entity player )
 	                                          
 
 	                                                     
-	                                                                                                          
+	                                                                                                             
 
 	                
 	                  
@@ -834,13 +837,6 @@ float function NPCs_GetLastTimePlayerSpotted( entity player )
                                                
                                                 
         
-                            
-                                                                                                          
-                                                  
-                            
-                                               
-                                                
-        
                           
                                                                                                           
                                                  
@@ -849,6 +845,16 @@ float function NPCs_GetLastTimePlayerSpotted( entity player )
                                                 
         
                          
+
+                           
+                            
+                                                                                                          
+                                                  
+                            
+                                               
+                                                
+        
+      
 
                    
                     
@@ -1361,33 +1367,6 @@ float function NPCs_GetLastTimePlayerSpotted( entity player )
            
  
 
-                                                            
- 
-                                                                                                                         
-                     
-
-                 
-                                  
-
-                
-                            
-                                  
-
-                                
-                              
-
-                            
-
-                      
-                                                                                                                         
-                                        
-                                           
-
-                          
-                                                     
-           
- 
-
                                                           
  
                                                                                                                          
@@ -1418,6 +1397,33 @@ float function NPCs_GetLastTimePlayerSpotted( entity player )
            
  
                          
+
+                           
+                                                            
+ 
+                                                                                                                        
+                     
+
+                 
+
+                
+                            
+                                                    
+                                  
+
+                                
+                              
+
+                              
+
+                                        
+                                           
+
+                          
+                                                     
+           
+ 
+      
 
                    
                                                      

@@ -22,6 +22,8 @@ global const CALCULATE_SEQUENCE_BLEND_TIME = -1.0
 
 global const string SILENT_PLAYER_VOICE = "_silent"
 
+global array<string> DEPLOYABLE_ABILITY_NAMES = []
+
 global struct ArrayDistanceEntry
 {
 	float  distanceSqr
@@ -233,19 +235,21 @@ void function InitWeaponScripts()
 	MpWeaponOctaneKnifePrimary_Init()
 	MeleeMirageStatue_Init()
 	MpWeaponMirageStatuePrimary_Init()
+	MeleeWattsonGadget_Init()
+	MpWeaponWattsonGadgetPrimary_Init()
 	        
                      
-                            
-                                      
+		MeleeCryptoHeirloom_Init()
+		MpWeaponCryptoHeirloomPrimary_Init()
+       
+                     
+                           
+                                     
        
 	MeleeGibraltarClub_Init()
 	MpWeaponGibraltarClubPrimary_Init()
 	MeleeRampartWrench_Init()
 	MpWeaponRampartWrenchPrimary_Init()
-                     
-		MeleeWattsonGadget_Init()
-		MpWeaponWattsonGadgetPrimary_Init()
-       
 	MeleeRevenantScythe_Init()
 	MpWeaponRevenantScythePrimary_Init()
                   
@@ -263,6 +267,7 @@ void function InitWeaponScripts()
                   
                             
                            
+                             
        
 
 	MpWeaponEmoteProjector_Init()
@@ -323,7 +328,6 @@ void function InitWeaponScripts()
                                
        
                  
-                                
                                    
                                
                                      
@@ -351,6 +355,7 @@ void function InitWeaponScripts()
 
                
                              
+                             
                             
        
 
@@ -366,8 +371,15 @@ void function InitWeaponScripts()
 	MpAbilitySonicBlast_Init()
 
                                  
+                      
                                
                          
+                              
+                             
+                               
+                                   
+                                
+                             
        
 
                
@@ -376,14 +388,8 @@ void function InitWeaponScripts()
                             
        
 
-              
+                  
                              
-                               
-                                   
-                                
-                             
-                             
-                              
                              
                              
        
@@ -397,17 +403,22 @@ void function InitWeaponScripts()
        
 
                 
-                    
+                       
                   
                          
 
                     
-                       
+                         
 
               
                                         
                         
                           
+       
+
+                
+                  
+                           
        
 
                  
@@ -416,6 +427,10 @@ void function InitWeaponScripts()
                                   
                           
                           
+       
+
+                    
+                                
        
 
                     
@@ -464,6 +479,10 @@ void function InitWeaponScripts()
         
                             
        
+
+	#if SERVER
+	                                                                                                                                                                                                                                                                                                                                                                                         
+	#endif
 }
 
 
@@ -880,6 +899,69 @@ bool function GetReplayDisabled()
 	                                                                          
 	            
  
+
+                                                                          
+ 
+	                  
+		           
+	                                             
+		          
+
+	                                          
+	                                          
+	 
+		                                                                   
+		                     
+		 
+			             
+		 
+	 
+	           
+ 
+
+                                                
+ 
+	                                                               
+ 
+
+                                                        
+ 
+	                                                   
+		      
+
+	                              
+	 
+		                             
+			                            
+			     
+		                           
+			                             
+			                              
+			     
+		                            
+			                                           
+			     
+		                              
+		                        
+		                     
+		                         
+		                               
+			                                      
+			     
+		                           
+			                          
+			             
+			     
+		                                          
+			                                           
+			     
+		                               
+		                               
+		                              
+			                          
+			     
+	 
+ 
 #endif              
 
 table function ArrayValuesToTableKeys( arr )
@@ -1263,6 +1345,7 @@ bool function ControlPanel_IsValidModel( entity controlPanel )
 	validModels.append( "mdl/props/terminal_usable_wall_01_animated/terminal_usable_wall_01_animated.rmdl" )
 	validModels.append( "mdl/props/terminal_usable_cpit_01_animated/terminal_usable_cpit_01_animated.rmdl" )
 	validModels.append( "mdl/props/pathfinder_beacon_radar/pathfinder_beacon_radar_animated.rmdl" )
+	validModels.append( "mdl/props/specter_shack_control/specter_shack_control.rmdl" )
 
 	return validModels.contains( string( controlPanel.GetModelName() ) )
 }
@@ -4543,6 +4626,10 @@ bool function IsAndroidNPC( entity ent )
 
 bool function IsBiologicalNPC( entity ent )
 {
+                                 
+	if (IsNessie(ent))
+		return true
+       
 	return (IsProwler( ent ) || IsSpider( ent ))
 }
 
@@ -4559,8 +4646,18 @@ bool function IsProwler( entity ent )
 
 bool function IsSpider( entity ent )
 {
+                                 
+	if (IsNessie(ent))
+		return false
+       
 	return ent.GetNetworkedClassName() == "npc_spider" || ent.GetNetworkedClassName() == "npc_spider_ranged"
 }
+                                
+bool function IsNessie( entity ent )
+{
+	return (ent.IsNPC() && ent.GetAISettingsName() == "npc_nessie")
+}
+      
 
 bool function IsAirDrone( entity ent )
 {
@@ -4628,6 +4725,22 @@ bool function IsEnvDecoy( entity ent )
 	                                   
  
 #endif
+
+bool function CanNPCDoDamageOnBehalfOfPlayer( entity ent )
+{
+	if (!IsValid(ent))
+		return false
+
+                                
+	if (IsNessie(ent))
+		return true
+      
+                 
+                                                     
+             
+      
+	return false
+}
 
 RaySphereIntersectStruct function IntersectRayWithSphere( vector rayStart, vector rayEnd, vector sphereOrigin, float sphereRadius )
 {
@@ -5339,6 +5452,10 @@ bool function CanAttachToWeapon( string attachment, string weaponName )
 
 string function GetBaseWeaponRef( string weaponRef )
 {
+                                 
+		if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS ) != -1 )
+			return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS.len()) )
+       
 	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL ) != -1 )
 		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL.len()) )
 	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_GOLD ) != -1 )
@@ -6546,12 +6663,12 @@ void function ManageJitterVFX_Thread()
 			intervalA = RandomFloatRangeSeeded( seed, phaseOneSlow_Lower, phaseOneSlow_Upper )
 		}
 		#if DEV
-			printf( string(intervalA) )
+			                             
 		#endif
 		SetConVarInt( "glitch_aberrationScale", 80 )
 		wait intervalB
 		#if DEV
-			printf( string(intervalB) )
+			                             
 		#endif
 		intervalB = RandomFloatRangeSeeded( seed, phaseTwo_Lower, phaseTwo_Upper )
 	}

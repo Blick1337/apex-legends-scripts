@@ -98,6 +98,7 @@ global function SURVIVAL_GetInventorySlotCountForPlayer
 
 global function GetAllDeathBoxes
 global function ShouldPickupDNAFromDeathBox
+global function DestroyAllDeathBoxes
 
 #if CLIENT
 global function SURVIVAL_BuildStringForAction
@@ -266,6 +267,11 @@ global const string WEAPON_LOCKEDSET_MOD_PURPLEPAINTBALL = "purple_paintball"
 
 global const string WEAPON_LOCKEDSET_SUFFIX_BLUEPAINTBALL = "_blue_paintball"
 global const string WEAPON_LOCKEDSET_MOD_BLUEPAINTBALL = "blue_paintball"
+
+                                
+global const string WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS = "_april_fools"
+global const string WEAPON_LOCKEDSET_MOD_APRILFOOLS = "hopup_april_fools"
+      
 
 global const string WEAPON_LOCKEDSET_MOD_CRATE = "crate"
 
@@ -985,6 +991,14 @@ string function GetWeaponClassNameWithLockedSet( entity weapon )
 {
 	string result = weapon.GetWeaponClassName()
 
+                                 
+		if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_APRILFOOLS ) )
+		{
+			result += WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS
+			return result
+		}
+       
+
 	if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_GOLD ) )
 		result += WEAPON_LOCKEDSET_SUFFIX_GOLD
 	else if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_WHITESET ) )
@@ -999,7 +1013,6 @@ string function GetWeaponClassNameWithLockedSet( entity weapon )
 		result += WEAPON_LOCKEDSET_SUFFIX_BLUEPAINTBALL
 	else if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_GOLDPAINTBALL ) )
 		result += WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL
-
 	return result
 }
 
@@ -1018,6 +1031,11 @@ bool function WeaponLootRefIsLockedSet( string ref )
 		return true
 	if ( ref.find( WEAPON_LOCKEDSET_SUFFIX_BLUEPAINTBALL ) >= 0 )
 		return true
+
+                                 
+		if ( ref.find( WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS ) >= 0 )
+			return true
+       
 	return false
 }
 
@@ -2190,6 +2208,22 @@ void function SURVIVAL_Loot_UpdateHighlightForLoot( entity prop )
 			else if ( data.tier - 1 == eRarityTier.EPIC )
 				highlight = "survival_item_epic_loba"
 		}
+
+                   
+                                                                                                                                                           
+   
+                                               
+                                             
+                                                     
+                                              
+                                                
+                                         
+                                                
+                                            
+                                                  
+                                              
+   
+        
 
 		SetSurvivalPropHighlight( prop, highlight, prop.e.isSelected )
 		ManageHighlightEntity( prop )
@@ -3566,7 +3600,17 @@ string function GetWeaponToReplace( entity player )
 
 			                                                                   
 				        
+
+                                   
+				                                                                
+					        
+         
 		 
+
+                   
+                                                 
+           
+        
 
 		                                
 		                                
@@ -3781,7 +3825,7 @@ void function Inventory_RegisterNetworking()
 		                              
 			                                
                                
-              
+                  
                                                         
                                                      
        
@@ -4729,6 +4773,11 @@ int function EvolvingArmor_GetEvolutionProgress( entity player )
 		 
 			                     
 			 
+				                             
+				 
+					      
+				 
+
 				                                
 				 
 					                   
@@ -5337,6 +5386,12 @@ array<entity> function GetAllDeathBoxes()
 	#endif
 }
 
+void function DestroyAllDeathBoxes()
+{
+	foreach ( entity deathBox in GetAllDeathBoxes() )
+		deathBox.Destroy()
+}
+
 
 #if SERVER
                                     
@@ -5521,6 +5576,10 @@ bool function SURVIVAL_Weapon_IsAttachmentLocked( string weaponName )
 	array<string> baseMods = SURVIVAL_Loot_GetLootDataByRef( weaponName ).baseMods
 	if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_CRATE ) )
 		return true
+                                 
+		if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_APRILFOOLS ) )
+			return true
+       
 	if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_GOLD ) )
 		return true
 	if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_WHITESET ) )

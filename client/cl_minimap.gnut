@@ -1222,14 +1222,12 @@ void function MinimapPackage_NPCHumanSizedInit( entity ent, var rui )
 	#if MINIMAP_DEBUG
 		printt( "Adding 'rui/hud/minimap/compass_icon_small_dot' icon to minimap" )
 	#endif
-	RuiSetImage( rui, "defaultIcon", $"rui/hud/minimap/compass_icon_small_dot" )
-	RuiSetImage( rui, "clampedDefaultIcon", $"" )
+	RuiSetImage( rui, "defaultIcon", $"rui/hud/minimap/compass_icon_enemy_pilot" )
+	RuiSetImage( rui, "clampedDefaultIcon", $"rui/hud/minimap/compass_icon_enemy_pilot" )	                                  
 
-	                                                    
-	   
-	  	                                        
-	  	                                                        
-	   
+	RuiSetBool( rui, "useTeamColor", false )
+	RuiSetFloat3( rui, "iconColor", TEAM_COLOR_YOU / 255.0 )
+	RuiSetFloat2( rui, "iconScale", <0.65, 0.65, 0.0> )
 	RuiTrackGameTime( rui, "lastFireTime", ent, RUI_TRACK_LAST_FIRED_TIME )
 	                                                                                                                        
 	  	                                                                                                              

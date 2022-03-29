@@ -1,5 +1,4 @@
 global function OnWeaponChargeBegin_ability_heal
-global function OnWeaponPrimaryAttack_ability_heal
 global function OnWeaponChargeEnd_ability_heal
 global function OnWeaponAttemptOffhandSwitch_ability_heal
 
@@ -50,16 +49,9 @@ bool function OnWeaponChargeBegin_ability_heal( entity weapon )
 void function OnWeaponChargeEnd_ability_heal( entity weapon )
 {
 	#if SERVER
-		                                       
-		                                         
+		                                                                                  
+		                                                                
 	#endif
-}
-
-
-var function OnWeaponPrimaryAttack_ability_heal( entity weapon, WeaponPrimaryAttackParams attackParams )
-{
-	entity player = weapon.GetWeaponOwner()
-	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 }
 
 

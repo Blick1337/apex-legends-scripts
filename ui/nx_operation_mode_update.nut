@@ -20,24 +20,22 @@ void function UICodeCallback_OperationModeChanged()
 	else
 		printt( "UIScript: Switching to Dock" )
 
-	if( GetActiveMenu() && GetActiveMenuName() == "CharacterSelectMenuNew")
-	{
-		RunClientScript("CharacterSelect_UpdateMenuButtons")
-	}
+	var activeMenu = GetActiveMenu()
 
-	if( GetActiveMenu() && GetActiveMenuName() == "CustomizeCharacterMenu")
-	{
-		RunClientScript("ClearBattlePassItem")
-	}
+	if ( activeMenu && GetActiveMenuName() == "CharacterSelectMenuNew" )
+		RunClientScript( "CharacterSelect_UpdateMenuButtons" )
+
+	if ( activeMenu && GetActiveMenuName() == "CustomizeCharacterMenu" )
+		RunClientScript( "ClearBattlePassItem" )
 
 	isNxSwitchingMode = true
 
-	if( uiGlobal.activeMenu != null )
+	if ( activeMenu != null )
 	{
-		var activeMenu = uiGlobal.activeMenu
-		if( uiGlobal.menuData[ activeMenu ].hideFunc != null )
+		if ( uiGlobal.menuData[ activeMenu ].hideFunc != null )
 			uiGlobal.menuData[ activeMenu ].hideFunc()
-		if( uiGlobal.menuData[ activeMenu ].showFunc != null )
+
+		if ( uiGlobal.menuData[ activeMenu ].showFunc != null )
 			uiGlobal.menuData[ activeMenu ].showFunc()
 
 		UpdateMenuTabs()
@@ -54,7 +52,7 @@ void function UICodeCallback_OperationModeChanged()
 
 	printt( "UIScript: Switch Completed" )
 }
-#endif
+#endif      
 
 #if CLIENT
 void function ClientCodeCallback_OperationModeChanged()
@@ -66,11 +64,10 @@ void function ClientCodeCallback_OperationModeChanged()
 
 	printt( "ClientScript: Switch Completed" )
 }
-#endif
+#endif          
 
 bool function IsNxSwitchingMode()
 {
 	return isNxSwitchingMode
 }
-
-#endif
+#endif                            

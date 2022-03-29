@@ -8,6 +8,7 @@ global function OnWeaponTossPrep_WeaponEmoteProjector
 global function ActivateEmoteProjector
 global function CreateClientSideEmoteIcon
 global function CreateClientSideEmoteIconModel
+global function EnableEmoteProjector
 #endif
 
 global function EmoteIcon_Waypoint_GetLinkedPlayers
@@ -52,6 +53,7 @@ struct
 	#if CLIENT
 		ItemFlavor ornull lastUsedHolo
 		var holoSpayTitleRui
+		bool enabledView = true
 	#endif
 
 } file
@@ -573,6 +575,19 @@ void function ClientSideEmoteIconThink( entity wp, int guid, float creationTime 
 		minDot = cos( DEG_TO_RAD * DEFAULT_FOV * 1.3 * scalar )
 		bool isInView = dot > minDot
 
+		                                                                   
+		if ( !file.enabledView )
+		{
+			if ( active )
+			{
+				wp.Signal( "CreateClientSideEmoteIcon" )
+				active = false
+			}
+
+			WaitFrame()
+			continue
+		}
+
 		if ( !active )
 		{
 			if ( isInView )
@@ -815,6 +830,14 @@ void function OnFirstPersonSpectateStarted( entity player, entity currentTarget 
 #endif
 
 #if CLIENT
+void function EnableEmoteProjector( bool enable )
+{
+	if ( IsFiringRangeGameMode() )
+		file.enabledView = enable
+	else
+		Warning( "Called EnableEmoteProjector() from a map other firing range. Currently not supported to turn off emotes outside."  )
+}
+
 void function OnPlayerLifeStateChanged( entity player, int oldState, int newState )
 {
 	if ( player == GetLocalViewPlayer() )

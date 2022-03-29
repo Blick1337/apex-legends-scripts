@@ -496,6 +496,7 @@ void function UpdateHudDataForMainWeapons( entity player, entity selectedWeapon 
 			UpdateRUIWeaponData( player, rui, weaponInSlot0, 0, activeWeaponTab == 0 )
 			UpdateRUIWeaponData( player, rui, weaponInSlot1, 1, activeWeaponTab == 1 )
 
+			RuiSetFloat( rui, "clipAmmoDisplayMult", 1.0 )
 			RuiSetString ( rui, "weaponSwitchOverride", "" )
 		}
 
@@ -615,15 +616,15 @@ void function UpdateHudDataForHMG( entity player, entity selectedWeapon, var rui
                                                 
                                                 
 
-                                                             
+                                                               
                                                             
 
-                                                                  
+                                          
                                                       
                                                  
 
                                                   
-                                                                 
+                                                                   
                                                                             
                                               
 
@@ -631,6 +632,10 @@ void function UpdateHudDataForHMG( entity player, entity selectedWeapon, var rui
                                              
                                                  
                                                                                            
+
+                                                                                 
+                                                                  
+
 
                                                    
  
@@ -727,7 +732,7 @@ void function UpdateRUIWeaponData( entity player, var rui, entity weapon, int ta
 
 	if ( IsValid( weapon ) )
 	{
-		string weaponName = GetWeaponInfoFileKeyField_GlobalString( weapon.GetWeaponClassName(), "shortprintname" )
+		string weaponName = GetWeaponInfoFileKeyField_WithMods_GlobalString( weapon.GetWeaponClassName(), weapon.GetMods(), "shortprintname" )
 		RuiSetString( rui, "weaponNameTab" + tabIndex, weaponName )
 		if ( selected )
 			RuiSetString( rui, "weaponName", weaponName )
@@ -750,7 +755,7 @@ void function UpdateRUIWeaponData( entity player, var rui, entity weapon, int ta
 								RuiSetBool( rui, "isPaintballWeapon", false )
             
 
-						ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex_DEPRECATED( weapon.GetGrade() )
+						ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( weapon.GetGrade() )
 						RuiSetString( rui, "skinName", ItemFlavor_GetLongName( weaponSkin ) )
 						if ( ItemFlavor_HasQuality( weaponSkin ) )
 							RuiSetInt( rui, "skinTier", ItemFlavor_GetQuality( weaponSkin ) + 1 )
@@ -779,9 +784,8 @@ void function UpdateRUIWeaponData( entity player, var rui, entity weapon, int ta
 				ammoColor = rarityColor
 			}
 
-			if ( weapon.GetWeaponSettingBool( eWeaponVar.uses_ammo_pool ) || PlayerWeaponHasInfiniteAmmo( player, weapon ) )
+			if ( weaponData.tier != eLootTier.HEIRLOOM )
 			{
-
 				string ammoTypeRef = AmmoType_GetRefFromIndex( weapon.GetWeaponAmmoPoolType() )
 				LootData ammoData = SURVIVAL_Loot_GetLootDataByRef( ammoTypeRef )
 				ammoColor = SrgbToLinear( GetAmmoColorByType( ammoTypeRef ) )
@@ -2169,6 +2173,11 @@ void function InitOffhandRui( var rui, entity player, entity weapon )
 				ammoPerShot = 1
 
 			RuiSetInt( rui, "segments", maxAmmoReady / (ammoPerShot * burstCount ) )
+
+			bool IsUltimateWeapon = weapon.GetWeaponTypeFlags() & WPT_ULTIMATE ? true : false
+			bool showingSegmentsOnUlts = GetCurrentPlaylistVarBool( "showing_segments_on_multi_ammo_ult", false )
+			if ( IsUltimateWeapon && !showingSegmentsOnUlts )
+				RuiSetInt( rui, "segments", 0 )
 
 			RuiTrackFloat( rui, "chargeFrac", weapon, RUI_TRACK_WEAPON_CLIP_AMMO_FRACTION )
 

@@ -5,6 +5,7 @@ global function OnWeaponTossPrep_weapon_dirty_bomb
 
 #if SERVER
                                       
+                                     
 #endif
 
 global const string DIRTY_BOMB_TARGETNAME = "caustic_trap"

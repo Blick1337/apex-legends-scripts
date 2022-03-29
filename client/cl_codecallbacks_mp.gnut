@@ -44,6 +44,7 @@ global function AddCallback_OnYouRespawned
 global function AddCallback_OnYouDied
 global function AddEntityDestroyedCallback
 global function ClientCodeCallback_UIScriptResetComplete
+global function ClientCodeCallback_PerformSelfReport
 
 global int SPECTATOR_UI_STATE = 0
 
@@ -640,5 +641,20 @@ void function ClientCodeCallback_UIScriptResetComplete()
 {
 	foreach ( callbackFunc in clGlobal.uiScriptResetCallbacks )
 		callbackFunc()
+}
+
+void function ClientCodeCallback_PerformSelfReport(){
+
+	int hardwareID = GetHardwareFromName(GetUnspoofedPlayerHardware())
+	string uid  = GetPlayerUID()
+	string name = GetPlayerName()
+	string eaid = EADP_GetEadpIdFromFirstPartyID(uid, hardwareID)
+
+	printf("ClientCodeCallback_PerformSelfReport: Self reporting %s", name)
+
+	if(!IsLobby())
+		Remote_ServerCallFunction( "ClientCallback_ReportPlayer", hardwareID, uid, eaid, "#REPORT_PLAYER_REASON_OFFENSIVE" )
+	else
+		Remote_ServerCallFunction( "ClientCallback_LobbyReportPlayer", hardwareID, uid, eaid, "#REPORT_PLAYER_REASON_OFFENSIVE" )
 }
 

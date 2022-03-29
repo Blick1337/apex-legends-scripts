@@ -641,12 +641,16 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 		                            
 
                  
+                                      
+       
+
+                 
                                  
        
 
 	                       
 	                                   
-	                                                                                                                            
+	                                                                                 
 
 	                                                                         
 	                                                   
@@ -908,7 +912,7 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 	                                                    
 	                                             
 
-	              
+	                                   
 	 
 		                                                            
 		                                           
@@ -1581,7 +1585,7 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 	                                                           
 
 	                                                       
-	                                      
+	                                                                                     
 	                                                                                                                                                      
 	                                                                          
 
@@ -1610,7 +1614,7 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 		                               
 		                              
 
-		                                                                                                                                                     
+		                                                                                                                                           
 
 		                        
 		 
@@ -2216,6 +2220,11 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 		                                       
 		      
 	 
+
+                 
+                             
+                                                                               
+       
  
 
                                                                          

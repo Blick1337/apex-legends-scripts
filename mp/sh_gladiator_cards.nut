@@ -70,9 +70,11 @@ global function Loadout_GladiatorCardStance
 global function Loadout_GladiatorCardBadge
 global function Loadout_GladiatorCardBadgeTier
 global function Loadout_GladiatorCardStatTracker
+global function Loadout_GladiatorCardStatTrackerValue
 global function GladiatorCardFrame_GetSortOrdinal
 global function GladiatorCardFrame_GetCharacterFlavor
 global function GladiatorCardFrame_ShouldHideIfLocked
+global function GladiatorCardFrame_IsSharedBetweenCharacters
 global function GladiatorCardStance_GetSortOrdinal
 global function GladiatorCardStance_GetCharacterFlavor
 global function GladiatorCardBadge_GetSortOrdinal
@@ -81,6 +83,7 @@ global function GladiatorCardBadge_GetUnlockStatRef
 global function GladiatorCardStatTracker_GetSortOrdinal
 global function GladiatorCardStatTracker_GetCharacterFlavor
 global function GladiatorCardStatTracker_GetFormattedValueText
+global function GladiatorCardStatTracker_IsSharedBetweenCharacters
 global function GladiatorCardBadge_ShouldHideIfLocked
 global function GladiatorCardBadge_IsTheEmpty
 global function GladiatorCardTracker_IsTheEmpty
@@ -1200,7 +1203,14 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		entry.DEV_category = "gcard_frames"
 		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " GCard Frame"
 		entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_FRAME
-		entry.defaultItemFlavor = frameList[0]                                                                                          
+		foreach ( ItemFlavor frame in frameList )
+		{
+			if ( ItemFlavor_GetGRXMode( frame ) == eItemFlavorGRXMode.NONE )
+			{
+				entry.defaultItemFlavor = frame
+				break
+			}
+		}
 		entry.validItemFlavorList = frameList
 		entry.isSlotLocked = bool function( EHI playerEHI ) {
 			return !IsLobby()
@@ -1403,14 +1413,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " GCard Tracker " + trackerIndex
 		entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_TRACKER1 + 2 * trackerIndex
 		entry.validItemFlavorList = trackerList
-		if ( trackerIndex == 0 && trackerList.len() > 1 )
-		{
-			entry.defaultItemFlavor = entry.validItemFlavorList[ 1 ]
-		}
-		else
-		{
-			entry.defaultItemFlavor = entry.validItemFlavorList[ 0 ]
-		}
+		entry.defaultItemFlavor = entry.validItemFlavorList[ 0 ]
 		entry.isSlotLocked = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
@@ -1588,7 +1591,6 @@ void function TriggerNestedGladiatorCardUpdate( NestedGladiatorCardHandle handle
 void function ActualUpdateNestedGladiatorCard( NestedGladiatorCardHandle handle )
 {
 	WaitEndFrame()
-	handle.updateQueued = false
 
 	Signal( handle, "ActualUpdateNestedGladiatorCard" )
 
@@ -1945,6 +1947,8 @@ void function ActualUpdateNestedGladiatorCard( NestedGladiatorCardHandle handle 
 			}
 		}
 	}
+
+	handle.updateQueued = false
 }
 #endif
 
@@ -2703,7 +2707,10 @@ void function UpdateRuiWithStatTrackerData( var rui, string prefix, EHI playerEH
 	if ( isLootCeremony )
 	{
 		RuiSetBool( rui, prefix + "IsLootCeremony", isLootCeremony )
-		RuiSetString( rui, prefix + "Character", ItemFlavor_GetShortName( GladiatorCardStatTracker_GetCharacterFlavor( trackerFlav ) ) )
+
+		ItemFlavor ornull ref = GladiatorCardStatTracker_GetCharacterFlavor( trackerFlav )
+		if ( ref != null )
+			RuiSetString( rui, prefix + "Character", ItemFlavor_GetShortName( expect ItemFlavor( GladiatorCardStatTracker_GetCharacterFlavor( trackerFlav ) ) ) )
 	}
 
 	LoadoutEntry valueEntry
@@ -2925,9 +2932,12 @@ int function GladiatorCardFrame_GetSortOrdinal( ItemFlavor flavor )
 
 
 #if SERVER || CLIENT || UI
-ItemFlavor function GladiatorCardFrame_GetCharacterFlavor( ItemFlavor flavor )
+ItemFlavor ornull function GladiatorCardFrame_GetCharacterFlavor( ItemFlavor flavor )
 {
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.gladiator_card_frame )
+
+	if ( GladiatorCardFrame_IsSharedBetweenCharacters( flavor ) )
+		return null
 
 	Assert( GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "parentItemFlavor" ) != "" )
 
@@ -2941,6 +2951,15 @@ bool function GladiatorCardFrame_ShouldHideIfLocked( ItemFlavor flavor )
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.gladiator_card_frame )
 
 	return GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "shouldHideIfLocked" )
+}
+#endif
+
+#if SERVER || CLIENT || UI
+bool function GladiatorCardFrame_IsSharedBetweenCharacters( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.gladiator_card_frame )
+
+	return GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "isSharedBetweenCharacters" )
 }
 #endif
 
@@ -3345,6 +3364,15 @@ bool function GladiatorCardTracker_IsTheEmpty( ItemFlavor flavor )
 
 
 #if SERVER || CLIENT || UI
+bool function GladiatorCardStatTracker_IsSharedBetweenCharacters( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.gladiator_card_stat_tracker )
+
+	return ( GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "parentItemFlavor" ) == "" )
+}
+#endif
+
+#if SERVER || CLIENT || UI
 int function GladiatorCardStatTracker_GetSortOrdinal( ItemFlavor flavor )
 {
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.gladiator_card_stat_tracker )
@@ -3355,9 +3383,12 @@ int function GladiatorCardStatTracker_GetSortOrdinal( ItemFlavor flavor )
 
 
 #if SERVER || CLIENT || UI
-ItemFlavor function GladiatorCardStatTracker_GetCharacterFlavor( ItemFlavor flavor )
+ItemFlavor ornull function GladiatorCardStatTracker_GetCharacterFlavor( ItemFlavor flavor )
 {
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.gladiator_card_stat_tracker )
+
+	if ( GladiatorCardStatTracker_IsSharedBetweenCharacters(flavor) )
+		return null
 
 	Assert( GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "parentItemFlavor" ) != "" )
 

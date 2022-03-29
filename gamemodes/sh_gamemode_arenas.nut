@@ -488,12 +488,6 @@ void function ShGamemodeArenas_Init()
 	                                                                                    
 	                                           
 
-	                                                                  
-	                                                                   
-	                                                                 
-	                                                                     
-	                                                                     
-
                       
 	                            
 	 
@@ -902,19 +896,6 @@ void function EntitiesDidLoad()
 		                                                                                                                                                    
 	    
 		                                                                                                                                                  
-
-	                             
-
-	                                                       
-		                                                        
-	                                                             
-		                                                         
-	                                                           
-		                                                       
-	                       
-		                                                                      
-	                       
-		                                                                      
  
 
                                                          
@@ -1299,10 +1280,6 @@ void function EntitiesDidLoad()
 		    
 			                                 
 	 
-	                                       
-		                             
-	                                       
-		                              
 
 	                 
 		                                                      
@@ -2086,7 +2063,20 @@ void function EntitiesDidLoad()
 
 	                                                                               
 	 
+		                                                            
+		                                                                                                      
+
+		                                                                              
 		                                                                                           
+		                                                     
+		                           
+		 
+			                                                                                                  
+			                                                 
+				                                              
+		 
+
+		                                                                        
 		                                                                                        
 	 
 	    
@@ -3154,10 +3144,6 @@ bool function IsArenaMode()
 		                                                           
 
 		                                                                                                                                  
-
-		                           
-
-		                                                                      
 	 
  
 

@@ -89,8 +89,6 @@ void function RemoteFunctions_Init_Begin()
 
 	Remote_RegisterClientFunction( "SCB_WattsonRechargeHint" )
 
-	LiveAPI_RegisterNetworking()
-
 	  
 	RegisterNetworkedVariable( "gameStateChangeTime", SNDC_GLOBAL_NON_REWIND, SNVT_TIME, -1.0 )
 	RegisterNetworkedVariable( "gameStartTime", SNDC_GLOBAL_NON_REWIND, SNVT_TIME, -1.0 )
@@ -328,6 +326,8 @@ void function RemoteFunctions_Init_Begin()
 			Ultimates_RegisterNetworking()
 			ClientMusic_RegisterNetworking()
 
+			LiveAPI_RegisterNetworking()
+
 			RegisterNetworkedVariable( "currentDeathFieldStage", SNDC_GLOBAL, SNVT_INT, -1 )
 			RegisterNetworkedVariable( "nextCircleStartTime", SNDC_GLOBAL, SNVT_TIME, -1 )
 			RegisterNetworkedVariable( "circleCloseTime", SNDC_GLOBAL, SNVT_TIME, -1 )
@@ -447,8 +447,18 @@ void function RemoteFunctions_Init_Begin()
      
                                                                                        
      
-                                                                                   
-      
+              
+        
+     
+                                                                                       
+     
+                    
+
+                                  
+    
+                                                                                  
+    
+                            
 
 #if CLIENT
 			CLSurvival_RegisterNetworkFunctions()
@@ -520,6 +530,10 @@ void function RemoteFunctions_Init_Begin()
 
                                
                                                 
+      
+
+                                
+			ShGameMode_AprilFools_S12_RegisterNetworking()
       
 
                       
@@ -600,9 +614,11 @@ void function RemoteFunctions_Init_Begin()
        
 
 	Remote_RegisterClientFunction( "ServerCallback_AddDroneClientData", "entity" )
-	Remote_RegisterClientFunction( "ServerCallback_SetLootDroneTrailFXType", "entity", "int", 0, INT_MAX )
-	Remote_RegisterClientFunction( "ServerCallback_ClearLootDroneTrailFXType", "entity", "int", 0, INT_MAX )
+	Remote_RegisterClientFunction( "ServerCallback_SetDroneTrailFXType", "entity", "int", 0, INT_MAX )
+	Remote_RegisterClientFunction( "ServerCallback_ClearDroneTrailFXType", "entity", "int", 0, INT_MAX )
 	Remote_RegisterClientFunction( "ServerCallback_StopLootRollerFX", "int", 0, INT_MAX )
+	Remote_RegisterClientFunction( "ServerCallback_AdDroneSetBillboardVFX", "entity", "int", 0, INT_MAX )
+	Remote_RegisterClientFunction( "ServerCallback_AdDroneKillBillboardVFX", "entity" )
 
                           
 		Remote_RegisterClientFunction( "ServerCallback_SetDesertlandsTrainAtStation", "bool" )
@@ -775,7 +791,6 @@ void function RemoteFunctions_Init_Begin()
 	Remote_RegisterServerFunction( "ClientCallback_temp_newness_mark", "int", INT_MIN, INT_MAX )
 
 	                          
-	Remote_RegisterServerFunction( "ClientCallback_itemflavors_consistency", "bool", "int", INT_MIN, INT_MAX )
 
 	                                                                              
 	Remote_RegisterServerFunction( "ClientCallback_RUIProfileList", "string", "string", "string", "int", 0, INT_MAX,
@@ -825,15 +840,28 @@ void function RemoteFunctions_Init_Begin()
 
 	MobileHMG_RegisterNetworkFunctions()
 
-	Remote_RegisterUIFunction( "EnableCharacterChangeInFiringRange", "bool" )
+	Remote_RegisterClientFunction( "SCB_FiringRange_EnableCharacterChange", "bool" )
+	Remote_RegisterClientFunction( "SCB_FiringRange_SetPlayerInFinale", "bool" )
 
                        
                                                                                                                  
        
 
                
-                                                                                        
-                                                                                                    
+		Remote_RegisterClientFunction( "ServerCallback_S12E05CreateScreenRUI" )
+       
+
+               
+		Remote_RegisterServerFunction( "StoryEvent_OnRadioVignetteFinishedLobbyKick" )
+		Remote_RegisterUIFunction( "StoryEvent_PlayRadioVignetteForChapter", "int", 0, 4 )
+
+		Remote_RegisterClientFunction( "ServerCallback_FRC_MemoriesEffect", "bool" )
+		Remote_RegisterClientFunction( "ServerCallback_FRC_SetChallengeKey", "string")
+		Remote_RegisterClientFunction( "ServerCallback_FRC_UpdateState", "int", 0, 4 )
+		Remote_RegisterClientFunction( "ServerCallback_FRC_SetChallengeScore", "int", 0, INT_MAX )
+		Remote_RegisterClientFunction( "ServerCallback_FRC_UpdateOutofBounds", "bool", "float", 0.0, 10.0, 32 )
+		Remote_RegisterClientFunction( "ServerCallback_FRC_PostGameStats", "int", 0, INT_MAX, "int", 0, INT_MAX, "int", 0, INT_MAX, "int", 0, INT_MAX )
+		Remote_RegisterClientFunction( "ServerCallback_FRC_FinaleShowUI", "int", 0, 4 )
        
 
 	             

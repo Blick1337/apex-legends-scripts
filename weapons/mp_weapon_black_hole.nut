@@ -440,7 +440,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                                           
 	                                          
 	                                          
-	                                                                          
+	                                                                                   
 
 	                             
 

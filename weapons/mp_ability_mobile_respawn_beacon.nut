@@ -365,6 +365,9 @@ bool function MobileRespawn_ConditionalCheck( string ref, entity player )
 	                                                                                                                                                             
 	                                                                            
 
+
+	                                                                                   
+
 	       
 		                                       
 		 
@@ -382,26 +385,31 @@ bool function MobileRespawn_ConditionalCheck( string ref, entity player )
 	                                      
 	                                                                                                    
 	                                                                                       
-	                      
+
+	                                   
+	                                 
+
+	                                
 	 
-		                                   
-		                                              
 		                                 
-		                                            
+		                               
 	 
+
 	                  
 
 	                                                                
 	                                                                                                                          
 	                                                                                               
 	                                                                                        
-	                      
+
+	                                     
+	                              
+	                                
 	 
-		                                     
-		                                                
-		                              
-		                                         
+		                                   
+		                            
 	 
+
 	                                                                                     
 	                                                                       
 	                                                                         
@@ -445,10 +453,20 @@ bool function MobileRespawn_ConditionalCheck( string ref, entity player )
 	                                                                     
 	                                   
 	                                                                                                                                                                                      
-	                      
+	                                    
+	                                
+		                                  
+
+	                              
 	 
-		                                    
-		                                               
+		                     
+		 
+			                                                                  
+		 
+		    
+		 
+			                                       
+		 
 	 
 
 	                                                                                                                                                                   
@@ -919,7 +937,7 @@ void function OnBeginPlacingMobileRespawn( entity weapon, entity player )
                          
                                                                                                       
  
-                                                              
+                                                                      
         
 
                                    

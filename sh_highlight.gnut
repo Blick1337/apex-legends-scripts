@@ -557,6 +557,34 @@ void function Highlight_Init()
 	HighlightContext_SetFarFadeDistance( highlight, GetEyeForQualityRadius() )
 	highlight.colorID = COLORID_LOOT_TIER3
 
+                  
+                                                              
+                                                                         
+                                                                                
+                                                          
+                                                          
+                                           
+                                                                   
+                                                                          
+                                                                     
+                                                
+                                                                            
+                                       
+
+                                                                
+                                                                         
+                                                                                
+                                                          
+                                                          
+                                           
+                                                                   
+                                                                          
+                                                                     
+                                                
+                                                                            
+                                       
+       
+
                  
                                                          
                                                                                   

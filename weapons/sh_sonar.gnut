@@ -33,6 +33,7 @@ global function ServerCallback_SetSonarHighlightDrawDist_AllianceProximity
 const asset FX_SONAR_TARGET = $"P_ar_target_sonar"
 const asset FX_CAMERA_TARGET = $"P_ar_target_drone"
 const asset FX_DRONE_TARGET = $"P_ar_foa_lockon"
+const asset FX_HEAL_TARGET = $"P_ar_target_ally"
 
 struct
 {
@@ -51,7 +52,6 @@ struct
 
 void function SonarShared_Init()
 {
-	RegisterSignal( "SonarPing" )
 	PrecacheParticleSystem( $"P_ar_sonar_CP_amp" )
 	PrecacheParticleSystem( $"P_ar_sonar_CP" )
 	PrecacheParticleSystem( $"P_ar_sonar_plane_CP" )
@@ -65,6 +65,9 @@ void function SonarShared_Init()
 	PrecacheParticleSystem( FX_SONAR_TARGET )
 	PrecacheParticleSystem( FX_CAMERA_TARGET )
 	PrecacheParticleSystem( FX_DRONE_TARGET )
+               
+                                          
+       
 
 	#if SERVER
 		                                                                      
@@ -178,9 +181,9 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 	           
  
 
-                                                      
+                                                                                   
  
-	                                                                                           
+	                                                                                                                                 
 	               
  
 
@@ -276,10 +279,6 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 		 
                            
 
-	                                   
-	                                                         
-	                                      
-
 	                                     
 	 
 		                                     
@@ -300,6 +299,10 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 					                                                 
 				                                                                                         
 					                                                
+                  
+                                                                                              
+                                                    
+          
 				    
 					                                                
 				                                                                                                                                         

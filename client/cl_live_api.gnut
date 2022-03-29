@@ -15,6 +15,7 @@ global function ServerCallback_LiveAPI_LogNetwork_AmmoChanged
 global function ServerCallback_LiveAPI_LogNetwork_RespawnTeam
 global function ServerCallback_LiveAPI_LogNetwork_ArenasBuyMenu
 global function ServerCallback_LiveAPI_LogNetwork_MatchSetup
+global function ServerCallback_LiveAPI_LogNetwork_PlayerIntStatChanged
 
         
 global function LiveAPI_GetWeaponNameFromDamageSourceID
@@ -26,6 +27,7 @@ global function LiveAPI_OnLocalPlayerSpawned
 struct
 {
 	bool isEnabled = false
+	array<entity> connectedPlayers
 } file
 
             
@@ -59,8 +61,18 @@ string function LiveAPI_GetItemNameFromEntity( entity itemEntity )
 	if( !IsValid( itemEntity ) )
 		return "Unrecognised item (Invalid Entity)"
 
-	LootData lootData = SURVIVAL_Loot_GetLootDataByIndex( itemEntity.GetSurvivalInt() )
-	return LiveAPI_GetItemNameFromLootData( lootData )
+	if( itemEntity.IsProp() )
+	{
+		LootData lootData = SURVIVAL_Loot_GetLootDataByIndex( itemEntity.GetSurvivalInt() )
+		return LiveAPI_GetItemNameFromLootData( lootData )
+	}
+	else if ( itemEntity.IsWeaponX() )
+	{
+		Warning( "[LiveAPI] LiveAPI_GetItemNameFromEntity: received weapon as itemEntity" )
+		return LiveAPI_GetItemNameFromRef( itemEntity.GetWeaponClassName() )
+	}
+
+	return "Unrecognised item (Unsupported Entity Type)"
 }
 
                  
@@ -81,12 +93,20 @@ void function ServerCallback_LiveAPI_LogNetwork_MatchSetup( string playlistName,
 	)
 }
 
-void function LiveAPI_OnPlayerCreated( entity player )
+void function LiveAPI_OnPlayerConnectionStateChanged( entity player )
 {
 	if( !IsValid( player ) || !player.IsPlayer() )
 		return
 
-	LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.playerConnected, [ LiveAPI_GetPlayerIdentityTable( player ) ], [ "player" ] )
+	if( player.IsConnectionActive() )
+	{
+		file.connectedPlayers.append( player )
+		LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.playerConnected, [ LiveAPI_GetPlayerIdentityTable( player ) ], [ "player" ] )
+	}
+	else if( file.connectedPlayers.contains( player ) )
+	{
+		file.connectedPlayers.fastremovebyvalue( player )
+	}
 }
 
 void function ServerCallback_LiveAPI_LogNetwork_OnePlayer( int eventIndex, entity playerOne )
@@ -388,6 +408,17 @@ void function LiveAPI_OnPlayerDowned( entity attacker, entity victim, int damage
 		[ "attacker",								  "victim", 								"weapon" ]
 	)
 }
+
+void function ServerCallback_LiveAPI_LogNetwork_PlayerIntStatChanged( entity player, string statName, int newVal )
+{
+	if( !IsValid(player) )
+		return
+
+	LiveAPI_WriteLogUsingCustomFieldNames(eLiveAPI_EventTypes.playerStatChanged,
+		[ LiveAPI_GetPlayerIdentityTable( player ),	statName, 	newVal ],
+		[ "player",									"statName", "newValue" ]
+	)
+}
                       
 
               
@@ -483,12 +514,12 @@ void function LiveAPI_StartCallbacks()
 
 	                                                                   
 	                           
-	string version = LiveAPI_GetGameVersion()
+	string version = GetGameVersion()
 
 	LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.init, [ version ], [ "gameVersion" ] )
 
                         
-	AddCreateCallback( PLAYER_CLASSNAME, LiveAPI_OnPlayerCreated )
+	AddCallback_ClientOnPlayerConnectionStateChanged( LiveAPI_OnPlayerConnectionStateChanged )
     AddCallback_OnPlayerDisconnected( LiveAPI_OnPlayerDisconnected )
 
 	AddCallback_OnPlayerWeaponSwitched( LiveAPI_onPlayerWeaponSwitched )

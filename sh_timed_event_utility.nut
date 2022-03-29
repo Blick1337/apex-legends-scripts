@@ -8,6 +8,10 @@ global function TimedEvents_Init
 	                                                    
 #endif
 
+#if DEV && SERVER
+	                                                  
+#endif                     
+
 
 
 
@@ -451,3 +455,42 @@ void function ManageTimedEventTracker( var gameStateRui, int gamestate )
 	file.timedEventRui = null
 }
 #endif
+
+
+#if DEV && SERVER
+                                                        
+
+                                      
+                           
+ 
+	       
+	        
+	        
+
+	      
+ 
+
+                                                                                                 
+ 
+	                                                                  
+	 
+		                                                                                                                                            
+	 
+
+	                                                                                                                      
+	                                                  
+	 
+		                               
+		      
+	 
+
+	                                          
+	 
+		                                                                                                              
+		      
+	 
+
+	                                                    
+	                                                                                                                 
+ 
+#endif                     

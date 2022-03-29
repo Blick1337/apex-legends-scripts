@@ -93,65 +93,6 @@ global struct BackendError
 	string errorString
 }
 
-                             
-   
-  	           
-  	              
-  	                    
-  	                     
-  	               
-  	               
-  	                
-  	           
-  	              
-   
-
-                                 
-   
-  	               
-  	             
-  	                  
-  	           
-  	              
-  	           
-  	                    
-  	                     
-  	                 
-  	               
-  	                
-  	                
-  	                
-  	                
-  	              
-  	              
-  	              
-  	              
-  	              
-  	                  
-  	           
-  	        
-  	          
-  	            
-  	             
-  	         
-  	              
-  	              
-  	               
-  	             
-  	                   
-  	                
-  	                 
-  	                  
-   
-
-global struct CommunityMembership
-{
-	int communityId
-	string communityName
-	string communityClantag
-	string membershipLevel
-}
-
 global struct CommunityFriends
 {
 	bool isValid
@@ -203,8 +144,6 @@ global struct CommunityUserInfo
 	float lastServerChangeTime
 	string privacySetting
 	array<int> charData
-
-	int numCommunities
 }
 
 global struct PartyMember
@@ -220,32 +159,14 @@ global struct PartyMember
 	string unspoofedHardware
 }
 
-                          
-   
-  	                 
-  	                   
-  	                     
-  	                    
-  	            
-  	                   
-  	                
-  	              
-  	              
-  	              
-  	                          
-   
-
-
 global struct Party
 {
-	string partyType
 	string playlistName
 	string originatorName
 	string originatorUID
 	int numSlots
 	int numClaimedSlots
 	int numFreeSlots
-	float timeLeft
 	bool amIInThis
 	bool amILeader
 	bool searching
@@ -280,25 +201,16 @@ global struct RemoteMatchInfo
 	array<int> teamScores
 }
 
-                            
-   
-  	             
-  	                  
-  	              
-  	             
-  	               
-  	                  
-  
-  	               
-  	                     
-  	                
-  	                 
-  	               
-  	                    
-  	                  
-  	                  
-  	                
-   
+global struct NetTraceRouteResults
+{
+	string address
+	int sent
+	int received
+	int bestRttMs
+	int worstRttMs
+	int lastRttMs
+	int averageRttMs
+}
 
 #if UI || CLIENT
 global struct MatchmakingDatacenterETA
@@ -749,6 +661,7 @@ global enum eRichPresenceSubstitutionMode
 	MODE_MAP,									          			       
 	MODE_MAP_SQUADSLEFT,						          			       			                                                                                   
 	MODE_MAP_FRIENDLYSCORE_ENEMYSCORE,			          			       			                                                                       
+	MODE_MAP_FRIENDLYSCORE_ENEMYSCORE_PERCENTAGE,          			       			                                                                       
 	PARTYSLOTSUSED_PARTYSLOTSMAX,				                 	              	                         
 }
 
@@ -775,7 +688,7 @@ global struct CustomMatch_LobbyPlayer
 	string clubTag
 	bool isAdmin = false
 	int team = 1
-	int readiness = 0
+	int flags = 0
 }
 
 global struct CustomMatch_LobbyState
@@ -796,6 +709,43 @@ global struct CustomMatch_LobbyState
 	bool anonMode = false
 	array<CustomMatch_LobbyPlayer> players
 	table<int, string> teamNames
+}
+
+global struct CustomMatch_MatchPlayer
+{
+	string uid
+	string hardware
+	string name
+	string clubTag
+	string character
+	int status
+}
+
+global struct CustomMatch_MatchTeam
+{
+	int index
+	string name
+	int placement
+	int killCount
+	array<CustomMatch_MatchPlayer> players
+}
+
+global struct CustomMatch_MatchSummary
+{
+	string gamemode
+	bool inProgress
+	array<CustomMatch_MatchTeam> teams
+}
+
+global struct CustomMatch_MatchHistory
+{
+	int matchNumber
+	float endTime
+}
+
+global struct CustomMatch_LobbyHistory
+{
+	array<CustomMatch_MatchHistory> matches
 }
 
 #endif                

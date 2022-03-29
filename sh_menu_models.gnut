@@ -1642,13 +1642,10 @@ void function InitMenuEntities()
 	
 	bool eventLobbyOverride = GetCurrentPlaylistVarBool( "lobby_event_positioning_override", false )
 	                                                    
-                     
-		if ( CalEvent_IsActive( GetItemFlavorByAsset( $"settings/itemflav/calevent/s11e01/collection.rpak" ), GetUnixTimestamp() ) || eventLobbyOverride )
-			ApplyEventPositioning()
-      
-                           
-                          
-       
+	if ( CalEvent_IsActive( GetItemFlavorByAsset( $"settings/itemflav/calevent/s11e01/collection.rpak" ), GetUnixTimestamp() ) || eventLobbyOverride )
+		ApplyEventPositioning()
+	if ( eventLobbyOverride )
+		ApplyEventPositioning()
 
 	InitPresentationData()
 	InitMenuModelFlashData()
@@ -1854,7 +1851,7 @@ void function UpdateMenuCharacterModelInternal( int overrideCharacterFlavorNetwo
 	if ( overrideCharacterFlavorNetworkIndex == -1 )
 		character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
 	else
-		character = GetItemFlavorByNetworkIndex_DEPRECATED( overrideCharacterFlavorNetworkIndex )
+		character = GetItemFlavorByNetworkIndex( overrideCharacterFlavorNetworkIndex )
 
 	#if DEV
 		if ( GetBugReproNum() == 1747 )                                                                                                                                   
@@ -1938,7 +1935,7 @@ void function UIToClient_PreviewCharacterEmote( int index, int overrideCharacter
 
 void function UIToClient_PreviewCharacterSkin( int index, int overrideCharacterFlavorNetworkIndex )
 {
-	clGlobal.previewMenuPilotModels.characterSkin = GetItemFlavorByNetworkIndex_DEPRECATED( index )
+	clGlobal.previewMenuPilotModels.characterSkin = GetItemFlavorByNetworkIndex( index )
 
 	if ( clGlobal.previewMenuPilotModels.characterSkin != null )
 		ModelData_SetSkinFlavor( file.customizeCharacter, expect ItemFlavor( clGlobal.previewMenuPilotModels.characterSkin ) )
@@ -2479,11 +2476,11 @@ void function UIToClient_PreviewWeaponSkin( int skinFlavorIndex, int charmFlavor
 	if ( !file.initializedMenuModels )                                                                        
 		return
 
-	ItemFlavor weaponSkin   = GetItemFlavorByNetworkIndex_DEPRECATED( skinFlavorIndex )
+	ItemFlavor weaponSkin   = GetItemFlavorByNetworkIndex( skinFlavorIndex )
 	ItemFlavor weaponFlavor = WeaponSkin_GetWeaponFlavor( weaponSkin )
 	ModelData_SetSkinFlavor( file.customizeWeapon, weaponSkin )
 
-	ItemFlavor charmFlavor = GetItemFlavorByNetworkIndex_DEPRECATED( charmFlavorIndex )
+	ItemFlavor charmFlavor = GetItemFlavorByNetworkIndex( charmFlavorIndex )
 
 	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
 	entity weaponMover = ModelData_GetMover( file.customizeWeapon )
@@ -2670,7 +2667,7 @@ void function UpdateStoreItemDisplay_WeaponCharm( ItemFlavor item )
 	SetWeaponSkinLocalOffset( weaponEnt, true )
 }
 
-void function UpdateStoreItemDisplay_BannerCard( ItemFlavor item )
+void function UpdateStoreItemDisplay_BannerCard( ItemFlavor item, bool isSingleItem = false )
 {
 	int itemType = ItemFlavor_GetType( item )
 	Assert( itemType == eItemType.gladiator_card_frame || itemType == eItemType.gladiator_card_stance )
@@ -2695,7 +2692,16 @@ void function UpdateStoreItemDisplay_BannerCard( ItemFlavor item )
 
 	if ( itemType == eItemType.gladiator_card_frame )
 	{
-		ItemFlavor character = GladiatorCardFrame_GetCharacterFlavor( item )
+		ItemFlavor ornull character = GladiatorCardFrame_GetCharacterFlavor( item )
+		if ( character == null )
+		{
+			if ( isSingleItem == false )
+				character = GetRandomGoodItemFlavorForLoadoutSlot( LocalClientEHI(), Loadout_Character() )
+			else
+				character = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_Character() )
+		}
+
+		expect ItemFlavor( character )
 		SetNestedGladiatorCardOverrideCharacter( nestedGCHandleFront, character )
 		SetNestedGladiatorCardOverrideFrame( nestedGCHandleFront, item )
 	}
@@ -2904,7 +2910,11 @@ void function UpdateStoreItemDisplay_StatTracker( ItemFlavor item )
 	var topo = CreateRUITopology_Worldspace( origin + <0, 0, (ruiHeight * 0.5)>, placardAngles, ruiWidth, ruiHeight )
 	var rui = RuiCreate( ruiAsset, topo, RUI_DRAW_WORLD, 0 )
 
-	ItemFlavor character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+	ItemFlavor ornull character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+	if ( character == null )                                  
+		character = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_Character() )
+
+	expect ItemFlavor( character )
 
 	RuiSetBool( rui, "isVisible", true )
 	RuiSetBool( rui, "battlepass", true )
@@ -3148,7 +3158,7 @@ void function UpdateStoreItemDisplay_StandingEmote( ItemFlavor item )
                       
 
 
-void function UIToClient_PreviewStoreItem( SettingsAssetGUID itemFlavorGUID )
+void function UIToClient_PreviewStoreItem( SettingsAssetGUID itemFlavorGUID, bool isSingleItem = false )
 {
 	ClearStoreInspectItem()
 
@@ -3164,7 +3174,7 @@ void function UIToClient_PreviewStoreItem( SettingsAssetGUID itemFlavorGUID )
 		if ( InputIsButtonDown( KEY_LSHIFT ) )
 		{
 			string locedName = Localize( ItemFlavor_GetLongName( item ) )
-			printt( "\"" + locedName + "\" grx ref is: " + GetGlobalSettingsString( item._____INTERNAL_settingsAsset, "grxRef" ) )
+			printt( "\"" + locedName + "\" grx ref is: " + GetGlobalSettingsString( ItemFlavor_GetAsset( item ), "grxRef" ) )
 		}
 	#endif       
 
@@ -3195,7 +3205,7 @@ void function UIToClient_PreviewStoreItem( SettingsAssetGUID itemFlavorGUID )
 		case eItemType.gladiator_card_frame:
 			autoRotate = false
 			DisableModelTurn()
-			UpdateStoreItemDisplay_BannerCard( item )
+			UpdateStoreItemDisplay_BannerCard( item, isSingleItem )
 			break
 
 		case eItemType.gladiator_card_badge:

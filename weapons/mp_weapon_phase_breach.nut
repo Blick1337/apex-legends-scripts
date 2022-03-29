@@ -88,6 +88,7 @@ struct
 	float maxEndingMoverSpeedSqr
 	bool allowStartOnMovers
 	bool allowEndOnMovers
+	array<string> invalidTriggerEndingTypes = ["trigger_slip"]
 } file
 
 void function MpWeaponPhaseBreach_Init()
@@ -107,6 +108,9 @@ void function MpWeaponPhaseBreach_Init()
 	#if SERVER
 		                                                                                            
 	#endif
+
+	if ( PHASE_BREACH_ALLOW_END_ON_OOB == false )
+		file.invalidTriggerEndingTypes.append( "trigger_out_of_bounds" )
 }
 
 
@@ -734,12 +738,8 @@ bool function IsBreachPositionValid( entity player, vector position, entity trac
 	if ( !IsNormalMostlyVertical( normal ) )
 		return false
 
-	array<string> triggersToCheck = ["trigger_slip"]
-	if ( PHASE_BREACH_ALLOW_END_ON_OOB == false )
-		triggersToCheck.append( "trigger_out_of_bounds" )
-
 	foreach ( entity trigger in GetTriggersByClassesInRealms_HullSize(
-		triggersToCheck,
+		file.invalidTriggerEndingTypes,
 		position, position,
 		player.GetRealms(), TRACE_MASK_PLAYERSOLID,
 		player.GetPlayerMins(), player.GetPlayerMaxs() ) )

@@ -30,6 +30,7 @@ global function Ping_GetSortModifier
 global function Ping_ExecutePendingNewPingWithOverride
 global function Ping_GetPendingNewPingTargetEnt
 global function Ping_SetDeathbox
+global function Send_PingLoot
                         
 global function Ping_SetControlObjective
                               
@@ -316,7 +317,7 @@ global enum ePingType
        
 
                 
-                  
+                     
        
 
 	ASH_PASSIVE_PING_DEATHBOX,
@@ -325,6 +326,12 @@ global enum ePingType
 	PING_PHASE_BREACH,
 	OPENED_PHASE_BREACH,
 	ENEMY_TETHERED,
+
+               
+              
+             
+                      
+       
 
                              
 		EXPLOSIVEHOLD,
@@ -350,6 +357,13 @@ global enum ePingType
 
                
 		MAGGIE_WRECKING_BALL,
+       
+
+                  
+                        
+                      
+                      
+                    
        
 
 	PATHFINDER_STATUE,
@@ -549,7 +563,7 @@ const string CMDNAME_PING_DEATHBOX = "ClientCallback_PingDeathbox"
 const string CMDNAME_PING_CONTROL_OBJECTIVE = "ClientCallback_PingControlObjective"
                               
                       
-                                                                     
+                                                                              
                                                                            
                             
                           
@@ -613,7 +627,10 @@ string function Ping_GetSoundForLocationPing( entity wp, int pingType, bool isOu
               
 		case ePingType.MAGGIE_WRECKING_BALL:
       
-
+                 
+                                       
+                                     
+      
 		case ePingType.VOID_RING:
 		case ePingType.ABILITY_SPACE_ELEVATOR:
 		case ePingType.ABILITY_ECHO_LOCATOR:
@@ -1768,6 +1785,10 @@ array<int> function GetReplyOptionsForWaypoint( entity player, entity wp )
               
 					case ePingType.MAGGIE_WRECKING_BALL:
       
+                 
+                                          
+                                        
+      
 					case ePingType.ABILITY_ECHO_LOCATOR:
 					case ePingType.ENEMY_TETHERED:
 						results.append( ePingReply.BLANK )
@@ -1825,6 +1846,11 @@ array<int> function GetReplyOptionsForWaypoint( entity player, entity wp )
 
               
 					case ePingType.MAGGIE_WRECKING_BALL:
+      
+
+                 
+                                          
+                                        
       
 					case ePingType.ABILITY_ECHO_LOCATOR:
 					case ePingType.ENEMY_TETHERED:
@@ -2931,7 +2957,7 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
                                   
        
                                    
-                                                   
+                                                      
        
       
            
@@ -2976,17 +3002,14 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
 
                       
   
-                                                                                       
-                                                              
-                              
+                                                                
    
-                              
+                                  
                                                   
                 
    
 
-                                                                                      
-                                                         
+                                                                                             
                               
    
                               
@@ -3667,6 +3690,44 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
 		}
 	}
 
+                  
+   
+                                                                                           
+                                 
+    
+                                     
+                                  
+     
+                                           
+                            
+                            
+     
+
+                                
+                                                                                                                       
+                 
+    
+   
+
+   
+                                                                                                       
+                               
+    
+                                   
+                                  
+     
+                                         
+                            
+                            
+     
+
+                              
+                                                                                                                   
+                 
+    
+   
+       
+
                       
 		{
 			entity hoverVehicle = GetHoverVehicleForHitEnt( processedHitEnt )
@@ -3869,7 +3930,10 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
 				if ( objectiveStarterPing != null )
 					result.hitEnt = objectiveStarterPing
 
-				if ( processedHitEnt.GetOwner().GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) != -1 && IsTeamInAlliance( player.GetTeam(), processedHitEnt.GetOwner().GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) ) )
+				entity objectiveEnt = processedHitEnt.GetOwner()
+				int objectiveOwner = objectiveEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER )
+
+				if ( objectiveOwner != -1 && IsTeamInAlliance( player.GetTeam(), objectiveOwner ) )
 				{
 					result.pingType = ePingType.CONTROL_OBJECTIVE_DEFEND
 				}
@@ -3898,10 +3962,12 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
 			if ( processedHitEnt.ContextAction_IsReviving() || processedHitEnt.ContextAction_IsBeingRevived() )
 			{
 				result.pingType = ePingType.ENEMY_REVIVING
+				return result
 			}
 			else
 			{
 				result.pingType = ePingType.ENEMY_SPECIFIC
+				return result
 			}
 		}
 	}
@@ -3974,6 +4040,9 @@ int function GetEnemyPingCommsAction( int pingType, entity pingedEnt )
 			case "npc_boss_guts":
 			case "npc_training_dummy":
 			case "npc_dummie_combat":
+                                
+			case "npc_nessie":
+      
 				                                 
 				break;
 
@@ -4248,8 +4317,8 @@ int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity p
 		case ePingType.ENEMY_GENERAL:
 			return eCommsAction.PING_ENEMY_SPOTTED_GENERAL
                
-                                  
-                                              
+                                     
+                                                 
       
 		case ePingType.ENEMY_SPECIFIC:
                            
@@ -4322,6 +4391,17 @@ int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity p
               
 		case ePingType.MAGGIE_WRECKING_BALL:
 			return eCommsAction.PING_MAGGIE_WRECKING_BALL
+      
+
+                 
+                                       
+                                         
+                                     
+                                               
+                                     
+                                       
+                                   
+                                             
       
 
                             
@@ -4566,6 +4646,11 @@ int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity p
                                          
       
 		case ePingType.ASH_PASSIVE_ID_ATTACKER:
+              
+                             
+                            
+                                     
+      
 			return eCommsAction.BLANK
 
 		case ePingType.ABILITY_ECHO_LOCATOR:
@@ -4826,6 +4911,17 @@ asset function Ping_IconForPing_Hud( entity player, int pingType, entity pingedE
 
 		case ePingType.ABILITY_ECHO_LOCATOR:
 			return $"rui/hud/ultimate_icons/ultimate_seer"
+
+              
+                             
+                                               
+
+                            
+                                                            
+
+                                     
+                                                          
+      
 	}
 
 	int commsAction = GetCommsActionForPing( player, pingType, pingedEnt )
@@ -4898,7 +4994,18 @@ asset function Ping_IconForPing_Bigmap( entity player, int pingType, entity ping
 #if CLIENT
 vector function Ping_IconScaleForPing( entity player, int pingType, entity pingedEnt, entity owner )
 {
-	return <1.0, 1.0, 0.0>
+	switch ( pingType )
+	{
+                
+                                     
+                         
+        
+        
+
+		default:
+			return <1.0, 1.0, 0.0>
+	}
+	unreachable
 }
 
 bool function Ping_IconForPing_IsAdditive( entity player, int pingType, entity pingedEnt, entity owner )

@@ -49,6 +49,8 @@ const float SYNCED_MELEE_TARGET_SCREEN_FADE_ALPHA = 255
 const float SYNCED_MELEE_TARGET_SCREEN_FADE_FADE_TIME = 0.15
 const float SYNCED_MELEE_TARGET_SCREEN_FADE_FADE_HOLD = 0.1
 
+const bool DEBUG_PLACE_TARGET = false
+
 #if SERVER
                                            
  
@@ -330,16 +332,59 @@ void function ServerCallback_SyncedMeleeDone()
 	                                          
  
 
+                                                                                                             
+ 
+	                                             
+	                        
+
+	                                                    
+	                                                    
+
+	                                                           
+	                                                    
+	                                                                                                   
+
+	                                                                                                                                                                       
+
+	                             
+	                                 
+		                                                                              
+	    
+		                                            
+
+	                                                                                     
+
+	                                                    
+	                                                      
+
+	                                                                                                                                                                        
+
+	                        
+	 
+		                                                                                
+		                                                                               
+		                                                                                                   
+		                                                                                             
+	 
+
+	                                    
+	                                                   
+ 
+
                                                                     
  
 	                                                
 	                                                                                   
 
+	                                               
+	                                                
+	                                                                                           
+
                                 
                                                                                                                                   
        
 
-	                                                                                       
+	                                                                                                                     
 		                          
 		 
 			                                                                         
@@ -369,8 +414,6 @@ void function ServerCallback_SyncedMeleeDone()
 			                  
 			                    
 
-			                                                                                       
-
 			                                          
 			 
 				                        
@@ -384,6 +427,9 @@ void function ServerCallback_SyncedMeleeDone()
 					                                       
 					                     
 					                                
+
+					                                                                                   
+
 					                        
 					 
 						                           

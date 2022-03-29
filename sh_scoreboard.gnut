@@ -185,7 +185,7 @@ void function OnScoreboardButtonPressed( entity localPlayer )
 
 bool function ShouldShowCharSelectForScoreboard()
 {
-	if ( IsFiringRangeGameMode() )
+	if ( IsFiringRangeGameMode() && FiringRange_IsCharacterSwitchingEnabled() )
 		return true
 
 	#if DEV
@@ -263,6 +263,8 @@ bool function ShouldShowScoreboard()
 	else if ( Crafting_IsPlayerAtWorkbench( GetLocalClientPlayer() ) )
 		return false
       
+	else if ( !FiringRange_IsCharacterSwitchingEnabled() )
+		return false
 
 	return file.wantsToShowScoreboard
 }

@@ -1,4 +1,5 @@
 global function OnWeaponPrimaryAttack_weapon_shotgun_pistol
+global function OnProjectileCollision_weapon_shotgun_pistol
 
 #if SERVER
                                                               
@@ -7,6 +8,15 @@ global function OnWeaponPrimaryAttack_weapon_shotgun_pistol
 
 var function OnWeaponPrimaryAttack_weapon_shotgun_pistol( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
+                                 
+		if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_APRILFOOLS ) )
+		{
+			#if SERVER
+				                                          
+			#endif
+			return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
+		}
+                     
 	bool playerFired = true
 	return Fire_ShotgunPistol( weapon, attackParams, playerFired )
 }
@@ -25,7 +35,7 @@ int function Fire_ShotgunPistol( entity weapon, WeaponPrimaryAttackParams attack
 	if ( playerFired )
 	{
 		                                    
-		entity owner = weapon.GetWeaponOwner()
+		entity owner             = weapon.GetWeaponOwner()
 		float maxAdsPatternScale = expect float( weapon.GetWeaponInfoFileKeyField( "blast_pattern_ads_scale" ) )
 		patternScale *= GraphCapped( owner.GetZoomFrac(), 0.0, 1.0, 1.0, maxAdsPatternScale )
 	}
@@ -34,9 +44,165 @@ int function Fire_ShotgunPistol( entity weapon, WeaponPrimaryAttackParams attack
 		patternScale = weapon.GetWeaponSettingFloat( eWeaponVar.blast_pattern_npc_scale )
 	}
 
-	float speedScale = 1.0
+	float speedScale  = 1.0
 	bool ignoreSpread = true
 	weapon.FireWeapon_Default( attackParams.pos, attackParams.dir, speedScale, patternScale, ignoreSpread )
 
 	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 }
+
+void function OnProjectileCollision_weapon_shotgun_pistol( entity projectile, vector pos, vector normal, entity hitEnt, int hitbox, bool isCritical, bool isPassthrough )
+{
+                                 
+		#if SERVER
+		                                                                 
+		 
+			                                                
+		 
+		#endif         
+                     
+}
+
+                                
+#if SERVER
+
+                                        
+                                     
+                                           
+                                          
+
+                                                                                         
+ 
+	                                                                      
+	 
+		                                                                
+		                                              
+	 
+ 
+
+                                                                                            
+ 
+	                                         
+	                                                      
+	                                                      
+	                                          
+	                                           
+
+	                                               
+	                                                                                                                                                            
+	                                                         
+
+	                                                                 
+	                                                                                                                            
+
+	                                                           
+	           
+ 
+
+                                                
+ 
+	                                                                                                                
+	                                                            
+	                             
+
+	                                      
+	                                     
+	                              
+
+	                  
+ 
+
+                                                                   
+ 
+	                              
+	                                
+	                
+	                                         
+ 
+
+                                                                              
+ 
+	                                                                      
+	 
+		                                                         
+		                           
+		 
+			                                                 
+			                                    
+			                            
+			                                           
+			 
+				                      
+			 
+			                                                                                                           
+			                    
+		 
+	 
+ 
+
+                                                                                                                             
+ 
+	                                                                             
+	                                    
+	                     
+	 
+		                             
+	 
+	                       
+	                                   
+	                                      
+	                             
+
+	                                                         
+
+	                                                                                                                  
+	                                 
+	                           
+	 
+		                                                    
+	 
+	                                                  
+	                                                                                                   
+ 
+
+                                                 
+ 
+	                                                   
+	                                                       
+
+	                                                   
+	                                    
+	                                    
+	                                       
+	                              
+	                                      
+	                        
+	                           
+	                                              
+ 
+
+                                                              
+ 
+	                      
+		      
+
+	                 
+
+	                               
+	 
+		                      
+	 
+
+	                                                                                
+	 
+		                      
+	 
+ 
+
+                                              
+ 
+	                                                                                                                                                                  
+ 
+#endif
+
+                    

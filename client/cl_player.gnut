@@ -1079,6 +1079,12 @@ void function ServerCallback_OnEntityKilled( entity attacker, entity victim, int
 	if ( IsValid( attacker ) && attacker.IsPlayer() )
 	{
 	}
+	else if ( IsValid( attacker ) && attacker.IsNPC() )
+	{
+		entity boss = attacker.GetBossPlayer()
+		if ( IsValid( boss ) )
+			attacker = boss
+	}
 	else if ( victim.IsPlayer() )
 	{
 		if ( ("latestAssistTime" in victim.s) && victim.s.latestAssistTime >= Time() - MAX_NPC_KILL_STEAL_PREVENTION_TIME )

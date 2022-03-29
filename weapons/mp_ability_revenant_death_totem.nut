@@ -10,6 +10,7 @@ global function OnWeaponDeactivate_ability_revenant_death_totem
                                               
                                              
                                          
+                                      
 #endif         
 
        
@@ -233,7 +234,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 
 	                                                                 
 	                               
-		                                         
+		                                                  
 
 	            
 
@@ -285,7 +286,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 
 				                                                                 
 				                               
-					                                            
+					                                                     
 
 				                            
 				 
@@ -346,9 +347,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                          
 	                                   
 	                                 
-	                                                        
 	                                    
-	                                                                                
 	                                                  
 
 	                                                                                                                           
@@ -362,6 +361,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 
 	                           
 	                           
+	                                                                                     
 
 	                                                   
 
@@ -418,6 +418,14 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 							                        
 							 
 								                          
+
+								                                                 
+								 
+									                                                                                                                                                                                                           
+									                                                                                                    
+									                                                                                                                                                                  
+									                                                                         
+								 
 							 
 						 
 					 
@@ -1309,6 +1317,7 @@ void function DeathTotem_OnTotemCreated( entity ent )
 		SetCallback_CanUseEntityCallback( ent, DeathTotem_CanUseTotem )
 		AddCallback_OnUseEntity_ClientServer( ent, DeathTotem_OnTotemUse )
 		AddEntityCallback_GetUseEntOverrideText( ent, DeathTotem_UseTextOverride )
+		AddEntityDestroyedCallback( ent, DeathTotem_OnTotemDestroyed )
 	}
 }
 
@@ -1330,6 +1339,14 @@ string function DeathTotem_UseTextOverride( entity ent )
 	}
 
 	return ""
+}
+
+void function DeathTotem_OnTotemDestroyed( entity totem )
+{
+	                                                                                                                                                  
+	                                                                                                                                          
+	if ( IsValid( totem ) && totem.GetBossPlayer() == GetLocalViewPlayer() )
+		UltimateWeaponStateSet( eUltimateState.CHARGING )
 }
 
 void function DeathTotem_StartVisualEffect( entity ent, int statusEffect, bool actuallyChanged )

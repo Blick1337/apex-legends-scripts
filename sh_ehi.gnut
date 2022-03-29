@@ -807,8 +807,23 @@ string function GetPlayerNameFromEHI( EHI playerEHI )
 	string clubTag = GetPlayerClubTag( playerEHI )
 
 	string playerName = EHI_GetName( playerEHI )
-	if ( (ShouldPlayerNameBeAnonymized( playerEHI ) || !DisplayObituaryName()) && playerEHI != LocalClientEHI() && EHI_GetTeam( playerEHI ) != EHI_GetTeam( LocalClientEHI() ) )
+	bool isSetToObsfuscatedName = ( ShouldPlayerNameBeAnonymized( playerEHI ) || !DisplayObituaryName() )
+	bool isPlayerEHISameAsLocalClientEHI = playerEHI == LocalClientEHI()
+
+	if ( isSetToObsfuscatedName && !isPlayerEHISameAsLocalClientEHI && EHI_GetTeam( playerEHI ) != EHI_GetTeam( LocalClientEHI() ) )
 		return GetObsfuscatedName( playerEHI )
+
+                         
+		                                                                                                                
+		                                                                                                       
+		                                                                                                                                 
+		                                                                                                             
+		if ( Control_IsModeEnabled() )
+		{
+			if ( isSetToObsfuscatedName && !isPlayerEHISameAsLocalClientEHI && Control_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI ) != Control_GetOriginalPlayerTeam_FromPlayerEHI( LocalClientEHI() ) )
+				return GetObsfuscatedName( playerEHI )
+		}
+                               
 
 	return clubTag + " " + playerName
 }

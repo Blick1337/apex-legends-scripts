@@ -28,9 +28,9 @@ global function Grenade_OnProjectileCollision
                                                      
               
                                        
+                                  
       
                                      
-                                  
 #endif
 global function Grenade_Init
 global function Grenade_Launch
@@ -46,8 +46,8 @@ const EMP_MAGNETIC_FORCE = 1600
 const MAG_FLIGHT_SFX_LOOP = "Explo_MGL_MagneticAttract"
 
                          
-global const PROXIMITY_MINE_EXPLOSION_DELAY = 1.2
-global const PROXIMITY_MINE_ARMING_DELAY = 3.0
+global const PROXIMITY_MINE_EXPLOSION_DELAY = 1.5
+global const PROXIMITY_MINE_ARMING_DELAY = 2.5
 const TRIGGERED_ALARM_SFX = "Weapon_ProximityMine_CloseWarning"
 global const THERMITE_GRENADE_FX = $"P_grenade_thermite"
 global const CLUSTER_BASE_FX = $"P_wpn_meteor_exp"
@@ -618,6 +618,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
 
                            
                     
+                  
                                                     
        
        
@@ -629,97 +630,125 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
 	                                                                
  
 
+                                                                                                        
                                                                                                  
  
-	                                      
+                                       
 
-	            
-		                              
-		 
-			                               
-				                       
-		 
-	 
-	                                               
+             
+                                
+   
+                                  
+                           
+   
+  
+                                                
 
-	                                
+                                                                
 
-	                                                   
-	                                                           
-	                                                          
-	                             
-	                               
-	                               
+                                 
 
-	                                      
-	                                                      
-	 
-		                                                  
-		 
-			                                                                                                               
-			                             
-			 
-				                                                      
-				 
-					                                                                 
-					                                          
-					      
-				 
-			 
-			                            
-		 
+                                                    
+                                                            
+                                                           
+                              
+                                
+                                
 
-		                                                                                                                     
-		                                
-		 
-			                                                      
-			 
-				                                                                 
-				                                          
-				      
-			 
-		 
+                                                                                                                                                                 
+                                                               
+                        
+                                                                                
 
-		                   
-	 
+                                                                     
+
+             
+                        
+   
+                          
+                       
+   
+  
+
+                                       
+                                                       
+  
+                                                    
+   
+                                                                                                                  
+                                
+    
+                                                          
+     
+                                                                      
+                                               
+           
+     
+    
+                               
+   
+
+                                                                                                                       
+                                  
+   
+                                                         
+    
+                                                                     
+                                              
+
+                           
+                        
+
+          
+    
+   
+
+                            
+  
  
 
                                                                                       
  
-	                                                           
-	                                                       
+                                                            
+                                                        
 
-	                                   
+                                                                                                                                                                                                             
+                                
+                                                   
+                                     
 
-	                               
-	 
-		                                             
-		 
-			                                  
-			                                       
-			                                                   
-		 
-		    
-		 
-			                                                                
-		 
-	 
+                                    
+
+                                
+  
+                                               
+   
+                                     
+                                          
+                                                      
+   
+      
+   
+                                                                   
+   
+  
  
 
                                                                            
  
-	                                                                                                  
-		            
+                                                                                                   
+              
 
-	                           
-		            
+                            
+              
 
-	                                                                                                                                                                  
-	                                                     
-		           
+                                                                                                                                                                   
+                                                      
+             
 
-	            
+             
  
+      
 #endif          
 
 

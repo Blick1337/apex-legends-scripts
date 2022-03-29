@@ -794,7 +794,7 @@ float function GetCooldownTimeForCommsAction( int commsAction )
 		case eCommsAction.PING_ENEMY_TELEPORTER:
 			return 1.5
                
-                                            
+                                               
              
       
                          
@@ -1010,7 +1010,7 @@ void function HandleBroadcastCommsAction( entity player, int commsAction, entity
                                 
 
                  
-                                                             
+                                                                
     
                                                                                                 
                                                       
@@ -1115,6 +1115,13 @@ void function PlaySoundForCommsAction( entity player, entity subjectEnt, CommsAc
 
 		string subEvent    = act.subEvent
 		string flavorEvent = flavorEventOverride == "" ? act.flavorEvent : flavorEventOverride
+                 
+                                                             
+   
+                                                                              
+   
+        
+
 		if ( subEvent != "" )
 		{
 			thread PlaySoundForSubActionWhenPrimaryFinishes( soundHandle, act, file.actions[ GetCommsActionForName( subEvent ) ], player, subjectEnt, opt, flavorEvent )
@@ -1581,7 +1588,7 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 			                                                                                    
 			                                                                                                                             
 			 
-				                                                                                                                                                                       
+				                                                                                                                                                                                                                                            
 				 
 					               
 					                                                                      

@@ -1712,8 +1712,8 @@ void function ToggleFireSelect( entity player )
 	if ( !IsValid( weapon ) )
 		return
 
-	if ( player.IsSliding() && weapon.HasMod ( "kinetic_choke" ) )
-		return
+	                                          
+		        
 
 	if ( weapon.IsDiscarding() )
 		return
@@ -2118,9 +2118,15 @@ void function TrackPrimaryWeapon( entity player )
                                                                                                          
       
                                                 
+       
+                                              
                                                                           
+       
           
+       
+                                               
                                                                            
+       
       
          
            
@@ -4470,25 +4476,30 @@ void function UICallback_QueryPlayerCanBeRespawned()
 	entity player             = GetLocalClientPlayer()
 	bool playerCanBeRespawned = (PlayerIsMarkedAsCanBeRespawned( player ) && (GetGameState() == eGameState.Playing))
 
+	int penaltyLength = 0
 	bool penaltyMayBeActive
 	if ( IsRankedGame() )
 	{
 		penaltyMayBeActive = Ranked_IsPlayerAbandoning( player )                                                                            
+		penaltyLength = SharedRanked_GetAbandonPenaltyLength( player )
 	}
                        
 	else if ( IsArenasRankedGame() )
 	{
 		penaltyMayBeActive = ArenasRanked_IsPlayerAbandoning( player )
+		penaltyLength = SharedRanked_GetAbandonPenaltyLength( player )
 	}
 	else if ( IsArenaMode() )
 	{
 		penaltyMayBeActive = Arenas_IsPlayerAbandoning( player )
+		penaltyLength = SharedRanked_GetAbandonPenaltyLength( player )
 	}
       
                                               
 	else if ( Control_IsModeEnabled() )
 	{
 		penaltyMayBeActive = Control_IsPlayerAbandoning( player )
+		penaltyLength = Control_GetAbandonPenaltyLength( player )
 	}
       
 	else
@@ -4504,7 +4515,7 @@ void function UICallback_QueryPlayerCanBeRespawned()
 		}
 	}
 
-	RunUIScript( "ConfirmLeaveMatchDialog_SetPlayerCanBeRespawned", playerCanBeRespawned, penaltyMayBeActive )
+	RunUIScript( "ConfirmLeaveMatchDialog_SetPlayerCanBeRespawned", playerCanBeRespawned, penaltyMayBeActive, penaltyLength )
 }
 
 
@@ -4824,12 +4835,15 @@ void function ServerCallback_AutoReloadComplete( entity weapon )
 
 	if(SURVIVAL_Loot_IsRefValid( ammoTypeRef ) )
 	{
-		LootData ammoData = SURVIVAL_Loot_GetLootDataByRef( ammoTypeRef )
-
-		if(weapon.GetWeaponSettingBool( eWeaponVar.uses_ammo_pool ))
+		if( weaponData.tier != eLootTier.HEIRLOOM )
+		{
+			LootData ammoData = SURVIVAL_Loot_GetLootDataByRef( ammoTypeRef )
 			ammoIcon = ammoData.hudIcon
+		}
 		else
+		{
 			ammoIcon = weaponData.fakeAmmoIcon == $"" ? $"rui/hud/gametype_icons/survival/sur_ammo_unique" : weaponData.fakeAmmoIcon
+		}
 	}
 
 	var rui = ClWeaponStatus_GetWeaponHudRui( GetLocalViewPlayer() )

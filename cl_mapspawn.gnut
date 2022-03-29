@@ -10,9 +10,11 @@ global function ClientCodeCallback_RunClientConnectScripts
 global function ClientCodeCallback_FullUpdate
 global function Init_PlayerScripts
 global function ServerCallback_ClientInitComplete
+global function ClientCodeCallback_ClientInit
+global function ClientCodeCallback_ClientShutdown
 global function ClientCodeCallback_OnDropShipCinematicEventStateChanged
 global function ClientCodeCallback_OnDetenteEnded
-global function ClientCodeCallback_OnResolutionChanged
+global function ClientCodeCallback_ResolutionChanged
 global function PerfInitLabels
 global function GetCockpitRuiHeight
 
@@ -231,7 +233,7 @@ void function CreateHUDRuiTopologies()
 }
 
 
-void function ClientCodeCallback_OnResolutionChanged()
+void function ClientCodeCallback_ResolutionChanged( bool askForConfirmation )
 {
 	UpdateMainHudVisibility( GetLocalViewPlayer() )
 	UpdateFullscreenTopology( clGlobal.topoFullScreen, false )
@@ -365,6 +367,16 @@ void function Init_PlayerScripts( entity player )
 void function ServerCallback_ClientInitComplete()
 {
 	FlagSet( "ClientInitComplete" )
+}
+
+void function ClientCodeCallback_ClientInit()
+{
+	                                                                     
+}
+
+void function ClientCodeCallback_ClientShutdown()
+{
+	                                                                         
 }
 
                                                                  

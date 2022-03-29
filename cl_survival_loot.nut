@@ -758,7 +758,7 @@ void function TryStreamHintForWeapon( entity ent )
 	ItemFlavor ornull weaponSkinOrNull
 	if ( skinNetworkIdx > 0 )
 	{
-		weaponSkinOrNull = GetItemFlavorByNetworkIndex_DEPRECATED( skinNetworkIdx )
+		weaponSkinOrNull = GetItemFlavorByNetworkIndex( skinNetworkIdx )
 	}
 	else
 	{
@@ -1111,7 +1111,7 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 		if ( GetWeaponInfoFileKeyField_GlobalInt_WithDefault ( weaponName, "has_energized", 0 ) == 1 )
 		{
 			string energizedConsumableData = GetWeaponInfoFileKeyField_GlobalString ( weaponName, "energized_consumable" )
-			string weaponNameString = GetWeaponInfoFileKeyField_GlobalString ( weaponName, "printname" )
+			string weaponNameString = GetWeaponInfoFileKeyField_WithMods_GlobalString ( weaponName, weapon.GetMods(), "printname" )
 			string consumableHint = GetWeaponInfoFileKeyField_GlobalString ( weaponName, "energized_consumable_hint" )
 
 			LootData weaponData = SURVIVAL_Loot_GetLootDataByRef ( weaponName )
@@ -1156,10 +1156,10 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 		int skinNetworkIdx = GetPropSurvivalMainProperty( lootRef.lootProperty )
 		if ( skinNetworkIdx > 0 )
 		{
-			ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex_DEPRECATED( skinNetworkIdx )
+			ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( skinNetworkIdx )
 			if ( ItemFlavor_HasQuality( weaponSkin ) )
 			{
-				string weaponName = GetWeaponInfoFileKeyField_GlobalString( data.baseWeapon, "shortprintname" )
+				string weaponName = GetWeaponInfoFileKeyField_WithMods_GlobalString( data.baseWeapon, data.baseMods,"shortprintname" )
 				RuiSetString( rui, "titleText", Localize( weaponName ).toupper() )
 				RuiSetString( rui, "skinName", ItemFlavor_GetLongName( weaponSkin ) )
 				RuiSetInt( rui, "skinTier", ItemFlavor_GetQuality( weaponSkin ) + 1 )
@@ -1926,6 +1926,14 @@ entity function GetEntityPlayerIsLookingAt( entity player, array<entity> ents, f
 		int index     = item.ent.GetSurvivalInt()
 		LootData data = SURVIVAL_Loot_GetLootDataByIndex( index )
 
+		                   
+		                                                                                                                        
+		   
+		  	                  
+		  	      
+		   
+		      
+		        
 		if ( PlayerHasPassive( GetLocalViewPlayer(), ePassives.PAS_LOBA_EYE_FOR_QUALITY ) && data.tier - 1 >= eRarityTier.EPIC )
 		{
 			theEnt = item.ent

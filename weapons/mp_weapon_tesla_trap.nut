@@ -138,7 +138,6 @@ const float TESLA_TRAP_LINK_DAMAGE_INTERVAL = 0.5
 const float TESLA_TRAP_LINK_DAMAGE_INTERVAL_UPDATE = 1.0
 const float TESLA_TRAP_LINK_DAMAGE_AMOUNT_UPDATE = 20
 const float TESTLA_TRAP_EMP_DURATION_UPDATE = 3.0
-const float TESLA_TRAP_NPC_STUN_IMMUNITY_DURATION = 3.0
 
                            
 const float TESLA_TRAP_POSE_PARAMETER_HEIGHT_MAX = 5.0
@@ -273,8 +272,6 @@ struct
 		                                		            
 		                                                                                
 		                      						                  
-
-		              							                       
 	#endif         
 
 	table< entity, TeslaTrapSortingData > trapSortingData                                    
@@ -1792,7 +1789,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 	                             
 	                     
 	                                 
-	                                                                                                                                       
+	                                                                                                                                                
 
 	                                                
 	                       
@@ -2044,17 +2041,10 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 
                                                                       
  
-	                     
+	                                                                          
 	 
-		                                                  
-		 
-			                                       
-			      
-		 
-		    
-		 
-			                                                  
-		 
+		                                       
+		      
 	 
 
 	                                                      
@@ -2079,20 +2069,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 			                                                                                                                
        
 
-	                                                                                    
- 
-
-                                                             
- 
-	                                     
-
-	                          
-
-	                                        
-		                                                  
-	   
-
-	                                          
+	                                                                                     
  
 
                                                                          

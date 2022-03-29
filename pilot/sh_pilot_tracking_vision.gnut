@@ -161,6 +161,12 @@ global enum eTrackingVisionNetworkedPOITypes
 	PLAYER_ABILITY_ASH_PORTAL_ENTER,
 	PLAYER_ABILITY_ASH_PORTAL_EXIT,
 
+                 
+                                             
+                                           
+                                              
+                                            
+      
 	_count,
 }
 
@@ -245,6 +251,12 @@ int function TrackingVision_GetPriorityForPOIType( int poiEventID )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END:
+      
+                 
+                                                                                    
+                                                                                  
+                                                                                     
+                                                                                   
       
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_ENTER:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_EXIT:
@@ -463,6 +475,12 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_PATH:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END:
+      
+                 
+                                                                                    
+                                                                                  
+                                                                                     
+                                                                                   
       
 			return < 0, 0, 24.0 >
 

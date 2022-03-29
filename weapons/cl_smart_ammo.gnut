@@ -47,7 +47,7 @@ void function SmartAmmoClient_Init()
 
 void function SmartAmmoClient_AddClient( entity player )
 {
-	var rui = CreateCockpitPostFXRui( $"ui/lockon_hud.rpak", HUD_Z_BASE )
+	var rui = CreateCockpitPostFXRui( $"ui/lockon_hud.rpak", FULLMAP_Z_BASE )
 	file.lockon_hud = rui
 }
 
@@ -201,6 +201,9 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                                                                              
                                                                                                           
                                  
+                
+                                                                       
+                     
 			&& !player.IsCloaked( true ) )
 		{
 			RuiSetFloat3( file.lockon_hud, "borderColor", <1, .36, .31> )                       
@@ -246,11 +249,20 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_fuse" )
 			}
                                 
+                   
+                                                                            
+    
+                                                                           
+                                                                                     
+                                                             
+    
+                        
 			else
 			{
 				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_bloodhound" )
 				RuiSetString( file.lockon_hud, "lockMessage", "#SONAR_WARNING" )
 			}
+
 
 
 			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )

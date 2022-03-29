@@ -12,6 +12,10 @@ void function NPCPrecache_AllNPCTypes()
                        
        
 
+                            
+                               
+       
+
                     
                        
        

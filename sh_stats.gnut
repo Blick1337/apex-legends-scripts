@@ -1,4 +1,4 @@
-                                                           
+                                                            
 
 
 global function ShStats_LevelInit
@@ -161,6 +161,12 @@ global function GetCurrentStatRankedPeriodRefOrNullByType
                     
                                                        
                                                           
+                                                        
+      
+
+                 
+                                                         
+                                                            
                                                         
       
 
@@ -571,6 +577,12 @@ global struct CareerStats
 		StatTemplate& maggie_warlords_ire_highlight_time
        
 
+                  
+                                         
+                                              
+                                        
+       
+
 
 	          
 	StatTemplate& season_battlepass_level
@@ -835,6 +847,23 @@ global struct CareerStats
 	StatTemplate& s12ace_br_dooms
 	StatTemplate& s12ace_combined_badge_earned                   
 
+	                   
+	                                   
+	                            
+	                        
+	                                
+	StatTemplate& s12e01_buffet_points
+	StatTemplate& s12e01_br_damage_done
+	StatTemplate& s12e01_control_captures
+	StatTemplate& s12e01_br_dooms
+	StatTemplate& s12e01_combined_badge_earned
+
+	                                    
+	StatTemplate& s12e02_01_buffet_points
+	StatTemplate& s12e02_02_buffet_points
+	StatTemplate& s12e02_01_br_dooms
+	StatTemplate& s12e02_02_br_damage_done
+
 	           
                      
 	StatTemplate& hovervehicle_occupant_meters_traveled
@@ -842,10 +871,10 @@ global struct CareerStats
 
 
               
-                                 
-                                 
-                                 
-                                      
+	StatTemplate& s12e04_challenge_1
+	StatTemplate& s12e04_challenge_2
+	StatTemplate& s12e04_challenge_3
+	StatTemplate& s12e04_finale_completed
       
 
 	       
@@ -882,67 +911,6 @@ global struct MatchStats
 
 #if SERVER || CLIENT || UI
 global CareerStats CAREER_STATS            
-#endif
-
-
-#if (SERVER || CLIENT || UI)
-global const array<string> ZONE_STAT_REFS =
-[
-	"can_relay",
-	"can_wetlands",
-	"can_swamps",
-	"can_hydrodam",
-	"can_repulsor",
-	"can_cage",
-	"can_artillery",
-	"can_containment",
-	"can_watertreatment",
-	"can_slumlakes",
-	"can_pit",
-	"can_runoff",
-	"can_airbase",
-	"can_skulltown",
-	"can_market",
-	"can_thunderdome",
-	"can_bunker",
-	"can_bridges",
-	"can_cascades",
-	"can_octanett", "des_wastelands",
-	"des_uncharted",
-	"des_snipe",
-	"des_blood",
-	"des_drill_site",
-	"des_cap_city",
-	"des_tunnel_z2",
-	"des_lost",
-	"des_buried_refinery",
-	"des_ground_zero",
-	"des_lava_fissure",
-	"des_pass",
-	"des_trainyard",
-	"des_harvester",
-	"des_fragment_west",
-	"des_fragment_east",
-	"des_survey",
-	"des_tunnel_z5",
-	"des_new_springfield",
-	"des_snow_field",
-	"des_tunnel_z7",
-	"des_hot_spring",
-	"des_end",
-	"des_fuel",
-	"des_ridge_line",
-	"des_bridge",
-	"des_out",
-	"des_research_station_bravo",
-	"des_tunnel_z10",
-	"des_thermal_station",
-	"des_research_station_alpha",
-	"des_refinery",
-	"des_lava_city",
-	"des_volcanic",
-	"des_mt",
-]
 #endif
 
 #if (SERVER || CLIENT || UI)
@@ -1095,11 +1063,6 @@ void function RegisterAllStats()
 			allArenasRankedPeriodRefs.append( ItemFlavor_GetGUIDString( arenasRankedPeriod ) )
 		}
        
-
-	#if SERVER
-		                                             
-			                                              
-	#endif
 
 	const int CHALLENGES_NEED = eStatFlags.STORE_START_OF_PREVIOUS_MATCH | eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY                                       
 	const int CHALLENGES_CALC_DEPENDS = eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY
@@ -1456,6 +1419,12 @@ void function RegisterAllStats()
 		CAREER_STATS.maggie_warlords_ire_highlight_time = RegisterAccumulatedStat_Int( null, "maggie_warlords_ire_highlight_time", TRACKERS_NEED | CHALLENGES_NEED )
        
 
+                  
+                                                                                                                                            
+                                                                                                                                                      
+                                                                                                                                          
+       
+
 	StatEnumStruct season_SES = RegisterStatEnumStruct( null, "seasons", "eSeasonFlavor", allSeasonRefs )
 	CAREER_STATS.season_battlepass_level = RegisterCachedCalculatedStat_Int( season_SES, "battlepass_level", BADGES_NEED, SetupGetSeasonBattlePassLevelForStat, [] )       
 
@@ -1503,13 +1472,6 @@ void function RegisterAllStats()
 		CAREER_STATS.season_arenas_completions = RegisterAccumulatedStat_Int( season_SES, "arenas_completions", BADGES_NEED )       
        
 
-	StatEnumStruct zone_SES = RegisterStatEnumStruct( null, "zones", "eMapZones", ZONE_STAT_REFS )       
-	CAREER_STATS.zone_kills = RegisterAccumulatedStat_Int( zone_SES, "kills", CHALLENGES_NEED )       
-	CAREER_STATS.zone_damage_done = RegisterAccumulatedStat_Int( zone_SES, "damage_done", CHALLENGES_NEED )       
-	CAREER_STATS.zone_dooms = RegisterAccumulatedStat_Int( zone_SES, "dooms", CHALLENGES_NEED )       
-	CAREER_STATS.zone_executions = RegisterAccumulatedStat_Int( zone_SES, "executions", CHALLENGES_NEED )       
-	CAREER_STATS.zone_landings = RegisterAccumulatedStat_Int( zone_SES, "landings", CHALLENGES_NEED )       
-	CAREER_STATS.zone_loot_bins = RegisterAccumulatedStat_Int( zone_SES, "loot_bins_opened", CHALLENGES_NEED )       
 	CAREER_STATS.loot_bins = RegisterAccumulatedStat_Int( null, "loot_bins_opened", CHALLENGES_NEED )       
 	CAREER_STATS.opponents_outlived = RegisterAccumulatedStat_Int( null, "opponents_outlived", CHALLENGES_NEED )       
 	CAREER_STATS.survival_time_seconds = RegisterAccumulatedStat_Int( null, "survival_time_seconds", CHALLENGES_NEED )       
@@ -1695,12 +1657,25 @@ void function RegisterAllStats()
 	CAREER_STATS.s12ace_br_dooms                 = RegisterAccumulatedStat_Int( null, "s12ace_br_dooms", BADGES_NEED )
 	CAREER_STATS.s12ace_combined_badge_earned    = RegisterExpensiveCalculatedStat_Int( null, "s12ace_combined_badge_earned", BADGES_NEED, SetupGetS12ACECombinedBadgeEarned, [] )
 
-              
-         
-                                                                                                                        
-                                                                                                                        
-                                                                                                                        
-                                                                                                                                  
+	                   
+	CAREER_STATS.s12e01_buffet_points            = RegisterAccumulatedStat_Int( null, "s12e01_buffet_points", CHALLENGES_NEED )
+	CAREER_STATS.s12e01_br_damage_done			 = RegisterAccumulatedStat_Int( null, "s12e01_br_damage_done", BADGES_NEED )
+	CAREER_STATS.s12e01_control_captures         = RegisterAccumulatedStat_Int( null, "s12e01_control_captures", BADGES_NEED )
+	CAREER_STATS.s12e01_br_dooms                 = RegisterAccumulatedStat_Int( null, "s12e01_br_dooms", BADGES_NEED )
+	CAREER_STATS.s12e01_combined_badge_earned    = RegisterExpensiveCalculatedStat_Int( null, "s12e01_combined_badge_earned", BADGES_NEED, SetupGetWarriorsCombinedBadgeEarned, [] )
+
+	                                    
+	CAREER_STATS.s12e02_01_buffet_points         = RegisterAccumulatedStat_Int( null, "s12e02_01_buffet_points", CHALLENGES_NEED )
+	CAREER_STATS.s12e02_02_buffet_points         = RegisterAccumulatedStat_Int( null, "s12e02_02_buffet_points", CHALLENGES_NEED )
+	CAREER_STATS.s12e02_01_br_dooms              = RegisterAccumulatedStat_Int( null, "s12e02_01_br_dooms", BADGES_NEED )
+	CAREER_STATS.s12e02_02_br_damage_done        = RegisterAccumulatedStat_Int( null, "s12e02_02_br_damage_done", BADGES_NEED )
+
+               
+	        
+	CAREER_STATS.s12e04_challenge_1            = RegisterAccumulatedStat_Int( null, "s12e04_challenge_1", CHALLENGES_NEED )
+	CAREER_STATS.s12e04_challenge_2            = RegisterAccumulatedStat_Int( null, "s12e04_challenge_2", CHALLENGES_NEED )
+	CAREER_STATS.s12e04_challenge_3            = RegisterAccumulatedStat_Int( null, "s12e04_challenge_3", CHALLENGES_NEED )
+	CAREER_STATS.s12e04_finale_completed            = RegisterAccumulatedStat_Int( null, "s12e04_finale_completed", CHALLENGES_NEED )
       
 
 	                      
@@ -2914,9 +2889,12 @@ bool function IsValidMapForStats()
 		                                                                          
 		                                                                                                          
 
-		                                    
+		                                             
 		                                                                                                                        
 			                                                                                    
+		                                               
+		                                                                                                                                
+			                                                                                       
 
 		                   
 			                                                                                                               
@@ -2931,10 +2909,6 @@ bool function IsValidMapForStats()
 				                                                                                                                                    
 			 
 		 
-
-		                                                                     
-		                    
-			                                                                                        
 
 		                                     
 		 
@@ -3110,10 +3084,6 @@ bool function IsValidMapForStats()
 			 
 				                                                                               
 				                                                                                                                                        
-
-				                                                                     
-				                    
-					                                                                                             
 			 
 			                                                  
 		 
@@ -3217,10 +3187,6 @@ bool function IsValidMapForStats()
 		                                                                        
 		                                                                                   
 		                                                                                                      
-
-		                                                                   
-		                    
-			                                                                                      
 
 		                                     
 		 
@@ -3666,17 +3632,16 @@ bool function IsValidMapForStats()
 			                                            
 				                                                                                                               
 
-			                                    
+			                                             
 			                                                                                                                        
 				                                                                                                     
+			                                               
+			                                                                                                                                
+				                                                                                                        
 
 			                                                 
 			                             
 				                                                                                                  
-
-			                                                                     
-			                    
-				                                                                                                         
 
 			                                                                                                  
 			                                                                            
@@ -3867,23 +3832,14 @@ bool function IsValidMapForStats()
 		      
 
 	                                                                            
-	                                                                   
-	                    
-		                                                                                          
  
 
                                                               
  
-	                        
-	 
-		                                                                   
-		                    
-		 
-			                                            
-				                                                                                         
-			                                                                                               
-		 
-	 
+	                          
+	   
+	  	             
+	   
  
 
                                                                                          
@@ -4804,6 +4760,29 @@ bool function IsValidMapForStats()
  
       
 
+                 
+                                                                                      
+ 
+                                                                                                                  
+        
+
+                                                                                                    
+ 
+                                                                                       
+ 
+                                                                                                                  
+        
+
+                                                                                                       
+ 
+                                                                       
+ 
+                                                                                                                  
+        
+
+                                                                                            
+ 
+      
 
 #endif         
 
@@ -4876,7 +4855,7 @@ bool function IsValidMapForStats()
 
 	                                                                                                       
 
-	                                    
+	                                             
 	                                                                                                                        
 		                                                                                          
  
@@ -4999,39 +4978,22 @@ bool function IsValidMapForStats()
 
 
               
-          
-                                                                                             
+#if SERVER
+                                                                                                     
  
-                           
-        
+	                          
+		      
 
-                      
-                     
-  
-         
-                                             
-        
-         
-                                             
-        
-         
-                                             
-        
-          
-         
-        
-  
-
-                                                                                         
-                        
-                                                              
+	                                                                                        
+	                       
+		                                                            
  
 
                                                                         
  
-                                                                                           
+	                                                                                          
  
-      
+#endif
       
 
                                                                                                    
@@ -5986,6 +5948,33 @@ StatCalcFuncInfo function SetupGetS12ACECombinedBadgeEarned( StatEntry calcEntry
 	return info
 }
 #endif
+
+ #if (SERVER || CLIENT || UI)
+ StatCalcFuncInfo function SetupGetWarriorsCombinedBadgeEarned( StatEntry calcEntry, array<StatTemplate> sourceTemplates )
+ {
+	 StatCalcFuncInfo info
+
+	                                     
+	                                                        
+	                                           
+	    
+
+	 info.calcFunc_Int = (int function ( entity player, array<StatEntry> sourceEntries, int when ) {
+		 int count = 0
+
+		 int control_captures = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s12e01_control_captures ), when )
+		 int br_damage        = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s12e01_br_damage_done ), when )
+		 int br_knockdowns	 = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s12e01_br_dooms ), when )
+
+		 if ( control_captures >= 100 && br_damage >= 10000 && br_knockdowns >= 100 )
+			 count = 1
+
+		 return count
+	 })
+
+	 return info
+ }
+ #endif
 
 #if SERVER || CLIENT || UI
 StatCalcFuncInfo function SetupGetS08E04FinaleNotCompletedForStat( StatEntry calcEntry, array<StatTemplate> sourceTemplates )

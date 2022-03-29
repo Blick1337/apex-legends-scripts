@@ -51,6 +51,11 @@ const int CANISTER_DISTANCE_FRAME_TO_LOOT_SQR = 4900
                                                                           
                                                                             
 
+                        
+                                                                                                 
+                                                                                                 
+                              
+
                                                            
                                                             
                                                        
@@ -113,11 +118,16 @@ struct
 		                				                
 		                                  	                   
 		                				              
+
+		                                       
 	#endif          
 }file
 
 void function Caustic_TT_Init()
 {
+	if (!GetCurrentPlaylistVarBool( "caustic_tt_enabled", true ))
+		return
+
 	AddCallback_EntitiesDidLoad( EntitiesDidLoad )
 	#if CLIENT
 		AddCreateCallback( "prop_dynamic", CausticCanisterSwitchSpawned )
@@ -125,6 +135,7 @@ void function Caustic_TT_Init()
 	#if SERVER
 		                                                
 		                                                   
+		                                                             
 	#endif          
 }
 
@@ -329,7 +340,7 @@ void function EntitiesDidLoad()
 	#endif          
 
 	if ( file.isGasFunctionInverted )
-		thread CanisterSwitch_TrapActivate_Thread( null, true )                                                                   
+		thread CanisterSwitch_TrapActivate_Thread( null, true )                                                                  
 }
 
 bool function CanisterSwitch_CanUse ( entity player, entity canisterSwitch, int useFlags )
@@ -402,11 +413,16 @@ void function CanisterSwitch_DisplayRui( entity ent, entity player, var rui, Ext
 
 void function CanisterSwitch_ExtendedUseSuccess( entity canisterSwitch, entity player, ExtendedUseSettings settings )
 {
+		if ( !file.canistersClosed )
+			return
+
 		if ( !IsValid( player ) )
 			return
 
 		if ( !IsValid( canisterSwitch ) )
 			return
+
+		CanisterSwitches_Disabled()
 
 	if ( !file.isGasFunctionInverted )
 		thread CanisterSwitch_TrapActivate_Thread( player )
@@ -416,16 +432,10 @@ void function CanisterSwitch_ExtendedUseSuccess( entity canisterSwitch, entity p
 
 void function CanisterSwitch_TrapActivate_Thread( entity player, bool isInvertedSetup = false )
 {
-	if ( !isInvertedSetup )
-		CanisterSwitches_Disabled()
-
 	#if SERVER
 		                                                                                               
 		                                                                                                                                                    
 		                                                                
-
-		                                                    
-			                            
 
 		                                                                                                
 
@@ -436,6 +446,9 @@ void function CanisterSwitch_TrapActivate_Thread( entity player, bool isInverted
 
 		                       
 		 
+			                                                    
+				                            
+
 			                                                   
 			 
 				                         
@@ -452,17 +465,20 @@ void function CanisterSwitch_TrapActivate_Thread( entity player, bool isInverted
 		 
 	#endif          
 
-	if ( isInvertedSetup )
-		return
-
 	wait 2.0
 
 	#if SERVER
+		                                        
+
 		                                                          
 			                                                                                              
 
-		                                                                                                   
+		                       
+			                                                                                                   
 	#endif          
+
+	if ( isInvertedSetup )
+		return
 
 	wait 7.5
 
@@ -524,6 +540,7 @@ void function CanisterSwitch_TrapExpired_Thread()
 
 		                                     
 
+		                                       
 	#endif          
 
 	wait 2.0
@@ -544,15 +561,33 @@ void function CanisterSwitch_TrapExpired_Thread()
 	CanisterSwitches_Enabled()
 }
 
+const float CAUSTIC_TT_INVERTED_WAIT_TO_DRAIN = 20.0
+const float CAUSTIC_TT_INVERTED_WAIT_TO_DRAIN_EXTENDED = 25.0
 void function CanisterSwitch_TrapActivate_Inverted_Thread( entity player )
 {
-	CanisterSwitches_Disabled()
+	bool useDefaultSFX = true
 
+                         
+		if ( Control_IsModeEnabled() )
+			useDefaultSFX = false
+                               
 
 	#if SERVER
-		                                                                                               
-		                                                                                                                                                    
-		                                                                
+
+		                    
+		 
+			                                                                                               
+			                                                                                                                                                    
+			                                                                
+		 
+                          
+		    
+		 
+			                                                                                                            
+			                                                                                                                                                    
+			                                                                             
+		 
+                                
 
 		                                                    
 			                            
@@ -583,6 +618,8 @@ void function CanisterSwitch_TrapActivate_Inverted_Thread( entity player )
 
 		                                                          
 			                                                                                             
+
+		                                       
 	#endif          
 
 	wait 7.0
@@ -592,13 +629,15 @@ void function CanisterSwitch_TrapActivate_Inverted_Thread( entity player )
 			                             
 	#endif          
 
-	wait 15.0
-
-	#if SERVER
-		                                                                                               
-	#endif          
-
-	wait CANISTER_TIMER_END
+	                                 
+	if ( useDefaultSFX )
+	{
+		wait CAUSTIC_TT_INVERTED_WAIT_TO_DRAIN
+	}
+	else
+	{
+		wait CAUSTIC_TT_INVERTED_WAIT_TO_DRAIN_EXTENDED
+	}
 
 	thread CanisterSwitch_TrapExpired_Inverted_Thread()
 }
@@ -641,6 +680,8 @@ void function CanisterSwitch_TrapExpired_Inverted_Thread()
 	wait 2.0
 
 	#if SERVER
+		                                        
+
 		                                                          
 			                                                                                              
 	#endif          
@@ -931,7 +972,7 @@ void function CanisterSwitches_Enabled()
  
 	                                                
 	 
-		                                                                  
+		                                                                   
 			        
 
 		               
@@ -1025,3 +1066,26 @@ void function CausticTT_SetGasFunctionInvertedValue( bool val )
 
 	file.isGasFunctionInverted = val
 }
+
+#if SERVER
+                                                                                                                                               
+                                                                                                                                                                          
+                                                                                                                                    
+                                                           
+ 
+	                         
+		      
+
+	                                           
+		      
+
+	                                       
+	 
+		                                                                                        
+	 
+	    
+	 
+		                                                                                         
+	 
+ 
+#endif

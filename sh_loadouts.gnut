@@ -103,6 +103,7 @@ const bool LOADOUT_NETVAR_DEBUG_PRINTS = false
                       
                       
                       
+global const string LOADOUT_TREE_TOP_TIER = "! general"
 
 global typedef LoadoutEntry_IsSlotLocked bool functionref( EHI playerEHI )
 #if SERVER
@@ -132,7 +133,7 @@ global struct LoadoutEntry
 	string id = ""
 	int    type = -1
 
-	string pdefSectionKey = "! general"
+	string pdefSectionKey = LOADOUT_TREE_TOP_TIER
 	int    stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.INVALID                      
 	int    maxFavoriteCount = 0
 
@@ -179,7 +180,8 @@ global struct LoadoutEntry
 	                                        
 }
 
-
+global const int NUM_BADGE_LOADOUT_SLOTS = 3
+global const int NUM_TRACKER_LOADOUT_SLOTS = 3
 
                        
                        
@@ -208,6 +210,8 @@ struct FileStruct_LifetimeLevel
 {
 	bool                         isInitialized = false
 	array<LoadoutEntry>          loadoutSlotEntries = []
+
+	bool allowLoadoutSlotOverridesByPlaylist = false
 
 	#if SERVER || CLIENT || UI                                                       
 		table<string, LoadoutNetworkVarInfo> networkVars = {}
@@ -1287,6 +1291,11 @@ array<LoadoutEntry> function GetAllLoadoutSlots()
 void function ShLoadouts_OnPlayerEHICreated( EHI player, bool thisCallIsHappeningBecauseTheUIVMReset = false )
 {
 	EHIScriptStruct ehiss = GetEHIScriptStruct( player )
+	#if SERVER || CLIENT
+		fileLevel.allowLoadoutSlotOverridesByPlaylist = GetCurrentPlaylistVarBool( "allow_loadout_slot_overrides", false )
+	#elseif UI
+		fileLevel.allowLoadoutSlotOverridesByPlaylist = false                                                        
+	#endif
 
 #if SERVER
 	       
@@ -1926,6 +1935,7 @@ void function RefreshLoadoutSlotInternal( EHI playerEHI, LoadoutEntry entry, tab
 				                                                                            
 				                                                                                
 
+				                                                             
 				                                    
 					                                                                                                                                             
 			 
@@ -2155,7 +2165,16 @@ array<ItemFlavor> function GetLoadoutItemsSortedForMenu( LoadoutEntry entry, int
 		else if ( aQuality < bQuality )
 			return 1
 
-		if ( itemType == eItemType.gladiator_card_intro_quip || itemType == eItemType.gladiator_card_kill_quip || itemType == eItemType.weapon_charm )
+		string aTag = string(ItemFlavor_GetSourceIcon( a ))
+		string bTag = string(ItemFlavor_GetSourceIcon( b ))
+		if ( aTag > bTag )
+			return -1
+		else if ( aTag < bTag )
+			return 1
+
+		if ( itemType == eItemType.gladiator_card_intro_quip || itemType == eItemType.gladiator_card_kill_quip || itemType == eItemType.weapon_charm
+				|| itemType == eItemType.character_skin || itemType == eItemType.music_pack || itemType == eItemType.loadscreen
+				|| itemType == eItemType.gladiator_card_stance || itemType == eItemType.gladiator_card_frame || itemType == eItemType.weapon_skin)
 			return SortStringAlphabetize( Localize( ItemFlavor_GetLongName( a ) ), Localize( ItemFlavor_GetLongName( b ) ) )
 
 		return sortOrdinalFunc( a ) - sortOrdinalFunc( b )
@@ -2184,12 +2203,22 @@ array<ItemFlavor> function GetLoadoutItemsSortedForMenu( LoadoutEntry entry, int
    
         
 
-
+                                                                                                                                                              
+                                                                                                                                                                        
 bool function IsLoadoutSlotActive( EHI playerEHI, LoadoutEntry entry, LoadoutEntry ornull entryToNotCheck = null )
 {
 	#if CLIENT || UI
 		if ( playerEHI != LocalClientEHI() && entry.networkTo != eLoadoutNetworking.PLAYER_GLOBAL )
 			return false
+	#endif
+
+	#if SERVER && DEV
+		                                                                        
+		                                                                       
+		                                    
+			                                                                                          
+		    
+			                                                                           
 	#endif
 
 	foreach ( LoadoutEntry dependency, table<ItemFlavor, bool> flavorSet in entry.isActiveConditions )
@@ -2198,7 +2227,7 @@ bool function IsLoadoutSlotActive( EHI playerEHI, LoadoutEntry entry, LoadoutEnt
 			continue
 
 		if ( !IsLoadoutSlotActive( playerEHI, dependency ) )
-			return false
+				return false
 
 		int dependencyContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, dependency )
 		if ( dependencyContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY )
@@ -2343,13 +2372,14 @@ bool function IsContentsIndexValidForLoadoutSlot( EHI playerEHI, LoadoutEntry en
 
 	                                  
 	                                                
+	                                                                                                                                                         
 	                                                                                  
 	 
 		                                                  
 		 
 			                                                                 
 			 
-				                                                                                                  
+				                                                                                                   
 			 
 		 
 		                                                                 
@@ -2507,6 +2537,9 @@ bool function IsContentsIndexValidForLoadoutSlot( EHI playerEHI, LoadoutEntry en
 #if SERVER || CLIENT || UI
 array<string> ornull function GetLoadoutSlotForceResetTo( LoadoutEntry entry )
 {
+	if ( fileLevel.allowLoadoutSlotOverridesByPlaylist == false )
+		return null
+
 	                                                                                                                                   
 	string playlistVarVal = GetCurrentPlaylistVarString( format( "loadout_slot_%s_force_reset_to", entry.id ), "" )
 

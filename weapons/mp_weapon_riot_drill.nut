@@ -66,7 +66,6 @@ const vector RIOT_DRILL_PLACEMENT_ERROR_COLOR 	= <255, 40, 40>
 const string RIOT_DRILL_DAMAGE_SOUND_1P 		= "flesh_thermiteburn_3p_vs_1p"					                  
 const string RIOT_DRILL_DAMAGE_SOUND_3P 		= "flesh_thermiteburn_3p_vs_3p"				                               
 const string RIOT_DRILL_EXIT_DRILLING 			= "Maggie_Tac_Drill_Exit_Drilling"
-const string RIOT_DRILL_EXIT_DRILLING_INTENSE 	= "not_used"
 const string RIOT_DRILL_ENTRANCE_DRILLING 		= "Maggie_Tac_Drill_Entrance_Drilling"                             
 
 enum eBreachPlacementResult
@@ -190,7 +189,7 @@ void function MpWeaponRiotDrill_Init()
 	file.fxOption_impactTableFXEnterRefire	= GetCurrentPlaylistVarFloat( "breaching_spike_impact_fx_enter_refire", 0.2 )
 	file.fxOption_impactTableFXExitRefire	= GetCurrentPlaylistVarFloat( "breaching_spike_impact_fx_exit_refire", 0.2 )
 
-              
+                  
                                                           
        
 	file.shieldScriptNames.append( BUBBLE_SHIELD_SCRIPTNAME )
@@ -630,6 +629,8 @@ void function RestoreRiotDrillAmmo( entity owner )
 	                                     
 
 	                                                              
+	                                    
+	                                                                 
 	                                                              
 	                                                                   
 	                                                                
@@ -653,6 +654,8 @@ void function RestoreRiotDrillAmmo( entity owner )
 	                                 
 
 	                                                          
+	                                
+	                                                             
 	                                                          
 	                                                                    
 	                                                        
@@ -686,6 +689,8 @@ void function RestoreRiotDrillAmmo( entity owner )
 	 
 		                                                                                                          
 			                                                                 
+		                                  
+		                                                               
 		                             
 	 
 
@@ -1008,7 +1013,7 @@ void function RiotDrill_AddThreatIndicator( entity dangerZone )
 	int dangerZoneTeam = player.GetTeam()
 
 	if( IsEnemyTeam( team, dangerZoneTeam ) || ( player == owner ) )
-		ShowGrenadeArrow( player, dangerZone, file.balance_riotDrillLength, 0, false, false, ( 60.0 * dangerZone.GetUpVector() ) )
+		ShowGrenadeArrow( player, dangerZone, file.balance_riotDrillLength, 0, false, eThreatIndicatorVisibility.INDICATOR_SHOW_TO_ALL, ( 60.0 * dangerZone.GetUpVector() ) )
 }
 
 #endif         

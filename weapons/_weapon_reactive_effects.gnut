@@ -13,6 +13,7 @@ global function DEV_PrintFileReactiveEffects
 #if SERVER
                                                         
                                                        
+                                                   
 #endif
 
 #if CLIENT
@@ -130,10 +131,10 @@ bool function WeaponHasReactiveKillTrackingForCurrentSkin( entity weapon )
 	if ( !IsValid( weapon ) )
 		return false
 
-	if ( !IsValidItemFlavorNetworkIndex_DEPRECATED( weapon.GetGrade(), eValidation.DONT_ASSERT ) )
+	if ( !IsValidItemFlavorNetworkIndex( weapon.GetGrade(), eValidation.DONT_ASSERT ) )
 		return false
 
-	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex_DEPRECATED( weapon.GetGrade() )
+	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( weapon.GetGrade() )
 	if ( !WeaponSkin_DoesReactToKills( weaponSkin ) )
 		return false
 
@@ -145,7 +146,7 @@ int function WeaponReactiveKillTracking_GetKillsForPlayerWithWeapon( entity play
 	if ( !WeaponHasReactiveKillTrackingForCurrentSkin( weapon ) )
 		return -1
 
-	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex_DEPRECATED( weapon.GetGrade() )
+	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( weapon.GetGrade() )
 
 	#if SERVER
 		                                                                    
@@ -176,7 +177,7 @@ int function WeaponReactiveKillTracking_GetKillsForPlayerWithWeapon( entity play
 	                                                                                              
  
 
-                                                                                                          
+                                                    
  
 	                      
 		            
@@ -190,6 +191,16 @@ int function WeaponReactiveKillTracking_GetKillsForPlayerWithWeapon( entity play
 	                                  
 
 	            
+ 
+
+                                                                                                          
+ 
+	                                      
+ 
+
+                                                                  
+ 
+	                                      
  
 
                                                                                                                                                        
@@ -215,7 +226,7 @@ int function WeaponReactiveKillTracking_GetKillsForPlayerWithWeapon( entity play
 
 		                                                                                 
 		 
-			                                                                                   
+			                                                                        
 
 			                                                      
 			 
@@ -304,7 +315,7 @@ void function UpdatePlayerWeaponReactiveEffects( entity weapon, int updateType )
 	if ( !IsAlive( player ) || !player.IsPlayer() )
 		return
 
-	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex_DEPRECATED( weapon.GetGrade() )
+	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( weapon.GetGrade() )
 
 	int numKills = WeaponReactiveKillTracking_GetKillsForPlayerWithWeapon( player, weapon )
 	int reactiveKillLevel = WeaponSkin_GetReactToKillsLevelIndexForKillCount( weaponSkin, numKills )
@@ -533,7 +544,7 @@ void function WeaponReactiveEffects_SetPoseParameter( entity weapon, ItemFlavor 
 	                                                             
 		      
 
-	                                                                                   
+	                                                                        
 	                                                                                                              
 		      
 

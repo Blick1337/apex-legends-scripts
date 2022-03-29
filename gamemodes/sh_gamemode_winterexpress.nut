@@ -3009,7 +3009,7 @@ void function UI_UpdateOpenMenuButtonCallbacks_Spectate( int newLifeState, bool 
 			RunClientScript( "CloseCharacterSelectNewMenu" )
 
                                   
-			if ( IsFullyConnected() && IsUsingLoadoutSelectionSystem() )
+			if ( IsUsingLoadoutSelectionSystem() )
 			{
 				DeregisterButtonPressedCallback( KEY_E, WinterExpress_UI_OpenLoadoutSelect )
 				DeregisterButtonPressedCallback( BUTTON_TRIGGER_RIGHT_FULL, WinterExpress_UI_OpenLoadoutSelect )
@@ -3028,7 +3028,7 @@ void function UI_UpdateOpenMenuButtonCallbacks_Spectate( int newLifeState, bool 
 		file.OpenMenuSpectateButtonCallbackRegistered = true
 
                                   
-			if ( IsFullyConnected() && IsUsingLoadoutSelectionSystem() )
+			if ( IsUsingLoadoutSelectionSystem() )
 			{
 				RegisterButtonPressedCallback( KEY_E, WinterExpress_UI_OpenLoadoutSelect )
 				RegisterButtonPressedCallback( BUTTON_TRIGGER_RIGHT_FULL, WinterExpress_UI_OpenLoadoutSelect )

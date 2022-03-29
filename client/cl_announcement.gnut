@@ -588,7 +588,7 @@ void function AnnouncementMessage_DisplayOnHud( AnnouncementData announcement )
 
 		case ANNOUNCEMENT_STYLE_RATING_LEADER:
 			customAnnouncement = true
-			rui = RuiCreate( $"ui/rating_leader_noti.rpak", clGlobal.topoFullScreen, RUI_DRAW_POSTEFFECTS, 0 )
+			rui = RuiCreate( $"ui/rating_leader_noti.rpak", clGlobal.topoFullScreen, RUI_DRAW_POSTEFFECTS, FULLMAP_Z_BASE - 1 )
 			RuiSetFloat( rui, "startTime", Time() )
 			RuiSetString( rui, "messageText", optionalTextArgs[0] )
 			RuiSetString( rui, "messageSubText", optionalTextArgs[1] )

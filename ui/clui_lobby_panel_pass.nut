@@ -40,6 +40,7 @@ global function GetBattlePassRewardItemName
 
 global function BattlePass_PurchaseButton_OnActivate
 global function ShouldDisplayTallButton
+global function GetCharacterIconToDisplay
 #endif
 
 #if CLIENT || UI
@@ -2128,10 +2129,10 @@ void function AboutBattlePass1Dialog_OnOpen()
 	expect ItemFlavor( activeBattlePass )
 
 	var infoPanel = Hud_GetChild( menu, "InfoPanel" )
-	HudElem_SetRuiArg( infoPanel, "battlePassName", ItemFlavor_GetLongName( activeBattlePass ) )
+	RuiSetString( rui, "battlePassName", ItemFlavor_GetLongName( activeBattlePass ) )
 
 	bool passOwned = GRX_IsItemOwnedByPlayer( activeBattlePass )
-
+	asset battlePassAsset = ItemFlavor_GetAsset( activeBattlePass )
 	if( GetConVarBool( "battlepass_expansion_enabled" ) )
 	{
 		RegisterButtonPressedCallback( KEY_SPACE, AboutProgressButton_OnClick )
@@ -2139,6 +2140,7 @@ void function AboutBattlePass1Dialog_OnOpen()
 		float scaleFactor = buttonWidth/425.0
 		Hud_SetX( file.aboutProgressButton, passOwned ? -172*scaleFactor : 75*scaleFactor )
 		Hud_SetX( file.aboutPurchaseButton, 250*scaleFactor )
+		RuiSetImage( rui, "logo", GetGlobalSettingsAsset( battlePassAsset , "largeLogo" ) )
 	}
 	else
 	{
@@ -2151,9 +2153,6 @@ void function AboutBattlePass1Dialog_OnOpen()
 		HudElem_SetRuiArg( infoPanel, "numCraftingMaterials", fileLevel.numCraftingMetalsInBattlePass )
 		HudElem_SetRuiArg( infoPanel, "passOwned", passOwned )
 	}
-
-
-
 
 	Hud_SetVisible( file.aboutPurchaseButton, !passOwned && showPurchaseButton )
 }
@@ -2321,7 +2320,6 @@ void function InitPassPurchaseMenu( var newMenuArg )
 	{
 		s_passPurchaseMenu.backgroundsPanel = Hud_GetChild( menu, "Backgrounds" )
 		s_passPurchaseMenu.passBanner = Hud_GetChild( menu, "HeaderBanner" )
-		s_passPurchaseMenu.overlayPanel = Hud_GetChild( menu, "BlackOverlay" )
 		Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_GET_FOCUS, PassPurchaseButton_OnFocus )
 		Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_LOSE_FOCUS, PurchaseButtons_OnLoseFocus )
 		Hud_AddEventHandler( s_passPurchaseMenu.bundlePurchaseButton, UIE_GET_FOCUS, BundlePurchaseButton_OnFocus )
@@ -2345,8 +2343,6 @@ void function PassPurchaseButton_OnFocus( var button )
 
 	HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "isPremiumFocused", true)
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isPremiumFocused", true)
-	HudElem_SetRuiArg( s_passPurchaseMenu.overlayPanel, "isPremiumFocused", true)
-
 }
 
 void function PurchaseButtons_OnLoseFocus( var button )
@@ -2357,8 +2353,6 @@ void function PurchaseButtons_OnLoseFocus( var button )
 	HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "isBundleFocused", false)
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isPremiumFocused", false)
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isBundleFocused", false)
-	HudElem_SetRuiArg( s_passPurchaseMenu.overlayPanel, "isPremiumFocused", false)
-
 }
 
 void function PassPurchaseButton_OnActivate( var button )
@@ -2677,9 +2671,10 @@ int function SortByAwardLevel( BattlePassReward a, BattlePassReward b )
 
 
 #if CLIENT
-void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int level, float scale, bool showLow, var loadscreenPreviewBox, bool shouldPlayAudioPreview, string sceneRefName, bool isNXHH = false )
+void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int level, float scale, bool showLow, var loadscreenPreviewBox, bool shouldPlayAudioPreview, string sceneRefName, bool isNXHH = false, bool isThemedEvent = false )
 {
 	ItemFlavor flav = GetItemFlavorByGUID( itemFlavorGUID )
+	int itemType = ItemFlavor_GetType( flav )
 	entity sceneRef = GetEntByScriptName( sceneRefName )
 
 	fileLevel.sceneRefName = sceneRefName
@@ -2692,24 +2687,23 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 		if ( fabs( float( GetScreenSize().width ) / float( GetScreenSize().height ) - (16.0 / 10.0) ) < 0.07 )
 			fileLevel.sceneRefOrigin += <0, 25, 0>
 
-
-		if ( ItemFlavor_GetType( flav ) == eItemType.character_emote )
+		if ( itemType == eItemType.character_emote )
 			scale *= 0.7
 	}
 	else if ( sceneRefName == "battlepass_center_ref" )
 	{
 		                              
 		                                                                                                                                          
-		if ( ItemFlavor_GetType( flav ) == eItemType.emote_icon )
+		if ( itemType == eItemType.emote_icon )
 			fileLevel.sceneRefOrigin += <5, 0, 14>
-		else if ( ItemFlavor_GetType( flav ) == eItemType.character_emote )
+		else if ( itemType == eItemType.character_emote )
 			scale *= 0.7
 	}
 	else if ( sceneRefName == "collection_event_ref" )
 	{
 		                                   
 		                                                                                                                                          
-		if ( ItemFlavor_GetType( flav ) == eItemType.emote_icon )
+		if ( itemType == eItemType.emote_icon )
 			fileLevel.sceneRefOrigin += <0, 105, -33>                                                                                             
 	}
 
@@ -2728,16 +2722,16 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 	else if ( sceneRefName == "collection_event_ref" )
 	{
 		                                    
-		if ( ItemFlavor_GetType( flav ) == eItemType.character_skin )
+		if ( itemType == eItemType.character_skin )
 		{
 			fileLevel.sceneRefOrigin += <0, 0, -10>
 		}
-		else if ( ItemFlavor_GetType( flav ) == eItemType.gladiator_card_stance )
+		else if ( itemType == eItemType.gladiator_card_stance || itemType == eItemType.gladiator_card_frame )
 		{
 			fileLevel.sceneRefOrigin += <0, 0, 1>
 			scale *= 0.8
 		}
-		else if ( ItemFlavor_GetType( flav ) == eItemType.character_emote )
+		else if ( itemType == eItemType.character_emote )
 		{
 			fileLevel.sceneRefOrigin += <0, 0, 6>
 			scale *= 0.58
@@ -2752,7 +2746,7 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 		fileLevel.sceneRefOrigin += <10, 0, 0>
 	}
 
-	if( sceneRefName == "customize_character_emotes_ref" )
+	if ( sceneRefName == "customize_character_emotes_ref" )
 	{
 		if ( !isNXHH )
 		{
@@ -2760,7 +2754,45 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 			fileLevel.sceneRefOrigin += <0, 60, 20>
 		}
 	}
+	
+	if ( sceneRefName == "collection_event_ref" )
+	{
+		if ( isNXHH && itemType == eItemType.emote_icon )
+		{
+			fileLevel.sceneRefOrigin += <15, 0, 30>
+		}
+	}
 #endif
+
+	                                                                             
+	                                                                                   
+	if ( isThemedEvent )
+	{
+		fileLevel.sceneRefOrigin += <-21, 0, -7>
+		if ( !showLow )
+			fileLevel.sceneRefOrigin += <0, 0, 5>
+
+		if ( itemType == eItemType.gladiator_card_stat_tracker )
+			fileLevel.sceneRefOrigin += <0, 0, 8>
+		else if ( itemType == eItemType.gladiator_card_stance)
+			fileLevel.sceneRefOrigin += <-2, 0, 8>
+		else if ( itemType == eItemType.gladiator_card_frame )
+			fileLevel.sceneRefOrigin += <-2, 0, 10>
+		else if ( itemType == eItemType.emote_icon )
+			fileLevel.sceneRefOrigin += <-5, 90, 0>
+		else if ( itemType == eItemType.weapon_skin )
+			fileLevel.sceneRefOrigin += <5, 0, 5>
+
+		                                      
+#if NX_PROG || PC_PROG_NX_UI		
+		                                       
+		if ( isNXHH && itemType == eItemType.emote_icon )
+		{
+			fileLevel.sceneRefOrigin += <-26, 230, -30>
+		}
+#endif
+		
+	}
 
 	fileLevel.sceneRefAngles = sceneRef.GetAngles()
 
@@ -3154,41 +3186,20 @@ void function ShowBattlePassItem_WeaponSkin( ItemFlavor item, float scale )
 
 void function ShowBattlePassItem_WeaponCharm( ItemFlavor item, float scale )
 {
-	const vector BATTLEPASS_WEAPON_CHARM_LOCAL_ANGLES = <-5, -140, 0>
-
+	vector origin = fileLevel.sceneRefOrigin + <0, 0, 42>
 	vector angles = fileLevel.sceneRefAngles
-	vector origin = fileLevel.sceneRefOrigin + <0, 0, 29.0> + -3.6 * AnglesToRight( angles )
 
 	entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
 	mover.MakeSafeForUIScriptHack()
 
-	asset weaponModelAsset = $"mdl/weapons/p2011/ptpov_p2011.rmdl"
-	string weaponName      = "mp_weapon_semipistol"
-
-	entity model = CreateClientSidePropDynamic( origin, AnglesCompose( angles, BATTLEPASS_WEAPON_CHARM_LOCAL_ANGLES ), $"mdl/dev/empty_model.rmdl" )
-	model.SetModel( weaponModelAsset )
-	model.SetSkin( model.GetSkinIndexByName( "charm_preview_black" ) )
+	entity model = CreateClientSidePropDynamicCharm( origin, AnglesCompose( angles, <0, 270, 0> ), WeaponCharm_GetCharmModel( item ) )
 	model.MakeSafeForUIScriptHack()
-	model.SetVisibleForLocalPlayer( 0 )
-	model.Anim_SetPaused( true )
-	float modelScale = 7.85
-	model.SetModelScale( scale * modelScale )
+	model.SetModelScale( scale * 18 )
 	model.SetParent( mover )
-	ShowDefaultBodygroupsOnFakeWeapon( model, weaponName )
-
-	         
-	model.SetLocalOrigin( GetAttachmentOriginOffset( model, "CHARM", BATTLEPASS_WEAPON_CHARM_LOCAL_ANGLES ) )
-	model.SetLocalAngles( BATTLEPASS_WEAPON_CHARM_LOCAL_ANGLES )
-
-	WeaponCosmetics_Apply( model, null, item )
-
-	entity charmEnt = GetCharmForWeaponEntity( model )
-	charmEnt.SetModelScale( modelScale * 1.23 )
-
-	                                                                     
+	thread MoverPendulum( mover )
 
 	vector flashColor = ItemFlavor_GetQualityColor( item ) / 255
-	thread FlashMenuModel( charmEnt, eMenuModelFlashType.BATTLEPASS, flashColor )
+	thread FlashMenuModel( model, eMenuModelFlashType.BATTLEPASS, flashColor )
 
 	fileLevel.mover = mover
 	fileLevel.models.append( model )
@@ -3259,7 +3270,11 @@ void function ShowBattlePassItem_Banner( ItemFlavor item, float scale )
 
 	if ( itemType == eItemType.gladiator_card_frame )
 	{
-		ItemFlavor character = GladiatorCardFrame_GetCharacterFlavor( item )
+		ItemFlavor ornull character = GladiatorCardFrame_GetCharacterFlavor( item )
+		if ( character == null )
+			character = GetRandomGoodItemFlavorForLoadoutSlot( ToEHI( player ), Loadout_Character() )
+
+		expect ItemFlavor( character )
 		SetNestedGladiatorCardOverrideCharacter( nestedGCHandleFront, character )
 		SetNestedGladiatorCardOverrideFrame( nestedGCHandleFront, item )
 	}
@@ -3288,7 +3303,7 @@ void function ShowBattlePassItem_EmoteIcon( ItemFlavor item, float scale, bool s
 	vector angles = fileLevel.sceneRefAngles
 
 	#if NX_PROG || PC_PROG_NX_UI
-		vector origin = fileLevel.sceneRefOrigin - (AnglesToForward( angles ) * ( (1.0 - scale) ) ) + (AnglesToRight( angles ) * ((1.0 - scale)) * -28) + <0, 0, -25>
+		vector origin = fileLevel.sceneRefOrigin - (AnglesToForward( angles ) * ( (1.0 - scale) ) ) + (AnglesToRight( angles ) * ((1.0 - scale)) * -28) + <20, 30, 5>
 	#else
 		vector origin = fileLevel.sceneRefOrigin - (AnglesToForward( angles ) * ( (1.0 - scale) * 100) ) + (AnglesToRight( angles ) * ((1.0 - scale) * -12))
 
@@ -3458,7 +3473,9 @@ void function ShowBattlePassItem_StatTracker( ItemFlavor item, float scale )
 	model.MakeSafeForUIScriptHack()
 	model.SetModelScale( scale * BATTLEPASS_STAT_TRACKER_SCALE )
 
-	ItemFlavor character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+	ItemFlavor ornull character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+	if ( character == null )                                  
+		character = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_Character() )
 
 	RuiSetBool( rui, "isVisible", true )
 	RuiSetBool( rui, "battlepass", true )
@@ -3677,34 +3694,15 @@ void function ShowBattlePassItem_Voucher( ItemFlavor item, float scale )
 	asset itemAsset = ItemFlavor_GetAsset( item )
 	switch( itemAsset )
 	{
-		case $"settings/itemflav/voucher/s05_quest_piece.rpak":
-			ShowBattlePassItem_QuestClue( item, scale )
-			break
-
-		case $"settings/itemflav/voucher/s05_quest_reward_bp_points_3000.rpak":
-		case $"settings/itemflav/voucher/s06_quest_reward_bp_points_5000.rpak":
-			ShowBattlePassItem_CPReward( item, scale )
-			break
-
-		case $"settings/itemflav/voucher/s07_quest_reward_stars_1.rpak":
-		case $"settings/itemflav/voucher/s08_quest_reward_stars_2.rpak":
+		case $"settings/itemflav/voucher/quest_reward_stars_2.rpak":
 			ShowBattlePassItem_StarReward( item, scale )
 			break
-		case $"settings/itemflav/voucher/s09_quest_reward_stars_2.rpak":
+		case $"settings/itemflav/voucher/quest_reward_stars_10.rpak":
 			ShowBattlePassItem_StarReward( item, scale )
 			break
 		default:
 			ShowBattlePassItem_XPBoost( item, scale )
 	}
-
-	                                                                                         
-	  	                                           
-	                                                                                                              
-	  	                                          
-	                                                                                                              
-	  	                                          
-	      
-	  	                                         
 }
 
 const float BATTLEPASS_VIDEO_WIDTH = 600.0

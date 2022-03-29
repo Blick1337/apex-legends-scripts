@@ -6,8 +6,7 @@ const string OVERLAY_SOUND_ON_CLOSE = "menu_back"
 struct
 {
 	#if CLIENT
-		var characterInfoRui
-		bool characterInfoOverlayOpen = false
+		var characterInfoRui = null
 	#endif
 } file
 
@@ -26,11 +25,6 @@ void function ShCharacterInfo_Init()
 }
 
 #if CLIENT
-bool function IsCharacterInfoButtonActive()
-{
-	return file.characterInfoOverlayOpen
-}
-
 bool function CharacterInfo_CanUse( entity player )
 {
 	if ( IsWatchingReplay() )
@@ -50,6 +44,8 @@ bool function CharacterInfo_CanUse( entity player )
 	if ( GetGameState() >= eGameState.Resolution )
 		return false
 
+	if ( GetGameState() < eGameState.Prematch )
+		return false
 	return true
 }
 
@@ -61,11 +57,8 @@ void function CharacterInfoButton_Down( entity player )
 
 void function CharacterInfoOpen( entity player, bool debounce = true )
 {
-	if ( file.characterInfoOverlayOpen )
-		return
-
+	DestroyCharacterInfo()                                        
 	file.characterInfoRui = CreateFullscreenRui( $"ui/character_info.rpak", 500 )
-	file.characterInfoOverlayOpen = true
 
 	if ( debounce )
 		player.SetLookStickDebounce()
@@ -87,11 +80,7 @@ void function CharacterInfoButton_Up( entity player )
 
 void function CharacterInfo_Shutdown( bool makeSound )
 {
-	if ( !IsCharacterInfoButtonActive() )
-		return
-
 	DestroyCharacterInfo()
-	file.characterInfoOverlayOpen = false
 
 	entity player = GetLocalViewPlayer()
 	if ( !IsValid( player ) )
@@ -105,10 +94,11 @@ void function CharacterInfo_Shutdown( bool makeSound )
 
 void function DestroyCharacterInfo()
 {
-	if ( !IsCharacterInfoButtonActive() )
-		return
-
 	var rui = file.characterInfoRui
-	RuiDestroy( rui )
+
+	if( rui != null )
+		RuiDestroyIfAlive( rui )
+
+	file.characterInfoRui = null
 }
 #endif

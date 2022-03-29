@@ -52,7 +52,9 @@ global function ClientToUI_ClearInspectModeIsActive
 global function ClientToUI_PlayLootCeremonySound
 global function ClientToUI_StopLootCeremonySound
 global function ClientToUI_LootCeremonyMarkItemAsNoLongerNew
+                    
 global function ClientToUI_TrackMythicChallenge
+                          
 
 global function LootCeremony_UpdateOpenAdditionalButton
 
@@ -228,7 +230,10 @@ struct FileLevelStruct
 		entity cameraEnt
 
 		table<string, var>            rewardPlacards = { RewardLeftButton = null, RewardCenterButton = null, RewardRightButton = null }
+                    
 		array<entity>				  characterSkinModels
+		bool						  inspectModeActive
+                          
 
 		array< ItemPresentationData > itemPresentationDatas
 
@@ -680,7 +685,7 @@ void function UIToClient_OnGRXPackOpeningResultsAvailable()
 			fileLevel.itemPresentationDatas.append( data )
 		}
 	}
-       
+                           
 	else
 	{
 		for ( int i = 0; i < bag.quantities.len(); i++ )
@@ -719,6 +724,7 @@ array<ItemFlavor> function FilterAndSortPackResults( array<ItemFlavor> resultLis
 	                                                                                     
 	bool isThematicCharacterPack = false                               
 	bool isThematicItemTypePack = false                       
+	bool isThematicWeaponCategoryPack = false                
 
 	                                                                        
 	foreach ( ItemFlavor result in resultList )
@@ -743,6 +749,11 @@ array<ItemFlavor> function FilterAndSortPackResults( array<ItemFlavor> resultLis
 				isThematicCharacterPack = true
 				packThemeType = eItemType.character
 			}
+			else if ( ItemFlavor_GetType( expect ItemFlavor( packTheme ) ) == eItemType.weapon_category )
+			{
+				isThematicWeaponCategoryPack = true
+				packThemeType = eItemType.weapon_category
+			}
 			else
 			{
 				isThematicItemTypePack = true
@@ -752,7 +763,7 @@ array<ItemFlavor> function FilterAndSortPackResults( array<ItemFlavor> resultLis
 	}
 
 	                                                                                                                 
-	out.sort( int function( ItemFlavor a, ItemFlavor b ) : ( isThematicCharacterPack, isThematicItemTypePack, packTheme, packThemeType ) {
+	out.sort( int function( ItemFlavor a, ItemFlavor b ) : ( isThematicCharacterPack, isThematicItemTypePack, isThematicWeaponCategoryPack, packTheme, packThemeType ) {
 		bool aIsMeleeSkin = (ItemFlavor_GetType( a ) == eItemType.melee_skin)
 		bool bIsMeleeSkin = (ItemFlavor_GetType( b ) == eItemType.melee_skin)
 		if ( aIsMeleeSkin )
@@ -774,6 +785,20 @@ array<ItemFlavor> function FilterAndSortPackResults( array<ItemFlavor> resultLis
 
 			if ( packTheme == GetItemFlavorAssociatedCharacterOrWeapon( b ) && ItemFlavor_GetQuality( b ) >= eRarityTier.RARE )
 			return 1
+		}
+		else if ( isThematicWeaponCategoryPack )
+		{
+			if ( ItemFlavor_GetType( a ) == eItemType.weapon_skin )
+			{
+				if ( packTheme == WeaponItemFlavor_GetCategory( expect ItemFlavor( GetItemFlavorAssociatedCharacterOrWeapon( a ) ) ) && ItemFlavor_GetQuality( a ) >= eRarityTier.RARE )
+					return -1
+			}
+
+			if ( ItemFlavor_GetType( b ) == eItemType.weapon_skin )
+			{
+				if ( packTheme == WeaponItemFlavor_GetCategory( expect ItemFlavor( GetItemFlavorAssociatedCharacterOrWeapon( b ) ) ) && ItemFlavor_GetQuality( b ) >= eRarityTier.RARE )
+					return 1
+			}
 		}
 		else if ( isThematicItemTypePack )
 		{
@@ -1619,6 +1644,9 @@ void function LootCeremonySequenceShowRewards()
 	RunUIScript( "ClientToUI_SetLootHasBeenPresented", heirloomShards )
 	RunUIScript( "ClientToUI_UpdateStoreButtonVisibility" )
 	RunUIScript( "LootCeremony_UpdateOpenAdditionalButton" )
+                    
+	thread MythicUpdateAllEffects( true )
+                          
 
 	                                      
 	for ( int i = 0; i < TICK_LOOT_ATTACHMENTS.len(); i++ )
@@ -1902,8 +1930,10 @@ void function ShowRewards_CharacterSkin( ItemFlavor item, vector origin, vector 
 	thread FlashMenuModel( characterModel, flashType, flashColor )
 	LootCeremonyUpdateSpotLights( attachment, true, eItemType.character_skin )
 
+                    
 	if ( Mythics_IsItemFlavorMythicSkin( item ) && displayIndex != 1 )
 		fileLevel.characterSkinModels.append( characterModel )
+                          
 
 	OnThreadEnd(
 		function() : ( mover, characterModel, attachment )
@@ -2325,7 +2355,12 @@ GladiatorCardData function ShowRewards_GladiatorCard_Create( ItemFlavor item, in
 
 	if ( itemType == eItemType.gladiator_card_frame )
 	{
-		ItemFlavor character = GladiatorCardFrame_GetCharacterFlavor( item )
+		ItemFlavor ornull character = GladiatorCardFrame_GetCharacterFlavor( item )
+		if ( character == null )
+			character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
+
+		expect ItemFlavor( character )
+
 		SetNestedGladiatorCardOverrideCharacter( nestedGCHandleFront, character )
 		SetNestedGladiatorCardOverrideFrame( nestedGCHandleFront, item )
 	}
@@ -2508,7 +2543,11 @@ void function ShowRewards_StatTracker( ItemFlavor item, vector origin, vector an
 	bgModel.MakeSafeForUIScriptHack()
 	bgModel.SetModelScale( 1.0 / STAT_TRACKER_SCALE_DIVIDE_BY )
 
-	ItemFlavor character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+	ItemFlavor ornull character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+	if ( character == null )                                  
+		character = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_Character() )
+
+	expect ItemFlavor( character )
 
 	RuiSetBool( ruiStatTracker, "isVisible", true )
 	UpdateRuiWithStatTrackerData( ruiStatTracker, "tracker", LocalClientEHI(), character, -1, item, null, true )
@@ -2910,6 +2949,7 @@ void function ShowRewards_Placard( ItemFlavor item, vector origin, vector angles
 		ItemFlavor currencyFlav = GRXCurrencyBundle_GetCurrencyFlav( item )
 		RuiSetString( ruiPlacard, "nameText", ItemFlavor_GetShortName( currencyFlav ) )
 	}
+                    
 	else if ( Mythics_IsItemFlavorMythicSkin( item ) )
 	{
 		int tierIndex = Mythics_GetSkinTierIntForSkin( item )
@@ -2923,6 +2963,7 @@ void function ShowRewards_Placard( ItemFlavor item, vector origin, vector angles
 		if ( tierIndex > 1 )
 			RuiSetBool( ruiPlacard, "isLocked", true )
 	}
+                          
 	else
 	{
 		RuiSetString( ruiPlacard, "nameText", ItemFlavor_GetTypeName( item ) )
@@ -2962,9 +3003,92 @@ void function UIToClient_RewardPlacard_Hover( var menuButton, bool isHovered )
 
 	if ( IsValid( rui ) )
 		RuiSetBool( rui, "isHovered", isHovered )
+
+                    
+	MythicSetButtonModelFade( menuButton, !isHovered )
+                          
 }
 #endif
 
+                    
+#if CLIENT
+void function MythicUpdateAllEffects( bool enable )
+{
+	WaitFrame()
+	if ( fileLevel.characterSkinModels.len() < 2 )
+		return
+
+	if ( !enable )
+	{
+		thread MythicModelClear( fileLevel.characterSkinModels[0] )
+		thread MythicModelClear( fileLevel.characterSkinModels[1] )
+	}
+	else
+	{
+		thread MythicModelFade( fileLevel.characterSkinModels[0] )
+		thread MythicModelFade( fileLevel.characterSkinModels[1] )
+	}
+}
+
+void function MythicSetButtonModelFade( var menuButton, bool fade )
+{
+	if ( fileLevel.characterSkinModels.len() < 2 || Hud_GetHudName( menuButton ) == INSPECT_BUTTONS[1] )
+		return
+
+	entity model
+
+	if ( Hud_GetHudName( menuButton ) == INSPECT_BUTTONS[0] )
+		model = fileLevel.characterSkinModels[0]
+	else if ( Hud_GetHudName( menuButton ) == INSPECT_BUTTONS[2] )
+		model = fileLevel.characterSkinModels[1]
+
+	if( !IsValid( model ) )
+		return
+
+	if( fade && !fileLevel.inspectModeActive )
+		thread MythicModelFade( model )
+	else
+		thread MythicModelClear( model )
+}
+
+void function MythicModelFade( entity model )
+{
+	WaitFrame()
+
+	if( !IsValid( model ) )
+		return
+
+	array<entity> hierachy = GetEntityAndImmediateChildren( model )
+	foreach ( entity childEnt in hierachy )
+	{
+		childEnt.Highlight_ResetFlags()
+		childEnt.Highlight_SetCurrentContext( HIGHLIGHT_CONTEXT_NEUTRAL )
+		int highlightState = childEnt.Highlight_GetState( HIGHLIGHT_CONTEXT_NEUTRAL )
+		childEnt.Highlight_SetFunctions( HIGHLIGHT_CONTEXT_NEUTRAL, HIGHLIGHT_FILL_LOBBY_IN_MATCH, true, 0, 1, highlightState, false )
+		childEnt.Highlight_SetParam( HIGHLIGHT_CONTEXT_NEUTRAL, 0, <0.01, 0.01, 0.01> )
+		childEnt.Highlight_SetParam( HIGHLIGHT_CONTEXT_NEUTRAL, 1, <400.0, 100.0, 100.0> )
+		childEnt.Highlight_SetFadeInTime( 1 )
+		childEnt.Highlight_SetFadeOutTime( 999999 )
+		childEnt.Highlight_StartOn()
+		childEnt.Highlight_SetLifeTime( 99999999 )
+	}
+}
+
+void function MythicModelClear( entity model )
+{
+	WaitFrame()
+
+	if( !IsValid( model ) )
+		return
+	array<entity> hierachy = GetEntityAndImmediateChildren( model )
+	foreach ( entity childEnt in hierachy )
+	{
+		int highlightState = childEnt.Highlight_GetState( HIGHLIGHT_CONTEXT_NEUTRAL )
+		childEnt.Highlight_SetFunctions( HIGHLIGHT_CONTEXT_NEUTRAL, 0, true, HIGHLIGHT_OUTLINE_NONE, 1.0, highlightState, false )
+	}
+}
+#endif
+                          
 
 #if CLIENT
 var function RewardPlacard_GetRuiFromMenuButton( var menuButton )
@@ -3172,6 +3296,11 @@ void function UIToClient_RewardInspectActivate_Threaded( var menuButton )
 	RunUIScript( "LootCeremony_UpdateOpenAdditionalButton" )
 	DisableFakeInspectButtons()
 
+                    
+	fileLevel.inspectModeActive = true
+	thread MythicUpdateAllEffects( false )
+                          
+
 	               
 	string menuButtonName = Hud_GetHudName( menuButton )
 	Signal( fileLevel.signalDummy, "LootCeremonyInspectModeStart", { inspectButton = menuButtonName } )
@@ -3363,7 +3492,12 @@ array<LoadoutEntry> function EquipButton_GetItemLoadoutEntries( ItemFlavor item,
 			break
 
 		case eItemType.gladiator_card_frame:
-			entry = [ Loadout_GladiatorCardFrame( GladiatorCardFrame_GetCharacterFlavor( item ) ) ]
+			ItemFlavor ornull character = GladiatorCardFrame_GetCharacterFlavor( item )
+			if ( character == null )                                  
+				character = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_Character() )
+			expect ItemFlavor( character )
+
+			entry = [ Loadout_GladiatorCardFrame( character ) ]
 			break
 
 		case eItemType.gladiator_card_stance:
@@ -3389,7 +3523,12 @@ array<LoadoutEntry> function EquipButton_GetItemLoadoutEntries( ItemFlavor item,
 			}
 			else
 			{
-				ItemFlavor character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+				ItemFlavor ornull character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+				if ( character == null )                                  
+					character = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_Character() )
+
+				expect ItemFlavor( character )
+
 				for ( int trackerIndex = 0; trackerIndex < GLADIATOR_CARDS_NUM_TRACKERS; trackerIndex++ )
 				{
 					LoadoutEntry trackerSlot = Loadout_GladiatorCardStatTracker( character, trackerIndex )
@@ -3466,7 +3605,11 @@ array<LoadoutEntry> function EquipButton_GetItemLoadoutEntries( ItemFlavor item,
 #if CLIENT || UI
 LoadoutEntry function PopulateInspectMenuDetails_GetStatTrackerLoadoutEntry( ItemFlavor item, bool findExistingEntry )
 {
-	ItemFlavor character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+	ItemFlavor ornull character = GladiatorCardStatTracker_GetCharacterFlavor( item )
+	if ( character == null )                                  
+		character = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_Character() )
+
+	expect ItemFlavor( character )
 
 	for ( int trackerIndex = 0; trackerIndex < GLADIATOR_CARDS_NUM_TRACKERS; trackerIndex++ )
 	{
@@ -3541,6 +3684,10 @@ void function UIToClient_RewardInspectNavBack_Threaded()
 	RunUIScript( "LootCeremony_UpdateOpenAdditionalButton" )
 	EnableFakeInspectButtons()
 	RunUIScript( "ClientToUI_PlayLootCeremonySound", SOUND_HOLOGRAM_APPEAR_RESETVIEW )
+                    
+	fileLevel.inspectModeActive = false
+	thread MythicUpdateAllEffects( true )
+                          
 
 	Signal( fileLevel.signalDummy, "LootCeremonyInspectModeEndComplete" )
 
@@ -3828,6 +3975,7 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 		itemTypeName = ItemFlavor_GetLongName( item )
 		itemName = ""
 	}
+                    
 	else if ( Mythics_IsItemFlavorMythicSkin( item ) )
 	{
 		int mythicTier = Mythics_GetSkinTierIntForSkin( item )
@@ -3835,6 +3983,7 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 		itemName = Localize( ItemFlavor_GetLongName( item ) )
 		itemTypeName = Localize( "#MYTHIC_SKIN" )
 	}
+                          
 	else
 	{
 		itemName = Localize( ItemFlavor_GetLongName( item ) )
@@ -3865,6 +4014,7 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 	var equipButtonRui = Hud_GetRui( fileLevel.equipButton )
 
 	                        
+                    
 	if ( Mythics_IsItemFlavorMythicSkin( item ) )
 	{
 		var trackButtonRui = Hud_GetRui( fileLevel.trackChallengeButton )
@@ -3878,7 +4028,9 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 		Hud_SetEnabled( fileLevel.trackChallengeButton, true )
 	}
 	else
+                          
 	{
+
 		Hud_SetVisible( fileLevel.trackChallengeButton, false )
 	}
 
@@ -3975,12 +4127,15 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 
 			Hud_SetEnabled( fileLevel.equipButton, true )
 			Hud_SetLocked( fileLevel.equipButton, false )
+
+                    
 			if( Mythics_IsItemFlavorMythicSkin( item ) && Mythics_GetSkinTierIntForSkin( item ) > 1)
 			{
 				Hud_SetLocked( fileLevel.equipButton, true )
 				RuiSetString( equipButtonRui, "buttonText", "#EQUIP_LOCKED")
 				RuiSetString( equipButtonRui, "descText", "#CHALLENGE_MYTHIC_LOCKED_ICON")
 			}
+                          
 		}
 	}
 }
@@ -4364,7 +4519,10 @@ void function InspectMenuFunctionality_RUI( ItemFlavor item, int displayIndex, i
 	switch ( itemType )
 	{
 		case eItemType.gladiator_card_stat_tracker:
-			nameText = ItemFlavor_GetShortName( GladiatorCardStatTracker_GetCharacterFlavor( item ) )
+			if ( GladiatorCardStatTracker_GetCharacterFlavor( item ) != null )
+			{
+				nameText = ItemFlavor_GetShortName( expect ItemFlavor(GladiatorCardStatTracker_GetCharacterFlavor( item )))
+			}
 			break
 	}
 
@@ -4435,7 +4593,12 @@ void function SpecialItemPresentationView_RUI( ItemFlavor item, int rarity, var 
 	switch ( itemType )
 	{
 		case eItemType.gladiator_card_stat_tracker:
-			nameText = ItemFlavor_GetShortName( GladiatorCardStatTracker_GetCharacterFlavor( item ) )
+			if ( GladiatorCardStatTracker_GetCharacterFlavor( item ) == null )
+			{
+				break
+			}
+
+			nameText = ItemFlavor_GetShortName( expect ItemFlavor( GladiatorCardStatTracker_GetCharacterFlavor( item ) ) )
 			break
 	}
 
@@ -4690,9 +4853,22 @@ void function InspectMenuFunctionality_GladiatorCard( ItemFlavor item, int itemT
 
 	string characterName
 	if ( itemType == eItemType.gladiator_card_frame )
-		characterName = ItemFlavor_GetShortName( GladiatorCardFrame_GetCharacterFlavor( item ) )
+	{
+		ItemFlavor ornull character = GladiatorCardFrame_GetCharacterFlavor( item )
+		if ( character == null )
+		{
+			characterName = "#REWARD_GENERIC"
+		}
+		else
+		{
+			expect ItemFlavor( character )
+			characterName = ItemFlavor_GetShortName( character )
+		}
+	}
 	else
+	{
 		characterName = ItemFlavor_GetShortName( GladiatorCardStance_GetCharacterFlavor( item ) )
+	}
 
 	while( true )
 	{
@@ -4752,9 +4928,22 @@ void function SpecialItemPresentationView_GladiatorCard( ItemFlavor item, int it
 
 	string characterName
 	if ( itemType == eItemType.gladiator_card_frame )
-		characterName = ItemFlavor_GetShortName( GladiatorCardFrame_GetCharacterFlavor( item ) )
+	{
+		ItemFlavor ornull character = GladiatorCardFrame_GetCharacterFlavor( item )
+		if ( character == null )
+		{
+			characterName = "#REWARD_GENERIC"
+		}
+		else
+		{
+			expect ItemFlavor( character )
+			characterName = ItemFlavor_GetShortName( character )
+		}
+	}
 	else
+	{
 		characterName = ItemFlavor_GetShortName( GladiatorCardStance_GetCharacterFlavor( item ) )
+	}
 
 	PopulateInspectMenuDetails( item, rarity, 1, characterName )
 
@@ -5344,12 +5533,14 @@ void function SetChallengeRewardPresentationModeActive( ItemFlavor itemFlav, int
 	fileLevel.specialPurchaseDialogConfig = null
 	fileLevel.onNavigatingBackFunc = null
 
+                    
 	if( Mythics_IsItemFlavorMythicSkin( itemFlav ) )
 	{
 		fileLevel.specialItemPriceHeader = "#EQUIP_LOCKED"
 		fileLevel.specialItemFormattedPrice = "#CHALLENGE_MYTHIC_LOCKED_ICON"
 	}
 	else
+                          
 	{
 		fileLevel.specialItemPriceHeader = priceHeader
 		fileLevel.specialItemFormattedPrice = subHeader
@@ -5571,12 +5762,14 @@ void function ClientToUI_EquipButtonShowDialog( SettingsAssetGUID itemGUID )
 	)
 }
 
+                    
 void function ClientToUI_TrackMythicChallenge( SettingsAssetGUID skinGUID )
 {
 	SettingsAssetGUID challengeGUID = Mythics_GetChallengeGUIDForSkinGUID( skinGUID )
 	ItemFlavor challenge = GetItemFlavorByGUID( challengeGUID )
 	Mythics_ToggleTrackChallenge( challenge, fileForever.trackChallengeButton )
 }
+                          
 
 void function EquipToWheelButtonOnClick( var button )
 {

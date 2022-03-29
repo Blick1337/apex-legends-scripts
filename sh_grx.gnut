@@ -54,6 +54,7 @@ global function GRXOffer_IsHeirloomPack
 global function GRX_PurchaseOffer
 global function GRX_MakeItemFlavorBagFromPriceArray
 global function GRXOffer_GetEventThematicPackCollectionInfo
+global function GRX_IsLocationActive
 #endif
 
 #if SERVER || UI
@@ -659,7 +660,7 @@ void function ShGRX_LevelShutdown()
 #if SERVER || CLIENT || UI
 void function ShGRX_RegisterItemFlavor( ItemFlavor flavor )
 {
-	string grxModeStr = GetGlobalSettingsString( flavor._____INTERNAL_settingsAsset, "grxMode" )
+	string grxModeStr = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "grxMode" )
 	Assert( grxModeStr in eItemFlavorGRXMode, "Unknown item flavor GRX mode: " + grxModeStr )
 	flavor._____INTERNAL_grxMode = eItemFlavorGRXMode[grxModeStr]
 	if ( flavor._____INTERNAL_grxMode == eItemFlavorGRXMode.REGULAR
@@ -689,7 +690,7 @@ void function ShGRX_RegisterItemFlavor( ItemFlavor flavor )
 			if ( ownershipTarget._____INTERNAL_grxOwnershipTargettedBy == null )
 				ownershipTarget._____INTERNAL_grxOwnershipTargettedBy = []
 			array<int> targettedBy = expect array<int>(ownershipTarget._____INTERNAL_grxOwnershipTargettedBy)
-			targettedBy.append( flavor._____INTERNAL_index )
+			targettedBy.append( flavor._____INTERNAL_guid )
 		}
 	}
 
@@ -790,7 +791,7 @@ string function ItemFlavor_GetGRXAlias( ItemFlavor flavor )
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 	Assert( flavor._____INTERNAL_grxMode != eItemFlavorGRXMode.NONE, "Attempted to get the GRX alias of a non-GRX item flavor: " + DEV_DescItemFlavor( flavor ) )
 
-	return GetGlobalSettingsString( flavor._____INTERNAL_settingsAsset, "grxRef" )
+	return GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "grxRef" )
 }
 #endif
 
@@ -802,7 +803,7 @@ ItemFlavor ornull function ItemFlavor_GetGRXOwnershipTarget( ItemFlavor flavor )
 	if ( flavor._____INTERNAL_grxMode != eItemFlavorGRXMode.OWNERSHIP_TARGET )
 		return null
 
-	asset ownershipTargetFlavAsset = GetGlobalSettingsAsset( flavor._____INTERNAL_settingsAsset, "ownershipTarget" )
+	asset ownershipTargetFlavAsset = GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "ownershipTarget" )
 	if ( IsValidItemFlavorSettingsAsset( ownershipTargetFlavAsset ) )
 		return GetItemFlavorByAsset( ownershipTargetFlavAsset )
 
@@ -817,9 +818,9 @@ array<ItemFlavor> function ItemFlavor_GetGRXOwnershipTargettedBy( ItemFlavor fla
 	array<ItemFlavor> out = []
 	if ( flavor._____INTERNAL_grxOwnershipTargettedBy != null )
 	{
-		foreach ( int targeterIdx in expect array<int>(flavor._____INTERNAL_grxOwnershipTargettedBy) )
+		foreach ( int targeterGuid in expect array<int>(flavor._____INTERNAL_grxOwnershipTargettedBy) )
 		{
-			out.append( GetItemFlavorByNetworkIndex_DEPRECATED( targeterIdx ) )
+			out.append( GetItemFlavorByGUID( targeterGuid ) )
 		}
 	}
 	return out
@@ -858,7 +859,7 @@ asset function GRXCurrency_GetPreviewModel( ItemFlavor flav )
 asset function GRXCurrency_GetRewardIcon( ItemFlavor flav )
 {
 	Assert( ItemFlavor_GetType( flav ) == eItemType.account_currency )
-	return GetGlobalSettingsAsset( flav._____INTERNAL_settingsAsset, "rewardIcon" )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( flav ), "rewardIcon" )
 }
 #endif
 
@@ -1479,6 +1480,17 @@ array<GRXScriptOffer> function GRX_GetLocationOffers( string location )
 }
 #endif
 
+#if UI
+bool function GRX_IsLocationActive( string location )
+{
+	Assert( GetPlayerGRXScriptState( GetLocalClientPlayer() ).areOffersReady, "Called GRX_IsLocationActive when offers weren't ready" )
+
+	if ( location in fileLevel.locationOffersMap )
+		return fileLevel.locationOffersMap[location].len() > 0
+
+	return false
+}
+#endif
 
 #if UI
 array<GRXScriptOffer> function GRX_GetItemDedicatedStoreOffers( ItemFlavor flav, string location )
@@ -1494,7 +1506,7 @@ array<GRXScriptOffer> function GRX_GetItemDedicatedStoreOffers( ItemFlavor flav,
 #if UI
 int function GRX_GetStoreOfferColumnNumRows( int col, int storeLocation )
 {
-	Assert( GetPlayerGRXScriptState( GetLocalClientPlayer() ).areOffersReady, "Called GRX_GetStoreOfferColumn when offers weren't ready" )
+	Assert( GetPlayerGRXScriptState( GetLocalClientPlayer() ).areOffersReady, "Called GRX_GetStoreOfferColumnNumRows when offers weren't ready" )
 
 	int numRows = 0
 	array<array<array<GRXScriptOffer> > > storeOfferColumns
@@ -2873,6 +2885,7 @@ bool function DisplayQueuedRewardsGiven()
 
 		string titleText = "#GENERIC_REWARD_RECEIVED"
 		string descText  = ""
+		string headerText = ""
 		bool noShowLow   = false
 		if ( sourceItemFlavOrNull != null )
 		{
@@ -2883,8 +2896,6 @@ bool function DisplayQueuedRewardsGiven()
 				{
 					int tierIdx = sourceItemExtraData
 
-					titleText = "#CHALLENGE_COMPLETED_HEADER"
-
 					int tierCount = Challenge_GetTierCount( sourceItemFlav )
 
 					if ( tierCount <= 0 )                                                                                         
@@ -2894,6 +2905,16 @@ bool function DisplayQueuedRewardsGiven()
 					else
 					{
 						descText = Challenge_GetDescription( sourceItemFlav, tierIdx )
+					}
+
+					if ( Challenge_GetTimeSpanKind( sourceItemFlav ) == eChallengeTimeSpanKind.EVENT_SPECIAL_2 )
+					{
+						titleText = ItemFlavor_GetShortDescription( sourceItemFlav )
+						descText = ItemFlavor_GetLongDescription( sourceItemFlav )
+					}
+					else
+					{
+						titleText = "#CHALLENGE_COMPLETED_HEADER"
 					}
 					break
 				}
@@ -2930,7 +2951,7 @@ bool function DisplayQueuedRewardsGiven()
 		rewardInfo.flav = rewardItemFlav
 		rewardInfo.quantity = quantity
 		ShowRewardCeremonyDialog(
-			"",
+			headerText,
 			titleText,
 			descText,
 			[rewardInfo],
@@ -3257,6 +3278,8 @@ void function WORKAROUND_CallOperationDoFuncOnFrameEnd( ScriptGRXOperationInfo o
 
 				                           
 				 
+					                                                                                                                                                                                         
+						                                                    
 					                                                 
 				 
 			  
@@ -4570,7 +4593,8 @@ void function ClientCodeCallback_GRXPackOpened( array<int> balanceDiffs, array<i
 					          
 					                                                                                    
 					             
-					               
+					                                                                                                                                                                                                                                       
+					
 					                                               
 				 
 
@@ -4590,7 +4614,7 @@ void function ClientCodeCallback_GRXPackOpened( array<int> balanceDiffs, array<i
 				          
 				                               
 				             
-				               
+				                                                                                                                                                                                                                                     
 				                                               
 			 
 			                

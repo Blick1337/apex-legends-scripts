@@ -173,6 +173,9 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		entry.isSlotLocked = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
+		entry.isItemFlavorUnlocked = (bool function( EHI playerEHI, ItemFlavor execution, bool shouldIgnoreOtherSlots ) {
+			return ( !GetGlobalSettingsBool( ItemFlavor_GetAsset( execution ) , "isNotEquippable" ) )
+		})
 		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
 		entry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
 		fileLevel.loadoutCharacterExecutionSlotMap[characterClass] <- entry

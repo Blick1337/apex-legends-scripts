@@ -224,6 +224,10 @@ void function ChatMenuButton_Down( entity player )
 		if ( ms < ePlayerMatchState.SKYDIVE_PRELAUNCH )
 			return
 	}
+	else if ( FiringRange_IsPlayerInFinale() )
+	{
+		return
+	}
 
 	int chatPage = eChatPage.DEFAULT
 

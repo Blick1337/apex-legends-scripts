@@ -8,6 +8,7 @@ global function ShWarpGates_Init
                                                                   
                                                                      
                                           
+                                             
 #endif
 
 #if CLIENT
@@ -1450,4 +1451,21 @@ void function MinimapPackage_PhaseGate( entity ent, var rui )
 	RuiSetImage( rui, "clampedDefaultIcon", $"rui/pilot_loadout/tactical/pilot_tactical_phase_shift" )
 	RuiSetBool( rui, "useTeamColor", false )
 }
+#endif
+
+#if SERVER
+                                                     
+ 
+	                
+
+	                                            
+	 
+		                                               
+		 
+			                                        
+		 
+	 
+
+	          
+ 
 #endif

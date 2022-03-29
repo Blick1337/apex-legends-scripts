@@ -86,9 +86,9 @@ global function OnWeaponEnergizedStart
                                     
                                        
                                        
-                                       
                                       
-                                             
+                                                       
+                                              
 #endif
 
 global function Weapon_AddSingleCharge
@@ -235,6 +235,7 @@ global const string SMART_RELOAD_HOPUP = "hopup_smart_reload"
 global const string LMG_FAST_RELOAD_MOD = "fast_reload_mod"
 global const string LMG_OVERLOADED_AMMO_MOD = "overloaded_ammo"
 global const string END_SMART_RELOAD = "end_smart_reload_functionality"
+global const string ULTIMATE_ACTIVE_MOD_STRING = "ultimate_active"
 
 const vector LOWAMMO_UI_COLOR = <0, 255, 0> / 255.0
 const vector OVERLOADAMMO_UI_COLOR = <0, 200, 200> / 255.0
@@ -298,6 +299,13 @@ global const PRO_SCREEN_IDX_AMMO_COUNTER_OVERRIDE_HACK = 2
 
 global const int DAMAGEARROW_WP_INT_INDEX_ID = 0
 global const int DAMAGEARROW_WP_INT_INDEX_TEAM = 1
+global const int DAMAGEARROW_WP_INT_INDEX_VISIBILITY_TYPE = 2
+
+global const int DAMAGEARROW_WP_ENT_OWNER = 0
+
+#if SERVER
+                                                               
+#endif
 
 const float DEFAULT_SHOTGUN_SPREAD_INNEREXCLUDE_FRAC = 0.4
 const bool DEBUG_PROJECTILE_BLAST = false
@@ -393,8 +401,8 @@ struct
 	#if SERVER
 
 		                                                                                                                                                               
-		                                                         
-		                                                            
+		                                                        
+		                                                           
 
 		                                          
 		                                          
@@ -406,6 +414,8 @@ struct
 		       
 			                          
 		      
+
+		              						                     
 
 	#else          
 		var satchelHintRUI = null
@@ -614,9 +624,9 @@ void function OnWeaponActivate_RUIColorSchemeOverrides( entity weapon )
 		      
 
 	           
-	                                                                                             
+	                                                                                  
 	 
-		                                                                                   
+		                                                                        
 		                                                          
 	 
 
@@ -2815,11 +2825,11 @@ entity function GetMeleeWeapon( entity player )
 
                                                                   
  
-	                                                
+	                                                 
  
 
 
-                                                                          
+                                                                           
  
 	                                                                       
 		            
@@ -2843,7 +2853,37 @@ entity function GetMeleeWeapon( entity player )
 	           
  
 
-                                                                                                                                                                                                                                                                 
+                                                                   
+ 
+	                     
+	 
+		                                               
+		 
+			           
+		 
+		    
+		 
+			                                               
+		 
+	 
+
+	            
+ 
+
+                                                             
+ 
+	                                     
+
+	                          
+
+	                                        
+		                                                  
+	   
+
+	                                           
+ 
+
+                                                                                                                                                                                                                                                                  
  
 	                      
 		      
@@ -2868,7 +2908,7 @@ entity function GetMeleeWeapon( entity player )
 	 
 		                  
 		                
-		                                                        
+		                                                         
 		 
 			                                                               
 		 
@@ -2877,7 +2917,7 @@ entity function GetMeleeWeapon( entity player )
 	 
 		                  
 		                
-		                                                        
+		                                                         
 		 
 			                                                               
 			                                              
@@ -4357,7 +4397,7 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 		                             
 		                                                                                                  
 		                                                                
-		                                                       
+		                                                               
 		                                                            
 		                                                                
 		                                                    
@@ -4437,12 +4477,12 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 			 
 
 			                                   
-			                                                                                                
-				                                                                           
+			                                                                                     
+				                                                                
 
 			                                    
-			                                                                                                 
-				                                                                             
+			                                                                                      
+				                                                                  
 
 			                                                
 				                                                        
@@ -4691,13 +4731,6 @@ vector function GetAmmoColorByType( string ammoType )
 }
 #endif
 
-#if SERVER
-                                                                     
- 
-	                                                                                                                                                                                                                      
-		                                                                                                                   
- 
-#endif
 
 bool function EnergyChoke_OnWeaponModCommandCheckMods( entity player, entity weapon, string mod, bool isAdd )
 {
@@ -5579,13 +5612,10 @@ void function OnWeaponActivate_Kinetic_Loader( entity weapon)
 			if ( InPrediction() )
 			#endif
 			{
-				if ( !weapon.HasMod( "choke" ) && weapon.HasMod( "kinetic_choke" ) )
+				                                                            
+				if ( weapon.HasMod( "hopup_kinetic_choke" ) && weapon.HasMod( "kinetic_choke" ) )
 				{
-					if ( weapon.HasMod( "hopup_kinetic_choke" ) )
-					{
 						weapon.RemoveMod( "kinetic_choke" )
-						weapon.AddMod( "choke" )
-					}
 				}
 			}
 
@@ -5641,14 +5671,6 @@ void function KineticLoaderChokeFunctionality_ServerThink( entity player, entity
 				     
 			 
 
-			                                                                    
-			 
-				                                            
-				 
-					                        
-				 
-			 
-
 			                                                
 			 
 				                                             
@@ -5660,7 +5682,6 @@ void function KineticLoaderChokeFunctionality_ServerThink( entity player, entity
 						                                 
 						 
 							                               
-								                           
 
 							                                        
 								                                
@@ -5669,7 +5690,6 @@ void function KineticLoaderChokeFunctionality_ServerThink( entity player, entity
 					                           
 					 
 						                                   
-						                           
 						     
 					 
 				 
@@ -5830,16 +5850,12 @@ void function KineticLoaderChokeGraceWindow_ServerThink( entity player, entity w
 							                                       
 								                                   
 
-							                                
-								                        
-
 							     
 						 
 					 
 					                           
 					 
 						                                   
-						                           
 						     
 					 
 

@@ -35,6 +35,10 @@ global function PlayerHasStealthMovement
 
 #if SERVER
                                 
+               
+                                                  
+                                                    
+      
 #endif
 
 
@@ -125,6 +129,10 @@ global enum ePassives
        
                   
                    
+                     
+       
+                
+                    
        
 	PAS_DUMMIE,
 	           
@@ -158,14 +166,14 @@ global enum ePassives
                
              
        
-              
+                  
             
        
                
              
        
                 
-           
+              
        
                  
                
@@ -962,43 +970,53 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
 
                
           
-                                                                                            
+                                                                  
  
-                          
-        
-
-               
-  
-                                            
-  
-
-              
-  
-                                             
-  
- 
-
-                                                         
- 
-                               
-                                 
-                                              
-
-               
-  
-          
-
-                                                                
-   
-                                                                                            
+                        
                                                                    
+                                
+  
+                                               
+           
 
                           
-    
-                                             
-    
+   
+                                                                                                
+                      
    
   
+
+                                                                              
+
+                   
+ 
+
+                                                                    
+ 
+                   
+                                                                   
+                                
+  
+                                               
+           
+
+                          
+   
+                                                                                                
+                
+   
+  
+
+                                                                     
+
+                       
+            
+                            
+            
+                            
+            
+
+           
  
                     
                          

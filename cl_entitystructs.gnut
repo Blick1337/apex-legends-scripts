@@ -92,6 +92,10 @@ global struct ClientEntityStruct
 
 	int cameraMaxRangeFXHandle = -1
 
+                  
+                              
+       
+
 	bool                       eyeForQuality_isScanned
 	bool                       blackMarket_haveSeenReady
 	bool                       ignorePingTrace = false
@@ -189,6 +193,10 @@ global struct ClientPlayerStruct
                          
                                     
                           
+       
+
+               
+                                      
        
 }
 

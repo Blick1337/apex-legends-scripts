@@ -865,7 +865,7 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 			                   
 				                                                              
 		 
-		                                                                                                                                  
+		                                                                                                                                           
 		 
 			                                                           
 			                                                                                     
@@ -2320,7 +2320,7 @@ void function TempUpdateRuiDistance( entity player )
 					else
 						targetString = Localize( "#CAMERA_INTERACT_DEATHBOX", trace.hitEnt.GetOwner().GetPlayerName() )
 				}
-				else if ( IsRespawnBeacon( trace.hitEnt ) && TeammatesWaitingToBeRespawned( player.GetTeam() ) && trace.hitEnt.e.isBusy == false )
+				else if ( IsRespawnBeacon( trace.hitEnt ) && CountTeammatesWaitingToBeRespawned( player.GetTeam() ) > 0 && trace.hitEnt.e.isBusy == false )
 				{
 					targetString = "#CAMERA_INTERACT_RESPAWN"
 				}

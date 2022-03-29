@@ -552,7 +552,6 @@ void function PlacementProxyThread( entity weapon, entity player )
 		                                                     
 		                                
 		                                     
-		                                                                                
 		 
 			                                             
 			                                        
@@ -586,6 +585,10 @@ void function PlacementProxyThread( entity weapon, entity player )
 		                                                                   
 
 		                                             
+
+                  
+                                            
+        
 
                      
                                        
@@ -725,7 +728,11 @@ void function PlacementProxyThread( entity weapon, entity player )
 
 	             
 	 
-		                                                                                                                                                   
+                   
+                                                                                                                                                                     
+       
+		                                                                            
+        
 
 		        
 	 
@@ -793,6 +800,11 @@ void function BlackMarketRumbleOnReadyThread( entity ent )
 
 	                                                              
 		                                                                                                                                              
+
+                 
+                             
+                                                                               
+       
 
 	                                                              
 		                                                                                          
@@ -932,6 +944,8 @@ void function BlackMarketRumbleOnReadyThread( entity ent )
 
 	                                                             
 		      
+
+	                                                                                                                                      
 
 	                                                                                                  
 

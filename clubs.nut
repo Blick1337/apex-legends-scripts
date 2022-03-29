@@ -839,16 +839,10 @@ void function Clubs_FinalizeJoinClub()
 	if ( !ClubIsValid() )
 		return
 
-	ClubHeader clubHeader = ClubGetHeader()
-	if ( !Clubs_DoesMeetJoinRequirements( clubHeader ) )
-	{
-		ClubLeave()
-		Clubs_OpenJoinReqsChangedDialog( clubHeader )
-	}
-
 	SetDialogFlowPersistenceTables( "clubIsPendingApproval", false  )                                                                                     
 	Remote_ServerCallFunction( "ClientCallback_SetClubIsPendingApproval", false )
 
+	ClubHeader clubHeader = ClubGetHeader()
 	ClubInvite_ProcessAcceptedClubInvite( clubHeader )
 	Clubs_SetIsSwitchingClubs( false )
 	Clubs_UpdateMyData()
@@ -1993,6 +1987,7 @@ bool function Clubs_IsValidClubTag( string clubTag )
 
 const int MAX_PLACEMENT_FOR_CLUB_EVENT = 5
 const int MAX_PLACEMENT_FOR_ARENAS_CLUB_EVENT = 1
+const int MAX_PLACEMENT_FOR_WINTER_EXPRESS_CLUB_EVENT = 1
 
 #if SERVER
                                                                                      
@@ -2004,6 +1999,11 @@ const int MAX_PLACEMENT_FOR_ARENAS_CLUB_EVENT = 1
 
                         
 		                                                                      
+			      
+       
+
+                       
+		                                                                                                                              
 			      
        
 

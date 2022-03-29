@@ -21,7 +21,41 @@ const asset PLAYER_WIND_FX 	= $"P_wind_cruising"
 
 global const string JUMPTOWER_PING_NAME = "jump_tower"
 
-const array<vector> skydiveSmokeColors = [ <178,184,244>, <143,222,95>, <255,134,26>, <255,251,130>, <255,202,254> ]
+                                                                                                                                 
+                                                                        
+const array<vector> skydiveSmokeColors = [
+	<0, 0, 0>,              
+	<0, 0, 0>,              
+	<6, 131, 149>,           
+	<10, 88, 106>,          
+	                           
+	<27, 71, 105>,          
+	<31, 84, 205>,          
+	                          
+	<68, 42, 96>,          
+	<110, 44, 111>,            
+	                           
+	<173, 45, 119>,            
+	                         
+	<176, 28, 81>,          
+	                          
+	<195, 0, 11>,          
+	<197, 67, 32>,       
+	<120, 30, 19>,            
+	<159, 59, 13>,           
+	<110, 49, 1>,               
+	<119, 75, 0>,           
+	<204, 121, 19>,            
+	<150, 125, 0>,           
+	                         
+	<133, 147, 10>,           
+	<73, 88, 3>,           
+	<112, 151, 67>,           
+	<57, 137, 52>,           
+	<47, 90, 26>,           
+	                          
+	<0, 116, 88>           
+]
 global function GetSkydiveSmokeColorForTeam
 
 
@@ -701,7 +735,7 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 	                                    
 
 	                       
-	                                 
+	                                     
 		                                             
 
 	                                                     
@@ -797,7 +831,7 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 		                                    
 
 	                          
-	                                 
+	                                     
 			                    
 
 	                                                 
@@ -816,7 +850,7 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 	                                                                                     
 
 	                                                                                                                                                             
-	                           	                              	 
+	                           	                                  	 
 	 
 		                                                                                    
 		                               
@@ -837,12 +871,12 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 		                                                     
 	                                                    
 
-	                                                                  
+	                                                                      
 	 
 		                                       
 	 
 
-	                                 
+	                                     
 		                                        
 
 	                                        
@@ -1081,7 +1115,7 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 		                                                             
 		                                                                                         
 		                                           
-		                                 
+		                                     
 			                                                                         
 	 
 
@@ -1670,7 +1704,8 @@ void function CL_AttemptDropEmote( entity player )
 
 	if ( emotes.len() == 1 )
 	{
-		Remote_ServerCallFunction( "ClientCallback_SkydiveEmote", 0)
+		foreach ( slotIndex, emote in emotes )
+			Remote_ServerCallFunction( "ClientCallback_SkydiveEmote", slotIndex )
 	}
 	else if ( emotes.len() > 1 )
 	{

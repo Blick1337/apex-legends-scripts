@@ -48,6 +48,8 @@ global array< asset > dialogAssetQueue
 global array< string > dialogPersistenceQueue 
 #endif
 
+const string GENERIC_ACKNOWLEDGEMENT_PVAR = "genericEntitlementsAcknowledgement"
+
 enum eEntitlementType
 {
 	FIRSTPARTY,
@@ -121,6 +123,9 @@ void function Entitlements_LevelInit()
 		      
 
 	                                       
+
+	                                                                                      
+		                                                             
 
 	                                                                
 
@@ -294,7 +299,8 @@ void function Entitlements_LevelInit()
 
 							                                
 							                                                                                     
-							                                                 
+							                                                          
+								                                                 
 
 							                                                                    
 							                                            
@@ -308,13 +314,15 @@ void function Entitlements_LevelInit()
 					                         
 					 
 						                              
+						                                                             
+						                                                
 						                                             
 					 
 				 
 			 
 		 
 
-		                              
+		                                                                                                
 		 
 			                                
 			                                                            
@@ -451,7 +459,8 @@ void function Entitlements_LevelInit()
 	 
 		       
 		                                                                                     
-		                                                 
+		                                                          
+			                                                 
 	 
  
 
@@ -615,6 +624,9 @@ string function Entitlement_GetMenuPersistenceVarName( ItemFlavor flavor )
 
 	asset entitlementAsset = ItemFlavor_GetAsset( flavor )
 
+	if ( GetGlobalSettingsBool( entitlementAsset, "isMenuEnabled" ) == false )
+		return GENERIC_ACKNOWLEDGEMENT_PVAR
+
 	string persistenceVarName = GetGlobalSettingsString( entitlementAsset, "menuPersistenceVarName" )
 	if ( persistenceVarName == "" )
 	{
@@ -777,6 +789,8 @@ void function UICodeCallback_GRXFirstPartyBundlePurchased( string bundleEnum )
 				{
 					string persistenceVarName = Entitlement_GetMenuPersistenceVarName( entitlementFlav )
 
+					Assert( persistenceVarName != GENERIC_ACKNOWLEDGEMENT_PVAR, "SKU Bundles should always be explicitly acknowledged. Do not use the generic ack pvar." )
+
 					if ( GetDialogFlowTablesValueOrPersistence( persistenceVarName ) == false )
 					{
 						asset entitlementAsset = ItemFlavor_GetAsset( entitlementFlav )
@@ -841,14 +855,8 @@ bool function TryEntitlementMenus()
 {
 	Assert( IsPersistenceAvailable() )
 
-	                                                                                
-	                                  
-	  
-	                                                
-		            
-
-	                                                
-	  
+	if ( fileLevel.hasRunMenuEntitlementsFirstTime )
+		return false
 
 	foreach ( ItemFlavor entitlementFlav in GetAllItemFlavorsOfType( eItemType.entitlement ) )
 	{
@@ -899,6 +907,8 @@ bool function TryEntitlementMenus()
 		return true
 	}
 
+	fileLevel.hasRunMenuEntitlementsFirstTime = true
+
 	return false
 }
 #endif      
@@ -907,6 +917,9 @@ bool function TryEntitlementMenus()
 bool function Entitlement_IsSKUBundleOwned( int bundleEnum, ItemFlavor bundleFlav )
 {
 	string persistenceVarName = Entitlement_GetMenuPersistenceVarName( bundleFlav )
+
+	Assert( persistenceVarName != GENERIC_ACKNOWLEDGEMENT_PVAR, "SKU Bundles should not use the generic ack pvar." )
+
 	if ( GetPersistentVarAsInt( persistenceVarName ) )
 		return true
 	
@@ -954,11 +967,16 @@ void function QueueEntitlementMenu( asset entitlementAsset, string persistenceVa
 	                                           
 	                                                                                          
 	 
+		                                                                                                
+			        
+
 		                                                                                    
 		                                                                                                                                                                                                                                 
 
 		                                               
 	 
+
+	                                                         
 
 	                           
  

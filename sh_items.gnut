@@ -12,8 +12,8 @@ global function ConvertItemFlavorGUIDStringToGUID
 global function GetItemFlavorOrNullByGUID
 global function IsValidItemFlavorHumanReadableRef
 global function GetItemFlavorByHumanReadableRef
-global function IsValidItemFlavorNetworkIndex_DEPRECATED
-global function GetItemFlavorByNetworkIndex_DEPRECATED
+global function IsValidItemFlavorNetworkIndex
+global function GetItemFlavorByNetworkIndex
 global function IsValidItemFlavorSettingsAsset
 global function GetItemFlavorByAsset
 global function IsValidItemFlavorType
@@ -24,7 +24,7 @@ global function IsItemFlavorStructValid
 global function ItemFlavor_GetGUID
 global function ItemFlavor_GetGUIDString
 global function ItemFlavor_GetHumanReadableRef
-global function ItemFlavor_GetNetworkIndex_DEPRECATED
+global function ItemFlavor_GetNetworkIndex
 global function ItemFlavor_GetType
 global function ItemFlavor_GetAsset
 global function ItemFlavor_GetSettingsBlock
@@ -65,7 +65,9 @@ global function MakeItemFlavorBag
 global function ItemFlavorBag_ClearZeroQuantityFlavors
 global function ItemFlavorBag_GetSingleOutputItemFlavor_Assert
 global function ItemFlavorBag_GetMeleeSkinItem
+                    
 global function ItemFlavorBag_GetMythicSkinItem
+                          
 global function ItemFlavorBag_ToQuantityMap
                       
 global function DEV_DescribeItemFlavorBag
@@ -105,24 +107,19 @@ global function DEV_AreAnyItemflavorsDisabledByPlaylist
 
 global function DEV_DescItemFlavor
 
-#if CLIENT
-global function ServerToClient_ItemFlavorConsistencyCheckFailed
-#endif
-#if ASSERTING && UI
-global function ClientToUI_ItemFlavorConsistencyCheckFailed
+#if DEV
+global function DEV_GetAllItemFlavors
 #endif
 
 #if CLIENT && ( DEV || ASSERTING )
 global function DEV_PrintAllGRXRefs
 #endif
 
-
-global const bool DEBUG_ITEM_FLAVOR_REGISTRATION = false
-
-#if SERVER
-                                                      
+#if SERVER && DEV
+                                         
 #endif
 
+global const bool DEBUG_ITEM_FLAVOR_REGISTRATION = false
 
                       
                       
@@ -336,19 +333,15 @@ global enum eItemFlavorAvailabilityOpinion
 
 global struct ItemFlavor
 {
-	SettingsAssetGUID        _____INTERNAL_guid = -1                                 
-	int                      _____INTERNAL_index = -1                                                                 
-	int                      _____INTERNAL_typeIndex = -1                                    
-	string                   _____INTERNAL_humanReadableRef = "~INVALID~"                                   
-	asset                    _____INTERNAL_settingsAsset                                     
-	int                      _____INTERNAL_grxMode = -1                       
-	array<int> ornull        _____INTERNAL_grxOwnershipTargettedBy = null                       
-	int                      _____INTERNAL_grxIndex = -1                       
-	int                      _____INTERNAL_availabilityOpinion = eItemFlavorAvailabilityOpinion.NONE
-
-	ItemFlavor ornull        _____INTERNAL_noCopyCheck = null
-	int                      _____INTERNAL_epoch = -1
-	table<string, string>    _____INTERNAL_metaData = {}                                                                                               
+	SettingsAssetGUID        _____INTERNAL_guid = -1                                                                               
+	int                      _____INTERNAL_typeIndex = -1                                                     
+	int                      _____INTERNAL_index = -1                                                                                                    
+	string                   _____INTERNAL_humanReadableRef = "~INVALID~"                                                                                                                                     
+	int                      _____INTERNAL_grxMode = -1                                        
+	array<int> ornull        _____INTERNAL_grxOwnershipTargettedBy = null                                                                                                
+	int                      _____INTERNAL_grxIndex = -1                                                               
+	int                      _____INTERNAL_availabilityOpinion = eItemFlavorAvailabilityOpinion.NONE                                                                     
+	table<string, string>    _____INTERNAL_metaData = {}                                                                                                                                                                                                                  
 }
 
 global typedef RegisterItemFlavorsCallbackType void functionref()
@@ -394,8 +387,7 @@ struct FileStruct_LifetimeLevel
 {
 	array<ItemTypeInfo>                   itemTypeInfoList
 	table<string, ItemFlavor>             refItemFlavorMap
-	table<string, ItemFlavor>             assetPathItemFlavorMap
-	array<ItemFlavor>                     itemFlavorList                                             
+	array<ItemFlavor>                     itemFlavorList                                                                                        
 	table<SettingsAssetGUID, ItemFlavor>  guidItemFlavorMap
 	bool                                  DEV_areAnyItemflavorsDisabledByPlaylist = false
 
@@ -410,21 +402,12 @@ struct FileStruct_LifetimeLevel
 	#if DEV
 		bool DEV_hasItemRegistrationStarted = false
 	#endif
-
-	#if ASSERTING
-		array<string> ASSERTING_crossVMCheckStringArr = []
-		int           ASSERTING_crossVMCheckHash = 0
-	#endif
 }
 FileStruct_LifetimeLevel& fileLevel
 
 struct
 {
 	table<string, bool functionref(entity player)> unlockFuncs
-
-	                                                                                                                   
-	                                                           
-	int itemFlavorEpoch = 99
 } file
 
                          
@@ -436,8 +419,6 @@ void function ShItems_LevelInit_Begin()
 {
 	FileStruct_LifetimeLevel newFileLevel
 	fileLevel = newFileLevel
-
-	file.itemFlavorEpoch += 1
 
 	#if DEV
 		#if SERVER
@@ -466,96 +447,12 @@ void function ShItems_LevelInit_Finish()
 	foreach ( RegisterItemFlavorsCallbackType cb in fileLevel.registerRootItemFlavorsCallbacks )
 		cb()
 
-	foreach ( ItemFlavor flavor in fileLevel.itemFlavorList )
-	{
-		#if ASSERTING
-			fileLevel.ASSERTING_crossVMCheckStringArr.append( string(flavor._____INTERNAL_settingsAsset) )
-		#endif
-
-		if ( ItemFlavor_GetType( flavor ) == eItemType.tagonly )
-			continue
-
-		if ( ItemFlavor_GetAsset( flavor ) == $"" )
-			continue
-	}
-
 	fileLevel.isItemRegistrationFinished = true
 
 	foreach ( OnAllItemFlavorsRegisteredCallbackType cb in fileLevel.onAllItemFlavorsRegisteredCallbacks )
 		cb()
 
-	#if SERVER || CLIENT
-		Remote_RegisterClientFunction( "ServerToClient_ItemFlavorConsistencyCheckFailed", "bool", "int", INT_MIN, INT_MAX )
-	#endif
-	#if ASSERTING
-		DoItemFlavorCrossVMCheck()
-	#endif
 }
-
-
-#if ASSERTING
-void function DoItemFlavorCrossVMCheck()
-{
-	                                                                                   
-	  	                                           
-
-	string crossVMCheckString = fileLevel.ASSERTING_crossVMCheckStringArr.join( ", " )
-	                                                                                  
-	int crossVMCheckHash      = StringHash( crossVMCheckString )
-	fileLevel.ASSERTING_crossVMCheckHash = crossVMCheckHash
-
-	#if CLIENT
-		thread (void function() {
-			WaitForLocalClientEHI()
-			Remote_ServerCallFunction( "ClientCallback_itemflavors_consistency", false, fileLevel.ASSERTING_crossVMCheckHash )
-		})()
-	#elseif UI
-		Remote_ServerCallFunction( "ClientCallback_itemflavors_consistency", true, fileLevel.ASSERTING_crossVMCheckHash )
-	#endif
-}
-#endif
-
-#if SERVER
-                                                                                                     
- 
-	                                        
-	                                                                 
-	 
-		                                                                                 
-			                                           
-
-		                                                                                                                                      
-	   
- 
-#endif
-
-#if CLIENT
-void function ServerToClient_ItemFlavorConsistencyCheckFailed( bool isUI, int serverHash )
-{
-	#if ASSERTING
-		if ( isUI )
-		{
-			RunUIScript( "ClientToUI_ItemFlavorConsistencyCheckFailed", serverHash )
-			return
-		}
-
-		                                                                                   
-		  	                                           
-
-		Assert( false, format( "Item flavor consistency check failed: SV=%d, CL=%d", serverHash, fileLevel.ASSERTING_crossVMCheckHash ) )
-	#endif
-}
-#endif
-
-#if ASSERTING && UI
-void function ClientToUI_ItemFlavorConsistencyCheckFailed( int serverHash )
-{
-	                                                                                   
-	  	                                           
-
-	Assert( false, format( "Item flavor consistency check failed: SV=%d, UI=%d", serverHash, fileLevel.ASSERTING_crossVMCheckHash ) )
-}
-#endif
 
 bool function IsItemFlavorRegistrationFinished()
 {
@@ -567,6 +464,14 @@ bool function IsItemFlavorRegistrationFinished()
                           
                           
                           
+#if DEV
+array<ItemFlavor> function DEV_GetAllItemFlavors()
+{
+	Assert( IsItemFlavorRegistrationFinished(), "Can't ask for all itemflavors before they are all registered" )
+	return fileLevel.itemFlavorList
+}
+#endif
+
 array<asset> function GetBaseItemFlavorsFromArray( string arrayFieldName )
 {
 	var parentBlock = GetSettingsBlockForAsset( $"settings/base_itemflavors.rpak" )
@@ -686,7 +591,7 @@ ItemFlavor function GetItemFlavorByHumanReadableRef( string ref )
 }
 
 
-bool function IsValidItemFlavorNetworkIndex_DEPRECATED( int index, int validationBehavior = eValidation.DONT_ASSERT )
+bool function IsValidItemFlavorNetworkIndex( int index, int validationBehavior = eValidation.DONT_ASSERT )
 {
 	bool good = fileLevel.itemFlavorList.isvalidindex( index - 1 )
 
@@ -695,9 +600,9 @@ bool function IsValidItemFlavorNetworkIndex_DEPRECATED( int index, int validatio
 }
 
 
-ItemFlavor function GetItemFlavorByNetworkIndex_DEPRECATED( int index )
+ItemFlavor function GetItemFlavorByNetworkIndex( int index )
 {
-	Assert( IsValidItemFlavorNetworkIndex_DEPRECATED( index, eValidation.ASSERT ) )
+	Assert( IsValidItemFlavorNetworkIndex( index, eValidation.ASSERT ) )
 
 	return fileLevel.itemFlavorList[ index - 1 ]
 }
@@ -705,7 +610,14 @@ ItemFlavor function GetItemFlavorByNetworkIndex_DEPRECATED( int index )
 
 bool function IsValidItemFlavorSettingsAsset( asset itemAsset, int validationBehavior = eValidation.DONT_ASSERT )
 {
-	bool good = (string(itemAsset) in fileLevel.assetPathItemFlavorMap)
+	if ( itemAsset == $"" )
+	{
+		Assert( false || validationBehavior != eValidation.ASSERT, "Blank item settings asset passed" )
+		return false
+	}
+
+	int guid = GetUniqueIdForSettingsAsset( itemAsset )
+	bool good = ( guid in fileLevel.guidItemFlavorMap )
 
 	Assert( good || validationBehavior != eValidation.ASSERT, "Bad item settings asset: " + itemAsset )
 	return good
@@ -716,7 +628,9 @@ ItemFlavor function GetItemFlavorByAsset( asset itemAsset )
 {
 	Assert( IsValidItemFlavorSettingsAsset( itemAsset, eValidation.ASSERT ) )
 
-	return fileLevel.assetPathItemFlavorMap[ string(itemAsset) ]
+	int guid = GetUniqueIdForSettingsAsset( itemAsset )
+
+	return fileLevel.guidItemFlavorMap[ guid ]
 }
 
 
@@ -728,18 +642,10 @@ bool function IsValidItemFlavorType( int typeIndex, int validationBehavior = eVa
 	return good
 }
 
-
-                                                                     
-   
-  	                                                      
-  
-  	                                                                                
-   
-
 array<ItemFlavor> function GetAllItemFlavors()
 {
 	Assert( fileLevel.isItemRegistrationFinished )
-	return fileLevel.itemFlavorList                                                                       
+	return fileLevel.itemFlavorList                                       
 }
 
 
@@ -755,9 +661,8 @@ array<ItemFlavor> function GetAllItemFlavorsOfType( int typeIndex )
 bool function IsItemFlavorStructValid( ItemFlavor flavor, int validationBehavior = eValidation.DONT_ASSERT )
 {
 	Assert( validationBehavior != eValidation.ASSERT || flavor._____INTERNAL_index != -1, "ItemFlavor struct was not initialized!" )
-	Assert( validationBehavior != eValidation.ASSERT || flavor._____INTERNAL_noCopyCheck == flavor, "ItemFlavor struct was copied!" )
-	Assert( validationBehavior != eValidation.ASSERT || flavor._____INTERNAL_epoch == file.itemFlavorEpoch, "ItemFlavor struct from previous level load was used!" )
-	return (flavor._____INTERNAL_index != -1 && flavor._____INTERNAL_noCopyCheck == flavor && flavor._____INTERNAL_epoch == file.itemFlavorEpoch)
+	Assert( validationBehavior != eValidation.ASSERT || GetSettingsAssetForUniqueId( flavor._____INTERNAL_guid ) != $"", "ItemFlavor struct does not point to a valid Settings asset" )
+	return ( flavor._____INTERNAL_index != -1 && GetSettingsAssetForUniqueId( flavor._____INTERNAL_guid ) != $"" )
 }
 
 
@@ -784,7 +689,7 @@ string function ItemFlavor_GetHumanReadableRef( ItemFlavor flavor )
 }
 
 
-int function ItemFlavor_GetNetworkIndex_DEPRECATED( ItemFlavor flavor )
+int function ItemFlavor_GetNetworkIndex( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 	return flavor._____INTERNAL_index
@@ -801,14 +706,14 @@ int function ItemFlavor_GetType( ItemFlavor flavor )
 asset function ItemFlavor_GetAsset( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
-	return flavor._____INTERNAL_settingsAsset
+	return GetSettingsAssetForUniqueId( flavor._____INTERNAL_guid )
 }
 
 
 var function ItemFlavor_GetSettingsBlock( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
-	return GetSettingsBlockForAsset( flavor._____INTERNAL_settingsAsset )
+	return GetSettingsBlockForAsset( ItemFlavor_GetAsset( flavor ) )
 }
 
 #if CLIENT || UI
@@ -840,7 +745,7 @@ string function ItemFlavor_GetLongName( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 
-	string localizationKey = GetGlobalSettingsString( flavor._____INTERNAL_settingsAsset, "localizationKey_NAME" )
+	string localizationKey = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "localizationKey_NAME" )
 	#if DEV
 		if ( localizationKey != "" && localizationKey.slice( 0, 1 ) != "#" )
 			localizationKey = format( "%s !UNLOCALIZED!", localizationKey )
@@ -855,7 +760,7 @@ string function ItemFlavor_GetShortName( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 
-	string localizationKey = GetGlobalSettingsString( flavor._____INTERNAL_settingsAsset, "localizationKey_NAME_SHORT" )
+	string localizationKey = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "localizationKey_NAME_SHORT" )
 	#if DEV
 		if ( localizationKey != "" && localizationKey.slice( 0, 1 ) != "#" )
 			localizationKey = format( "%s !UNLOCALIZED!", localizationKey )
@@ -870,7 +775,7 @@ string function ItemFlavor_GetLongDescription( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 
-	string localizationKey = GetGlobalSettingsString( flavor._____INTERNAL_settingsAsset, "localizationKey_DESCRIPTION_LONG" )
+	string localizationKey = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "localizationKey_DESCRIPTION_LONG" )
 	#if DEV
 		if ( localizationKey != "" && localizationKey.slice( 0, 1 ) != "#" )
 			localizationKey = format( "%s !UNLOCALIZED!", localizationKey )
@@ -885,7 +790,7 @@ string function ItemFlavor_GetShortDescription( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 
-	string localizationKey = GetGlobalSettingsString( flavor._____INTERNAL_settingsAsset, "localizationKey_DESCRIPTION_SHORT" )
+	string localizationKey = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "localizationKey_DESCRIPTION_SHORT" )
 	#if DEV
 		if ( localizationKey != "" && localizationKey.slice( 0, 1 ) != "#" )
 			localizationKey = format( "%s !UNLOCALIZED!", localizationKey )
@@ -911,7 +816,12 @@ string function ItemFlavor_GetRewardShortDescription( ItemFlavor flav )
 			return Localize( "#REWARD_SKIN", Localize( ItemFlavor_GetLongName( ref ) ) )
 
 		case eItemType.gladiator_card_stat_tracker:
-			ItemFlavor ref = GladiatorCardStatTracker_GetCharacterFlavor( flav )
+			ItemFlavor ornull ref = GladiatorCardStatTracker_GetCharacterFlavor( flav )
+			if ( ref == null )
+				return ""
+
+			expect ItemFlavor( ref )
+
 			return Localize( "#REWARD_TRACKER", Localize( ItemFlavor_GetLongName( ref ) ) )
 
 		case eItemType.gladiator_card_intro_quip:
@@ -923,7 +833,12 @@ string function ItemFlavor_GetRewardShortDescription( ItemFlavor flav )
 			return Localize( "#REWARD_KILL_QUIP", Localize( ItemFlavor_GetLongName( ref ) ) )
 
 		case eItemType.gladiator_card_frame:
-			ItemFlavor ref = GladiatorCardFrame_GetCharacterFlavor( flav )
+			ItemFlavor ornull ref = GladiatorCardFrame_GetCharacterFlavor( flav )
+			if ( ref == null )
+				return Localize( "#REWARD_FRAME_GENERIC" )
+
+			expect ItemFlavor( ref )
+
 			return Localize( "#REWARD_FRAME", Localize( ItemFlavor_GetLongName( ref ) ) )
 
 		case eItemType.gladiator_card_stance:
@@ -967,7 +882,7 @@ string function ItemFlavor_GetRewardShortDescription( ItemFlavor flav )
 asset function ItemFlavor_GetIcon( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
-	return GetGlobalSettingsAsset( flavor._____INTERNAL_settingsAsset, "icon" )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "icon" )
 }
 #endif
 
@@ -976,7 +891,7 @@ asset function ItemFlavor_GetIcon( ItemFlavor flavor )
 asset function ItemFlavor_GetSourceIcon( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
-	return GetGlobalSettingsAsset( flavor._____INTERNAL_settingsAsset, "tagIcon" )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "tagIcon" )
 }
 #endif
 
@@ -1378,7 +1293,7 @@ array<ItemFlavor> function RegisterReferencedItemFlavorsFromArray( ItemFlavor pa
 
 					Assert( assetParentFlavor == parentFlavor, "ItemFlavor " + ItemFlavor_GetHumanReadableRef( childFlavor ) + " has parentItemFlavor " + ItemFlavor_GetHumanReadableRef( assetParentFlavor ) + " but is registered with " + ItemFlavor_GetHumanReadableRef( parentFlavor ) )
 				}
-			#endif
+			#endif             
 		}
 	}
 	return loaded
@@ -1410,11 +1325,11 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 	#endif
 
 	string assetPath = string( settingsAsset ).tolower()
-	if ( assetPath in fileLevel.assetPathItemFlavorMap )
+	int guid = GetUniqueIdForSettingsAsset( settingsAsset )
+	if ( guid in fileLevel.guidItemFlavorMap )
 	{
 		                      
-		                                                                                                                                              
-		return fileLevel.assetPathItemFlavorMap[ assetPath ]
+		return fileLevel.guidItemFlavorMap[ guid ]
 	}
 	Assert( !fileLevel.isItemRegistrationFinished, "Attempted to register item flavor after registration period ended (" + assetPath + ")" )
 
@@ -1423,14 +1338,10 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 
 	                                                                                            
 	string humanReadableRef = StringReplace( RegexpReplace( assetPath, itemSettingsPathPattern, "$1" ), "/", "_" )
-	                                                   
 
 	Assert( RegexpFindAll( humanReadableRef, "\\W" ).len() == 0, "Weird characters in item flavor human readable ref: " + humanReadableRef + " (only alphanumeric and underscore allowed)" )
 
 	ItemFlavor flavor
-	flavor._____INTERNAL_noCopyCheck = flavor
-	flavor._____INTERNAL_epoch = file.itemFlavorEpoch
-	flavor._____INTERNAL_settingsAsset = settingsAsset
 	flavor._____INTERNAL_availabilityOpinion = GetItemFlavorPlaylistOpinion( humanReadableRef )
 	if ( flavor._____INTERNAL_availabilityOpinion == eItemFlavorAvailabilityOpinion.DISABLED )
 	{
@@ -1465,11 +1376,7 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 	flavor._____INTERNAL_index = (1 + fileLevel.itemFlavorList.len())
 	fileLevel.itemFlavorList.append( flavor )
 
-	                                                                                                                                                     
-
 	fileLevel.refItemFlavorMap[ humanReadableRef ] <- flavor
-
-	fileLevel.assetPathItemFlavorMap[ assetPath ] <- flavor
 
 	fileLevel.itemTypeInfoList[flavor._____INTERNAL_typeIndex].itemFlavorList.append( flavor )
 
@@ -1481,11 +1388,6 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 		foreach ( OnItemFlavorRegisteredCallbackType cb in fileLevel.itemTypeOnItemFlavorRegisteredCallbackListMap[flavor._____INTERNAL_typeIndex] )
 			cb( flavor )
 	}
-
-	                                                                                                                                                                       
-	                                                                                                                                                                              
-	                                                                                                                                                                                          
-	                                                                                                                                                                                            
 
 	flavor._____INTERNAL_availabilityOpinion = CalcItemFlavorAvailabilityOpinion( flavor )
 
@@ -1603,6 +1505,7 @@ ItemFlavor function ItemFlavorBag_GetMeleeSkinItem( ItemFlavorBag bag )
 }
 #endif
 
+                    
 #if SERVER || CLIENT || UI
 ItemFlavor function ItemFlavorBag_GetMythicSkinItem( ItemFlavorBag bag )
 {
@@ -1625,7 +1528,7 @@ ItemFlavor function ItemFlavorBag_GetMythicSkinItem( ItemFlavorBag bag )
 	return mythicSkin
 }
 #endif
-
+                          
 
 #if SERVER || CLIENT || UI
 table<ItemFlavor, int> function ItemFlavorBag_ToQuantityMap( ItemFlavorBag bag )
@@ -1679,35 +1582,6 @@ string function DEV_DescribeItemFlavorBag( ItemFlavorBag bag )
                    
                    
                    
-#if SERVER && DEV
-                                                                                 
- 
-	           
-
-	                                
-	                                       
-	 
-		                                                                                                                                                                         
-		      
-	 
-
-	                                      
-	 
-		                                          
-			        
-
-		                                                             
-		                                                        
-		 
-			       
-				                                        
-				                                                
-				                            
-			 
-		 
-	 
- 
-#endif
 
               
 bool function ItemFlavor_HasUnlockFunc( ItemFlavor flavor )
@@ -2156,34 +2030,6 @@ table<string, string> function GetTimestampMetaDataFromAsset( asset settingsAsse
 	return metaData
 }
 
-#if CLIENT && (DEV || ASSERTING)
-void function DEV_PrintAllGRXRefs()
-{
-	array<ItemFlavor> allItemFlavs = GetAllItemFlavors()
-
-	string currentType = ""                                                          
-
-	printt( "------- ALL ASSETS -------" )
-	printt( "TYPE , ASSET PATH , GRX REF , SHORT NAME , LONG NAME , RARITY" )
-	foreach ( ItemFlavor flav in allItemFlavs )
-	{
-		                                                      
-		 
-			                                                                            
-			                                           
-		   
-
-		if ( ItemFlavor_GetGRXMode( flav ) != eItemFlavorGRXMode.REGULAR )
-			continue
-
-		string quality = ItemFlavor_HasQuality( flav ) ? DEV_GetEnumStringSafe( "eRarityTier", ItemFlavor_GetQuality( flav ) ) : "NULL"
-
-		printt( Localize( ItemFlavor_GetTypeName( flav ) ) + " , " + ItemFlavor_GetHumanReadableRef( flav ) + " , " + ItemFlavor_GetGRXAlias( flav ) + " , " + Localize( ItemFlavor_GetShortName( flav ) )  + " , " + Localize( ItemFlavor_GetLongName( flav ) ) + " , " + quality )
-	}
-	printt( "------- END ASSETS -------" )
-}
-#endif
-
 bool function ItemFlavor_ChallengesHaveMetaData()
 {
 	return fileLevel.hasChallengeMetaData
@@ -2206,3 +2052,71 @@ bool function IsCalEvent( int itemType )
 
 	return false
 }
+
+                                         
+                                         
+                                          
+#if SERVER && DEV
+                                                                                 
+ 
+	           
+
+	                                
+	                                       
+	 
+		                                                                                                                                                                         
+		      
+	 
+
+	                                      
+	 
+		                                          
+			        
+
+		                                                             
+		                                                        
+		 
+			       
+				                                        
+				                                     
+				                            
+			 
+		 
+	 
+ 
+#endif
+
+#if CLIENT && (DEV || ASSERTING)
+void function DEV_PrintAllGRXRefs()
+{
+	array <ItemFlavor> allItemFlavs = GetAllItemFlavors()
+
+	string currentType = ""                                                          
+
+	printt( "------- ALL ASSETS -------" )
+	printt( "TYPE , ASSET PATH , GRX REF , SHORT NAME , LONG NAME , RARITY" )
+	foreach ( ItemFlavor flav in allItemFlavs )
+	{
+		if ( ItemFlavor_GetGRXMode( flav ) != eItemFlavorGRXMode.REGULAR )
+			continue
+
+		string quality = ItemFlavor_HasQuality( flav ) ? DEV_GetEnumStringSafe( "eRarityTier", ItemFlavor_GetQuality( flav ) ) : "NULL"
+
+		printt( Localize( ItemFlavor_GetTypeName( flav ) ) + " , " + ItemFlavor_GetHumanReadableRef( flav ) + " , " + ItemFlavor_GetGRXAlias( flav ) + " , " + Localize( ItemFlavor_GetShortName( flav ) )  + " , " + Localize( ItemFlavor_GetLongName( flav ) ) + " , " + quality )
+	}
+	printt( "------- END ASSETS -------" )
+}
+#endif
+
+#if SERVER && DEV
+                                                  
+ 
+	                                                  
+	 
+		                                                         
+			                                                                              
+	 
+
+	                                      
+ 
+#endif

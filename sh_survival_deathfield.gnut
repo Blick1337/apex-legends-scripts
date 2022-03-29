@@ -69,6 +69,9 @@ global function Sh_ArenaDeathField_Init
 #if CLIENT
 global function Cl_Deathfield_GetRadiusScale
 global function Cl_Deathfield_GetFXIDForRadius
+#if DEV
+global function Cl_Deathfield_SetOpacityOverride
+#endif
 global function Cl_GetDeathFieldStage
 global function Cl_SURVIVAL_GetDeathField
 global function Cl_SURVIVAL_GetDeathFieldCurrentRadius
@@ -238,11 +241,15 @@ struct
 		int                                               colorCorrection
 		float                                             nextHolsterHintTime
 		bool											  trackingObserverDeathfield
+		int												  fieldEffectHandle
+		float 											  ringOpacityOverrideValue
 	#endif
 
 	array<void functionref( int stage, float nextCircleStartTime )> onSurvivalDeathFieldStageChangedCallbacks
 
 	bool usePreciseRingFx
+	bool ringOpacityOverrideEnabled
+
 } file
 
 void function Sh_ArenaDeathField_Init()
@@ -255,6 +262,10 @@ void function Sh_ArenaDeathField_Init()
 	PrecacheParticleSystem( $"P_survival_radius_CP_1k_x_5k" )
 	PrecacheParticleSystem( $"P_survival_radius_CP_1k_x_100k" )
 
+	PrecacheParticleSystem( $"P_ring_radCP1_opaCP2_1k_x_1k" )
+	PrecacheParticleSystem( $"P_ring_radCP1_opaCP2_1k_x_5k" )
+	PrecacheParticleSystem( $"P_ring_radCP1_opaCP2_1k_x_100k" )
+
 	AddCallback_OnPassiveChanged( ePassives.PAS_PATHFINDER, ReconClassCharacter_PassiveChanged )
 
                        
@@ -266,7 +277,7 @@ void function Sh_ArenaDeathField_Init()
 		AddCallback_OnPassiveChanged( ePassives.PAS_PARIAH, ReconClassCharacter_PassiveChanged )
 
                  
-                                                                                        
+                                                                                           
         
 
        
@@ -276,6 +287,12 @@ void function Sh_ArenaDeathField_Init()
        
 
 	file.usePreciseRingFx = GetCurrentPlaylistVarBool( "deathfield_usePreciseRingFx", true )
+
+	file.ringOpacityOverrideEnabled = GetCurrentPlaylistVarBool( "deathfield_ringOpacityOverrideEnabled", true )
+	if ( file.ringOpacityOverrideEnabled )
+	{
+		RegisterNetworkedVariable( "ringOpacityOverride", SNDC_GLOBAL, SNVT_FLOAT_RANGE, 1.0, 0.0, 1.0 )
+	}
 
 	PrecacheParticleSystem( $"P_ring_FP_hit_01" )
 
@@ -367,6 +384,18 @@ void function Sh_ArenaDeathField_Init()
 			}
 
 			Assert( distanceToSound.len() > 0 )
+		}
+
+		if ( GetCurrentPlaylistVarBool( "deathfield_opacity_override", true ) )
+		{
+			if ( GetCurrentPlaylistVarFloat( "deathfield_ringOpacityOverrideValue", 1.0 ) != 1.0 )
+			{
+				file.ringOpacityOverrideValue = GetCurrentPlaylistVarFloat( "deathfield_ringOpacityOverrideValue", 1.0 )
+			}
+			else
+			{
+				RegisterNetworkedVariableChangeCallback_float ( "ringOpacityOverride", Cl_Deathfield_SetOpacityOverride )
+			}
 		}
 
 	#endif
@@ -3107,6 +3136,9 @@ int function Cl_Deathfield_GetFXIDForRadius( float radius )
 	if ( file.usePreciseRingFx )
 		fxIdx     = [ GetParticleSystemIndex( $"P_survival_radius_CP_1k_x_1k" ), GetParticleSystemIndex( $"P_survival_radius_CP_1k_x_5k" ), GetParticleSystemIndex( $"P_survival_radius_CP_1k_x_100k" ) ]
 
+	if ( file.ringOpacityOverrideEnabled )
+		fxIdx     = [ GetParticleSystemIndex( $"P_ring_radCP1_opaCP2_1k_x_1k" ), GetParticleSystemIndex( $"P_ring_radCP1_opaCP2_1k_x_5k" ), GetParticleSystemIndex( $"P_ring_radCP1_opaCP2_1k_x_100k" ) ]
+
 	int idealIdx
 	if ( radius <= 3000 )
 	{
@@ -3259,8 +3291,17 @@ void function Cl_DeathFieldThink( entity deathField )
 		Minimap_SetDeathFieldRadius( radius )
 		FullMap_SetDeathFieldRadius( radius )
 		EffectSetControlPointVector( e["fx"], 1, <radius / radiusScale, 0, 0> )
+
+		if ( file.ringOpacityOverrideEnabled )
+			EffectSetControlPointVector( e["fx"], 2, < file.ringOpacityOverrideValue, 0, 0 > )
+
 		WaitFrame()
 	}
+}
+
+void function Cl_Deathfield_SetOpacityOverride( entity e, float oldVal, float newVal )
+{
+	file.ringOpacityOverrideValue = newVal
 }
 
 float function Cl_Deathfield_GetRadiusScale()
@@ -3718,9 +3759,9 @@ void function TrackDeathfieldDistance_Internal( entity cockpit, entity player )
 			ColorCorrection_SetWeight( file.colorCorrection, 0.0 )
 			Chroma_EnteredRing()
 
-			if ( EffectDoesExist( screenFx ) )
+			if ( EffectDoesExist( file.fieldEffectHandle ) )
 			{
-				EffectStop( screenFx, true, true )
+				EffectStop( file.fieldEffectHandle, true, false )
 			}
 
 			if( file.trackingObserverDeathfield && player.GetTeam() == TEAM_SPECTATOR )
@@ -3748,6 +3789,8 @@ void function TrackDeathfieldDistance_Internal( entity cockpit, entity player )
 				if ( !EffectDoesExist( screenFx ) && player.GetTeam() != TEAM_SPECTATOR )                                                                                                          
 				{
 					screenFx = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( DEATHFIELD_EFFECT ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+					file.fieldEffectHandle = screenFx
+
 					EffectSetIsWithCockpit( screenFx, true )
 				}
 
@@ -3973,9 +4016,9 @@ void function ReconClassCharacter_PassiveChanged( entity player, int passive, bo
 				break
 			}
                
-                           
+                              
     
-                                            
+                                               
                            
                            
                            

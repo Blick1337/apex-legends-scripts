@@ -126,15 +126,15 @@ void function BuffetEvents_Init()
 
 		BuffetEventModesAndChallengesData bemacd
 		bool expired = CalEvent_GetFinishUnixTime( ev ) < GetUnixTimestamp()
+		bemacd.mainChallengeFlav = RegisterItemFlavorFromSettingsAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( ev ), "mainChallengeFlav" ) )
+		if ( bemacd.mainChallengeFlav != null )
+		{
+			RegisterChallengeSource( expect ItemFlavor( bemacd.mainChallengeFlav ), ev, 0 )
+		}
+		else Warning( "Buffet event '%s' refers to bad challenge asset: %s", ItemFlavor_GetHumanReadableRef( ev ), string( GetGlobalSettingsAsset( ItemFlavor_GetAsset( ev ), "mainChallengeFlav" ) ) )
+
 		if ( expired == false )
 		{
-			bemacd.mainChallengeFlav = RegisterItemFlavorFromSettingsAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( ev ), "mainChallengeFlav" ) )
-			if ( bemacd.mainChallengeFlav != null )
-			{
-				RegisterChallengeSource( expect ItemFlavor( bemacd.mainChallengeFlav ), ev, 0 )
-			}
-			else Warning( "Buffet event '%s' refers to bad challenge asset: %s", ItemFlavor_GetHumanReadableRef( ev ), string( GetGlobalSettingsAsset( ItemFlavor_GetAsset( ev ), "mainChallengeFlav" ) ) )
-
 			int challengeSortOrdinal = 1
 			foreach ( var modeBlock in IterateSettingsAssetArray( ItemFlavor_GetAsset( ev ), "modes" ) )
 			{
@@ -244,13 +244,27 @@ array<ItemFlavor> function GetActiveStoryEventArray( int t )
 {
 	Assert( IsItemFlavorRegistrationFinished() )
 	array<ItemFlavor> events
+	bool eventIsUsingChallengeBox = false
 	foreach ( ItemFlavor ev in GetAllItemFlavorsOfType( eItemType.calevent_story_challenges ) )
 	{
 		if ( !CalEvent_IsActive( ev, t ) )
 			continue
 
+		Assert( eventIsUsingChallengeBox == false || StoryEvent_GetShowInChallengeBoxBool( ev ) == false, "Only one event can use the Lobby Challenge widget at a time" )
+
+		if ( StoryEvent_GetShowInChallengeBoxBool( ev ) )
+			eventIsUsingChallengeBox = true
+
 		events.append( ev )
 	}
+	events.sort( int function( ItemFlavor a, ItemFlavor b ) {
+		if ( StoryEvent_GetShowInChallengeBoxBool( a ) == false && StoryEvent_GetShowInChallengeBoxBool( b ) == true )
+			return 1
+		if ( StoryEvent_GetShowInChallengeBoxBool( a ) == true && StoryEvent_GetShowInChallengeBoxBool( b ) == false )
+			return -1
+		return 0
+	} )
+
 	return events
 }
 

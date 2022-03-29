@@ -19,6 +19,7 @@ global function ToolTips_AddMenu
 global function ToolTips_MenuOpened
 global function ToolTips_MenuClosed
 
+global function ToolTips_SetMenuTooltipVisible
 global function ToolTips_HideTooltipUntilRefocus
 
 global function ClientToUI_Tooltip_MarkForClientUpdate
@@ -43,7 +44,7 @@ struct ToolTipMenuData
 {
 	var menu
 	var toolTip
-	                                                   
+	int toolTipFlags	                                               
 }
 
 struct {
@@ -129,6 +130,12 @@ void function Sh_InitToolTips()
 	style = eTooltipStyle.MINI_PROMO_APEX_PACK
 	file.tooltipInfos[ style ].ruiAsset = $"ui/mini_promo_apex_pack_tooltip.rpak"
 	file.tooltipInfos[ style ].hasActionText = true
+
+                      
+                                     
+                                                                      
+                                                
+      
 }
 
 #if UI
@@ -183,6 +190,31 @@ void function ToolTips_MenuClosed( var menu )
 	ToolTipMenuData menuData = file.menusWithToolTips[string(menu)]
 }
 
+
+void function ToolTips_SetMenuTooltipVisible( var panel, bool visible )
+{
+	var menu = panel
+	while ( ( menu != null ) && !( string( menu ) in file.menusWithToolTips ) )
+	{
+		menu = Hud_GetParent( menu )
+	}
+
+	if ( string( menu ) in file.menusWithToolTips )
+	{
+		ToolTipMenuData menuData = file.menusWithToolTips[ string( menu ) ]
+		UpdateTooltipFlag( menuData, eToolTipFlag.HIDDEN, !visible )
+	}
+	else
+	{
+		Warning( "No tooltip found for panel: %s", string( panel ) )
+	}
+}
+
+void function UpdateTooltipFlag( ToolTipMenuData menuData, int flag, bool enabled )
+{
+	menuData.toolTipFlags = enabled ? ( menuData.toolTipFlags | flag ) : ( menuData.toolTipFlags & ~flag )
+}
+
   
                                               
  
@@ -214,6 +246,13 @@ void function ToolTips_HideTooltipUntilRefocus( var element )
 void function OnToolTipMenuThink( var menu )
 {
 	ToolTipMenuData menuData = file.menusWithToolTips[string(menu)]
+
+	if ( menuData.toolTipFlags & eToolTipFlag.HIDDEN )
+	{
+		s_hideElement = null
+		HideTooltipRui();
+		return
+	}
 
 	var focusElement = GetMouseFocus()
 	if ( focusElement == null || !Hud_HasToolTipData( focusElement ) )
@@ -391,6 +430,14 @@ void function UpdateToolTipElement( var toolTipElement, var focusElement )
 		RuiSetBool( rui, "isInGame", dt.clubMemberData.isInGame )
 		RuiSetBool( rui, "isInMatch", dt.clubMemberData.isInMatch )
 	}
+
+                      
+                                                       
+  
+                                                          
+                                                                                                    
+  
+      
 }
 
 void function AddCallback_OnUpdateTooltip( int style, void functionref(int style, ToolTipData) func )

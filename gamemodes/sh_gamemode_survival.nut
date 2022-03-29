@@ -310,6 +310,12 @@ bool function Survival_PlayerCanDrop( entity player )
 	if ( player.IsPhaseShifted() )
 		return false
 
+	if ( player.IsGrappleActive() )
+		return false
+	
+	if ( player.IsTraversing() || player.IsWallHanging() || player.IsWallRunning() )
+		return false
+	
 	if ( IsPlayerInCryptoDroneCameraView( player ) )
 		return false
 

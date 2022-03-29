@@ -54,7 +54,7 @@ global function ServerToClient_RespawnChamberOnUse
 
 global function GetRespawnStatus
 
-global function TeammatesWaitingToBeRespawned
+global function CountTeammatesWaitingToBeRespawned
 #if SERVER
                                   
 #endif
@@ -301,7 +301,7 @@ void function RespawnStatusChanged( entity player, int old, int new )
 	if ( !IsValid( viewPlayer ) )
 		return
 
-	bool waitingToBeRespawned = TeammatesWaitingToBeRespawned( viewPlayer.GetTeam() )
+	bool waitingToBeRespawned = CountTeammatesWaitingToBeRespawned( viewPlayer.GetTeam() ) > 0
 
 	foreach ( rui in file.respawnChamberRuis )
 	{
@@ -781,7 +781,7 @@ void function ManageRespawnChamberData( entity ent, var rui )
 	file.respawnChamberRuis.append( rui )
 	ent.EndSignal( "OnDestroy" )
 
-	UpdateRespawnChamberRuis( rui, TeammatesWaitingToBeRespawned( GetLocalViewPlayer().GetTeam() ) )
+	UpdateRespawnChamberRuis( rui, CountTeammatesWaitingToBeRespawned( GetLocalViewPlayer().GetTeam() ) > 0 )
 
 	OnThreadEnd(
 		function() : ( ent, rui )
@@ -886,7 +886,7 @@ string function RespawnChamber_TextOverride( entity ent )
 	entity player = GetLocalViewPlayer()
 	int team      = player.GetTeam()
 	if ( GetPlayerArrayOfTeam( team ).len() == GetPlayerArrayOfTeam_Alive( team ).len() ||
-			!TeammatesWaitingToBeRespawned( team ) )
+			CountTeammatesWaitingToBeRespawned( team ) == 0 )
 	{
 		return "#HINT_RESPAWN_NEED"
 	}
@@ -913,7 +913,7 @@ void function RespawnChamberOnUse( entity pickup, entity player, int pickupFlags
 	if ( !(pickupFlags & USE_INPUT_LONG) )
 		return
 
-	if ( !TeammatesWaitingToBeRespawned( player.GetTeam() ) )
+	if ( CountTeammatesWaitingToBeRespawned( player.GetTeam() ) == 0 )
 		return
 
 	float time = Time()
@@ -1063,7 +1063,7 @@ void function DisplayRuiForRespawnChamber_Internal( var rui, asset icon, float s
 
                                                                      
  
-	                                                             
+	                                                                      
 		            
 
 	                                                                                            
@@ -1116,18 +1116,18 @@ void function DisplayRuiForRespawnChamber_Internal( var rui, asset icon, float s
                    
   
 
-bool function TeammatesWaitingToBeRespawned( int team )
+int function CountTeammatesWaitingToBeRespawned( int team )
 {
+	int count = 0
 	foreach ( player in GetPlayerArrayOfTeam( team ) )
 	{
 		if ( !IsAlive( player ) )
 		{
 			if ( player.GetPlayerNetInt( "respawnStatus" ) == eRespawnStatus.WAITING_FOR_DELIVERY )
-				return true
+				count++
 		}
 	}
-
-	return false
+	return count
 }
 
 #if CLIENT
@@ -2263,7 +2263,7 @@ void function RespawnSuccessClient_Mobile( entity ent, entity playerUser, Extend
 	if ( !IsValid( viewPlayer ) )
 		return
 
-	bool waitingToBeRespawned = TeammatesWaitingToBeRespawned( viewPlayer.GetTeam() )
+	bool waitingToBeRespawned = CountTeammatesWaitingToBeRespawned( viewPlayer.GetTeam() ) > 0
 	foreach ( rui in file.respawnChamberRuis )
 	{
 		UpdateRespawnChamberRuis( rui, waitingToBeRespawned )

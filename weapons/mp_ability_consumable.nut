@@ -2061,7 +2061,7 @@ int function TryUseConsumable( entity player, int consumableType )
 		if ( !ultimateAbility.IsReadyToFire() )
 			return eUseConsumableResult.DENY_ULT_NOTREADY
 
-		if( ultimateAbility.HasMod( MOBILE_HMG_ACTIVE_MOD ) )
+		if( ultimateAbility.HasMod( MOBILE_HMG_ACTIVE_MOD ) || ultimateAbility.HasMod( ULTIMATE_ACTIVE_MOD_STRING ) )
 			return eUseConsumableResult.DENY_ULT_NOTREADY
 	}
 	else

@@ -216,6 +216,12 @@ void function SV_CL_Init()
 	ShSurvivalTraining_Init()
 	FiringRangeGameMode_Init()
 	ShFiringRangeStoryEvents_Init()
+               
+		ShFiringRangeChallenges_Init()
+		ShFRC_G7Scout_Init()
+		ShFRC_Bow_Init()
+		ShFRC_p2020_Init()
+       
 	PanicButton_Init()
 	ShGas_Init()
                  
@@ -240,7 +246,7 @@ void function SV_CL_Init()
        
 
 	ChargePylons_Init()
-	ShLootDrones_Init()
+	ShDrones_Init()
 	ShLootRollers_Init()
 
                  
@@ -337,6 +343,11 @@ void function SV_CL_Init()
 
                   
                        
+                         
+       
+
+                
+                         
        
 
 	Sh_PersistentDamageLayer_Init()
@@ -431,6 +442,10 @@ void function SV_CL_Init()
                            
        
 
+                                 
+		AprilFools_S12_Mode_Init()
+       
+
                    
 		Caustic_TT_Init()
        
@@ -486,8 +501,11 @@ void function SV_CL_Init()
 	                 
 	              
 
-                    
+                                               
                   
+                            
+                    
+       
        
 
                     
@@ -530,7 +548,6 @@ void function SV_CL_Init()
 	                     
 	                     
 	                     
-	                    
                        
 		                    
        
@@ -602,7 +619,7 @@ void function SV_CL_Init()
 	                
 	                  
 
-	                
+	                   
 	                 
                        
 		               
@@ -905,6 +922,7 @@ void function Client_Lobby_Init()
 	ShPassPanel_LevelInit()
 	ClLoadscreensInit()
 	ClImagePakLoadInit()
+	Sh_InitToolTips()
 }
 #endif          
 

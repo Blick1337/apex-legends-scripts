@@ -4,6 +4,7 @@ global function FiringRangeGameMode_Init
                                                          
                                                         
                                                           
+                                                   
                                      
                                                               
                          
@@ -18,15 +19,27 @@ global function FiringRangeGameMode_Init
 
 #if CLIENT
 global function SCB_BroadcastFriendlyFireChange
+global function FiringRange_IsCharacterSwitchingEnabled
+global function SCB_FiringRange_EnableCharacterChange
+global function SCB_FiringRange_SetPlayerInFinale
+global function FiringRange_IsPlayerInFinale
 #endif          
 
+
+
+struct {
                          
           
-        
                                                 
-     
       
       
+	#if CLIENT
+		bool characterSwitchingEnabled = true
+		bool inFinale = false
+	#endif
+}file
+
+
 
 global const string FIRING_RANGE_DUMMIE_SCRIPT_NAME = "npc_dummie"
 
@@ -68,6 +81,30 @@ void function SCB_BroadcastFriendlyFireChange( entity playerThatChanged )
 	string subText = (IsValid( playerThatChanged ) ? Localize( "#NOTIFY_FRIENDLY_FIRE_SUBTEXT", playerThatChanged.GetPlayerName() ) : "")
 	vector titleColor = (isEnabled ? ENEMY_COLOR : FRIENDLY_COLOR)
 	AnnouncementMessage( localPlayer, mainText, subText, titleColor )
+}
+
+bool function FiringRange_IsCharacterSwitchingEnabled()
+{
+	return file.characterSwitchingEnabled
+}
+
+void function SCB_FiringRange_EnableCharacterChange( bool enable )
+{
+	file.characterSwitchingEnabled = enable
+	if ( !enable )
+		CloseCharacterSelectNewMenu()
+	RunUIScript( "EnableCharacterChangeInFiringRange", enable )
+}
+
+void function SCB_FiringRange_SetPlayerInFinale( bool inFinale )
+{
+	file.inFinale = true
+	SCB_FiringRange_EnableCharacterChange ( false )
+}
+
+bool function FiringRange_IsPlayerInFinale()
+{
+	return file.inFinale
 }
 #endif          
 
@@ -334,6 +371,33 @@ void function SCB_BroadcastFriendlyFireChange( entity playerThatChanged )
 
 		                                  
 		           
+
+                
+		                                                          
+		 
+			                                   
+			 
+				                                         
+				      
+			 
+			    
+			 
+				                                                                          
+				                                       
+				                            
+				 
+					                                  
+				 
+				    
+				 
+					                           
+					                                
+				 
+			 
+		 
+        
+
+
 		                                
 
                            
@@ -354,6 +418,28 @@ void function SCB_BroadcastFriendlyFireChange( entity playerThatChanged )
 	                              
 	                               
  
+
+                                                                  
+ 
+	                              
+		                          
+
+	                                   
+
+	                                           
+	 
+		                                                        
+		                        
+		 
+			                      
+			 
+				              
+			 
+		 
+		                                          
+	 
+ 
+
 #endif          
 
 #if CLIENT
@@ -457,6 +543,8 @@ void function IntroDisplayThread()
 	                                 
 
 	                                                    
+
+	                                     
 
 	  
 	                                                                              

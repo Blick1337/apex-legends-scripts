@@ -388,6 +388,11 @@ float function CalcFOVScale( float baseFOV, float zoomScale )
 	return RadToDeg( atan( tan( DegToRad( baseFOV / 2.0 ) ) / zoomScale ) ) * 2
 }
 
+int function CalcZoomMag( float baseFOV, float fov )
+{
+	return int ( tan( DegToRad( baseFOV/2 ) ) / tan( DegToRad( fov/2 ) ) )
+}
+
 
 vector function RotateAroundOrigin2D( vector originToRotate, vector origin, float angRadians )
 {
@@ -527,12 +532,6 @@ bool function IsLobbyMapName( string levelname )
 		return true
 
 	return false
-}
-
-
-bool function IsLobby()
-{
-	return Code_IsLobby()
 }
 
 bool function IsStormPoint()
@@ -1122,6 +1121,12 @@ string function GetWeaponInfoFileKeyField_GlobalString( string ref, string varia
 	return expect string( val )
 }
 
+string function GetWeaponInfoFileKeyField_WithMods_GlobalString( string ref, array<string> mods, string variable )
+{
+	var val = GetWeaponInfoFileKeyField_WithMods_Global( ref, mods, variable )
+	Assert( val != null, "Weapon key \"" + variable + "\" does not exist in weapon \"" + ref + "\" !" )
+	return expect string( val )
+}
 
 int function GetWeaponInfoFileKeyField_GlobalInt( string ref, string variable )
 {
@@ -1247,6 +1252,27 @@ void function WaitFrame()
 	                                                                                                                                                                          
 	wait 0.0001
 }
+
+
+void function WaitFrames( int frames )
+{
+	int framesRemaining = frames
+	while ( framesRemaining > 0 )
+	{
+		WaitFrame()
+		framesRemaining--
+	}
+}
+
+
+#if SERVER
+                                          
+                                    
+ 
+	                                                               	                          
+	                          
+ 
+#endif
 
 
 string function VectorToString( vector vec )
@@ -2201,6 +2227,36 @@ bool function IsFiringRangeGameMode()
 {
 	return GetCurrentPlaylistVarBool( "survival_firingrange", false )
 }
+
+              
+#if SERVER
+                                                 
+ 
+       
+	                                                              
+		           
+      
+
+	                                                           
+		            
+
+	                           
+	                                             
+		            
+
+	                                                                                               
+	                            
+	                                       
+		            
+
+	                                                              
+	                         
+		            
+
+	           
+ 
+#endif
+      
 
 bool function FiringRangeHasFriendlyFire()
 {
@@ -3373,7 +3429,7 @@ bool function IsUserOnSamePlatformID( int hardwareID )
 			return true
 		}
 		else
-		{		
+		{
 			return hardwareID == GetHardwareFromName( GetUnspoofedPlayerHardware() )
 		}
 		return false

@@ -207,22 +207,26 @@ void function PlayerDeathfieldSoundThread()
          
 		}
 
+		                                            
+		                                                     
+		entity clientPlayer = GetLocalClientPlayer()
+
 		if ( !arePlaying && shouldPlay )
 		{
 			ourPlayer = localViewPlayer
 			arePlaying = true
 
-			EmitSoundOnEntity( ourPlayer, SOUND_DEATHFIELD_START )
-			EmitSoundOnEntity( ourPlayer, SOUND_DEATHFIELD_CONSTANT )
+			EmitSoundOnEntity( clientPlayer, SOUND_DEATHFIELD_START )
+			EmitSoundOnEntity( clientPlayer, SOUND_DEATHFIELD_CONSTANT )
 		}
 		else if ( arePlaying && !shouldPlay )
 		{
-			if ( IsValid( ourPlayer ) )
+			if ( IsValid( clientPlayer ) )
 			{
 				  
-				StopSoundOnEntity( ourPlayer, SOUND_DEATHFIELD_CONSTANT )
+				StopSoundOnEntity( clientPlayer, SOUND_DEATHFIELD_CONSTANT )
 				  
-				EmitSoundOnEntity( ourPlayer, SOUND_DEATHFIELD_STOP )
+				EmitSoundOnEntity( clientPlayer, SOUND_DEATHFIELD_STOP )
 			}
 
 			arePlaying = false

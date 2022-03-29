@@ -35,7 +35,7 @@ global function RefreshCharacterAfterPurchase
 
 #if CLIENT || UI
 global function CustomizeMenu_GetRewardButtonImage
-global function GetItemFlavorCustomizeParents
+global function CustomizeMenu_GetGenericRewardButtonImage
 global function GetAppropriateLoadoutSlotsForItemFlavor
 global function IsItemFlavorEquippable
 global function EquipItemFlavorInAppropriateLoadoutSlot
@@ -695,11 +695,13 @@ void function CustomizeButton_OnRightOrDoubleClick( var button )
 		return
 	}
 
+                    
 	if ( Mythics_IsItemFlavorMythicSkin( cbc.itemFlavor ) )
 	{
 		if( !GRX_IsItemOwnedByPlayer( cbc.itemFlavor ) )
 			return
 	}
+                          
 
 	PreviewCustomizeButtonItem( cbc )
 	EquipCustomizeButtonItemOrShowSlotPickerDialogOrShowUnlockDialog( cbc )
@@ -1301,8 +1303,10 @@ void function UpdateActionButton()
 	bool isEquipped             = IsItemInCBCEquipped( cbc )
 	bool isVisible              = !fileLevel.isParentItemOwned || !isOwned || (isOwned && !isEquipped)
 
+                    
 	if ( Mythics_IsItemFlavorMythicSkin( item ) )
 		isVisible = (isOwned && !isEquipped)
+                          
 
 	Hud_SetVisible( fileLevel.actionButton, isVisible )
 
@@ -1331,56 +1335,6 @@ void function UpdateActionButton()
 
 
 #if CLIENT || UI
-array<ItemFlavor> function GetItemFlavorCustomizeParents( ItemFlavor itemFlav )
-{
-	switch ( ItemFlavor_GetType( itemFlav ) )
-	{
-		case eItemType.character_skin:
-			return [ CharacterSkin_GetCharacterFlavor( itemFlav ) ]
-
-		case eItemType.character_execution:
-			return [ CharacterExecution_GetCharacterFlavor( itemFlav ) ]
-
-		case eItemType.skydive_emote:
-			return [ SkydiveEmote_GetCharacterFlavor( itemFlav ) ]
-
-		case eItemType.gladiator_card_stance:
-			return [ GladiatorCardStance_GetCharacterFlavor( itemFlav ) ]
-
-		case eItemType.gladiator_card_frame:
-			return [ GladiatorCardFrame_GetCharacterFlavor( itemFlav ) ]
-
-		case eItemType.gladiator_card_intro_quip:
-			return [ CharacterIntroQuip_GetCharacterFlavor( itemFlav ) ]
-
-		case eItemType.gladiator_card_kill_quip:
-			return [ CharacterKillQuip_GetCharacterFlavor( itemFlav ) ]
-
-		case eItemType.gladiator_card_stat_tracker:
-			return [ GladiatorCardStatTracker_GetCharacterFlavor( itemFlav ) ]
-
-		case eItemType.gladiator_card_badge:
-			if ( GladiatorCardBadge_IsCharacterBadge( itemFlav ) )
-				return [ expect ItemFlavor( GladiatorCardBadge_GetCharacterFlavor( itemFlav ) ) ]
-			else
-				return []
-
-		case eItemType.melee_skin:
-			return [ MeleeSkin_GetCharacterFlavor( itemFlav ) ]
-
-		case eItemType.weapon_skin:
-			return [ WeaponSkin_GetWeaponFlavor( itemFlav ) ]
-
-		case eItemType.weapon_charm:
-			return GetAllWeaponItemFlavors()
-	}
-
-	return []
-}
-#endif
-
-
-#if CLIENT || UI
 array<LoadoutEntry> function GetAppropriateLoadoutSlotsForItemFlavor( ItemFlavor itemFlav )
 {
 	int itemType = ItemFlavor_GetType( itemFlav )
@@ -1395,7 +1349,13 @@ array<LoadoutEntry> function GetAppropriateLoadoutSlotsForItemFlavor( ItemFlavor
 			break
 
 		case eItemType.gladiator_card_frame:
-			return [ Loadout_GladiatorCardFrame( GladiatorCardFrame_GetCharacterFlavor( itemFlav ) ) ]
+			if ( GladiatorCardFrame_IsSharedBetweenCharacters( itemFlav ) )
+			{
+				return []
+				break
+			}
+
+			return [ Loadout_GladiatorCardFrame( expect ItemFlavor( GladiatorCardFrame_GetCharacterFlavor( itemFlav ) ) ) ]
 			break
 
 		case eItemType.gladiator_card_stance:
@@ -1415,7 +1375,13 @@ array<LoadoutEntry> function GetAppropriateLoadoutSlotsForItemFlavor( ItemFlavor
 			break
 
 		case eItemType.gladiator_card_stat_tracker:
-			ItemFlavor character = GladiatorCardStatTracker_GetCharacterFlavor( itemFlav )
+			if ( GladiatorCardStatTracker_IsSharedBetweenCharacters( itemFlav ) )
+			{
+				return []
+				break
+			}
+
+			ItemFlavor character = expect ItemFlavor( GladiatorCardStatTracker_GetCharacterFlavor( itemFlav ) )
 			                                        
 			   
 			  	                                                                                   
@@ -1593,6 +1559,116 @@ asset function CustomizeMenu_GetRewardButtonImage( ItemFlavor flavor )
 				ItemFlavor weapon = WeaponSkin_GetWeaponFlavor( flavor )
 				buttonImage = ItemFlavor_GetIcon( weapon )
 			}
+			break
+
+		case eItemType.gladiator_card_frame:
+			buttonImage = $"rui/menu/buttons/battlepass/banner_frame"
+			break
+
+		case eItemType.gladiator_card_stance:
+			buttonImage = $"rui/menu/buttons/battlepass/banner_pose"
+			break
+
+		case eItemType.music_pack:
+			buttonImage = $"rui/menu/buttons/battlepass/music_pack"
+			break
+
+		case eItemType.loadscreen:
+			buttonImage = $"rui/menu/buttons/battlepass/loadscreen"
+			break
+
+		case eItemType.gladiator_card_intro_quip:
+			buttonImage = $"rui/hud/chat_icons/icon_chat_introquip"
+			break
+
+		case eItemType.gladiator_card_kill_quip:
+			buttonImage = $"rui/hud/chat_icons/icon_chat_killquip"
+			break
+
+		case eItemType.gladiator_card_stat_tracker:
+			buttonImage = $"rui/menu/buttons/battlepass/tracker"
+			break
+
+		case eItemType.weapon_charm:
+			buttonImage = $"rui/menu/buttons/battlepass/weapon_charm"
+			break
+
+		case eItemType.gladiator_card_badge:
+			buttonImage = $"rui/menu/buttons/battlepass/badge"
+			break
+
+		case eItemType.account_currency:
+			buttonImage = GRXCurrency_GetRewardIcon( flavor )
+			break
+
+		case eItemType.apex_coins:
+			buttonImage = $"rui/menu/buttons/battlepass/currency_coins"
+			break
+
+		case eItemType.battlepass_purchased_xp:
+			buttonImage = $"rui/menu/challenges/challenges_icon_levelup"
+			break
+
+                
+                         
+                                                       
+        
+                      
+
+		default:
+			Warning( "Unknown item type passed to CustomizeMenu_GetRewardButtonImage() " + DEV_GetEnumStringSafe( "eItemType", itemType ) )
+			break
+	}
+
+	if ( buttonImage == $"" )
+		Warning( "CustomizeMenu_GetRewardButtonImage() returning empty image for %s", ItemFlavor_GetHumanReadableRef( flavor ) )
+
+	return buttonImage
+}
+asset function CustomizeMenu_GetGenericRewardButtonImage( ItemFlavor flavor )                                                                     
+{
+	int itemType      = ItemFlavor_GetType( flavor )
+	asset buttonImage = $""
+
+	switch ( itemType )
+	{
+		case eItemType.account_pack:
+			buttonImage = ItemFlavor_GetIcon( flavor )
+			if ( buttonImage == $"" )
+			{
+				buttonImage = $"rui/menu/buttons/battlepass/apex_pack"
+			}
+			break
+
+		case eItemType.skydive_emote:
+		case eItemType.character_execution:
+		case eItemType.voucher:
+		case eItemType.quest_mission:
+                       
+		case eItemType.quest_comic:
+                             
+		case eItemType.melee_skin:
+			buttonImage = ItemFlavor_GetIcon( flavor )
+			break
+
+		case eItemType.emote_icon:
+			buttonImage = $"rui/menu/buttons/battlepass/icon_holospray"
+			break
+
+		case eItemType.character_skin:
+			ItemFlavor character = CharacterSkin_GetCharacterFlavor( flavor )
+			buttonImage = ItemFlavor_GetIcon( character )
+			break
+		case eItemType.character_emote:
+			buttonImage = ItemFlavor_GetIcon( flavor )
+			break
+		case eItemType.character:
+			buttonImage = CharacterClass_GetCharacterUnlockedStoreIcon( flavor )
+			break
+
+		case eItemType.weapon_skin:
+			ItemFlavor weapon = WeaponSkin_GetWeaponFlavor( flavor )
+			buttonImage = ItemFlavor_GetIcon( weapon )
 			break
 
 		case eItemType.gladiator_card_frame:

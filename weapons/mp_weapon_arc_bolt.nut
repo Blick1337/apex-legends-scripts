@@ -1102,15 +1102,15 @@ void function RemoveWaypointPopout( entity wp )
 	                                   
 	 
 		                                                      
-		                                                                                                                                                                        
+		                                                                                                                                                                                                              
 		                               
 		                                         
 		                           
 		                
 	 
-	                
+	                                     
 	 
-		                                                                                                                                                 
+		                                                                                                                                                                                       
 		                               
 		                                         
 		                           

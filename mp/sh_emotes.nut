@@ -1035,10 +1035,10 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	                         
 		      
 
-	                                                                      
+	                                                           
 		      
 
-	                                                                                
+	                                                                     
 	                                           
  
 

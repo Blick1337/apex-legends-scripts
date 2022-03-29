@@ -634,7 +634,7 @@ void function WeaponCosmetics_Apply( entity ent, ItemFlavor ornull skinOrNull, I
 				                                              
 		#endif
 
-		ent.e.__itemFlavorNetworkId = ItemFlavor_GetNetworkIndex_DEPRECATED( skin )
+		ent.e.__itemFlavorNetworkId = ItemFlavor_GetNetworkIndex( skin )
 		ent.SetSkin( 0 )                                                                                                                                                         
 
 		#if SERVER
@@ -694,7 +694,7 @@ void function WeaponCosmetics_Apply( entity ent, ItemFlavor ornull skinOrNull, I
 		string charmModel = WeaponCharm_GetCharmModel( charm )
 		string attachmentName = WeaponCharm_GetAttachmentName( charm )
 
-		ent.e.charmItemFlavorNetworkId = ItemFlavor_GetNetworkIndex_DEPRECATED( charm )
+		ent.e.charmItemFlavorNetworkId = ItemFlavor_GetNetworkIndex( charm )
 
 		#if SERVER
 			                                               
@@ -748,15 +748,13 @@ void function WeaponCosmetics_Apply( entity ent, ItemFlavor ornull skinOrNull, I
 
 int function CodeCallback_GetWeaponSkin( entity weapon )
 {
-#if SERVER
-	                                                      
-		        
-#endif
+	if ( !GetConVarBool( "enable_code_weapon_reactive" ) )
+		return 0
 
 	if( !WeaponHasReactiveKillTrackingForCurrentSkin( weapon ) )
 		return 0
 
-	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex_DEPRECATED( weapon.GetGrade() )
+	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( weapon.GetGrade() )
 	return ItemFlavor_GetGUID( weaponSkin )
 }
 

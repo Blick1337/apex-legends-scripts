@@ -324,7 +324,7 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 			shieldLevel = 1
 			shieldFrac = isKillShot ? 0.0 : max( 0, ( victim.GetHealth() - damageAmount ) / victim.GetMaxHealth() )
 		}
-             
+                 
                                          
    
                    
@@ -362,6 +362,14 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 					shieldLevel = 1
 				}
 			}
+                           
+                                                           
+    
+                    
+                   
+                                                                                                           
+    
+      
 		}
 	}
 
@@ -502,7 +510,7 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 			RuiSetInt( stackingRui, "shieldBreakTier", shieldLevel )
 		}
 
-               
+                                  
                                                       
         
 
@@ -538,7 +546,7 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 			RuiSetBool( floatingRui, "isSour", isSourShot )
 			RuiSetBool( floatingRui, "showStacking", showStackingDamageText )
 
-                
+                                   
                                                        
          
 

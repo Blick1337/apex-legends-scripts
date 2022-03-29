@@ -33,6 +33,9 @@ global function ThemedShopEvent_GetHeaderTextColor
 global function ThemedShopEvent_GetLobbyButtonImage
 global function ThemedShopEvent_GetTitleTextColor
 global function ThemedShopEvent_HasLobbyTheme
+global function ThemedShopEvent_GetPackOffer
+global function ThemedShopEvent_GetAboutText
+global function ThemedShopEvent_GetAboutPageSpecialTextColor
 #endif
 
 
@@ -225,6 +228,18 @@ string function ThemedShopEvent_GetItemGroupHeaderText( ItemFlavor event, int gr
 }
 #endif
 
+#if UI
+array<string> function ThemedShopEvent_GetAboutText( ItemFlavor event, bool restricted )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+
+	array<string> aboutText = []
+	string key = (restricted ? "aboutTextRestricted" : "aboutTextStandard")
+	foreach ( var aboutBlock in IterateSettingsAssetArray( ItemFlavor_GetAsset( event ), key ) )
+		aboutText.append( GetSettingsBlockString( aboutBlock, "text" ) )
+	return aboutText
+}
+#endif
 
 #if UI
 vector function ThemedShopEvent_GetItemGroupHeaderTextColor( ItemFlavor event, int group )
@@ -310,6 +325,14 @@ vector function ThemedShopEvent_GetHeaderTextColor( ItemFlavor event )
 }
 #endif
 
+#if UI
+vector function ThemedShopEvent_GetAboutPageSpecialTextColor( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "aboutPageSpecialTextColor" )
+}
+#endif
+
 #if SERVER || CLIENT || UI
 asset function ThemedShopEvent_GetHeaderIcon( ItemFlavor event )
 {
@@ -318,6 +341,25 @@ asset function ThemedShopEvent_GetHeaderIcon( ItemFlavor event )
 }
 #endif
 
+#if UI
+GRXScriptOffer ornull function ThemedShopEvent_GetPackOffer( ItemFlavor event )
+{
+	if ( GRX_IsOfferRestricted() )
+		return null
+
+	ItemFlavor packFlav          = GetItemFlavorByAsset( ThemedShopEvent_GetAssociatedPack( event ) )
+	string offerLocation         = ThemedShopEvent_GetGRXOfferLocation( event )
+	array<GRXScriptOffer> offers = GRX_GetItemDedicatedStoreOffers( packFlav, offerLocation )
+	foreach( GRXScriptOffer offer in offers )
+	{
+		if ( offer.output.flavors.len() > 1 )
+			continue
+		if ( GRXOffer_ContainsEventThematicPack( offer ) )
+			return offer
+	}
+	return null
+}
+#endif
 
                        
                        

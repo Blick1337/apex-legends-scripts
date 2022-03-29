@@ -141,7 +141,8 @@ void function Teams_ShowScoreboard( int order = 0, float xOffset = 0, float yOff
 	RuiSetFloat2( file.scoreboardRui, "offset", < xOffset, yOffset, 0 > )
 	RuiSetBool (file.scoreboardRui, "showBottomBar", showBottomBar)
 	RuiSetFloat (file.scoreboardRui, "backgroundAlpha", backgroundAlpha)
-	Teams_PopulateScoreboardRui( rui, 780, false )
+	Teams_PopulateScoreboardRui( rui, 610, false )
+
 }
 
 void function Teams_ShowBackgroundBlur()
@@ -185,11 +186,11 @@ var function CreateNesterHeaderRui( ScoreboardData data, var rui, bool friendly,
 	RuiSetFloat( scoreHeaderRui, "rowWidth", rowWidth )
 	RuiSetBool( scoreHeaderRui, "hasSpacer", hasSpacer )
 
-	Teams_PopulateHeaderRui( scoreHeaderRui, data, friendly )
+	Teams_PopulateHeaderRui( scoreHeaderRui, data, friendly, rowWidth, hasSpacer )
 	return scoreHeaderRui
 }
 
-void function Teams_PopulateHeaderRui( var scoreHeaderRui, ScoreboardData data, bool friendly )
+void function Teams_PopulateHeaderRui( var scoreHeaderRui, ScoreboardData data, bool friendly, float rowWidth, bool hasSpacer = false )
 {
 	RuiSetInt( scoreHeaderRui, "numScoreColumns", data.numScoreColumns )
 
@@ -201,6 +202,8 @@ void function Teams_PopulateHeaderRui( var scoreHeaderRui, ScoreboardData data, 
 
 	RuiSetBool( scoreHeaderRui, "winningTeamIsFriendly", true )                                                        
 	RuiSetString( scoreHeaderRui, "headerText", friendly ? "#ALLIES" : "#ENEMIES" )
+	RuiSetFloat( scoreHeaderRui, "rowWidth", rowWidth )
+	RuiSetBool( scoreHeaderRui, "hasSpacer", hasSpacer )
 }
 
 void function Thread_Teams_PopulateHeaderRui()
@@ -233,6 +236,7 @@ void function Teams_PopulateScoreboardRui( var rui, float rowWidth, bool hasSpac
 	{
 		var r = RuiCreateNested( rui, "myTeamPlayer" + i + "NestedHandle", $"ui/teams_scoreboard_player_row.rpak" )
 		RuiSetFloat( r, "rowWidth", rowWidth )
+		RuiSetFloat( r, "rowWidthCurr", rowWidth )
 		RuiSetBool( r, "hasSpacer", hasSpacer )
 		RuiSetFloat( r, "fadeAlpha", 0 )
 		friendlyRowRuis.append( r )
@@ -242,16 +246,17 @@ void function Teams_PopulateScoreboardRui( var rui, float rowWidth, bool hasSpac
 	for( int i = 0; i < RUI_MAX_ROWS; i++ )
 	{
 		var r = RuiCreateNested( rui, "enemyTeamPlayer" + i + "NestedHandle", $"ui/teams_scoreboard_player_row.rpak" )
-		RuiSetFloat( r, "rowWidth", rowWidth )
-		RuiSetBool( r, "hasSpacer", hasSpacer )
+		                                        
+		                                         
+		RuiSetFloat( r, "rowWidthCurr", rowWidth )
 		RuiSetFloat( r, "fadeAlpha", 0 )
 		enemyRowRuis.append( r )
 	}
 
-	thread ScoreboardUpdate( rui, friendlyRowRuis, enemyRowRuis )
+	thread ScoreboardUpdate( rui, friendlyRowRuis, enemyRowRuis, rowWidth, hasSpacer  )
 }
 
-void function ScoreboardUpdate( var rui, array< var > friendlyRowRuis, array< var > enemyRowRuis )
+void function ScoreboardUpdate( var rui, array< var > friendlyRowRuis, array< var > enemyRowRuis, float rowWidth, bool hasSpacer )
 {
 	EndSignal( clGlobal.levelEnt, "Teams_HideScoreboard" )
 
@@ -293,14 +298,14 @@ void function ScoreboardUpdate( var rui, array< var > friendlyRowRuis, array< va
 		RuiSetFloat( rui, "numFriendlyRows", float( friendlies.len() ) )
 		RuiSetFloat( rui, "numEnemyRows", float( enemies.len() ) )
 
-		Teams_FillTeamData( friendlyRowRuis, friendlies, data, file.scoreboardSelectedIndex )
-		Teams_FillTeamData( enemyRowRuis, enemies, data, file.scoreboardSelectedIndex - friendlies.len() )
+		Teams_FillTeamData( friendlyRowRuis, friendlies, data, file.scoreboardSelectedIndex, rowWidth, hasSpacer )
+		Teams_FillTeamData( enemyRowRuis, enemies, data, file.scoreboardSelectedIndex - friendlies.len(), rowWidth, hasSpacer )
 
 		WaitFrame()
 	}
 }
 
-void function Teams_FillTeamData( array< var > teamRowRuis, array< entity > teamPlayers, ScoreboardData gameData, int selectedIndex )
+void function Teams_FillTeamData( array< var > teamRowRuis, array< entity > teamPlayers, ScoreboardData gameData, int selectedIndex, float rowWidth, bool hasSpacer  )
 {
 	Assert( IsValid( file.Callback_PlayerScores ), "PlayerScores is missing a callback, ensure your game mode has provided a callback in the setup function - Teams_AddCallback_PlayerScores" )
 
@@ -314,7 +319,7 @@ void function Teams_FillTeamData( array< var > teamRowRuis, array< entity > team
 		if ( i < teamPlayers.len() )
 		{
 			RuiSetFloat( teamRowRuis[i], "fadeAlpha", 1 )
-			Teams_PopulatePlayerRow( teamRowRuis[i], teamPlayers[i], gameData, selectedIndex == i )
+			Teams_PopulatePlayerRow( teamRowRuis[i], teamPlayers[i], gameData, selectedIndex == i, rowWidth, hasSpacer )
 		}
 		else
 		{
@@ -323,7 +328,7 @@ void function Teams_FillTeamData( array< var > teamRowRuis, array< entity > team
 	}
 }
 
-void function Teams_PopulatePlayerRow( var rui, entity player, ScoreboardData gameData, bool selected )
+void function Teams_PopulatePlayerRow( var rui, entity player, ScoreboardData gameData, bool selected, float rowWidth, bool hasSpacer = false)
 {
 	RuiSetBool( rui, "isFriendly", player.GetTeam() == GetLocalClientPlayer().GetTeam() )
 
@@ -341,7 +346,9 @@ void function Teams_PopulatePlayerRow( var rui, entity player, ScoreboardData ga
 	RuiSetString( rui, "playerName", GetPlayerNameFromEHI( playerEHI ) )
 
 	RuiSetBool( rui, "selectedRow", selected )
+	RuiSetBool( rui, "hasSpacer", hasSpacer )
 	RuiSetInt( rui, "numScoreColumns", gameData.numScoreColumns )
+	RuiSetFloat( rui, "rowWidth", rowWidth )
 
 	array< int > scores = file.Callback_PlayerScores( player )
 	for( int j = 0; j < gameData.numScoreColumns; j++ )
@@ -357,7 +364,13 @@ void function Teams_PopulatePlayerRow( var rui, entity player, ScoreboardData ga
 	RuiSetImage( rui, "playerImage", CharacterClass_GetGalleryPortrait( character ) )
 	RuiSetImage( rui, "playerBG", CharacterClass_GetGalleryPortraitBackground( character ) )
 
+	bool isRatingLeader = GradeFlagsHas( player, eTargetGrade.EXP_LEADER )
+	bool isKillLeader = GradeFlagsHas( player, eTargetGrade.CHAMP_KILLLEADER )
+	RuiSetBool( rui, "isRatingLeader", isRatingLeader )
+	RuiSetBool( rui, "isKillLeader", isKillLeader )
+
 	RuiSetBool( rui, "isLocalPlayer", player == localPlayer )
+	RuiSetBool( rui, "isAlive", IsAlive( player ) )
 	RuiSetColorAlpha( rui, "customCharacterColor", SrgbToLinear( GetPlayerInfoColor( player ) / 255.0 ), 1.0 )
 	RuiSetBool( rui, "useCustomCharacterColor", localPlayer.GetTeam() == player.GetTeam() )
 }

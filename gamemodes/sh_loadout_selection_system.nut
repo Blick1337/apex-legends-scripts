@@ -33,6 +33,7 @@ global function UICallback_LoadoutSelection_BindItemIcon
 global function UICallback_LoadoutSelection_SetConsumablesCountRui
 global function LoadoutSelection_GetItemIcon
 global function LoadoutSelection_GetWeaponLootTeir
+global function LoadoutSelection_RefreshAllUILoadoutInfo
 const string SOUND_SELECT_OPTIC = "ui_arenas_ingame_inventory_Select_Optic"
 #endif          
 
@@ -1409,6 +1410,7 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
 	 
  
 
+                                                                                          
                                                                                                    
                                                                          
  
@@ -1521,7 +1523,7 @@ int function LoadoutSelection_GetLoadoutSlotTypeForLoadoutIndex( int loadoutSlot
 #endif                
 
 #if CLIENT
-                                                                                                                       
+                                                                                                                            
 void function ServerCallback_LoadoutSelection_UpdateLoadoutInfo( int loadoutIndex, string loadoutHeaderText, int weaponCount, int loadoutType, int weapon0ScopePref, int weapon1ScopePref )
 {
 	file.loadoutSlotIndexToHeaderTable[ loadoutIndex ] <- loadoutHeaderText
@@ -1536,6 +1538,44 @@ void function ServerCallback_LoadoutSelection_UpdateLoadoutInfo( int loadoutInde
 		data.weaponIndexToScopePreferenceTable[ 1 ] <- weapon1ScopePref
 
 	RunUIScript( "LoadoutSelection_UpdateLoadoutInfo_UI", loadoutIndex, loadoutHeaderText, weaponCount, loadoutType )
+}
+
+                                                                                                                                 
+                                                                                                                                                            
+void function LoadoutSelection_RefreshAllUILoadoutInfo()
+{
+	string loadoutHeaderText
+	int weaponCount
+	int loadoutType
+	int loadoutIndex
+
+	foreach ( loadoutCategory in file.loadoutCategories )
+	{
+		loadoutHeaderText = ""
+		weaponCount = -1
+		loadoutType = eLoadoutSelectionSlotType.INVALID
+		loadoutIndex = loadoutCategory.index
+
+		if ( loadoutIndex in file.loadoutSlotIndexToHeaderTable )
+		{
+			loadoutHeaderText = file.loadoutSlotIndexToHeaderTable[ loadoutIndex ]
+		}
+
+		if ( loadoutIndex in file.loadoutSlotIndexToWeaponCountTable )
+		{
+			weaponCount = file.loadoutSlotIndexToWeaponCountTable[ loadoutIndex ]
+		}
+
+		if ( loadoutIndex in file.loadoutSlotIndexToLoadoutTypeTable )
+		{
+			loadoutType = file.loadoutSlotIndexToLoadoutTypeTable[ loadoutIndex ]
+		}
+
+		if ( loadoutType != eLoadoutSelectionSlotType.INVALID && weaponCount != -1 && loadoutHeaderText != "")
+			RunUIScript( "LoadoutSelection_UpdateLoadoutInfo_UI", loadoutIndex, loadoutHeaderText, weaponCount, loadoutType )
+	}
+
+	RunUIScript( "LoadoutSelectionMenu_ResetLoadoutButtons" )
 }
 
                                                                                                                                  

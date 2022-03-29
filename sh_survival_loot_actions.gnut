@@ -850,7 +850,7 @@ bool function EquipEquipment( entity pickup, entity player, string equipSlot, en
 				                                                                                                             
 				                                                                                                                                     
 			 
-                
+                    
                                                         
     
                                                                 

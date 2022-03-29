@@ -58,6 +58,7 @@ const asset FX_HEARTBEAT_SENSOR_SONAR_PULSE_NO_INTRO = $"P_heart_sensor_on_1p"
 const bool HEARTBEAT_SENSOR_DEBUG = false
 const bool HEARTBEAT_SENSOR_DEBUG_VERBOSE = false
 const bool HEARTBEAT_SENSOR_WEAPON_MODS_DEBUG = false
+const bool HEARTBEAT_SENSOR_STAT_TRACKING_DEBUG = false
                                    
 const bool HEARTBEAT_SENSOR_COMMS_DEBUG = false
                                         
@@ -103,6 +104,9 @@ struct
                              
                                               
                                   
+	#endif         
+	#if SERVER
+		                                                      
 	#endif         
 	var heartbeatSensorRui
 	float heartbeatSensorRange
@@ -173,6 +177,11 @@ void function HeartbeatSensor_OnPassiveChanged( entity player, int passive, bool
 			                                                                         
 			                                                          
 			                                         
+
+			                                                       
+			 
+				                                                     
+			 
 		 
 		#elseif CLIENT
 			if ( player == localViewPlayer )
@@ -193,6 +202,8 @@ void function HeartbeatSensor_OnPassiveChanged( entity player, int passive, bool
 	{
 		#if SERVER
 		                                                                                             
+
+		                                                     
 		#elseif CLIENT
 			if ( player == localViewPlayer )
 			{
@@ -481,7 +492,25 @@ void function HeartbeatSensorTogglePressed( entity player )
 
                                                                                   
  
-	                                                   
+	                                                       
+	 
+		                                                                              
+
+		                                                                               
+		                                               
+
+		       
+		                                           
+		 
+			                                                                                                                                                                                                              
+		 
+		            
+
+		                    
+		 
+			                                                       
+		 
+	 
  
 #endif         
 
@@ -547,6 +576,21 @@ void function InitializeHeartbeatSensorUI( entity player )
 
 void function ActivateHeartbeatSensor( entity player, bool fromTac )
 {
+	#if SERVER
+		                                                       
+		 
+			       
+			                                           
+			 
+				                                                               
+			 
+			            
+
+			                                                       
+		 
+
+		                                       
+	#endif         
 	#if CLIENT
 		entity localViewPlayer = GetLocalViewPlayer()
 
@@ -561,7 +605,7 @@ void function ActivateHeartbeatSensor( entity player, bool fromTac )
 				                                                                                                                                        
 				RuiSetBool( file.heartbeatSensorRui, "heartbeatSensorADSOverride", true )
 			}
-	
+
 			thread ShowHeartbeatSensorRange_Thread( player )
 
 			thread ManageVictims_Thread( player )
@@ -598,9 +642,6 @@ void function ActivateHeartbeatSensor( entity player, bool fromTac )
 			                                              
 		}
 	#endif         
-	#if SERVER
-		                                       
-	#endif         
 }
 
 #if CLIENT
@@ -630,7 +671,7 @@ void function ManageHeartbeatSensorComms_Thread( entity player )
 			if ( HEARTBEAT_SENSOR_COMMS_DEBUG )
 				printt(FUNC_NAME() + " Out of Combat")
 			#endif      
-			
+
 			                                                                                                                           
 			vector lastReportLocation = file.lastCommsLocation != ZERO_VECTOR ? file.lastCommsLocation : player.EyePosition()
 
@@ -873,6 +914,9 @@ void function ShowHeartbeatSensorRange_Thread( entity player )
 
 void function DeactivateHeartbeatSensor( entity player, bool fromTac )
 {
+	#if SERVER
+		                                          
+	#endif         
 	#if CLIENT
 		if ( player == GetLocalViewPlayer() )
 		{
@@ -914,9 +958,6 @@ void function DeactivateHeartbeatSensor( entity player, bool fromTac )
 			}
 		}
 	#endif         
-	#if SERVER
-		                                          
-	#endif         
 }
 
 #if CLIENT
@@ -948,7 +989,7 @@ void function ManageVictims_Thread( entity player )
 
 		                                                                                                                                                                                                                                                                                                   
 		float watchRange = GraphCapped( viewportFOV, HEARTBEAT_SENSOR_MIN_ZOOM_FOV, HEARTBEAT_SENSOR_MAX_ZOOM_FOV, HEARTBEAT_SENSOR_MIN_WATCH_RANGE, HEARTBEAT_SENSOR_MAX_WATCH_RANGE )
-		
+
 		#if DEV
 			if ( HEARTBEAT_SENSOR_DEBUG )
 			{
@@ -1397,6 +1438,10 @@ ScreenSpaceData function GetScreenSpaceData( entity player, entity victim )
 void function CL_HeartSeekerRUIThread( entity player, entity weapon )
 {
 	Assert( IsNewThread(), "Must be threaded off." )
+
+	if ( !IsValid( player ) || !IsValid( weapon ) )
+		return
+
 	player.EndSignal( "OnDestroy" )
 	player.EndSignal( "DestroyHeartbeatSensor" )
 	player.EndSignal( "EndHeartbeatSensorUI" )

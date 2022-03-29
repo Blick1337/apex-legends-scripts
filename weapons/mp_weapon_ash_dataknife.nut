@@ -163,7 +163,7 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 	}
 }
 
-bool function DeathboxNetwork_CanPlayerUse( entity player, entity deathbox )
+bool function DeathboxNetwork_CanPlayerUse( entity player, entity deathbox, bool checkDistance = false )
 {
 	if ( !IsValid( player ) || !IsValid( deathbox ) || !player.HasPassive( ePassives.PAS_ASH ) )
 		return false
@@ -182,6 +182,9 @@ bool function DeathboxNetwork_CanPlayerUse( entity player, entity deathbox )
 	deathboxInfo info = file.deathboxInfoTable[deathbox]
 
 	if ( info.attackerTeam == player.GetTeam() )
+		return false
+
+	if ( checkDistance && DistanceSqr( player.GetOrigin(), deathbox.GetOrigin() ) > (500*500) )                                                                                                             
 		return false
 
 	return true
@@ -276,7 +279,7 @@ void function OnCharacterButtonPressed( entity player )
 #if SERVER
                                                                                           
  
-	                                                        
+	                                                              
 		      
 
 	                                           

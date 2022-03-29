@@ -96,7 +96,14 @@ ObitEntityInfo function Obituary_GetEntityInfo( entity ent, int damageSourceId, 
 
 	entity localPlayer = GetLocalViewPlayer()
 
-	info.displayColor = localPlayer.GetTeam() == ent.GetTeam() ? GetPlayerInfoColor( ent ) : <255, 255, 255>                              
+	if ( ent.IsNPC() )
+	{
+		info.displayColor = <255, 255, 255>
+	}
+	else
+	{
+		info.displayColor = localPlayer.GetTeam() == ent.GetTeam() ? GetPlayerInfoColor( ent ) : <255, 255, 255>                              
+	}
 
                      
 		                                                                                                             
@@ -554,6 +561,7 @@ void function Obituary_Print_Control_ObjectivePing( entity subjectEnt, string lo
 					{
 						RuiDestroy( obitData.rui )
 						obitData.rui = null
+						file.obituaryQueue.removebyvalue( obitData )
 					}
 
 					delete file.controlObjectiveToObituaryDataTable[ objectivePing.GetOwner() ]
@@ -668,6 +676,27 @@ entity function Obituary_GetControlObjectivePingFromObituaryDataOrNull( Obituary
 
 	return null
 }
+
+                                                                                            
+void function Obituary_CleanupControlObjectivePingData( ObituaryData obitData )
+{
+	if ( Control_IsModeEnabled() )
+	{
+		if ( Obituary_IsObituaryDataForControlObjectivePing( obitData ) )
+		{
+			entity objectivePing = Obituary_GetControlObjectivePingFromObituaryDataOrNull( obitData )
+
+			if ( objectivePing != null && IsValid( objectivePing ) )
+			{
+				if ( file.obituaryControlObjectivePingQueue.contains( objectivePing ) )
+					file.obituaryControlObjectivePingQueue.removebyvalue( objectivePing )
+
+				if ( objectivePing.GetOwner() in file.controlObjectiveToObituaryDataTable )
+					delete file.controlObjectiveToObituaryDataTable[ objectivePing.GetOwner() ]
+			}
+		}
+	}
+}
                               
 
 void function UpdateObituaryQueue()
@@ -690,30 +719,19 @@ void function UpdateObituaryQueue()
 	{
 		ObituaryData obitData = file.obituaryQueue[index]
 
-		if ( Time() - obitData.startTime >= OBITUARY_DURATION || index > 20 )
+		if ( Time() - obitData.startTime >= OBITUARY_DURATION || index > 20 || !IsValid( obitData.rui ) )
 		{
-			RuiDestroy( obitData.rui )
-			obitData.rui = null
+			if ( IsValid( obitData.rui ) )
+			{
+				RuiDestroy( obitData.rui )
+				obitData.rui = null
+			}
+			
 			file.obituaryQueue.remove( index )
 
                            
 				                                                                                                
-				if ( Control_IsModeEnabled() )
-				{
-					if ( Obituary_IsObituaryDataForControlObjectivePing( obitData ) )
-					{
-						entity objectivePing = Obituary_GetControlObjectivePingFromObituaryDataOrNull( obitData )
-
-						if ( objectivePing != null && IsValid( objectivePing ) )
-						{
-							if ( file.obituaryControlObjectivePingQueue.contains( objectivePing ) )
-								file.obituaryControlObjectivePingQueue.removebyvalue( objectivePing )
-
-							if ( objectivePing.GetOwner() in file.controlObjectiveToObituaryDataTable )
-								delete file.controlObjectiveToObituaryDataTable[ objectivePing.GetOwner() ]
-						}
-					}
-				}
+				Obituary_CleanupControlObjectivePingData( obitData )
                                  
 
 			continue
@@ -789,6 +807,10 @@ void function Obituary_ClearObituary()
 		RuiDestroy( obitData.rui )
 		obitData.rui = null
 		file.obituaryQueue.remove( index )
+
+                          
+			Obituary_CleanupControlObjectivePingData( obitData )
+                                
 	}
 }
 

@@ -177,6 +177,10 @@ global enum eWaypoint
 	VOID_RING_TROPHY_TIMER,
 	VOID_RING_TROPHY_LIFE,
 
+                  
+                                  
+       
+
                
                     
        
@@ -2062,7 +2066,11 @@ void function InstanceLocationPing( entity wp )
                          
 		                                                                                                                            
 		if ( Control_IsModeEnabled() && !isSameTeam )
-			isSameTeam = IsTeamInAlliance( owner.GetTeam(), Control_GetAllianceFromTeam( viewPlayer.GetTeam() ) )
+		{
+			int viewPlayerAlliance = Control_GetAllianceFromTeam( viewPlayer.GetTeam() )
+			if ( viewPlayerAlliance != -1 )
+				isSameTeam = IsTeamInAlliance( owner.GetTeam(), viewPlayerAlliance )
+		}
 
                                
 
@@ -2395,7 +2403,11 @@ void function InstanceObjectivePing( entity wp )
                          
 		                                                                                                                            
 		if ( Control_IsModeEnabled() && !isSameTeam )
-			isSameTeam = IsTeamInAlliance( owner.GetTeam(), Control_GetAllianceFromTeam( viewPlayer.GetTeam() ) )
+		{
+			int viewPlayerAlliance = Control_GetAllianceFromTeam( viewPlayer.GetTeam() )
+			if ( viewPlayerAlliance != -1 )
+				isSameTeam = IsTeamInAlliance( owner.GetTeam(), viewPlayerAlliance )
+		}
 
                                
 
@@ -2515,6 +2527,19 @@ void function InstanceLootPing( entity wp )
 		return
 	}
 
+                     
+		                                                                                                                                               
+		                                                                                                                                                               
+		if ( IsUsingProximityAllianceMembers() && !IsPVEMode() )
+		{
+			if ( !IsValid( wp ) )
+				return
+
+			if ( Control_GetAllianceFromTeam( viewPlayer.GetTeam() ) != Control_GetAllianceFromTeam( wp.GetTeam() ) )
+				return
+		}
+                           
+
 	bool isDirectlyOnItem = (wp.GetParent() == lootItem)
 
 	vector mins = <0, 0, 0>
@@ -2600,11 +2625,18 @@ void function InstanceLootPing( entity wp )
                      
 		                                                                                                                                       
 		                                                                
-		if ( IsUsingProximityAllianceMembers() && viewPlayer.GetTeam() != owner.GetTeam() )
+		if ( IsUsingProximityAllianceMembers() )
 		{
-			float maxProximity = GetMaxDistForAllianceMemberProximity()
-			if ( !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), owner.GetOrigin() ) && !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), wp.GetOrigin() ) )
+			if ( !IsValid( owner ) )
+			{
 				shouldPlayCommsSound = false
+			}
+			else if ( viewPlayer.GetTeam() != owner.GetTeam() )
+			{
+				float maxProximity = GetMaxDistForAllianceMemberProximity()
+				if ( !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), owner.GetOrigin() ) && !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), wp.GetOrigin() ) )
+					shouldPlayCommsSound = false
+			}
 		}
                            
 	if ( file.commsWaypointSoundsEnabled && shouldPlayCommsSound )
@@ -3298,7 +3330,13 @@ array<entity> function Waypoints_GetActiveLootPings()
 	                                                                                                          
 
 	                     
-	                                      
+
+                     
+		                                                                                                                                                                         
+		                                         
+                           
+		                                      
+
 	                                            
 	                                      
 	                                         

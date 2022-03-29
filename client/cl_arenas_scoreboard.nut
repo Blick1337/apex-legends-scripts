@@ -49,7 +49,7 @@ void function ShowScoreboardOrMap_Arenas()
 	{
 		var rui = CreateFullscreenRui( $"ui/teams_scoreboard_small.rpak", 0 )
 		file.scoreboardRui = rui
-		Teams_PopulateScoreboardRui( rui, 480, true )
+		Teams_PopulateScoreboardRui( rui, 485, false )
 	}
 	else
 	{
@@ -145,7 +145,7 @@ array< int > function Arenas_GetPlayerScores( entity player )
 	return scores
 }
 
-void function Threaded_PopulateRowForPlayer( var rui, entity player )
+void function Threaded_PopulateRowForPlayer( var rui, entity player, float rowWidth, bool hasSpacer )
 {
 	clGlobal.levelEnt.EndSignal( "Threaded_PopulateRowForPlayer" )
 	player.EndSignal( "OnDestroy" )
@@ -155,7 +155,7 @@ void function Threaded_PopulateRowForPlayer( var rui, entity player )
 
 	ItemFlavor character = LoadoutSlot_WaitForItemFlavor( ToEHI( player ), Loadout_Character() )
 
-	Teams_PopulatePlayerRow( rui, player, Arenas_GetScoreboardData(), false )
+	Teams_PopulatePlayerRow( rui, player, Arenas_GetScoreboardData(), false, rowWidth, hasSpacer )
 }
 
 array<entity> function GetTeamPlayers( bool friendly )
@@ -197,13 +197,13 @@ void function UICallback_ReportMenu_BindTeamButton( var button, bool friendly )
 		Hud_Hide( button )
 }
 
-void function UICallback_ReportMenu_BindTeamHeader( var button, bool friendly )
+void function UICallback_ReportMenu_BindTeamHeader( var button, bool friendly, float rowWidth, bool hasSpacer = false )
 {
 	var rui = Hud_GetRui( button )
-	Teams_PopulateHeaderRui( rui, Arenas_GetScoreboardData(), friendly )
+	Teams_PopulateHeaderRui( rui, Arenas_GetScoreboardData(), friendly, rowWidth, hasSpacer )
 }
 
-void function UICallback_ReportMenu_BindTeamRow( var button, bool friendly )
+void function UICallback_ReportMenu_BindTeamRow( var button, bool friendly, float rowWidth, bool hasSpacer = false)
 {
 	var rui = Hud_GetRui( button )
 	int row = int( Hud_GetScriptID( button ) )
@@ -212,7 +212,7 @@ void function UICallback_ReportMenu_BindTeamRow( var button, bool friendly )
 		return
 
 	array<entity> teamPlayers = GetTeamPlayers( friendly )
-	thread Threaded_PopulateRowForPlayer( rui, teamPlayers[ row ] )
+	thread Threaded_PopulateRowForPlayer( rui, teamPlayers[ row ], rowWidth, hasSpacer )
 }
 
 void function UpdateArenasReportMenuForPlayer( entity player )

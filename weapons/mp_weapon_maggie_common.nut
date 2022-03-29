@@ -166,7 +166,7 @@ array<string> function MaggieCommon_GetTrapToDestroyNames()
 		                                                     
 
 		                                                                           
-			                                                                                          
+			                                                                                                         
 		    
 			                                        
 

@@ -36,11 +36,15 @@ void function OnWeaponActivate_weapon_energy_shotgun( entity weapon )
 			                                                                  
 			 
 				                                   
-				                        
+				                          
 			 
 		 
 
 		                                       
+
+		                    
+			      
+
 		                        
 		 
 			                                                                                  

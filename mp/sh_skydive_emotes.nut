@@ -98,11 +98,16 @@ table<int, ItemFlavor> function GetValidPlayerSkydiveEmotes( entity player )
 
 ItemFlavor function GetPlayerSkydiveEmote( entity player, int index )
 {
-	if ( LoadoutSlot_IsReady( ToEHI( player ), Loadout_Character() ) )
+	EHI playerEHI              = ToEHI( player )
+	LoadoutEntry characterSlot = Loadout_Character()
+
+	if ( LoadoutSlot_IsReady( playerEHI, characterSlot ) )
 	{
-		ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
-		if ( LoadoutSlot_IsReady( ToEHI( player ), Loadout_SkydiveEmote( character, index ) ) )
-			return LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_SkydiveEmote( character, index ) )
+		ItemFlavor character          = LoadoutSlot_GetItemFlavor( playerEHI, characterSlot )
+		LoadoutEntry skydiveEmoteSlot = Loadout_SkydiveEmote( character, index )
+
+		if ( LoadoutSlot_IsReady( playerEHI, skydiveEmoteSlot ) )
+			return LoadoutSlot_GetItemFlavor( playerEHI, skydiveEmoteSlot )
 	}
 
 	return GetItemFlavorByAsset( $"settings/itemflav/skydive_emote/_empty.rpak" )

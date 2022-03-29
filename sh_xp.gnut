@@ -823,7 +823,7 @@ string function GetXPEventValueDisplay( entity player, int xpType )
 asset function GetImageForReward( RewardData reward )
 {
 	asset icon = $""
-	if ( ItemFlavor_GetNetworkIndex_DEPRECATED( reward.item ) > 0 )
+	if ( ItemFlavor_GetNetworkIndex( reward.item ) > 0 )
 	{
 		if ( ItemFlavor_GetType( reward.item ) == eItemType.account_currency )
 			icon = GRXCurrency_GetRewardIcon( reward.item )

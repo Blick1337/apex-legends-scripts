@@ -561,7 +561,7 @@ void function Init_CharacterClassToLoadoutNameTable()
 		                                         
 		                                         
 		 
-			                                                                                           
+			                                                                                
 		 
 		    
 		 
@@ -574,7 +574,7 @@ void function Init_CharacterClassToLoadoutNameTable()
 		                                          
 		                                            
 		 
-			                                                                                               
+			                                                                                    
 		 
 		    
 		 

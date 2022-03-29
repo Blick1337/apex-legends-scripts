@@ -79,6 +79,14 @@ global enum eThreatIndicatorID
 
 }
 
+global enum eThreatIndicatorVisibility
+{
+	INDICATOR_SHOW_TO_ALL,
+	INDICATOR_SHOW_TO_ENEMIES,
+	INDICATOR_SHOW_TO_SELF,
+	INDICATOR_SHOW_TO_SELF_AND_ENEMIES,
+}
+
 global const WAYPOINTTYPE_THREAT_INDICATOR = "threat_indicator"
 
 struct

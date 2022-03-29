@@ -514,6 +514,7 @@ void function PanAwayCharacterSelect()
 
 	wait (outroSceneChangeDuration / 3.0)
 
+	                                                                                                         
 	NotifyCharacterSelectBeginEnd( false )
 }
 
@@ -1092,8 +1093,8 @@ void function UI_CloseCharacterSelect()
 	SetBlurEnabled( false )
 	if ( GetActiveMenu() == fileForever.menu )
 		CloseActiveMenu()
-	else if ( IsMenuInMenuStack( fileForever.menu ) )
-		RemoveFromMenuStack( fileForever.menu )
+	else if ( MenuStack_Contains( fileForever.menu ) )
+		MenuStack_Remove( fileForever.menu )
 }
 #endif     
 
@@ -1133,6 +1134,8 @@ void function CloseCharacterSelectNewMenu()
 
 	foreach( func in file.Callbacks_OnCharacterMenuClosed )
 		func()
+
+	NotifyCharacterSelectBeginEnd( false )
 }
 
 void function CharacterSelect_RestorePlayerView()

@@ -46,7 +46,9 @@ global function CollectionEvent_GetHeaderIcon
 global function CollectionEvent_GetItemCount
 global function CollectionEvent_GetCurrentRemainingItemCount
 global function CollectionEvent_AwardHeirloomShards
+                    
 global function CollectionEvent_IsRewardMythicSkin
+                          
 
 #endif
 
@@ -345,14 +347,15 @@ ItemFlavor function CollectionEvent_GetPrimaryCompletionRewardItem( ItemFlavor e
 }
 #endif
 
+                    
 #if SERVER || CLIENT || UI
 bool function CollectionEvent_IsRewardMythicSkin( ItemFlavor event )
 {
 	ItemFlavor primaryRewardItem =  CollectionEvent_GetPrimaryCompletionRewardItem( event )
-
 	return Mythics_IsItemFlavorMythicSkin( primaryRewardItem )
 }
 #endif
+                          
 
 
 #if SERVER || CLIENT || UI
@@ -661,8 +664,10 @@ string function CollectionEvent_GetHeirloomHeaderText( ItemFlavor event )
 	string headerText = "#COLLECTION_EVENT_HEIRLOOM_BOX_TITLE"
 	if ( CollectionEvent_AwardHeirloomShards( event ) )
 		headerText = "#CURRENCY_HEIRLOOM_NAME_SHORT"
+                    
 	else if ( CollectionEvent_IsRewardMythicSkin( event ) )
 		headerText = "#COLLECTION_EVENT_MYTHIC_BOX_TITLE"
+                          
 
 	return Localize( headerText ).toupper()
 }
@@ -988,7 +993,7 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 				        
 
 			                                                               
-			                                                                                                   
+			                                                                                                             
 			                                                  
 			                                                  
 

@@ -115,7 +115,8 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 	dummies = $"rui/menu/gamemode/dummies",
 	deja_loot = $"rui/menu/gamemode/deja_loot",
                           
-	campfire = $"rui/menu/gamemode/flashpoint",
+		campfire = $"rui/menu/gamemode/flashpoint",
+		campfire_oly = $"rui/menu/gamemode/playlist_bg_olympus_mu2_flashpoint",
        
 	explore_mode = $"rui/menu/gamemode/playlist_bg_olympus_explore",
 
@@ -134,10 +135,15 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 		arenas_habitat = $"rui/menu/gamemode/playlist_bg_arena_habitat",
 		arenas_lava_siphon = $"rui/menu/gamemode/playlist_bg_arena_lava_siphon",
 		arenas_barometer = $"rui/menu/gamemode/playlist_bg_arena_barometer",
+		arenas_drop_off = $"rui/menu/gamemode/playlist_bg_arena_drop_off",
        
                          
 		control_barometer = $"rui/menu/gamemode/playlist_bg_control_barometer",
 		control_hammond_labs = $"rui/menu/gamemode/playlist_bg_control_hammond_labs",
+		control_caustic_tt = $"rui/menu/gamemode/playlist_bg_control_caustic_tt",
+       
+               
+		s12e04_finale = $"rui/menu/gamemode/s12e04_finale",
        
 }
 
@@ -210,6 +216,7 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 	deja_loot = $"rui/menu/gamemode/deja_loot",
                           
 		campfire = $"rui/menu/gamemode/flashpoint",
+		campfire_oly = $"rui/menu/gamemode/playlist_bg_sq_olympus_mu2_flashpoint",
        
 	explore_mode = $"rui/menu/gamemode/playlist_bg_olympus_explore",
 
@@ -228,11 +235,17 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 		arenas_habitat = $"rui/menu/gamemode/playlist_bg_sq_arena_habitat",
 		arenas_lava_siphon = $"rui/menu/gamemode/playlist_bg_sq_arena_lava_siphon",
 		arenas_barometer = $"rui/menu/gamemode/playlist_bg_sq_arena_barometer",
+		arenas_drop_off = $"rui/menu/gamemode/playlist_bg_sq_arena_drop_off",
        
 
                          
 		control_barometer = $"rui/menu/gamemode/playlist_bg_sq_control_barometer",
 		control_hammond_labs = $"rui/menu/gamemode/playlist_bg_sq_control_hammond_labs",
+		control_caustic_tt = $"rui/menu/gamemode/playlist_bg_sq_control_caustic_tt",
+       
+
+               
+		s12e04_finale = $"rui/menu/gamemode/s12e04_finale",
        
 }
 
@@ -433,7 +446,14 @@ asset function GetImageFromImageMap( string keyName )
 		if ( keyName in GAMEMODE_IMAGE_MAP )
 			imageAsset = GAMEMODE_IMAGE_MAP[keyName]
 		else
+		{
+			#if DEV
+				if ( GetConVarBool( "ui_automation_enabled" ) )
+					return imageAsset                    
+			#endif       
+
 			Warning( "Invalid playlist value for 'image': %s", keyName )
+		}
 	}
 	return imageAsset
 }
@@ -446,7 +466,14 @@ asset function GetThumbnailImageFromImageMap( string keyName )
 		if ( keyName in GAMEMODE_THUMBNAIL_IMAGE_MAP )
 			imageAsset = GAMEMODE_THUMBNAIL_IMAGE_MAP[keyName]
 		else
+		{
+			#if DEV
+				if ( GetConVarBool( "ui_automation_enabled" ) )
+					return imageAsset                    
+			#endif       
+
 			Warning( "Invalid playlist value for 'image': %s", keyName )
+		}
 	}
 	return imageAsset
 }
