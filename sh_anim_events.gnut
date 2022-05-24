@@ -452,7 +452,7 @@ void function ClientCodeCallback_HandleClientAnimEvent( entity eventCaller, stri
 
 		case "mp_frag_drone_fx":
 		{
-			thread PlayWarningFXOnMPFragDrone( eventCaller )                                                                                                                                                      
+			                                                                                                                                                                                                        
 			break
 		}
 

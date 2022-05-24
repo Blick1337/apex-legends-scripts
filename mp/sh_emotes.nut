@@ -243,7 +243,6 @@ void function ShEmotes_Init()
 	InitAntiPeekSettings( nearDist, farDist, 2.0, testDistance, testFoV, testFriendlies, bonesToTry )
 
 	RegisterNetworkedVariableChangeCallback_bool( "isEmoting", Cl_OnPlayerEmoteStateChanged )
-	RegisterNetworkedVariableChangeCallback_bool( "canGroundEmote", Cl_OnPlayerCanGroundEmoteChanged )
 
 	AddCallback_OnVictoryCharacterModelSpawned( OnVictoryCharacterModelSpawned )
 #endif          
@@ -644,7 +643,7 @@ bool function AreEmotesEnabled()
 }
 
 #if CLIENT
-void function Cl_OnPlayerEmoteStateChanged( entity player, bool playerWasEmoting, bool playerIsEmoting )
+void function Cl_OnPlayerEmoteStateChanged( entity player, bool playerIsEmoting )
 {
 	if ( player != GetLocalViewPlayer() )
 		return
@@ -791,10 +790,6 @@ bool function IsInFrontLockedFOV( entity player, entity ent, vector initialEyeAn
 		return false
 
 	return true
-}
-
-void function Cl_OnPlayerCanGroundEmoteChanged( entity player, bool playerCouldEmote, bool playerCanEmote )
-{
 }
 #endif
 
@@ -1192,7 +1187,8 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	                       
 	                                 
 	                                 
-	                                                                                 
+	                                      
+	                                                                         
 	                            
 	                             
 	                         
@@ -1229,7 +1225,7 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	                       
 		                                                                    
 	    
-		                                                           
+		                                                                       
 
 	                                                  
 	                                                  
@@ -1319,7 +1315,7 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	           
  
 
-                                                                                    
+                                                                                                       
  
 	                                                 
 	                                           
@@ -1327,7 +1323,7 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 
 	             
 
-	                                                                                  
+	                                                                          
 	                            
 	                             
  

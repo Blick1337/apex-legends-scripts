@@ -292,9 +292,7 @@ void function StimVisualsEnabled( entity ent, int statusEffect, bool actuallyCha
 	if ( !IsValid( cockpit ) )
 		return
 
-              
 	Signal( player, "WreckingBall_CleanupFX" )
-      
 
 	Chroma_StartStimEffect()
 

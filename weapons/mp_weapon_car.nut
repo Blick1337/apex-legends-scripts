@@ -1,4 +1,3 @@
-                      
 global function MpWeaponCar_Init
 global function OnWeaponActivate_Car
 global function OnWeaponDeactivate_Car
@@ -323,4 +322,3 @@ void function HandleCarDryFire( entity player, entity weapon, int clipCount )
 	}
 }
 #endif
-                           

@@ -136,6 +136,11 @@ void function HoverVehicle_Init()
 	if ( !HoverVehiclesAreEnabled() )
 		return
 
+	if( GetMapName().find( "mp_rr_canyonlands" ) > -1 )
+		return
+	else if ( GetMapName().find( "mp_rr_desertlands" ) > -1 )
+		return
+
 	PrecacheModel( HOVER_VEHICLE_MODEL )
 
 	PrecacheParticleSystem( FX_VEHICLE_BOOST )
@@ -425,13 +430,12 @@ bool function EntIsHoverVehicle( entity ent )
 	                                                      
 
 	                                                                   
-                        
-	                              
-	 
-		                                                                          
-		                                                                    
-	 
-                              
+
+	                                                        
+		                                                                                          
+
+	                                                           
+		                                                                                                
  
                                                                         
  
@@ -598,12 +602,10 @@ bool function EntIsHoverVehicle( entity ent )
 	    
 	 
 		                                                                                                               
-               
-		                                                                                                      
-		                                                                                                    
-		                                                                                               
-			                                           
-       
+	                                                                                                      
+	                                                                                                    
+	                                                                                               
+		                                           
 	 
 
 	                                              

@@ -576,11 +576,8 @@ void function Gamemode_ShadowSquad_RegisterNetworking()
             
 
 #if CLIENT
-void function OnGamePhaseChanged( entity player, int oldVal, int newVal )
+void function OnGamePhaseChanged( entity player, int newVal )
 {
-	if ( oldVal == newVal )
-		return
-
 	foreach( guy in GetPlayerArray() )
 	{
 
@@ -2219,7 +2216,7 @@ void function OnPlayerLifeStateChanged( entity player, int oldState, int newStat
 	                                                    
  
 
-                                                                                                
+                                                                                  
  
 	                                                                                       
 	                                                                                                           
@@ -3005,7 +3002,6 @@ void function OnPlayerLifeStateChanged( entity player, int oldState, int newStat
 	                                                              
 
 	                                                                                 
-	                                                                                                                                                                   
 
 	                                    
 	                                     

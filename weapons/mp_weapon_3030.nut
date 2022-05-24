@@ -1,4 +1,3 @@
-                   
 global function MpWeapon3030_Init
 
 global function OnWeaponActivate_weapon_3030
@@ -54,7 +53,6 @@ void function OnWeaponActivate_weapon_3030( entity weapon )
 		}
 	#endif
 
-                       
 	thread ShatterRounds_UpdateShatterRoundsThink( weapon )
 	#if SERVER
 	                                               
@@ -62,7 +60,6 @@ void function OnWeaponActivate_weapon_3030( entity weapon )
 	    
 		                                              
 	#endif
-       
 }
 
 void function OnWeaponDeactivate_weapon_3030( entity weapon )
@@ -76,13 +73,11 @@ void function OnWeaponDeactivate_weapon_3030( entity weapon )
 		{
 			weapon.Signal( HAMMER_THREAD_ABORT_SIGNAL )
 		}
-                        
 		weapon.Signal( SHATTER_ROUNDS_THINK_END_SIGNAL )
 
 		#if SERVER
 		                                                             
 		#endif
-        
 	#endif
 }
 
@@ -208,4 +203,3 @@ var function OnWeaponPrimaryAttack_weapon_3030( entity weapon, WeaponPrimaryAtta
 	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 }
 
-                        

@@ -36,9 +36,7 @@ global function GetAmmoStatusHintRui
 global function GetTacticalRui
 global function GetUltimateRui
 global function InitWeaponStatusRuis
-                      
 global function Weapon_UpdateAltAmmoRui
-      
 #if DEV
 global function DEV_TestUltimateStates
 #endif      
@@ -716,9 +714,7 @@ void function UpdateRUIWeaponData( entity player, var rui, entity weapon, int ta
 	if ( selected )
 	{
 		PrimaryWeapon_UpdateFireSelectHUD( weapon )
-                        
 		Weapon_UpdateAltAmmoRui( rui, player, weapon, true, false )
-        
 		UpdateModsOnSurvivalWeaponRui( rui, weapon )
 
 		RuiSetBool( rui, "isVisible", (GetHudDefaultVisibility() && file.ammo_counter_visible && !player.IsTitan()) )
@@ -823,7 +819,6 @@ void function UpdateRUIWeaponData( entity player, var rui, entity weapon, int ta
 	}
 }
 
-                      
 void function Weapon_UpdateAltAmmoRui( var rui, entity player, entity weapon, bool useRuiTrack = true, bool useDefaultAmmoIcons = true )
 {
 	bool hasAltAmmo = false
@@ -899,7 +894,6 @@ void function UpdateCarAmmoHint(entity player, entity weapon)
 
 	AnnouncementMessageRight( player, Localize( message ) , "", <1, 1, 1>, $"", 1.0 )
 }
-      
 
 void function PrimaryWeapon_UpdateFireSelectHUD( entity weapon )
 {
@@ -916,22 +910,6 @@ void function PrimaryWeapon_UpdateFireSelectHUD( entity weapon )
 
 		if ( IsWeaponInSingleShotMode( weapon ) )
 		{
-			  
-                         
-				                                                                                                
-				 
-					                                                                                   
-					                                                                                                                                                          
-					                                                                                                                                       
-
-					                                                
-						                                                                                        
-					    
-						                                                                                        
-				 
-				    
-         
-			  
                            
                                                              
      
@@ -1298,18 +1276,11 @@ bool function WeaponHasFireModeSelect( entity weapon )
 	else if ( DoesModExist( weapon, "hopup_paintball" ) && IsModActive( weapon, "hopup_paintball" ) )
 		return true
                       
-  
-                      
-	                                                                                                           
-		           
-      
-  
+
 	else if ( DoesModExist( weapon, "altfire" ) )
 		return true
-                      
 	else if ( DoesModExist( weapon, "alt_ammo" ) )                   
 		return true
-      
 	return false
 }
 
@@ -1393,14 +1364,7 @@ int function GetWeaponCurrentFireModeIndex( entity weapon )
 		else
 			return 0
 	}
-  
-                      
-	                                                     
-		                                                        
-      
-  
 
-                      
 	if ( DoesModExist( weapon, "alt_ammo" ) )
 	{
 		if ( IsModActive( weapon, "alt_ammo" ) )
@@ -1408,7 +1372,6 @@ int function GetWeaponCurrentFireModeIndex( entity weapon )
 		else
 			return 0
 	}
-      
 	return 0
 }
 
@@ -1567,11 +1530,8 @@ bool function IsModAltfireMod( string mod )
                                          
              
        
-                       
 	if ( mod == "shatter_rounds_mode" )
 		return true
-       
-
 
 	return false
 }
@@ -1623,7 +1583,7 @@ void function WeaponStatusSetWeaponInspect( bool inspect )
 	RuiSetBool( file.weapon_hud_rui, "weaponInspect", inspect )
 	array<var> additionalWeaponInspectRuis
 	additionalWeaponInspectRuis.append( GetCryptoAnimatedTacticalRui() )
-	additionalWeaponInspectRuis.append( GetBubbleBunkerRui() )
+	                                                                                                             
                  
                                                                 
       
@@ -1651,7 +1611,6 @@ void function InitWeaponRuiTracks( var rui, entity player, entity weapon )
 	RuiTrackFloat( rui, "ammoRegenRate", weapon, RUI_TRACK_WEAPON_AMMO_REGEN_RATE )
 	RuiTrackFloat( rui, "bleedoutEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
 
-              
 	if ( weapon.HasMod( WARLORDS_IRE_MOD_NAME ) )
 	{
 		RuiSetBool( rui, "showPassiveBonusIconWeapon", true )
@@ -1662,7 +1621,6 @@ void function InitWeaponRuiTracks( var rui, entity player, entity weapon )
 		RuiSetBool( rui, "showPassiveBonusIconWeapon", false )
 		RuiSetImage( rui, "passiveBonusIconWeapon", $"" )
 	}
-      
 
 	if ( weapon.HasMod( GUNNER_MOD_NAME ) )
 	{

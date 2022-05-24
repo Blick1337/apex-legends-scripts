@@ -78,7 +78,6 @@ const int CANISTER_DISTANCE_FRAME_TO_LOOT_SQR = 4900
  
 	       	             
 	       	             
-	       	                     
 	       	       
 	       	           
 	       	       
@@ -241,8 +240,6 @@ void function EntitiesDidLoad()
 			                                                       
 			                                                             
 			                                                              
-
-			                                                                                            
 
 			                                                         
 			                                                                        
@@ -457,9 +454,6 @@ void function CanisterSwitch_TrapActivate_Thread( entity player, bool isInverted
 
 					                                                                                                                                                          
 					                                                                                                    
-
-					                                            
-						                                    
 				 
 			 
 		 
@@ -530,7 +524,6 @@ void function CanisterSwitch_TrapExpired_Thread()
 
 					                                                                                                                      
 					                                                                                                   
-					                                                                                            
 				 
 			 
 		 
@@ -610,9 +603,6 @@ void function CanisterSwitch_TrapActivate_Inverted_Thread( entity player )
 
 				                                                                                                                                                          
 				                                                                                                    
-
-				                                            
-					                                    
 			 
 		 
 
@@ -671,7 +661,6 @@ void function CanisterSwitch_TrapExpired_Inverted_Thread()
 
 					                                                                                                                      
 					                                                                                                   
-					                                                                                            
 				 
 			 
 		 
@@ -807,9 +796,9 @@ void function CanisterSwitches_Enabled()
 		    
                                
 		 
-			                                                                      
-
-			                                                                                
+			                                                                        
+			                                                                                  
+			                                                                          
 		 
 
 	                            
@@ -893,9 +882,6 @@ void function CanisterSwitches_Enabled()
 	                                
 	                                                                                                                    
 
-	                                            
-		                                    
-
 	                                                                                           
 	                                      
 	                                                   
@@ -962,12 +948,6 @@ void function CanisterSwitches_Enabled()
 	 
  
 
-                                                                                 
- 
-	                                                                                                                                                                                                                              
-
-	                    
- 
                                                            
  
 	                                                

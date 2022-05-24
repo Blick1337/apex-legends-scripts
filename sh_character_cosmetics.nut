@@ -54,6 +54,10 @@ global function CharacterSkin_WaitForAndApplyFromLoadout
 global function CharacterSkin_CheckBloodhoundRavenSkin
 #endif
 
+#if CLIENT || UI
+global function CharacterSkin_ShouldHideIfLocked
+#endif
+
 #if DEV && CLIENT
 global function DEV_TestCharacterSkinData
 #endif
@@ -173,8 +177,10 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		entry.isSlotLocked = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.isItemFlavorUnlocked = (bool function( EHI playerEHI, ItemFlavor execution, bool shouldIgnoreOtherSlots ) {
-			return ( !GetGlobalSettingsBool( ItemFlavor_GetAsset( execution ) , "isNotEquippable" ) )
+		entry.isItemFlavorUnlocked = (bool function( EHI playerEHI, ItemFlavor execution, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false ) {
+			if( GetGlobalSettingsBool( ItemFlavor_GetAsset( execution ) , "isNotEquippable" ) )
+				return false
+			return IsItemFlavorGRXUnlockedForLoadoutSlot( playerEHI, execution, shouldIgnoreGRX, shouldIgnoreOtherSlots )
 		})
 		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
 		entry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
@@ -243,11 +249,6 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 
 	                 
 	RegisterSkydiveEmotesForCharacter( characterClass )
-
-                 
-             
-                                                
-       
 
                      
 		                         
@@ -782,6 +783,15 @@ ItemFlavor function CharacterIntroQuip_GetCharacterFlavor( ItemFlavor flavor )
 
 	return GetItemFlavorByAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "parentItemFlavor" ) )
 }
+
+#if CLIENT || UI
+bool function CharacterSkin_ShouldHideIfLocked( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.character_skin )
+
+	return GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "shouldHideIfLocked" )
+}
+#endif
 
 #if CLIENT
 void function CharacterSkin_CheckBloodhoundRavenSkin ( entity child, entity model )

@@ -404,14 +404,14 @@ void function Init_CharacterClassToLoadoutNameTable()
 #endif          
 
 #if SERVER
-                                                                                    
+                                                                      
  
 	                                                                                     
 
 	                                                                                                             
 		      
 
-	                                                                                                                            
+	                                                                         
 	 
 		                                                                     
 	 

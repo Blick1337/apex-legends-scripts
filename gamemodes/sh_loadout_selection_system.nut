@@ -1,4 +1,3 @@
-                                
                                                                                                                              
 #if CLIENT || SERVER
 global function LoadoutSelection_Init
@@ -45,21 +44,15 @@ global function LoadoutSelection_GetSelectedLoadoutSlotIndex_UI
 
 global function IsUsingLoadoutSelectionSystem
 global function LoadoutSelection_GetWeaponCountByLoadoutIndex
-
-                    
-                                                                                                                                       
 global function LoadoutSelection_AreChallengeLoadoutsEnabled
 global function LoadoutSelection_AreFeaturedLoadoutsEnabled
 
                                                                                                                                                                                                 
+global const int LOADOUTSELECTION_MAX_LOADOUT_COUNT_REGULAR = 6
 global const int LOADOUTSELECTION_MAX_LOADOUT_COUNT_FEATURED = 1
 global const int LOADOUTSELECTION_MAX_LOADOUT_COUNT_CHALLENGE = 1
                                                                                                                    
 global const int LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS = 8
-     
-                                                             
-                          
-global const int LOADOUTSELECTION_MAX_LOADOUT_COUNT = 6
 global const int LOADOUTSELECTION_MAX_WEAPONS_PER_LOADOUT = 2
 global const int LOADOUTSELECTION_MAX_CONSUMABLES_PER_LOADOUT = 5
 global const int LOADOUTSELECTION_MAX_SCOPE_INDEX = 9
@@ -82,8 +75,8 @@ const asset LOADOUTSELECTION_ROTATIONS_DATATABLE = $"datatable/loadoutselection_
 const asset LOADOUTSELECTION_LOADOUTS_DATATABLE = $"datatable/loadoutselection_selectable_loadouts.rpak"
 const asset LOADOUTSELECTION_WEAPON_DATA_DATATABLE = $"datatable/loadoutselection_weapon_data.rpak"
                       
-const asset WINTEREXPRESS_ROTATIONS_DATATABLE = $"datatable/gamemode_winterexpress_loadout_rotations.rpak"
-const asset WINTEREXPRESS_LOADOUTS_DATATABLE = $"datatable/gamemode_winterexpress_selectable_loadouts.rpak"
+                                                                                                          
+                                                                                                           
       
 
 
@@ -113,10 +106,9 @@ global enum eLoadoutSelectionSlotType
 {
 	INVALID,
 	REGULAR,
-                     
-		FEATURED,
-		CHALLENGE,
-                           
+	FEATURED,
+	CHALLENGE,
+
 	_count
 }
 
@@ -240,7 +232,6 @@ bool function LoadoutSelection_ShouldAvoidDuplicateWeaponsInLoadoutRotation()
 	return GetCurrentPlaylistVarBool( "loadoutselection_avoid_duplicate_weapons_in_loadouts", false )
 }
 
-                    
 bool function LoadoutSelection_AreChallengeLoadoutsEnabled()
 {
 	return GetCurrentPlaylistVarBool( "loadoutselection_enable_challenge_loadouts", false )
@@ -250,7 +241,7 @@ bool function LoadoutSelection_AreFeaturedLoadoutsEnabled()
 {
 	return GetCurrentPlaylistVarBool( "loadoutselection_enable_featured_loadouts", false )
 }
-                          
+
 
 #if CLIENT || SERVER
                                                                                        
@@ -261,11 +252,11 @@ void function LoadoutSelection_SetDatatableAssets()
 	                                                                                                                 
 
                        
-		if ( GetCurrentPlaylistVarBool( "is_winter_express_game", false ) )
-		{
-			file.rotationsDatatable = WINTEREXPRESS_ROTATIONS_DATATABLE
-			file.loadoutsDatatable = WINTEREXPRESS_LOADOUTS_DATATABLE
-		}
+                                      
+   
+                                                              
+                                                            
+   
        
 
 }
@@ -739,7 +730,7 @@ array<string> function LoadoutSelection_GetAvailableWeaponUpgradesForWeaponRef( 
 	                                                                                                         
 	                                                                                                   
 	 
-		                                                                                                                       
+		                                                                                                                  
 
 		                                      
 		 
@@ -846,7 +837,6 @@ LoadoutSelectionLoadoutContents function LoadoutSelection_GenerateLoadoutByLoado
 {
 	Assert( loadoutIndex in file.loadoutSlotToCategoryDataTable, "Running LoadoutSelection_GenerateLoadoutByLoadoutSlot and " + loadoutIndex + " is not a key for the file.loadoutSlotToCategoryDataTable table" )
 	LoadoutSelectionCategory loadoutCategory = file.loadoutSlotToCategoryDataTable[ loadoutIndex ]
-	int loadoutRotation = loadoutCategory.rotationStyle
 	LoadoutSelectionLoadoutContents loadout
 	string activeLoadoutName
 	#if SERVER
@@ -1419,11 +1409,11 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
 
 	                    
 	                                               
-                     
-		                                                          
-		                            
-		                             
-                           
+
+	                                                          
+	                            
+	                             
+
 	                                                     
 	 
 		                                                                                                                       
@@ -1438,31 +1428,29 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
 			                                                                                
 
 		                                                                                                                                                                                                                                                              
-                      
-			                                                                            
-			 
-				              
-				                      
-			 
 
-			                                                                             
-			 
-				              
-				                       
-			 
+		                                                                            
+		 
+			              
+			                      
+		 
 
-                            
+		                                                                             
+		 
+			              
+			                       
+		 
+
 		              
 	 
 
 	                                                                                                                         
-                     
-		                                                    
-			                                                                                                                                  
 
-		                                                     
-			                                                                                                                                    
-                           
+	                                                    
+		                                                                                                                                  
+
+	                                                     
+		                                                                                                                                    
 
 	                                                                                                                                                                   
 
@@ -2300,9 +2288,10 @@ void function UICallback_LoadoutSelection_OpticSelectDialogueClose()
 	 
 
 	                                                                 
+	                                            
 	                                                                                                              
 	                                         
-	                                                                                              
+	                                                                                                        
 	                                                                
 	                         
 
@@ -2417,4 +2406,3 @@ bool function LoadoutSelection_IsRefValidWeapon( string weaponRef )
 	LootData lootData = SURVIVAL_Loot_GetLootDataByRef( weaponRef )
 	return lootData.lootType == eLootType.MAINWEAPON
 }
-                                      

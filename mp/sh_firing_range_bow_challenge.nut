@@ -1,4 +1,3 @@
-              
 #if SERVER || CLIENT
 global function ShFRC_Bow_Init
 #endif
@@ -14,8 +13,6 @@ const vector TRAVEL_MID_POINT = <TARGET_ORIGIN.x, TARGET_ORIGIN.y + ( 2 * TRAVEL
 const vector TRAVEL_3Q_POINT = <TARGET_ORIGIN.x, TARGET_ORIGIN.y + ( 3 * TRAVEL_LENGTH_1Q ), TARGET_ORIGIN.z>
 
 const array< vector > MOVE_TARGETS =[ TARGET_ORIGIN , TRAVEL_1Q_POINT, TRAVEL_MID_POINT , TRAVEL_3Q_POINT, TARGET_END]
-
-const asset PAPER_MODEL = $"mdl/props/paper_01/paper_01.rmdl"
 
 struct NextMoveIndexData
 {
@@ -57,13 +54,10 @@ void function ShFRC_Bow_Init()
 	data.challengeTime = 60.0
 	data.challengeType = eFiringRangeChallengeType.FR_CHALLENGE_TYPE_BEST_DAMAGE
 	data.statTemplate = CAREER_STATS.s12e04_challenge_2
-	data.storyChallengeChapter = 2
-	data.storyChallengeItemFlav = "challenge_s12e04_group2challenge0"
 	data.challengeName = "#FRC_CHALLENGE_2_NAME"
 	data.challengeInteractStr = "#FRC_CHALLENGE_2_INTERACT"
 	data.challengeStartHint = "#FR_CHALLENGE_TARGET_HINT"
 	data.rewardTracker = $"settings/itemflav/gcard_tracker/frc_challenge2_score.rpak"
-	data.storyRewardTracker = $"settings/itemflav/gcard_tracker/s12e04_challenge2_score.rpak"
 
 	data.borderName = "frc_challenge2_border"
 	data.borderType = 0
@@ -76,8 +70,6 @@ void function ShFRC_Bow_Init()
 		                                        
 		                                        
 		                                          
-		                                      
-		                            
 	#endif
 
 	FRC_RegisterChallenge( "mp_weapon_bow_challenge", data )
@@ -100,8 +92,6 @@ void function ShFRC_Bow_Init()
 	 
 
 	                                      
-
-	                                                                          
  
 
                                          
@@ -252,11 +242,6 @@ void function ShFRC_Bow_Init()
 
 	                                                                                    
 
-
-	                                          
-		                                         
-
-
 	         
 	                                
  
@@ -385,125 +370,4 @@ void function ShFRC_Bow_Init()
 		                           
 	 
  
-
-                                     
- 
-	                                               
-	                                                 
-	                                               
-	                                                 
-	                                               
-	                                                
- 
-
-                                                                              
-
-                                 
- 
-	                                                 
-	                                                 
-	                                                
- 
-
-                                    
- 
-	                                                 
-	                                                 
-	                                                
- 
-
-                                                       
- 
-	                          
-		      
-
-	                                
-	                                       
-	       
-		                                       
-	      
-
-	         
-
-	                                                                                  
-	                                               
-	                                                   
-	                               
-
-	            
-		                       
-		 
-			                         
-			 
-				                                                                                   
-				                                              
-				                                                  
-				                              
-			 
-		 
-	 
-
-	                                              
-	 
-		                                                                                     
-
-		             
-			                                                             
-
-		             
-			                         
-		    
-			                 
-	 
- 
-
-                                                          
- 
-	                                      
-	 
-		                          
-			      
-
-		                                
-
-		                                 
-
-		                                           
-			      
-
-
-		               
-		 
-			        
-
-			                                                                     
-		 
-		    
-		 
-			                        
-			                                               
-			                                                   
-			                                                                                    
-			                               
-
-			                                   
-			 
-				                                                                              
-				                 
-			 
-
-			         
-			                                                                  
-			                                       
-
-			         
-
-			                                                                             
-		 
-	   
- 
-
 #endif
-
-
-      

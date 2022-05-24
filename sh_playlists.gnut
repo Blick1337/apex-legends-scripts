@@ -75,8 +75,9 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 	panel_canyon_land_mu2 = $"rui/menu/gamemode/playlist_bg_kc_mu2",
 	panel_canyon_land_mu3 = $"rui/menu/gamemode/playlist_bg_kc_mu3",
 	panel_canyon_land_night = $"rui/menu/gamemode/playlist_bg_kc_night",
-	shotguns_and_snipers = $"rui/menu/gamemode/shotguns_and_snipers",
+	shotguns_and_snipers = $"rui/menu/gamemode/playlist_bg_shotguns_and_snipers",
 	panel_storm_point = $"rui/menu/gamemode/playlist_bg_storm_point",
+	panel_storm_point_mu1 = $"rui/menu/gamemode/playlist_bg_storm_point_mu1",
 
 	panel_worlds_edge_mu2_airdrop = $"rui/menu/gamemode/playlist_bg_worldsedge_airdrop",
 	panel_olympus_airdrop = $"rui/menu/gamemode/playlist_bg_olympus_airdrop",
@@ -91,7 +92,7 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 		shadow_royale = $"rui/menu/gamemode/playlist_bg_shadow_royale",
        
                        
-		winter_express = $"rui/menu/gamemode/winter_express",
+                                                       
        
                            
 		tournament = $"rui/menu/gamemode/tournament",
@@ -101,6 +102,10 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
                                                                
                                                      
                                                        
+                                                               
+                                                                         
+                                                                               
+                                                                                 
        
                                
                                                      
@@ -142,9 +147,6 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 		control_hammond_labs = $"rui/menu/gamemode/playlist_bg_control_hammond_labs",
 		control_caustic_tt = $"rui/menu/gamemode/playlist_bg_control_caustic_tt",
        
-               
-		s12e04_finale = $"rui/menu/gamemode/s12e04_finale",
-       
 }
 
 global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
@@ -175,8 +177,9 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 	panel_canyon_land_mu2 = $"rui/menu/gamemode/playlist_bg_kc_mu2",
 	panel_canyon_land_mu3 = $"rui/menu/gamemode/playlist_bg_kc_mu3",
 	panel_canyon_land_night = $"rui/menu/gamemode/playlist_bg_kc_night",
-	shotguns_and_snipers = $"rui/menu/gamemode/shotguns_and_snipers",
+	shotguns_and_snipers = $"rui/menu/gamemode/playlist_bg_sq_shotguns_and_snipers",
 	panel_storm_point = $"rui/menu/gamemode/playlist_bg_storm_point",
+	panel_storm_point_mu1 = $"rui/menu/gamemode/playlist_bg_storm_point_mu1",
 
 	panel_worlds_edge_mu2_airdrop = $"rui/menu/gamemode/playlist_bg_worldsedge_airdrop",
 	panel_olympus_airdrop = $"rui/menu/gamemode/playlist_bg_olympus_airdrop",
@@ -191,7 +194,7 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 		shadow_royale = $"rui/menu/gamemode/playlist_bg_sq_shadow_royale",
        
                        
-		winter_express = $"rui/menu/gamemode/winter_express",
+                                                       
        
                            
 		tournament = $"rui/menu/gamemode/tournament",
@@ -201,6 +204,10 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
                                                                
                                                      
                                                        
+                                                                  
+                                                                            
+                                                                                  
+                                                                                    
        
                                
                                                      
@@ -243,10 +250,6 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 		control_hammond_labs = $"rui/menu/gamemode/playlist_bg_sq_control_hammond_labs",
 		control_caustic_tt = $"rui/menu/gamemode/playlist_bg_sq_control_caustic_tt",
        
-
-               
-		s12e04_finale = $"rui/menu/gamemode/s12e04_finale",
-       
 }
 
 global const table<string, asset> GAMEMODE_MINI_ICON_MAP = {
@@ -277,7 +280,7 @@ const table<string, asset> GAMEMODE_BINK_MAP = {
 		shadow_royale = $"media/gamemodes/shadow_squad.bik",
        
                        
-		winter_express = $"media/gamemodes/winter_express.bik",
+                                                         
        
                            
 		tournament = $"media/gamemodes/play_apex.bik",
@@ -820,7 +823,7 @@ const table<string, asset> GAMEMODE_EMBLEM_MAP = {
 
 	duos = $"rui/menu/gamemode_emblem/duos",
                        
-		winter_express = $"rui/menu/gamemode_emblem/winter_express",
+                                                              
        
                            
                                                                              

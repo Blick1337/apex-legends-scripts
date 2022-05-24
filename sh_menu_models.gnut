@@ -222,7 +222,8 @@ struct
 		MenuModelData questGoalModelData
 		MenuModelData storeInspectModelData
                 
-                                
+                                       
+                                    
                       
 
 		int baseFXHandle = -1
@@ -305,7 +306,8 @@ global function UIToClient_PreviewCharacterSkinFromCharacterSkinPanel
 global function UIToClient_PreviewWeaponSkin
 global function UIToClient_PreviewStoreItem
                 
-                                         
+                                             
+                                                
                       
 global function UIToClient_ResetWeaponRotation
 global function UIToClient_PartyMemberGetFocus
@@ -1109,8 +1111,8 @@ void function InitPresentationData()
 
                 
   
-                                                                       
-                                      
+                                                                               
+                                             
                                 
                         
                         
@@ -1119,13 +1121,33 @@ void function InitPresentationData()
                                       
                         
                       
-                          
-                          
-                            
+                         
+                         
+                           
                 
+                                                  
+                                              
+                                                                         
+  
+
+  
+                                                                            
+                                          
+                                
+                        
+                        
+             
                                           
                                       
-                                                                            
+                        
+                      
+                         
+                         
+                           
+                
+                                               
+                                           
+                                                                         
   
                       
 }
@@ -1490,32 +1512,60 @@ void function StartPresentation_CLUBS_LANDING()
 }
 
                 
-                                         
+                                                 
  
                                                                                           
-                                                                                                                                           
+                                                                                                                                
 
-                                                                 
+                                                                        
                               
                     
 
-                                                                     
+                                                                            
                                
                      
  
 
-                                       
+                                               
  
-                                                                 
+                                                                        
                               
                     
 
-                                                                     
+                                                                            
                                
                      
 
                                                                                                 
-                                                                                                                            
+                                                                                                                 
+ 
+
+                                              
+ 
+                                                                                          
+                                                                                                                                
+
+                                                                     
+                              
+                    
+
+                                                                         
+                               
+                     
+ 
+
+                                            
+ 
+                                                                     
+                              
+                    
+
+                                                                         
+                               
+                     
+
+                                                                                                
+                                                                                                                 
  
                       
 
@@ -1732,16 +1782,28 @@ void function InitMenuEntities()
 	ModelData_CreateMover( file.questGoalModelData )
 
                 
-                                                                                   
-                                                                     
-                                                               
-                                                                              
-                                               
+                                                                                                       
+                                                                                        
+                                                                                                                           
+                                 
+                                   
+                                 
+                                                                          
+                                                                                        
+                                                                                     
+                                                      
+                                                                                                                              
+
+                                                                                     
+                                                                  
+                                                                                  
+                                                   
                       
 
 	                                                            
 	                                                              
-	                                                               
+	                                                                      
+	                                                                   
 
 	InitBattlePassLights()
 	InitLightingConfigs()
@@ -1904,21 +1966,54 @@ void function UIToClient_PreviewCharacterEmote( int index, int overrideCharacter
 }
 
                 
-                                                                                                  
+                                                                               
+ 
+                                                               
+                                                                    
+
+                                         
+  
+                   
+        
+  
+
+                                       
+                                       
+                                          
+                                 
+                                           
+                  
+
+                                            
+  
+                                                                        
+                              
+                             
+                                                                                                             
+  
+ 
+
+                                                                                                         
  
                                                                
 
-                                                                
+                                                                       
                                                                
                        
                                   
-                             
                                                            
                         
 
-                                                                                           
-                                             
-                                      
+                                                        
+  
+                                 
+                                              
+  
+     
+  
+                                
+                                                                                  
+  
 
                                                                                              
 

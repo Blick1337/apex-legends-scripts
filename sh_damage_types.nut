@@ -38,9 +38,7 @@ global enum eDamageSourceId
 	damagedef_titan_hotdrop
 	damagedef_reaper_fall
 	damagedef_trip_wire
-              
 	damagedef_wrecking_ball
-      
 	damagedef_reaper_groundslam
 	damagedef_reaper_nuke
 	damagedef_frag_drone_explode
@@ -66,6 +64,11 @@ global enum eDamageSourceId
                                                
        
 	damagedef_defensive_bombardment
+
+                    
+                                     
+       
+
                  
                         
        
@@ -133,9 +136,7 @@ global enum eDamageSourceId
                     
                             
        
-                   
-		mp_weapon_bow
-       
+	mp_weapon_bow
                          
                      
        
@@ -175,10 +176,8 @@ global enum eDamageSourceId
 	melee_wattson_gadget
 	mp_weapon_wattson_gadget_primary
 
-                     
-		melee_crypto_heirloom
-		mp_weapon_crypto_heirloom
-       
+	melee_crypto_heirloom
+	mp_weapon_crypto_heirloom
 	
                      
                       
@@ -216,11 +215,9 @@ global enum eDamageSourceId
                  
                            
                            
-               
-		mp_weapon_concussive_breach
-		mp_weapon_riot_shield_impact
-		mp_weapon_wrecking_ball_puck
-                         
+	mp_weapon_concussive_breach
+	mp_weapon_riot_shield_impact
+	mp_weapon_wrecking_ball_puck
                           
                         
                                     
@@ -296,14 +293,15 @@ global enum eDamageSourceId
 	charge_ball
 	grunt_melee
 	spectre_melee
+	spectre_ranged_hemlock
 	prowler_melee
                           
 		spider_melee
 		spider_ranged
        
                                  
-		nessie_hug
-		nessie_kiss
+            
+             
        
 	super_spectre_melee
 	titan_execution
@@ -421,9 +419,9 @@ global enum eDamageSourceId
                         
        
                   
-                         
-                         
-                        
+		mp_ability_shield_throw
+		mp_ability_armored_leap
+		mp_ability_castle_wall
        
                 
                               
@@ -448,23 +446,16 @@ global enum eDamageSourceId
                                    
        
 		mp_ability_void_ring
-                    
 		mp_weapon_3030
-       
-                          
 		mp_weapon_dragon_lmg
 		mp_weapon_dragon_lmg_thermite
-       
                                 
                             
        
                             
                         
-                                
        
-                       
 		mp_weapon_car
-       
                                
                            
        
@@ -481,6 +472,11 @@ global enum eDamageSourceId
 
                         
                               
+       
+
+                    
+                                          
+                                             
        
 
 	_count
@@ -556,12 +552,16 @@ void function DamageTypes_Init()
 			[ eDamageSourceId.spider_ranged ] = "#DEATH_SPIDER_RANGED",
         
                                   
-			[ eDamageSourceId.nessie_hug ] = "#BABY_NESSIE_TITLE",
-			[ eDamageSourceId.nessie_kiss ] = "#BABY_NESSIE_TITLE",
+                                                         
+                                                          
         
 		[ eDamageSourceId.super_spectre_melee ] = "#DEATH_SUPER_SPECTRE",
 		[ eDamageSourceId.grunt_melee ] = "#DEATH_GRUNT_MELEE",
-		[ eDamageSourceId.spectre_melee ] = "#DEATH_SPECTRE_MELEE",
+                     
+			[ eDamageSourceId.spectre_melee ] = "#DEATH_SPECTRE_MELEE",
+			[ eDamageSourceId.spectre_ranged_hemlock ] = "#DEATH_SPECTRE_RANGED_HEMLOCK",
+			[ eDamageSourceId.npc_weapon_thermite_grenade ] = "#DEATH_SPECTRE_THERMITE",
+        
 		[ eDamageSourceId.eviscerate ] = "#DEATH_EVISCERATE",
 		[ eDamageSourceId.wall_smash ] = "#DEATH_WALL_SMASH",
 		[ eDamageSourceId.ai_turret ] = "#DEATH_TURRET",
@@ -665,11 +665,8 @@ void function DamageTypes_Init()
 		[ eDamageSourceId.melee_wattson_gadget ] = "#DEATH_MELEE_WATTSON_GADGET",
 		[ eDamageSourceId.mp_weapon_wattson_gadget_primary ] = "#DEATH_MELEE_WATTSON_GADGET",
 
-		
-                      
-			[ eDamageSourceId.melee_crypto_heirloom ] = "#DEATH_MELEE_CRYPTO_HEIRLOOM",
-			[ eDamageSourceId.mp_weapon_crypto_heirloom ] = "#DEATH_MELEE_CRYPTO_HEIRLOOM",
-        
+		[ eDamageSourceId.melee_crypto_heirloom ] = "#DEATH_MELEE_CRYPTO_HEIRLOOM",
+		[ eDamageSourceId.mp_weapon_crypto_heirloom ] = "#DEATH_MELEE_CRYPTO_HEIRLOOM",
 		
                       
                                                                             
@@ -683,6 +680,11 @@ void function DamageTypes_Init()
 		[ eDamageSourceId.mp_weapon_cluster_bomb ] = "#WPN_CLUSTER_BOMB",
 		[ eDamageSourceId.mp_weapon_mortar_ring ] = "#WPN_MORTAR_RING",
 
+                   
+			[ eDamageSourceId.mp_ability_armored_leap ] = "#WPN_ARMORED_LEAP",
+			[ eDamageSourceId.mp_ability_castle_wall ] = "#WPN_ARMORED_LEAP",
+			[ eDamageSourceId.mp_ability_shield_throw ] = "#WPN_SHIELD_THROW",
+        
                   
                                                                     
                                                               
@@ -714,9 +716,7 @@ void function DamageTypes_Init()
 
 			[ eDamageSourceId.mp_ability_sonic_blast ] = "#WPN_SONIC_BLAST",
 
-                
-			[ eDamageSourceId.mp_weapon_concussive_breach ] = "#WPN_RIOT_DRILL",
-        
+		[ eDamageSourceId.mp_weapon_concussive_breach ] = "#WPN_RIOT_DRILL",
 
 		[ eDamageSourceId.mp_weapon_arc_bolt ] = "#WPN_ARC_BOLT",
 

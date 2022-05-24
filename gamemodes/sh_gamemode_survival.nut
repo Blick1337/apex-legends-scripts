@@ -316,6 +316,9 @@ bool function Survival_PlayerCanDrop( entity player )
 	if ( player.IsTraversing() || player.IsWallHanging() || player.IsWallRunning() )
 		return false
 	
+	if ( player.p.isInExtendedUse )
+		return false
+	
 	if ( IsPlayerInCryptoDroneCameraView( player ) )
 		return false
 
@@ -718,8 +721,8 @@ bool function CanWeaponInspect( entity player, int activity )
        
 
                        
-		                                    
-			                                             
+                                      
+                                                
        
 
                          

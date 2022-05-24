@@ -273,12 +273,8 @@ vector function GetChatTitleColorForPlayer( entity player )
 	if ( localPlayer.GetTeam() == player.GetTeam() )
 		return OBITUARY_COLOR_FRIENDLY
 
-                     
-		if ( IsUsingProximityAllianceMembers() && IsValid( localPlayer ) && IsValid( player ) && IsFriendlyTeam( localPlayer.GetTeam(), player.GetTeam() ) )
-		{
-			return TEAM_COLOR_FRIENDLY
-		}
-                           
+	if ( IsUsingProximityAllianceMembers() && IsValid( localPlayer ) && IsValid( player ) && IsFriendlyTeam( localPlayer.GetTeam(), player.GetTeam() ) )
+		return TEAM_COLOR_FRIENDLY
 
 	return OBITUARY_COLOR_ENEMY
 }
@@ -418,6 +414,10 @@ array<string> function GetSubjectNamesForCommsAction( int commsAction, entity su
 		{
 			return [Localize( "#NPC_SPIDER_UI_TITLE" )]
 		}
+		else if ( commsAction == eCommsAction.PING_ENEMY_NPC_SPECTRE )
+		{
+			return [Localize( "#NPC_SPECTRE" )]
+		}
 		else if ( commsAction == eCommsAction.PING_NPC_MARVIN_LOOT || commsAction == eCommsAction.PING_NPC_MARVIN_LOOT_DISABLED || commsAction == eCommsAction.PING_NPC_MARVIN_STORY )
 		{
 			return [Localize( "#NPC_MARVIN_UI_TITLE" )]
@@ -477,11 +477,13 @@ array<string> function GetSubjectNamesForCommsAction( int commsAction, entity su
 			{
 				if ( IsValid( subjectEnt ) && IsValid( subjectEnt.GetOwner() ) && !subjectEnt.GetOwner().IsPlayer() )
 				{
-					return [ Localize( subjectEnt.GetOwner().GetWaypointString( CONTROL_STRING_OBJ_INDEX_NAME ) ) ]
+					int objectiveID = subjectEnt.GetOwner().GetWaypointInt( INT_OBJECTIVE_ID )
+					return [ Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID ) ]
 				}
 				else if ( IsValid( subjectEnt ) && IsValid( subjectEnt.GetOwner() ) && subjectEnt.GetOwner().IsPlayer() )
 				{
-					return [ Localize( subjectEnt.GetWaypointString( CONTROL_STRING_OBJ_INDEX_NAME ) ) ]
+					int objectiveID = subjectEnt.GetWaypointInt( INT_OBJECTIVE_ID )
+					return [ Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID ) ]
 				}
 			}
 		}
@@ -518,7 +520,7 @@ vector function GetSubjectColorForCommsAction( entity subjectEnt, string itemRef
 		case PLAYER_WAYPOINT_CLASSNAME:
 			if ( Control_IsModeEnabled() && subjectEnt.GetWaypointType() == eWaypoint.CONTROL_OBJECTIVE )
 			{
-				if ( subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == -1 )
+				if ( subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == ALLIANCE_NONE )
 				{
 					return CONTROL_OBJECTIVE_RED
 				}
@@ -568,7 +570,7 @@ vector function GetSecondarySubjectColorForCommsAction( entity subjectEnt, entit
 		case PLAYER_WAYPOINT_CLASSNAME:
 			if ( Control_IsModeEnabled() && subjectEnt.GetWaypointType() == eWaypoint.CONTROL_OBJECTIVE )
 			{
-				if ( subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == -1 )
+				if ( subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == ALLIANCE_NONE )
 				{
 					return GetKeyColor( COLORID_TEXT_LOOT_TIER0 )
 				}
@@ -914,27 +916,25 @@ void function HandleBroadcastCommsAction( entity player, int commsAction, entity
 		}
        
 
-                     
-		                                                                                                                                                                                   
-		if ( IsUsingProximityAllianceMembers() )
+	                                                                                                                                                                                   
+	if ( IsUsingProximityAllianceMembers() )
+	{
+		if ( !IsValid( player ) || !IsValid( GetLocalViewPlayer() ) )
+			return
+
+		if ( player.GetTeam() != GetLocalViewPlayer().GetTeam() )
 		{
-			if ( !IsValid( player ) || !IsValid( GetLocalViewPlayer() ) )
-				return
+			                                                                                                                                              
+			shouldUseTeamCommsBehaviour = false
 
-			if ( player.GetTeam() != GetLocalViewPlayer().GetTeam() )
+			                                                                                                                                                               
+			if ( !shouldUseAllianceCommsBehaviour )
 			{
-				                                                                                                                                              
-				shouldUseTeamCommsBehaviour = false
-
-				                                                                                                                                                               
-				if ( !shouldUseAllianceCommsBehaviour )
-				{
-					if ( GetAllAllianceMembersInProximity( player.GetTeam(), player.GetOrigin() ).contains( GetLocalViewPlayer() ) )
-						shouldUseAllianceCommsBehaviour = true
-				}
+				if ( GetAllAllianceMembersInProximity( player.GetTeam(), player.GetOrigin() ).contains( GetLocalViewPlayer() ) )
+					shouldUseAllianceCommsBehaviour = true
 			}
 		}
-                           
+	}
 
 	if ( !shouldUseTeamCommsBehaviour && !shouldUseAllianceCommsBehaviour )
 		return
@@ -1568,19 +1568,17 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 
 	                                                                              
 
-                     
-		                                                                                                                                                                                
-		                                        
+	                                                                                                                                                                                
+	                                        
+	 
+		                                
 		 
-			                                
+			                                                                                                                       
 			 
-				                                                                                                                       
-				 
-					                                 
-				 
+				                                 
 			 
 		 
-                           
+	 
 
                          
 		                              
@@ -1699,13 +1697,13 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 		                                           
        
 			                                                       
-                   
+
 		                                             
                           
 		                                           
        
 			                                                       
-       
+
                              
 		                                                  
 		                                               

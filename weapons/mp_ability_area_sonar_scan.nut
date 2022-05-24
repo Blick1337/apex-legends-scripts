@@ -75,6 +75,10 @@ var function OnWeaponPrimaryAttackAnimEvent_ability_area_sonar_scan( entity weap
 	                                              
 	entity weaponOwner = weapon.GetWeaponOwner()
 	Assert ( weaponOwner.IsPlayer() )
+	
+#if CLIENT
+	EmitSoundOnPS5Controller( "/host/SonarScan_ButtonPress_1p_2ch_v1_01.wav", "/host/wpn_light_vib_single.wav" )
+#endif
 
 	#if SERVER
 		                                                                                  
@@ -162,13 +166,19 @@ float function AreaSonarScan_GetConeFOV()
 		    
 			                           
 
-		                                             
-
 		                                       
 		 
 			                                               
 			                                                  
 		 
+
+		                                             
+		 
+			                             
+		 
+
+		                                             
+
 
 		                                                    
 
@@ -183,6 +193,7 @@ float function AreaSonarScan_GetConeFOV()
 		 
 			                                                   
 		 
+
 
        
 		                              
@@ -269,6 +280,15 @@ float function AreaSonarScan_GetConeFOV()
 		      
 	 
 
+	                                                                      
+	                                                        
+	   
+	  	                               
+	  	 
+	  		                                                            
+	  	 
+	   
+
 
 
 	            
@@ -285,18 +305,27 @@ float function AreaSonarScan_GetConeFOV()
 
 				                                    
 				 
+					                                                                    
+					                                                        
+					   
+					  	                               
+					  	 
+					  		                                                            
+					  	 
+					   
+
 					                                                                   
 					 
-						                                          
+						                               
 						                                  
 						                                                                                                                         
 					 
+					                                                     
 				 
 			 
 			                          
 				                 
 
-			                           
 		 
 	 
 

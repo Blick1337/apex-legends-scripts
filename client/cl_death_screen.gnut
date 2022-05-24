@@ -453,7 +453,7 @@ bool function ShouldSwitchToRecap()
 }
 
 
-void function DeathScreen_SpectatorTargetCountChanged( entity player, int oldValue, int newValue )
+void function DeathScreen_SpectatorTargetCountChanged( entity player, int newValue )
 {
 	if ( player != GetLocalClientPlayer() )
 		return
@@ -463,7 +463,7 @@ void function DeathScreen_SpectatorTargetCountChanged( entity player, int oldVal
 }
 
 
-void function DeathScreen_RespawnStatusChanged( entity player, int old, int new )
+void function DeathScreen_RespawnStatusChanged( entity player, int new )
 {
 	entity clientPlayer = GetLocalClientPlayer()
 
@@ -746,8 +746,8 @@ void function DeathScreenUpdateHeader( var headerElem )
        
 
                        
-		if ( WinterExpress_IsModeEnabled() )
-			RuiSetBool( headerRui, "hideRespawnTimer", true )
+                                      
+                                                    
        
 
 	if ( file.deathScreenBannerOverrideFunc != null )
@@ -2351,12 +2351,19 @@ asset function GetGladCardReplacementImageForDamageSourceID( int damageSourceID 
                                
 
                                 
-		case eDamageSourceId.nessie_hug:
-			return $"rui/death_recap/icon_deathrecap_specialcase_spider_melee"
+                                  
+                                                                     
 
-		case eDamageSourceId.nessie_kiss:
-			return $"rui/death_recap/icon_deathrecap_specialcase_spider_ranged"
+                                   
+                                                                      
                                
+                   
+		case eDamageSourceId.spectre_melee:
+		case eDamageSourceId.spectre_ranged_hemlock:
+		case eDamageSourceId.npc_weapon_thermite_grenade:
+			return $"rui/death_recap/icon_deathrecap_specialcase_spectre"
+                        
+
 	}
 
 	#if DEV

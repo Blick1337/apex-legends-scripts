@@ -32,11 +32,9 @@ global function ClientCodeCallback_SpectatorTargetChanged
 global function ClientCodeCallback_SpectatorPlayerTagModeChanged
 global function ClientCodeCallback_SpectatorVisibleEnemiesChanged
 global function ClientCodeCallback_SpectatorUiStateChanged
-global function ClientCodeCallback_CustomMatchDataChanged
 global function ServerCallback_YouRespawned
 global function ServerCallback_YouDied
 global function ClientCodeCallback_SaveResumed
-global function ClientCodeCallback_SmokeTestRunning
 global function ClientCodeCallback_OnSelectedWeaponChanged
 global function ClientCodeCallback_OnLinkedButtonPairPressed
 global function AddCallback_OnPlayerChangedTeam
@@ -542,13 +540,6 @@ void function ClientCodeCallback_SpectatorUiStateChanged( int newState )
 		callbackFunc( newState )
 }
 
-void function ClientCodeCallback_CustomMatchDataChanged( CustomMatch_LobbyState data )
-{
-                       
-                                 
-       
-}
-
 void function RunKillReplayEndedCallbacks()
 {
 	foreach ( callbackFunc in clGlobal.killReplayEndCallbacks )
@@ -623,11 +614,6 @@ void function ClientCodeCallback_SaveResumed()
 {
 }
 
-void function ClientCodeCallback_SmokeTestRunning( string param )
-{
-    printl( "ClientCodeCallback_SmokeTestRunning : " + param )
-}
-
 void function ClientCodeCallback_OnSelectedWeaponChanged( entity selectedWeapon )
 {
 	                                                
@@ -650,11 +636,15 @@ void function ClientCodeCallback_PerformSelfReport(){
 	string name = GetPlayerName()
 	string eaid = EADP_GetEadpIdFromFirstPartyID(uid, hardwareID)
 
-	printf("ClientCodeCallback_PerformSelfReport: Self reporting %s", name)
-
 	if(!IsLobby())
+	{
+		printf("ClientCallback_ReportPlayer: Self reporting %s uid=%s eaid=%s", name, uid, eaid)
 		Remote_ServerCallFunction( "ClientCallback_ReportPlayer", hardwareID, uid, eaid, "#REPORT_PLAYER_REASON_OFFENSIVE" )
+	}
 	else
+	{
+		printf("ClientCallback_LobbyReportPlayer: Self reporting %s uid=%s eaid=%s", name, uid, eaid)
 		Remote_ServerCallFunction( "ClientCallback_LobbyReportPlayer", hardwareID, uid, eaid, "#REPORT_PLAYER_REASON_OFFENSIVE" )
+	}
 }
 

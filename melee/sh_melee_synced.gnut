@@ -172,7 +172,7 @@ bool function IsValidSyncedMeleeTarget( entity attacker, entity meleeInputWeapon
 		if ( target.ContextAction_IsActive() )
 			return false
 
-		if ( !target.IsInterruptable() )
+		if ( !target.IsInterruptableForScriptedAnim() )
 			return false
 
 		if ( !target.CanBeMeleeExecuted() )
@@ -416,6 +416,8 @@ void function ServerCallback_SyncedMeleeDone()
 
 			                                          
 			 
+				                                       
+
 				                        
 				 
 					                                                                       
@@ -424,7 +426,6 @@ void function ServerCallback_SyncedMeleeDone()
 
 					                                                                       
 
-					                                       
 					                     
 					                                
 
@@ -441,6 +442,11 @@ void function ServerCallback_SyncedMeleeDone()
 				                          
 				 
 					                                          
+					                                                                              
+					                              
+					 
+						                    
+					 
 				 
 
 				                        
@@ -607,6 +613,11 @@ void function ServerCallback_SyncedMeleeDone()
 		                          
 		 
 			                                         
+			                                                                              
+			                              
+			 
+				                    
+			 
 		 
 
 		                                       
@@ -712,7 +723,10 @@ void function ServerCallback_SyncedMeleeDone()
 	                        
 		      
 
-	                                       
+	                                             
+	 
+		                                       
+	 
 
 	                                                            
 	                                         

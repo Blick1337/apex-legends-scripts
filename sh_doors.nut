@@ -108,7 +108,7 @@ void function ShDoors_Init()
 		                                                                     
 		                                                  
                         
-                                                                             
+			                                                                          
         
 
 		                                              
@@ -556,10 +556,10 @@ bool function DoorsAreEnabled()
 			                         
 			     
                         
-                                    
-                               
-          
-        
+		                                  
+			                            
+			       
+			     
         
 	 
 
@@ -1993,29 +1993,23 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	                                                                                               
 	 
 
-                           
-			                        
+		                        
+		 
+			                                                                        
+			                                           
 			 
-				                                                                        
-				                                           
+				                                                
 				 
-					                                                
-					 
-						                                                  
-						                                                   
+					                                                  
+					                                                   
 
-						                                                                        
-						 
-							                                                        
-							                                             
-						 
+					                                                                        
 					 
-
-					    
-					 
-						                   
+						                                                        
+						                                             
 					 
 				 
+
 				    
 				 
 					                   
@@ -2025,9 +2019,11 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 			 
 				                   
 			 
-       
-                      
-                                 
+		 
+		    
+		 
+			                   
+		 
 	 
 
                  

@@ -180,6 +180,8 @@ void function InitLootCeremonyLightingRigs( table< string, table<string, vector>
 				break
 			entity light = lights[0]
 			light.SetTweakLightRealtimeShadows( false )
+			light.SetTweakLightUpdateShadowsEveryFrame( false )
+			light.SetTweakLightDistance( 2.0 )                                                 
 			spot.tweakLights.append( light )
 		}
 	}

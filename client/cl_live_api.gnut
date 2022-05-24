@@ -374,9 +374,9 @@ void function LiveAPI_OnPlayerDisconnected( entity player )
                   
 
                    
-void function LiveAPI_OnPlayerLockedInCharacter( entity player, bool wasLocked, bool isLocked )
+void function LiveAPI_OnPlayerLockedInCharacter( entity player, bool isLocked )
 {
-	if( !isLocked || ( wasLocked == isLocked ) )
+	if( !isLocked )
 		return
 
 	                                                                                                                 

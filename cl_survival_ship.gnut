@@ -52,12 +52,9 @@ void function PlaneCreated( entity plane )
 	file.planeSpeaker = RegisterEnvironmentSpeaker( plane )
 }
 
-void function JumpmasterStatusChanged( entity statusChangePlayer, bool oldValue, bool newValue )
+void function JumpmasterStatusChanged( entity statusChangePlayer, bool newValue )
 {
-	PlayerPlaneStatusChanged( statusChangePlayer, oldValue, newValue )
-
-	if ( oldValue == newValue )
-		return
+	PlayerPlaneStatusChanged( statusChangePlayer, newValue )
 
 	if ( newValue == false )
 		return
@@ -68,11 +65,8 @@ void function JumpmasterStatusChanged( entity statusChangePlayer, bool oldValue,
 	PlayBattleChatterToSelfOnClient( statusChangePlayer, "bc_imJumpmaster" )
 }
 
-void function PlayerPlaneStatusChanged( entity statusChangePlayer, bool oldValue, bool newValue )
+void function PlayerPlaneStatusChanged( entity statusChangePlayer, bool newValue )
 {
-	if ( oldValue == newValue )
-		return
-
 	__PlayerPlaneStatusChanged( statusChangePlayer )
 }
 

@@ -474,10 +474,8 @@ void function CodeCallback_OnMeleePressed( entity attacker, entity meleeInputWea
 		if ( doorLungeEnabled && IsValid( lungeTarget ) && IsDoor( lungeTarget ) )
 		{
 			meleeAttackWeapon.AddMod( "proto_door_kick" )
-			
-                    
+
 			if ( !meleeAttackWeapon.HasMod( "melee_crypto_drone" ) )
-                              
 			{
 				meleeAttackWeapon.AddMod( "proto_door_kick_impact_table" )
 			}

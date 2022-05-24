@@ -855,7 +855,11 @@ vector function GetConsumableColor( ConsumableInfo info )
 
 void function BeginProgressOverlay( vector color, float duration )
 {
-	Assert( file.consumableOverlayHandle == -1 )
+	if( file.consumableOverlayHandle != -1 )
+	{
+		Warning("cl_chroma: Trying to begin progress overlay while one is already running, clearing currently running one first")
+		EndProgressOverlay()
+	}
 	file.consumableOverlayHandle = Chroma_AddPersistentOverlay( CHROMALOOP_SMOOTHNOISE, CHROMALOOP_PROGRESSBAR, CHROMATRANS_BLEND, {[0.0] = color}, 0.0, 1.0, 5.0 / duration )
 }
 

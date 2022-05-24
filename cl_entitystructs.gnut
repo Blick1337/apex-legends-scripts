@@ -93,7 +93,12 @@ global struct ClientEntityStruct
 	int cameraMaxRangeFXHandle = -1
 
                   
+		bool castleWallIsEnergized = false
+       
+
+                  
                               
+                                  
        
 
 	bool                       eyeForQuality_isScanned
@@ -198,6 +203,10 @@ global struct ClientPlayerStruct
                
                                       
        
+
+                  
+                    
+       
 }
 
 
@@ -251,6 +260,11 @@ global struct ClientWeaponStruct
 	array<WeaponMissileMultipleTargetData>   valkTac_targetData
 	float                      valkUltStartTime
 	array<entity>			   valkAlliesWaitingForLaunch
+
+	bool isWhiteset = false
+	bool isBlueset = false
+	bool isPurpleset = false
+	bool isGoldset = false
 }
 
 
@@ -263,6 +277,7 @@ global struct ClientProjectileStruct
 	int    projectileBounceCount = 0
 	float  detonateDist
 	bool   useHighDetailCollisionTraceForPlaceStickyEnt = false
+	bool   ignoreOwnerForPlaceStickyEnt = false
 
                              
                                    

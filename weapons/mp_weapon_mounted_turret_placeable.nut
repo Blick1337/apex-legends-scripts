@@ -458,18 +458,18 @@ bool function OnWeaponAttemptOffhandSwitch_weapon_mounted_turret_placeable( enti
 	 
 
 	                                           
-                     
-		                                                                                                                                                                         
-		                                                                                                      
+
+	                                                                                                                                                                         
+	                                                                                                      
+	 
+		                           
+		                            
+		                                                          
 		 
-			                           
-			                            
-			                                                          
-			 
-				                                                   
-			 
+			                                                   
 		 
-                           
+	 
+
 	                                   
 	                                                    
 

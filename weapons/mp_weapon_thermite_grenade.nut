@@ -109,8 +109,6 @@ void function OnProjectileCollision_weapon_thermite_grenade( entity projectile, 
 	projectile.SetDoesExplode( false )
 
 #if SERVER
-	                                                  
-
 	                         
 	 
 		                    

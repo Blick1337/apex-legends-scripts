@@ -194,7 +194,7 @@ bool function CanReclaimWall( entity baseWall )
 
 	if ( !IsValid( ampedWall) )
 	{
-		if ( GetCurrentPlaylistVarBool( "rampart_higher_health", false ) )
+		if ( GetCurrentPlaylistVarBool( "rampart_higher_health", true ) )
 			 {
 				 if ( baseWall.GetMaxHealth() != COVER_WALL_HIGHER_HEALTH )
 					 return false
@@ -352,7 +352,7 @@ void function PlaceWallWithoutHolstering( entity player )
 
 	                              
 
-	                                                                  
+	                                                                 
 	 
 		                                                  
 		                                               
@@ -386,6 +386,7 @@ void function PlaceWallWithoutHolstering( entity player )
 
 	                                                        
 	                                                       
+	                               
 
 	                                                                                                   
 
@@ -394,21 +395,21 @@ void function PlaceWallWithoutHolstering( entity player )
 	                                         
 	                                         
 	                                          
-                     
-		                                                                                                                                                                         
-		                                                                                                      
+
+	                                                                                                                                                                         
+	                                                                                                      
+	 
+		                    
+		                                             
+			                                                
+		                      
+		                                                     
+		                                                                     
 		 
-			                    
-			                                             
-				                                                
-			                      
-			                                                     
-			                                                                     
-			 
-				                                                  
-			 
+			                                                  
 		 
-                           
+	 
+
 	                                                 
 
 	                 
@@ -537,7 +538,7 @@ void function PlaceWallWithoutHolstering( entity player )
 
 	                                                                                     
 
-	                                                                  
+	                                                                 
 	 
 		                                        
 	 
@@ -634,7 +635,7 @@ void function PlaceWallWithoutHolstering( entity player )
 		 
 	 
 
-	                                                                  
+	                                                                 
 	 
 		                                                  
 	 
@@ -647,7 +648,7 @@ void function PlaceWallWithoutHolstering( entity player )
 	                                                                           
 	                                                   
 
-	                                                                  
+	                                                                 
 	 
 		                                                                                               
 	 
@@ -658,7 +659,7 @@ void function PlaceWallWithoutHolstering( entity player )
 
 	                                                                            
 
-	                                                                  
+	                                                                 
 	 
 		                                   
 	 
@@ -756,7 +757,7 @@ void function PlaceWallWithoutHolstering( entity player )
 
 	                                              
 
-	                                                                  
+	                                                                 
 	 
 		                                                                                                 
 	 

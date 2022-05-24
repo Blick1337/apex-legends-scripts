@@ -815,6 +815,11 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 				        
 
 			                                                        
+
+			                                                                                                                                                                            
+			                                                                       
+				        
+
 			                                     
 			                                                                                                             
 			 

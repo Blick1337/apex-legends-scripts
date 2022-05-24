@@ -25,9 +25,7 @@ global function SonarPulse
 global function ServerCallback_SonarPulseFromPosition
 global function ServerCallback_SonarPulseConeFromPosition
 global function ServerCallback_SonarPulseConeFromEntityMultiple
-                    
 global function ServerCallback_SetSonarHighlightDrawDist_AllianceProximity
-                          
 #endif
 
 const asset FX_SONAR_TARGET = $"P_ar_target_sonar"
@@ -262,22 +260,20 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 
 	                                                                
 
-                     
-		                                                                                                                                                                              
-		                                        
+	                                                                                                                                                                              
+	                                        
+	 
+		                                                                 
+		                                                               
 		 
-			                                                                 
-			                                                               
-			 
-				                                                                   
-			 
-			                                                                                                                 
-			                                                                       
-			 
-				                                                                                                                     
-			 
+			                                                                   
 		 
-                           
+		                                                                                                                 
+		                                                                       
+		 
+			                                                                                                                     
+		 
+	 
 
 	                                     
 	 
@@ -732,7 +728,6 @@ void function PlayLoopingSonarSound( entity ent )
 	}
 }
 
-                    
                                                                                                                                 
 void function ServerCallback_SetSonarHighlightDrawDist_AllianceProximity( entity enemy, int sonarSourceTeam )
 {
@@ -748,6 +743,5 @@ void function ServerCallback_SetSonarHighlightDrawDist_AllianceProximity( entity
 		Highlight_SetAllianceProximityDrawFunc( enemy, HIGHLIGHT_CONTEXT_SONAR )
 
 }
-                          
 #endif
 

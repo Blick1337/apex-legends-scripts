@@ -1,5 +1,3 @@
-              
-
 #if SERVER || CLIENT
 global function ShFiringRangeChallenges_Init
 global function FRC_RegisterChallenge
@@ -7,27 +5,19 @@ global function FRC_IsEnabled
 #endif
 
 #if SERVER
-       
-                                        
-      
 
                                  
                                
                                
-
-                                                
-                                          
                                      
 #endif
 
 #if CLIENT
 global function FRC_StartChallengeTimer
 global function ServerCallback_FRC_UpdateState
-global function ServerCallback_FRC_SetChallengeScore
 global function ServerCallback_FRC_SetChallengeKey
 global function ServerCallback_FRC_UpdateOutofBounds
 global function ServerCallback_FRC_PostGameStats
-global function ServerCallback_FRC_MemoriesEffect
 #endif
 
 const asset GUNRACK_MODEL = $"mdl/industrial/gun_rack_arm_down.rmdl"
@@ -41,7 +31,7 @@ const int ACTIVE_CHALLENGE_WEAPON_FLAGS = WPT_TACTICAL | WPT_ULTIMATE | WPT_MELE
 const asset FRC_BORDER01_MDL = $"mdl/canyonlands/firingrange_perimetermarker_01.rmdl"
 const asset FRC_BORDER02_MDL = $"mdl/canyonlands/firingrange_perimetermarker_02.rmdl"
 
-const string S12E04_STORY_EVENT_NAME = "calevent_s12e04_s12e04_story_challenges"
+const string FRC_SCORE_NETWORK_VAR = "firingRangeChallengeScore"
 
 global enum eFiringRangeChallengeState
 {
@@ -71,7 +61,6 @@ global struct FiringRangeChallengeRegistrationData
 	array < string > weaponMods
 	asset            weaponMdl
 	asset		 	 rewardTracker
-	asset		 	 storyRewardTracker
 
 	int   challengeType
 	float challengeTime = 0.0
@@ -90,10 +79,6 @@ global struct FiringRangeChallengeRegistrationData
 	void functionref( entity ) challengeStartFunc
 	void functionref( int ) challengeCleanUpFunc
 	void functionref( entity, bool ) challengePostFunc
-
-	            
-	int    storyChallengeChapter = -1
-	string storyChallengeItemFlav = ""
 }
 
 struct FiringRangeChallengeRealmData
@@ -105,7 +90,6 @@ struct FiringRangeChallengeRealmData
 #if SERVER
 	                          
 	                       
-	                        
 
 	                           
 	                         
@@ -113,6 +97,8 @@ struct FiringRangeChallengeRealmData
 	                              
 	                             
 	   	                  
+
+	                                 
 
 	                       
 	                  
@@ -174,9 +160,13 @@ void function ShFiringRangeChallenges_Init()
 	if ( !FRC_IsEnabled() )
 		return
 
+	RegisterNetworkedVariable( FRC_SCORE_NETWORK_VAR, SNDC_PLAYER_EXCLUSIVE, SNVT_BIG_INT, 0 )
+
 	#if SERVER
 		                                                            
 		                                                 
+		                                                                
+		                                                    
 		                                               
 		                              
 		                                    
@@ -186,18 +176,18 @@ void function ShFiringRangeChallenges_Init()
 			                                  
 		      
 
-		                                           
 		                                               
 	#endif
 
 	#if CLIENT
 		RegisterSignal("FRChallengeStarted")
 		RegisterSignal("FRChallengeEnded")
-		AddLocalPlayerDidDamageCallback( OnLocalPlayerDidDamage )
 		AddCreateCallback( "prop_script", FRChallenge_GunCreated )
 		AddCinematicEventFlagChangedCallback( CE_FLAG_HIDE_MAIN_HUD_INSTANT, OnFirstDrawCinematicFlagChanged )
 		RegisterSignal("FRChallengedEndMemoriesEffect")
 		PrecacheParticleSystem( $"P_adrenaline_screen_CP" )
+
+		RegisterNetVarIntChangeCallback( FRC_SCORE_NETWORK_VAR, FiringRangeChallengeScoreUpdated )
 	#endif
 
 	RegisterSignal("FRC_BackInBounds")
@@ -213,6 +203,9 @@ bool function FRC_IsEnabled()
 void function FRC_RegisterChallenge( string challengeKey, FiringRangeChallengeRegistrationData data )
 {
 	Assert( !(challengeKey in file.registeredFiringRangeChallenges) , "Another firing range challenge with key " + challengeKey + " already registered." )
+
+	if ( !GetCurrentPlaylistVarBool( "FRC_" + challengeKey, true ) )
+		return
 
 	                                                                              
 	file.registeredFiringRangeChallenges[ challengeKey ] <- data
@@ -336,16 +329,19 @@ void function EntitiesDidLoad()
 	                                         
 
 	                                                                      
-	                               
-		                                                            
-	    
-		                                                                   
+	                                                                   
 
 	                               
+	                                    
  
 
                                                                                        
  
+	                         
+		      
+
+	                                 
+	                                     
 	                                                 
  
 
@@ -379,22 +375,7 @@ void function EntitiesDidLoad()
 	                                                                                                                                 
 
 	                                                                                                            
-	                                                
-	 
-		                                                                   
-		                                                                                                        
-		                                                                            
-		                                              
-		 
-			                                          
-		 
-	 
-	    
-	 
-		        
-	 
-
-	                                                                
+	                                                                    
 	                                                                                                                                                    
 
 	                                                                    
@@ -403,29 +384,19 @@ void function EntitiesDidLoad()
 		                             
 			        
 
-		                                           
+		                                         
+		                                                                                       
 	 
 
-	        
+	                                        
 
-	                                     
-	 
-		                             
-			        
-
-		                                                 
-	 
-
+	                                      
 	                                   
 	                                                                                           
 	                                                                                                                                                       
-
-	        
-
-	                                                                                                                                                                                                                                                    
-	                                                                                      
-
-	        
+	                                                                                                                                                                             
+	                                                                               
+	                                                                          
 
 	                                     
 	 
@@ -435,83 +406,76 @@ void function EntitiesDidLoad()
 		                                          
 	 
 
-	                                                                                                                                                                                                                            
+	                                                                                                                                                             
 	                                   
  
 
-                                                                                                                                
+                                                                    
  
-	                         
-		      
-
-	                               
-	                                                          
 	                                  
-	                               
-	                                                                                       
-
-	                                           
-		                                      
-
-	                   
-	 
-		                              
-		                        
-		                                                    
-
-		                                                         
-		                                                      
-
-		                                               
-		                                                   
-		                               
-
-		                                          
-		                                
-		                                
-		                                  
-		                                  
 		      
+
+	                             
+	                           
+	                           
+	                               
+	                             
+	                          
+	                               
+	                         
+	                                        
+	                            
+
+	                                                                             
+	                                
 	 
-	    
-	 
-		         
-		                                                                    
-		                            
+		                         
+			        
+
+		                                           
+			                                      
+
+		                                              
+
+		                                    
+
+		                                 
 		 
-			                             
-			                           
-			                           
 			                               
-			                             
-			                          
-			                               
-			                         
-			                                        
-
-			                                     
-			 
-				                             
-					        
-
-				                           
-					        
-
-				                                                                                           
-				                                               
-					                                          
-
-				                                        
-
-				                                                          
-				                                      
-				   
-			 
+			                                                          
 		 
+		    
+		 
+			                                                      
+		 
+
+		                                             
 	 
  
 
                                                                                                                 
+ 
+	                                  
+		      
+
+	         
+	                                                                             
+	                                     
+	 
+		                                    
+		 
+			                                         
+			                                   
+		 
+		    
+		 
+			                                      
+			   
+		 
+	 
+ 
+
+                                                                                              
  
 	                         
 		      
@@ -520,11 +484,6 @@ void function EntitiesDidLoad()
 
 	                                                                 
 	                                                                                                  
-	                  
-	 
-		                                     
-	 
-
 	                                           
 	                                              
 	                         
@@ -552,6 +511,26 @@ void function EntitiesDidLoad()
 	                                                                           
  
 
+                                                                
+ 
+	                                                            
+		      
+
+	                                                                                  
+ 
+
+                                                      
+ 
+	                                                            
+		      
+
+	                                                                                       
+	 
+		                        
+			                    
+	 
+ 
+
                                                    
  
 	                                                            
@@ -564,6 +543,7 @@ void function EntitiesDidLoad()
 	 
 
 	                                                                    
+	                                                                         
  
 
                                                        
@@ -583,6 +563,38 @@ void function EntitiesDidLoad()
  
 
                                                                                   
+ 
+	                         
+		      
+
+	                                 
+
+	                                                            
+		      
+
+	                                                                                                                                                          
+	 
+		                                                                           
+	 
+ 
+
+                                                                                          
+ 
+	                         
+		      
+
+	                                 
+
+	                                                            
+		      
+
+	                                                                                                                                                          
+	 
+		                                                                           
+	 
+ 
+
+                                                  
  
 	                         
 		      
@@ -619,6 +631,9 @@ void function EntitiesDidLoad()
                                                                      
  
 	           
+
+	                      
+		      
 
 	                                                    
 		      
@@ -664,7 +679,6 @@ void function EntitiesDidLoad()
 
 	                                
 
-	                                                                    
 	                                                          
 	                                                                  
 	                                                                                                                  
@@ -704,6 +718,7 @@ void function EntitiesDidLoad()
 		                                                                                                   
 		                                                                                            
 		                                              
+		                                                       
 	 
 
 	                                                
@@ -788,13 +803,18 @@ void function EntitiesDidLoad()
 
 	                                                                                                                            
 	 
-		                                                                                    
+
+		                                                                                   
+			                                                                                    
+
 		                                                                                           
 		           
 	 
 	    
 	 
-		                                                                                     
+		                                                                                   
+			                                                                                     
+
 		                                                                                        
 		            
 	 
@@ -812,24 +832,17 @@ void function EntitiesDidLoad()
 	                                                            
 		      
 
-	                                
+	                                                                                     
+	                                                                                                                 
+
+	                      
+	                                                                    
 	 
-		                                                                                     
-		                                                                                                                       
-		                                                                    
-			      
-
-		                                                                                                                 
-
-		                      
-		                                                                    
-		 
-			                                                     
-			                            
-			                       
-			                                            
-			                                            
-		 
+		                                                     
+		                            
+		                       
+		                                            
+		                                            
 	 
  
 
@@ -865,7 +878,6 @@ void function EntitiesDidLoad()
 			     
 		                                                  
 			                                        
-			                                    
 			     
 	 
 
@@ -911,14 +923,13 @@ void function EntitiesDidLoad()
 		 
 	 
 
-	                                                     
-	 
-		                                                                              
-		      
-	 
+	                        
+		                                       
 
 	                             
-	                                                                            
+
+	                                                                                                                          
+	                                                                                   
  
 
                                                                         
@@ -949,64 +960,8 @@ void function EntitiesDidLoad()
 	 
 		                                                               
 	 
- 
 
-                                                               
- 
-	                                    
- 
-
-                                                  
- 
-	                         
-		      
-
-	                                 
-	                       
-		      
-
-	                                
-	                                       
-	                                
-
-	                                        
-		                                    
-
-	                   
-	                                                                    
-
-	            
-		                                         
-		 
-			                        
-			 
-				                                                    
-
-				                                             
-
-				                                                            
-				                                                         
-
-				                                              
-				                                                  
-				                              
-
-				                       
-				                      
-			 
-		 
-	 
-
-	                                                   
-		           
- 
-
-                                                     
- 
-	                                                            
-		            
-
-	                                                                   
+	                                                                                                       
  
 
                                                 
@@ -1050,11 +1005,6 @@ void function ServerCallback_FRC_SetChallengeKey( string challengeKey )
 	file.challengeKey = challengeKey
 }
 
-void function ServerCallback_FRC_SetChallengeScore( int score )
-{
-	RuiSetInt( file.challengeRui, "challengeProgress", score )
-}
-
 void function ServerCallback_FRC_UpdateOutofBounds( bool outOfBounds, float timer )
 {
 	entity player = GetLocalViewPlayer()
@@ -1074,12 +1024,12 @@ void function ServerCallback_FRC_UpdateOutofBounds( bool outOfBounds, float time
 			OnThreadEnd(
 				function() : ()
 				{
-					if ( IsValid( file.challengeRui ) )
+					if ( file.challengeRui != null )
 						RuiSetFloat( file.challengeRui, "oOBTimer", -1 )
 				}
 			)
 
-			if ( IsValid( file.challengeRui ) )
+			if ( file.challengeRui != null )
 				RuiSetFloat( file.challengeRui, "oOBTimer", timer )
 
 			wait timer
@@ -1129,29 +1079,17 @@ void function FRC_CreatePendingChallengeUI()
 	{
 		RuiSetString( rui, "hintText", file.registeredFiringRangeChallenges[file.challengeKey].challengeStartHint )
 
-		bool isStoryEventChallenge = false
 		int currentBest = FRC_GetChallengeStat( player, file.registeredFiringRangeChallenges[file.challengeKey].statTemplate )
-		if ( FRC_IsStoryEventActive() )
-		{
-			string humanReadableItemFlav = file.registeredFiringRangeChallenges[file.challengeKey].storyChallengeItemFlav
-			ItemFlavor flavor = GetItemFlavorByHumanReadableRef( humanReadableItemFlav )
-			if ( !Challenge_IsComplete( player, flavor ) )
-			{
-				currentBest = Challenge_GetGoalVal( flavor, 0 )
-				isStoryEventChallenge = true
-			}
-		}
-
 		if ( currentBest > 0 )
 		{
 			string hint = ""
 			switch ( file.registeredFiringRangeChallenges[file.challengeKey].challengeType )
 			{
 				case eFiringRangeChallengeType.FR_CHALLENGE_TYPE_BEST_DAMAGE:
-					hint = ( isStoryEventChallenge ) ? format( Localize("#FR_CHALLENGE_SC_DMG_GOAL_HINT"), string(currentBest) ) : format( Localize("#FR_CHALLENGE_DMG_GOAL_HINT"), string(currentBest) )
+					hint = format( Localize("#FR_CHALLENGE_DMG_GOAL_HINT"), string(currentBest) )
 					break
 				case eFiringRangeChallengeType.FR_CHALLENGE_TYPE_TARGETS_HIT:
-					hint = ( isStoryEventChallenge ) ? format( Localize("#FR_CHALLENGE_SC_TARGET_GOAL_HINT"), string(currentBest) ) : format( Localize("#FR_CHALLENGE_TARGET_GOAL_HINT"), string(currentBest) )
+					hint = format( Localize("#FR_CHALLENGE_TARGET_GOAL_HINT"), string(currentBest) )
 					break
 				default:
 					break
@@ -1206,16 +1144,6 @@ void function FRC_StartChallengeTimer()
 	}
 
 	int currentBest = FRC_GetChallengeStat( player, file.registeredFiringRangeChallenges[file.challengeKey].statTemplate )
-	if ( FRC_IsStoryEventActive() )
-	{
-		string humanReadableItemFlav = file.registeredFiringRangeChallenges[file.challengeKey].storyChallengeItemFlav
-		ItemFlavor flavor = GetItemFlavorByHumanReadableRef( humanReadableItemFlav )
-		if ( !Challenge_IsComplete( player, flavor ) )
-		{
-			currentBest = Challenge_GetGoalVal( flavor, 0 )
-			RuiSetBool( file.challengeRui,  "isStoryChallenge", true )
-		}
-	}
 
 	if ( file.registeredFiringRangeChallenges[file.challengeKey].challengeName != "" )
 	{
@@ -1238,33 +1166,12 @@ void function FRC_StartChallengeTimer()
 	WaitSignal( player, "FRChallengeEnded")
 }
 
-void function OnLocalPlayerDidDamage( entity attacker, entity victim, vector damagePosition, int damageType, float damageAmount )
+void function FiringRangeChallengeScoreUpdated( entity player, int newVal )
 {
-	if ( file.challengeState == eFiringRangeChallengeState.FR_CHALLENGE_ACTIVE )
-	{
-		if ( !(file.challengeKey in file.registeredFiringRangeChallenges) )
-			return
+	file.score = newVal
 
-		if ( victim.GetScriptName() != file.challengeKey )
-			return
-
-		int challengeType = file.registeredFiringRangeChallenges[file.challengeKey].challengeType
-
-		if ( challengeType == eFiringRangeChallengeType.FR_CHALLENGE_TYPE_BEST_DAMAGE )
-		{
-			file.score += int(damageAmount)
-		}
-		else if ( challengeType == eFiringRangeChallengeType.FR_CHALLENGE_TYPE_TARGETS_HIT )
-		{
-			file.score += 1
-		}
-		else
-		{
-			return
-		}
-
+	if ( file.challengeRui != null )
 		RuiSetInt( file.challengeRui, "challengeProgress", file.score )
-	}
 }
 
 void function OnFirstDrawCinematicFlagChanged( entity player )
@@ -1300,48 +1207,10 @@ string function FRC_ChallengeGunTextOverride( entity gun )
 	if ( !(challengeKey in file.registeredFiringRangeChallenges) )
 		return ""
 
-	string interactStr = file.registeredFiringRangeChallenges[challengeKey].challengeInteractStr
+	if ( !( FRC_CanCharacterPickup( player, gun ) ) )
+		return "#FRC_CHALLENGE_CHAR_DISABLED_INTR"
 
-	if ( !FRC_IsStoryEventActive() )
-		return interactStr
-
-	if ( file.registeredFiringRangeChallenges[challengeKey].storyChallengeChapter == -1 )
-		return interactStr
-
-	ItemFlavor event = GetItemFlavorByHumanReadableRef( S12E04_STORY_EVENT_NAME )
-	string challengeItemFlavStr = file.registeredFiringRangeChallenges[challengeKey].storyChallengeItemFlav
-	if (  challengeItemFlavStr == "" )
-	{
-		return interactStr
-	}
-
-	ItemFlavor challengeFlavor = GetItemFlavorByHumanReadableRef( challengeItemFlavStr )
-	bool isChallengeAvailable = StoryChallengeEvent_IsChallengeAvailableForPlayer( event, challengeFlavor, player )
-
-	if ( isChallengeAvailable )
-	{
-		if ( Challenge_IsComplete(player, challengeFlavor ) )
-			return  interactStr
-
-		int activeChapter = StoryEvent_GetActiveChapter(player, event)
-		bool challengeChapterAfterActive = file.registeredFiringRangeChallenges[challengeKey].storyChallengeChapter > activeChapter
-		if ( challengeChapterAfterActive )
-		{
-			return ( activeChapter == 0 ) ?  "#CHALLENGE_START_PROLOGUE_REQ" : "#CHALLENGE_START_STEP_REQ"
-		}
-	}
-	else
-	{
-		return "#CHALLENGE_START_LOCKED_REQ"
-	}
-
-	if ( !FRC_Story_IsBangalore( player ) )
-		return "#CHALLENGE_START_BANGALORE_REQ"
-
-	if ( GetPlayerArrayOfTeam_Connected( player.GetTeam() ).len() > 1 )
-		return "#CHALLENGE_START_ALONE_REQ"
-
-	return interactStr
+	return file.registeredFiringRangeChallenges[challengeKey].challengeInteractStr
 }
 #endif
 
@@ -1482,21 +1351,6 @@ int function FRC_GetChallengeStat( entity player, StatTemplate template )
 #endif
 
 #if SERVER || CLIENT
-bool function FRC_IsStoryEventActive()
-{
-	#if DEV
-		if( FRC_FakeSkipEvent() )
-			return false
-	#endif
-
-	ItemFlavor event = GetItemFlavorByHumanReadableRef( S12E04_STORY_EVENT_NAME )
-	int now = GetUnixTimestamp()
-	if ( !CalEvent_IsActive( event, now ) )
-		return false
-
-	return true
-}
-
 bool function FRC_CanPickUpWeaponPlayerStatusCheck ( entity player )
 {
 	if ( player.Anim_IsActive() )
@@ -1548,7 +1402,17 @@ bool function FRC_GenericCanPickUpWeapon( entity player, entity weapon, int useF
 	if ( !IsValid ( player ) )
 		return false
 
+	if ( !IsValid ( weapon ) )
+		return false
+
 	if ( !FRC_CanPickUpWeaponPlayerStatusCheck( player ) )
+		return false
+
+	int realm = player.GetRealms()[0]
+	if ( (realm in file.firingRangeChallengeDataByRealmTable) && (file.firingRangeChallengeDataByRealmTable[realm].challengeState != eFiringRangeChallengeState.FR_CHALLENGE_INACTIVE) )
+		return false
+
+	if ( !FRC_CanCharacterPickup( player, weapon ) )
 		return false
 
 	return true
@@ -1562,173 +1426,31 @@ bool function FRC_CanPickUpWeapon( entity player, entity weapon, int useFlags )
 	if ( !FRC_CanPickUpWeaponPlayerStatusCheck( player ) )
 		return false
 
-	if ( !FRC_IsStoryEventActive() )
-		return true
-
-	string challengeKey = weapon.GetScriptName()
-	if ( challengeKey == "" )
-		return true
-
-	if ( !(challengeKey in file.registeredFiringRangeChallenges) )
-		return true
-
-	if ( file.registeredFiringRangeChallenges[challengeKey].storyChallengeChapter == -1 )
-		return true
-
-	                                       
-	ItemFlavor event = GetItemFlavorByHumanReadableRef( S12E04_STORY_EVENT_NAME )
-	int activeChapter = StoryEvent_GetActiveChapter(player, event)
-	if ( file.registeredFiringRangeChallenges[challengeKey].storyChallengeChapter > activeChapter )
-		return false
-
-	string challengeItemFlavStr = file.registeredFiringRangeChallenges[challengeKey].storyChallengeItemFlav
-	if (  challengeItemFlavStr == "" )
-		return true
-
-	ItemFlavor challengeFlavor = GetItemFlavorByHumanReadableRef( challengeItemFlavStr )
-	if ( Challenge_IsComplete( player, challengeFlavor ) )
-		return true
-
-
-	if ( !FRC_Story_IsBangalore( player ) )
-		return false
-
-    if ( GetPlayerArrayOfTeam_Connected( player.GetTeam() ).len() > 1 )
-		return false
-
 	return true
 }
 
-bool function FRC_IsStoryActive( entity player, string challengeKey )
+bool function FRC_CanCharacterPickup( entity player, entity weapon )
 {
-	if ( !FRC_IsStoryEventActive() )
+	if ( !IsValid ( player ) )
 		return false
 
-	if ( !(challengeKey in file.registeredFiringRangeChallenges) )
+	if ( !IsValid ( weapon ) )
 		return false
 
-	if ( file.registeredFiringRangeChallenges[challengeKey].storyChallengeChapter == -1 )
-		return false
+	string weaponScriptName = weapon.GetScriptName()
+	string disabledCharsOverride = GetCurrentPlaylistVarString( "FRC_" + weaponScriptName + "_disabled_chars", "" )
+	if ( disabledCharsOverride ==  "" )
+		return true
 
-	ItemFlavor event = GetItemFlavorByHumanReadableRef( S12E04_STORY_EVENT_NAME )
-	int activeChapter = StoryEvent_GetActiveChapter(player, event)
-	if ( file.registeredFiringRangeChallenges[challengeKey].storyChallengeChapter != activeChapter )
-		return false
-
-	string challengeItemFlavStr = file.registeredFiringRangeChallenges[challengeKey].storyChallengeItemFlav
-	if (  challengeItemFlavStr == "" )
-		return false
-
-	ItemFlavor challengeFlavor = GetItemFlavorByHumanReadableRef( challengeItemFlavStr )
-	if ( Challenge_IsComplete( player, challengeFlavor ) )
-		return false
-
-	if ( !FRC_Story_IsBangalore( player ) )
-		return false
-
-	if ( GetPlayerArrayOfTeam_Connected( player.GetTeam() ).len() > 1 )
-		return false
-
-	return true
-}
-
-bool function FRC_Story_IsBangalore( entity player )
-{
-	if ( !IsValid( player ) )
-		return false
-
+	array<string> disabledChars = []
+	disabledChars.extend( split( disabledCharsOverride, " " ) )
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
 	string characterRef  = ItemFlavor_GetHumanReadableRef( character ).tolower()
 
-	if ( characterRef == "character_bangalore" )
-		return true
+	if ( disabledChars.contains( characterRef ) )
+		return false
 
-	return false
+	return true
 }
 #endif
-
-#if CLIENT
-void function ServerCallback_FRC_MemoriesEffect( bool enable )
-{
-	entity player = GetLocalViewPlayer()
-	if ( !IsValid ( player ) )
-		return
-
-	if ( enable )
-	{
-		thread function() : ( player )
-		{
-			EndSignal ( player, "OnDestroy" )
-			EndSignal ( player, "FRChallengedEndMemoriesEffect" )
-			int fxHandle = StartParticleEffectOnEntityWithPos( player, PrecacheParticleSystem( $"P_adrenaline_screen_CP" ), FX_PATTACH_ABSORIGIN_FOLLOW, -1, player.EyePosition(), <0,0,0> )
-			EffectSetIsWithCockpit( fxHandle, true )
-
-			OnThreadEnd(
-				function() : ( fxHandle )
-				{
-					ServerCallback_SetCommsDialogueEnabled( 1 )
-
-					if ( !EffectDoesExist( fxHandle ) )
-						return
-
-					EffectStop( fxHandle, false, true )
-				}
-			)
-
-			ServerCallback_SetCommsDialogueEnabled( 0 )
-
-			EffectSetControlPointVector( fxHandle, 1.0, <1,999,0> )
-
-			WaitForever()
-		}()
-	}
-	else
-	{
-		Signal( player, "FRChallengedEndMemoriesEffect" )
-	}
-}
-#endif
-
-#if DEV
-#if CLIENT || SERVER
-bool function FRC_FakeSkipEvent()
-{
-	return GetCurrentPlaylistVarBool( "s12e04_skipevent", false )
-}
-#endif
-
-#if SERVER
-                                                                                               
- 
-	                          
-		      
-
-	                         
-	                           
-	 
-		       
-			                                              
-			     
-		       
-			                                              
-			     
-		       
-			                                              
-			     
-		        
-			      
-			     
-	 
-
-	                                                              
-	                                             
-		      
-
-	                                                
-	                                                                          
- 
-#endif
-#endif
-
-      
 

@@ -12,11 +12,14 @@ global function Ranked_GetTiers
 global function Ranked_GetCostForEntry
 global function Ranked_GetPointsPerKillForPlacement
 global function Ranked_GetPlacementMultipler
+global function Ranked_GetPlacementKillScore
 global function Ranked_GetKillsAndAssistsPointCap
 global function Ranked_GetPointsForPlacement
+global function Ranked_GetPointsForKillsPlacement
 global function Ranked_GetRankedDivisionDataForTier
 global function Ranked_GetNextTierData
 global function Ranked_GetLadderPosition
+global function GetDemotionProtectionBuffer
 
 global function Ranked_GetHistoricalRankScore
 global function Ranked_GetHistoricalFirstSplitRankScore
@@ -71,6 +74,7 @@ global function SharedRanked_GetAbandonPenaltyLength
                                                                                                 
                                                  
 
+                                                
                                        
                                                
                                               
@@ -125,6 +129,7 @@ global const RANKED_MAX_KILL_SCORE = 6
 
 global const SHARED_RANKED_NUM_ABANDON_FORGIVENESS_GAMES = 3
 global const RANKED_RESET_DIVISION_COUNT = 6                                           
+global const RANKED_RESET_DIVISION_FLOOR = 4                           
 
 global const SHARED_RANKED_INVALID_RANK_SCORE = -1
 global const SHARED_RANKED_INVALID_LADDER_POSITION = -1
@@ -139,6 +144,10 @@ global const RANKED_SEASON_06_GUIDSTRING = "SAID01826354644"
 global const RANKED_SEASON_07_GUIDSTRING = "SAID00461784517"
 global const RANKED_SEASON_08_GUIDSTRING = "SAID01162744308"
 global const RANKED_SEASON_09_GUIDSTRING = "SAID01649072598"
+global const RANKED_SEASON_10_GUIDSTRING = "SAID01091892544"
+global const RANKED_SEASON_11_GUIDSTRING = "SAID01007141711"
+global const RANKED_SEASON_12_GUIDSTRING = "SAID01547807959"
+global const RANKED_SEASON_13_GUIDSTRING = "SAID02144147554"
 
                  
 global function GetKillPointsWithTierDiff
@@ -146,32 +155,39 @@ global function GetTierDifference
 global function GetTierDifferenceByEntity
 global const RANKED_MAX_KILL_SCORE_BY_SKILL = 175
                 
-                                               
+global const float PARTICIPATION_MODIFIER = 0.5
      
-global const float PARTICIPATION_MODIFIER = 0.0
+                                               
       
 global function Ranked_GetParticipationMutlipler
 
                                          
 
                 
-                                    
-                                    
-                                    
-                                     
-                                     
-                                     
-                                     
-                                     
-     
+global const RANKED_RP_PROMOTION_BONUS = 100
+
+const int MASTER_PLUS_SCALING_RP = 5
+const int MASTER_PLUS_SCALING_RP_INTERVAL = 1000
+const int MASTER_PLUS_SCALING_RP_MAX = 170
+const int MASTER_PLUS_TIER_INDEX = 6
+
 const int RANKED_RP_TIER_MINUS_4 = 0
 const int RANKED_RP_TIER_MINUS_3 = 3
-const int RANKED_RP_TIER_MINUS_2 = 5
-const int RANKED_RP_TIER_MINUS_1 = 8
+const int RANKED_RP_TIER_MINUS_2 = 7
+const int RANKED_RP_TIER_MINUS_1 = 10
 const int RANKED_RP_TIER_EQUAL   = 10
-const int RANKED_RP_TIER_PLUS_1  = 12
+const int RANKED_RP_TIER_PLUS_1  = 10
 const int RANKED_RP_TIER_PLUS_2  = 15
 const int RANKED_RP_TIER_PLUS_3  = 20
+     
+                                    
+                                    
+                                    
+                                    
+                                     
+                                     
+                                     
+                                     
       
 
 global enum emblemDisplayMode                                            
@@ -182,6 +198,47 @@ global enum emblemDisplayMode
 	NONE,
 }
 
+global const array<string> DIVISION_ORDERING_BY_LOC_KEY =
+[
+	"#RANKED_DIVISION_ROOKIE_IV",
+	"#RANKED_DIVISION_ROOKIE_III",
+	"#RANKED_DIVISION_ROOKIE_II",
+	"#RANKED_DIVISION_ROOKIE_I",
+	"#RANKED_DIVISION_BRONZE_IV",
+	"#RANKED_DIVISION_BRONZE_III",
+	"#RANKED_DIVISION_BRONZE_II",
+	"#RANKED_DIVISION_BRONZE_I",
+	"#RANKED_DIVISION_SILVER_IV",
+	"#RANKED_DIVISION_SILVER_III",
+	"#RANKED_DIVISION_SILVER_II",
+	"#RANKED_DIVISION_SILVER_I",
+	"#RANKED_DIVISION_GOLD_IV",
+	"#RANKED_DIVISION_GOLD_III",
+	"#RANKED_DIVISION_GOLD_II",
+	"#RANKED_DIVISION_GOLD_I",
+	"#RANKED_DIVISION_PLATINUM_IV",
+	"#RANKED_DIVISION_PLATINUM_III",
+	"#RANKED_DIVISION_PLATINUM_II",
+	"#RANKED_DIVISION_PLATINUM_I",
+	"#RANKED_DIVISION_DIAMOND_IV",
+	"#RANKED_DIVISION_DIAMOND_III",
+	"#RANKED_DIVISION_DIAMOND_II",
+	"#RANKED_DIVISION_DIAMOND_I",
+	"#RANKED_DIVISION_MASTER",
+	"#RANKED_DIVISION_APEX_PREDATOR"
+]
+
+global const array<string> TIER_ORDERING_BY_LOC_KEY =
+[
+	"#RANKED_TIER_ROOKIE",
+	"#RANKED_TIER_BRONZE",
+	"#RANKED_TIER_SILVER",
+	"#RANKED_TIER_GOLD",
+	"#RANKED_TIER_PLATINUM",
+	"#RANKED_TIER_DIAMOND",
+	"#RANKED_TIER_MASTER",
+	"#RANKED_TIER_APEX_PREDATOR"
+]
 
 global enum sharedRankedBadgeAwardLevel
 {
@@ -199,7 +256,7 @@ global enum sharedRankedBadgeAwardLevel
 	MASTER_ANIMATED,
 	APEX_STATIC,
 	APEX_ANIMATED,
-	UNRANKED,
+	ROOKIE,
 	NONE,
 }
 
@@ -226,6 +283,7 @@ global struct SharedRankedTierData
 	int                       entryCost = 9999999
 	int 					  maxProtection
 	int 					  minProtection
+	bool					  allowsDemotion = true
 	string                    promotionAnnouncement
 	bool                      isLadderOnlyTier = false
 	array<SharedRankedReward> rewards
@@ -254,6 +312,7 @@ global struct RankedPlacementScoreStruct
 	int   pointsPerAssist
 	int   sumOfKillsAndAssistsPointCap
 	int   placementKillBonus
+	int   killByPlacement
 	float multiplier
 }
 
@@ -280,6 +339,8 @@ global struct RankScoreData
 
 	int killBasedPoints
 	int killBasedPointsBase
+
+	int promotionBonus = 0
 
 	int placement
 	int placementScore
@@ -347,6 +408,7 @@ struct
 		                                                                                       
 		                                                                       
 		                                                                         
+		                					                                
 	#endif
 
 	#if UI
@@ -375,19 +437,19 @@ void function Sh_Ranked_Init()
 		                                                               
 		                                                                       
 		                                                              
+		                                                              
 		                                                                          
 		                                                                                
 		                                                                                                                                        
 		                                                   
 
-                  
-                                                           
-   
-                                                                          
-                                               
-   
+		                
+		 
+			                                                                                                                
+			                                    
+			                                                                                     
+		 
 
-        
 		       
 			                                               
 		             
@@ -457,6 +519,7 @@ void function Ranked_InitPlacementScoring()
 		placementScoringData.sumOfKillsAndAssistsPointCap = GetDataTableInt( dataTable, i, GetDataTableColumnByName( dataTable, "sumOfKillsAndAssistsPointCap" ) )
 		placementScoringData.placementKillBonus           = GetDataTableInt( dataTable, i, GetDataTableColumnByName( dataTable, "placementKillBonus" ) )
 		placementScoringData.multiplier                   = GetDataTableFloat (dataTable, i, GetDataTableColumnByName( dataTable, "multiplier" ) )
+		placementScoringData.killByPlacement              = GetDataTableInt (dataTable, i, GetDataTableColumnByName( dataTable, "killByPlacement" ) )
 		file.placementScoringData.append( placementScoringData )
 	}
 }
@@ -474,6 +537,7 @@ void function OnRankedPeriodRegistered( ItemFlavor rp )
 		tier.entryCost             = GetSettingsBlockInt( tierBlock, "entryCost" )
 		tier.maxProtection         = GetSettingsBlockInt( tierBlock, "maxProtection" )
 		tier.minProtection         = GetSettingsBlockInt( tierBlock, "minProtection" )
+		tier.allowsDemotion        = GetSettingsBlockBool( tierBlock, "allowsDemotion" )
 		tier.icon                  = GetSettingsBlockAsset( tierBlock, "icon" )
 		tier.bgImage               = GetSettingsBlockAsset( tierBlock, "bgImage" )
 		tier.levelUpRuiAsset       = GetSettingsBlockStringAsAsset( tierBlock, "levelUpRuiAsset" )
@@ -513,6 +577,7 @@ void function OnRankedPeriodRegistered( ItemFlavor rp )
 		tier.index = tierData.len()
 
 		tierData.append( tier )
+		Assert ( TIER_ORDERING_BY_LOC_KEY.contains(tier.name) , "Tier Name : " + tier.name + " is not found in TIER_ORDERING_BY_LOC_KEY." )
 	}
 
 	divisionData.sort( SharedRanked_CompareDivision )
@@ -520,6 +585,9 @@ void function OnRankedPeriodRegistered( ItemFlavor rp )
 	{
 		SharedRankedDivisionData data = divisionData[i]
 		data.index = i
+
+		Assert ( DIVISION_ORDERING_BY_LOC_KEY.contains(divisionData[i].divisionName) , "Divionsion name: " + divisionData[i].divisionName + " is not found in DIVISION_ORDERING_BY_LOC_KEY.")		                                         
+		divisionData[i].divisionEntryCost = GetCurrentPlaylistVarInt ( "ranked_division_entry_cost_" + i , divisionData[i].divisionEntryCost )
 	}
 
 	int ladderOnlyTiers = 0
@@ -962,21 +1030,61 @@ SharedRankedDivisionData ornull function GetNextRankedDivisionFromScore( int sco
   
 
 
-int function Ranked_GetCostForEntry( SharedRankedDivisionData currentRank )
+int function Ranked_GetCostForEntry( SharedRankedDivisionData currentRank , int rankScore = 0)
 {
                  
-                                                                             
-  
-                                                                             
-  
-     
-  
-                                     
-  
-            
-      
+	if ( GetCurrentPlaylistVarBool( "ranked_scaling_entry_cost_enabled", true ))
+	{
+		if (currentRank.tier.index < MASTER_PLUS_TIER_INDEX )
+		{
+			if  (currentRank.divisionEntryCost  > 0)
+			{
+				return currentRank.divisionEntryCost
+			}
+
+			return maxint( currentRank.tier.entryCost, currentRank.divisionEntryCost )
+		}
+		else
+		{
+			int masterEntryCost = currentRank.tier.entryCost
+			int minScoreForMaster = currentRank.tier.scoreMin
+
+			if (rankScore > minScoreForMaster)
+			{
+				int interval = Ranked_GetEntryCostInterval()
+
+				if (interval > 0 )
+				{
+					int multipler = abs(rankScore - minScoreForMaster) / interval
+					return minint( masterEntryCost + multipler * Ranked_GetEntryCostScalar() , Ranked_GetEntryCostMax() )
+				}
+			}
+		}
+	}
+
+	          
 	return (currentRank.tier.entryCost)
+      
+                                    
        
+}
+
+
+int function Ranked_GetEntryCostScalar ()
+{
+	return GetCurrentPlaylistVarInt( "ranked_entrycost_scalar",  MASTER_PLUS_SCALING_RP )
+}
+
+
+int function Ranked_GetEntryCostInterval ()
+{
+	return GetCurrentPlaylistVarInt( "ranked_entrycost_interval",  MASTER_PLUS_SCALING_RP_INTERVAL )
+}
+
+
+int function Ranked_GetEntryCostMax ()
+{
+	return GetCurrentPlaylistVarInt( "ranked_entrycost_max",  MASTER_PLUS_SCALING_RP_MAX )
 }
 
 
@@ -997,11 +1105,33 @@ float function Ranked_GetPlacementMultipler ( int placement )
 	return GetCurrentPlaylistVarFloat( playlistVarName, csvValue )
 }
 
+int function Ranked_GetPlacementKillScore ( int placement )
+{
+	int lookupPlacement    = minint( file.placementScoringData.len() - 1, placement )
+	int csvValue           = file.placementScoringData[ lookupPlacement ].killByPlacement
+	string playlistVarName = "ranked_placementKill_" + lookupPlacement
+	return GetCurrentPlaylistVarInt( playlistVarName, csvValue )
+}
 
 int function Ranked_GetPointsForKillsBySkill (int victimTier, int killerTier)
 {
 	int tierDiff = GetTierDifference(victimTier, killerTier)
 	return GetKillPointsWithTierDiff(tierDiff)
+}
+
+int function Ranked_GetPointsForKillsPlacement ( int placement )
+{
+	int lookupPlacement    = minint( file.placementScoringData.len() - 1, placement )
+	int killByPlacement           = file.placementScoringData[ lookupPlacement ].killByPlacement
+	return  killByPlacement
+}
+
+float function Ranked_GetPointsForKillsBySkillAndPlacement (int placement, int victimTier, int killerTier)
+{
+	float killByPlacement           = float ( Ranked_GetPointsForKillsPlacement ( placement ) )
+	int tierDiff = GetTierDifference(victimTier, killerTier)
+	float killValuePercentage =  float (GetKillPointsWithTierDiff(tierDiff)) /10.0
+	return  (killValuePercentage == 0 ) ? 0.0 : max ( 1.0, killByPlacement  * killValuePercentage )
 }
 
 
@@ -1079,7 +1209,7 @@ float function Ranked_GetPointsForKills( int placement, array<int> killsByTiers,
 {
 	float totalPoints = 0.0
 	totalPoints += Ranked_GetPointsForKillsBase ( placement,  killsByTiers, currentRankTier )
-	totalPoints += Ranked_GetPointsForKillsBonus ( placement,  killsByTiers, currentRankTier )
+	                                                                                            
 	return totalPoints
 }
 
@@ -1089,21 +1219,21 @@ float function Ranked_GetPointsForKillsBonus( int placement, array<int> killsByT
 	float totalPoints = 0.0
 
 	                                
-	for (int i = 0; i < killsByTiers.len(); i++)
-	{
-		int numberOfKills = killsByTiers[i]
-		int pointsPerKill = GetKillPointsWithTierDiff ( GetTierDifference( i, currentRankTier ) )
-
-		if ( GetCurrentPlaylistVarBool( "ranked_kill_invalidation", true ) )
-		{
-			                          
-			                                                                         
-			if ( Ranked_IsKillValid ( pointsPerKill ) )
-			{
-				totalPoints += float ( numberOfKills * Ranked_GetPointsPerKillForPlacement( placement ) )
-			}
-		}
-	}
+	                                              
+	   
+	  	                                   
+	  	                                                                                         
+	  
+	  	                                                                    
+	  	 
+	  		                          
+	  		                                                                         
+	  		                                           
+	  		 
+	  			                                                                                         
+	  		 
+	  	 
+	   
 	return totalPoints
 }
 
@@ -1115,8 +1245,9 @@ float function Ranked_GetPointsForKillsBase( int placement, array<int> killsByTi
 	for (int i = 0; i < killsByTiers.len(); i++)
 	{
 		int numberOfKills = killsByTiers[i]
-		int pointsPerKill = GetKillPointsWithTierDiff ( GetTierDifference(i, currentRankTier))
-		totalPoints += float (numberOfKills * pointsPerKill )
+		                                                                                        
+		float pointsPerKill = Ranked_GetPointsForKillsBySkillAndPlacement ( placement, i, currentRankTier )
+		totalPoints += numberOfKills * pointsPerKill
 	}
 	return totalPoints
 }
@@ -1126,7 +1257,7 @@ float function Ranked_GetPointsForAssists( int placement, array<int> AssistsByTi
 {
 	float totalPoints = 0.0
 	totalPoints += Ranked_GetPointsForAssistsBase ( placement, AssistsByTiers, currentRankTier )
-	totalPoints += Ranked_GetPointsForAssistsBonus ( placement, AssistsByTiers, currentRankTier )
+	                                                                                               
 	return 	totalPoints
 }
 
@@ -1137,22 +1268,22 @@ float function Ranked_GetPointsForAssistsBonus ( int placement, array<int> assis
 	float totalPoints = 0.0
 
 	                        
-	for (int i = 0; i < assistsByTiers.len(); i++)
-	{
-		int numberOfKills = assistsByTiers[i]
-		int pointsPerKill = GetKillPointsWithTierDiff ( GetTierDifference(i, currentRankTier))
-
-		                          
-		                                                                         
-
-		if ( GetCurrentPlaylistVarBool( "ranked_kill_invalidation", true ))
-		{
-			if ( Ranked_IsKillValid ( pointsPerKill ) )
-			{
-				totalPoints += float ( numberOfKills * Ranked_GetPointsPerKillForPlacement( placement ) )
-			}
-		}
-	}
+	                                                
+	   
+	  	                                     
+	  	                                                                                      
+	  
+	  	                          
+	  	                                                                         
+	  
+	  	                                                                   
+	  	 
+	  		                                           
+	  		 
+	  			                                                                                         
+	  		 
+	  	 
+	   
 	return 	totalPoints
 }
 
@@ -1163,8 +1294,8 @@ float function Ranked_GetPointsForAssistsBase( int placement, array<int> assists
 	for (int i = 0; i < assistsByTiers.len(); i++)
 	{
 		int numberOfKills = assistsByTiers[i]
-		int pointsPerKill = GetKillPointsWithTierDiff ( GetTierDifference(i, currentRankTier))
-		totalPoints += float ( numberOfKills * pointsPerKill )
+		float pointsPerKill = Ranked_GetPointsForKillsBySkillAndPlacement ( placement, i, currentRankTier )
+		totalPoints += numberOfKills * pointsPerKill
 	}
 	return 	totalPoints
 }
@@ -1174,7 +1305,7 @@ float function Ranked_GetPointsForParticipation( int placement, array<int> parti
 {
 	float totalPoints = 0.0
 	totalPoints += Ranked_GetPointsForParticipationBase ( placement, participationByTiers, currentRankTier )
-	totalPoints += Ranked_GetPointsForParticipationBonus ( placement, participationByTiers, currentRankTier )
+	                                                                                                           
 	return 	totalPoints
 }
 
@@ -1184,21 +1315,21 @@ float function Ranked_GetPointsForParticipationBonus ( int placement, array<int>
 	float totalPoints = 0.0
 
 	                        
-	for (int i = 0; i < participationByTier.len(); i++)
-	{
-		int numberOfKills = participationByTier[i]
-		int pointsPerKill = GetKillPointsWithTierDiff ( GetTierDifference(i, currentRankTier))
-
-		                          
-		                                                                         
-		if ( GetCurrentPlaylistVarBool( "ranked_kill_invalidation", true ))
-		{
-			if ( Ranked_IsKillValid ( pointsPerKill ) )
-			{
-				totalPoints += float ( numberOfKills * Ranked_GetPointsPerKillForPlacement( placement ) )
-			}
-		}
-	}
+	                                                     
+	   
+	  	                                          
+	  	                                                                                      
+	  
+	  	                          
+	  	                                                                         
+	  	                                                                   
+	  	 
+	  		                                           
+	  		 
+	  			                                                                                         
+	  		 
+	  	 
+	   
 	return 	totalPoints * Ranked_GetParticipationMutlipler()
 }
 
@@ -1209,10 +1340,14 @@ float function Ranked_GetPointsForParticipationBase( int placement, array<int> p
 	for (int i = 0; i < participationByTiers.len(); i++)
 	{
 		int numberOfKills = participationByTiers[i]
-		int pointsPerKill = GetKillPointsWithTierDiff ( GetTierDifference(i, currentRankTier))
-		totalPoints += float ( numberOfKills * pointsPerKill )
+		float pointsPerKill =  Ranked_GetPointsForKillsBySkillAndPlacement ( placement, i, currentRankTier )  * Ranked_GetParticipationMutlipler()
+
+		if (pointsPerKill > 0.0)
+			pointsPerKill = max ( 1.0, pointsPerKill )
+
+		totalPoints += numberOfKills * pointsPerKill
 	}
-	return 	totalPoints * Ranked_GetParticipationMutlipler()
+	return 	totalPoints
 }
 
 
@@ -1238,12 +1373,12 @@ int function Ranked_GetPointsForPlacement( int placement )
 }
 
 
-int function Ranked_GetPenaltyPointsForAbandon( SharedRankedDivisionData currentRank )
+int function Ranked_GetPenaltyPointsForAbandon( SharedRankedDivisionData currentRank , int rankedPoint = 0)
 {
 	SharedRankedTierData tierData = currentRank.tier
 	int tierIndex                 = tierData.index
 	string playlistVarString      = "ranked_abandon_cost_" + tierIndex
-	return GetCurrentPlaylistVarInt( playlistVarString, Ranked_GetCostForEntry( currentRank ) )
+	return GetCurrentPlaylistVarInt( playlistVarString, Ranked_GetCostForEntry( currentRank , rankedPoint ) )
 }
 
 
@@ -1339,30 +1474,35 @@ SharedRankedDivisionData function Ranked_GetHistoricalRankedDivisionFromScore( i
 
 SharedRankedTierData function Ranked_GetHighestHistoricalRankedTierData( entity player )
 {
-	SharedRankedDivisionData highestDivision
+	SharedRankedTierData highestTier
 	int highestRankScore = 0
 	int highestLadderPos = 0
 
 	array< ItemFlavor > rankedPeriods = GetAllRankedPeriodFlavorsByType( eItemType.calevent_rankedperiod )
-	foreach ( ItemFlavor period in rankedPeriods )
+
+	Assert ( rankedPeriods.len() > 0, "No Rank Period Flavor is found"  )
+
+	for  ( int i = 0 ; i < rankedPeriods.len(); i++)
 	{
-		string periodGUID       = ItemFlavor_GetGUIDString( period )
-		int endRankScore        = Ranked_GetHistoricalRankScore( player, periodGUID )
-		int firstSplitRankScore = Ranked_GetHistoricalFirstSplitRankScore( player, periodGUID )
-		int bestRankScore       = firstSplitRankScore > endRankScore ? firstSplitRankScore : endRankScore
+		ItemFlavor period = rankedPeriods[i]
+		string periodGUID       				= ItemFlavor_GetGUIDString( period )
+		int endRankScore        				= Ranked_GetHistoricalRankScore( player, periodGUID )
+		int firstSplitRankScore				 	= Ranked_GetHistoricalFirstSplitRankScore( player, periodGUID )
+		int bestRankScore       				= firstSplitRankScore > endRankScore ? firstSplitRankScore : endRankScore
+		SharedRankedTierData thisTier			= Ranked_GetHistoricalRankedDivisionFromScore (bestRankScore, periodGUID).tier
 
-		                                                           
-		if ( periodGUID == RANKED_SEASON_02_GUIDSTRING )
-			bestRankScore = bestRankScore * 10
-
-		if ( bestRankScore > highestRankScore )
+		if ( i == 0 )                 
 		{
-			highestRankScore = bestRankScore
-			highestDivision  = Ranked_GetHistoricalRankedDivisionFromScore( bestRankScore, periodGUID )
+			highestTier = thisTier
 		}
-	}
 
-	return highestDivision.tier
+		if ( DIVISION_ORDERING_BY_LOC_KEY.find( highestTier.name ) < DIVISION_ORDERING_BY_LOC_KEY.find( thisTier.name ) )
+		{
+			highestTier = thisTier
+		}
+
+	}
+	return highestTier
 }
 
 
@@ -1440,6 +1580,9 @@ SharedRankedDivisionData function Ranked_GetNewDivisionForNewSeasonReset( entity
 		  	                                                                           
 		  	     
 
+		case RANKED_SEASON_13_GUIDSTRING:
+			resetDivisionCount = 2                                                                                                                                                
+
 		default:
 			resetDivisionCount = RANKED_RESET_DIVISION_COUNT
 			break
@@ -1448,7 +1591,13 @@ SharedRankedDivisionData function Ranked_GetNewDivisionForNewSeasonReset( entity
 	                                                                                                                                                             
 	int previousRankedScore             = Ranked_GetHistoricalRankScore( player, previousRankedPeriodRef )
 	SharedRankedDivisionData divData    = Ranked_GetHistoricalRankedDivisionFromScore( previousRankedScore, previousRankedPeriodRef )                                                                                       
-	int resetDivisionIndex              = maxint( 0, divData.index - resetDivisionCount )
+	int resetDivisionIndex = divData.index
+
+	if ( divData.index > RANKED_RESET_DIVISION_FLOOR )
+	{
+		resetDivisionIndex = maxint( RANKED_RESET_DIVISION_FLOOR, divData.index - resetDivisionCount )
+	}
+
 	SharedRankedDivisionData newDivData = file.historicalRankedDivisions[ newRankedPeriodRef ][ resetDivisionIndex ]
 
 	return newDivData
@@ -1474,7 +1623,14 @@ SharedRankedDivisionData function Ranked_GetNewDivisionForSeasonSplitReset( enti
 	                                                                                                                                                             
 	int previousRankedScore             = Ranked_GetHistoricalRankScore( player, rankedPeriodRef )
 	SharedRankedDivisionData divData    = Ranked_GetHistoricalRankedDivisionFromScore( previousRankedScore, rankedPeriodRef )                                                                                       
-	int resetDivisionIndex              = maxint( 0, divData.index - resetDivisionCount )
+
+	int resetDivisionIndex = divData.index
+
+	if ( divData.index > RANKED_RESET_DIVISION_FLOOR )
+	{
+		resetDivisionIndex = maxint( RANKED_RESET_DIVISION_FLOOR, divData.index - resetDivisionCount )
+	}
+
 	SharedRankedDivisionData newDivData = file.historicalRankedDivisions[ rankedPeriodRef ][ resetDivisionIndex ]
 
 	return newDivData
@@ -1885,7 +2041,7 @@ bool function Ranked_HasPlayerWaitedTooLongAfterBannerWasPickedUp( entity player
 	                                                                          
 
                  
-                                                                                        
+	                                                                                       
        
  
 
@@ -1913,7 +2069,7 @@ bool function Ranked_HasPlayerWaitedTooLongAfterBannerWasPickedUp( entity player
 	 
 		                                                                      
                   
-                                                                         
+		                                                                       
         
 	 
 
@@ -2016,6 +2172,10 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 
 }
 
+int function GetDemotionProtectionBuffer ( entity player )
+{
+	return expect int ( player.GetPersistentVar( "demotionBuffer" ) )
+}
 
 #if SERVER
        
@@ -2065,7 +2225,7 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 
                                       
  
-	                      
+	                     
 	                  
 	                 
 	                             
@@ -2075,19 +2235,20 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 	                            
 	                                  
                  
-                                            
-                                              
-                                                    
-      
+	                             
 	                                             
 	                                               
 	                                                     
+      
+                                            
+                                              
+                                                    
        
-	                                                                                                                                                                                                                                                               
+	                                                                                                                                                                                                                                                                                      
  
 
                 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
      
                                                                                                                                                                                                                                                                                                                                                                                                                                                        
       
@@ -2104,8 +2265,7 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 		                                                                       
 		                                                                               
                   
-                                                                    
-                                                                                   
+		                                                                  
         
 		                                                                                 
 		                                                                       
@@ -2288,8 +2448,21 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
                                                                                   
  
 
+	       
+		                                                                                                   
+		                                                                           
+		                                                              
+		                                                                    
+		                                                                        
+		                                                              
+		                                                                                                
+		                                                                                            
+		                                                                                                              
+		                                                                
+	      
+
                  
-                                                                                      
+	                                                                                     
        
 	                                                                        
 	                                                                              
@@ -2306,22 +2479,31 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 		                                                                                                            
 
                   
-                                                                                                    
+			                                                                                                  
         
 	 
 	
 	                         
 	 
+		       
+			                                          
+		      
 		                                                                                                              
 		                                                                                                                                                     
 	 
 	    
 	 
+		       
+			                                              
+		      
 		                                                                                                                                
 	 
 
 	                                                                             
 	 
+		       
+			                                                           
+		      
 		                                                                                                                                  
 	 
 
@@ -2385,9 +2567,9 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
  
 
                     
-                                                                                                                                                                                                        
+	                                                                                                                                                                                                       
       
-	                                                                                                                                                                      
+                                                                                                                                                                       
        
 
 	                                                                                                        
@@ -2401,10 +2583,7 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 	                                                             
 	                                                                      
 	                                            
-
-                 
-                                              
-       
+	                                             
 
 	                                               
  
@@ -2429,7 +2608,7 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 
 	                                                                     
 	                                                                                                                                                                
-	                                                                                    
+	                                                                                                      
 	                                              
 	                                               
 
@@ -2462,9 +2641,9 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 	                                                                                                                                                              
 
                 
-                                                                                  
-                   
-  
+	                                                                                 
+	                  
+	 
       
 		                                                                    
 		 
@@ -2473,156 +2652,92 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 			                                                
 		 
                 
-  
-     
-  
-                         
-                                                                                                        
-   
-                                                          
-                                    
-    
-                    
-                                                                              
-                                                                                
-                                                    
-    
-       
-    
-                   
-                                                            
-                                                                           
+	 
+	    
+	 
+		                       
+		                                                                                                      
+		 
+			                                                       
+			                                                                                                       
+			 
+				                
+				                                                                          
+				                                                                   
+				                                                
+			 
+			    
+			 
+				               
+				                                                        
+				                                                                       
 
-                                                                              
-                                                              
+				                                                                          
+				                                                          
 
-                                                             
-                                                                      
-    
-   
-      
-   
-                                 
-                                         
-   
-
-  
+				                                                         
+			 
+		 
+	 
       
 	            
  
 
+
                 
                                                                                  
  
-                                                                                                                                                               
 
-                                                        
-                                                                                                               
-                                    
-  
-                                                       
-  
-             
- 
+	                                                                                                                                                                
+	                                                                                                                                                              
 
-
-                                                          
- 
-                                                                  
- 
-
-
-                                                                       
- 
-                                                      
- 
-
-
-                                                          
- 
-                                                                             
- 
-
-
-                                                                       
- 
-                                                                 
- 
-
-
-                                                                                       
- 
-                                                          
-
-                                                                                                            
-  
-
-                                                            
-                                                                                                                                                                        
-
-                                                        
-                                           
-
-        
-  
-
-                                                  
- 
-      
-
-                                                                              
- 
-	                                                               
-	                                          
-		      
-
-	                                                
+	                                                                                          
 	 
-		                                         
+		                                                       
+		                                                                                                              
+		                                   
 		 
 			                                                     
 		 
+
+		                                  
+		 
+			                                                                                                            
+		 
+
+		                                                           
+		                                                              
 	 
+
+	            
  
+
+                                                                       
+ 
+	                                                     
+ 
+      
 
 
                                                                                  
  
-	                                                                                             
-	                             
-	                                                                      
-
-	                                  
-	                                                     
-
-	                                                                             
-	                            
-	                                                                                                          
+	                                                                        
 	 
-		                                     
+
+		                          
 			        
 
-		                                                      
+		                         
 			        
 
-		                                                             
-		 
-			                                                               
-		 
-	 
+		                                                               
+			        
 
-	                                                         
-	                                                    
-	 
 		                       
-		 
+			 
 			                                                                                                          
 			                                                    
-
-			                     
-			 
-				                                                   
-			 
+			                                                   
 		 
 	 
  
@@ -2668,9 +2783,8 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 
                                                                         
  
-	                               
-	                                                                                           
-	                                                                   
+	                                                                                         
+	                                                                 
 
 	                                                    
 	                                               
@@ -2701,6 +2815,9 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 		 
 			                                                                         
 			 
+				                           
+					        
+
 				                                                                                                                                           
 					                                                                
 			 
@@ -2794,13 +2911,37 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 
 	                                                                                                                           
 	                                                    
+	 
 		                                                           
 
-	                                                                                                      
-	                                                      
-	                                                    
+		                                                                                                      
+		                                                      
+		                                                    
 
-	                                                                   
+		                                                                   
+	 
+	                                 
+	 
+		                                                                                                             
+		                                                                                                                      
+		                                                                   
+
+		            
+		                                                   
+		 
+			                                                                                                        
+			              
+				                                                                
+		 
+		                                                                                                                
+
+		                       
+		 
+			                                                                         
+			                                                                                                      
+			                                                                                                                           
+		 
+	 
  
 
 
@@ -2875,9 +3016,7 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 	                                                                 
 
 	                                                             
-	                                                                                         
-	                                                                              
-
+	                                                                                    
 	                                                                                
 	                                                                 
 
@@ -2897,7 +3036,11 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 	                                                        
 	                                                                    
 
-	                                                                                                                               
+	       
+		                                                                
+		                                                                             
+	      
+	                                                                                                                                
 
 	                                
 
@@ -2908,6 +3051,11 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
                                                                                                                                                                         
                                                                                                                                         
  
+	       
+		                                                 
+		                                                                                             
+	      
+
 	                                                                                                                                                           
 	                                      
 	                                                          
@@ -2926,9 +3074,11 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 	                                                
 
                 
-                                                                               
-  
+	                                                                             
+	 
       
+		                                   
+
 		                                                                         
 		                                                                             
 
@@ -2946,7 +3096,7 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 		                                                                  
 
 		                     
-		                                                             
+		                                                                               
 
 		                                                                         
 		                                                                                                           
@@ -2956,93 +3106,108 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 
 		                                                                                
 
-		                                   
 		                                                  
 
                 
-  
-     
-  
+	 
+	    
+	 
 
-                           
-                                                                           
-                                                                                
+		                         
+		                                                                         
+		                                                                              
 
-                                            
-                                                                                        
+		                                          
+		                                                                                      
 
-                          
-                                                                                      
-                                                                                              
-                                                                                                         
-                                                                                                                 
+		                        
+		                                                                                    
+		                                                                                            
+		                                                                                                       
+		                                                                                                               
 
-                                                                                                       
-                                  
-                                             
-   
-                                                                                   
-                                            
-    
-                                                          
-    
-   
+		                                                                                                     
+		                                
+		                                           
+		 
+			                                                                                             
+			                                         
+			 
+				                                             
+			 
+		 
 
-                                               
-   
-                                                                                   
-                                              
-    
-                                                         
-    
-   
+		                                             
+		 
+			                                                                                             
+			                                           
+			 
+				                                            
+			 
+		 
 
-                                                     
-   
-                                                                                   
-                                                    
-    
-                                                                                               
-    
-   
+		                                                   
+		 
+			                                                                                             
+			                                                 
+			 
+				                                                                                  
+			 
+		 
 
-                            
-                                                         
+		                          
+		                                                       
 
-                         
-                                                       
-   
-                                                                                             
-                           
-   
+		                       
+		                                                     
+		 
+			                                    
+			 
+				                                                                                                                                                      
+				                        
 
-                                                                    
+				       
+					                                                                
+				      
+			 
+		 
 
-                       
-                                                               
+		                                                                  
 
-                                                                          
-                                                                                        
 
-                          
-                                                  
+		                                   
 
-                                                                                  
+		                     
+		                                                                               
 
-                                     
-                                                    
-  
+		                                                                        
+		                                                                                        
+		                                            
+
+		                        
+		                                                
+
+		                                                                                
+
+		                                                  
+
+		       
+			                                                          
+			                                                                     
+			                                                      
+			                                                 
+		      
+
+
+	 
       
 	             
  
 
 
-
-
-
                                                             
  
-	                                                          
+	                                                               
 
 	                                            
 		          
@@ -3063,6 +3228,49 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 		                   
 
 	            
+ 
+
+                                                        
+ 
+	       
+		                                    
+			      
+	      
+
+	                 
+		      
+
+	                       
+		      
+
+	                                                                                                     
+		      
+
+	                                                                                               
+	                                                                                                                 
+		      
+
+	                                                                                                         
+	 
+		                                                                  
+		                                                                            
+			        
+
+		                                                                                                                               
+		                   
+		                                                                                   
+		 
+			                                                                                                        
+			                                                                                  
+		 
+
+		               
+		                                                                          
+		 
+			                                                                                                        
+			                                                                                  
+		 
+	 
  
 
 
@@ -3250,13 +3458,19 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 				                                                                                                    
 				                                                         
 
+				                                                                                        
+				 
+					                                           
+					                                           
+				 
+
                     
-                                            
-                                        
+					                                                            
+					                                                                
           
 
 				                                  
-					                                                                                                                               
+					                                                                                                                                
 				    
 					                                                                                                   
 
@@ -3335,12 +3549,21 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 		                                                                                                   
 
 	                                        
+
+	                                                                                        
+	 
+		                                           
+		                                           
+	 
+
 	                                                                                                          
 	                                                                                                               
 	                                                                                                  
+
                  
-                                         
-                                     
+		                           
+		                                                            
+		                                                                
        
 
 	                                                                                                                                                                     
@@ -3529,8 +3752,23 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 
                                                           
  
-	                                                 
+	                
+	 
 		                                    
+			                                    
+
+		                                                   
+			                                                   
+
+		                                                   
+			                                                   
+
+		                                                   
+			                                                   
+
+		                                                     
+			                                                     
+	 
  
 
 
@@ -3564,11 +3802,9 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 	                                                        
 
 	                                                                                                                                                              
-	                                                                                         
+	                                                                                                
 	                                                                 
 	                                      
-
-	                                                         
 
 	                                                             
 	                                                                      
@@ -3597,6 +3833,52 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 
 		                                                                  
 	 
+
+       
+	                                                              
+	                                        
+
+	                
+	 
+		                                                     
+
+		                    
+
+		                      
+		 
+			                      
+			                                                                                      
+			                          
+			 
+				            
+
+				                            
+				 
+					                
+					     
+				 
+
+				              
+			 
+
+			                
+				     
+		 
+
+		                       
+		 
+			                                           
+			                     
+			                                
+
+			                                                                                                         
+			                                                                                              
+			                                        
+			                                                           
+		 
+	 
+
+      
  
 
 
@@ -3738,7 +4020,7 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
  
 	                                                                                                                                                                                                              
 	                        
-	                                                                                                                    
+	                                                                                                                
 	                                                                                                                       
 	                                                                                                                       
 	                                                                                                                   
@@ -3747,7 +4029,7 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 	                                                                                                                       
 	                                                                                                                            
 
-	                                                                                                                      
+	                                                                                                                  
 	                                                                                                                           
 	                                                                                                                           
 	                                                                                                                       
@@ -3795,12 +4077,12 @@ var function GetRankedPersistenceData( entity player, string persistenceField )
 
 
 #if CLIENT
-void function OnRankedScoreChanged( entity player, int old, int new )
+void function OnRankedScoreChanged( entity player, int new )
 {
 	if ( IsLobby() )
 		return
 
-	if ( old == new && new == SHARED_RANKED_INVALID_RANK_SCORE )
+	if ( new == SHARED_RANKED_INVALID_RANK_SCORE )
 		return
 
 	EHI playerEHI = ToEHI( player )
@@ -3816,12 +4098,12 @@ void function OnRankedScoreChanged( entity player, int old, int new )
 
 
 #if CLIENT
-void function OnRankedLadderPositionChanged( entity player, int old, int new )
+void function OnRankedLadderPositionChanged( entity player, int new )
 {
 	if ( IsLobby() )
 		return
 
-	if ( old == new && new == SHARED_RANKED_INVALID_LADDER_POSITION )                                                                                            
+	if ( new == SHARED_RANKED_INVALID_LADDER_POSITION )                                                                                            
 		return
 
 	EHI playerEHI = ToEHI( player )
@@ -3861,8 +4143,7 @@ void function SetRankedIcon( int score, int ladderPos )
 	if ( GetLocalViewPlayer() != null )
 	{
 		RuiTrackInt( rui, "inMatchRankScoreProgress", GetLocalViewPlayer(), RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "inMatchRankScoreProgress" ) )
-		RuiTrackInt( rui, "rankedKillAssistMultiplier", GetLocalViewPlayer(), RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "rankedKillAssistMultiplier" ) )
-		RuiTrackInt( rui, "currentRankKillAssistScore", GetLocalViewPlayer(), RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "currentRankKillAssistScore" ) )
+		RuiTrackFloat( rui, "rankedKillAssistMultiplier", GetLocalViewPlayer(), RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "rankedKillAssistMultiplier" ) )
 	}
 }
 #endif

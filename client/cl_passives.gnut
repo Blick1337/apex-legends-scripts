@@ -148,7 +148,7 @@ void function OnInitWeaponStatusRuis_CLPassives( entity player )
 		CreateCryptoTacticalRui( player )
 	}
                  
-                                                              
+                                                                
   
                                       
   
@@ -180,7 +180,7 @@ void function OnPlayerClassChanged_CLPassives( entity player )
 		}
 	}
                  
-                                                               
+                                                                 
   
                                           
    

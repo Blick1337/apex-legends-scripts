@@ -140,8 +140,6 @@ global const asset BATTLEPASS_MODEL_APEX_COINS = $"mdl/menu/coin.rmdl"
 global const asset BATTLEPASS_MODEL_CRAFTING_METALS = $"mdl/currency/crafting/currency_crafting_epic.rmdl"
 global const float BATTLEPASS_XP_BOOST_AMOUNT = 0.1
 
-global const asset S8_BP = $"settings/itemflav/battlepass/season08.rpak"
-
                          
                          
                          
@@ -199,7 +197,15 @@ void function ShBattlePass_LevelInit()
 		bool isExpired    = false
 
 		if ( GetCalEventBeingProcessed() != null )
-			isExpired = CalEvent_GetFinishUnixTime( expect ItemFlavor( GetCalEventBeingProcessed() ) ) < GetUnixTimestamp()
+		{
+			#if CLIENT || UI
+				Assert( IsConnected(), "We're not connected to a server. This will result in excess challenges being loaded. This won't break anything, but it also shouldn't happen." )
+				if ( IsConnected() )
+			#endif                                                                                    
+				{
+					isExpired = CalEvent_GetFinishUnixTime( expect ItemFlavor( GetCalEventBeingProcessed() ) ) < GetUnixTimestamp()
+				}
+		}
 
 		passData.totalXPToCompleteLevel.resize( maxLevels )
 
@@ -304,9 +310,6 @@ void function ShBattlePass_LevelInit()
 
 		dupeCheck.clear()
 
-		table<string, table<string,int> > zoneChallenges
-		table<string,int> zoneChallengesAll
-
 		passData.challenges[ eChallengeTimeSpanKind.SEASON_WEEKLY ] <- {}
 		if ( isExpired == false )
 		{
@@ -321,80 +324,15 @@ void function ShBattlePass_LevelInit()
 					Assert( !dupeCheck.contains( chAsset ) )
 					dupeCheck.append( chAsset )
 
-				ItemFlavor ornull challenge = RegisterChallengeFromAsset( chAsset )
+					ItemFlavor ornull challenge = RegisterChallengeFromAsset( chAsset )
 					if ( challenge != null )
 					{
 						expect ItemFlavor( challenge )
 						passData.challenges[ eChallengeTimeSpanKind.SEASON_WEEKLY ][week].append( challenge )
-
-						#if DEV && CLIENT
-						int tierCount   = Challenge_GetTierCount( challenge )
-
-						for( int i=0; i<tierCount; i++ )
-						{
-							var tierData = Challenge_GetTierDataBlock( challenge, i )
-							string specifiedStatRef = GetSettingsBlockString( tierData, "statRef" )
-
-							if ( specifiedStatRef.find( "%char%" ) == -1 )
-								continue
-
-							foreach ( ref in Challenge_GetStatRefs( challenge, i ) )
-							{
-								array<string> breakdown = split( ref, "[]" )
-								string statType = breakdown[0].slice( "stats.".len() )
-								if ( statType == "characters" )
-								{
-									string zoneStatType = breakdown[2].slice( 1 )
-									ItemFlavor char = GetItemFlavorByGUID( ConvertItemFlavorGUIDStringToGUID( breakdown[1] ) )
-									string zoneName = ItemFlavor_GetLongName( char )
-
-									#if CHALLENGE_DEBUG
-										                                         
-									#endif
-
-									if (!( zoneStatType in zoneChallenges ))
-									{
-										zoneChallenges[ zoneStatType ] <- {}
-									}
-
-									if (!( zoneName in zoneChallenges[ zoneStatType ] ))
-									{
-										zoneChallenges[ zoneStatType ][ zoneName ] <- 0
-									}
-
-									if (!( zoneName in zoneChallengesAll ))
-									{
-										zoneChallengesAll[ zoneName ] <- 0
-									}
-
-									zoneChallenges[ zoneStatType ][ zoneName ] += 1
-									zoneChallengesAll[ zoneName ] += 1
-								}
-							}
-						}
-						#endif
 					}
 				}
 			}
 		}
-
-		#if CHALLENGE_DEBUG && DEV && CLIENT
-			printt( "---------------- CHARACTER CHALLENGES ----------------" )
-			foreach ( zoneStatType, zoneTbl in zoneChallenges )
-			{
-				printt( "----" + zoneStatType.toupper() + "----" )
-				foreach ( zone, count in zoneTbl )
-				{
-					printt( zone + " - " + count )
-				}
-			}
-
-			printt( "---------------- CHARACTER CHALLENGES TOTAL ----------------" )
-			foreach ( zone, count in zoneChallengesAll )
-			{
-				printt( zone + " - " + count )
-			}
-		#endif
 
 		dupeCheck.clear()
 
@@ -1271,6 +1209,9 @@ int function BattlePassPurchasedXP_GetXPAmount( ItemFlavor purchasedXPFlav )
 				                                                                      
 					        
 
+				                                                     
+					        
+
 				                                                                         
 				 
 					                                                     
@@ -1358,6 +1299,9 @@ int function BattlePassPurchasedXP_GetXPAmount( ItemFlavor purchasedXPFlav )
 					                             
 
 					                                                                      
+						        
+
+					                                                     
 						        
 
 					                                                                         
@@ -1574,8 +1518,14 @@ asset function GetBattlePassDisplayBadge( int levelIndex )
 #if SERVER
                                                                                       
  
+	                                 
+		      
+
 	                                                                                       
 	                     
+		      
+
+	                                              
 		      
 
 	                           

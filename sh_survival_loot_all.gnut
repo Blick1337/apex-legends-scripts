@@ -6,6 +6,7 @@ global function SURVIVAL_Loot_IsLootIndexValid
 global function SURVIVAL_Loot_GetLootDataByRef
 global function SURVIVAL_Loot_IsRefValid
 global function SURVIVAL_Loot_IsRefDisabled
+global function SURVIVAL_Loot_IsReforBaseWeaponDisabled
 global function SURVIVAL_Loot_AddDisabledRef
 global function SURVIVAL_Loot_GetByType
 global function SURVIVAL_Loot_GetLootTypeFromString
@@ -187,6 +188,9 @@ global enum eRestrictedLootTypes
 	CAUSTIC_TT,
                    
 		RAMPART_TT,
+       
+                       
+		SPECTRE_SHACK,
        
 }
 
@@ -382,6 +386,9 @@ void function SURVIVAL_Loot_All_InitShared()
 	disabledRefs = GetCurrentPlaylistVarString( "survival_disabled_weapons", " " )
 	file.disabledRefs.extend( split( disabledRefs, " " ) )
 
+	disabledRefs = GetCurrentPlaylistVarString( "global_disabled_loot", " " )
+	file.disabledRefs.extend( split( disabledRefs, " " ) )
+
 	int numRows = GetDataTableRowCount( dt )
 	for ( int i = 0; i < numRows; i++ )
 	{
@@ -502,11 +509,9 @@ void function SURVIVAL_Loot_All_InitShared()
 						case 4:
 							data.ammoType = "sniper"
 							break
-                  
 						case 5:
 							data.ammoType = "arrows"
 							break
-      
 						default:
 							data.ammoType = ""
 							break
@@ -538,11 +543,9 @@ void function SURVIVAL_Loot_All_InitShared()
 						case "sniper":
 							data.secondaryAmmoType = "sniper"
 							break
-                  
 						case "arrows":
 							data.secondaryAmmoType = "arrows"
 							break
-      
 						default:
 							data.secondaryAmmoType = ""
 							break
@@ -558,13 +561,13 @@ void function SURVIVAL_Loot_All_InitShared()
 				{
 					expect ItemFlavor( weaponFlavor )
 
-					int availableState = ItemFlavor_GetPlaylistOpinion( weaponFlavor )
+					int availableState = ItemFlavor_GetPlaylistAvailability( weaponFlavor )
 					bool shouldBeEnabled
-					if ( availableState == eItemFlavorAvailabilityOpinion.FORCE_UNLOCK_FOR_SPECIAL_EVENT )
+					if ( availableState == eItemFlavorPlaylistAvailability.FORCE_UNLOCK_FOR_SPECIAL_EVENT )
 						shouldBeEnabled = true
-					else if ( availableState == eItemFlavorAvailabilityOpinion.HIDDEN )
+					else if ( availableState == eItemFlavorPlaylistAvailability.HIDDEN )
 						shouldBeEnabled = false
-					else if ( availableState == eItemFlavorAvailabilityOpinion.DISABLED )
+					else if ( availableState == eItemFlavorPlaylistAvailability.DISABLED )
 						shouldBeEnabled = false
 					else
 						shouldBeEnabled = ItemFlavor_IsActiveForEdition( weaponFlavor, GetConVarInt( "mtx_svEdition" ) )
@@ -899,6 +902,22 @@ bool function SURVIVAL_Loot_IsRefDisabled( string ref )
 	return file.disabledRefs.contains( ref )
 }
 
+bool function SURVIVAL_Loot_IsReforBaseWeaponDisabled( string ref )
+{
+	if( SURVIVAL_Loot_IsRefDisabled( ref ) )
+		return true
+
+	                                               
+	if( !SURVIVAL_Loot_IsRefValid( ref ) )
+		return true
+
+	                                                                  
+	LootData lootData = SURVIVAL_Loot_GetLootDataByRef( ref )
+	if( lootData.lootType == eLootType.MAINWEAPON && SURVIVAL_Loot_IsRefDisabled( lootData.baseWeapon ) )
+		return true
+
+	return false
+}
 
 void function SURVIVAL_Loot_AddDisabledRef( string ref )
 {
@@ -1110,6 +1129,40 @@ string function SURVIVAL_Loot_GetDesc( LootData data, entity forPlayer )
 		return Localize( "#SURVIVAL_PICKUP_HEALTH_ULTIMATE_HINT_LOBA" )
 	}
 
+                 
+	                                                                                           
+	if ( SURVIVAL_Loot_GetLootDataByRef( data.ref ).lootType == eLootType.INCAPSHIELD
+	&& IsValid( forPlayer )
+	&& LoadoutSlot_IsReady( ToEHI( forPlayer ), Loadout_Character() )
+	&& ItemFlavor_GetAsset( LoadoutSlot_GetItemFlavor( ToEHI( forPlayer ), Loadout_Character() ) ) == $"settings/itemflav/character/newcastle.rpak" )
+	{
+		#if CLIENT
+		                                                                          
+		if (Crafting_IsPlayerAtWorkbench(forPlayer))
+			return result
+		#endif
+		string desc = ""
+		switch( data.ref )
+		{
+			case "incapshield_pickup_lv1":
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV1_HINT_NEWCASTLE" )
+				break
+			case "incapshield_pickup_lv2":
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV2_HINT_NEWCASTLE" )
+				break
+			case "incapshield_pickup_lv3":
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV3_HINT_NEWCASTLE" )
+				break
+			case "incapshield_pickup_lv4_selfrevive":
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV4_HINT_NEWCASTLE" )
+				break
+			default:
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV1_HINT_NEWCASTLE" )
+				break
+		}
+		return desc
+	}
+      
 	return result
 }
 #endif
@@ -1713,6 +1766,26 @@ void function SURVIVAL_Loot_InitRestrictedLoot()
 				file.restrictedLootInfo[ eRestrictedLootTypes.RAMPART_TT ].dialogPopupHeader = "#LOBA_ULT_BLACK_MARKET_RAMPARTTT_CONFIRM_HEADER"
 				file.restrictedLootInfo[ eRestrictedLootTypes.RAMPART_TT ].dialogPopupAreYouSure = "#LOBA_ULT_BLACK_MARKET_RAMPARTTT_CONFIRM_BODY"
 				file.restrictedLootInfo[ eRestrictedLootTypes.RAMPART_TT ].dialogPopupDeny = "#LOBA_ULT_BLACK_MARKET_RAMPARTTT_DENY_BODY"
+			#endif
+        
+	}
+
+	{
+		RestrictedLootInfo emptyLoot
+                        
+			                           
+			file.restrictedLootInfo[ eRestrictedLootTypes.SPECTRE_SHACK ] <- emptyLoot
+			#if SERVER || CLIENT
+				file.restrictedLootInfo[ eRestrictedLootTypes.SPECTRE_SHACK ].getRestrictedPanel = GetSpectreShackSmartLootBinForLoot
+				file.restrictedLootInfo[ eRestrictedLootTypes.SPECTRE_SHACK ].isRestrictedPanelLocked = IsSpectreShackSmartLootLocked
+			#endif
+			#if SERVER
+				                                                                                                                           
+			#endif
+			#if UI
+				file.restrictedLootInfo[ eRestrictedLootTypes.SPECTRE_SHACK ].dialogPopupHeader = "#LOBA_ULT_BLACK_MARKET_SMARTLOOT_CONFIRM_HEADER"
+				file.restrictedLootInfo[ eRestrictedLootTypes.SPECTRE_SHACK ].dialogPopupAreYouSure = "#LOBA_ULT_BLACK_MARKET_SMARTLOOT_CONFIRM_BODY"
+				file.restrictedLootInfo[ eRestrictedLootTypes.SPECTRE_SHACK ].dialogPopupDeny = "#LOBA_ULT_BLACK_MARKET_SMARTLOOT_DENY_BODY"
 			#endif
         
 	}

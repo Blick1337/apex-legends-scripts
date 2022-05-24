@@ -716,7 +716,6 @@ bool function IsAprilFools_S8_Mode()
 	return GetCurrentPlaylistVarBool( "is_april_fools_s8", false )
 }
 
-                    
 bool function IsUsingProximityAllianceMembers()
 {
 	return GetCurrentPlaylistVarBool( "use_proximity_alliance_members", false )
@@ -728,7 +727,6 @@ int function GetAllianceFromTeam( int team )
 	return IsTeamInAlliance( team, ALLIANCE_A ) ? ALLIANCE_A : ALLIANCE_B
 }
 #endif                    
-                          
 
                         
 bool function Control_IsModeEnabled()
@@ -744,10 +742,10 @@ bool function Control_IsModeEnabled()
                               
 
                       
-bool function WinterExpress_IsModeEnabled()
-{
-	return GetCurrentPlaylistVarBool( "is_winter_express_game", false )
-}
+                                           
+ 
+                                                                    
+ 
       
 
 int function GetEnemyTeam( int team )
@@ -2228,36 +2226,6 @@ bool function IsFiringRangeGameMode()
 	return GetCurrentPlaylistVarBool( "survival_firingrange", false )
 }
 
-              
-#if SERVER
-                                                 
- 
-       
-	                                                              
-		           
-      
-
-	                                                           
-		            
-
-	                           
-	                                             
-		            
-
-	                                                                                               
-	                            
-	                                       
-		            
-
-	                                                              
-	                         
-		            
-
-	           
- 
-#endif
-      
-
 bool function FiringRangeHasFriendlyFire()
 {
 	return GetCurrentPlaylistVarBool( "firingrange_has_friendlyfire", true )
@@ -2281,10 +2249,10 @@ bool function FreelanceSystemsAreEnabled()
 	return GetCurrentPlaylistVarBool( "freelance_systems_enabled", ENABLED_BY_DEFAULT )
 }
                       
-                                       
- 
-                                                                    
- 
+bool function SpectreShacksAreEnabled()
+{
+	return GetCurrentPlaylistVarBool( "spectre_shacks_enabled", true )
+}
       
 
                        

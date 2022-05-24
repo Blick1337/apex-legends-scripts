@@ -18,7 +18,7 @@ global enum eSkydiveLauncherType
        
 		GRAVITY_MINI,
                        
-             
+		IMC_ARMORY,
        
 	                             
 }
@@ -148,7 +148,11 @@ void function Sh_SkydiveLaunchers_Init()
 	                                              
 		                                                                        
 
-	                                                                                                           
+	                          
+	                                               
+		                                                                        
+
+	                                                                                                                           
 	                                                              
  
 
@@ -211,7 +215,7 @@ void function Sh_SkydiveLaunchers_Init()
 
 
 #if SERVER
-                                                                                                                                                                                             
+                                                                                                                                                                                                                         
  
 	                                                                      
 	 
@@ -236,7 +240,7 @@ void function Sh_SkydiveLaunchers_Init()
 	                             
 
 	                                               
-	                         
+	                                   
 	                                    
 
 
@@ -286,7 +290,7 @@ void function Sh_SkydiveLaunchers_Init()
         
 		                                       
                         
-                                       
+		                                     
         
 			                                                
 			                                              
@@ -502,7 +506,7 @@ void function Sh_SkydiveLaunchers_Init()
 			 
 				                                       
                           
-                                         
+				                                     
           
 					                                                                        
 					                           
@@ -663,7 +667,7 @@ void function Sh_SkydiveLaunchers_Init()
 	 
 		                                                                                       
 	 
-	    
+	                              
 	 
 		                                          
 	 
@@ -773,11 +777,13 @@ void function OnSkydiveLauncherCreated( entity trigger )
 	switch( skydiveLauncherType )
 	{
 		case eSkydiveLauncherType.GRAVITY_MINI:
-                        
-                                       
-        
 			ambientFxName = "GravityMini_LaunchPad_Idle_Loop"
 			break
+                      
+		case eSkydiveLauncherType.IMC_ARMORY:
+			ambientFxName = "GravityMini_LaunchPad_SpectreShack_Idle_Loop"
+			break
+      
 		default:
 			ambientFxName = "WXpress_Emit_LaunchPad_Loop"
 			break
@@ -813,7 +819,7 @@ void function OnSkydiveLauncherCreated( entity trigger )
 				sfxAirborneMvmt1p = "JumpPad_Ascent_Windrush"
 			case eSkydiveLauncherType.GRAVITY_MINI:
                          
-                                        
+			case eSkydiveLauncherType.IMC_ARMORY:
          
 				sfxLaunchPlayer1p = "GravityMini_LaunchPad_1p"
 				sfxAirborneMvmt1p = "JumpPad_Ascent_Windrush"
@@ -840,38 +846,38 @@ void function OnSkydiveLauncherCreated( entity trigger )
 	} )
 
                       
-                                                             
-  
-                                                          
-  
+	if( skydiveLauncherType == eSkydiveLauncherType.IMC_ARMORY )
+	{
+		thread Cl_ManageAmbientSound_Thread( trigger, clientAG )
+	}
       
 }
 
                       
-                                                                             
- 
-                                            
-                                 
+void function Cl_ManageAmbientSound_Thread( entity trigger, entity clientAG )
+{
+	Assert( IsNewThread(), "Must be threaded" )
+	trigger.EndSignal( "OnDestroy" )
 
-             
-                                     
-   
-          
-                                                        
-         
-                             
-    
-           
-                              
-          
-                                
-                      
-    
-   
-  
+	OnThreadEnd(
+		function () : ( trigger, clientAG )
+		{
+			#if DEV
+				printf( "mini gravity skydive launcher thread end" )
+			#endif
+			if ( IsValid( clientAG ) )
+			{
+				#if DEV
+					printf( "DESTROYING AG" )
+				#endif
+				clientAG.SetEnabled( false )
+				clientAG.Destroy()
+			}
+		}
+	)
 
-              
- 
+	WaitForever()
+}
       
 
 #endif         

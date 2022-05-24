@@ -39,6 +39,7 @@ global function AddCallback_OnLootBinOpening
                                              
                                                     
                                         
+                                           
 #endif
 
 #if CLIENT
@@ -49,6 +50,7 @@ global function ServerToClient_LootBinOpening
 #if SERVER
                                         
 #endif
+
 
 
 #if SERVER || CLIENT
@@ -92,6 +94,19 @@ global typedef OnLootBinOpeningCallbackType void functionref( entity )
  
 #endif
 
+#if SERVER
+                                                                                                                                                                                            
+ 
+	                              
+	 
+		                              
+		       
+			                                                                   
+			                                                                               
+		      
+	 
+ 
+#endif
 
 #if SERVER || CLIENT
 struct
@@ -123,7 +138,7 @@ void function ShLootBin_Init()
 	#if SERVER
 		                                                                             
 		                                              
-
+		                                                          
 		                                                
 
 		       
@@ -751,7 +766,17 @@ array<entity> function LootBin_GetSpawnedLoot( entity lootBin, bool includeRegul
 	                                                                                             
 	               
 	 
-		  
+		                                 
+		                    
+		 
+			                
+			                                                 
+		 
+	 
+
+	              
+	 
+		            
 	 
 	                                                                             
 	 
@@ -1081,7 +1106,6 @@ array<entity> function LootBin_GetSpawnedLoot( entity lootBin, bool includeRegul
  
 #endif
 
-
 #if CLIENT
 void function ServerToClient_LootBinOpening( entity lootBin )
 {
@@ -1255,7 +1279,32 @@ string function GetLootBinUseTextOverride( entity lootBin )
 	if ( !LootBin_IsFullyOpenedForPlayer( lootBin, player ) )
 	{
 		if ( GradeFlagsHas( lootBin, eGradeFlags.IS_LOCKED ) )
+		{
+			if ( IsValid( lootBin.GetOwner() ) )
+			{
+				entity lootBinOwner = lootBin.GetOwner()
+
+				EHI ornull ehi = ToEHI( lootBinOwner )
+				if ( ehi == null )
+					return ""
+				expect EHI( ehi )
+				if ( !EHIHasValidScriptStruct( ehi ) )
+					return ""
+
+				int team          = EHI_GetTeam( ehi )
+				string playerName = GetPlayerNameFromEHI( ehi )
+
+				string hint = "#SURVIVAL_LOOTBIN_LOCKED_FRIENDLY"
+
+				if (lootBinOwner == player)
+					hint = "#SURVIVAL_LOOTBIN_LOCKED_SELF"
+				else if ( IsEnemyTeam( team, player.GetTeam() ) )
+					hint = "#SURVIVAL_LOOTBIN_LOCKED_ENEMY"
+
+				return Localize( hint, playerName )
+			}
 			return "#SURVIVAL_LOOTBIN_LOCKED"
+		}
 		else if ( !GradeFlagsHas( lootBin, eGradeFlags.IS_OPEN ) )
 			return "#SURVIVAL_LOOTBIN_OPEN"
                         
@@ -1432,6 +1481,13 @@ string function GetLootBinUseTextOverride( entity lootBin )
 
 	                     
  
+
+       
+                                                          
+ 
+	                                                                                   
+ 
+      
 #endif
 
 

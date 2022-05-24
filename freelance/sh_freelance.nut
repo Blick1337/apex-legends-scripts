@@ -45,7 +45,7 @@ global enum eTeamCanRespawn
 
 const string WAYPOINTTYPE_SQUADHUDTRACKER = "SquadHudTrackerWP"
 
-global const int MAX_PVE_SQUADS = 3
+global const int MAX_SQUADS = 4
 
 #if (CLIENT || SERVER)
 void function SharedInit_Freelance()
@@ -177,7 +177,7 @@ string function Freelance_GetWaitingToRespawnTextForState( int teamCanRespawn )
 
 int function GetTeamFromSquadID( int squad )
 {
-	Assert( (squad >= 0) && (squad < MAX_PVE_SQUADS) )
+	Assert( (squad >= 0) && (squad < MAX_SQUADS) )
 	int teamNum = (TEAM_MULTITEAM_FIRST + squad)
 	return teamNum
 }
@@ -185,7 +185,7 @@ int function GetTeamFromSquadID( int squad )
 int function GetSquadIDFromTeam( int team )
 {
 	int squad = (team - TEAM_MULTITEAM_FIRST)
-	Assert( (squad >= 0) && (squad < MAX_PVE_SQUADS) )
+	Assert( (squad >= 0) && (squad < MAX_SQUADS) )
 	return squad
 }
 

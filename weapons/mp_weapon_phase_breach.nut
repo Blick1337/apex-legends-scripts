@@ -7,6 +7,9 @@ global function OnWeaponAttemptOffhandSwitch_weapon_phase_breach
 #if SERVER && DEV
                                           
 #endif
+#if CLIENT
+global function ServerToClient_PhaseBreachPortalCancelled
+#endif
 
 const string SOUND_PORTAL_ENTRANCE_OPEN_1P = "Ash_PhaseBreach_Activate_1p"
 const string SOUND_PORTAL_ENTRANCE_OPEN_3P = "Ash_PhaseBreach_Activate_3p"
@@ -45,8 +48,8 @@ const asset BREACH_STARTPOINT_FX = $"P_ash_breach_start"
 const asset BREACH_ENDPOINT_FX = $"P_ash_breach_end"
 const asset BREACH_AIM_FX = $"P_wrp_trl_end"
 
+const string FUNC_BREACH_FAILED = "ServerToClient_PhaseBreachPortalCancelled"
 const string PLACEMENT_FAILED_HINT = "#PHASE_BREACH_CANT_PLACE"
-                                                                                 
 global const string PHASE_BREACH_BLOCKER_SCRIPTNAME = "phase_breach_blocker"
 
 struct PhaseBreachTargetInfo
@@ -111,6 +114,8 @@ void function MpWeaponPhaseBreach_Init()
 
 	if ( PHASE_BREACH_ALLOW_END_ON_OOB == false )
 		file.invalidTriggerEndingTypes.append( "trigger_out_of_bounds" )
+
+	Remote_RegisterClientFunction( FUNC_BREACH_FAILED )
 }
 
 
@@ -269,17 +274,6 @@ var function OnWeaponPrimaryAttackAnimEvent_ability_phase_breach( entity weapon,
 	                                     
 	                               
 
-	            
-		                                            
-		 
-			                               
-				                           
-
-			                              
-				                      
-		 
-	 
-
 	                                                                                       
 
 	                                                                        
@@ -296,21 +290,70 @@ var function OnWeaponPrimaryAttackAnimEvent_ability_phase_breach( entity weapon,
 	                                          
 	                                                                
 
+	            
+		                                                        
+		 
+			                                                 
+				                                             
+
+			                               
+				                           
+
+			                              
+				                      
+		 
+	 
+
 	                                                                                                    
+
+	                                    	                                                     
+	                                
+	 
+		           
+
+		                         
+			      
+
+		                                                                                   
+		 
+			                                                    
+			                                                           
+			                                                                                   
+			 
+				                                
+			 
+
+			                              
+				                          
+
+			                                                                               
+			                                                           
+
+			      
+		 
+	 
 
 	                                                                                                                                                  
 	                                                                                                                                       
 
-	        
-	                         
-	 
-		                                  
-		      
-	 
-
 	                                                                 
  
+#endif
 
+#if CLIENT
+void function ServerToClient_PhaseBreachPortalCancelled()
+{
+	entity localPlayer = GetLocalViewPlayer()
+	if ( !IsValid( localPlayer ) )
+		return
+
+	AddPlayerHint( 3.0, 0.5, $"", "Phase Breach Failed" )
+
+	StopSoundOnEntity( localPlayer, "Ash_PhaseBreach_Enter_1p" )
+}
+#endif
+
+#if SERVER
                                                                                            
  
 	                                                                
@@ -360,9 +403,6 @@ var function OnWeaponPrimaryAttackAnimEvent_ability_phase_breach( entity weapon,
 	            
 		                                               
 		 
-			                                                 
-				                                             
-
 			                           
 			 
 				                                   

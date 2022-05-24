@@ -45,8 +45,6 @@ const vector DIRTY_BOMB_BOUND_MAXS = <8, 8, 8>
 const vector DIRTY_BOMB_PLACEMENT_TRACE_OFFSET = <0, 0, 128>
 const float DIRTY_BOMB_ANGLE_LIMIT = 0.55
 const float DIRTY_BOMB_PLACEMENT_MAX_HEIGHT_DELTA = 20.0
-const float DIRTY_BOMB_TRACE_START_OFFSET = 16
-const float DIRTY_BOMB_TRACE_GROUND_END_OFFSET = 32
 const float DIRTY_BOMB_TRACE_HEIGHT_END_OFFSET = 24
 
 const bool CAUSTIC_DEBUG_DRAW_PLACEMENT = false
@@ -56,7 +54,6 @@ struct DirtyBombPlacementInfo
 	vector origin
 	vector angles
 	entity parentTo
-	bool   success = false
 	bool   doDeployAnim = true
 
 	entity originalProjectile
@@ -178,11 +175,11 @@ void function DirtyBombPrecache()
 	                                             
 	                                                       
 	                                            
-	                        
 	                                                                                                                 
 	                                   	                                      
 	                                                                                                                               
 	                                                                                                                                               
+	                                   
 
 	                                                                
 	                                                                   
@@ -275,7 +272,57 @@ void function DirtyBombPrecache()
 	 
 	                                                                    
 
-	                     
+	                                              
+	                                                                  
+	 
+		                                              
+		                             
+		 
+			                     
+		 
+	 
+
+	                                                   
+
+	                                                                                                             
+	                                                                                   
+	                                                      
+	                                                   
+	                                   
+	                            
+	                           
+	                                  
+	                                      
+	                                          
+	                                    
+	                                        
+	                                          
+	                             
+	                                        
+	                        
+	                                              
+	                                             
+	                               	                                                                                                             
+
+	            
+		                        
+		 
+			                         
+			 
+				                 
+			 
+		 
+	 
+
+	                                    
+	                                                 
+	 
+		           
+	 
+
+	                 
+
+	                                                                                  
 	                                                     
                               
                                                                                                      
@@ -293,18 +340,6 @@ void function DirtyBombPrecache()
 	                                                               
 
 	                              
-
-	                                              
-	                                                   
-
-	                                                                  
-	 
-		                                              
-		                             
-		 
-			                     
-		 
-	 
 
 	             
  
@@ -431,8 +466,8 @@ void function DirtyBombPrecache()
 	                                
 
 	                                                      
-	                                      
-	                                                                               
+	                                                                              
+	                                                 
 	                           
 
 	                                                   
@@ -974,137 +1009,6 @@ string function DirtyBomb_UseTextOverride( entity ent )
 }
 #endif         
 
-DirtyBombPlacementInfo function GetDirtyBombPlacementInfo( entity player, entity bombModel )
-{
-	vector eyePos  = player.EyePosition()
-	vector viewVec = player.GetViewVector()
-	vector angles  = < 0, VectorToAngles( viewVec ).y, 0 >
-	                                     
-
-	float maxRange = DIRTY_BOMB_PLACEMENT_RANGE_MAX
-
-	TraceResults viewTraceResults = TraceLine( eyePos, eyePos + player.GetViewVector() * (DIRTY_BOMB_PLACEMENT_RANGE_MAX * 2), [player, bombModel], TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
-	if ( viewTraceResults.fraction < 1.0 )
-	{
-		float slope = fabs( viewTraceResults.surfaceNormal.x ) + fabs( viewTraceResults.surfaceNormal.y )
-		if ( slope < 0.707 )
-			maxRange = min( Distance2D( eyePos, viewTraceResults.endPos ), DIRTY_BOMB_PLACEMENT_RANGE_MAX )
-	}
-
-	vector idealPos = player.GetOrigin() + (AnglesToForward( angles ) * DIRTY_BOMB_PLACEMENT_RANGE_MAX)
-
-	vector fwdStart          = eyePos + viewVec * min( DIRTY_BOMB_PLACEMENT_RANGE_MIN, maxRange )
-	TraceResults fwdResults  = TraceHull( fwdStart, eyePos + viewVec * maxRange, DIRTY_BOMB_BOUND_MINS, <30, 30, 1>, player, TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
-	TraceResults downResults = TraceHull( fwdResults.endPos, fwdResults.endPos - DIRTY_BOMB_PLACEMENT_TRACE_OFFSET, DIRTY_BOMB_BOUND_MINS, DIRTY_BOMB_BOUND_MAXS, player, TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
-
-	                                                                   
-	                                                                   
-	                                                               
-	                                                                                                                
-
-	DirtyBombPlacementInfo placementInfo = DirtyBomb_GetPlacementInfoFromTraceResults( player, bombModel, downResults, viewTraceResults, idealPos )
-
-	if ( !placementInfo.success )
-	{
-		                                             
-		vector fallbackPos               = fwdResults.endPos - (viewVec * Length( DIRTY_BOMB_BOUND_MINS ))
-		TraceResults downFallbackResults = TraceHull( fallbackPos, fallbackPos - DIRTY_BOMB_PLACEMENT_TRACE_OFFSET, DIRTY_BOMB_BOUND_MINS, DIRTY_BOMB_BOUND_MAXS, [player, bombModel], TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
-
-		                                        
-		   
-		  	                                                                                                                                                      
-		   
-
-		placementInfo = DirtyBomb_GetPlacementInfoFromTraceResults( player, bombModel, downFallbackResults, viewTraceResults, idealPos )
-	}
-
-	return placementInfo
-}
-
-
-DirtyBombPlacementInfo function DirtyBomb_GetPlacementInfoFromTraceResults( entity player, entity bombModel, TraceResults hullTraceResults, TraceResults viewTraceResults, vector idealPos )
-{
-	vector viewVec = player.GetViewVector()
-	vector angles  = < 0, VectorToAngles( viewVec ).y, 0 >
-
-	bool isScriptedPlaceable = false
-
-	bool success = !hullTraceResults.startSolid && hullTraceResults.fraction < 1.0 && (hullTraceResults.hitEnt.IsWorld() || hullTraceResults.hitEnt.GetNetworkedClassName() == "func_brush" || isScriptedPlaceable)
-
-	entity parentTo
-	if ( IsValid( hullTraceResults.hitEnt ) && hullTraceResults.hitEnt.GetNetworkedClassName() == "func_brush" )
-	{
-		parentTo = hullTraceResults.hitEnt
-	}
-
-	if ( hullTraceResults.startSolid && hullTraceResults.fraction < 1.0 && (hullTraceResults.hitEnt.IsWorld() || isScriptedPlaceable) )
-	{
-		TraceResults upResults = TraceHull( hullTraceResults.endPos, hullTraceResults.endPos, DIRTY_BOMB_BOUND_MINS, DIRTY_BOMB_BOUND_MAXS, player, TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
-		if ( !upResults.startSolid )
-			success = true
-	}
-
-	if ( success )
-	{
-		bombModel.SetOrigin( hullTraceResults.endPos )
-		bombModel.SetAngles( angles )
-	}
-
-	if ( !player.IsOnGround() )
-		success = false
-
-	                                           
-	if ( success && hullTraceResults.fraction < 1.0 )
-	{
-		vector right   = bombModel.GetRightVector()
-		vector forward = bombModel.GetForwardVector()
-		vector up      = bombModel.GetUpVector()
-
-		float length = Length( DIRTY_BOMB_BOUND_MINS )
-
-		array< vector > groundTestOffsets = [
-			Normalize( right + forward ) * length,
-			Normalize( -right + forward ) * length,
-			Normalize( right + -forward ) * length,
-			Normalize( -right + -forward ) * length
-		]
-
-		foreach ( vector testOffset in groundTestOffsets )
-		{
-			vector testPos           = bombModel.GetOrigin() + testOffset
-			TraceResults traceResult = TraceLine( testPos + (up * DIRTY_BOMB_PLACEMENT_MAX_HEIGHT_DELTA), testPos + (up * -DIRTY_BOMB_PLACEMENT_MAX_HEIGHT_DELTA), [player, bombModel], TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
-
-			if ( traceResult.fraction == 1.0 )
-			{
-				success = false
-				break
-			}
-		}
-	}
-
-	                                                                                                                           
-	  	               
-	if ( success && hullTraceResults.hitEnt != null && (!hullTraceResults.hitEnt.IsWorld() && !isScriptedPlaceable) )
-	{
-		                                                               
-		                        
-		success = false
-	}
-
-	                                                                                                                                                             
-	if ( success && !PlayerCanSeePos( player, hullTraceResults.endPos, false, 90 ) )                                                               
-		success = false
-
-	vector org = success ? hullTraceResults.endPos - <0, 0, DIRTY_BOMB_BOUND_MAXS.z> : idealPos
-	DirtyBombPlacementInfo placementInfo
-	placementInfo.success = success
-	placementInfo.origin = org
-	placementInfo.angles = angles
-	placementInfo.parentTo = parentTo
-
-	return placementInfo
-}
-
                                                                         
   			    
                                                                         
@@ -1123,6 +1027,8 @@ var function OnWeaponTossReleaseAnimEvent_weapon_dirty_bomb( entity weapon, Weap
 
 #if SERVER
 		                                      
+		                                                                   
+		                                                   
 
 		                                                            
 		                            
@@ -1167,43 +1073,30 @@ void function OnDirtyBombPlanted( entity projectile, DeployableCollisionParams c
 {
 	#if SERVER
 		                                                
-		                                                                            
+		                                                                                          
 
-		                                                                                                                                                                                
+		                      
+		                             
+                       
+			                                     
+				                            
+           
 
-		                                    
-		                                                                                    
-		 
-			                                         
-			                                                                                                                
-		 
-		                                                  
+		                                                                                                                                                          
+		                                                           
 		 
 			                                             
+			                    
+			      
 		 
-		                                             
 
-		                            
+		                                    
+		                                             
+		                                             
 		                                  
 		                                               
 		                                             
-
-		  
-		 
-			                      
-			                             
-                        
-				                                     
-					                            
-                                  
-
-			                                                                                                                                                                            
-
-			                                                             
-				                                                                
-			    
-				                                             
-		 
+		                                                                
 
 		                    
 	#endif

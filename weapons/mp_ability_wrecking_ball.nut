@@ -419,7 +419,7 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 	 
 
 	                        
-		                                                         
+		                                                                                       
 
 	                                    
 		                                                                                                                                         
@@ -744,7 +744,9 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 		                                                                              
 
 	                                                                                                             
-	                                               
+	                                                              
+	                           
+	                                     
 
 	                                                                                                                                                                
 

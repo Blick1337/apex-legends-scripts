@@ -76,6 +76,7 @@ global function EvolvingArmor_ExceedsMaxIntLimit
 #if CLIENT
 global function ServerCallback_PlayFPEvoShieldUpgradeFX
 global function ServerCallback_Play3PEvoShieldUpgradeFX
+global function ServerCallback_SetLockedSet
 #endif          
 
 #if SERVER
@@ -238,6 +239,8 @@ global function GetDeathBoxLootEnts
 global function IsValidAndStandardGrabbableLootEnt
 global function IsLootEntInsideDeathBox
 global function DoesDeathBoxSupportAddingLoot
+global function ShouldUseAltInteractForArmorSwap
+global function GetDeathboxArmorSwap
 #endif
 
 global function GetFadeDistForLoot
@@ -269,8 +272,8 @@ global const string WEAPON_LOCKEDSET_SUFFIX_BLUEPAINTBALL = "_blue_paintball"
 global const string WEAPON_LOCKEDSET_MOD_BLUEPAINTBALL = "blue_paintball"
 
                                 
-global const string WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS = "_april_fools"
-global const string WEAPON_LOCKEDSET_MOD_APRILFOOLS = "hopup_april_fools"
+                                                                       
+                                                                         
       
 
 global const string WEAPON_LOCKEDSET_MOD_CRATE = "crate"
@@ -496,6 +499,8 @@ struct
 
 	bool initialized
 
+	bool useAltInteractForArmorSwap
+
 	table<string, int> maxAmmoForType
 
 	#if SERVER
@@ -583,6 +588,7 @@ void function SURVIVAL_Loot_InitShared()
 	Remote_RegisterServerFunction( "ClientCallback_BackpackClosed" )
 	Remote_RegisterServerFunction( "ClientCallback_Sur_SwapPrimaryPositions" )
 	Remote_RegisterServerFunction( "ClientCallback_PickupSurvivalLootFromDeathbox", "int", INT_MIN, INT_MAX, "int", INT_MIN, INT_MAX, "entity", "entity", "int", INT_MIN, INT_MAX, "int", INT_MIN, INT_MAX )
+	Remote_RegisterClientFunction( "ServerCallback_SetLockedSet", "entity", "bool", "bool", "bool", "bool" )
 
                   
                                                                                
@@ -952,6 +958,8 @@ void function SURVIVAL_Loot_InitShared()
 	RegisterNetworkedVariable( NV_EVOLVING_ARMOR_KILL_COUNT, SNDC_PLAYER_EXCLUSIVE, SNVT_UNSIGNED_INT, 0 )
 
 	Remote_RegisterServerFunction( CMDNAME_PLAYER_SWITCHED_WEAPONS, "int", -1, 2 )
+
+	file.useAltInteractForArmorSwap = GetCurrentPlaylistVarBool( "alt_interact_armor_swap", GetCurrentPlaylistName() == "survival_nitro" )                                                                               
 }
 
 #if SERVER
@@ -986,28 +994,61 @@ array<entity> function SURVIVAL_Loot_GetAllLoot()
 	return file.allLoot
 }
 
+#if CLIENT
+void function ServerCallback_SetLockedSet( entity weapon, bool whiteSet, bool blueSet, bool purpleSet, bool goldSet )
+{
+	if ( !IsValid( weapon ) )
+		return
+
+	if ( whiteSet )
+		weapon.w.isWhiteset = true
+	else if ( blueSet )
+		weapon.w.isBlueset = true
+	else if ( purpleSet )
+		weapon.w.isPurpleset = true
+	else if ( goldSet )
+		weapon.w.isGoldset = true
+
+	if ( IsArenaMode() )
+		RunUIScript( "ClientToUI_Arenas_RefreshBuyMenu" )
+}
+#endif
 
 string function GetWeaponClassNameWithLockedSet( entity weapon )
 {
 	string result = weapon.GetWeaponClassName()
 
                                  
-		if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_APRILFOOLS ) )
-		{
-			result += WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS
-			return result
-		}
+                                                         
+   
+                                               
+                
+   
        
 
-	if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_GOLD ) )
+	bool whiteset = weapon.w.isWhiteset
+	bool blueset = weapon.w.isBlueset
+	bool purpleset = weapon.w.isPurpleset
+	bool goldset = weapon.w.isGoldset
+
+	if ( goldset == true )
+	{
 		result += WEAPON_LOCKEDSET_SUFFIX_GOLD
-	else if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_WHITESET ) )
+	}
+	else if ( whiteset == true )
+	{
 		result += WEAPON_LOCKEDSET_SUFFIX_WHITESET
-	else if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_BLUESET ) )
+	}
+	else if ( blueset == true )
+	{
 		result += WEAPON_LOCKEDSET_SUFFIX_BLUESET
-	else if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_PURPLESET ) )
+	}
+	else if ( purpleset == true )
+	{
 		result += WEAPON_LOCKEDSET_SUFFIX_PURPLESET
-	else if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_PURPLEPAINTBALL ) )
+	}
+
+	if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_PURPLEPAINTBALL ) )
 		result += WEAPON_LOCKEDSET_SUFFIX_PURPLEPAINTBALL
 	else if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_BLUEPAINTBALL ) )
 		result += WEAPON_LOCKEDSET_SUFFIX_BLUEPAINTBALL
@@ -1033,8 +1074,8 @@ bool function WeaponLootRefIsLockedSet( string ref )
 		return true
 
                                  
-		if ( ref.find( WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS ) >= 0 )
-			return true
+                                                            
+              
        
 	return false
 }
@@ -1071,12 +1112,6 @@ bool function CodeCallback_WeaponModCommandCheckMods( entity player, entity weap
 	if ( alwaysAllowedMods.contains( mod ) )
 		return true
 
-  
-                      
-	                                                                                                  
-		           
-      
-  
 
 	if ( Consumable_IsValidModCommand( player, weapon, mod, isAdd ) )
 		return true
@@ -2882,9 +2917,14 @@ bool function SURVIVAL_CanPlayerPickup( entity player, entity pickup, int useInp
 
 bool function SURVIVAL_PlayerAllowedToPickup( entity player, int useInputFlags = 0 )
 {
-	if ( IsValid( player.GetActiveWeapon( eActiveInventorySlot.mainHand ) )
-	&& player.GetActiveWeapon( eActiveInventorySlot.mainHand ).IsWeaponOffhand() )
-		return false
+	entity activeMainWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
+
+	if ( IsValid( activeMainWeapon ) && activeMainWeapon.IsWeaponOffhand() )
+	{
+		var offhandAllowsPickups = activeMainWeapon.GetWeaponInfoFileKeyField( "offhand_allow_player_interact" )
+		if ( !offhandAllowsPickups || offhandAllowsPickups <= 0 )
+			return false
+	}
 
 	return PlayerCommonItemPickupCheck( player, useInputFlags )
 }
@@ -2918,8 +2958,8 @@ bool function SURVIVAL_PlayerCanSwitchOrdnance( entity player )
 
 #if SERVER
                        
-		                                    
-			           
+                                      
+              
                                  
 
 	                                           
@@ -3602,8 +3642,8 @@ string function GetWeaponToReplace( entity player )
 				        
 
                                    
-				                                                                
-					        
+                                                                    
+             
          
 		 
 
@@ -3826,8 +3866,8 @@ void function Inventory_RegisterNetworking()
 			                                
                                
                   
-                                                        
-                                                     
+		                                                      
+			                                                  
        
  
 
@@ -4083,7 +4123,11 @@ bool function SurvivalLoot_CanUseFunction( entity player, entity ent, int useFla
 		if ( IsValid( activeWeapon ) )
 		{
 			if ( activeWeapon.IsWeaponOffhand() )
-				return false
+			{
+				var offhandAllowsPickups = activeWeapon.GetWeaponInfoFileKeyField( "offhand_allow_player_interact" )
+				if ( !offhandAllowsPickups || offhandAllowsPickups <= 0 )
+					return false
+			}
 		}
 	}
 
@@ -4798,6 +4842,11 @@ int function EvolvingArmor_GetEvolutionProgress( entity player )
 						                                                                                                               
 						     
            
+                           
+					                   
+						                                                                                                         
+						     
+           
 					        
 						                                              
 				 
@@ -4809,15 +4858,6 @@ int function EvolvingArmor_GetEvolutionProgress( entity player )
 				                                      
 			 
 		 
-                      
-                                                         
-   
-                                                
-    
-                                                                                                                
-    
-   
-      
 		                                                      
 			      
 	 
@@ -5364,6 +5404,17 @@ void function OnDeathBoxUse( entity box, entity player, int useInputFlags )
         
        
 
+	if ( ShouldUseAltInteractForArmorSwap() && useInputFlags & USE_INPUT_ALT )
+	{
+		entity ornull armorEnt = GetDeathboxArmorSwap( player, box )
+		if ( armorEnt != null )
+		{
+			expect entity( armorEnt )
+			Survival_PickupItem( armorEnt, player, 0, box )
+		}
+		return
+	}
+
 	if ( useInputFlags & USE_INPUT_LONG )
 	{
 		if ( ShouldPickupDNAFromDeathBox( box, player ) )
@@ -5574,19 +5625,20 @@ bool function SURVIVAL_Weapon_IsAttachmentLocked( string weaponName )
 	if ( !SURVIVAL_Loot_IsRefValid( weaponName ) )
 		return false
 	array<string> baseMods = SURVIVAL_Loot_GetLootDataByRef( weaponName ).baseMods
+	array<string> lootTags = SURVIVAL_Loot_GetLootDataByRef( weaponName ).lootTags
 	if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_CRATE ) )
 		return true
                                  
-		if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_APRILFOOLS ) )
-			return true
+                                                             
+              
        
-	if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_GOLD ) )
+	if ( lootTags.contains( WEAPON_LOCKEDSET_MOD_GOLD ) )
 		return true
-	if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_WHITESET ) )
+	if ( lootTags.contains( WEAPON_LOCKEDSET_MOD_WHITESET ) )
 		return true
-	if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_BLUESET ) )
+	if ( lootTags.contains( WEAPON_LOCKEDSET_MOD_BLUESET ) )
 		return true
-	if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_PURPLESET ) )
+	if ( lootTags.contains( WEAPON_LOCKEDSET_MOD_PURPLESET ) )
 		return true
 	if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_PURPLEPAINTBALL ) )
 		return true
@@ -5659,6 +5711,15 @@ int function SURVIVAL_GetInventorySlotCountForPlayer( entity player, LootData da
 	{
 		result++
 	}
+                      
+                                                                                                    
+  
+                                                                                            
+              
+                                                                                                                                           
+           
+  
+      
 
 	if ( PlayerHasPassive( player, ePassives.PAS_BATTERY_POWERED ) && data.ref == "health_pickup_ultimate" )
 	{
@@ -6037,7 +6098,13 @@ bool function IsLootEntInsideDeathBox( entity lootEnt )
 		return false
 	}
 
-	return true
+	array<entity> boxLinkedEnts = lootEntParent.GetLinkEntArray()	                                                                                                                             
+	if ( boxLinkedEnts.contains( lootEnt ) )
+		return true
+	else
+		return false
+
+	unreachable
 }
 #endif
 
@@ -6083,6 +6150,44 @@ bool function SURVIVAL_EquipmentPretendsToBeBlank( string ref )
 
 	LootData data = SURVIVAL_Loot_GetLootDataByRef( ref )
 	return data.pretendsToBeBlank
+}
+
+bool function ShouldUseAltInteractForArmorSwap()
+{
+	return file.useAltInteractForArmorSwap
+}
+
+entity ornull function GetDeathboxArmorSwap( entity player, entity box )
+{
+	array<entity> items = GetDeathBoxLootEnts( box )
+	foreach ( int idx, entity item in items )
+	{
+		LootData data = SURVIVAL_Loot_GetLootDataByIndex( item.GetSurvivalInt() )
+		  
+		if ( data.lootType == eLootType.ARMOR )
+		{
+			int currentShields  = SURVIVAL_GetPlayerShieldHealthFromArmor( player )
+			int lootShields     = GetPropSurvivalMainPropertyFromEnt( item )
+
+			bool isEvoProgressUpgrade = false
+			  
+			                                                        
+			                                                                       
+
+			                                                                     
+			                                                                 
+			                                                                                        
+			                                                           
+			  
+
+			if( lootShields > currentShields || lootShields == currentShields && isEvoProgressUpgrade )
+				return item
+			else
+				return null
+		}
+	}
+
+	return null
 }
 #endif
 

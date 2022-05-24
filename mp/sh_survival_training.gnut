@@ -22,6 +22,8 @@
 
 #if SERVER && DEV
                                        
+                                                
+                              
 #endif
 
 #if CLIENT
@@ -127,6 +129,18 @@ struct
 	table<entity, entity>             playerUltimateDropPods
 } file
 
+#if DEV
+void function GetWeaponNames (entity player)
+{
+	array<entity> weapons = player.GetAllActiveWeapons()
+	foreach (weapon in weapons)
+	{
+		printt("Player's holding : " + weapon.GetWeaponName())
+	}
+
+}
+#endif
+
 void function ShSurvivalTraining_Init()
 {
 	if ( !IsSurvivalTraining() )
@@ -213,7 +227,7 @@ void function Training_EntitiesDidLoad()
  
 	                                          
 
-	                          
+	                                  
 	                                           
 		      
 
@@ -494,9 +508,9 @@ void function OnLocalClientConnected( entity player )
 	printt( "Training: OnLocalClientConnected", player )
 }
 
-void function TrainingEndTimeChanged( entity player, float old, float new )
+void function TrainingEndTimeChanged( entity player, float new )
 {
-	if ( old != new && new > 0 )
+	if ( new > 0 )
 	{
 		var rui = CreateFullscreenRui( $"ui/training_end_countdown.rpak" )
 		RuiSetGameTime( rui, "quitTime", new )
@@ -773,7 +787,30 @@ void function QuitToLobbyDelayed( entity player, float time )
 
 	                                                                 
  
+       
+                                                                      
+ 
+	                            
+	            
+	 
+		       
+			                                                                                  
+			     
 
+		       
+			                                                                                   
+			     
+
+		       
+			                                                                                   
+			     
+
+		        
+			                                                                                 
+	 
+	                                                                                                                 
+ 
+      
                                                                
  
 	                             

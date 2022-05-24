@@ -201,8 +201,8 @@ void function FreelanceMode_SharedInit()
 		QuestS05EndInit()
 
                           
-                                                                     
-                    
+	if ( GetCurrentPlaylistVarBool( "freelance_mode_dropdown", false ) )
+		DropDownModeInit()
                                 
 }
 
@@ -909,7 +909,7 @@ bool function FreelanceMode_GetIsVictoryForAll()
  
 	             
 
-	                                                
+	                                            
 	 
 		                                                 
 		                                                    
@@ -1244,7 +1244,7 @@ bool function FreelanceMode_GetIsVictoryForAll()
 	 
 	                                                                     
 
-	                                                
+	                                            
 	 
 		                                    
 
@@ -1298,7 +1298,7 @@ bool function FreelanceMode_GetIsVictoryForAll()
 		                         
 	                        
 
-	                                                
+	                                            
 	 
 		                                    
 
@@ -1427,11 +1427,8 @@ void function DoCountdownEndingTimer()
 	}()
 }
 
-void function OnNVModeChanged( entity player, int oldVal, int newVal )
+void function OnNVModeChanged( entity player, int newVal )
 {
-	if ( oldVal == newVal )
-		return
-
 	RegisterSignal( "OnNVModeChanged" )
 	Signal( clGlobal.levelEnt, "OnNVModeChanged" )
 

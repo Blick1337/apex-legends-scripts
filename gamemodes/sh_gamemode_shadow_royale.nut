@@ -1411,7 +1411,7 @@ void function OnVictoryCharacterModelSpawned( entity characterModel, ItemFlavor 
 
 
 #if SERVER
-                                                                                    
+                                                                      
  
 	                                           
 	 

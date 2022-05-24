@@ -125,7 +125,16 @@ void function BuffetEvents_Init()
 	AddCallback_OnItemFlavorRegistered( eItemType.calevent_buffet, void function( ItemFlavor ev ) {
 
 		BuffetEventModesAndChallengesData bemacd
-		bool expired = CalEvent_GetFinishUnixTime( ev ) < GetUnixTimestamp()
+		bool expired = false
+
+		#if CLIENT || UI
+			Assert( IsConnected(), "We're not connected to a server. This will result in excess challenges being loaded. This won't break anything, but it also shouldn't happen." )
+			if ( IsConnected() )
+		#endif                                                                                    
+			{
+				expired = CalEvent_GetFinishUnixTime( ev ) < GetUnixTimestamp()
+			}
+
 		bemacd.mainChallengeFlav = RegisterItemFlavorFromSettingsAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( ev ), "mainChallengeFlav" ) )
 		if ( bemacd.mainChallengeFlav != null )
 		{

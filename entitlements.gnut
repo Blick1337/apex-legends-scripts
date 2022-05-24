@@ -112,7 +112,7 @@ void function Entitlements_LevelInit()
 
 	#if SERVER
 		                                                                            
-		                                                                         
+		                                                                              
 	#endif
 }
 
@@ -836,19 +836,6 @@ int function GetEntitlementForString( string entitlementString )
 	return expect int( getconsttable()[ entitlementString ] )
 }
 #endif
-
-
-#if SERVER
-                                                                                             
- 
-	                          
-	 
-		                                        
-	 
- 
-
-#endif
-
 
 #if UI
 bool function TryEntitlementMenus()

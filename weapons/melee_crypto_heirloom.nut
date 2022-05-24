@@ -1,4 +1,3 @@
-                    
 global function MeleeCryptoHeirloom_Init
 
 global function OnWeaponActivate_melee_crypto_heirloom
@@ -89,4 +88,3 @@ void function UpdateSwordDrone_Internal( entity weapon, bool usingDrone )
 			weapon.AddMod( "proto_door_kick_impact_table" )
 	}
 }
-                              

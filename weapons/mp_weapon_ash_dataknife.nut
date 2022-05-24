@@ -280,7 +280,10 @@ void function OnCharacterButtonPressed( entity player )
                                                                                           
  
 	                                                              
+	 
+		                                               
 		      
+	 
 
 	                                           
  
@@ -308,7 +311,7 @@ void function OnCharacterButtonPressed( entity player )
 
 	                                         
 	 
-		                                                                         
+		                                                                          
 		      
 	 
 
@@ -401,7 +404,7 @@ void function OnCharacterButtonPressed( entity player )
 
 	                                         
 	 
-		                                                                         
+		                                                                        
 		      
 	 
 
@@ -467,7 +470,11 @@ bool function OnWeaponAttemptOffhandSwitch_ability_ash_dataknife( entity weapon 
 		                                                               
 			            
 
-		                                                                            
+		                                                                                   
+		             
+			                                                                    
+
+		             
 	#endif
 	return true
 }
@@ -511,8 +518,9 @@ void function OnWeaponDeactivate_ability_ash_dataknife( entity weapon )
 {
 	#if SERVER
 	                                
+	                                                                                                   
 
-	                       
+	                                                         
 		                                     
 	#endif
 }

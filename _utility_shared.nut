@@ -22,8 +22,6 @@ global const CALCULATE_SEQUENCE_BLEND_TIME = -1.0
 
 global const string SILENT_PLAYER_VOICE = "_silent"
 
-global array<string> DEPLOYABLE_ABILITY_NAMES = []
-
 global struct ArrayDistanceEntry
 {
 	float  distanceSqr
@@ -198,9 +196,7 @@ void function InitWeaponScripts()
                       
                        
        
-                   
-		MpWeaponBow_Init()
-       
+	MpWeaponBow_Init()
                          
                           
        
@@ -237,11 +233,8 @@ void function InitWeaponScripts()
 	MpWeaponMirageStatuePrimary_Init()
 	MeleeWattsonGadget_Init()
 	MpWeaponWattsonGadgetPrimary_Init()
-	        
-                     
-		MeleeCryptoHeirloom_Init()
-		MpWeaponCryptoHeirloomPrimary_Init()
-       
+	MeleeCryptoHeirloom_Init()
+	MpWeaponCryptoHeirloomPrimary_Init()
                      
                            
                                      
@@ -276,6 +269,12 @@ void function InitWeaponScripts()
                                                               
        
 	MpWeaponGrenadeDefensiveBombardment_Init()
+
+                    
+                                        
+                               
+       
+
 	MpAbilityHuntModeWeapon_Init()
 	MpAbilityAreaSonarScan_Init()
 	MpWeaponGrenadeGas_Init()
@@ -303,11 +302,9 @@ void function InitWeaponScripts()
                                       
                                   
        
-               
-		MpWeaponRiotDrill_Init()
-		MpAbilityWreckingBall_Init()
-		MpMaggieCommon_Init()
-       
+	MpWeaponRiotDrill_Init()
+	MpAbilityWreckingBall_Init()
+	MpMaggieCommon_Init()
                           
                                  
        
@@ -348,6 +345,7 @@ void function InitWeaponScripts()
                 
                                  
                                     
+                              
        
                  
                                 
@@ -389,9 +387,9 @@ void function InitWeaponScripts()
        
 
                   
-                             
-                             
-                             
+		MpAbilityShieldThrow_Init()
+		MpAbilityArmoredLeap_Init()
+		MpWeaponReviveShield_Init()
        
 
                
@@ -406,6 +404,7 @@ void function InitWeaponScripts()
                        
                   
                          
+                              
 
                     
                          
@@ -427,29 +426,23 @@ void function InitWeaponScripts()
                                   
                           
                           
+                           
        
 
                     
                                 
        
 
-                    
-		MpWeapon3030_Init()
-       
-                          
-		MpWeaponDragon_LMG_Init()
-       
+	MpWeapon3030_Init()
+	MpWeaponDragon_LMG_Init()
                         
                            
        
 	VOID_RING_Init()
-                       
-		MpWeaponCar_Init()
-       
+	MpWeaponCar_Init()
 
                             
                             
-                                   
        
 
                                
@@ -479,10 +472,6 @@ void function InitWeaponScripts()
         
                             
        
-
-	#if SERVER
-	                                                                                                                                                                                                                                                                                                                                                                                         
-	#endif
 }
 
 
@@ -899,69 +888,6 @@ bool function GetReplayDisabled()
 	                                                                          
 	            
  
-
-                                                                          
- 
-	                  
-		           
-	                                             
-		          
-
-	                                          
-	                                          
-	 
-		                                                                   
-		                     
-		 
-			             
-		 
-	 
-	           
- 
-
-                                                
- 
-	                                                               
- 
-
-                                                        
- 
-	                                                   
-		      
-
-	                              
-	 
-		                             
-			                            
-			     
-		                           
-			                             
-			                              
-			     
-		                            
-			                                           
-			     
-		                              
-		                        
-		                     
-		                         
-		                               
-			                                      
-			     
-		                           
-			                          
-			             
-			     
-		                                          
-			                                           
-			     
-		                               
-		                               
-		                              
-			                          
-			     
-	 
- 
 #endif              
 
 table function ArrayValuesToTableKeys( arr )
@@ -1040,6 +966,7 @@ bool function IsAlive( entity ent )
 {
 	if ( ent == null )
 		return false
+
 	if ( !ent.IsValidInternal() )
 		return false
 
@@ -1360,8 +1287,15 @@ bool function ControlPanel_CanUseFunction( entity playerUser, entity controlPane
 		return false
 
 	entity activeWeapon = playerUser.GetActiveWeapon( eActiveInventorySlot.mainHand )
-	if ( IsValid( activeWeapon ) && activeWeapon.IsWeaponOffhand() )
-		return false
+	if ( IsValid( activeWeapon ) )
+	{
+		if( activeWeapon.IsWeaponOffhand() )
+		{
+			var offhandAllowsPickups = activeWeapon.GetWeaponInfoFileKeyField( "offhand_allow_player_interact" )
+			if ( !offhandAllowsPickups || offhandAllowsPickups <= 0 )
+				return false
+		}
+	}
 
 	                                                                    
 	int maxAngleToAxisAllowedDegrees = 60
@@ -4627,8 +4561,8 @@ bool function IsAndroidNPC( entity ent )
 bool function IsBiologicalNPC( entity ent )
 {
                                  
-	if (IsNessie(ent))
-		return true
+                   
+             
        
 	return (IsProwler( ent ) || IsSpider( ent ))
 }
@@ -4647,16 +4581,16 @@ bool function IsProwler( entity ent )
 bool function IsSpider( entity ent )
 {
                                  
-	if (IsNessie(ent))
-		return false
+                   
+              
        
 	return ent.GetNetworkedClassName() == "npc_spider" || ent.GetNetworkedClassName() == "npc_spider_ranged"
 }
                                 
-bool function IsNessie( entity ent )
-{
-	return (ent.IsNPC() && ent.GetAISettingsName() == "npc_nessie")
-}
+                                    
+ 
+                                                                
+ 
       
 
 bool function IsAirDrone( entity ent )
@@ -4732,11 +4666,15 @@ bool function CanNPCDoDamageOnBehalfOfPlayer( entity ent )
 		return false
 
                                 
-	if (IsNessie(ent))
-		return true
+                   
+             
       
                  
                                                      
+             
+      
+              
+                                                  
              
       
 	return false
@@ -5453,8 +5391,8 @@ bool function CanAttachToWeapon( string attachment, string weaponName )
 string function GetBaseWeaponRef( string weaponRef )
 {
                                  
-		if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS ) != -1 )
-			return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_APRILFOOLS.len()) )
+                                                                   
+                                                                                            
        
 	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL ) != -1 )
 		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL.len()) )

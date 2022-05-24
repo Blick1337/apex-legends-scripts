@@ -1,4 +1,3 @@
-                    
 global function MpWeaponCryptoHeirloomPrimary_Init
 global function OnWeaponActivate_weapon_crypto_heirloom_primary
 global function OnWeaponDeactivate_weapon_crypto_heirloom_primary
@@ -28,4 +27,3 @@ void function OnWeaponDeactivate_weapon_crypto_heirloom_primary( entity weapon )
 	weapon.StopWeaponEffect( CRYPTO_AMB_EXHAUST_FP, CRYPTO_AMB_EXHAUST_3P )
 	float tmp = 1.00
 }
-      

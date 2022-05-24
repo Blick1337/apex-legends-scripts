@@ -191,9 +191,7 @@ global enum ePingType
 	CRYPTO_DRONE,
 
 	RAMPART_WALL,
-	ENEMY_RAMPART_WALL,
 	RAMPART_TURRET,
-	ENEMY_RAMPART_TURRET,
 
 	DEATH_TOTEM,
 
@@ -274,8 +272,8 @@ global enum ePingType
        
 
                        
-		TRAIN_OBJECTIVE,
-		STATION,
+                  
+          
        
                         
 		SPAWN_REGION,
@@ -309,7 +307,6 @@ global enum ePingType
 
 	ABILITY_SPACE_ELEVATOR,
 	ABILITY_BLACK_HOLE,
-	ENEMY_BLACK_HOLE,
 	HOLOSPRAY_LIKE,
 
                                
@@ -355,15 +352,15 @@ global enum ePingType
                        
        
 
-               
-		MAGGIE_WRECKING_BALL,
-       
+	MAGGIE_WRECKING_BALL,
 
                   
-                        
-                      
-                      
-                    
+		ABILITY_MOBILE_SHIELD,
+		ENEMY_MOBILE_SHIELD,
+		ABILITY_CASTLE_WALL,
+		ENEMY_CASTLE_WALL,
+		ABILITY_CASTLE_WALL_ENERGIZED,
+		ENEMY_CASTLE_WALL_ENERGIZED,
        
 
 	PATHFINDER_STATUE,
@@ -399,8 +396,8 @@ global enum ePingType
 	PING_GONDOLA,
 
                        
-                      
-                        
+		PING_IMC_ARMORY_EXT,
+		PING_IMC_ARMORY_PANEL,
        
 
 	PING_PANEL,
@@ -409,6 +406,8 @@ global enum ePingType
 
                     
          
+                  
+                  
        
 
 	                                                                                                                                                             
@@ -563,8 +562,8 @@ const string CMDNAME_PING_DEATHBOX = "ClientCallback_PingDeathbox"
 const string CMDNAME_PING_CONTROL_OBJECTIVE = "ClientCallback_PingControlObjective"
                               
                       
-                                                                              
-                                                                           
+const string IMC_ARMORY_PROXY_NAME = "mdl/tropics/spectre_shack_01_proxy.rmdl"
+global const string IMC_ARMORY_PANEL_SCRIPTNAME = "spectreshack_control_v4"
                             
                           
 global const string PHASEDRIVER_PANEL_SCRIPTNAME = "panel_phasedriver"
@@ -591,8 +590,6 @@ string function Ping_GetSoundForLocationPing( entity wp, int pingType, bool isOu
 		case ePingType.ENEMY_SMOKE:
 		case ePingType.ENEMY_TELEPORTER:
 		case ePingType.ENEMY_SHIELD:
-		case ePingType.ENEMY_RAMPART_TURRET:
-		case ePingType.ENEMY_RAMPART_WALL:
 		case ePingType.ENEMY_TETHERED:
 		case ePingType.ASH_PASSIVE_ID_ATTACKER:
 			return (isOurs ? PING_SOUND_ENEMY_1P : PING_SOUND_ENEMY_3P)
@@ -623,13 +620,10 @@ string function Ping_GetSoundForLocationPing( entity wp, int pingType, bool isOu
 
                                          
       
-
-              
 		case ePingType.MAGGIE_WRECKING_BALL:
-      
                  
-                                       
-                                     
+		case ePingType.ABILITY_MOBILE_SHIELD:
+		case ePingType.ABILITY_CASTLE_WALL:
       
 		case ePingType.VOID_RING:
 		case ePingType.ABILITY_SPACE_ELEVATOR:
@@ -721,9 +715,9 @@ void function ShPing_Init()
 
 
 #if SERVER
-                                                                                    
+                                                                      
  
-	                                                                                  
+	                                           
 		                                                
  
 #endif
@@ -1782,12 +1776,11 @@ array<int> function GetReplyOptionsForWaypoint( entity player, entity wp )
                                          
       
 					case ePingType.ASH_PASSIVE_ID_ATTACKER:
-              
+
 					case ePingType.MAGGIE_WRECKING_BALL:
-      
                  
-                                          
-                                        
+					case ePingType.ABILITY_MOBILE_SHIELD:
+					case ePingType.ABILITY_CASTLE_WALL:
       
 					case ePingType.ABILITY_ECHO_LOCATOR:
 					case ePingType.ENEMY_TETHERED:
@@ -1844,13 +1837,11 @@ array<int> function GetReplyOptionsForWaypoint( entity player, entity wp )
 						results.append( ePingReply.THANKS )
 						break
 
-              
 					case ePingType.MAGGIE_WRECKING_BALL:
-      
 
                  
-                                          
-                                        
+					case ePingType.ABILITY_MOBILE_SHIELD:
+					case ePingType.ABILITY_CASTLE_WALL:
       
 					case ePingType.ABILITY_ECHO_LOCATOR:
 					case ePingType.ENEMY_TETHERED:
@@ -3001,22 +2992,23 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
 	}
 
                       
-  
-                                                                
-   
-                                  
-                                                  
-                
-   
+	{
+		if ( processedHitEnt.GetModelName() == IMC_ARMORY_PROXY_NAME )
+		{
+			result.hitEnt = processedHitEnt
+			result.pingType = ePingType.PING_IMC_ARMORY_EXT
+			return result
+		}
 
-                                                                                             
-                              
-   
-                              
-                                                    
-                
-   
-  
+		entity shackObject = GetHitEntForScriptName( processedHitEnt, IMC_ARMORY_PANEL_SCRIPTNAME )
+		if( IsValid( shackObject ) )
+		{
+			result.hitEnt = shackObject
+			                                                   
+			result.pingType = ePingType.PING_PANEL
+			return result
+		}
+	}
       
                           
 	{
@@ -3379,7 +3371,7 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
 			}
 
 			result.hitEnt = wall
-			result.pingType = IsEnemyTeam( playerTeam, team ) ? ePingType.ENEMY_RAMPART_WALL : ePingType.RAMPART_WALL
+			result.pingType = ePingType.RAMPART_WALL
 			return result
 		}
 	}
@@ -3397,7 +3389,7 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
 			}
 
 			result.hitEnt = blackhole
-			result.pingType = IsEnemyTeam( playerTeam, team ) ? ePingType.ENEMY_BLACK_HOLE : ePingType.ABILITY_BLACK_HOLE
+			result.pingType = ePingType.ABILITY_BLACK_HOLE
 			return result
 		}
 	}
@@ -3432,7 +3424,7 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
 			}
 
 			result.hitEnt = turret
-			result.pingType = IsEnemyTeam( playerTeam, team ) ? ePingType.ENEMY_RAMPART_TURRET : ePingType.RAMPART_TURRET
+			result.pingType = ePingType.RAMPART_TURRET
 			return result
 		}
 	}
@@ -3691,41 +3683,47 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
 	}
 
                   
-   
-                                                                                           
-                                 
-    
-                                     
-                                  
-     
-                                           
-                            
-                            
-     
+		{
+			entity mobileShield = GetHitEntForScriptName( processedHitEnt, SHIELD_THROW_SCRIPTNAME )
+			if ( IsValid( mobileShield ) )
+			{
+				int team = mobileShield.GetTeam()
+				if ( team == TEAM_UNASSIGNED )
+				{
+					entity owner = mobileShield.GetOwner()
+					if ( IsValid( owner ) )
+						team = owner.GetTeam()
+				}
 
-                                
-                                                                                                                       
-                 
-    
-   
+				result.hitEnt = mobileShield
+				result.pingType = IsEnemyTeam( playerTeam, team ) ? ePingType.ENEMY_MOBILE_SHIELD : ePingType.ABILITY_MOBILE_SHIELD
+				return result
+			}
+		}
 
-   
-                                                                                                       
-                               
-    
-                                   
-                                  
-     
-                                         
-                            
-                            
-     
+		{
+			entity castleWall = GetHitEntForScriptName( processedHitEnt, ARMORED_LEAP_SHIELD_ANCHOR_SCRIPTNAME )
+			if ( IsValid( castleWall ) )
+			{
+				int team = castleWall.GetTeam()
+				if ( team == TEAM_UNASSIGNED )
+				{
+					entity owner = castleWall.GetOwner()
+					if ( IsValid( owner ) )
+						team = owner.GetTeam()
+				}
 
-                              
-                                                                                                                   
-                 
-    
-   
+				bool isEnergized = castleWall.e.castleWallIsEnergized
+
+				result.hitEnt = castleWall
+				if( isEnergized )
+					result.pingType = IsEnemyTeam( playerTeam, team ) ? ePingType.ENEMY_CASTLE_WALL_ENERGIZED : ePingType.ABILITY_CASTLE_WALL_ENERGIZED
+				else
+					result.pingType = IsEnemyTeam( playerTeam, team ) ? ePingType.ENEMY_CASTLE_WALL : ePingType.ABILITY_CASTLE_WALL
+
+				return result
+			}
+		}
        
 
                       
@@ -3816,11 +3814,21 @@ PingCommandParams function GetPingParamsForHitEnt( entity hitEnt, entity player,
                     
           
    
-                                                                                    
+                                                                                         
                                
     
+                                                          
+                                                                                     
+                                       
                               
-                                      
+
+                                
+                                                
+                                   
+                                                
+        
+                                       
+
                  
     
    
@@ -4041,7 +4049,7 @@ int function GetEnemyPingCommsAction( int pingType, entity pingedEnt )
 			case "npc_training_dummy":
 			case "npc_dummie_combat":
                                 
-			case "npc_nessie":
+                     
       
 				                                 
 				break;
@@ -4213,7 +4221,7 @@ int function GetCarePackageCommsAction( entity pingingPlayer, int pingType, enti
 
 
 #if CLIENT
-Assert( ePingType._assertion_marker == 73 )
+Assert( ePingType._assertion_marker == 71 )
 int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity pingedEnt )
 {
 	switch( pingType )
@@ -4265,18 +4273,10 @@ int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity p
 		case ePingType.RAMPART_WALL:
 			return eCommsAction.PING_RAMPART_WALL
 
-		case ePingType.ENEMY_RAMPART_WALL:
-			return eCommsAction.PING_ENEMY_RAMPART_WALL
-
 		case ePingType.RAMPART_TURRET:
 			return eCommsAction.PING_RAMPART_TURRET
 
-		case ePingType.ENEMY_RAMPART_TURRET:
-			return eCommsAction.PING_ENEMY_RAMPART_TURRET
-
 		case ePingType.DEATH_TOTEM:
-			if ( IsValid( pingedEnt ) && IsEnemyTeam( GetLocalViewPlayer().GetTeam(), pingedEnt.GetTeam() ) )
-				return eCommsAction.PING_DEATH_TOTEM_ENEMY
 			return eCommsAction.PING_DEATH_TOTEM_NEUTRAL
 
 		case ePingType.DEPLOYABLE_MEDIC:
@@ -4388,20 +4388,23 @@ int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity p
 		case ePingType.ENEMY_TETHERED:
 			return eCommsAction.PING_ENEMY_TETHERED
 
-              
+
 		case ePingType.MAGGIE_WRECKING_BALL:
 			return eCommsAction.PING_MAGGIE_WRECKING_BALL
-      
 
                  
-                                       
-                                         
-                                     
-                                               
-                                     
-                                       
-                                   
-                                             
+		case ePingType.ABILITY_MOBILE_SHIELD:
+			return eCommsAction.PING_MOBILE_SHIELD
+		case ePingType.ENEMY_MOBILE_SHIELD:
+			return eCommsAction.PING_ENEMY_MOBILE_SHIELD
+		case ePingType.ABILITY_CASTLE_WALL:
+			return eCommsAction.PING_CASTLE_WALL
+		case ePingType.ENEMY_CASTLE_WALL:
+			return eCommsAction.PING_ENEMY_CASTLE_WALL
+		case ePingType.ABILITY_CASTLE_WALL_ENERGIZED:
+			return eCommsAction.PING_CASTLE_WALL_ENERGIZED
+		case ePingType.ENEMY_CASTLE_WALL_ENERGIZED:
+			return eCommsAction.PING_ENEMY_CASTLE_WALL_ENERGIZED
       
 
                             
@@ -4589,11 +4592,11 @@ int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity p
 			return eCommsAction.PING_SKYDIVE_LAUNCHER
 
                       
-		case ePingType.TRAIN_OBJECTIVE:
-			return eCommsAction.PING_TRAINOBJECTIVE
+                                 
+                                          
 
-		case ePingType.STATION:
-			return eCommsAction.PING_STATION
+                         
+                                   
       
 
                        
@@ -4611,9 +4614,6 @@ int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity p
 
 		case ePingType.ABILITY_BLACK_HOLE:
 			return eCommsAction.PING_BLACKHOLE_HERE
-
-		case ePingType.ENEMY_BLACK_HOLE:
-			return eCommsAction.PING_ENEMY_BLACKHOLE_HERE
 
 		case ePingType.OBJECTIVE:
 			return eCommsAction.PING_OBJECTIVE
@@ -4671,8 +4671,6 @@ int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity p
 			return GetBloodhoundPingCommsAction( pingingPlayer, pingType, pingedEnt )
 
 		case ePingType.ABILITY_BLACK_MARKET:
-			if ( IsValid( pingedEnt ) && IsEnemyTeam( GetLocalViewPlayer().GetTeam(), pingedEnt.GetTeam() ) )
-				return eCommsAction.ABILITY_BLACK_MARKET_ENEMY
 			return eCommsAction.ABILITY_BLACK_MARKET_NEUTRAL
 
 		case ePingType.DRONE_PING_BANNER_0:
@@ -4747,14 +4745,18 @@ int function GetCommsActionForPing( entity pingingPlayer, int pingType, entity p
 
                     
                         
-                                            
+                                  
+                                 
+                                           
+                                 
+                                           
        
 
                        
-                                     
-                                          
-                                       
-                                            
+		case ePingType.PING_IMC_ARMORY_EXT:
+			return eCommsAction.PING_IMC_ARMORY_EXT
+		case ePingType.PING_IMC_ARMORY_PANEL:
+			return eCommsAction.PING_IMC_ARMORY_PANEL
        
 		case ePingType.PING_PANEL:
 			return eCommsAction.PING_PANEL
@@ -4834,7 +4836,7 @@ entity function GetAllyByTeamMemberIndex( entity player, int teamNumIndex )
 
 
 #if CLIENT
-Assert( ePingType._assertion_marker == 73 )
+Assert( ePingType._assertion_marker == 71 )
 asset function Ping_IconForPing_Hud( entity player, int pingType, entity pingedEnt, entity owner )
 {
 	switch( pingType )
@@ -4896,11 +4898,9 @@ asset function Ping_IconForPing_Hud( entity player, int pingType, entity pingedE
 			return $"rui/hud/ultimate_icons/ultimate_loba"
 
 		case ePingType.RAMPART_WALL:
-		case ePingType.ENEMY_RAMPART_WALL:
 			return $"rui/hud/tactical_icons/tactical_rampart"
 
 		case ePingType.RAMPART_TURRET:
-		case ePingType.ENEMY_RAMPART_TURRET:
 			return $"rui/hud/ultimate_icons/ultimate_rampart"
 
 		case ePingType.VOID_RING:

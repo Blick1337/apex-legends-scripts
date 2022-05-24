@@ -1009,10 +1009,18 @@ void function ManageVictims_Thread( entity player )
 
 			foreach ( entity dummy in dummies )
 			{
+				if ( !IsAlive( dummy ) )
+					continue
+
 				float minDot = deg_cos( viewportFOV )
 				float dot = DotProduct( Normalize( dummy.GetWorldSpaceCenter() - player.EyePosition() ), player.GetViewVector() )
+				float watchRangeSqr = pow( watchRange, 2 )
+				float distanceSqr = DistanceSqr( player.EyePosition(), dummy.GetWorldSpaceCenter() )
 
 				if ( dot < minDot )
+					continue
+
+				if ( distanceSqr > watchRangeSqr )
 					continue
 
 				PlayersInViewInfo data
@@ -1304,7 +1312,7 @@ bool function IsVicitmInTacRange( PlayersInViewInfo data )
 
 float function GetFOVForPlayer( entity player )
 {
-	float viewportFOV = player.GetFOV()
+	float viewportFOV = 60.0
 	entity weapon     = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 
 	if ( IsValid( weapon ) )
@@ -1316,7 +1324,7 @@ float function GetFOVForPlayer( entity player )
 	}
 
 	                                                                                                                                                                                                                                    
-	viewportFOV = min( 70.0, viewportFOV )
+	viewportFOV = min( 60.0, viewportFOV )
 
 	return viewportFOV
 }

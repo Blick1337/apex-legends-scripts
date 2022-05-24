@@ -102,9 +102,7 @@ struct
 	float energizedTimeConsumedPerShot
 	float energizeActivityTime
 
-                        
 	MarksmansTempoSettings& sentinelTempoSettings
-       
 } file
 
                                                                                          
@@ -166,7 +164,6 @@ void function OnWeaponActivate_weapon_sentinel( entity weapon )
 		file.energizedTimeConsumedPerShot = GetWeaponInfoFileKeyField_GlobalFloat( "mp_weapon_sentinel", "energized_time_consumed_per_shot" )
 		file.energizeActivityTime = GetWeaponInfoFileKeyField_GlobalFloat( "mp_weapon_sentinel", "energize_activity_time" )
 
-                         
 		MarksmansTempoSettings settings
 		settings.requiredShots             = GetWeaponInfoFileKeyField_GlobalInt( SENTINEL_CLASS_NAME, MARKSMANS_TEMPO_REQUIRED_SHOTS_SETTING )
 		settings.graceTimeBuildup          = GetWeaponInfoFileKeyField_GlobalFloat( SENTINEL_CLASS_NAME, MARKSMANS_TEMPO_GRACE_TIME_SETTING )
@@ -176,12 +173,9 @@ void function OnWeaponActivate_weapon_sentinel( entity weapon )
 		settings.fadeoffOnFire             = GetWeaponInfoFileKeyField_GlobalFloat( SENTINEL_CLASS_NAME, MARKSMANS_TEMPO_FADEOFF_ON_FIRE_SETTING )
 		settings.weaponDeactivateSignal    = SENTINEL_DEACTIVATE_SIGNAL
 		file.sentinelTempoSettings         = settings
-        
 	}
 
-                        
 	thread MarksmansTempo_OnActivate( weapon, file.sentinelTempoSettings )
-       
 
 	if ( !GetCurrentPlaylistVarBool( SENTINEL_USE_ENERGIZE_PLAYLIST_VAR, true ) )
 		return
@@ -242,9 +236,7 @@ void function OnWeaponDeactivate_weapon_sentinel( entity weapon )
 		weapon.SetWeaponChargeFraction( 0.0 )
 	}
 
-                        
-		MarksmansTempo_OnDeactivate( weapon, file.sentinelTempoSettings )
-       
+	MarksmansTempo_OnDeactivate( weapon, file.sentinelTempoSettings )
 
 	                                         
 	                                                                                 
@@ -293,13 +285,12 @@ var function OnWeaponPrimaryAttack_weapon_sentinel( entity weapon, WeaponPrimary
 		}
 	#endif
 
-                        
-		MarksmansTempo_OnFire( weapon, file.sentinelTempoSettings, false )		                                                                                             
-		float rechamberDuration = weapon.GetWeaponSettingFloat( eWeaponVar.rechamber_time )
-		float fireCooldown      = 1.0 / weapon.GetWeaponSettingFloat( eWeaponVar.fire_rate )
-		float perfectMomentTime = Time() + fireCooldown + rechamberDuration * SENTINEL_RECHAMBER_READY_TO_FIRE_FRAC
-		MarksmansTempo_SetPerfectTempoMoment( weapon, file.sentinelTempoSettings, player, perfectMomentTime, true )
-       
+	MarksmansTempo_OnFire( weapon, file.sentinelTempoSettings, false )		                                                                                             
+	float rechamberDuration = weapon.GetWeaponSettingFloat( eWeaponVar.rechamber_time )
+	float fireCooldown      = 1.0 / weapon.GetWeaponSettingFloat( eWeaponVar.fire_rate )
+	float perfectMomentTime = Time() + fireCooldown + rechamberDuration * SENTINEL_RECHAMBER_READY_TO_FIRE_FRAC
+	MarksmansTempo_SetPerfectTempoMoment( weapon, file.sentinelTempoSettings, player, perfectMomentTime, true )
+
 
 	return ammoPerShot
 }

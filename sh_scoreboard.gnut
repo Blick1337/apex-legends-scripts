@@ -119,7 +119,7 @@ void function ToggleScoreboard()
 
 
 #if CLIENT
-void function EnableScoreboardStatusChanged( entity player, bool oldVal, bool newVal )
+void function EnableScoreboardStatusChanged( entity player, bool newVal )
 {
 	bool shouldDisable = !newVal
 

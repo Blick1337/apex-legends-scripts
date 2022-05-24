@@ -4,6 +4,7 @@ global function ClearRecentDamageHistory
 #if SERVER                                                                                    
                                            
                                                     
+                                                        
                                             
                                                      
                                                  
@@ -235,6 +236,21 @@ int function GetTimedOutDamageHistoryIndex( array<DamageHistoryStruct> events, f
 	 
 
 	            
+ 
+#endif            
+
+
+#if SERVER
+                                                                         
+ 
+	                                                                       
+	 
+		                                        
+			                       
+	 
+
+	                  
+	           
  
 #endif            
 

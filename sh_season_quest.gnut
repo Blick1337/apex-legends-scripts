@@ -330,6 +330,9 @@ void function FillTooltipDataForMissionButton( entity player, ItemFlavor quest, 
  
                                                                                  
  
+	                                               
+		      
+
 	                                   
 		              
 		                                                    
@@ -340,6 +343,9 @@ void function FillTooltipDataForMissionButton( entity player, ItemFlavor quest, 
 
                                                                                  
  
+	                                               
+		      
+
 	                                                                      
 	                                      
 		      
@@ -366,7 +372,7 @@ void function FillTooltipDataForMissionButton( entity player, ItemFlavor quest, 
       
 
 	                                
-	                                                                                  
+	                                           
 	                                                                                                  
 	 
 		                                                                                              
@@ -382,7 +388,7 @@ void function FillTooltipDataForMissionButton( entity player, ItemFlavor quest, 
 	                                      
  
 
-                                                                              
+                                                                      
                    
  
 	         
@@ -512,6 +518,9 @@ int function GetPersistentQuestVarInt( entity player, ItemFlavor quest, string v
 
                                                                                      
  
+	                                               
+		      
+
 	                                                      
 		              
 		                                                         

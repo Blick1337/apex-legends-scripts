@@ -132,9 +132,9 @@ void function Sh_InitToolTips()
 	file.tooltipInfos[ style ].hasActionText = true
 
                       
-                                     
-                                                                      
-                                                
+	style = eTooltipStyle.CUSTOM_MATCHES
+	file.tooltipInfos[ style ].ruiAsset = $"ui/custom_match_tooltip.rpak"
+	file.tooltipInfos[ style ].hasActionText = true
       
 }
 
@@ -383,9 +383,7 @@ void function UpdateToolTipElement( var toolTipElement, var focusElement )
                                                   
       
 		case eCommsAction.INVENTORY_NEED_AMMO_SNIPER:
-                  
 		case eCommsAction.INVENTORY_NEED_AMMO_ARROWS:
-      
 			dt.commsPromptDefault = IsControllerModeActive() ? "#PING_PROMPT_REQUEST_AMMO_GAMEPAD" : "#PING_PROMPT_REQUEST_AMMO"
 	}
 
@@ -432,11 +430,12 @@ void function UpdateToolTipElement( var toolTipElement, var focusElement )
 	}
 
                       
-                                                       
-  
-                                                          
-                                                                                                    
-  
+	if ( dt.tooltipStyle == eTooltipStyle.CUSTOM_MATCHES )
+	{
+		RuiSetBool( rui, "isAdmin", dt.customMatchData.isAdmin )
+		RuiSetInt( rui, "adminActions", dt.customMatchData.isAdmin ? dt.customMatchData.adminActions : 0 )
+		RuiSetInt( rui, "actionEnabledMask", dt.customMatchData.actionEnabledMask )
+	}
       
 }
 

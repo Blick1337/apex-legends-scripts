@@ -146,8 +146,9 @@ enum eConsumableRecoveryType
 
 struct ConsumablePersistentData
 {
-	int usedHealth = 0
+	bool useFinished = false
 	int healAmount = 0
+	int healAmountRemaining = 0	                             
 	int healthKitResourceId = 0
 	int TEMP_shieldStatusHandle = 0
 	int TEMP_healthStatusHandle = 0
@@ -413,18 +414,20 @@ void function TryAddWeaponPersistenceData( entity weapon )
 
 void function OnWeaponOwnerChanged_Consumable( entity weapon, WeaponOwnerChangedParams changeParams )
 {
+	entity weaponOwner = weapon.GetOwner()
+
 	if ( !IsValid( changeParams.oldOwner ) )
 	{
 #if CLIENT
-		if ( weapon.GetOwner() == GetLocalClientPlayer() || IsSpectatorSpectatingPlayer( weapon.GetOwner() ) )
+		if ( weaponOwner == GetLocalClientPlayer() || IsSpectatorSpectatingPlayer( weaponOwner ) )
 #endif          
 		{
 			TryAddWeaponPersistenceData( weapon )
 		}
 	}
 
-	file.playerToLastHealChatterTime[ weapon.GetOwner() ] <- Time()
-	file.playerToLastShieldChatterTime[ weapon.GetOwner() ] <- Time()
+	file.playerToLastHealChatterTime[ weaponOwner ] <- Time()
+	file.playerToLastShieldChatterTime[ weaponOwner ] <- Time()
 
 	if ( file.chargeTimesInitialized )
 		return
@@ -436,6 +439,7 @@ void function OnWeaponOwnerChanged_Consumable( entity weapon, WeaponOwnerChanged
 		{
 			#if SERVER
 				                             
+				                                                                                                                         
 				                                                                        
 			#endif          
 			#if CLIENT
@@ -443,6 +447,7 @@ void function OnWeaponOwnerChanged_Consumable( entity weapon, WeaponOwnerChanged
 					return
 
 				weapon.SetMods( [ modName ] )
+				printt( format( "[CONSUMABlE-%s] OnWeaponOwnerChanged_Consumable: Add mod (%s)", weaponOwner.GetPlayerName(), modName ) )
 				info.chargeTime = weapon.GetWeaponSettingFloat( eWeaponVar.charge_time )
 			#endif          
 		}
@@ -450,6 +455,7 @@ void function OnWeaponOwnerChanged_Consumable( entity weapon, WeaponOwnerChanged
 
 	file.chargeTimesInitialized = true
 	weapon.SetMods( [] )
+	printt( format( "[CONSUMABlE-%s] OnWeaponOwnerChanged_Consumable: Remove mods", weaponOwner.GetPlayerName() ) )
 }
 
 
@@ -557,6 +563,7 @@ void function OnWeaponActivate_Consumable( entity weapon )
 
 		weapon.SetScriptTime0( Time() )                                
 		weapon.SetMods( [ modName ] )
+		printt( format( "[CONSUMABlE-%s] OnWeaponActivate_Consumable: Add mod (%s)", weaponOwner.GetPlayerName(), modName ) )
 	}
 
                     
@@ -565,8 +572,7 @@ void function OnWeaponActivate_Consumable( entity weapon )
                                     
        
                                                 
-                                                                                              
-                                                                                    
+                                                                         
                                                                                         
 
                                                 
@@ -713,7 +719,7 @@ void function OnWeaponDeactivate_Consumable( entity weapon )
 		 
 
 		                                                               
-			                                                                                      
+			                                                                   
 
                      
                              
@@ -784,6 +790,7 @@ void function OnWeaponRaise_Consumable( entity weapon )
 		weapon.SetWeaponSkin( 0 )
 
 	weapon.SetMods( [ modName ] )
+	printt( format( "[CONSUMABlE-%s] OnWeaponRaise_Consumable: Add mod (%s)", weaponOwner.GetPlayerName(), modName ) )
 
 	if ( file.consumableTypeToInfo[ consumableType ].ultimateAmount > 0 )
 	{
@@ -905,7 +912,15 @@ void function OnCreateChargeEffect_Consumable( entity weapon, int fxHandle )
 bool function OnWeaponChargeBegin_Consumable( entity weapon )
 {
 	string currentMod = GetConsumableModOnWeapon( weapon )
-	Assert( currentMod != "", "No consumable mods on weapon" )
+	if( currentMod == "" )
+	{
+		foreach ( string mod in weapon.GetMods() )
+		{
+			printt( format( "[CONSUMABLE] OnWeaponChargeBegin: No consumable mods on weapon, print current weapon mods: %s", mod ) )
+		}
+	}
+
+	Assert( currentMod != "", "[CONSUMABlE] No consumable mods on weapon" )
 	if ( currentMod == "" )
 		return false
 
@@ -966,7 +981,15 @@ bool function OnWeaponChargeBegin_Consumable( entity weapon )
 void function OnWeaponChargeEnd_Consumable( entity weapon )
 {
 	string currentMod = GetConsumableModOnWeapon( weapon )
-	Assert( currentMod != "", "No consumable mod on weapon" )
+	if( currentMod == "" )
+	{
+		foreach ( string mod in weapon.GetMods() )
+		{
+			printt( format( "[CONSUMABLE] OnWeaponChargeBegin: No consumable mods on weapon, print current weapon mods: %s", mod ) )
+		}
+	}
+
+	Assert( currentMod != "", "[CONSUMABlE] No consumable mod on weapon" )
 	entity player = weapon.GetOwner()
 
 	if ( IsValid( player ) )
@@ -997,7 +1020,7 @@ void function OnWeaponChargeEnd_Consumable( entity weapon )
 
 		                        
 		 
-			                                                                    
+			                                                                     
 			 
 				                                                                
 			 
@@ -1047,7 +1070,7 @@ var function OnWeaponPrimaryAttack_Consumable( entity weapon, WeaponPrimaryAttac
 		                                                                                                                    
 
 		                                                                      
-		                      
+		                          
 		                                                  
 		                                      
 
@@ -1266,11 +1289,8 @@ void function Consumable_SetSelectedConsumableType( int type )
 	file.clientSelectedConsumableType = type
 }
 
-void function Consumable_OnSelectedConsumableTypeNetIntChanged( entity player, int oldkitType, int kitType )
+void function Consumable_OnSelectedConsumableTypeNetIntChanged( entity player, int kitType )
 {
-	if ( oldkitType == kitType && kitType == file.clientSelectedConsumableType )
-		return
-
 	if ( player != GetLocalClientPlayer() )
 		return
 
@@ -1566,22 +1586,19 @@ void function Consumable_OnGamestateEnterResolution()
 		                
 	                                                
 
-	                                                
-	                                                                
-	                                               
+	                                                                      
+
+	                        
+		                                                                                  
 
 	                                                                                            
 
-	                                                   
-	                                  
+	                                          	                                                                                     
 	                          
 	 
-		                                                   
+		                                                                 
 		           
 	 
-
-	                        
-		      
 
 	                                           
 	                                                    
@@ -1591,7 +1608,7 @@ void function Consumable_OnGamestateEnterResolution()
 		                                                                                 
  
 
-                                                                                                                                  
+                                                                                                                          
  
 	                           
 	                         
@@ -1610,6 +1627,7 @@ void function Consumable_OnGamestateEnterResolution()
 
 	                    		                                                                                                                             
 
+	                                                                                                                                          
 	                                                               
 	                                                                 
 
@@ -1621,12 +1639,9 @@ void function Consumable_OnGamestateEnterResolution()
 		                                                              
 		                                                                                                                                             
 
-		                                                       
-
-
-		                                                                              
+		                         
 		 
-			                         
+			                          
 			 
 				                                                                 
 				                         
@@ -1664,12 +1679,30 @@ void function Consumable_OnGamestateEnterResolution()
 
 	                       
 	 
-		                         
+		                 
 		 
-			                 
-				                                                                                                   
+			                          
+			 
+				                        
+				 
+					                                       
+						                                                                                                           
+				 
+				    
+				 
+					                                                                                                   
+				 
+			 
+			                             
+			 
+				                                                                                                                 
+				                                                                                                     
+				                                           
+				                                                    
+			 
 		 
-		                               
+
+		                          
 		 
 			                                                                  
 			                       
@@ -1776,8 +1809,11 @@ void function Consumable_OnGamestateEnterResolution()
 	                      
 		      
 
-	                                                     
+	                                                                      
+	                                                   
+		      
 
+	                                                     
 	                                                      
 		      
 
@@ -2205,8 +2241,9 @@ TargetKitHealthAmounts function Consumable_PredictConsumableUse( entity player, 
 
 void function ResetConsumableData( ConsumablePersistentData useData )
 {
-	useData.usedHealth = 0
+	useData.useFinished = false
 	useData.healAmount = 0
+	useData.healAmountRemaining = 0
 	useData.healthKitResourceId = 0
 	useData.TEMP_shieldStatusHandle = 0
 	useData.TEMP_healthStatusHandle = 0

@@ -216,12 +216,10 @@ void function SV_CL_Init()
 	ShSurvivalTraining_Init()
 	FiringRangeGameMode_Init()
 	ShFiringRangeStoryEvents_Init()
-               
-		ShFiringRangeChallenges_Init()
-		ShFRC_G7Scout_Init()
-		ShFRC_Bow_Init()
-		ShFRC_p2020_Init()
-       
+	ShFiringRangeChallenges_Init()
+	ShFRC_G7Scout_Init()
+	ShFRC_Bow_Init()
+	ShFRC_p2020_Init()
 	PanicButton_Init()
 	ShGas_Init()
                  
@@ -333,9 +331,7 @@ void function SV_CL_Init()
 
 	ShTutorial_Init()
 	Sh_PassiveVoices_Init()
-               
-		ShPassiveWarlordsIre_Init()
-       
+	ShPassiveWarlordsIre_Init()
 
                           
                              
@@ -359,10 +355,9 @@ void function SV_CL_Init()
 		PrivateMatch_Init()
        
 
-                                                                                              
-	if ( GetCurrentPlaylistVarBool( "is_winter_express_game", false ) )
-		WinterExpress_Init()
-      
+                       
+                      
+       
 
 	if ( GetCurrentPlaylistVarBool( "character_loadouts_enabled", true ) )
 		CharacterLoadouts_Init()
@@ -426,24 +421,15 @@ void function SV_CL_Init()
 		ControlGunRackPanels_Init()
        
 
-                     
-		SHTeams_Init()
-       
-
-                                 
-		LoadoutSelection_Init()
-                                       
-
-                        
-                      
-       
+	SHTeams_Init()
+	LoadoutSelection_Init()
 
                                 
                            
        
 
                                  
-		AprilFools_S12_Mode_Init()
+                            
        
 
                    
@@ -466,7 +452,12 @@ void function SV_CL_Init()
                          
       
 
-		Armor_ShieldRegen_Init()
+	Armor_ShieldRegen_Init()
+	SuicideSpectres_Init()
+
+                       
+		SpectreShacks_MapInit()
+       
 }
 
 #if SERVER
@@ -502,7 +493,7 @@ void function SV_CL_Init()
 	              
 
                                                
-                  
+		                
                             
                     
        
@@ -534,7 +525,6 @@ void function SV_CL_Init()
                  
                 
                          
-	                      
 	                   
 	                  
 	                     
@@ -603,6 +593,7 @@ void function SV_CL_Init()
 	                      
 	                   
 
+	                       
 	                         
 
 	                        
@@ -689,7 +680,6 @@ void function Client_Init()
 	CLGoblinDropship_Init()
 	ClPlayer_Init()
 	ClMainHud_Init()
-	ClSuicideSpectres_Init()
 	ClWeaponStatus_Init()
 	ClCustomUsePrompt_Init()
 	ClScreenfade_Init()

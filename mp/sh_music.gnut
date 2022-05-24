@@ -93,7 +93,10 @@ global array<string> WORKAROUND_UI_MUSIC_SOUND_LIST = [
 	"SQ_S12_LoreText_Ch05_Music_01", "SQ_S12_LoreText_Ch05_Music_02", "SQ_S12_LoreText_Ch05_Music_03", "SQ_S12_LoreText_Ch05_Music_04", "SQ_S12_LoreText_Ch05_Music_05", "SQ_S12_LoreText_Ch05_Music_06",
 	"SQ_S12_LoreText_Ch05_Music_07", "SQ_S12_LoreText_Ch06_Music_01", "SQ_S12_LoreText_Ch06_Music_02", "SQ_S12_LoreText_Ch06_Music_03", "SQ_S12_LoreText_Ch06_Music_04", "SQ_S12_LoreText_Ch06_Music_05",
 	"SQ_S12_LoreText_Ch07_Music_01", "SQ_S12_LoreText_Ch07_Music_02", "SQ_S12_LoreText_Ch07_Music_03", "SQ_S12_LoreText_Ch07_Music_04", "SQ_S12_LoreText_Ch07_Music_05", "SQ_S12_LoreText_Ch07_Music_06",
-	"SQ_S12_LoreText_Ch07_Music_07"
+	"SQ_S12_LoreText_Ch07_Music_07", "SQ_S13_LoreText_Ch01_Music_01", "SQ_S13_LoreText_Ch01_Music_02", "SQ_S13_LoreText_Ch01_Music_03", "SQ_S13_LoreText_Ch01_Music_04", "SQ_S13_LoreText_Ch02_Music_01",
+	"SQ_S13_LoreText_Ch02_Music_02", "SQ_S13_LoreText_Ch02_Music_03", "SQ_S13_LoreText_Ch03_Music_01", "SQ_S13_LoreText_Ch03_Music_02", "SQ_S13_LoreText_Ch03_Music_03", "SQ_S13_LoreText_Ch03_Music_04",
+	"SQ_S13_LoreText_Ch03_Music_05", "SQ_S13_LoreText_Ch04_Music_01", "SQ_S13_LoreText_Ch04_Music_02", "SQ_S13_LoreText_Ch04_Music_03", "SQ_S13_LoreText_Ch04_Music_04", "SQ_S13_LoreText_Ch04_Music_05",
+	"SQ_S13_LoreText_Ch04_Music_06", "SQ_S13_LoreText_Ch04_Music_07", "SQ_S13_LoreText_Ch04_Music_08"
 	LOOT_CEREMONY_MUSIC_P1,
 	LOOT_CEREMONY_MUSIC_P2
 ]

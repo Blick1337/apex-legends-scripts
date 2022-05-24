@@ -99,6 +99,10 @@ var function OnWeaponPrimaryAttack_ability_crypto_drone_emp( entity weapon, Weap
 			return 0
         
 	}
+	else if ( StatusEffect_GetSeverity( weaponOwner, eStatusEffect.crypto_camera_is_recalling ) > 0.0 )
+	{
+		return 0
+	}
 	else
 	{
 		#if SERVER

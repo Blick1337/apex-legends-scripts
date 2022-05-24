@@ -37,6 +37,7 @@ global const float DEFAULT_DRONE_FALLING_SPEED_MAX = 800.0
 global const float DEFAULT_DRONE_FALLING_ACCEL = 300.0
 global const float DEFAULT_DRONE_FALLING_GRAVITY = 350.0
 global const float DEFAULT_DRONE_MIN_FALL_DIST_TO_SURFACE = 32.0
+global const float DEFAULT_DRONE_ROLL = 45.0
 
 #if SERVER
                                                                                         
@@ -142,15 +143,7 @@ void function ShDrones_DroneSpawned( entity droneEnt )
 			                                                                                                                       
 			 
 				                                   
-				                                                          
-				                                                                                                                        
-				                                      
-				 
-					                        
-					 
-						                                                                                                                   
-					 
-				 
+				                                                        
 			 
 		 
 	#endif         

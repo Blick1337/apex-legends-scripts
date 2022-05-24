@@ -57,6 +57,8 @@ global function DEV_RequestSetItemFlavorLoadoutSlot
 global function IsItemFlavorValidForLoadoutSlot
 global function GetValidItemFlavorsForLoadoutSlot
 global function IsItemFlavorUnlockedForLoadoutSlot
+global function IsItemFlavorGRXUnlockedForLoadoutSlot
+global function IsItemFlavorGRXUnlockedForLoadoutSlotHelper
 global function GetUnlockedItemFlavorsForLoadoutSlot
 global function GetRandomGoodItemFlavorForLoadoutSlot
 global function GetDefaultItemFlavorForLoadoutSlot
@@ -110,7 +112,7 @@ global typedef LoadoutEntry_IsSlotLocked bool functionref( EHI playerEHI )
                                                                                          
                                                                                                                                   
 #endif
-global typedef ItemFlavorLoadoutEntry_IsItemFlavorUnlockedFuncType bool functionref( EHI playerEHI, ItemFlavor itemFlavor, bool shouldIgnoreOtherSlots )
+global typedef ItemFlavorLoadoutEntry_IsItemFlavorUnlockedFuncType bool functionref( EHI playerEHI, ItemFlavor itemFlavor, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false )
 global typedef ItemFlavorLoadoutSlotDidChangeFuncType void functionref( EHI playerEHI, ItemFlavor flavor )
 global typedef IntegerLoadoutSlotDidChangeFuncType void functionref( EHI playerEHI, int value )
 
@@ -125,6 +127,13 @@ global enum eLoadoutEntryType
 {
 	ITEM_FLAVOR,
 	INTEGER,
+}
+
+global enum eTristate
+{
+	TRUE,
+	FALSE,
+	UNKNOWN,
 }
 
 global struct LoadoutEntry
@@ -364,15 +373,15 @@ void function ShLoadouts_LevelInit_Finish()
 				#endif
 
 				#if CLIENT
-					RegisterNetworkedVariableChangeCallback_int( fullNetworkVarName, void function( entity player, int old, int new ) : ( nvInfo )
+					RegisterNetworkedVariableChangeCallback_int( fullNetworkVarName, void function( entity player, int new ) : ( nvInfo )
 					{
 						EHI playerEHI         = ToEHI( player )
 						EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
 
 						#if LOADOUT_NETVAR_DEBUG_PRINTS
-							printf( "### LOADOUT SLOT NV, %s (%s), %s, %d --[%d]-> %d (=%d)",
+							printf( "### LOADOUT SLOT NV, %s (%s), %s --[%d]-> %d (=%d)",
 								string(player), string(EHI_IsConnected( playerEHI )), nvInfo.fullNetworkVarName,
-								old, ehiss.netVarsLastSeenValuesMap[nvInfo.nvIndex], new, player.GetPlayerNetInt( nvInfo.fullNetworkVarName ) )
+								ehiss.netVarsLastSeenValuesMap[nvInfo.nvIndex], new, player.GetPlayerNetInt( nvInfo.fullNetworkVarName ) )
 						#endif
 
 						new = player.GetPlayerNetInt( nvInfo.fullNetworkVarName )                                        
@@ -399,7 +408,7 @@ void function ShLoadouts_LevelInit_Finish()
 										continue
 									found = entry
 								#endif
-								HandleLoadoutSlotNetworkVarChanged( playerEHI, entry, old, new )
+								HandleLoadoutSlotNetworkVarChanged( playerEHI, entry, new )
 								#if !ASSERTING
 									break
 								#endif
@@ -1107,54 +1116,60 @@ bool function IsItemFlavorUnlockedForLoadoutSlot( EHI playerEHI, LoadoutEntry en
 				           
 			                                                                                
 		 
-
-                          
-			                                                                                                                                                                            
-			                              
-			 
-				                                        
-					           
-			 
-                                
 	#endif
 
-	if ( entry.isItemFlavorUnlocked != null && !entry.isItemFlavorUnlocked( playerEHI, itemFlavor, shouldIgnoreOtherSlots ) )
-		return false
+	ItemFlavorLoadoutEntry_IsItemFlavorUnlockedFuncType isItemFlavorUnlocked = entry.isItemFlavorUnlocked
+	if ( isItemFlavorUnlocked == null )
+		isItemFlavorUnlocked = IsItemFlavorGRXUnlockedForLoadoutSlot
 
-	                                      
-
-	if ( shouldIgnoreGRX )
-		return true
-
-	return IsItemFlavorGRXUnlockedForLoadoutSlot( playerEHI, itemFlavor )
+	return isItemFlavorUnlocked( playerEHI, itemFlavor, shouldIgnoreGRX, shouldIgnoreOtherSlots )
 }
 
 
-bool function IsItemFlavorGRXUnlockedForLoadoutSlot( EHI playerEHI, ItemFlavor itemFlavor )
+int function IsItemFlavorGRXUnlockedForLoadoutSlotHelper( EHI playerEHI, ItemFlavor itemFlavor, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false )
 {
+	if ( shouldIgnoreGRX )
+		return eTristate.TRUE
+
 #if SERVER
 	                                                                                    
-		            
+		                      
 
 	                        
 	 
 		                             
-			           
-		                                                                                
+			                     
+		                                                                               
+			                     
+		                      
 	 
 #endif
 
 	#if DEV
 		                                                    
 		if ( GetConVarBool( "loadouts_ignore_grx" ) )
-			return true
+			return eTristate.TRUE
 	#endif
 
-	entity player = FromEHI( playerEHI )
-	if ( IsLobby() && !ItemFlavor_IsActiveForEdition( itemFlavor, GRX_GetPlayerEdition( player ) ) )
-		return false
+	if ( IsLobby() && !ItemFlavor_IsActiveForEdition( itemFlavor, GRX_GetPlayerEdition( FromEHI( playerEHI ) ) ) )
+		return eTristate.FALSE
 
-	return GRX_IsItemOwnedByPlayer_AllowOutOfDateData( itemFlavor, player )
+	return eTristate.UNKNOWN
+}
+
+
+bool function IsItemFlavorGRXUnlockedForLoadoutSlot( EHI playerEHI, ItemFlavor itemFlavor, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false )
+{
+	switch( IsItemFlavorGRXUnlockedForLoadoutSlotHelper( playerEHI, itemFlavor, shouldIgnoreGRX, shouldIgnoreOtherSlots ) )
+	{
+		case eTristate.TRUE:
+			return true
+		case eTristate.FALSE:
+			return false
+		default:
+			return GRX_IsItemOwnedByPlayer_AllowOutOfDateData( itemFlavor, FromEHI( playerEHI ) )
+	}
+	unreachable
 }
 
 
@@ -1230,10 +1245,6 @@ array<LoadoutEntry> function GetAllLoadoutSlots()
 #if SERVER && DEV
                                     
  
-	                                                                                                                                                                                                   
-	                                                
-		                                                                                                                                                          
-
 	                                                                                                               
 	                                                            
 	                                                            
@@ -1480,7 +1491,7 @@ void function ShLoadouts_OnPlayerEHICreated( EHI player, bool thisCallIsHappenin
 
 
 #if CLIENT
-void function HandleLoadoutSlotNetworkVarChanged( EHI playerEHI, LoadoutEntry entry, int old, int new )
+void function HandleLoadoutSlotNetworkVarChanged( EHI playerEHI, LoadoutEntry entry, int new )
 {
 	if ( !fileLevel.isInitialized )
 		return
@@ -2567,8 +2578,8 @@ bool function IsLoadoutSlotLocked( EHI playerEHI, LoadoutEntry entry )
 	#endif
 
                        
-	if ( GetCurrentPlaylistVarBool( "winter_express_loadout_changeable_at_anytime", false ) )
-		return false
+                                                                                          
+              
        
 
                          

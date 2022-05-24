@@ -3299,7 +3299,7 @@ void function Cl_DeathFieldThink( entity deathField )
 	}
 }
 
-void function Cl_Deathfield_SetOpacityOverride( entity e, float oldVal, float newVal )
+void function Cl_Deathfield_SetOpacityOverride( entity e, float newVal )
 {
 	file.ringOpacityOverrideValue = newVal
 }

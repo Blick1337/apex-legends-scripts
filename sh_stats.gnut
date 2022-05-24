@@ -158,11 +158,9 @@ global function GetCurrentStatRankedPeriodRefOrNullByType
                                             
 
              
-                    
                                                        
                                                           
                                                         
-      
 
                  
                                                          
@@ -194,11 +192,7 @@ global function GetCurrentStatRankedPeriodRefOrNullByType
                                                           
                               
 
-              
                                                     
-                                                        
-      
-
 #endif         
 
 
@@ -571,16 +565,14 @@ global struct CareerStats
 	StatTemplate& ash_enemies_tethered
 	StatTemplate& ash_players_portaled
 
-                     
-		StatTemplate& maggie_riot_drill_drill_distance
-		StatTemplate& maggie_wrecking_ball_boost_distance
-		StatTemplate& maggie_warlords_ire_highlight_time
-       
+	StatTemplate& maggie_riot_drill_drill_distance
+	StatTemplate& maggie_wrecking_ball_boost_distance
+	StatTemplate& maggie_warlords_ire_highlight_time
 
                   
-                                         
-                                              
-                                        
+		StatTemplate& newcastle_revive_distance
+		StatTemplate& newcastle_mobile_shield_damage
+		StatTemplate& newcastle_allies_rescued
        
 
 
@@ -869,13 +861,9 @@ global struct CareerStats
 	StatTemplate& hovervehicle_occupant_meters_traveled
                            
 
-
-              
 	StatTemplate& s12e04_challenge_1
 	StatTemplate& s12e04_challenge_2
 	StatTemplate& s12e04_challenge_3
-	StatTemplate& s12e04_finale_completed
-      
 
 	       
 	StatTemplate& clubs_games_played_with_club
@@ -951,7 +939,6 @@ struct FileStruct_LifetimeLevel
 		                                    
 		                                  
 
-		                          
 		                          
 	#endif
 }
@@ -1413,16 +1400,14 @@ void function RegisterAllStats()
 	CAREER_STATS.ash_enemies_tethered = RegisterAccumulatedStat_Int( null, "ash_enemies_tethered", TRACKERS_NEED | CHALLENGES_NEED )       
 	CAREER_STATS.ash_players_portaled = RegisterAccumulatedStat_Int( null, "ash_players_portaled", TRACKERS_NEED | CHALLENGES_NEED )       
 
-                     
-		CAREER_STATS.maggie_riot_drill_drill_distance = RegisterAccumulatedStat_Int( null, "maggie_riot_drill_drill_distance", TRACKERS_NEED | CHALLENGES_NEED )
-		CAREER_STATS.maggie_wrecking_ball_boost_distance = RegisterAccumulatedStat_Int( null, "maggie_wrecking_ball_boost_distance", TRACKERS_NEED | CHALLENGES_NEED )
-		CAREER_STATS.maggie_warlords_ire_highlight_time = RegisterAccumulatedStat_Int( null, "maggie_warlords_ire_highlight_time", TRACKERS_NEED | CHALLENGES_NEED )
-       
+	CAREER_STATS.maggie_riot_drill_drill_distance = RegisterAccumulatedStat_Int( null, "maggie_riot_drill_drill_distance", TRACKERS_NEED | CHALLENGES_NEED )
+	CAREER_STATS.maggie_wrecking_ball_boost_distance = RegisterAccumulatedStat_Int( null, "maggie_wrecking_ball_boost_distance", TRACKERS_NEED | CHALLENGES_NEED )
+	CAREER_STATS.maggie_warlords_ire_highlight_time = RegisterAccumulatedStat_Int( null, "maggie_warlords_ire_highlight_time", TRACKERS_NEED | CHALLENGES_NEED )
 
                   
-                                                                                                                                            
-                                                                                                                                                      
-                                                                                                                                          
+		CAREER_STATS.newcastle_revive_distance = RegisterAccumulatedStat_Int( null, "newcastle_revive_distance", TRACKERS_NEED | CHALLENGES_NEED )
+		CAREER_STATS.newcastle_mobile_shield_damage = RegisterAccumulatedStat_Int( null, "newcastle_mobile_shield_damage", TRACKERS_NEED | CHALLENGES_NEED )
+		CAREER_STATS.newcastle_allies_rescued = RegisterAccumulatedStat_Int( null, "newcastle_allies_rescued", TRACKERS_NEED | CHALLENGES_NEED )
        
 
 	StatEnumStruct season_SES = RegisterStatEnumStruct( null, "seasons", "eSeasonFlavor", allSeasonRefs )
@@ -1670,13 +1655,10 @@ void function RegisterAllStats()
 	CAREER_STATS.s12e02_01_br_dooms              = RegisterAccumulatedStat_Int( null, "s12e02_01_br_dooms", BADGES_NEED )
 	CAREER_STATS.s12e02_02_br_damage_done        = RegisterAccumulatedStat_Int( null, "s12e02_02_br_damage_done", BADGES_NEED )
 
-               
-	        
+
 	CAREER_STATS.s12e04_challenge_1            = RegisterAccumulatedStat_Int( null, "s12e04_challenge_1", CHALLENGES_NEED )
 	CAREER_STATS.s12e04_challenge_2            = RegisterAccumulatedStat_Int( null, "s12e04_challenge_2", CHALLENGES_NEED )
 	CAREER_STATS.s12e04_challenge_3            = RegisterAccumulatedStat_Int( null, "s12e04_challenge_3", CHALLENGES_NEED )
-	CAREER_STATS.s12e04_finale_completed            = RegisterAccumulatedStat_Int( null, "s12e04_finale_completed", CHALLENGES_NEED )
-      
 
 	                      
 	                                                   
@@ -1799,8 +1781,8 @@ bool function IsValidMapForStats()
 		            
 
                        
-	                                    
-		            
+                                     
+              
        
 
                                
@@ -1922,11 +1904,11 @@ bool function IsValidMapForStats()
        
 
                        
-		                                    
-		 
-			                               
-			                               
-		 
+                                      
+   
+                                  
+                                  
+   
        
 
                                
@@ -2250,7 +2232,6 @@ bool function IsValidMapForStats()
 				 
 					                                                                                                                                 
 					                                                                                                                                                       
-					                                                                                                                                                           
 
 					                                                                                                                                     
 					                                                                                                                                                                             
@@ -2437,10 +2418,7 @@ bool function IsValidMapForStats()
 
 		                                                                                   
 		                                     
-		 
 			                                                                                                                                                         
-			                                                                                                                                                            
-		 
 
 		                                                             
 		 
@@ -2718,6 +2696,9 @@ bool function IsValidMapForStats()
   
                                                                                        
  
+	                
+		      
+
 	                         
 
 	  
@@ -2850,8 +2831,11 @@ bool function IsValidMapForStats()
 		                                                                                                                         
 		                                         
 		 
-			                                                                                                    
-			                                                                                            
+			                                                 
+			 
+				                                                                                                    
+				                                                                                           
+			 
 		 
 	 
 
@@ -2890,11 +2874,13 @@ bool function IsValidMapForStats()
 		                                                                                                          
 
 		                                             
+                      
 		                                                                                                                        
 			                                                                                    
 		                                               
 		                                                                                                                                
 			                                                                                       
+        
 
 		                   
 			                                                                                                               
@@ -3075,6 +3061,13 @@ bool function IsValidMapForStats()
 		                                                                                       
 		                                                                            
 		 
+			                                                                                                        
+			 
+				                                                                                     
+				                                                                                                 
+			 
+			                       
+
 			                                                                      
 
 			                        
@@ -3195,7 +3188,6 @@ bool function IsValidMapForStats()
 			                                                                                                                        
 
 			                                                                                                                                                    
-			                                                                                                                                                 
 		 
 
 		                                                                                                                         
@@ -3633,11 +3625,13 @@ bool function IsValidMapForStats()
 				                                                                                                               
 
 			                                             
+                       
 			                                                                                                                        
 				                                                                                                     
 			                                               
 			                                                                                                                                
 				                                                                                                        
+         
 
 			                                                 
 			                             
@@ -3929,26 +3923,7 @@ bool function IsValidMapForStats()
 
 	                                                                      
 	                                     
-	 
-		                                                               
-
-		                                                                                                                     
-
-		        
-
-		                              
-		                                                                                                                                                                                                                                                                                        
-		 
-			                                                      
-			 
-				                                                                                                                                                                         
-			 
-
-			        
-
-			                                                                                                                                          
-		 
-	 
+		                                                                                                                                          
  
                                
 
@@ -4736,7 +4711,6 @@ bool function IsValidMapForStats()
 	                                                                                       
  
 
-                    
                                                                                     
  
 	                                                                                                                        
@@ -4758,29 +4732,28 @@ bool function IsValidMapForStats()
 
 	                                                                                                        
  
-      
 
                  
                                                                                       
  
-                                                                                                                  
-        
+	                                                                                                                 
+		      
 
-                                                                                                    
+	                                                                                                   
  
                                                                                        
  
-                                                                                                                  
-        
+	                                                                                                                 
+		      
 
-                                                                                                       
+	                                                                                                      
  
                                                                        
  
-                                                                                                                  
-        
+	                                                                                                                 
+		      
 
-                                                                                            
+	                                                                                           
  
       
 
@@ -4835,14 +4808,14 @@ bool function IsValidMapForStats()
                                                                                                                          
                                                                                                                         
                       
-#if SERVER
+          
                                                                                     
                                                                       
  
-	                                                                                                                          
-		                                                                                                   
+                                                                                                                           
+                                                                                                     
  
-#endif              
+                    
                                 
 
                         
@@ -4856,8 +4829,10 @@ bool function IsValidMapForStats()
 	                                                                                                       
 
 	                                             
+                     
 	                                                                                                                        
 		                                                                                          
+       
  
 #endif              
                                   
@@ -4977,7 +4952,6 @@ bool function IsValidMapForStats()
                                   
 
 
-              
 #if SERVER
                                                                                                      
  
@@ -4988,13 +4962,7 @@ bool function IsValidMapForStats()
 	                       
 		                                                            
  
-
-                                                                        
- 
-	                                                                                          
- 
 #endif
-      
 
                                                                                                    
                                              
@@ -5164,7 +5132,7 @@ StatCalcFuncInfo function SetupGetTotalLegendaryItemsForStat( StatEntry calcEntr
 		                                                                                                          
 
 		int count = 0
-		foreach ( ItemFlavor flav in GetAllItemFlavors() )
+		foreach ( ItemFlavor flav in GetAllItemFlavorsCosmetic() )
 		{
 			if ( ItemFlavor_GetGRXMode( flav ) != eItemFlavorGRXMode.REGULAR )
 				continue
@@ -5256,9 +5224,10 @@ StatCalcFuncInfo function SetupGetNumCharactersWithBannersOnceFilledForStat( Sta
 		 
 	 
 	                     
+	 
 		                                                                                                                                    
-
-	                                                                                                                   
+		                                                                                                                   
+	 
  
 #endif
 

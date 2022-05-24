@@ -541,7 +541,9 @@ CrosshairTargetData function GetCrosshairTargetData( entity player )
 	data.crosshairStart = player.CameraPosition()
 	vector crosshairEnd = data.crosshairStart + player.GetViewForward() * MORTAR_MAX_FIRE_DISTANCE
 	DoTraceCoordCheck( false )
-	TraceResults crosshairResults = TraceLineHighDetail( data.crosshairStart, crosshairEnd, [ player ], (TRACE_MASK_SHOT | CONTENTS_BLOCKLOS ) & ~CONTENTS_WINDOW, TRACE_COLLISION_GROUP_PROJECTILE )
+	array< entity > ignoreEnts = [ player ]
+	ignoreEnts.extend( GetEntArrayByScriptName( CRYPTO_DRONE_SCRIPTNAME ) )
+	TraceResults crosshairResults = TraceLineHighDetail( data.crosshairStart, crosshairEnd, ignoreEnts, (TRACE_MASK_SHOT | CONTENTS_BLOCKLOS ) & ~CONTENTS_WINDOW, TRACE_COLLISION_GROUP_PROJECTILE )
 	data.groundTarget = crosshairResults.endPos
 	data.airburstTarget = data.groundTarget + < 0, 0, MORTAR_RING_BOMB_AIRBURST_HEIGHT >
 	data.distanceToTarget = Distance( data.groundTarget, data.crosshairStart )
@@ -551,7 +553,7 @@ CrosshairTargetData function GetCrosshairTargetData( entity player )
 	{
 		data.groundTarget = crosshairResults.endPos + ( FlattenNormalizeVec ( data.directionToTarget ) * ( MORTAR_MIN_FIRE_DISTANCE - flattenedDistanceToTarget ) )
 		vector downTraceEnd = < data.groundTarget.x, data.groundTarget.y, data.groundTarget.z - 250 >
-		TraceResults downTraceResults = TraceLineHighDetail( data.groundTarget, downTraceEnd, [ player ], (TRACE_MASK_SHOT | CONTENTS_BLOCKLOS ) & ~CONTENTS_WINDOW, TRACE_COLLISION_GROUP_PROJECTILE )
+		TraceResults downTraceResults = TraceLineHighDetail( data.groundTarget, downTraceEnd, ignoreEnts, (TRACE_MASK_SHOT | CONTENTS_BLOCKLOS ) & ~CONTENTS_WINDOW, TRACE_COLLISION_GROUP_PROJECTILE )
 		if( downTraceResults.startSolid || downTraceResults.fraction < 1.0 )
 			data.groundTarget = downTraceResults.endPos
 		data.airburstTarget = data.groundTarget + < 0, 0, MORTAR_RING_BOMB_AIRBURST_HEIGHT >

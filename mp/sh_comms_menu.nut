@@ -2092,7 +2092,7 @@ void function OnBleedoutEnded( entity victim )
 	DestroyCommsMenu()
 }
 
-void function OnPlayerMatchStateChanged( entity player, int oldValue, int newValue )
+void function OnPlayerMatchStateChanged( entity player, int newValue )
 {
 	if ( player != GetLocalViewPlayer() )
 		return

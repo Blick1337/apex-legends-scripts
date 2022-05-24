@@ -98,6 +98,7 @@ void function Sh_JumpPad_Init()
 
 	#if CLIENT
 		AddCreateCallback( "trigger_cylinder_heavy", OnJumpPadCreated )
+		AddCallback_OnBleedoutStarted( HideDoubleJumpHint )
                         
 			AddCreateCallback( "trigger_cylinder_heavy", OnGravityCannonCreated )
         
@@ -670,6 +671,11 @@ void function ServerCallback_HideJumpPadHint()
 	HidePlayerHint( "#JUMP_PAD_DOUBLE_JUMP_HINT" )
 }
 
+void function HideDoubleJumpHint( entity victim, float endTime )
+{
+	HidePlayerHint( "#JUMP_PAD_DOUBLE_JUMP_HINT" )
+}
+
 void function _DisplayJumpPadHint()
 {
 	entity player = GetLocalViewPlayer()
@@ -707,7 +713,7 @@ void function JumpPad_GiveDoubleJump( entity player )
 	if ( !GetCurrentPlaylistVarBool( "octane_jump_pad_give_double_jump", true ) )
 		return
 
-	if ( player.GetTeam() == TEAM_SPECTATOR )
+	if ( player.GetTeam() == TEAM_SPECTATOR || Bleedout_IsBleedingOut( player ) )
 		return
 
 	asset settings = player.GetPlayerSettings()

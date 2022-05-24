@@ -12,6 +12,7 @@ global function PIN_Survey
 global function PIN_Settings
 global function PIN_UIInteraction_Select
 global function PIN_ComicPageView
+global function PIN_QuestTextView
 global function PIN_StoryTrackerPageView
 
 global function PIN_Club_Create
@@ -240,6 +241,21 @@ void function PIN_ComicPageView( string currentID, string previousID, float view
 		}
 	)
 }
+
+void function PIN_QuestTextView( string currentID, string previousID, float viewDuration )
+{
+	AddPINTelemetryEvent( "page_view",
+		PIN_StandardHeader(),
+		{
+			ldur = 0
+			pgdur = viewDuration
+			pgid = currentID
+			fromid = previousID
+			type = "quest_text"
+		}
+	)
+}
+
 void function PIN_StoryTrackerPageView( string currentID, string previousID, float viewDuration )
 {
 	AddPINTelemetryEvent( "page_view",

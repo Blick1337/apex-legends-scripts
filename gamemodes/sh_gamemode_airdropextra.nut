@@ -557,12 +557,12 @@ void function AirdropExtravaganzaOverrideGamestateUI()
 	ClGameState_RegisterGameStateAsset( $"ui/gamestate_info_airdropextra.rpak" )
 }
 
-void function OnServerVarChanged_AirdropExtra_AirdropTier( entity player, int old, int new )
+void function OnServerVarChanged_AirdropExtra_AirdropTier( entity player, int new )
 {
 	if ( GetGameState() != eGameState.Playing )
 		return
 
-	printf( "AIRDROP EXTRAVAGANZA: server var changed: " + old + " " + new )
+	printf( "AIRDROP EXTRAVAGANZA: server var changed: " + new )
 
 	int colorID = GetAirdropPingColorIDFromRarityTier( new )
 	string airdropText = GetAirdropTierTextFromTier( new )
@@ -573,7 +573,7 @@ void function OnServerVarChanged_AirdropExtra_AirdropTier( entity player, int ol
 	RuiSetInt( ClGameState_GetRui(), "airdropCount", GetGlobalNetInt("AirdropExtra_AirdropCount") )
 }
 
-void function OnServerVarChanged_AirdropExtra_AirdropProgress( entity player, int old, int new )
+void function OnServerVarChanged_AirdropExtra_AirdropProgress( entity player, int new )
 {
 	if ( GetGameState() != eGameState.Playing )
 		return

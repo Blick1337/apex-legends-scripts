@@ -1,6 +1,6 @@
 global function GetPlayerTitansOnTeam
 global function GetPlayerTitansReadyOnTeam
-                    
+                                                                                     
 global function SHTeams_Init
 global function GetMaxDistForAllianceMemberProximity
 global function GetAllAllianceMembersInProximity
@@ -23,7 +23,7 @@ float function GetMaxDistForAllianceMemberProximity()
 {
 	return file.maxDistAllianceProximity
 }
-                          
+                                                                                      
 
                                                         
 array<entity> function GetPlayerTitansOnTeam( int team )
@@ -97,7 +97,7 @@ array<entity> function GetPlayerTitansReadyOnTeam( int team )
 	return teamTitansReady
 }
 
-                    
+                                                                                     
                                                           
 array<entity> function GetAllAllianceMembersInProximity( int team, vector origin )
 {
@@ -202,4 +202,4 @@ void function ManageTeamProximity_IconVisibility_Thread( entity ent, var rui, bo
 	}
 }
 #endif          
-                          
+                                                                                      

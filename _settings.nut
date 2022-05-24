@@ -270,7 +270,7 @@ global const FX_GRENADE_SMOKESCREEN = $"P_smkscreen_test"
 global const MAX_DAMAGE_HISTORY_TIME 					= 30
 global const MAX_NPC_KILL_STEAL_PREVENTION_TIME			= 0.0                                                                                   
 
-global const MAX_ASSIST_TIME_GAP						= 10                                                                                                                                                      
+global const MAX_ASSIST_TIME_GAP						= 15                                                                                                                                                      
 
 global const HIT_GROUP_HEADSHOT 						= 1                                                                                      
 

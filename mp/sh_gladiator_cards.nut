@@ -92,8 +92,6 @@ global function GladiatorCardBadge_GetTierCount
 global function GladiatorCardBadge_GetTierData
 global function GladiatorCardBadge_GetTierDataList
 global function GetPlayerBadgeDataInteger
-global function GladiatorCardCharacterSkin_ShouldHideIfLocked
-global function GladiatorCardWeaponSkin_ShouldHideIfLocked
 #endif
 #if CLIENT || UI
 global function GladiatorCardStatTracker_GetColor0
@@ -1309,8 +1307,10 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		{
 			entry.defaultItemFlavor = entry.validItemFlavorList[ 0 ]
 		}
-		entry.isItemFlavorUnlocked = (bool function( EHI playerEHI, ItemFlavor badge, bool shouldIgnoreOtherSlots ) : ( characterClass, badgeIndex ) {
-			return GetPlayerBadgeIsUnlocked( playerEHI, badge, characterClass )
+		entry.isItemFlavorUnlocked = (bool function( EHI playerEHI, ItemFlavor badge, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false ) : ( characterClass, badgeIndex ) {
+			if( !GetPlayerBadgeIsUnlocked( playerEHI, badge, characterClass ) )
+				return false
+			return IsItemFlavorGRXUnlockedForLoadoutSlot( playerEHI, badge, shouldIgnoreGRX, shouldIgnoreOtherSlots )
 		})
 		entry.isSlotLocked = bool function( EHI playerEHI ) {
 			return !IsLobby()
@@ -1462,7 +1462,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 #if CLIENT
 void function OnYouDied( entity attacker, float healthFrac, int damageSourceId, float recentHealthDamage )
 {
-	if ( GetGameState() != eGameState.Playing )
+	if ( GetGameState() != eGameState.Playing || !IsFiringRangeGameMode() )
 		return
 
 	if ( !IsValid( attacker ) || !attacker.IsPlayer() )
@@ -3494,25 +3494,6 @@ void function ShGladiatorCards_OnDevnetBugScreenshot()
 	#if DEV
 		DEV_DumpCharacterCaptures()
 	#endif
-}
-#endif
-
-#if SERVER || CLIENT || UI
-bool function GladiatorCardCharacterSkin_ShouldHideIfLocked( ItemFlavor flavor )
-{
-	Assert( ItemFlavor_GetType( flavor ) == eItemType.character_skin )
-
-	return GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "shouldHideIfLocked" )
-}
-#endif
-
-
-#if SERVER || CLIENT || UI
-bool function GladiatorCardWeaponSkin_ShouldHideIfLocked( ItemFlavor flavor )
-{
-	Assert( ItemFlavor_GetType( flavor ) == eItemType.weapon_skin )
-
-	return GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "shouldHideIfLocked" )
 }
 #endif
 

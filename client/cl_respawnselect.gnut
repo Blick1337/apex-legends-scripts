@@ -72,12 +72,12 @@ void function RespawnSelect_OnTitanAvailableChanged()
 	UpdateRespawnSelectHud()
 }
 
-void function RespawnSelect_OnRespawnAvailableChanged(entity player, int oldVal, int newVal )
+void function RespawnSelect_OnRespawnAvailableChanged(entity player, int newVal )
 {
 	UpdateRespawnSelectHud()
 }
 
-void function RespawnSelection_GameEndTimeChanged(entity player, float oldVal, float newVal )
+void function RespawnSelection_GameEndTimeChanged(entity player, float newVal )
 {
 	UpdateRespawnSelectHud()
 }

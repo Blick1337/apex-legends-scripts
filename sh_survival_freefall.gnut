@@ -21,13 +21,10 @@ const asset PLAYER_WIND_FX 	= $"P_wind_cruising"
 
 global const string JUMPTOWER_PING_NAME = "jump_tower"
 
-                                                                                                                                 
-                                                                        
 const array<vector> skydiveSmokeColors = [
-	<0, 0, 0>,              
-	<0, 0, 0>,              
-	<6, 131, 149>,           
+	<110, 49, 1>,               
 	<10, 88, 106>,          
+	<6, 131, 149>,           
 	                           
 	<27, 71, 105>,          
 	<31, 84, 205>,          
@@ -43,7 +40,6 @@ const array<vector> skydiveSmokeColors = [
 	<197, 67, 32>,       
 	<120, 30, 19>,            
 	<159, 59, 13>,           
-	<110, 49, 1>,               
 	<119, 75, 0>,           
 	<204, 121, 19>,            
 	<150, 125, 0>,           
@@ -320,7 +316,7 @@ void function SurvivalFreefall_Init()
                                           
 			                                                                                                                 
                          
-				                                     
+                                         
          
 				 
 					                                        
@@ -358,10 +354,6 @@ void function SurvivalFreefall_Init()
 vector function GetSkydiveSmokeColorForTeam( int team )
 {
 	vector teamSkyDiveColor = skydiveSmokeColors[ team % skydiveSmokeColors.len() ]
-
-	if( IsPrivateMatch() )
-		teamSkyDiveColor = GameRules_GetTeamColor( team )
-
 	return teamSkyDiveColor
 }
 
@@ -1480,7 +1472,7 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 	
 	                                                                                    
 	                                                                                       
-	
+	                                       
 	                                  
 	
 	                                                                   
@@ -1489,8 +1481,9 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 	
 	                         
 		      
-	
+
 	                                                   
+	                                        
  
 
                                                                     
@@ -1820,7 +1813,7 @@ void function UpdateSkydiveRui_MusicTrackInfo( var rui )
 	RuiSetString( rui, "musicpackName", ItemFlavor_GetLongName( item ) )
 }
 
-void function PlayerFreefallActiveChanged( entity player, bool oldValue, bool isFreefallActive )
+void function PlayerFreefallActiveChanged( entity player, bool isFreefallActive )
 {
 	if ( player != GetLocalViewPlayer() )
 		return
@@ -1900,7 +1893,7 @@ void function PlayerFreefallActiveChanged( entity player, bool oldValue, bool is
 	}
 }
 
-void function PlayerFreefallEmoteAvailableChanged( entity player, bool oldValue, bool isFreefallEmoteAvailable )
+void function PlayerFreefallEmoteAvailableChanged( entity player, bool isFreefallEmoteAvailable )
 {
 	printt( "PlayerFreefallEmoteAvailableChanged", isFreefallEmoteAvailable )
 	if ( file.skydiveRui != null )
@@ -1916,13 +1909,13 @@ void function ServerCallback_Mirage_DecoysDeployed( bool active )
 		RuiSetBool( file.skydiveRui, "decoysAvailable", false )
 }
 
-void function SkydiveFreelookActiveChanged( entity player, bool old, bool new )
+void function SkydiveFreelookActiveChanged( entity player, bool new )
 {
 	if ( file.skydiveRui != null )
 		RuiSetBool( file.skydiveRui, "freelookActive", new )
 }
 
-void function SkydiveFollowPlayerChanged( entity player, entity oldEnt, entity newEnt )
+void function SkydiveFollowPlayerChanged( entity player, entity newEnt )
 {
 	if ( file.skydiveRui == null )
 		return

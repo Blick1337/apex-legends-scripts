@@ -31,13 +31,15 @@ global function DEV_PrintAllPassives
                                                                            
 #if SERVER || CLIENT
 global function PlayerHasStealthMovement
+               
+                                                    
+      
 #endif
 
 #if SERVER
                                 
                
                                                   
-                                                    
       
 #endif
 
@@ -78,9 +80,7 @@ global enum ePassives
                  
                   
        
-               
-		PAS_WARLORDS_IRE,
-       
+	PAS_WARLORDS_IRE,
                           
                    
        
@@ -159,6 +159,9 @@ global enum ePassives
 	PAS_INFINITE_HEAL,
 	PAS_INFINITE_AMMO_CLIPS,
 	PAS_INFINITE_AMMO_CLIPS_OMIT_CRATE_WEAPONS,
+                       
+                   
+       
 
 	PAS_NOVA,
 	PAS_PARIAH,
@@ -167,7 +170,7 @@ global enum ePassives
              
        
                   
-            
+		PAS_AXIOM,
        
                
              
@@ -198,6 +201,9 @@ global const table<int, string> PASSIVE_NAME_MAP = {
 	[ePassives.PAS_GUARDIAN_ANGEL] = "#PAS_GUARDIAN_ANGEL",
 	[ePassives.PAS_FORTIFIED] = "#PAS_FORTIFIED",
 	[ePassives.PAS_LOWPROFILE] = "#PAS_LOW_PROFILE",
+                      
+                                                      
+      
 }
 
 global const table<int, string> PASSIVE_DESCRIPTION_SHORT_MAP = {
@@ -209,6 +215,9 @@ global const table<int, string> PASSIVE_DESCRIPTION_SHORT_MAP = {
 	[ePassives.PAS_GUARDIAN_ANGEL] = "#PAS_GUARDIAN_ANGEL_DESC",
 	[ePassives.PAS_FORTIFIED] = "#PAS_FORTIFIED_DESC",
 	[ePassives.PAS_LOWPROFILE] = "#PAS_LOW_PROFILE_DESC",
+                      
+                                                           
+      
 }
 #endif	              
 
@@ -282,8 +291,10 @@ void function PassivesShared_Init()
 		                                                                                                 
 
                  
-                                                                                 
                                              
+        
+                
+                                                                             
         
                      
                                                                                        
@@ -981,7 +992,7 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
 
                           
    
-                                                                                                
+                                                                                            
                       
    
   
@@ -990,7 +1001,9 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
 
                    
  
+      
 
+                    
                                                                     
  
                    
@@ -1002,24 +1015,31 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
 
                           
    
-                                                                                                
+                                                                                            
                 
    
   
 
                                                                      
 
-                       
-            
-                            
-            
-                            
-            
+                                                                          
 
-           
+                                             
  
-                    
+      
                          
+
+              
+          
+                                                                                           
+ 
+              
+  
+                                                                      
+  
+ 
+      
+      
 
 #if SERVER
                                                                                       

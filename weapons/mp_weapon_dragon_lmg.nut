@@ -1,4 +1,3 @@
-                         
                                                                                                                                                                                                                  
                                                                                                                                                                                                       
 global function MpWeaponDragon_LMG_Init
@@ -825,4 +824,3 @@ void function Charge_Cancel_Stop_Effects ( entity weapon )
 		weapon.StopWeaponEffect( EFFECT_CHAMBER_OPENING_FP, $"" )
 	}
 }
-                              

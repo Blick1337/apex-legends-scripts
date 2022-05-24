@@ -42,6 +42,10 @@ global function GetCharmForWeaponEntity
 global function DestroyCharmForWeaponEntity
 #endif
 
+#if CLIENT || UI
+global function WeaponSkin_ShouldHideIfLocked
+#endif
+
                       
                       
                       
@@ -186,12 +190,14 @@ void function OnItemFlavorRegistered_LootMainWeapon( ItemFlavor weaponFlavor )
 			return !IsLobby()
 		}
 		charmEntry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
-		charmEntry.isItemFlavorUnlocked = bool function( EHI playerEHI, ItemFlavor flavor, bool shouldIgnoreOtherSlots ) : ( weaponFlavor ) {
-			if ( shouldIgnoreOtherSlots )
-				return true
-
-			ItemFlavor ornull flavorCurrentWeaponEquippedTo = GetWeaponThatCharmIsCurrentlyEquippedToForPlayer( playerEHI, flavor )
-			return (flavorCurrentWeaponEquippedTo == null || flavorCurrentWeaponEquippedTo == weaponFlavor)
+		charmEntry.isItemFlavorUnlocked = bool function( EHI playerEHI, ItemFlavor flavor, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false ) : ( weaponFlavor ) {
+			if ( !shouldIgnoreOtherSlots )
+			{
+				ItemFlavor ornull flavorCurrentWeaponEquippedTo = GetWeaponThatCharmIsCurrentlyEquippedToForPlayer( playerEHI, flavor )
+				if ( flavorCurrentWeaponEquippedTo != null && flavorCurrentWeaponEquippedTo != weaponFlavor )
+					return false
+			}
+			return IsItemFlavorGRXUnlockedForLoadoutSlot( playerEHI, flavor, shouldIgnoreGRX, shouldIgnoreOtherSlots )
 		}
 
 		#if SERVER && DEV
@@ -619,6 +625,15 @@ asset function WeaponSkin_GetVideo( ItemFlavor flavor )
 	return GetGlobalSettingsStringAsAsset( ItemFlavor_GetAsset( flavor ), "video" )
 }
 
+#if CLIENT || UI
+bool function WeaponSkin_ShouldHideIfLocked( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.weapon_skin )
+
+	return GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "shouldHideIfLocked" )
+}
+#endif
+
 
 const bool CHARM_DEBUG = false
 #if SERVER || CLIENT
@@ -751,10 +766,25 @@ int function CodeCallback_GetWeaponSkin( entity weapon )
 	if ( !GetConVarBool( "enable_code_weapon_reactive" ) )
 		return 0
 
-	if( !WeaponHasReactiveKillTrackingForCurrentSkin( weapon ) )
+	if ( !IsValid( weapon ) )
 		return 0
 
-	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( weapon.GetGrade() )
+	int weaponGrade = weapon.GetGrade()
+	if ( !IsValidItemFlavorNetworkIndex( weaponGrade, eValidation.DONT_ASSERT ) )
+	{
+		printt( "Debugging CodeCallback_GetWeaponSkin: Not a valid item flavor network id: " + weaponGrade + " weapon name: " + weapon.GetWeaponClassName() )
+		return 0
+	}
+
+	ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( weaponGrade )
+	int flavorType = ItemFlavor_GetType( weaponSkin )
+
+	Assert( flavorType == eItemType.weapon_skin, "Debugging CodeCallback_GetWeaponSkin: For weapon " + weapon.GetWeaponClassName() +
+		": Itemflavor " + ItemFlavor_GetHumanReadableRef( weaponSkin ) + " is not a valid skin asset. GUID: " +  ItemFlavor_GetGUIDString( weaponSkin ) +  " Type: " + flavorType + " NetworkIndex: " + ItemFlavor_GetNetworkIndex( weaponSkin ) )
+
+	if ( !GetGlobalSettingsBool( ItemFlavor_GetAsset( weaponSkin ), "featureReactsToKills" ) )
+		return 0
+
 	return ItemFlavor_GetGUID( weaponSkin )
 }
 

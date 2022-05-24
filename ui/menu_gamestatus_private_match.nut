@@ -806,6 +806,12 @@ void function PrivateMatch_GameStatus_TeamRoster_Update( int dirtyBit )
 		if ( ( dirtyBit & ( 1 << teamIndex ) ) == 0 )
 			continue
 
+		if(nextSlotIdx > file.teamRosters.len())
+		{
+			Warning("PrivateMatch_GameStatus_TeamRoster_Update: More teamIndices than teamRosters, skipping slotIndex "+string(nextSlotIdx)+" and teamIndex "+string(teamIndex))
+			continue
+		}
+
 		TeamRosterStruct teamRoster = file.teamRosters[nextSlotIdx]
 		string teamName = PrivateMatch_GetTeamName( teamIndex )
 
@@ -983,7 +989,7 @@ void function OnGameStateEnter_WinnerDetermined()
 	RunUIScript( "OnPrivateMatchStateChange", eGameState.WinnerDetermined )
 }
 
-void function OnPlayerMatchStateChanged( entity player, int oldState, int newState )
+void function OnPlayerMatchStateChanged( entity player, int newState )
 {
 	if ( newState > ePlayerMatchState.SKYDIVE_PRELAUNCH )
 	{

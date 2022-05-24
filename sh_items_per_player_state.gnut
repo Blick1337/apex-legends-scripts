@@ -540,6 +540,9 @@ void function ServerToClient_OnItemFlavorNewnessChanged( int guid, bool isNew )
 #if UI
 void function ClientToUI_OnItemFlavorNewnessChanged( int guid, bool isNew )
 {
+	if ( IsValidItemFlavorGUID( guid, eValidation.ASSERT ) == false )
+		return
+
 	ItemFlavor flavor = GetItemFlavorByGUID( guid )
 	OnItemFlavorNewnessChanged( flavor, isNew, true )
 }

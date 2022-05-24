@@ -87,7 +87,7 @@ void function ServerCallback_ShadowAbilitiesClientEffectsEnable( entity player, 
 #endif         
 
 #if CLIENT
-void function OnServerVarChanged_IsPlayerShadowZombie( entity player, bool old, bool new )
+void function OnServerVarChanged_IsPlayerShadowZombie( entity player, bool new )
 {
 	                                                                                                    
 	                                                                 

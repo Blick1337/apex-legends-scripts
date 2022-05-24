@@ -27,7 +27,7 @@ void function RemoteFunctions_Init_Begin()
 			break
 
                       
-                                           
+		case "mp_rr_spectreshack_actionblock_02":
       
 		case "mp_rr_tropic_island":
 		case "mp_rr_tropic_island_mu1":
@@ -44,10 +44,6 @@ void function RemoteFunctions_Init_Begin()
 
 	Remote_RegisterUntypedFunction_deprecated( "ServerCallback_EventNotification" )
 
-                 
-                                                                                   
-                       
-
 	Remote_RegisterClientFunction( "ServerCallback_UpdateHudWeaponData", "entity" )
 	Remote_RegisterClientFunction( "ServerCallback_UpdateHudWeaponDataNoEntity" )
 	Remote_RegisterClientFunction( "ServerCallback_UpdateOffhandRuis" )
@@ -61,9 +57,7 @@ void function RemoteFunctions_Init_Begin()
 	Remote_RegisterClientFunction( "ServerCallback_SonarPulseConeFromPosition", "vector", -32000.0, 32000.0, 32, "float", 0.0, 32000.0, 8, "vector", -1.0, 1.0, 32, "float", -360.0, 360.0, 8, "int", 0, 128, "float", 0.0, 32000.0, 32, "bool", "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_SonarPulseConeFromEntityMultiple", "entity", "int", 0, 30, "float", 0.0, 10.0, 8, "float", 0.0, 32000.0, 8, "vector", -1.0, 1.0, 32, "float", -360.0, 360.0, 8, "int", 0, 128, "float", 0.0, 32000.0, 32, "bool", "bool" )
 
-                     
-		Remote_RegisterClientFunction( "ServerCallback_SetSonarHighlightDrawDist_AllianceProximity", "entity", "int", 0, ABSOLUTE_MAX_TEAMS + 1 )
-                           
+	Remote_RegisterClientFunction( "ServerCallback_SetSonarHighlightDrawDist_AllianceProximity", "entity", "int", 0, ABSOLUTE_MAX_TEAMS + 1 )
 
                          
 		Remote_RegisterClientFunction( "ServerCallback_ControlScoreEvent", "int", INT_MIN, INT_MAX, "bool", "int", 0, INT_MAX, "int", INT_MIN, INT_MAX )
@@ -138,6 +132,8 @@ void function RemoteFunctions_Init_Begin()
 
 	RegisterNetworkedVariable( "ownerEHI", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
 
+	Remote_RegisterUntypedFunction_deprecated( "ServerCallback_PlaySpectreChatterMP" )
+
 	switch ( GameRules_GetGameMode() )
 	{
 		case GAMEMODE_FREELANCE:
@@ -157,8 +153,6 @@ void function RemoteFunctions_Init_Begin()
      
                                                                                    
                         
-
-			Remote_RegisterUntypedFunction_deprecated( "ServerCallback_PlaySpectreChatterMP" )
 
 			Freelance_RegisterNetworking()
 			ObjectiveSystem_RegisterNetworking()
@@ -344,9 +338,9 @@ void function RemoteFunctions_Init_Begin()
 
 			Remote_RegisterClientFunction( "ServerCallback_PlayerBootsOnGround" )
 			Remote_RegisterClientFunction( "ServerCallback_RefreshDeathBoxHighlight" )
-                     
+
 			Remote_RegisterClientFunction( "ServerCallback_AutoReloadComplete", "entity" )
-      
+
                          
                                                                                                   
       
@@ -421,9 +415,9 @@ void function RemoteFunctions_Init_Begin()
 
 				if ( IsRankedGame() || IsArenasRankedGame() )
 				{
+					RegisterNetworkedVariable( "kill_participation", SNDC_PLAYER_GLOBAL, SNVT_INT, 0 )
 					RegisterNetworkedVariable( "inMatchRankScoreProgress", SNDC_PLAYER_EXCLUSIVE, SNVT_INT, -1 )
-					RegisterNetworkedVariable( "rankedKillAssistMultiplier", SNDC_PLAYER_EXCLUSIVE, SNVT_INT, 10 )
-					RegisterNetworkedVariable(  "currentRankKillAssistScore", SNDC_PLAYER_EXCLUSIVE, SNVT_INT, 0 )
+					RegisterNetworkedVariable( "rankedKillAssistMultiplier", SNDC_PLAYER_EXCLUSIVE, SNVT_FLOAT_RANGE, 0.0, 0.0, 10.0 )
 					RegisterNetworkedVariable( "nv_currentRankedScore", SNDC_PLAYER_GLOBAL, SNVT_BIG_INT, -1 )
 					RegisterNetworkedVariable( "nv_currentRankedLadderPosition", SNDC_PLAYER_GLOBAL, SNVT_BIG_INT, -1 )
 
@@ -440,24 +434,12 @@ void function RemoteFunctions_Init_Begin()
 			{
 				NPCs_RegisterNetworking()
 				ObjectiveSystem_RegisterNetworking()
-				Remote_RegisterUntypedFunction_deprecated( "ServerCallback_PlaySpectreChatterMP" )
 			}
                       
-                                                                                                                           
-     
-                                                                                       
-     
-              
-        
-     
-                                                                                       
-     
-                    
-
-                                  
-    
-                                                                                  
-    
+			if( SpectreShacksAreEnabled() )
+			{
+				Remote_RegisterClientFunction( "ServerCallback_SpectreShacksUpdateLootBinRarity", "entity", "int", 0, 5, "int", 0, 5, "int", 0, 5, "int", 0, 5, "int", 0, 5, "int", 0, 5, "int", 0, 5, "int", 0, 5 )
+			}
                             
 
 #if CLIENT
@@ -486,7 +468,7 @@ void function RemoteFunctions_Init_Begin()
       
 
                       
-			WinterExpress_RegisterNetworking()
+                                     
       
 
                          
@@ -518,11 +500,8 @@ void function RemoteFunctions_Init_Begin()
                               
       
 
-                                
-			LoadoutSelection_RegisterNetworking()
-      
-
-			AirdropExtravaganza_RegisterNetworking()
+		LoadoutSelection_RegisterNetworking()
+		AirdropExtravaganza_RegisterNetworking()
 
                              
                                                   
@@ -533,7 +512,7 @@ void function RemoteFunctions_Init_Begin()
       
 
                                 
-			ShGameMode_AprilFools_S12_RegisterNetworking()
+                                                 
       
 
                       
@@ -737,7 +716,7 @@ void function RemoteFunctions_Init_Begin()
 	Remote_RegisterServerFunction( "ClientCallback_SetClubTimelineViewedTime", "int", INT_MIN, INT_MAX )
 	Remote_RegisterServerFunction( "ClientCallback_SetClubChatViewedTime", "int", INT_MIN, INT_MAX )
 	Remote_RegisterServerFunction( "ClientCallback_SetClubAnnouncementViewedTime", "int", INT_MIN, INT_MAX )
-	Remote_RegisterServerFunction( "ClientCallback_ReportClub", "string", "string", "string", "string" )
+	Remote_RegisterServerFunction( "ClientCallback_ReportClub", "string", "string", "string", "string" , "string" )
 	Remote_RegisterServerFunction( "ClientCallback_LobbyReportPlayer", "int", -1, INT_MAX, "string", "string", "string" )
 	Remote_RegisterServerFunction( "ClientCallback_SetClubIsPendingApproval", "bool" )
 
@@ -847,22 +826,12 @@ void function RemoteFunctions_Init_Begin()
                                                                                                                  
        
 
-               
-		Remote_RegisterClientFunction( "ServerCallback_S12E05CreateScreenRUI" )
-       
-
-               
-		Remote_RegisterServerFunction( "StoryEvent_OnRadioVignetteFinishedLobbyKick" )
-		Remote_RegisterUIFunction( "StoryEvent_PlayRadioVignetteForChapter", "int", 0, 4 )
-
-		Remote_RegisterClientFunction( "ServerCallback_FRC_MemoriesEffect", "bool" )
-		Remote_RegisterClientFunction( "ServerCallback_FRC_SetChallengeKey", "string")
-		Remote_RegisterClientFunction( "ServerCallback_FRC_UpdateState", "int", 0, 4 )
-		Remote_RegisterClientFunction( "ServerCallback_FRC_SetChallengeScore", "int", 0, INT_MAX )
-		Remote_RegisterClientFunction( "ServerCallback_FRC_UpdateOutofBounds", "bool", "float", 0.0, 10.0, 32 )
-		Remote_RegisterClientFunction( "ServerCallback_FRC_PostGameStats", "int", 0, INT_MAX, "int", 0, INT_MAX, "int", 0, INT_MAX, "int", 0, INT_MAX )
-		Remote_RegisterClientFunction( "ServerCallback_FRC_FinaleShowUI", "int", 0, 4 )
-       
+	Remote_RegisterServerFunction( "StoryEvent_OnRadioVignetteFinishedLobbyKick" )
+	Remote_RegisterUIFunction( "StoryEvent_PlayRadioVignetteForChapter", "int", 0, 4 )
+	Remote_RegisterClientFunction( "ServerCallback_FRC_SetChallengeKey", "string")
+	Remote_RegisterClientFunction( "ServerCallback_FRC_UpdateState", "int", 0, 4 )
+	Remote_RegisterClientFunction( "ServerCallback_FRC_UpdateOutofBounds", "bool", "float", 0.0, 10.0, 32 )
+	Remote_RegisterClientFunction( "ServerCallback_FRC_PostGameStats", "int", 0, INT_MAX, "int", 0, INT_MAX, "int", 0, INT_MAX, "int", 0, INT_MAX )
 
 	             
 	Remote_RegisterClientFunction( "ServerCallback_DevToto", "int", INT_MIN, INT_MAX, "string" )
@@ -891,13 +860,13 @@ void function RemoteFunctions_Init_Begin()
 	                                                                                              
 	#if CLIENT
 		RegisterNetVarTimeChangeCallback( "uiGameStartTime",
-			void function( entity player, float oldVal, float newVal ) : ()
+			void function( entity player, float newVal ) : ()
 			{
 				RunUIScript( "UICallback_SetUIVar", "uiGameStartTime", newVal )
 			} )
 
 		RegisterNetVarBoolChangeCallback( "uiDisableDev",
-			void function( entity player, bool oldVal, bool newVal ) : ()
+			void function( entity player, bool newVal ) : ()
 			{
 				RunUIScript( "UICallback_SetUIVar", "uiDisableDev", newVal )
 			} )

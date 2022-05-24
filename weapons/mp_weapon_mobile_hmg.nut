@@ -547,6 +547,7 @@ void function MobileHMG_WeaponActiveThreadClient( entity weapon )
 	if ( !IsValid( weaponOwner ) )
 		return
 	EndSignal( weaponOwner, "OnDestroy" )
+	EndSignal( weaponOwner, "OnDeath" )
 
 	OnThreadEnd(
 		function() : ( weaponOwner )

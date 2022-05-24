@@ -808,6 +808,12 @@ void function BattlePass_Purchase( var button, int startQuantity )
 	}
 	else if ( GetPlayerBattlePassPurchasableLevels( ToEHI( GetLocalClientPlayer() ), activeBattlePass ) > 0 )
 	{
+		if ( ItemFlavor_IsItemDisabledForGRX( BattlePass_GetXPPurchaseFlav( activeBattlePass ) ) )
+		{
+			EmitUISound( "menu_deny" )
+			return
+		}
+
 		RewardPurchaseDialogConfig rpdcfg
 
 		rpdcfg.purchaseButtonTextCallback = string function( int purchaseQuantity ) : ( activeBattlePass ) {
@@ -1077,6 +1083,9 @@ void function BattlePass_FocusRewardButton( RewardButtonData rbd )
 
 void function BattlePass_RewardButton_OnActivate( var button )
 {
+	if ( GetActiveBattlePass() == null )
+		return
+
 	RewardButtonData rbd    = file.rewardButtonToDataMap[button]
 	BattlePassReward reward = rbd.rewardGroup.rewards[rbd.rewardSubIdx]
 	if ( ItemFlavor_GetType( reward.flav ) == eItemType.loadscreen )
@@ -2129,7 +2138,6 @@ void function AboutBattlePass1Dialog_OnOpen()
 	expect ItemFlavor( activeBattlePass )
 
 	var infoPanel = Hud_GetChild( menu, "InfoPanel" )
-	RuiSetString( rui, "battlePassName", ItemFlavor_GetLongName( activeBattlePass ) )
 
 	bool passOwned = GRX_IsItemOwnedByPlayer( activeBattlePass )
 	asset battlePassAsset = ItemFlavor_GetAsset( activeBattlePass )
@@ -2141,6 +2149,7 @@ void function AboutBattlePass1Dialog_OnOpen()
 		Hud_SetX( file.aboutProgressButton, passOwned ? -172*scaleFactor : 75*scaleFactor )
 		Hud_SetX( file.aboutPurchaseButton, 250*scaleFactor )
 		RuiSetImage( rui, "logo", GetGlobalSettingsAsset( battlePassAsset , "largeLogo" ) )
+		RuiSetString( rui, "battlePassName", GetGlobalSettingsStringAsAsset( battlePassAsset, "aboutPurchaseTitle" ) )
 	}
 	else
 	{
@@ -2152,6 +2161,7 @@ void function AboutBattlePass1Dialog_OnOpen()
 		HudElem_SetRuiArg( infoPanel, "numCoins", fileLevel.numApexCoinsInBattlePass )
 		HudElem_SetRuiArg( infoPanel, "numCraftingMaterials", fileLevel.numCraftingMetalsInBattlePass )
 		HudElem_SetRuiArg( infoPanel, "passOwned", passOwned )
+		RuiSetString( rui, "battlePassName", ItemFlavor_GetLongName( activeBattlePass ) )
 	}
 
 	Hud_SetVisible( file.aboutPurchaseButton, !passOwned && showPurchaseButton )
@@ -2321,9 +2331,9 @@ void function InitPassPurchaseMenu( var newMenuArg )
 		s_passPurchaseMenu.backgroundsPanel = Hud_GetChild( menu, "Backgrounds" )
 		s_passPurchaseMenu.passBanner = Hud_GetChild( menu, "HeaderBanner" )
 		Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_GET_FOCUS, PassPurchaseButton_OnFocus )
-		Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_LOSE_FOCUS, PurchaseButtons_OnLoseFocus )
+		Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_LOSE_FOCUS, PassPurchaseButton_OnLoseFocus )
 		Hud_AddEventHandler( s_passPurchaseMenu.bundlePurchaseButton, UIE_GET_FOCUS, BundlePurchaseButton_OnFocus )
-		Hud_AddEventHandler( s_passPurchaseMenu.bundlePurchaseButton, UIE_LOSE_FOCUS, PurchaseButtons_OnLoseFocus )
+		Hud_AddEventHandler( s_passPurchaseMenu.bundlePurchaseButton, UIE_LOSE_FOCUS, BundlePurchaseButton_OnLoseFocus )
 	}
 	else
 	{
@@ -2341,18 +2351,17 @@ void function PassPurchaseButton_OnFocus( var button )
 	if( !GetConVarBool( "battlepass_expansion_enabled" ) )
 		return
 
-	HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "isPremiumFocused", true)
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isPremiumFocused", true)
+	Hud_SetLocked( s_passPurchaseMenu.bundlePurchaseButton, true )
 }
 
-void function PurchaseButtons_OnLoseFocus( var button )
+void function PassPurchaseButton_OnLoseFocus( var button )
 {
 	if( !GetConVarBool( "battlepass_expansion_enabled" ) )
 		return
-	HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "isPremiumFocused", false)
-	HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "isBundleFocused", false)
+
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isPremiumFocused", false)
-	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isBundleFocused", false)
+	Hud_SetLocked( s_passPurchaseMenu.bundlePurchaseButton, false )
 }
 
 void function PassPurchaseButton_OnActivate( var button )
@@ -2383,8 +2392,15 @@ void function BundlePurchaseButton_OnFocus( var button )
 	if( !GetConVarBool( "battlepass_expansion_enabled" ) )
 		return
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isBundleFocused", true)
-	HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "isBundleFocused", true)
+	Hud_SetLocked( s_passPurchaseMenu.passPurchaseButton, true )
+}
 
+void function BundlePurchaseButton_OnLoseFocus( var button )
+{
+	if( !GetConVarBool( "battlepass_expansion_enabled" ) )
+		return
+	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isBundleFocused", false)
+	Hud_SetLocked( s_passPurchaseMenu.passPurchaseButton, false )
 }
 
 void function BundlePurchaseButton_OnActivate( var button )
@@ -2431,10 +2447,8 @@ void function PassPurchaseMenu_OnOpen()
 
 	if( GetConVarBool( "battlepass_expansion_enabled" ) )
 	{
-		HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "isPremiumFocused", false)
-		HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "isBundleFocused", false)
-		HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "logo", GetGlobalSettingsAsset( battlePassAsset, "largeLogo" ), eRuiArgType.IMAGE )
-		HudElem_SetRuiArg( s_passPurchaseMenu.passBanner, "seasonName", ItemFlavor_GetLongName( activeBattlePass ) )
+		var rui = Hud_GetRui( s_passPurchaseMenu.passBanner )
+		RuiSetString( rui, "seasonName", GetGlobalSettingsStringAsAsset( battlePassAsset, "aboutPurchaseTitle" ) )
 		HudElem_SetRuiArg( s_passPurchaseMenu.bundlePurchaseButton, "isBonusFrame", true )
 	}
 	else
@@ -2788,7 +2802,7 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 		                                       
 		if ( isNXHH && itemType == eItemType.emote_icon )
 		{
-			fileLevel.sceneRefOrigin += <-26, 230, -30>
+			fileLevel.sceneRefOrigin += <-15, 80, 0>
 		}
 #endif
 		
@@ -3303,7 +3317,7 @@ void function ShowBattlePassItem_EmoteIcon( ItemFlavor item, float scale, bool s
 	vector angles = fileLevel.sceneRefAngles
 
 	#if NX_PROG || PC_PROG_NX_UI
-		vector origin = fileLevel.sceneRefOrigin - (AnglesToForward( angles ) * ( (1.0 - scale) ) ) + (AnglesToRight( angles ) * ((1.0 - scale)) * -28) + <20, 30, 5>
+		vector origin = fileLevel.sceneRefOrigin - (AnglesToForward( angles ) * ( (1.0 - scale) ) ) + (AnglesToRight( angles ) * ((1.0 - scale)) * -28) + <0, 0, -25>
 	#else
 		vector origin = fileLevel.sceneRefOrigin - (AnglesToForward( angles ) * ( (1.0 - scale) * 100) ) + (AnglesToRight( angles ) * ((1.0 - scale) * -12))
 
@@ -3691,18 +3705,10 @@ void function ShowBattlePassItem_StarReward( ItemFlavor item, float scale )
 
 void function ShowBattlePassItem_Voucher( ItemFlavor item, float scale )
 {
-	asset itemAsset = ItemFlavor_GetAsset( item )
-	switch( itemAsset )
-	{
-		case $"settings/itemflav/voucher/quest_reward_stars_2.rpak":
-			ShowBattlePassItem_StarReward( item, scale )
-			break
-		case $"settings/itemflav/voucher/quest_reward_stars_10.rpak":
-			ShowBattlePassItem_StarReward( item, scale )
-			break
-		default:
-			ShowBattlePassItem_XPBoost( item, scale )
-	}
+	if ( Voucher_GetEffectBattlepassStars( item ) )
+		ShowBattlePassItem_StarReward( item, scale )
+	else
+		ShowBattlePassItem_XPBoost( item, scale )
 }
 
 const float BATTLEPASS_VIDEO_WIDTH = 600.0
@@ -3802,8 +3808,7 @@ void function ShowBattlePassItem_SkydiveEmote( ItemFlavor item, float scale )
 
 	fileLevel.videoChannel = ReserveVideoChannel( BattlePassVideoOnFinished )
 	RuiSetInt( rui, "channel", fileLevel.videoChannel )
-	if( !GetConVarBool( "battlepass_expansion_enabled" ) )
-		StartVideoOnChannel( fileLevel.videoChannel, SkydiveEmote_GetVideo( item ), true, 0.0 )
+	StartVideoOnChannel( fileLevel.videoChannel, SkydiveEmote_GetVideo( item ), true, 0.0 )
 
 	fileLevel.topo = topo
 	fileLevel.rui = rui

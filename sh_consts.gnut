@@ -779,7 +779,8 @@ global enum ePresentationType
 	CLUB_DISCOVERY,
 	ARENAS_RANKED,
                 
-         
+                 
+              
                       
 
 	COUNT
@@ -1036,15 +1037,14 @@ global enum eCommsAction
                      
                        
        
-                   
-		PING_WEAPON_BOW,
-       
+	PING_WEAPON_BOW,
                          
                         
                           
        
-                       
-		PING_WEAPON_CAR,
+	PING_WEAPON_CAR,
+                               
+                      
        
 	  
 	PING_OFFHAND_GRENADE_FIRESTAR,
@@ -1062,9 +1062,7 @@ global enum eCommsAction
                       
        
 	PING_AMMO_SNIPER,
-                   
-		PING_AMMO_ARROWS,
-       
+	PING_AMMO_ARROWS,
 	  
 	PING_EQUIPMENT_ARMOR_1,
 	PING_EQUIPMENT_ARMOR_2,
@@ -1138,6 +1136,13 @@ global enum eCommsAction
 	PING_ATTACHMENT_BARREL_STABILIZER_3,
 	PING_ATTACHMENT_BARREL_STABILIZER_4_FLASH_HIDER,
 	  
+                          
+                                
+                                
+                                
+                                
+       
+	  
 	PING_ATTACHMENT_HOPUP_TURBOCHARGER,
 	PING_ATTACHMENT_HOPUP_SELECTFIRE,
 	PING_ATTACHMENT_HOPUP_ENERGY_CHOKE,
@@ -1148,21 +1153,11 @@ global enum eCommsAction
 	PING_ATTACHMENT_HOPUP_DOUBLE_TAP,
 	PING_ATTACHMENT_HOPUP_SMART_RELOAD,
 	PING_ATTACHMENT_HOPUP_PAINTBALL,
-                        
-		PING_ATTACHMENT_HOPUP_MARKSMANS_TEMPO,
-       
-                          
-		PING_ATTACHMENT_HOPUP_QUICKDRAW_HOLSTER,
-       
-                       
-		PING_ATTACHMENT_HOPUP_SHATTER_ROUNDS,
-       
-                    
-		PING_ATTACHMENT_HOPUP_DUAL_SHELL
-       
-                       
+	PING_ATTACHMENT_HOPUP_MARKSMANS_TEMPO,
+	PING_ATTACHMENT_HOPUP_QUICKDRAW_HOLSTER,
+	PING_ATTACHMENT_HOPUP_SHATTER_ROUNDS,
+	PING_ATTACHMENT_HOPUP_DUAL_SHELL
 	PING_ATTACHMENT_HOPUP_KINETIC_FEEDER
-       
 	  
 	PING_ITEM_COMBO_FULL,
 	PING_ITEM_SHIELD_SMALL,
@@ -1261,14 +1256,14 @@ global enum eCommsAction
 	PING_PHASE_BREACH,
 	SPAWN_BREACH,
 	PING_ENEMY_TETHERED,
-               
-		PING_MAGGIE_WRECKING_BALL,
-       
+	PING_MAGGIE_WRECKING_BALL,
                   
-                     
-                           
-                   
-                         
+		PING_MOBILE_SHIELD,
+		PING_ENEMY_MOBILE_SHIELD,
+		PING_CASTLE_WALL,
+		PING_ENEMY_CASTLE_WALL,
+		PING_CASTLE_WALL_ENERGIZED,
+		PING_ENEMY_CASTLE_WALL_ENERGIZED,
        
 	  
 	PING_ENEMY_NPC_SNIPER,
@@ -1321,18 +1316,14 @@ global enum eCommsAction
 	PING_VALK_ULT_ENEMY_TAKING_OFF,
 	PING_SPACE_ELEVATOR_HERE,
 	PING_BLACKHOLE_HERE,
-	PING_ENEMY_BLACKHOLE_HERE,
 	PING_RESPAWN_STATION,
 	PING_RESPAWN_DROPSHIP,
 	PING_EVAC_DROPSHIP,
 	PING_JUMP_PAD,
 	PING_CRYPTO_DRONE,
 	PING_RAMPART_WALL,
-	PING_ENEMY_RAMPART_WALL,
 	PING_RAMPART_TURRET,
-	PING_ENEMY_RAMPART_TURRET,
 	PING_DEATH_TOTEM_NEUTRAL,
-	PING_DEATH_TOTEM_ENEMY,
 	PING_GEYSER,
 	PING_LAVA,
                           
@@ -1399,9 +1390,7 @@ global enum eCommsAction
                                 
        
 	INVENTORY_NEED_AMMO_SNIPER,
-                   
-		INVENTORY_NEED_AMMO_ARROWS,
-       
+	INVENTORY_NEED_AMMO_ARROWS,
                           
 		INVENTORY_NO_AMMO_BULLET,
 		INVENTORY_NO_AMMO_SPECIAL,
@@ -1465,18 +1454,11 @@ global enum eCommsAction
 	INVENTORY_NEED_HOPUP_HIGHCAL_ROUNDS,
 	INVENTORY_NEED_HOPUP_DOUBLE_TAP,
 	INVENTORY_NEED_HOPUP_BOOSTED_LOADER,
-                        
-		INVENTORY_NEED_HOPUP_MARKSMANS_TEMPO,
-       
-                          
-		INVENTORY_NEED_HOPUP_QUICKDRAW_HOLSTER,
-       
-                       
-		INVENTORY_NEED_HOPUP_SHATTER_ROUNDS,
-       
-                    
-		INVENTORY_NEED_HOPUP_DUAL_SHELL,
-       
+	INVENTORY_NEED_HOPUP_MARKSMANS_TEMPO,
+	INVENTORY_NEED_HOPUP_QUICKDRAW_HOLSTER,
+	INVENTORY_NEED_HOPUP_SHATTER_ROUNDS,
+	INVENTORY_NEED_HOPUP_DUAL_SHELL,
+	INVENTORY_NEED_HOPUP_KINETIC_FEEDER,
                                       
 	INVENTORY_NEED_BETTER_ARMOR,
 	INVENTORY_NEED_BETTER_HELMET,
@@ -1523,12 +1505,11 @@ global enum eCommsAction
 	SPAWN_WORMHOLE,
 	SPAWN_DRONEMEDIC,
 	ABILITY_BLACK_MARKET_NEUTRAL,
-	ABILITY_BLACK_MARKET_ENEMY,
 	  
 	PING_SKYDIVE_LAUNCHER,
                        
-		PING_TRAINOBJECTIVE,
-		PING_STATION,
+                      
+               
        
 		PING_OBJECTIVE,
 		PING_SPAWNREGION,
@@ -1561,9 +1542,7 @@ global enum eCommsAction
 		PING_BOXING_RING,
        
 
-                    
-		PING_WEAPON_3030,
-       
+	PING_WEAPON_3030,
 
 	PING_ABILITY_ECHO_LOCATOR,
 	PING_ABILITY_ECHO_LOCATOR_ENEMY,
@@ -1597,9 +1576,8 @@ global enum eCommsAction
 	SUB_TYPE_QUICKDRAW_HOLSTER,
 	SUB_TYPE_SHATTER_ROUNDS,
 	SUB_TYPE_BOOSTED_LOADER
-                    
-		SUB_TYPE_DUAL_SHELL
-       
+	SUB_TYPE_DUAL_SHELL
+	SUB_TYPE_KINETIC_FEEDER
 	  
 	FLAVOR_WEAPON_KRABER,
 	FLAVOR_WEAPON_MASTIFF,
@@ -1691,22 +1669,27 @@ global enum eCommsAction
 	FLAVOR_EQUIPMENT_BACKPACK_4,
 	FLAVOR_LOOT_DIBS,
 
+                          
+                                  
+                                  
+                                  
+                                  
+       
+
+                               
+                        
+       
+
                     
 		FLAVOR_NPC_MARVIN,
        
 
-                      
-		PING_ATTACHMENT_MAG_BULLET_4,
-		PING_ATTACHMENT_MAG_HIGHCAL_4,
-		PING_ATTACHMENT_MAG_SNIPER_4
-		PING_ATTACHMENT_MAG_ENERGY_4
-       
-                          
-		PING_WEAPON_DRAGON,
-       
-                       
-		PING_WEAPON_CAR_SMG,
-       
+	PING_ATTACHMENT_MAG_BULLET_4,
+	PING_ATTACHMENT_MAG_HIGHCAL_4,
+	PING_ATTACHMENT_MAG_SNIPER_4,
+	PING_ATTACHMENT_MAG_ENERGY_4,
+	PING_WEAPON_DRAGON,
+	PING_WEAPON_CAR_SMG,
 	PING_OFFHAND_VOID_RING,
 	PING_DEPLOYED_VOID_RING,
 	INVENTORY_NEED_GADGET,
@@ -1795,9 +1778,9 @@ global enum eCommsAction
        
 
                        
-                          
-                      
-                        
+		SPECTRE_SHACK_ACTIVATED,
+		PING_IMC_ARMORY_EXT,
+		PING_IMC_ARMORY_PANEL,
        
 
 	PING_PANEL,
@@ -1806,6 +1789,11 @@ global enum eCommsAction
 
 	PING_GO_CAREPACKAGE,
 
+                    
+              
+                       
+                       
+       
 
 	_count
 }
@@ -1862,7 +1850,7 @@ global enum eTooltipStyle
 	GLADIATOR_CARD_BADGE,
 	MINI_PROMO_APEX_PACK,
                       
-                
+	CUSTOM_MATCHES,
       
 }
 
@@ -1892,6 +1880,7 @@ global struct CustomMatchTooltipData
 	bool isAdmin
 	bool isTeamFull
 	int adminActions
+	int actionEnabledMask
 }
 
 global struct ToolTipData
@@ -2012,9 +2001,7 @@ global const table<string, int> ammoColors = {
                                           
        
 	sniper = COLORID_AMMO_SNIPER_COLOR
-                   
-		arrows = COLORID_AMMO_ARROWS_COLOR
-       
+	arrows = COLORID_AMMO_ARROWS_COLOR
 }
 
 global struct BurnDamageSettings
@@ -2060,7 +2047,7 @@ global enum eDeployableFlags
 }
                            
 
-global const float DEPLOYABLE_COLLISION_DEFAULT_TRACE_LENGTH = 12
+global const float DEPLOYABLE_COLLISION_DEFAULT_TRACE_LENGTH = 16
 global struct DeployableCollisionParams
 {
 	vector	pos
@@ -2082,6 +2069,7 @@ global struct ProximityExplodeParams
 	vector dir
 	bool   shouldFlipDir = true
 	vector normal
+	float  delay
 }
 
 global const string DEATH_BOX_TARGETNAME = "player_death_box"

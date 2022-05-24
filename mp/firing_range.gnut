@@ -182,12 +182,15 @@ bool function FiringRange_IsPlayerInFinale()
                                                 
    
                                                  
-                                  
+                      
     
-                    
+                                   
      
-                                                                 
-                                            
+                     
+      
+                                                                  
+                                             
+      
      
     
    
@@ -228,12 +231,15 @@ bool function FiringRange_IsPlayerInFinale()
                                                 
    
                                                  
-                                  
+                      
     
-                    
+                                   
      
-                                                                 
-                                            
+                     
+      
+                                                                  
+                                             
+      
      
     
    
@@ -371,32 +377,6 @@ bool function FiringRange_IsPlayerInFinale()
 
 		                                  
 		           
-
-                
-		                                                          
-		 
-			                                   
-			 
-				                                         
-				      
-			 
-			    
-			 
-				                                                                          
-				                                       
-				                            
-				 
-					                                  
-				 
-				    
-				 
-					                           
-					                                
-				 
-			 
-		 
-        
-
 
 		                                
 

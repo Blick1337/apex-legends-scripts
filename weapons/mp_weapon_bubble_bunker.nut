@@ -2,9 +2,10 @@ global function MpWeaponBubbleBunker_Init
 
 global function OnWeaponTossReleaseAnimEvent_WeaponBubbleBunker
 global function OnWeaponTossPrep_WeaponBubbleBunker
-#if CLIENT
-global function GetBubbleBunkerRui
-#endif
+
+            
+                                                                                   
+        
 global function GibraltarIsInDome
 global function InDomeShield
 
@@ -29,12 +30,12 @@ const string BUBBLE_BUNKER_SOUND_FINISH = "Gibraltar_BubbleShield_Deactivate"
 const BUBBLE_BUNKER_THROW_POWER = 800.0
 const BUBBLE_BUNKER_RADIUS = 240                                                  
 
-struct
-{
-	#if CLIENT
-	var bubbleBunkerRui
-	#endif
-} file
+        
+ 
+	          
+	                                                                    
+	      
+        
 
 
 void function MpWeaponBubbleBunker_Init()
@@ -50,8 +51,8 @@ void function MpWeaponBubbleBunker_Init()
 	                                      
 	                                     
 	#else
-	StatusEffect_RegisterEnabledCallback( eStatusEffect.bubble_bunker, BubbleBunker_EnterDome )
-	StatusEffect_RegisterDisabledCallback( eStatusEffect.bubble_bunker, BubbleBunker_ExitDome )
+	                                                                                                                                              
+	                                                                                             
 	#endif
 }
 
@@ -407,31 +408,32 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 
 #endif         
 
-#if CLIENT
-void function BubbleBunker_EnterDome( entity player, int statusEffect, bool actuallyChanged )
-{
-	if ( player != GetLocalViewPlayer() )
-		return
+                                                
+            
+                                                                                             
+ 
+	                                     
+		      
 
-	file.bubbleBunkerRui = CreateCockpitRui( $"ui/bubble_bunker.rpak", HUD_Z_BASE )
-	RuiTrackFloat( file.bubbleBunkerRui, "bleedoutEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
-	RuiTrackFloat( file.bubbleBunkerRui, "reviveEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "reviveEndTime" ) )
-}
+	                                                                               
+	                                                                                                                                              
+	                                                                                                                                          
+ 
 
-void function BubbleBunker_ExitDome( entity player, int statusEffect, bool actuallyChanged )
-{
-	if ( player != GetLocalViewPlayer() )
-		return
+                                                                                            
+ 
+	                                     
+		      
 
-	RuiDestroyIfAlive( file.bubbleBunkerRui )
-	file.bubbleBunkerRui = null
-}
+	                                         
+	                           
+ 
 
-var function GetBubbleBunkerRui()
-{
-	return file.bubbleBunkerRui
-}
-#endif         
+                                 
+ 
+	                           
+ 
+                 
 
 
 bool function GibraltarIsInDome( entity player )

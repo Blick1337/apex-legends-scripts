@@ -3,6 +3,12 @@ global function DeathTotem_PlayerCanRecall
 global function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem
 global function OnWeaponActivate_ability_revenant_death_totem
 global function OnWeaponDeactivate_ability_revenant_death_totem
+                         
+                                                                  
+          
+                                                                    
+      
+      
 #if SERVER
                                        
                                                   
@@ -38,7 +44,6 @@ const float DEATH_TOTEM_DISTORTION_RANGE_MAX_SQR = 3000 * 3000
 const float DEATH_TOTEM_OUT_OF_RANGE_DESYNC_TIME = 5.0
 
             
-const bool TOTEM_SPAWN_TRANSPARENT = false                                                     
 const float DEATH_TOTEM_TOTEM_HEALTH = 150
 global const string DEATH_TOTEM_TARGETNAME = "death_totem"
 global const string DEATH_TOTEM_RECALL_SIGNAL = "DeathTotem_DeathTotemed"
@@ -65,6 +70,10 @@ const asset DEATH_TOTEM_SHADOW_SCREEN_FX = $"P_Bshadow_screen"
 #endif         
 
 const float IDEAL_TOTEM_DISTANCE = 72.0
+
+
+       
+const bool DEATH_TOTEM_DEBUG = false
 
 struct DeathTotemPlacementInfo
 {
@@ -182,8 +191,49 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	return player.IsOnGround()
 }
 
+                         
+          
+                                                                                                                      
+ 
+                      
+                                   
+     
+                                          
+ 
+      
+
+                                                                                                                        
+ 
+                        
+                                             
+  
+                    
+          
+  
+
+                                             
+                                 
+
+           
+                                                   
+                                                   
+                                                     
+                                                                                                                                                                               
+
+                          
+                                  
+       
+
+                               
+ 
+      
+
 #if SERVER
+                         
+                                                                                                   
+     
                                                                    
+      
  
 	                        
 		      
@@ -191,11 +241,17 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                   
 	                                      
 	                                      
-	                                      
-	                                 
+
+                          
+                                              
+                                                    
+      
+		                                 
+		                                         
+       
 	                               
 	                                            
-	                                                                                
+	                                                                                      
 	                               
 	                              
 	                           
@@ -217,13 +273,18 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                                                                                                         
 	                                                                                                                                             
 	                                                             
-	                                                 
-	                                                                               
-	                                                              
-	                    
-	                               
-	                                           
+
+	                                                 	                  
+
+                           
+		                                                                               
+		                    
+		                                  
+		                               
+       
+	                                    
 	                            
+	                                
 	                          
 	 
 		                                
@@ -249,18 +310,13 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 		                  
 	 
 
-	                              
-	 
-		                                                              
-		                                                          
-			                                                                   
-		                                           
-		                           
-	 
-
 	                                                                                                                                                                                             
-	                                                                          
-	                                                                                                                                                                              
+                          
+                                                                                                                                                                           
+      
+		                                                                          
+		                                                                                                                                                                              
+       
 	                           
 
 	                   
@@ -328,14 +384,6 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 
 	                              
 
-	                              
-	 
-		                                                          
-			                       
-		                                             
-		                           
-	 
-
 	                                                                                                                                                              
 
 	                                                      
@@ -391,11 +439,15 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 		                                        
 		                                                     
 
-		                                                                                                                                               
-		                                                                                                         
-		                              
+		                                                                                                                                                                         
 		                         
 		 
+			                        
+			 
+				                                                                  
+				                            
+			 
+
 			                              
 			                        
 			 
@@ -417,6 +469,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 							                                                          
 							                        
 							 
+								                                                                                                                               
 								                          
 
 								                                                 
@@ -427,6 +480,10 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 									                                                                         
 								 
 							 
+							    
+							 
+								                                                                                                                                                                                        
+							 
 						 
 					 
 
@@ -435,8 +492,13 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 				 
 			 
 		 
+		    
+		 
+			                        
+				                                                                      
+		 
 
-		         
+		               
 	 
  
 
@@ -639,16 +701,41 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                  
 	 
 		                                        
+		                                                                                                                       
 
-		                                                                                                                       
-		                                                                                                                       
 	 
 	    
 	 
 		                                       
-
 		                                                                                    
-		                                                                                                                       
+	 
+
+	                                          
+	                        
+	 
+		                                                           
+		                                                       
+		                                                         
+	 
+
+	                                                                                                                       
+
+
+	                                                                            
+	                                        
+	 
+		                                         
+		                                                                                                          
+		                                                                                                                                                                                                     
+	 
+
+	                        
+	 
+		                                         
+		                                                                                
+		                                                             
+		                                                                         
+
 	 
 
 	                                
@@ -1223,6 +1310,12 @@ void function DeathTotem_MarkLocation( entity player, entity totemProxy )
 		                                                                  
 		                                     
 
+		                        
+		 
+			                                                                                           
+			                                                                                                                      
+		 
+
 		                                                               
 	#endif          
 }
@@ -1516,7 +1609,9 @@ void function OnWeaponActivate_ability_revenant_death_totem( entity weapon )
 	entity weaponOwner = weapon.GetWeaponOwner()
 	#if SERVER
 		                                                                              
-		                                                    
+                            
+			                                                    
+        
 		                                                     
 		                           
 	#endif

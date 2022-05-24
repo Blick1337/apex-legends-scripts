@@ -654,24 +654,24 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 
 	                                                                         
 	                                                   
-                     
-		                                                                                                                                                                         
-		                                                                                                      
+
+	                                                                                                                                                                         
+	                                                                                                      
+	 
+		                    
+		                                             
 		 
-			                    
 			                                             
-			 
-				                                             
-			 
-			                      
-			                                                  
-			                                  
-			                                                                     
-			 
-				                                               
-			 
 		 
-                           
+		                      
+		                                                  
+		                                  
+		                                                                     
+		 
+			                                               
+		 
+	 
+
 	                                                                                        
 	                                      
 	                           
@@ -2428,16 +2428,20 @@ void function TacticalShieldRepairFXStart( entity player )
 
 	while( true )
 	{
-		int armorTier = EquipmentSlot_GetEquipmentTier( player, "armor" )
-		if ( armorTier != oldArmorTier )
+		if( player.IsCloaked( true ) )
 		{
-			oldArmorTier = armorTier
+			if ( EffectDoesExist( fxID ) )
+				EffectSetControlPointVector( fxID, 2, < 0, 0, 0> )
+		}
+		else
+		{
+			int armorTier = EquipmentSlot_GetEquipmentTier( player, "armor" )
 			vector shieldColor = GetFXRarityColorForTier( armorTier )
 			if ( EffectDoesExist( fxID ) )
 				EffectSetControlPointVector( fxID, 2, shieldColor )
 		}
 
-		WaitSignal( player, "UpdateShieldRepair" )
+		WaitFrame()
 	}
 }
 

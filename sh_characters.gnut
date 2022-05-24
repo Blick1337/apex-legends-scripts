@@ -2,6 +2,7 @@ global function ShCharacters_LevelInit
 
 global function Loadout_Character
 global function GetAllCharacters
+global function Character_IsCharacterOwnedByPlayer
 global function CharacterClass_GetSetFile
 global function CharacterClass_GetShippingStatus
 global function CharacterClass_GetIsShippingCharacter
@@ -41,6 +42,7 @@ global function CharacterClass_ConsiderLegHitBoxAsTorso
 global function CharacterClass_GetMenuZoomOffset
 
 #if SERVER
+                                                          
                                                        
 #endif
 
@@ -166,8 +168,10 @@ void function OnRegisterRootItemFlavors()
 	entry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
 	entry.networkVarName = "CharacterSelection"
 	entry.isAllowedToChangeDuringMatch = true
-	entry.isItemFlavorUnlocked = bool function( EHI playerEHI, ItemFlavor flavor, bool shouldIgnoreOtherSlots ) {
-		return CharacterClass_IsAvailable( playerEHI, flavor )
+	entry.isItemFlavorUnlocked = bool function( EHI playerEHI, ItemFlavor flavor, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false ) {
+		if( !CharacterClass_IsAvailable( playerEHI, flavor ) )
+			return false
+		return IsCharacterGRXUnlockedForLoadoutSlot( playerEHI, flavor, shouldIgnoreGRX, shouldIgnoreOtherSlots )
 	}
 	entry.isSlotLocked = bool function( EHI playerEHI ) {
 		#if SERVER
@@ -247,6 +251,12 @@ void function OnItemFlavorRegistered_Character( ItemFlavor character )
 		                                                                          
 	 
 	                                                                                                                                                                
+
+	                                                           
+
+	                                                                                         
+
+	                           
  
 #endif
 
@@ -595,7 +605,70 @@ vector function CharacterClass_GetMenuZoomOffset( ItemFlavor flavor )
 	 
 	              
  
+
+                                                                         
+ 
+	       
+	                                    
+	 
+		       
+	 
+	      
+	                                              
+	 
+		      
+	 
+	                                                    
+	 
+		                                                                              
+		                                                                                                             
+	 
+ 
 #endif
+
+
+bool function IsCharacterGRXUnlockedForLoadoutSlot( EHI playerEHI, ItemFlavor itemFlavor, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false )
+{
+	switch( IsItemFlavorGRXUnlockedForLoadoutSlotHelper( playerEHI, itemFlavor, shouldIgnoreGRX, shouldIgnoreOtherSlots ) )
+	{
+		case eTristate.TRUE:
+			return true
+		case eTristate.FALSE:
+			return false
+		default:
+			return Character_IsCharacterOwnedByPlayer( itemFlavor, FromEHI( playerEHI ) )
+	}
+	unreachable
+}
+
+
+bool function Character_IsCharacterOwnedByPlayer( ItemFlavor character, entity player = null )
+{
+	Assert( ItemFlavor_GetType( character ) == eItemType.character )
+
+	#if SERVER
+		                                             
+	#elseif CLIENT
+		if ( player == null )
+			player = GetLocalClientPlayer()
+	#elseif UI
+		if ( player == null )
+			player = GetLocalClientPlayer()
+	#endif
+
+	if( GRX_HasInventoryEverBeenReady( player ) )
+	{
+		return GRX_IsItemOwnedByPlayer_AllowOutOfDateData( character, player )
+	}
+
+	bool alwaysOwnsChar = ( ItemFlavor_GetGRXMode( character ) == eItemFlavorGRXMode.NONE )
+	if( alwaysOwnsChar )
+	{
+		return true
+	}
+
+	return expect bool ( player.GetPersistentVar( "cachedCharacterOwnership[" + ItemFlavor_GetGUIDString( character ) + "]" ) )
+}
 
 #if CLIENT || UI
 array<ItemFlavor> function GetCharacterButtonOrder( array<ItemFlavor> allCharacters, int totalButtons )

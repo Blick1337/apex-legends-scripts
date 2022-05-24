@@ -243,16 +243,13 @@ struct FileStruct_LifetimeLevel
 			table<StatEnumStruct, StatEnumStruct_Children> sesChildrenMap        
 		#endif
 
-		                   
 		array<StatEntry> stats_Bool
 		array<StatEntry> stats_Int
 		array<StatEntry> stats_Float
 
 		array<StatEntry>         allStats
-		                                             
 		table<string, StatEntry> refStatEntryMap
 
-		table<EHI, AdditionalStatsPlayerState> playerStateMap = {}
 		table< entity, array<CalcStatCache> > calculatedStatsCache                          
 	#endif
 
@@ -534,14 +531,6 @@ float function GetStat_Float( entity player, StatEntry entry, int when = eStatGe
 #endif
 
 
-                            
-                                                          
-   
-  	                                     
-   
-        
-
-
 #if SERVER || CLIENT || UI
 StatEntry function GetStatEntryByIndex( int index )
 {
@@ -713,7 +702,11 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
 	                                                  
 
 	                                      
+	 
 		                    
+		                                               
+			                                               
+	 
  
 #endif
 
@@ -734,15 +727,8 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
 			      
 	      
 
-	                                       
-
 	                                                              
 	 
-		                                                 
-		 
-			                                 
-		 
-
 		                                                                      
 		 
 			                                                                                                          
@@ -756,11 +742,6 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
 
 	                                                             
 	 
-		                                                 
-		 
-			                                 
-		 
-
 		                                                                      
 		 
 			                                                                                                        
@@ -774,11 +755,6 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
 
 	                                                               
 	 
-		                                                 
-		 
-			                                 
-		 
-
 		                                                                      
 		 
 			                                                                                                            
@@ -797,6 +773,8 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
                                                                            
  
 	                    
+	                                               
+		                                               
  
 #endif
 
@@ -1334,8 +1312,6 @@ StatEnumStruct function RegisterStatEnumStruct( StatEnumStruct ornull parentSESO
 StatTemplate function InternalRegisterStatCommon( StatEnumStruct ornull parentSESOrNull, string fieldName, int type, int behavior, int flags, bool shouldCache )
 {
 	StatTemplate template
-	                            
-	                                                    
 
 	template.fieldName = fieldName
 	template.type = type

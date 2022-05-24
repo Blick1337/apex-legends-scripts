@@ -1,4 +1,3 @@
-              
 #if SERVER || CLIENT
 global function ShFRC_G7Scout_Init
 #endif
@@ -45,13 +44,10 @@ void function ShFRC_G7Scout_Init()
 	data.challengeTime = 60.0
 	data.challengeType = eFiringRangeChallengeType.FR_CHALLENGE_TYPE_TARGETS_HIT
 	data.statTemplate = CAREER_STATS.s12e04_challenge_1
-	data.storyChallengeChapter = 1
-	data.storyChallengeItemFlav = "challenge_s12e04_group1challenge0"
 	data.challengeName = "#FRC_CHALLENGE_1_NAME"
 	data.challengeInteractStr = "#FRC_CHALLENGE_1_INTERACT"
 	data.challengeStartHint = "#FR_CHALLENGE_TARGET_HINT"
 	data.rewardTracker = $"settings/itemflav/gcard_tracker/frc_challenge1_score.rpak"
-	data.storyRewardTracker = $"settings/itemflav/gcard_tracker/s12e04_challenge1_score.rpak"
 
 	data.playerTeleportPosition = <30885.4, -6689.3, -29164>
 	data.squadSafePosition = [<30564.6, -6463.7, -29152.87>, <30550.2, -6972.4, -29160.6>]
@@ -64,7 +60,6 @@ void function ShFRC_G7Scout_Init()
 	                                        
 	                                        
 	                                          
-	                                      
 	#endif
 
 	FRC_RegisterChallenge( "mp_weapon_g2_challenge", data )
@@ -91,7 +86,7 @@ void function ShFRC_G7Scout_Init()
 		                                           
 	 
 
-	                                                                          
+
  
 
                                          
@@ -210,6 +205,7 @@ void function ShFRC_G7Scout_Init()
 		                                       
 	      
 
+	                                                               
 	                                      
 	                                              
 	                                                                           
@@ -218,8 +214,6 @@ void function ShFRC_G7Scout_Init()
                                              
  
 	                                                      
-	                                                          
-		                                         
  
 
                                                         
@@ -244,7 +238,7 @@ void function ShFRC_G7Scout_Init()
 	                             
 	                           
 	 
-		                                                                
+		                                                                                                         
 		 
 			                     
 			                                        
@@ -312,110 +306,10 @@ void function ShFRC_G7Scout_Init()
 	           
 
 	                                    
-	                                                                           
+	                                         
+		                                                                           
 
 	                                                                  
 	      
  
-
-                                     
-	                                                   
-	                                              
-	                                              
-	                                                  
-
-                                 
-                                                   
-	                                                 
-	                                                  
-
-                                    
-                                                   
-	                                                  
-
-                                                       
- 
-	                          
-		      
-
-	                                
-	                                       
-	       
-		                                       
-	      
-
-	         
-
-	                                                                                  
-	                                               
-	                                                   
-	                               
-
-	            
-		                       
-		 
-			                         
-			 
-				                                                                                   
-				                                              
-				                                                  
-				                              
-			 
-		 
-	 
-
-	                                    
-	 
-		                                                                              
-		                 
-	 
- 
-
-                                                          
- 
-	                                      
-	 
-		                          
-			      
-
-		                                
-
-		                                 
-		                                           
-			      
-
-		               
-		 
-			        
-
-			                                                                     
-		 
-		    
-		 
-			                        
-			                                               
-			                                                   
-			                               
-
-			                                                                                    
-
-			                                   
-			 
-				                                                                              
-				                 
-			 
-
-			         
-			                                                                  
-			                                       
-
-			         
-
-			                                                                             
-		 
-	   
- 
 #endif
-
-
-      

@@ -69,15 +69,9 @@ global const table<string, asset> emptyAttachmentSlotImages = {
                    
                                                                      
        
-                     
-		hopup_smart_reload = $"rui/pilot_loadout/mods/hopup_smart_reload_empty"
-       
-                       
-		hopup_kinetic_loader = $"rui/pilot_loadout/mods/empty_hopup_kinetic_feeder"
-       
-                    
-		hopup_dual_loader = $"rui/pilot_loadout/mods/empty_hopup_dualshell"
-       
+	hopup_smart_reload = $"rui/pilot_loadout/mods/hopup_smart_reload_empty"
+	hopup_kinetic_loader = $"rui/pilot_loadout/mods/empty_hopup_kinetic_feeder"
+	hopup_dual_loader = $"rui/pilot_loadout/mods/empty_hopup_dualshell"
 	hopup_unshielded_dmg = $"rui/pilot_loadout/mods/empty_hopup_unshielded_dmg"
 	hopup_highcal_rounds = $"rui/pilot_loadout/mods/empty_hopup_anvilreceiver"
 	hopup_double_tap = $"rui/pilot_loadout/mods/empty_hopup_doubletap"
@@ -554,15 +548,14 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 		LootData weaponData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalClientPlayer(), es.attachmentWeaponSlot )
 		string ammotype = weaponData.ammoType
 
-                   
-                                  
-        
+		                   
+		                                  
+		        
 
 		switch( es.attachmentPoint )
 		{
 			case "mag":
 			{
-                      
 				                                                                              
 				array<entity> weapons = GetLocalClientPlayer().GetMainWeapons()
 				foreach ( entity weapon in weapons )
@@ -572,16 +565,13 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 						ammotype = AmmoType_GetRefFromIndex( weapon.GetWeaponAmmoPoolType() )
 					}
 				}
-      
 
 				switch( ammotype )
 				{
 					case "bullet":
 						return eCommsAction.INVENTORY_NEED_ATTACHMENT_MAG_BULLET
-                  
 					case "arrows":
 						return eCommsAction.BLANK
-      
 					case "special":
 						return eCommsAction.INVENTORY_NEED_ATTACHMENT_MAG_SPECIAL
 
@@ -703,23 +693,17 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 
 						case "hopup_smart_reload":
 							return eCommsAction.INVENTORY_NEED_HOPUP_BOOSTED_LOADER
-
-                       
 						case "hopup_marksmans_tempo":
 							return eCommsAction.INVENTORY_NEED_HOPUP_MARKSMANS_TEMPO
-      
-                         
+
 						case "hopup_quickdraw_holster":
 							return eCommsAction.INVENTORY_NEED_HOPUP_QUICKDRAW_HOLSTER
-      
-                      
+
 						case "hopup_shatter_rounds":
 							return eCommsAction.INVENTORY_NEED_HOPUP_SHATTER_ROUNDS
-      
-                   
+
 						case "hopup_dual_loader":
 							return eCommsAction.INVENTORY_NEED_HOPUP_DUAL_SHELL
-      
 					}
 				}
 
@@ -845,7 +829,6 @@ int function FilledCommsAction_Weapon( string equipmentSlotRef, string itemRef )
 
 	LootData lootData = SURVIVAL_Loot_GetLootDataByRef( itemRef )
 	string ammotype = lootData.ammoType
-                      
 	                                                                              
 	array<entity> weapons = GetLocalClientPlayer().GetMainWeapons()
 	foreach ( entity weapon in weapons )
@@ -855,7 +838,6 @@ int function FilledCommsAction_Weapon( string equipmentSlotRef, string itemRef )
 			ammotype = AmmoType_GetRefFromIndex( weapon.GetWeaponAmmoPoolType() )
 		}
 	}
-      
 	switch( ammotype )
 	{
 		case "":
@@ -899,14 +881,12 @@ int function FilledCommsAction_Weapon( string equipmentSlotRef, string itemRef )
 				return eCommsAction.INVENTORY_NO_AMMO_SNIPER
         
 			return eCommsAction.INVENTORY_NEED_AMMO_SNIPER
-                    
 		case "arrows":
                             
 			if ( GetLocalClientPlayer().AmmoPool_GetCount( eAmmoPoolType.arrows ) <= 0 )
 				return eCommsAction.INVENTORY_NO_AMMO_ARROWS
          
 			return eCommsAction.INVENTORY_NEED_AMMO_ARROWS
-        
 	}
 
 	Warning( "GetCommsActionForEquipmentSlot() - Unhandled ammo type '" + ammotype + "'" )
@@ -1323,9 +1303,9 @@ void function EquippedItemLootIndexChange( string equipSlot, entity player, int 
 	}
 }
 
-void functionref( entity player, int old, int new ) function CreateTrackingNetVarFunction( string equipSlot )
+void functionref( entity player, int new ) function CreateTrackingNetVarFunction( string equipSlot )
 {
-	return void function( entity player, int old, int new ) : ( equipSlot )
+	return void function( entity player, int new ) : ( equipSlot )
 	{
 		EquippedItemLootIndexChange( equipSlot, player, new )
 	}

@@ -575,6 +575,16 @@ string function DeathBoxTextOverride( entity ent )
 		if ( DeathboxNetwork_CanPlayerUse( localViewPlayer, ent ) )
 			localizedHint = Localize( "#PAS_ASH_ADDITIONAL_USE_PROMPT" ) + "\n" + localizedHint
 
+		if ( ShouldUseAltInteractForArmorSwap() )
+		{
+			entity ornull armorEnt = GetDeathboxArmorSwap( localViewPlayer, ent )
+			if ( armorEnt != null )
+			{
+				expect entity( armorEnt )
+				localizedHint = localizedHint + "\n" + Localize( "#HINT_PICKUP_SWAP_ARMOR", GetPropSurvivalMainPropertyFromEnt( armorEnt ) )
+			}
+		}
+
 		return localizedHint
 	}
 
@@ -609,6 +619,16 @@ string function DeathBoxTextOverride( entity ent )
 
 	if ( DeathboxNetwork_CanPlayerUse( localViewPlayer, ent ) )
 		localizedHint = Localize( "#PAS_ASH_ADDITIONAL_USE_PROMPT" ) + "\n" + localizedHint
+
+	if ( ShouldUseAltInteractForArmorSwap() )
+	{
+		entity ornull armorEnt = GetDeathboxArmorSwap( localViewPlayer, ent )
+		if ( armorEnt != null )
+		{
+			expect entity( armorEnt )
+			localizedHint = localizedHint + "\n" + Localize( "#HINT_PICKUP_SWAP_ARMOR", GetPropSurvivalMainPropertyFromEnt( armorEnt ) )
+		}
+	}
 
 	return localizedHint
 }
@@ -1099,7 +1119,6 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 	RuiSetImage( rui, "attachWeapon1Icon", $"" )
 	RuiSetBool( rui, "hasAttach1", false )
 
-                          
 	for( int weaponIndex = WEAPON_INVENTORY_SLOT_PRIMARY_0; weaponIndex <= WEAPON_INVENTORY_SLOT_PRIMARY_1; ++weaponIndex )
 	{
 		entity weapon = player.GetNormalWeapon( WEAPON_INVENTORY_SLOT_PRIMARY_0 + weaponIndex )
@@ -1129,7 +1148,6 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 		}
 
 	}
-       
 
 	const int MAX_ATTACHMENT_TAGS = 6
 	const int NUM_OF_CATEGORIES_TO_BE_CONSIDERED_UNIVERSAL = 5                                                                                                                     
@@ -2123,13 +2141,13 @@ string function CreateLootDevDisplayString( LootData data )
 	if ( ShouldAppendLootLevel( data ) )
 		displayString += " [Lv" + data.tier + "]"
 
-	if ( data.baseMods.contains( WEAPON_LOCKEDSET_MOD_GOLD ) )
+	if ( data.lootTags.contains( WEAPON_LOCKEDSET_MOD_GOLD ) )
 		displayString = "[GOLD]/ GOLD " + displayString
-	if ( data.baseMods.contains( WEAPON_LOCKEDSET_MOD_WHITESET ) )
+	if ( data.lootTags.contains( WEAPON_LOCKEDSET_MOD_WHITESET ) )
 		displayString = "[WHITE]/ WHITE " + displayString
-	if ( data.baseMods.contains( WEAPON_LOCKEDSET_MOD_BLUESET ) )
+	if ( data.lootTags.contains( WEAPON_LOCKEDSET_MOD_BLUESET ) )
 		displayString = "[BLUE]/ BLUE " + displayString
-	if ( data.baseMods.contains( WEAPON_LOCKEDSET_MOD_PURPLESET ) )
+	if ( data.lootTags.contains( WEAPON_LOCKEDSET_MOD_PURPLESET ) )
 		displayString = "[PURPLE]/ PURPLE " + displayString
 	if ( data.baseMods.contains( WEAPON_LOCKEDSET_MOD_GOLDPAINTBALL ) )
 		displayString = "[GOLD PAINTBALL]/ GOLD " + displayString

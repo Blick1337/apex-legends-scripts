@@ -9,7 +9,7 @@ void function NPCPrecache_AllNPCTypes()
        
 
                     
-                       
+		NPCPrecache_Spectre()
        
 
                             

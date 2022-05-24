@@ -3092,7 +3092,7 @@ entity function TeslaTrap_GetFocalTrapForPlayer( entity player )
 }
 
 #if CLIENT
-void function OnFocusTrapChanged( entity player, entity oldEnt, entity newEnt )
+void function OnFocusTrapChanged( entity player, entity newEnt )
 {
 	entity localViewPlayer = GetLocalViewPlayer()
 	if ( !IsValid( localViewPlayer ) )
@@ -4172,16 +4172,16 @@ void function CodeCallback_TeslaTrapCrossed( entity trigger, entity start, entit
 			                                                                             
 			                                  
 			                                                                                                             
-                       
-				                                                                                                                                                                         
-				                                                                                                      
+
+			                                                                                                                                                                         
+			                                                                                                      
+			 
+				                                                                              
 				 
-					                                                                              
-					 
-						                                                                                                                 
-					 
+					                                                                                                                 
 				 
-                             
+			 
+
 		 
 
 		                                                                                               
@@ -4194,16 +4194,15 @@ void function CodeCallback_TeslaTrapCrossed( entity trigger, entity start, entit
 				                                                                            
 				                                  
 				                                                                                                             
-                        
-					                                                                                                                                                                         
-					                                                                                                      
+
+				                                                                                                                                                                         
+				                                                                                                      
+				 
+					                                                                              
 					 
-						                                                                              
-						 
-							                                                                                                                 
-						 
+						                                                                                                                 
 					 
-                              
+				 
 			 
 		 
 

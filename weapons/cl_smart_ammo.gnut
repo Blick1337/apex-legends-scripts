@@ -192,7 +192,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			|| StatusEffect_GetSeverity( player, eStatusEffect.maphack_detected )
 			|| StatusEffect_GetSeverity( player, eStatusEffect.sonar_detected )
                
-                                                                             
+                                                                            
                     
                         
 			|| StatusEffect_GetSeverity( player, eStatusEffect.mortar_ring_reveal ))
@@ -201,9 +201,6 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                                                                              
                                                                                                           
                                  
-                
-                                                                       
-                     
 			&& !player.IsCloaked( true ) )
 		{
 			RuiSetFloat3( file.lockon_hud, "borderColor", <1, .36, .31> )                       
@@ -236,10 +233,10 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 				RuiSetFloat3( file.lockon_hud, "borderColor", scaledColor )
 			}
                   
-                                                                                      
-    
-                                                                            
                                                                                      
+    
+                                                                                 
+                                                                                             
     
                        
                            
@@ -249,14 +246,6 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_fuse" )
 			}
                                 
-                   
-                                                                            
-    
-                                                                           
-                                                                                     
-                                                             
-    
-                        
 			else
 			{
 				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_bloodhound" )

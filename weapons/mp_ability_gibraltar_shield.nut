@@ -410,9 +410,7 @@ var function OnWeaponPrimaryAttack_ability_gibraltar_shield( entity weapon, Weap
 			 
 				                                                  
 				                                                                                          
-                 
 				                                                                                                                                                   
-         
 				                                                                                     
 			 
 		 

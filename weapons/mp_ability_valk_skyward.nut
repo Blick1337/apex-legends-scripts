@@ -202,7 +202,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_valk_skyward( entity weapon )
 
 	float traceDist      = GetValkUltMaxHeight() + 40 + transitionDist                                            
 
-	TraceResults results = TraceHull( owner.GetOrigin(), owner.GetOrigin() + <0, 0, traceDist>, owner.GetPlayerMins(), owner.GetPlayerMaxs(), [ owner ], TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
+	TraceResults results = TraceHull( owner.GetOrigin(), owner.GetOrigin() + <0, 0, traceDist>, owner.GetPlayerMins(), owner.GetPlayerMaxs(), [ owner ], TRACE_MASK_PLAYERSOLID_BRUSHONLY , TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
 	if ( results.fraction < 1.0 )
 	{
 		#if CLIENT
@@ -536,6 +536,11 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 			 
 				                         
 				                               
+
+				                                                                               
+				                                                                               
+				                                    
+				                                                                                       
 			 
 		 
 	 
@@ -811,6 +816,9 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 
 				                                                        
 				                               
+
+				                                    
+				                                                                                       
 			 
 
 			                                                                                             

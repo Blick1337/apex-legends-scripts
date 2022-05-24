@@ -46,8 +46,10 @@ const EMP_MAGNETIC_FORCE = 1600
 const MAG_FLIGHT_SFX_LOOP = "Explo_MGL_MagneticAttract"
 
                          
-global const PROXIMITY_MINE_EXPLOSION_DELAY = 1.5
-global const PROXIMITY_MINE_ARMING_DELAY = 2.5
+                                              
+                                                          
+                                              
+      
 const TRIGGERED_ALARM_SFX = "Weapon_ProximityMine_CloseWarning"
 global const THERMITE_GRENADE_FX = $"P_grenade_thermite"
 global const CLUSTER_BASE_FX = $"P_wpn_meteor_exp"
@@ -133,6 +135,17 @@ void function Grenade_OnWeaponTossPrep( entity weapon, WeaponTossPrepParams prep
 
 void function Grenade_OnWeaponActivate( entity weapon )
 {
+               
+                                                    
+         
+
+                                  
+                                                                                                   
+         
+
+                                                                                
+                                      
+       
 }
 
 void function Grenade_OnWeaponDeactivate( entity weapon )
@@ -231,6 +244,19 @@ int function Grenade_OnWeaponToss( entity weapon, WeaponPrimaryAttackParams atta
 
 var function Grenade_OnWeaponTossReleaseAnimEvent( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
+               
+                                 
+                                                                                        
+  
+                                                   
+   
+                                             
+                                          
+       
+                                           
+   
+  
+       
 	var result = Grenade_OnWeaponToss( weapon, attackParams, 1.0 )
 	return result
 }
@@ -416,8 +442,6 @@ void function Grenade_OnPlayerNPCTossGrenade_Common( entity weapon, entity frag 
 {
 	Grenade_Init( frag, weapon )
 	#if SERVER
-		                                                
-
 		                                                            
 		                            
 			                                          
@@ -591,8 +615,10 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
                                                                                              
          
 
-
                                                                                                             
+         
+
+                                            
          
 
                                            
@@ -616,9 +642,18 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
                                        
          
 
+                                                               
+                                                                                                       
+                                  
+   
+                                     
+                                     
+   
+
                            
                     
                   
+                           
                                                     
        
        
@@ -642,7 +677,8 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
                            
    
   
-                                                
+                                                      
+                                                                
 
                                                                 
 
@@ -709,18 +745,23 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
 
                                                                                       
  
-                                                            
                                                         
+
+                                                                                                                                     
+                                                     
 
                                                                                                                                                                                                              
                                 
                                                    
                                      
 
-                                    
+              
 
                                 
   
+                             
+                          
+
                                                
    
                                      
@@ -736,7 +777,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
 
                                                                            
  
-                                                                                                   
+                                                                
               
 
                             

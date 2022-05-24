@@ -313,7 +313,7 @@ void function ShArenasBuy_RegisterNetworkingV2()
 	RegisterNetworkedVariable( "arenas_current_cash", SNDC_PLAYER_EXCLUSIVE, SNVT_BIG_INT, startingCash )
 	#if CLIENT
 		RegisterNetworkedVariableChangeCallback_int( "arenas_current_cash",
-			void function( entity player, int oldVal, int newVal ) : ()
+			void function( entity player, int newVal ) : ()
 			{
 				OnCurrentCashChanged( player )
 			}
@@ -333,7 +333,7 @@ void function Arenas_InitStoreData()
 	var dataTable = GetDataTable( ARENAS_ITEMS_DATATABLE )
 	int numRows = GetDataTableRowCount( dataTable )
 
-	array<string> disabledWeapons = split( GetCurrentPlaylistVarString( "survival_disabled_weapons", "" ).tolower(), " " )
+	array<string> disabledWeapons = split( GetCurrentPlaylistVarString( "global_disabled_loot", "" ).tolower(), " " )
 
 	table<string, LootData> allLootData = SURVIVAL_Loot_GetLootDataTable()
 
@@ -916,7 +916,9 @@ bool function IsAvailableWeapon( entity player, string weaponRef )
 				                              
 
 				                                                                             
-				                                                                                           
+				                                            
+
+				                                                                                                     
 				              
 
 				     
@@ -1250,7 +1252,9 @@ bool function IsAvailableWeapon( entity player, string weaponRef )
 					                                                     
 
 				                                          
-				                                                                                                  
+				                                      
+
+				                                                                                                            
 			 
 
 			              
@@ -1304,6 +1308,9 @@ void function OnUnlockedItemChanged( entity player )
 
 void function OnCurrentCashChanged( entity player )
 {
+	if( !IsValid( player ) )
+		return
+
 	                               
 	if( player.GetPlayerNetInt( "arenas_current_cash" ) <= 0 && SURVIVAL_GetPrimaryWeapons( player ).len() >= 2 )
 		RunUIScript( "ClientToUI_Arenas_CloseBuyMenu" )
@@ -1531,7 +1538,7 @@ void function _Arenas_BindWeaponButton( entity player, var button, var rui, int 
 				if( IsValid( weapon ) )
 				{
 					string weaponRef = GetWeaponClassNameWithLockedSet( weapon )
-					if( weapon.HasMod( WEAPON_LOCKEDSET_MOD_GOLD ) )
+					if( weapon.w.isGoldset )
 						weaponRef = GetBaseWeaponRef( weaponRef ) + WEAPON_LOCKEDSET_SUFFIX_PURPLESET
 
 					if( item.ref == weaponRef )
@@ -2855,7 +2862,9 @@ void function OnUpdateTooltip( int style, ToolTipData dt )
 			if( IsValid( weapon ) )
 			{
 				string weaponRef = GetWeaponClassNameWithLockedSet( weapon )
-				if( weapon.HasMod( WEAPON_LOCKEDSET_MOD_GOLD ) )
+
+				LootData weaponRefData = SURVIVAL_Loot_GetLootDataByRef( weaponRef )
+				if( weaponRefData.lootTags.contains( WEAPON_LOCKEDSET_MOD_GOLD ) )
 					weaponRef = GetBaseWeaponRef( weaponRef ) + WEAPON_LOCKEDSET_SUFFIX_PURPLESET
 
 				if( item.ref == weaponRef )
@@ -3047,7 +3056,7 @@ void function __UpdatePassiveRui( entity player )
 	RuiSetInt( file.passiveRui, "selectedHealthPickupCount", player.GetPlayerNetInt( "passiveCharges" ) )
 }
 
-void function OnBuyScreenVarUpdate( entity player, int oldVal, int newVal )
+void function OnBuyScreenVarUpdate( entity player, int newVal )
 {
 	if ( player == GetLocalViewPlayer() )
 		UpdatePassiveRui( player )

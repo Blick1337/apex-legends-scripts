@@ -301,24 +301,16 @@ void function _ValkFlightReveal( entity victim )
 	WaitForever()
 }
 
-void function OnValkTrackingChanged( entity player, bool old, bool new )
+void function OnValkTrackingChanged( entity player, bool new )
 {
 	if ( !IsValid( GetLocalViewPlayer() ) )
 		return
 
 	if ( player.GetTeam() != GetLocalViewPlayer().GetTeam() )
 	{
-                      
-			                                                                                                                                                                                                             
-			if ( IsUsingProximityAllianceMembers() && IsValid( player ) && IsFriendlyTeam( player.GetTeam(), GetLocalViewPlayer().GetTeam() ) && IsPositionWithinRadius( GetMaxDistForAllianceMemberProximity(), GetLocalViewPlayer().GetOrigin(), player.GetOrigin() ) )
-			{
-				                                                        
-			}
-			else
-                            
-			{
-				return
-			}
+		                                                                                                                                                                                                             
+		if ( !IsUsingProximityAllianceMembers() || !IsValid( player ) || !IsFriendlyTeam( player.GetTeam(), GetLocalViewPlayer().GetTeam() ) || !IsPositionWithinRadius( GetMaxDistForAllianceMemberProximity(), GetLocalViewPlayer().GetOrigin(), player.GetOrigin() ) )
+			return
 	}
 
 	if ( new )

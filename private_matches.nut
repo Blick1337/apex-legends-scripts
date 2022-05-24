@@ -20,7 +20,6 @@ global function PrivateMatch_IsObserverHighlightEnabled
 
                  
                                        
-                                                       
                                                      
                                                       
                                                       
@@ -82,6 +81,9 @@ global const int PRIVATEMATCH_ISPRELOADING_BIT = 2
 global const string CUSTOM_AIM_ASSIST_CONVAR_NAME = "sv_private_assist_style_override"
 global const string GLOBAL_AIM_ASSIST_CONVAR_NAME = "sv_tournament_assist_style_override"
 global const string CUSTOM_ANONYMOUS_MODE_CONVAR_NAME = "sv_tournament_anonymous_mode"
+global const string OBSERVER_PRESET_TEAM_CONVAR_NAME = "cl_observer_preset_team"
+global const string OBSERVER_PRESET_PLAYERSLOT_CONVAR_NAME = "cl_observer_preset_playerSlot"
+global const string OBSERVER_PRESET_PLAYERHASH_CONVAR_NAME = "cl_observer_preset_playerHash"
 
 const string WAYPOINTTYPE_PLAYERTEAMSTATS = "team_stats"
 
@@ -101,7 +103,6 @@ global const int TEAM_SPECTATOR_MAX_PLAYERS = 10
 const asset PM_CHAMPION_SCREEN = $"ui/private_match_champion_screen.rpak"
 
            
-const string NV_OBSERVER_EVENT_INDEX = "PrivateMatch_ObserverEvents"
 const string NV_OBSERVER_HIGHLIGHT_ENABLED = "PrivateMatch_Observer_HighlightEnabled"
 const float PM_OBSERVER_HIGHLIGHT_TOGGLE_DEBOUNCE = 0.5
 
@@ -218,7 +219,6 @@ void function PrivateMatch_RegisterNetworking()
 	Remote_RegisterClientFunction( "ServerCallback_EnableGameStatusMenu", "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_PrivateMatch_ManageHighlights" )
 	Remote_RegisterClientFunction( "ServerCallback_PrivateMatch_SquadEliminated", "int", TEAM_INVALID, 60, "int", 0, 60 )
-	RegisterNetworkedVariable( NV_OBSERVER_EVENT_INDEX, SNDC_GLOBAL, SNVT_UNSIGNED_INT, 0 )
 	RegisterNetworkedVariable( NV_OBSERVER_HIGHLIGHT_ENABLED, SNDC_PLAYER_GLOBAL, SNVT_BOOL, false )
 
 
@@ -306,7 +306,6 @@ void function PrivateMatch_ClientFrame()
 
 	PerfEnd( PerfIndexClient.PrivateLobbyThread )
 }
-
 
 void function InstancePlayerTeamStats( entity wp )
 {
@@ -926,6 +925,8 @@ void function PrivateMatch_SetUpTeamRosters( string playlistName )
 			                                                               
 			                                      
 			                                     
+			                                                                        
+			                                                              
 
 			                                                                                                                                                                                                                                                              
 			                                                      
@@ -1122,16 +1123,16 @@ bool function PrivateMatch_CanRenameTeam( entity player, int teamIndex )
 #endif
 
 #if CLIENT
-void function OnSelectedPlaylistIndexChanged( entity player, int oldIndex, int newIndex )
+void function OnSelectedPlaylistIndexChanged( entity player, int newIndex )
 {
 	if ( !IsPrivateMatchLobby() )
 		return
 
-	printf( "PrivateMatchPlaylistDebug: Selected playlist changed. old: %i, new: %i", oldIndex, newIndex )
+	                                                                                     
 	RunUIScript( "PrivateMatch_PlaylistNameChanged" )
 }
 
-void function OnStartCountdownChanged( entity player, int oldVal, int newVal )
+void function OnStartCountdownChanged( entity player, int newVal )
 {
 	if ( !IsPrivateMatchLobby() )
 		return
@@ -1174,40 +1175,7 @@ void function OnStartCountdownChanged( entity player, int oldVal, int newVal )
 	 
 
 	                                 
-	                                                                                
-	                                                                             
-	                                                         
-	                                                               
-	                                                                        
 	                                                                                 
- 
-
-                                                                                                  
- 
-	                                         
- 
-
-                                                               
- 
-	                                         
- 
-
-                                                                                           
- 
-	                         
-		      
-
-	                                         
- 
-
-                                                             
- 
-	                                         
- 
-
-                                                                
- 
-	                                         
  
 
                                                                       
@@ -1217,14 +1185,6 @@ void function OnStartCountdownChanged( entity player, int oldVal, int newVal )
 
 	                                                   
 		                                                                                                                                              
- 
-
-                                                       
- 
-	                                                              
-	                                     
-	                                                                                                            
-	                                                         
  
 
                                                                                                
@@ -1397,16 +1357,16 @@ void function PrivateMatch_CreateMatchEndEarlyDialog()
 #endif
 
 #if CLIENT
-void function ObserverHighlightEnableChanged( entity observer, bool oldValue, bool newValue )
+void function ObserverHighlightEnableChanged( entity observer, bool newValue )
 {
 	if ( observer.GetTeam() != TEAM_SPECTATOR )
 		return
 
 	if ( observer == GetLocalClientPlayer() )
 	{
-		if ( newValue == true && oldValue == false )
+		if ( newValue == true )
 			Obituary_Print_Localized( Localize( "#TOURNAMENT_OBSERVER_HIGHLIGHT_ENABLED" ) )
-		else if ( newValue == false && oldValue == true )
+		else if ( newValue == false )
 			Obituary_Print_Localized( Localize( "#TOURNAMENT_OBSERVER_HIGHLIGHT_DISABLED" ) )
 	}
 
@@ -1471,12 +1431,47 @@ void function OnSpectatorModeChanged( entity observer )
 	Remote_ServerCallFunction( "ClientCallback_PrivateMatchRefreshSurveyRing" )
 }
 
+entity function GetObserverPresetTarget()
+{
+	string presetPlayerHash = GetConVarString( OBSERVER_PRESET_PLAYERHASH_CONVAR_NAME )
+	if( presetPlayerHash != "" )
+	{
+		foreach( entity player in GetPlayerArray() )
+		{
+			if( player.GetHashedEadpUserIdStr() == presetPlayerHash )
+				return player
+		}
+	}
+
+	int presetTeam = GetConVarInt( OBSERVER_PRESET_TEAM_CONVAR_NAME )
+	if( presetTeam < 0 )
+		return null
+
+	array<entity> teamPlayers = GetPlayerArrayOfTeam(presetTeam + TEAM_MULTITEAM_FIRST - 1)
+
+	if( teamPlayers.len() == 0 )
+		return null
+
+	teamPlayers.sort( PrivateMatch_SortPlayersByName )
+
+	int playerSlot = abs((GetConVarInt( OBSERVER_PRESET_PLAYERSLOT_CONVAR_NAME ) - 1) % teamPlayers.len())
+
+	return teamPlayers[playerSlot]
+
+}
+
 void function PrivateMatch_OnGameStateChanged( int newVal )
 {
 	if ( !IsPrivateMatch() )
 		return
 
-	if ( newVal == eGameState.WinnerDetermined )
+	if( newVal == eGameState.Playing )
+	{
+		entity observerTarget = GetObserverPresetTarget()
+		if( observerTarget != null )
+			Remote_ServerCallFunction( "ClientCallback_PrivateMatchChangeObserverTarget", observerTarget )
+	}
+	else if ( newVal == eGameState.WinnerDetermined )
 	{
 		if( GameRules_GetTeamName( GetWinningTeam() ) != "Unassigned" )
 		{
@@ -1501,11 +1496,11 @@ void function PrivateMatch_OnGameStateChanged( int newVal )
 	}
 }
 
-void function PrivateMatch_ClientOnSquadEliminated( entity player, int oldVal, int newVal )
+void function PrivateMatch_ClientOnSquadEliminated( entity player, int newVal )
 {
 	bool anonymousModeActive = GetConVarBool( CUSTOM_ANONYMOUS_MODE_CONVAR_NAME )
 	if ( anonymousModeActive && GameRules_IsTeamIndexValid( newVal ) )
-		Obituary_Print_Localized( Localize( "#SURVIVAL_OBITUARY_SQUADELIMINATED", PrivateMatch_GetTeamName( newVal ) ), <255,128,0> )
+		Obituary_Print_Localized( Localize( "#SURVIVAL_OBITUARY_SQUADELIMINATED", PrivateMatch_GetTeamName( newVal ) ).toupper(), <255, 244, 79> )
 }
 
 void function ChampionScreenSetWinningTeamName( var rui )
@@ -1525,6 +1520,10 @@ int function PrivateMatch_GetMaxTeamsForSelectedGamemode()
 	{
 		case GAMEMODE_ARENAS:
 			maxTeams = 2
+			break
+
+		case GAMEMODE_CONTROL:
+			maxTeams = 6
 			break
 
 		default:

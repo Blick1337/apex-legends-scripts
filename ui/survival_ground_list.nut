@@ -1308,7 +1308,11 @@ void function ClientToUI_RestrictedLootConfirmDialog_Open( bool isBlackMarketOwn
 	array<string> dialogArray = SURVIVAL_Loot_GetRestrictedDialogArray( restrictedLootType )
 	data.headerText = Localize( dialogArray[0] )
 
-	if ( isBlackMarketOwner )
+                      
+	if ( isBlackMarketOwner && restrictedLootType != eRestrictedLootTypes.SPECTRE_SHACK )
+     
+                          
+      
 	{
 		data.messageText = Localize( dialogArray[1] )
 

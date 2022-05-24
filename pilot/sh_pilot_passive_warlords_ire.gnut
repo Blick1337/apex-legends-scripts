@@ -71,10 +71,8 @@ void function PassiveWarlordsIre_OnPassiveChanged( entity player, int passive, b
 	                                                                       
 	                                                                                                                                       
 
-                     
-		                                                        
-		                                                          
-       
+	                                                        
+	                                                          
  
 #endif
 
@@ -161,7 +159,8 @@ bool function PassiveWarlordsIre_EntityShouldBeHighlighted( entity target )
 void function OnPlayerClassChanged( entity player )
 {
 	                                 
-	OnPrimaryWeaponStatusUpdate( player.GetActiveWeapon( eActiveInventorySlot.mainHand ), ClWeaponStatus_GetWeaponHudRui( player ) )
+	if( player == GetLocalClientPlayer())
+		OnPrimaryWeaponStatusUpdate( player.GetActiveWeapon( eActiveInventorySlot.mainHand ), ClWeaponStatus_GetWeaponHudRui( player ) )
 }
 
 void function OnPrimaryWeaponStatusUpdate( entity selectedWeapon, var weaponRui )

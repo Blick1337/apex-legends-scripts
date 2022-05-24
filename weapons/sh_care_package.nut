@@ -8,6 +8,7 @@ global function GetSkinForCarePackageModel
 #if CLIENT
 global function SetCarePackageDeployed
 global function OnBeginPlacingCarePackage
+global function OnEndPlacingCarePackage
 #endif         
 #if SERVER
                                         
@@ -268,12 +269,26 @@ void function DeployableCarePackagePlacement( entity weapon, entity player, asse
          
 		}
 	)
-                                
-                                                                     
+
+                  
+                                           
+                               
+                                      
+  
+                                                                       
+                                                              
+      
+      
+                                                                   
+  
+      
+                               
+                                                                      
                                                              
      
-       
+      
 		AddPlayerHint( 3.0, 0.25, $"", "#WPN_CARE_PACKAGE_PLAYER_HINT" )
+       
 
 	while ( true )
 	{

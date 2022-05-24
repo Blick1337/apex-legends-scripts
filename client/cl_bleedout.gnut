@@ -30,6 +30,8 @@ struct
 	float bleedoutFXAlpha = 0.0
 	float reviveStartTime = 0.0
 	float reviveEndTime = 0.0
+
+	entity oldPlayerHealer = null
 } file
 
 void function BleedoutClient_Init()
@@ -102,7 +104,7 @@ void function Bleedout_SetFirstAidStrings( string applyString, string receiveStr
 	file.firstAidReceiveString = receiveString
 }
 
-void function BLEEDOUT_RevivePlayerHealerChanged( entity playerToRes, entity oldPlayerHealer, entity playerHealer )
+void function BLEEDOUT_RevivePlayerHealerChanged( entity playerToRes, entity playerHealer )
 {
 	ManageHighlightEntity( playerToRes )
 
@@ -111,15 +113,18 @@ void function BLEEDOUT_RevivePlayerHealerChanged( entity playerToRes, entity old
 		if ( IsValid( playerToRes ) )
 			playerToRes.Signal( "Bleedout_StopFirstAid" )
 
-		if ( IsValid( oldPlayerHealer ) )
-			oldPlayerHealer.Signal( "Bleedout_StopFirstAid" )
-
+		if ( IsValid( file.oldPlayerHealer ) )
+		{
+			file.oldPlayerHealer.Signal( "Bleedout_StopFirstAid" )
+			file.oldPlayerHealer = null
+		}
 		return
 	}
 
-	if ( IsValid( playerHealer ) && IsValid( oldPlayerHealer ) && (playerHealer != oldPlayerHealer) )
+	if ( IsValid( playerHealer ) && IsValid( file.oldPlayerHealer ) && (playerHealer != file.oldPlayerHealer) )
 	{
-		oldPlayerHealer.Signal( "Bleedout_StopFirstAid" )
+		file.oldPlayerHealer.Signal( "Bleedout_StopFirstAid" )
+		file.oldPlayerHealer = null
 	}
 
 	entity viewPlayer = GetLocalViewPlayer()
@@ -159,6 +164,8 @@ void function BLEEDOUT_RevivePlayerHealerChanged( entity playerToRes, entity old
 
 		thread Bleedout_DisplayFirstAidProgressBar( viewPlayer, endTime, endTime - Time(), ruiString, hasGuardianAngel )
 	}
+
+	file.oldPlayerHealer = playerHealer
 }
 
 void function Bleedout_DisplayTrainingFirstAidProgressBar( entity dummy, float endTime, float progressTime )
@@ -189,6 +196,7 @@ void function Bleedout_DisplayFirstAidProgressBar( entity playerToRes, float end
 	RuiSetFloat( rui, "progressTime", progressTime )
 	RuiSetBool( rui, "hasGuardianAngel", hasGuardianAngel )
 
+
 	Chroma_BeginRevive( progressTime )
 
 	OnThreadEnd(
@@ -199,7 +207,7 @@ void function Bleedout_DisplayFirstAidProgressBar( entity playerToRes, float end
 			Chroma_EndRevive()
 
 			if ( IsValid( playerToRes ) && playerToRes.IsPlayer() )
-				BleedoutEndTimeChanged( playerToRes, 0.0, playerToRes.GetPlayerNetTime( "bleedoutEndTime" ) )
+				BleedoutEndTimeChanged( playerToRes, playerToRes.GetPlayerNetTime( "bleedoutEndTime" ) )
 		}
 	)
 
@@ -209,7 +217,7 @@ void function Bleedout_DisplayFirstAidProgressBar( entity playerToRes, float end
 	}
 }
 
-void function BleedoutEndTimeChanged( entity player, float oldVal, float newVal )
+void function BleedoutEndTimeChanged( entity player, float newVal )
 {
 	player.Signal( SIGNAL_BLEEDOUT_STATE_CHANGED )
 

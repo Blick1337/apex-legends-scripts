@@ -302,7 +302,7 @@ void function OnGameStateEnter_PickLoadout()
 	thread TryEnablePrivateMatchSpectCharSelectMenu( GetLocalClientPlayer() )
 }
 
-void function OnPlayerMatchStateChanged( entity player, int oldState, int newState )
+void function OnPlayerMatchStateChanged( entity player, int newState )
 {
 	if ( player.GetTeam() != TEAM_SPECTATOR )
 		return

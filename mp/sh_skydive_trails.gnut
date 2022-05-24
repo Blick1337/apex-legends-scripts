@@ -130,6 +130,9 @@ void function ShSkydiveTrails_LevelInit()
 	fileLevel = newFileLevel
 
 	AddCallback_RegisterRootItemFlavors( RegisterSkydiveTrails )
+	#if SERVER
+		                                                                             
+	#endif
 }
 
 void function RegisterSkydiveTrails()

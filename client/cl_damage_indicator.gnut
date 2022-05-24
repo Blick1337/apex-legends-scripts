@@ -169,8 +169,8 @@ bool function ShouldShowMeleeFlashForDamage( float damage, int damageType, int d
        
 
                                  
-		if ( damageSourceId == eDamageSourceId.nessie_hug )
-			return false
+                                                     
+               
        
 
 	return true
@@ -721,16 +721,14 @@ asset function GetIndicatorModel( entity grenade )
 		return GRENADE_INDICATOR_GENERIC
 
                   
-                                                                 
-                                   
-                                                                              
-                                   
+		if ( grenade.GetScriptName() == CASTLE_WALL_THREAT_TARGETNAME )
+			return GRENADE_INDICATOR_GENERIC
+		if ( grenade.GetTargetName() == ARMORED_LEAP_IMPACT_ZONE_THREAT_TARGETNAME )
+			return GRENADE_INDICATOR_GENERIC
                        
 
-               
-		if ( grenade.GetTargetName() == RIOT_DRILL_DANGERZONE_TARGETNAME )
-			return GRENADE_INDICATOR_GENERIC
-                    
+	if ( grenade.GetTargetName() == RIOT_DRILL_DANGERZONE_TARGETNAME )
+		return GRENADE_INDICATOR_GENERIC
 
 	if ( grenade.GetTargetName() == BLACKHOLE_THREAT_TARGETNAME )
 		return GRENADE_INDICATOR_GENERIC

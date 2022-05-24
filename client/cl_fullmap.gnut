@@ -939,6 +939,9 @@ void function UpdateMap_THREAD()
 					RuiSetFloat2( rui, "highlightScaleTarget", < 0.8, 0.8, 0.0 > )
 
 				RuiSetBool( rui, "viewerIsSpectator", true )
+
+				vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( ent.GetTeam() ) / 255.0 )
+				RuiSetFloat3( rui, "smokeColor", smokeColor )
 			}
 
 			file.updatePlayerTags = false
@@ -1567,8 +1570,11 @@ entity function GetPlayerUnderAim()
 
 void function Spectator_ViewPlayer( entity spectatorPlayer )
 {
+	if ( !IsPrivateMatch() )
+		return
+
 	entity player = GetPlayerUnderAim()
-	if( IsValid(player) )
+	if ( IsValid( player ) )
 	{
 		Remote_ServerCallFunction( "ClientCallback_PrivateMatchChangeObserverTarget", player )
 	}

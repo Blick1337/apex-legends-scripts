@@ -24,7 +24,7 @@ global enum ePlayerMatchState
 
 struct
 {
-	array<void functionref( entity, int, int )> s_playerMatchStateChangedCallbacks
+	array<void functionref( entity, int )> s_playerMatchStateChangedCallbacks
 } file
 
 
@@ -37,7 +37,7 @@ void function PlayerMatchState_RegisterNetworking()
 #endif          
 }
 
-void function AddCallback_OnPlayerMatchStateChanged( void functionref( entity, int, int ) func )
+void function AddCallback_OnPlayerMatchStateChanged( void functionref( entity, int ) func )
 {
 	Assert( !file.s_playerMatchStateChangedCallbacks.contains( func ) )
 	file.s_playerMatchStateChangedCallbacks.append( func )
@@ -54,19 +54,16 @@ int function PlayerMatchState_GetFor( entity player )
  
 	                                                            
 	                                                               
-	                                                                                                
-		                                          
+	                                                                                           
+		                                
  
 #endif          
 
 #if CLIENT
-void function OnPlayerMatchStateChanged( entity player, int oldValue, int newValue )
+void function OnPlayerMatchStateChanged( entity player, int newValue )
 {
-	if ( oldValue == newValue )
-		return
-
-	foreach ( void functionref( entity, int, int ) func in file.s_playerMatchStateChangedCallbacks )
-		func( player, oldValue, newValue )
+	foreach ( void functionref( entity, int ) func in file.s_playerMatchStateChangedCallbacks )
+		func( player, newValue )
 }
 
 void function PlayerMatchState_RuiTrackInt( var rui, string argName, entity player )

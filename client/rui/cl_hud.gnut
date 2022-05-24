@@ -325,18 +325,18 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 			shieldFrac = isKillShot ? 0.0 : max( 0, ( victim.GetHealth() - damageAmount ) / victim.GetMaxHealth() )
 		}
                  
-                                         
-   
-                   
-                  
-                                                                                                          
-   
-                                       
-   
-                   
-                  
-                                                                                                          
-   
+		else if ( IsMobileShieldEnt( victim ) )
+		{
+			shieldIcon = $""
+			shieldLevel = 1
+			shieldFrac = isKillShot ? 0.0 : max( 0, ( victim.GetHealth() - damageAmount ) / victim.GetMaxHealth() )
+		}
+		else if ( IsCastleWallEnt( victim ) )
+		{
+			shieldIcon = $""
+			shieldLevel = 1
+			shieldFrac = isKillShot ? 0.0 : max( 0, ( victim.GetHealth() - damageAmount ) / victim.GetMaxHealth() )
+		}
       
                 
                                     

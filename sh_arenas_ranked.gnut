@@ -154,6 +154,7 @@ struct
 		                                                                                                   
 		                                                                                   
 		                                                                                     
+		                					                                      
 	#endif
 
 	#if UI
@@ -180,6 +181,7 @@ void function Sh_ArenasRanked_Init()
 		                                                                             
 
 		                                                                    
+		                                                                    
 		                                                                                      
 
 		                                                         
@@ -187,6 +189,13 @@ void function Sh_ArenasRanked_Init()
 		       
 			                                                     
 		             
+
+		                
+		 
+			                                                                                                                       
+			                                    
+			                                                                                     
+		 
 
 	#endif
 
@@ -1734,13 +1743,37 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 
 	                                                                                                                                 
 	                                                    
+	 
 		                                                                 
 
-	                                                                                                      
-	                                                            
-	                                                          
+		                                                                                                      
+		                                                            
+		                                                          
 
-	                                                                   
+		                                                                   
+	 
+	                                       
+	 
+		                                                                                                                   
+		                                                                                                                      
+		                                                                   
+
+		            
+		                                                   
+		 
+			                                                                                                              
+			              
+				                                                                
+		 
+		                                                                                                                      
+
+		                       
+		 
+			                                                                               
+			                                                                                                            
+			                                                                                                                                  
+		 
+	 
  
 
                                                                                                                                                                   
@@ -1779,6 +1812,51 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 
 	                              
  
+
+
+                                                              
+ 
+	       
+		                                    
+			      
+	      
+
+	                 
+		      
+
+	                       
+		      
+
+	                                                                                                     
+		      
+
+	                                                                                                           
+	                                                                                                                 
+		      
+
+	                                                                                                                 
+	 
+		                                                                  
+		                                                                            
+			        
+
+		                                                                                                                               
+		                   
+		                                                                                         
+		 
+			                                                                                                              
+			                                                                                        
+		 
+
+		               
+		                                                                                
+		 
+			                                                                                                              
+			                                                                                        
+		 
+	 
+ 
+
 
                                                               
  
@@ -2210,8 +2288,23 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 
                                                                 
  
-	                                             
+	                
+	 
 		                                
+			                                
+
+		                                                         
+			                                                         
+
+		                                                         
+			                                                         
+
+		                                                         
+			                                                         
+
+		                                                           
+			                                                           
+	 
  
 
 
@@ -2482,12 +2575,12 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 #endif            
 
 #if CLIENT
-void function OnArenasRankedScoreChanged( entity player, int old, int new )
+void function OnArenasRankedScoreChanged( entity player, int new )
 {
 	if ( IsLobby() )
 		return
 
-	if ( old == new && new == SHARED_RANKED_INVALID_RANK_SCORE )                                                                                            
+	if ( new == SHARED_RANKED_INVALID_RANK_SCORE )                                                                                            
 		return
 
 	EHI playerEHI = ToEHI( player )
@@ -2502,12 +2595,12 @@ void function OnArenasRankedScoreChanged( entity player, int old, int new )
 #endif
 
 #if CLIENT
-void function OnArenasRankedLadderPositionChanged( entity player, int old, int new )
+void function OnArenasRankedLadderPositionChanged( entity player, int new )
 {
 	if ( IsLobby() )
 		return
 
-	if ( old == new && new == SHARED_RANKED_INVALID_LADDER_POSITION )                                                                                            
+	if ( new == SHARED_RANKED_INVALID_LADDER_POSITION )                                                                                            
 		return
 
 	EHI playerEHI = ToEHI( player )

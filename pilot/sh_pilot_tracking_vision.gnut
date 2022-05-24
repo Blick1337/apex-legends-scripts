@@ -149,23 +149,21 @@ global enum eTrackingVisionNetworkedPOITypes
 	PLAYER_ABILITY_VALK_ULTIMATE_END,
 	PLAYER_ABILITY_FOCUS_OF_ATTENTION,
 	PLAYER_ABILITY_ECHO_LOCATOR,
-              
 	PLAYER_ABILITY_MAGGIE_RIOT_DRILL_START,
 	PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END,
 	PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START,
 	PLAYER_ABILITY_MAGGIE_WRECKING_BALL_PATH,
 	PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END,
-      
 	PLAYER_ABILITY_ASH_DATAKNIFE_USED,
 	PLAYER_ABILITY_ASH_ENEMY_TETHERED,
 	PLAYER_ABILITY_ASH_PORTAL_ENTER,
 	PLAYER_ABILITY_ASH_PORTAL_EXIT,
 
                  
-                                             
-                                           
-                                              
-                                            
+	PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_START,
+	PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_END,
+	PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_START,
+	PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_END,
       
 	_count,
 }
@@ -246,17 +244,15 @@ int function TrackingVision_GetPriorityForPOIType( int poiEventID )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_ULTIMATE_END:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_FOCUS_OF_ATTENTION:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ECHO_LOCATOR:
-              
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END:
-      
                  
-                                                                                    
-                                                                                  
-                                                                                     
-                                                                                   
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_END:
       
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_ENTER:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_EXIT:
@@ -279,9 +275,7 @@ int function TrackingVision_GetPriorityForPOIType( int poiEventID )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ELEVATOR_ENTER:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ELEVATOR_EXIT:
-              
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_PATH:
-      
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_ENEMY_TETHERED:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_DATAKNIFE_USED:
 			return eTrackingPOIPriority.HIGH
@@ -469,18 +463,16 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_GADGET:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_DROP_GADGET:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ECHO_LOCATOR:
-              
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_PATH:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END:
-      
                  
-                                                                                    
-                                                                                  
-                                                                                     
-                                                                                   
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_END:
       
 			return < 0, 0, 24.0 >
 

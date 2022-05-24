@@ -40,10 +40,8 @@ global function UICallback_OnEquipmentButtonAction
 global function UICallback_OnEquipmentButtonAltAction
 global function UICallback_PingEquipmentItem
 
-                         
 global function UICallback_PingRequestButton
 global function UICallback_UpdateRequestButton
-      
 
                             
 global function UICallback_PingIsMyUltimateReady
@@ -1005,10 +1003,8 @@ int function GetCommsActionForBackpackItem( var button, int position )
 
 				case eAmmoPoolType.sniper:
 					return eCommsAction.INVENTORY_NEED_AMMO_SNIPER
-                      
 				case eAmmoPoolType.arrows:
 					return eCommsAction.INVENTORY_NEED_AMMO_ARROWS
-          
 			}
 		}
 	}
@@ -1016,7 +1012,6 @@ int function GetCommsActionForBackpackItem( var button, int position )
 	return eCommsAction.BLANK
 }
 
-                         
 void function UICallback_UpdateRequestButton( var button )
 {
 	if ( IsLobby() )
@@ -1061,7 +1056,6 @@ void function UICallback_UpdateRequestButton( var button )
 
 	}
 }
-      
 
 void function UICallback_UpdateEquipmentButton( var button )
 {
@@ -1085,11 +1079,9 @@ void function UICallback_UpdateEquipmentButton( var button )
 	RuiSetString( rui, "passiveText", "" )
 	RuiSetImage( rui, "ammoTypeImage", $"" )
 	Hud_ClearToolTipData( button )
-                       
-		RuiSetBool( rui, "hasAltAmmo", false )
-		RuiSetImage( rui, "altAmmoIcon", $"" )
-		RuiSetInt( rui, "altMaxAmmo", 0 )
-       
+	RuiSetBool( rui, "hasAltAmmo", false )
+	RuiSetImage( rui, "altAmmoIcon", $"" )
+	RuiSetInt( rui, "altMaxAmmo", 0 )
 	if ( IsLobby() )
 		return
 
@@ -1271,9 +1263,7 @@ void function EquipmentButtonInit( var button, string equipmentSlot, LootData lo
 			icon = ammoData.hudIcon
 		}
 		RuiSetImage( rui, "ammoTypeImage", icon )
-                        
-			Weapon_UpdateAltAmmoRui(rui, player, weapon, false)
-        
+		Weapon_UpdateAltAmmoRui(rui, player, weapon, false)
 	}
 
 	ToolTipData dt
@@ -1370,7 +1360,6 @@ void function UICallback_PingIsMyUltimateReady( var button )
 }
                                   
 
-                         
 void function UICallback_PingRequestButton ( var button )
 {
 	if ( IsLobby() )
@@ -1395,7 +1384,6 @@ void function UICallback_PingRequestButton ( var button )
 		Quickchat( player, eCommsAction [ commsData ] )
 	}
 }
-      
 
 void function UICallback_PingEquipmentItem( var button )
 {
@@ -2198,9 +2186,6 @@ void function GroundItemsDiff( entity player, array<entity> loot )
 
 		gd.count = currentCount
 		indicesInList[gd.lootData.index] <- IN_SET
-
-		if ( gd.guids.len() == 0 && !gd.isHeader )
-			RunUIScript( "ClientCallback_AddPickedUpGroundListItems", index )
 	}
 
 	table<string, GroundLootData> extras

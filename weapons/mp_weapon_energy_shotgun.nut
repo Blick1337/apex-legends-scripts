@@ -18,7 +18,6 @@ void function OnWeaponActivate_weapon_energy_shotgun( entity weapon )
 {
 	OnWeaponActivate_ReactiveKillEffects( weapon )
 
-                       
 		if ( weapon.HasMod( KINETIC_LOADER_HOPUP ) )
 		{
 #if SERVER
@@ -50,16 +49,13 @@ void function OnWeaponActivate_weapon_energy_shotgun( entity weapon )
 			                                                                                  
 		 
 #endif
-       
 }
 
 void function OnWeaponDeactivate_weapon_energy_shotgun( entity weapon )
 {
 	OnWeaponDeactivate_ReactiveKillEffects( weapon )
 
-                       
-		OnWeaponDeactivate_Kinetic_Loader( weapon )
-       
+	OnWeaponDeactivate_Kinetic_Loader( weapon )
 
 }
 

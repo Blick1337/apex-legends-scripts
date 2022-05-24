@@ -292,7 +292,7 @@ void function ClMinimap_Pre_Init()
 	RegisterDefaultMinimapPackage( "info_hardpoint", $"", MinimapPackage_DummyInit )
 	RegisterDefaultMinimapPackage( "item_powerup", MINIMAP_OBJECT_RUI, MinimapPackage_PowerUp )
                       
-                                                                                     
+	RegisterDefaultMinimapPackage( "prop_control_panel", $"", MinimapPackage_DummyInit )
       
 }
 
@@ -1491,6 +1491,12 @@ bool function MiniMapIsDisabled()
 
 void function Minimap_UpdateMinimapVisibility( entity player )
 {
+	if ( !IsValid( player ) )
+	{
+		Minimap_DisableDraw_Internal()
+		return
+	}
+
 	bool isVisible = true
 
 	int ceFlags = player.GetCinematicEventFlags()

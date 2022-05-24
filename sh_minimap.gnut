@@ -111,7 +111,7 @@ global enum eMinimapObject_prop_script
 		CONTROL_OBJECTIVE,
        
                        
-                
+		SPECTRE_SHACK,
        
 
 	RISING_WALL_DOWN,

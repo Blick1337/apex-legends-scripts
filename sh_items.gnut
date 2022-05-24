@@ -17,7 +17,11 @@ global function GetItemFlavorByNetworkIndex
 global function IsValidItemFlavorSettingsAsset
 global function GetItemFlavorByAsset
 global function IsValidItemFlavorType
+#if DEV
 global function GetAllItemFlavors
+#endif
+global function GetAllItemFlavorsNetworked
+global function GetAllItemFlavorsCosmetic
 global function GetAllItemFlavorsOfType
 global function GetItemFlavorAssociatedCharacterOrWeapon
 global function IsItemFlavorStructValid
@@ -41,8 +45,9 @@ global function ItemFlavor_GetSourceIcon
 global function TEMP_IsItemFlavorEquippable
 global function ItemFlavor_GetTypeUICategory
 #endif
-global function ItemFlavor_GetPlaylistOpinion
+global function ItemFlavor_GetPlaylistAvailability
 global function ItemFlavor_IsAvailableInPlaylist
+global function ItemFlavor_IsItemDisabledForGRX
 global function ItemFlavor_ShouldBeVisible
 global function ItemFlavor_IsActiveForEdition
 global function ItemFlavor_IsTheFavoriteSentinel
@@ -103,8 +108,6 @@ global function ItemFlavor_ChallengesHaveMetaData
 global function ItemFlavor_CalEventsHaveTimeStampMetaData
 global function ItemFlavor_GetMetaData
 
-global function DEV_AreAnyItemflavorsDisabledByPlaylist
-
 global function DEV_DescItemFlavor
 
 #if DEV
@@ -132,7 +135,6 @@ global enum eItemType
 	INVALID,
 
 	                  
-	tagonly
 	entitlement
 
 	                   
@@ -322,25 +324,25 @@ global enum eAccountPackType
 	EVENT_THEMATIC,
 }
 
-global enum eItemFlavorAvailabilityOpinion
+global enum eItemFlavorPlaylistAvailability
 {
 	NONE,                                                                                                       
 	LOCKED,                                                                                                  
 	HIDDEN,                                                                                    
 	DISABLED,                                                                           
 	FORCE_UNLOCK_FOR_SPECIAL_EVENT,                                                                
+	GRX_DISABLED,                                                                                                                      
 }
 
 global struct ItemFlavor
 {
 	SettingsAssetGUID        _____INTERNAL_guid = -1                                                                               
 	int                      _____INTERNAL_typeIndex = -1                                                     
-	int                      _____INTERNAL_index = -1                                                                                                    
+	int                      _____INTERNAL_index = -1                                                                               
 	string                   _____INTERNAL_humanReadableRef = "~INVALID~"                                                                                                                                     
 	int                      _____INTERNAL_grxMode = -1                                        
 	array<int> ornull        _____INTERNAL_grxOwnershipTargettedBy = null                                                                                                
 	int                      _____INTERNAL_grxIndex = -1                                                               
-	int                      _____INTERNAL_availabilityOpinion = eItemFlavorAvailabilityOpinion.NONE                                                                     
 	table<string, string>    _____INTERNAL_metaData = {}                                                                                                                                                                                                                  
 }
 
@@ -367,6 +369,9 @@ global typedef ItemFlavorSet table< ItemFlavor, void >
 global const string CHALLENGE_TIER_COUNT = "tierCount"
 global const string CHALLENGE_TIER_STAT_COUNT = "tier%d_statCount"
 global const string CHALLENGE_TIER_STAT_REF = "tier%d_stat%d"
+                 
+                                                                     
+      
 
                     
 global const string HAS_MYTHIC_PREREQ = "has_mythic_prereq"
@@ -387,9 +392,12 @@ struct FileStruct_LifetimeLevel
 {
 	array<ItemTypeInfo>                   itemTypeInfoList
 	table<string, ItemFlavor>             refItemFlavorMap
-	array<ItemFlavor>                     itemFlavorList                                                                                        
+	#if DEV
+	array<ItemFlavor>                     itemFlavorListAll                                                                                        
+	#endif
+	array<ItemFlavor>					  itemFlavorListNetworked
+	array<ItemFlavor>					  itemFlavorListCosmetic
 	table<SettingsAssetGUID, ItemFlavor>  guidItemFlavorMap
-	bool                                  DEV_areAnyItemflavorsDisabledByPlaylist = false
 
 	array<RegisterItemFlavorsCallbackType>                 registerRootItemFlavorsCallbacks
 	table<int, array<OnItemFlavorRegisteredCallbackType> > itemTypeOnItemFlavorRegisteredCallbackListMap
@@ -398,6 +406,10 @@ struct FileStruct_LifetimeLevel
 	bool isItemRegistrationFinished = false
 	bool hasChallengeMetaData = true
 	bool hasTimestampMetaData = true
+	array<string> itemsWithPlaylistAvailability
+	#if SERVER
+	                                                                                             
+	#endif
 
 	#if DEV
 		bool DEV_hasItemRegistrationStarted = false
@@ -439,6 +451,17 @@ void function ShItems_LevelInit_Begin()
 
 	fileLevel.hasChallengeMetaData = GetCurrentPlaylistVarBool( "has_challenge_meta_data", true )
 	fileLevel.hasTimestampMetaData = GetCurrentPlaylistVarBool( "has_timestamp_meta_data", true )
+	string itemsWithPlaylistAvailabilityOverrides = GetCurrentPlaylistVarString( "items_with_playlist_availability", "" )
+	fileLevel.itemsWithPlaylistAvailability = []
+	fileLevel.itemsWithPlaylistAvailability.extend( split( itemsWithPlaylistAvailabilityOverrides, " " ) )
+
+	#if SERVER
+	                
+	 
+		                                                                                                                            
+		                                               
+	 
+	#endif
 }
 
 
@@ -468,7 +491,7 @@ bool function IsItemFlavorRegistrationFinished()
 array<ItemFlavor> function DEV_GetAllItemFlavors()
 {
 	Assert( IsItemFlavorRegistrationFinished(), "Can't ask for all itemflavors before they are all registered" )
-	return fileLevel.itemFlavorList
+	return fileLevel.itemFlavorListAll
 }
 #endif
 
@@ -593,9 +616,9 @@ ItemFlavor function GetItemFlavorByHumanReadableRef( string ref )
 
 bool function IsValidItemFlavorNetworkIndex( int index, int validationBehavior = eValidation.DONT_ASSERT )
 {
-	bool good = fileLevel.itemFlavorList.isvalidindex( index - 1 )
+	bool good = fileLevel.itemFlavorListNetworked.isvalidindex( index - 1 )
 
-	Assert( good || validationBehavior != eValidation.ASSERT, "Unknown item flavor network index: " + index + " (valid range is 1-" + fileLevel.itemFlavorList.len() + ")" )
+	Assert( good || validationBehavior != eValidation.ASSERT, "Unknown item flavor network index: " + index + " (valid range is 1-" + fileLevel.itemFlavorListNetworked.len() + ")" )
 	return good
 }
 
@@ -604,7 +627,7 @@ ItemFlavor function GetItemFlavorByNetworkIndex( int index )
 {
 	Assert( IsValidItemFlavorNetworkIndex( index, eValidation.ASSERT ) )
 
-	return fileLevel.itemFlavorList[ index - 1 ]
+	return fileLevel.itemFlavorListNetworked[ index - 1 ]
 }
 
 
@@ -642,12 +665,25 @@ bool function IsValidItemFlavorType( int typeIndex, int validationBehavior = eVa
 	return good
 }
 
+#if DEV
 array<ItemFlavor> function GetAllItemFlavors()
 {
 	Assert( fileLevel.isItemRegistrationFinished )
-	return fileLevel.itemFlavorList                                       
+	return fileLevel.itemFlavorListAll                                       
+}
+#endif
+
+array<ItemFlavor> function GetAllItemFlavorsNetworked()
+{
+	Assert( fileLevel.isItemRegistrationFinished )
+	return fileLevel.itemFlavorListNetworked                                       
 }
 
+array<ItemFlavor> function GetAllItemFlavorsCosmetic()
+{
+	Assert( fileLevel.isItemRegistrationFinished )
+	return fileLevel.itemFlavorListCosmetic                                       
+}
 
 array<ItemFlavor> function GetAllItemFlavorsOfType( int typeIndex )
 {
@@ -692,6 +728,7 @@ string function ItemFlavor_GetHumanReadableRef( ItemFlavor flavor )
 int function ItemFlavor_GetNetworkIndex( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
+	Assert( IsItemFlavorTypeNetworked( ItemFlavor_GetType( flavor ) ) )
 	return flavor._____INTERNAL_index
 }
 
@@ -913,22 +950,86 @@ int function ItemFlavor_GetAccountPackType( ItemFlavor pack )
 	return eAccountPackType.APEX                        
 }
 
-int function ItemFlavor_GetPlaylistOpinion( ItemFlavor flavor )
+
+#if SERVER
+                                                      
+ 
+	                                                
+	                   
+
+	              
+	 
+		                                                     
+
+		                                                                                                                     
+		                                            
+		                                                                                                      
+	 
+ 
+#endif
+
+
+                                                                                                           
+int function GetPlaylistAvailabilityByRef( string ref )
+{
+	if ( fileLevel.itemsWithPlaylistAvailability.len() == 0 || fileLevel.itemsWithPlaylistAvailability.contains( ref ) == false )
+		return eItemFlavorPlaylistAvailability.NONE
+
+	string playlistVar = GetCurrentPlaylistVarString( ref, "~none~" ).tolower()
+
+	if ( playlistVar == "~none~" || playlistVar == "enable" )
+		return eItemFlavorPlaylistAvailability.NONE
+
+	                                                                    
+	if ( playlistVar == "disable_grx_ops" )
+		return eItemFlavorPlaylistAvailability.GRX_DISABLED
+
+	if ( playlistVar == "lock" )
+		return eItemFlavorPlaylistAvailability.LOCKED
+
+	if ( playlistVar == "hide" )
+		return eItemFlavorPlaylistAvailability.HIDDEN
+
+	if ( playlistVar == "disable" )
+		return eItemFlavorPlaylistAvailability.DISABLED
+
+	if ( playlistVar == "force_unlock_for_special_event" )
+		return eItemFlavorPlaylistAvailability.FORCE_UNLOCK_FOR_SPECIAL_EVENT
+
+	Assert( false, "Bad value for playlist var \"" + ref + "\": \"" + playlistVar + "\" (must be \"lock\" \"hide\" or \"disable\")" )
+	return eItemFlavorPlaylistAvailability.DISABLED
+}
+
+
+int function ItemFlavor_GetPlaylistAvailability( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
-	return flavor._____INTERNAL_availabilityOpinion
+
+	if ( fileLevel.itemsWithPlaylistAvailability.len() == 0 )
+		return eItemFlavorPlaylistAvailability.NONE
+
+	string ref = ItemFlavor_GetHumanReadableRef( flavor )
+	return GetPlaylistAvailabilityByRef( ref )
 }
 
 
 bool function ItemFlavor_IsAvailableInPlaylist( ItemFlavor flavor )
 {
-	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
-	int op = flavor._____INTERNAL_availabilityOpinion
+	int op = ItemFlavor_GetPlaylistAvailability( flavor )
 
-	if ( op == eItemFlavorAvailabilityOpinion.NONE )
+	if ( op == eItemFlavorPlaylistAvailability.NONE )
 		return true
 
-	if ( op == eItemFlavorAvailabilityOpinion.FORCE_UNLOCK_FOR_SPECIAL_EVENT )
+	if ( op == eItemFlavorPlaylistAvailability.FORCE_UNLOCK_FOR_SPECIAL_EVENT )
+		return true
+
+	return false
+}
+
+
+bool function ItemFlavor_IsItemDisabledForGRX( ItemFlavor flavor )
+{
+	if ( ItemFlavor_GetPlaylistAvailability( flavor ) == eItemFlavorPlaylistAvailability.GRX_DISABLED )
 		return true
 
 	return false
@@ -937,10 +1038,10 @@ bool function ItemFlavor_IsAvailableInPlaylist( ItemFlavor flavor )
 
 bool function ItemFlavor_ShouldBeVisible( ItemFlavor flavor, entity player, int ornull overrideEditionOrNull = null )
 {
-	int availableState = ItemFlavor_GetPlaylistOpinion( flavor )
-	if ( availableState == eItemFlavorAvailabilityOpinion.HIDDEN )
+	int availableState = ItemFlavor_GetPlaylistAvailability( flavor )
+	if ( availableState == eItemFlavorPlaylistAvailability.HIDDEN )
 		return false
-	else if ( availableState == eItemFlavorAvailabilityOpinion.DISABLED )
+	else if ( availableState == eItemFlavorPlaylistAvailability.DISABLED )
 		return false
 
 	int edition
@@ -1080,19 +1181,6 @@ string function ItemQuality_GetQualityName( int quality )
 }
 
 
-                                                  
-   
-  	                           
-  	                                          
-  	 
-  		                                                                          
-  		                                                              
-  		                        
-  	 
-  	           
-   
-
-
                        
                        
                        
@@ -1116,41 +1204,6 @@ string function DEV_DescItemFlavor( ItemFlavor ornull flav, bool short = false )
 #endif
 
 
-int function GetItemFlavorPlaylistOpinion( string ref )
-{
-	string playlistVar = GetCurrentPlaylistVarString( ref, "~none~" ).tolower()
-
-	if ( playlistVar == "~none~" || playlistVar == "enable" )
-		return eItemFlavorAvailabilityOpinion.NONE
-
-	if ( playlistVar == "lock" )
-		return eItemFlavorAvailabilityOpinion.LOCKED
-
-	if ( playlistVar == "hide" )
-		return eItemFlavorAvailabilityOpinion.HIDDEN
-
-	if ( playlistVar == "disable" )
-		return eItemFlavorAvailabilityOpinion.DISABLED
-
-	if ( playlistVar == "force_unlock_for_special_event" )
-		return eItemFlavorAvailabilityOpinion.FORCE_UNLOCK_FOR_SPECIAL_EVENT
-
-	Assert( false, "Bad value for playlist var \"" + ref + "\": \"" + playlistVar + "\" (must be \"lock\" \"hide\" or \"disable\")" )
-	return eItemFlavorAvailabilityOpinion.DISABLED
-}
-
-
-int function CalcItemFlavorAvailabilityOpinion( ItemFlavor flav )
-{
-	if ( ItemFlavor_GetType( flav ) == eItemType.character )
-	{
-		if ( CharacterClass_GetShippingStatus( flav ) == eItemFlavorShippingStatus.WIP_HIDE )
-			return eItemFlavorAvailabilityOpinion.HIDDEN
-	}
-	return flav._____INTERNAL_availabilityOpinion
-}
-
-
 int function GetItemFlavorPlaylistEdition( ItemFlavor flavor )
 {
 	string ref      = ItemFlavor_GetHumanReadableRef( flavor )
@@ -1160,12 +1213,6 @@ int function GetItemFlavorPlaylistEdition( ItemFlavor flavor )
 		return 99999
 
 	return playlistVar
-}
-
-
-bool function DEV_AreAnyItemflavorsDisabledByPlaylist()
-{
-	return fileLevel.DEV_areAnyItemflavorsDisabledByPlaylist
 }
 
 
@@ -1315,7 +1362,6 @@ const string itemSettingsPathPattern = "^settings/itemflav/([^.]+)\\.rpak$"
 ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAsset )
 {
 	                                                                  
-
 	#if DEV
 		fileLevel.DEV_hasItemRegistrationStarted = true
 	#endif
@@ -1324,13 +1370,14 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 		                                                                                        
 	#endif
 
-	string assetPath = string( settingsAsset ).tolower()
 	int guid = GetUniqueIdForSettingsAsset( settingsAsset )
 	if ( guid in fileLevel.guidItemFlavorMap )
 	{
 		                      
 		return fileLevel.guidItemFlavorMap[ guid ]
 	}
+
+	string assetPath = string( settingsAsset )
 	Assert( !fileLevel.isItemRegistrationFinished, "Attempted to register item flavor after registration period ended (" + assetPath + ")" )
 
 	                                                         
@@ -1342,10 +1389,9 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 	Assert( RegexpFindAll( humanReadableRef, "\\W" ).len() == 0, "Weird characters in item flavor human readable ref: " + humanReadableRef + " (only alphanumeric and underscore allowed)" )
 
 	ItemFlavor flavor
-	flavor._____INTERNAL_availabilityOpinion = GetItemFlavorPlaylistOpinion( humanReadableRef )
-	if ( flavor._____INTERNAL_availabilityOpinion == eItemFlavorAvailabilityOpinion.DISABLED )
+
+	if ( GetPlaylistAvailabilityByRef( humanReadableRef ) == eItemFlavorPlaylistAvailability.DISABLED )
 	{
-		fileLevel.DEV_areAnyItemflavorsDisabledByPlaylist = true
 		Warning( "Item flavor disabled by dev-only playlist vars: " + humanReadableRef )
 		Warning( "!!WARNING!! Item flavor disabled by playlist, this is dev-only and should not remain: " + humanReadableRef )
 
@@ -1373,8 +1419,23 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 		format( "Duplicate item GUID: %d (%s and %s)", flavor._____INTERNAL_guid, fileLevel.guidItemFlavorMap[flavor._____INTERNAL_guid]._____INTERNAL_humanReadableRef, humanReadableRef ) )
 	fileLevel.guidItemFlavorMap[flavor._____INTERNAL_guid] <- flavor
 
-	flavor._____INTERNAL_index = (1 + fileLevel.itemFlavorList.len())
-	fileLevel.itemFlavorList.append( flavor )
+	Assert( IsItemFlavorTypeNetworked( flavor._____INTERNAL_typeIndex ) == GetGlobalSettingsBool( settingsAsset, "isNetworked" ), "Script has a different opinion about what's networked than code_root.rson does. This is REALLY bad." )
+	if ( GetGlobalSettingsBool( settingsAsset, "isNetworked" ) )
+	{
+		flavor._____INTERNAL_index = (1 + fileLevel.itemFlavorListNetworked.len())
+		fileLevel.itemFlavorListNetworked.append( flavor )
+	}
+	else
+	{
+		flavor._____INTERNAL_index = 0               
+	}
+
+	if ( IsItemFlavorTypeCosmetic( flavor._____INTERNAL_typeIndex ) )
+		fileLevel.itemFlavorListCosmetic.append( flavor )
+
+	#if DEV
+		fileLevel.itemFlavorListAll.append( flavor )
+	#endif
 
 	fileLevel.refItemFlavorMap[ humanReadableRef ] <- flavor
 
@@ -1388,8 +1449,6 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 		foreach ( OnItemFlavorRegisteredCallbackType cb in fileLevel.itemTypeOnItemFlavorRegisteredCallbackListMap[flavor._____INTERNAL_typeIndex] )
 			cb( flavor )
 	}
-
-	flavor._____INTERNAL_availabilityOpinion = CalcItemFlavorAvailabilityOpinion( flavor )
 
 	#if DEBUG_ITEM_FLAVOR_REGISTRATION
 		                                                                               
@@ -1904,11 +1963,33 @@ array<ItemFlavor> function FilterItemFlavorsByType( array<ItemFlavor> list, int 
 	return results
 }
 
-                              
-                                  
-                                              
-                                         
-  
+bool function IsItemFlavorTypeNetworked( int typeFilter )
+{
+	switch( typeFilter )
+	{
+		case eItemType.character:
+		case eItemType.character_skin:
+		case eItemType.character_emote:
+		case eItemType.weapon_skin:
+		case eItemType.weapon_charm:
+                 
+                         
+       
+			return true
+
+		default:
+			return false
+	}
+
+	unreachable
+}
+
+bool function IsItemFlavorTypeCosmetic( int typeFilter )
+{
+	                                                                            
+	return typeFilter > eItemType.grx_sentinel && typeFilter < eItemType.__loot_start
+}
+
 table<string, string> function GetChallengeMetaDataFromAsset( asset settingsAsset )
 {
 	table<string, string> metaData = {}
@@ -1923,7 +2004,11 @@ table<string, string> function GetChallengeMetaDataFromAsset( asset settingsAsse
 		var tierBlock       	= GetSettingsArrayElem( tierDataArray, i )
 
 		string specifiedStatRef = GetSettingsBlockString( tierBlock, "statRef" )
-		array<string> statRefs  = []
+
+                  
+                                                                                
+       
+		                                         
 		int statCount = 0
 		string tempKey = ""
 
@@ -1934,30 +2019,30 @@ table<string, string> function GetChallengeMetaDataFromAsset( asset settingsAsse
 			{
 				asset characterAsset = GetSettingsBlockAsset( characterBlock, "flavor" )
 				string tempStat = StringReplace( specifiedStatRef, "%char%", format( "SAID%011d", GetUniqueIdForSettingsAsset( characterAsset ) ) )
-				statRefs.append( tempStat )
+                    
+                                                                                                                                             
+         
+				                             
 				tempKey = format( CHALLENGE_TIER_STAT_REF, i, statCount )
 				metaData[tempKey] <- tempStat
+                    
+                                                                 
+                                    
+         
 				statCount++
 			}
 			tempKey = format( CHALLENGE_TIER_STAT_COUNT, i )
 			metaData[tempKey] <- string(statCount)
 		}
-		else if ( specifiedStatRef.find( "%weap%" ) > -1 )
-		{
-			asset weaponAsset = GetSettingsBlockAsset( tierBlock, "weapon" )
-			string tempStat = StringReplace( specifiedStatRef, "%weap%", format( "SAID%011d", GetUniqueIdForSettingsAsset( weaponAsset ) ) )
-			statRefs.append( tempStat )
-			tempKey = format( CHALLENGE_TIER_STAT_REF, i, statCount )
-			metaData[tempKey] <- tempStat
-			statCount++
-			tempKey = format( CHALLENGE_TIER_STAT_COUNT, i )
-			metaData[tempKey] <- string(statCount)
-		}
 		else
 		{
-			statRefs.append( specifiedStatRef )
+			                                     
 			tempKey = format( CHALLENGE_TIER_STAT_REF, i, statCount )
 			metaData[tempKey] <- specifiedStatRef
+                   
+                                                                
+                                           
+        
 			statCount++
 			tempKey = format( CHALLENGE_TIER_STAT_COUNT, i )
 			metaData[tempKey] <- string(statCount)
@@ -2076,9 +2161,13 @@ bool function IsCalEvent( int itemType )
 		                                                             
 		                                                        
 		 
+			                                       
+			                                             
+				                                                             
+
 			       
 				                                        
-				                                     
+				             
 				                            
 			 
 		 

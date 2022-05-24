@@ -192,18 +192,18 @@ global enum eSurvivalCommentaryBucket
 	MATCH_INTRO,
 
                       
-	ENEMY_CAP_TRAIN,
-	SEASONS_GREETINGS,
-	ROUND_WIN_BY_ELIM,
-	TIME_EXPIRED,
-	TRAIN_MOVING,
-	TRAIN_STOP,
-	WINNER_CLOSE_POINTS,
-	TIME_ALMOST_EXPIRED,
-	NARROW_WINNER,
-	WIDE_WINNER,
-	YOU_WINNER,
-	PHONE_LOST,
+                 
+                   
+                   
+              
+              
+            
+                     
+                     
+               
+             
+            
+            
                             
 
                 
@@ -247,32 +247,20 @@ global enum eSurvivalCommentaryBucket
                    
                                     
 
-	GAMECHANGER_INBOUND,
-	GAMECHANGER_DELIVER,
-	GAMECHANGER_INITIALIZE,
-	GAMECHANGER_INTRO,
-	GAMECHANGER_READY,
-	GAMECHANGER_INPROGRESS,
-	GAMECHANGER_INEFFECT,
-	WINNER_HAS_FUSE,
-	NEW_KILL_LEADER_HAS_FUSE,
-	FIRST_BLOOD_HAS_FUSE,
-	INTRO_CHAMPION_CARD_HAS_FUSE,
-	VICTORY_APEX_CHAMP_HAS_FUSE,
 	VICTORY_APEX_CHAMP_SOLO_YOU,
 	VICTORY_APEX_CHAMP_SQUAD_YOU,
 
 	FIRST_BLOOD_HAS_REV,
 
                       
-                         
-                        
-                       
-                   
-                   
-                     
-                
-                 
+	ARMORY_ACCESS_REQUESTED,
+	ARMORY_THREAT_DETECTED,
+	ARMORY_WAVE_ACTIVATED,
+	ARMORY_30_SECONDS,
+	ARMORY_10_SECONDS,
+	ARMORY_PANIC_BUTTON,
+	ARMORY_SUCCESS,
+	ARMORY_REDEPLOY,
       
 
                         
@@ -292,6 +280,9 @@ global enum eSurvivalCommentaryBucket
 	CONTROL_B_NEUTRALIZED,
 	CONTROL_C_CAPTURED,
 	CONTROL_C_NEUTRALIZED,
+	CONTROL_LOCKOUT_BEGIN,
+	CONTROL_LOCKOUT_COMPLETE,
+	CONTROL_LOCKOUT_BROKEN,
        
 
 	_count

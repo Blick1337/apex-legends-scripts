@@ -9,6 +9,8 @@ global function ServerCallback_AdDroneKillBillboardVFX
 
 #if SERVER
                                                 
+                                                      
+                                                         
 #endif          
 
 #if DEV && SERVER
@@ -17,7 +19,8 @@ global function ServerCallback_AdDroneKillBillboardVFX
 
 global const asset AD_DRONE_MODEL = $"mdl/props/loot_drone/loot_drone.rmdl"
 global const asset AD_DRONE_BILLBOARD_PROJECTOR_MODEL = $"mdl/props/loot_projector/loot_projector.rmdl"
-global const float AD_DRONE_HEALTH_MAX = 225.0
+global const float AD_DRONE_HEALTH_MAX = 450.0
+global const float AD_DRONE_ROLL = 9.0
 
 global const asset AD_DRONE_FX_EXPLOSION = $"P_loot_drone_explosion"
 global const asset AD_DRONE_BILLBOARD_PROJECTOR_FX_EXPLOSION = $"P_drone_ads_destroy"
@@ -35,9 +38,6 @@ const asset AD_DRONE_BILLBOARD_5 = $"P_drone_ads_paradinha"
 const asset AD_DRONE_BILLBOARD_6 = $"P_drone_ads_powerizer"
 const asset AD_DRONE_BILLBOARD_7 = $"P_drone_ads_silva"
 const asset AD_DRONE_BILLBOARD_8 = $"P_drone_ads_ziptec"
-              
-const asset AD_DRONE_BILLBOARD_9 = $"P_drone_ads_heshere"
-      
 
 global const string AD_DRONE_LIVING_SOUND = "LootDrone_Mvmt_Flying"
 global const string AD_DRONE_DEATH_SOUND = "LootDrone_KillShot"
@@ -68,11 +68,12 @@ struct
 {
 	array< asset > availableAdDroneBillboardVFX
 	#if CLIENT
-		table<entity, int> projectorModelToBillboardVFX
+		table<entity, int> projectorModelToBillboardVFXTable
 	#endif          
 
 	#if SERVER
 		                                      
+		                                                      
 	#endif          
 } file
 
@@ -88,16 +89,15 @@ void function ShAdDrones_Init()
 	PrecacheParticleSystem( AD_DRONE_FX_TRAIL_FALL )
 
 	file.availableAdDroneBillboardVFX = [ AD_DRONE_BILLBOARD_1, AD_DRONE_BILLBOARD_2, AD_DRONE_BILLBOARD_3, AD_DRONE_BILLBOARD_4, AD_DRONE_BILLBOARD_5, AD_DRONE_BILLBOARD_6, AD_DRONE_BILLBOARD_7, AD_DRONE_BILLBOARD_8 ]
-               
-	                                                                                                                                     
-	if ( S12E06_IsEnabled() )
-		file.availableAdDroneBillboardVFX.append( AD_DRONE_BILLBOARD_9 )
-       
 
 	foreach ( particleSystem in file.availableAdDroneBillboardVFX )
 	{
 		PrecacheParticleSystem( particleSystem )
 	}
+
+	#if SERVER
+		                                                                             
+	#endif          
 }
 
 #if SERVER
@@ -119,30 +119,79 @@ void function ShAdDrones_Init()
 
 	                     
  
+
+                                              
+                                                                             
+ 
+	                                
+	 
+		                                                          
+		                                                                               
+		                                                                                                             
+		                                      
+		 
+			                        
+			 
+				                                                                                                                   
+			 
+		 
+	 
+ 
+
+                                                                                    
+                                                                                
+ 
+	                                                                 
+		                                                                 
+
+	                                      
+	 
+		                        
+			                                                                                                 
+	 
+ 
+
+                                                                                             
+                                                                  
+ 
+	                        
+	 
+		                                                                          
+		                                                                 
+		 
+			                     
+				                                                                                            
+		 
+	 
+ 
 #endif          
 
 #if CLIENT
 void function ServerCallback_AdDroneSetBillboardVFX( entity projectorEnt, int billboardToDisplay )
 {
-	printf( "AdDroneClientDebug: ServerCallback_AdDroneSetBillboardVFX" )
+	printf( "AdDrone: ServerCallback_AdDroneSetBillboardVFX" )
+
+	if ( !IsValid( projectorEnt ) )
+		return
+
+	if ( billboardToDisplay < 0 || billboardToDisplay >= file.availableAdDroneBillboardVFX.len() )
+		return
+
 	AdDroneSetBillboardVFX( projectorEnt, billboardToDisplay )
 }
 
 void function AdDroneSetBillboardVFX( entity projectorEnt, int billboardToDisplay )
 {
-	if ( billboardToDisplay < 0 || billboardToDisplay >= file.availableAdDroneBillboardVFX.len() )
-		return
-
 	int fxId = GetParticleSystemIndex( file.availableAdDroneBillboardVFX[ billboardToDisplay ] )
 	int billboardFXHandle = StartParticleEffectOnEntity( projectorEnt, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
-	file.projectorModelToBillboardVFX[ projectorEnt ] <- billboardFXHandle
+	file.projectorModelToBillboardVFXTable[ projectorEnt ] <- billboardFXHandle
 }
 
 void function ServerCallback_AdDroneKillBillboardVFX( entity projectorEnt )
 {
-	if ( projectorEnt in file.projectorModelToBillboardVFX )
+	if ( projectorEnt in file.projectorModelToBillboardVFXTable )
 	{
-		int fxHandle = file.projectorModelToBillboardVFX[ projectorEnt ]
+		int fxHandle = file.projectorModelToBillboardVFXTable[ projectorEnt ]
 		if ( EffectDoesExist( fxHandle ) )
 			EffectStop( fxHandle, false, true )
 	}
@@ -213,6 +262,7 @@ void function AdDrones_SetAdDroneTrailFXType( entity droneEnt, int trailType )
 	 
 		                                                                                                                                                                
 		 
+			                                                                            
 			                                      
 			 
 				                        

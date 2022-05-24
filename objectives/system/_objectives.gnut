@@ -534,7 +534,7 @@ void function InitObjectiveTypes()
 	InitObjectiveType_NightrunLinearAssultFixedDefend()
 
                            
-                                  
+	InitObjectiveType_DropDownFight()
        
 
                      
@@ -542,7 +542,7 @@ void function InitObjectiveTypes()
                            
 
                                                     
-                                
+	InitObjectiveType_ShackAttack()
        
 
                   
@@ -631,7 +631,7 @@ void function ObjectiveSystem_RegisterNetworking()
 
   
 #if CLIENT
-void function OnVarChanged_InsideObjectiveFields( entity player, int oldVal, int newVal )
+void function OnVarChanged_InsideObjectiveFields( entity player, int newVal )
 {
 	if ( !(newVal in s_objectiveMainWPMap) )
 		return

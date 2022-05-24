@@ -353,19 +353,19 @@ void function ShApexScreens_Init()
 		RegisterNetworkedVariable( format( "ApexScreensMasterState_Pos%d_Player", screenPosition ), SNDC_GLOBAL, SNVT_BIG_INT, -1 )
 
 		#if CLIENT
-			RegisterNetworkedVariableChangeCallback_time( format( "ApexScreensMasterState_Pos%d_CommenceTime", screenPosition ), void function( entity unused, float old, float new ) : (screenPosition) {
+			RegisterNetworkedVariableChangeCallback_time( format( "ApexScreensMasterState_Pos%d_CommenceTime", screenPosition ), void function( entity unused, float new ) : (screenPosition) {
 				file.screenPositionMasterStates[screenPosition].commenceTime = new
 				UpdateAllScreensContent()
 			} )
-			RegisterNetworkedVariableChangeCallback_int( format( "ApexScreensMasterState_Pos%d_ModeIndex", screenPosition ), void function( entity unused, int old, int new ) : (screenPosition) {
+			RegisterNetworkedVariableChangeCallback_int( format( "ApexScreensMasterState_Pos%d_ModeIndex", screenPosition ), void function( entity unused, int new ) : (screenPosition) {
 				file.screenPositionMasterStates[screenPosition].modeIndex = new
 				UpdateAllScreensContent()
 			} )
-			RegisterNetworkedVariableChangeCallback_int( format( "ApexScreensMasterState_Pos%d_TransitionStyle", screenPosition ), void function( entity unused, int old, int new ) : (screenPosition) {
+			RegisterNetworkedVariableChangeCallback_int( format( "ApexScreensMasterState_Pos%d_TransitionStyle", screenPosition ), void function( entity unused, int new ) : (screenPosition) {
 				file.screenPositionMasterStates[screenPosition].transitionStyle = new
 				UpdateAllScreensContent()
 			} )
-			RegisterNetworkedVariableChangeCallback_int( format( "ApexScreensMasterState_Pos%d_Player", screenPosition ), void function( entity unused, int old, int new ) : (screenPosition) {
+			RegisterNetworkedVariableChangeCallback_int( format( "ApexScreensMasterState_Pos%d_Player", screenPosition ), void function( entity unused, int new ) : (screenPosition) {
 				file.screenPositionMasterStates[screenPosition].playerEHI = new
 				UpdateAllScreensContent()
 			} )
@@ -374,11 +374,8 @@ void function ShApexScreens_Init()
 
 	RegisterNetworkedVariable( NV_ApexScreensEventTimeA, SNDC_GLOBAL, SNVT_TIME, -1 )
 	#if CLIENT
-		RegisterNetworkedVariableChangeCallback_time( NV_ApexScreensEventTimeA, void function( entity unused, float oldTime, float newTime )
+		RegisterNetworkedVariableChangeCallback_time( NV_ApexScreensEventTimeA, void function( entity unused, float newTime )
 		{
-			if ( oldTime == newTime )
-				return
-
 			OnUpdateApexScreensEventTime( newTime )
 		} )
 	#endif          
@@ -1528,10 +1525,6 @@ bool function OnEnumStaticPropRui( StaticPropRui staticPropRuiInfo )
 
 	file.staticScreenList.append( apexScreen )
 	file.magicIdScreenStateMap[apexScreen.magicId] <- apexScreen
-
-	#if NX_PROG
-		apexScreen.rui = CreateBlankApexScreenRUIElement( apexScreen )
-	#endif
 
 	if ( apexScreen.sharesPropWithEnvironmentalRUI )
 		return false                                                                                                                 

@@ -91,9 +91,7 @@ struct
 
 	string chargeCompleteSound
 
-                        
 	MarksmansTempoSettings& bowTempoSettings
-       
 
 	table<string, array<asset> > fxLightAssets1p
 
@@ -182,7 +180,6 @@ void function OnWeaponActivate_weapon_bow( entity weapon )
 
 		file.chargeCompleteSound = GetWeaponInfoFileKeyField_GlobalString( "mp_weapon_bow", CHARGE_COMPLETE_SOUND_SETTING )
 
-                         
 		MarksmansTempoSettings settings
 		settings.requiredShots             = GetWeaponInfoFileKeyField_GlobalInt( "mp_weapon_bow", MARKSMANS_TEMPO_REQUIRED_SHOTS_SETTING )
 		settings.graceTimeBuildup          = GetWeaponInfoFileKeyField_GlobalFloat( "mp_weapon_bow", MARKSMANS_TEMPO_GRACE_TIME_SETTING )
@@ -192,7 +189,6 @@ void function OnWeaponActivate_weapon_bow( entity weapon )
 		settings.fadeoffOnFire             = GetWeaponInfoFileKeyField_GlobalFloat( "mp_weapon_bow", MARKSMANS_TEMPO_FADEOFF_ON_FIRE_SETTING )
 		settings.weaponDeactivateSignal    = BOW_DEACTIVATE_SIGNAL
 		file.bowTempoSettings              = settings
-        
 
 		file.centerDotHelperMinChargeLvl           = GetWeaponInfoFileKeyField_GlobalInt( "mp_weapon_bow", CENTER_DOT_MIN_CHARGE_SETTING )
 		file.centerDotHelperMinChargeLvlOpticClamp = GetWeaponInfoFileKeyField_GlobalInt( "mp_weapon_bow", CENTER_DOT_MIN_CHARGE_SETTING + "_optic_clamp" )
@@ -217,7 +213,7 @@ void function OnWeaponActivate_weapon_bow( entity weapon )
 
 	entity player = weapon.GetWeaponOwner()
 
-                       
+
 	thread ShatterRounds_UpdateShatterRoundsThink( weapon )
 	#if SERVER
 		                                               
@@ -225,11 +221,7 @@ void function OnWeaponActivate_weapon_bow( entity weapon )
 		    
 			                                              
 	#endif
-       
-
-                        
 	thread MarksmansTempo_OnActivate( weapon, file.bowTempoSettings )
-       
 }
 
 void function OnWeaponDeactivate_weapon_bow( entity weapon )
@@ -237,18 +229,15 @@ void function OnWeaponDeactivate_weapon_bow( entity weapon )
 	ClearChargeAndDmgLevelMods( weapon )
 	#if CLIENT
 		weapon.Signal( BOW_DEACTIVATE_SIGNAL )
-                        
+
 		weapon.Signal( SHATTER_ROUNDS_THINK_END_SIGNAL )
 
 		#if SERVER
 			                                                             
 		#endif
-        
-	#endif
 
-                        
-		MarksmansTempo_OnDeactivate( weapon, file.bowTempoSettings )
-       
+	#endif
+	MarksmansTempo_OnDeactivate( weapon, file.bowTempoSettings )
 }
 
 var function OnWeaponPrimaryAttack_weapon_bow( entity weapon, WeaponPrimaryAttackParams attackParams )
@@ -288,9 +277,8 @@ var function OnWeaponPrimaryAttack_weapon_bow( entity weapon, WeaponPrimaryAttac
 	speedMultiplier /= baseSpeed		                                                                                                                    
 	weapon.FireWeapon_Default( attackParams.pos, attackParams.dir, speedMultiplier, 1.0, ignoreSpread )
 
-                        
-		MarksmansTempo_OnFire( weapon, file.bowTempoSettings, true )
-       
+
+	MarksmansTempo_OnFire( weapon, file.bowTempoSettings, true )
 
 	thread ClearChargeAfterFrame( weapon )
 
@@ -364,10 +352,7 @@ bool function OnWeaponChargeBegin_weapon_bow( entity weapon )
 		PlayChargeFX( player, weapon )
 	#endif
 
-                        
 	MarksmansTempo_AbortFadeoff( weapon, file.bowTempoSettings )
-       
-
 	return true
 }
 
@@ -393,10 +378,7 @@ bool function OnWeaponChargeLevelIncreased_weapon_bow( entity weapon )
 			}
 		#endif
 
-
-                         
-			MarksmansTempo_SetPerfectTempoMoment( weapon, file.bowTempoSettings, player, Time(), true )
-        
+		MarksmansTempo_SetPerfectTempoMoment( weapon, file.bowTempoSettings, player, Time(), true )
 	}
 
 	                                           

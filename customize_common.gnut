@@ -9,6 +9,7 @@ global function CustomizeButton_UpdateAndMarkForUpdating
 global function CustomizeButton_UnmarkForUpdating
 global function CustomizeButton_GetItemFlavor
 global function CustomizeMenus_GetCollectedString
+global function CustomizeMenus_GetOwnedCount
 global function CustomizeMenus_IsFocusedItem
 global function CustomizeMenus_IsFocusedItemParentItemLocked
 global function CustomizeMenus_IsFocusedItemEquippable
@@ -314,6 +315,22 @@ string function CustomizeMenus_GetCollectedString( LoadoutEntry entry, array<Ite
 	}
 
 	return Localize( "#COLLECTED_ITEMS", owned, total )
+}
+#endif
+
+
+#if UI
+int function CustomizeMenus_GetOwnedCount( LoadoutEntry entry, array<ItemFlavor> itemList, bool ignoreDefaultItemForCount, bool shouldIgnoreOtherSlots )
+{
+	int numOwned = GetUnlockedItemFlavorsForLoadoutSlot( LocalClientEHI(), entry, shouldIgnoreOtherSlots ).len()
+
+	if ( ignoreDefaultItemForCount )
+		numOwned--
+
+	if ( itemList.contains( entry.favoriteItemFlavor ) )
+		numOwned--
+
+	return numOwned
 }
 #endif
 
@@ -629,7 +646,11 @@ void function CustomizeButton_OnRightClick( var button )
 {
 	CustomizeButtonContext cbc = fileLevel.activeCustomizeButtons[button]
 
+                 
+                                                                                                 
+      
 	if ( cbc.loadoutEntries.len() > 1 )
+       
 	{
 		                                   
 		bool wasEquipped = false
@@ -645,6 +666,15 @@ void function CustomizeButton_OnRightClick( var button )
 					if ( GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "isTheEmpty" ) )
 					{
 						RequestSetItemFlavorLoadoutSlot( LocalClientEHI(), loadoutEntry, flavor )
+
+                      
+                                                                                                   
+       
+                                  
+                            
+       
+                            
+
 						break
 					}
 				}
@@ -880,6 +910,9 @@ int function CalcCanEquipCanBuyStatus( CustomizeButtonContext cbc )
 
 	if ( cbc.getItemCanEquipCanBuyStatusFunc != null )
 		canEquipCanBuyStatus = cbc.getItemCanEquipCanBuyStatusFunc( cbc.itemFlavor )
+
+	if ( ItemFlavor_IsItemDisabledForGRX( cbc.itemFlavor ) )
+		canEquipCanBuyStatus = eItemCanEquipCanBuyStatus.CAN_EQUIP_CANNOT_BUY
 
 	bool shouldIgnoreOtherSlots = true
 	if ( !IsItemFlavorUnlockedForLoadoutSlot( LocalClientEHI(), cbc.loadoutEntries[ 0 ], cbc.itemFlavor, false, shouldIgnoreOtherSlots ) )
@@ -1126,7 +1159,7 @@ void function UpdateCustomizeItemButton( CustomizeButtonContext cbc, bool justAd
 			                                            
 			if ( ifpi.craftingOfferOrNull != null )
 			{
-				GRXScriptOffer offer = expect GRXScriptOffer(ifpi.craftingOfferOrNull)
+				GRXScriptOffer offer = GRX_ScriptOfferFromCraftingOffer( expect GRXScriptCraftingOffer(ifpi.craftingOfferOrNull) )
 				Assert( offer.prices.len() == 1 )
 				Assert( offer.prices[0].flavors[0] == GRX_CURRENCIES[GRX_CURRENCY_CRAFTING] )
 

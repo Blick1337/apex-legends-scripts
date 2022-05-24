@@ -3,7 +3,6 @@ global function ShFlyers_Init
 global function IsFlyerThatStillHasDeathBox
 global function GetDeathBoxFromFlyer
 
-
 global const FLYER_MODEL = $"mdl/Creatures/flyer/flyer_kingscanyon_animated.rmdl"
 const FLYER_1000X_MODEL = $"mdl/Creatures/flyer/flyer_kingscanyon_animated.rmdl"
 const FLYER_500X_MODEL = $"mdl/Creatures/flyer/flyer_kingscanyon_animated.rmdl"
@@ -80,7 +79,6 @@ struct TestFlyerSpawnDataStruct
 global function IsFlyer
 global function IsCagedFlyer
 global function IsDeathboxFlyer
-
 
 enum perchedFlyerState
 {
@@ -323,37 +321,40 @@ bool function EvilFlyersEnabled()
 		                                                       
 		                                                                          
 
-		                                                                       
-		                                                       
-		                      
-		                
-		                    
-		                                    
-		                                                            
-		                                              
-
-		                                              
+		                                               
+		                         
 		 
+			                                                       
+			                      
+			                
+			                    
+			                                    
+			                                                            
+			                                              
+
+			                                              
+			 
+				                                     
+				                                                                                                                   
+			 
+
+			                                                                          
+
+			                                                                      
+
 			                                     
-			                                                                                                                   
+			 
+				                                                                                               
+			 
+
+			                                                            
+
+                            
+				                                                     
+         
+
+			                                  
 		 
-
-		                                                                          
-
-		                                                                      
-
-		                                     
-		 
-			                                                                                               
-		 
-
-		                                                            
-
-                           
-			                                                     
-        
-
-		                                  
 
 		                                                 
 			                                                                   
@@ -638,9 +639,41 @@ bool function EvilFlyersEnabled()
 
 	                              
 	                                                                   
+	                                                                            
 	                               
 	                                                                                         
+	                                           
 	                                            
+	 
+		                                                               
+
+		                                                                                                                   
+			     
+
+		                                                   
+		                      
+		                                                                     
+		                                                         
+		 
+			                                                                                                 
+			 
+				                  
+				     
+			 
+		 
+
+		                 
+		 
+			                                   
+			                                                                               
+			                                                     
+		 
+		                                                        
+	 
+
+	                                                                                                                
+	                                                    
+	                                                           
 	 
 		                                                      
 
@@ -1375,13 +1408,22 @@ void function ServerCallback_PlayLootRarityFXOnDeathboxDrop( entity deathBox  )
 
 void function PlayLootRarityFXOnDeathboxDrop_threaded( entity deathBox  )
 {
+	                                                           
+	bool bDeathBoxIsValid = IsValid( deathBox )
+	Assert( bDeathBoxIsValid, "ERROR: Deathbox Invalid!" )
+
+	if( !bDeathBoxIsValid )
+	{
+		return
+	}
+
 	EndSignal( deathBox, "OnDeath" )
 	EndSignal( deathBox, "OnDestroy" )
 
-	int fxID = GetParticleSystemIndex( DEATHBOX_DROP_FX )
+	int fxID         = GetParticleSystemIndex( DEATHBOX_DROP_FX )
 	vector boxOrigin = deathBox.GetOrigin()
-	int deatboxTier = deathBox.GetNetInt( "lootRarity"  )
-	vector colorVec = GetFXRarityColorForTier( deatboxTier )
+	int deatboxTier  = deathBox.GetNetInt( "lootRarity" )
+	vector colorVec  = GetFXRarityColorForTier( deatboxTier )
 
 	int deathBoxFX = StartParticleEffectOnEntity( deathBox, fxID, FX_PATTACH_POINT_FOLLOW, deathBox.LookupAttachment( "FX_CENTER" ) )
 	EffectSetControlPointVector( deathBoxFX, 1, colorVec )
@@ -1389,15 +1431,12 @@ void function PlayLootRarityFXOnDeathboxDrop_threaded( entity deathBox  )
 	OnThreadEnd(
 		function() : ( deathBoxFX )
 		{
-			if ( EffectDoesExist( deathBoxFX  )  )
+			if ( EffectDoesExist( deathBoxFX ) )
 				EffectStop( deathBoxFX, true, true )
 		}
 	)
-
 	wait 1.0
-
 }
-
 
                                                
 void function OnEvilFlyerCreated( entity ent )

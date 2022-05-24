@@ -47,10 +47,8 @@ global function GetPingedEntForLocWaypoint
                                         
                                             
                                                
-
-                      
                                                    
-      
+
 
                                    
 
@@ -151,7 +149,7 @@ global enum eWaypoint
        
 
                        
-		TRAIN,
+        
        
 		OBJECTIVE,
 
@@ -178,7 +176,7 @@ global enum eWaypoint
 	VOID_RING_TROPHY_LIFE,
 
                   
-                                  
+		NEWCASTLE_MOBILE_SHIELD_LOCATOR,
        
 
                
@@ -186,12 +184,17 @@ global enum eWaypoint
        
 	DEATHBOX_NETWORK,
                        
-                      
+		SPECTRE_SHACK_TIMER,
        
 
                          
 		CONTROL_OBJECTIVE,
        
+
+                    
+              
+       
+
 		ABILITY_ECHO_LOCATOR,
 	_count
 }
@@ -405,9 +408,9 @@ void function PlayerWaypoint_CreateCallback( entity wp )
 
                       
 
-		case eWaypoint.TRAIN:
-			InstanceWP_WinterExpress_Train( wp )
-			break
+                       
+                                       
+        
       
 		case eWaypoint.OBJECTIVE:
 			InstanceObjectivePing( wp )
@@ -867,14 +870,13 @@ void function InstanceWP_Basic( entity wp )
 
 				wp.wp.ruiFullmap = rui
 				Fullmap_AddRui( rui )
-                        
-					                                                                                                                                               
-					                                                                                                                                                                         
-					if ( IsUsingProximityAllianceMembers() )
-					{
-						thread ManageTeamProximity_IconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )                                                                                    
-					}
-                              
+
+				                                                                                                                                               
+				                                                                                                                                                                         
+				if ( IsUsingProximityAllianceMembers() )
+				{
+					thread ManageTeamProximity_IconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )                                                                                    
+				}
 			}
 		}
 	}
@@ -1236,37 +1238,37 @@ void function InstanceWP_Button( entity wp )
       
 
                       
-void function InstanceWP_WinterExpress_Train( entity wp )
-{
-	entity train = wp.GetParent()
+                                                         
+ 
+                              
 
-	var wRui = CreateWaypointRui( $"ui/waypoint_basic_entpos.rpak", 200 )
-	SetWaypointRui_HUD( wp, wRui )
-	RuiKeepSortKeyUpdated( wRui, true, "targetPos" )
-	RuiSetFloat( wRui, "iconSize", 100.0 )
-	RuiSetFloat( wRui, "iconSizePinned", 120.0 )
-	RuiSetBool( wRui, "useInactiveScalar", false )
-	RuiSetBool( wRui, "completeADSFade", true )
-	RuiSetFloat( wRui, "fadeDistNear", 150.0 )
-	RuiSetFloat( wRui, "fadeDistFar", 600.0 )
-	RuiTrackFloat3( wRui, "playerAngles", GetLocalViewPlayer(), RUI_TRACK_CAMANGLES_FOLLOW )
-	RuiSetFloat3( wRui, "targetOffset", <0, 0, 46> )
+                                                                      
+                               
+                                                 
+                                       
+                                             
+                                               
+                                            
+                                           
+                                          
+                                                                                         
+                                                 
 
-	var fRui = FullMap_CommonAdd( $"ui/in_world_minimap_square_simple.rpak" )
-	wp.wp.ruiFullmap = fRui
-	Fullmap_AddRui( fRui )
-	RuiSetFloat( fRui, "objectSize", FULLMAP_SIZE_SMALL )
-	RuiSetBool( fRui, "doAnnounceEffect", true )
+                                                                          
+                        
+                       
+                                                      
+                                             
 
-	RuiTrackFloat3( wRui, "targetPos", train, RUI_TRACK_OVERHEAD_FOLLOW )
-	RuiTrackFloat3( fRui, "objectPos", train, RUI_TRACK_OVERHEAD_FOLLOW )
+                                                                      
+                                                                      
 
-	RuiSetImage( wRui, "iconImage", $"rui/hud/gametype_icons/survival/sur_hovertank_minimap_destination_desaturated" )
-	RuiSetImage( fRui, "iconImage", $"rui/hud/gametype_icons/survival/sur_hovertank_minimap_destination_desaturated" )
+                                                                                                                   
+                                                                                                                   
 
-	RuiTrackGameTime( wRui, "fadeOutEndTime", wp, RUI_TRACK_WAYPOINT_GAMETIME, 0 )
-	RuiTrackGameTime( fRui, "fadeOutEndTime", wp, RUI_TRACK_WAYPOINT_GAMETIME, 0 )
-}
+                                                                               
+                                                                               
+ 
       
 
 #endif          
@@ -1995,16 +1997,14 @@ void function InstanceLocationPing( entity wp )
 
 	int pingType    = Waypoint_GetPingTypeForWaypoint( wp )
 
-                     
-		                                                                                                                                               
-		                                                                                                                                                               
-		                                                                                                                 
-		if ( IsUsingProximityAllianceMembers() && !IsPVEMode() )
-		{
-			if ( Control_GetAllianceFromTeam( viewPlayer.GetTeam() ) != Control_GetAllianceFromTeam( wp.GetTeam() ) && pingType != ePingType.SPAWN_REGION )
-				return
-		}
-                           
+	                                                                                                                                               
+	                                                                                                                                                               
+	                                                                                                                 
+	if ( IsUsingProximityAllianceMembers() && !IsPVEMode() )
+	{
+		if ( Control_GetAllianceFromTeam( viewPlayer.GetTeam() ) != Control_GetAllianceFromTeam( wp.GetTeam() ) && pingType != ePingType.SPAWN_REGION )
+			return
+	}
 
 	entity wpParent = wp.GetParent()
 	if ( viewPlayer == wpParent && pingType == ePingType.BLEEDOUT )
@@ -2156,7 +2156,6 @@ void function InstanceLocationPing( entity wp )
 				completeAdsFade = false
 			}
 
-                       
 			                                                                                                                                                                                                          
 			if ( IsUsingProximityAllianceMembers() )
 			{
@@ -2164,7 +2163,6 @@ void function InstanceLocationPing( entity wp )
 				RuiSetImage( rui, "animImage", $"rui/hud/unitframes/frame_status_fill" )
 				RuiSetString( rui, "topLabelText", Localize( "#REVIVE" ).toupper() )
 			}
-                             
 
 			endTime = wp.GetWaypointGametime( GAMETIME_INDEX_PING_COMMON_COUNTDOWN )
 			RuiSetGameTime( rui, "startTime", endTime - Bleedout_GetBleedoutTime( owner ) )
@@ -2215,10 +2213,10 @@ void function InstanceLocationPing( entity wp )
 			break
 
                       
-		case ePingType.STATION:
-			RuiSetFloat( rui, "iconSize", 56.0 )
-			RuiSetFloat( rui, "iconSizePinned", 72.0 )
-			break
+                         
+                                       
+                                             
+        
       
 
                         
@@ -2246,16 +2244,14 @@ void function InstanceLocationPing( entity wp )
 
 	RuiSetString( rui, "ownerPlayerName", (((owner != null) && owner.IsPlayer()) ? owner.GetPlayerName() : "") )
 
-                     
-		                                                                                                                                       
-		                                                                
-		if ( IsUsingProximityAllianceMembers() && viewPlayer.GetTeam() != owner.GetTeam() )
-		{
-			float maxProximity = GetMaxDistForAllianceMemberProximity()
-			if ( !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), owner.GetOrigin() ) && !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), wp.GetOrigin() ) )
-				shouldPlayPingSound = false
-		}
-                           
+	                                                                                                                                       
+	                                                                
+	if ( IsUsingProximityAllianceMembers() && viewPlayer.GetTeam() != owner.GetTeam() )
+	{
+		float maxProximity = GetMaxDistForAllianceMemberProximity()
+		if ( !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), owner.GetOrigin() ) && !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), wp.GetOrigin() ) )
+			shouldPlayPingSound = false
+	}
 
 	if( Waypoint_ShouldPlayCreationEffectWaypoint( wp ) && file.commsWaypointSoundsEnabled && shouldPlayPingSound )
 	{
@@ -2328,17 +2324,14 @@ void function InstanceLocationPing( entity wp )
 		RuiSetString( rui, "pingPromptForOwner", promptText )
 	}
 
-                     
-		                                                                                                                                               
-		                                                                                                                                                                          
-		                                                                                                         
-		if ( IsUsingProximityAllianceMembers() && pingType != ePingType.CONTROL_OBJECTIVE_DEFEND && pingType != ePingType.CONTROL_OBJECTIVE_ATTACK )
-		{
-			thread ManageTeamProximity_IconVisibility_Thread( wp, rui, false, true )
-			thread ManageTeamProximity_IconVisibility_Thread( wp, wp.wp.ruiMinimap, false, false )
-			thread ManageTeamProximity_IconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )
-		}
-                           
+	                                                                                                                                                                          
+	                                                                                                         
+	if ( IsUsingProximityAllianceMembers() && pingType != ePingType.CONTROL_OBJECTIVE_DEFEND && pingType != ePingType.CONTROL_OBJECTIVE_ATTACK )
+	{
+		thread ManageTeamProximity_IconVisibility_Thread( wp, rui, false, true )
+		thread ManageTeamProximity_IconVisibility_Thread( wp, wp.wp.ruiMinimap, false, false )
+		thread ManageTeamProximity_IconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )
+	}
 }
 
 void function SetCommsWaypointSoundsEnabled( bool value )
@@ -2527,18 +2520,15 @@ void function InstanceLootPing( entity wp )
 		return
 	}
 
-                     
-		                                                                                                                                               
-		                                                                                                                                                               
-		if ( IsUsingProximityAllianceMembers() && !IsPVEMode() )
-		{
-			if ( !IsValid( wp ) )
-				return
+	                                                                                                                                                               
+	if ( IsUsingProximityAllianceMembers() && !IsPVEMode() )
+	{
+		if ( !IsValid( wp ) )
+			return
 
-			if ( Control_GetAllianceFromTeam( viewPlayer.GetTeam() ) != Control_GetAllianceFromTeam( wp.GetTeam() ) )
-				return
-		}
-                           
+		if ( Control_GetAllianceFromTeam( viewPlayer.GetTeam() ) != Control_GetAllianceFromTeam( wp.GetTeam() ) )
+			return
+	}
 
 	bool isDirectlyOnItem = (wp.GetParent() == lootItem)
 
@@ -2622,23 +2612,23 @@ void function InstanceLootPing( entity wp )
 	}
 
 	bool shouldPlayCommsSound = true
-                     
-		                                                                                                                                       
-		                                                                
-		if ( IsUsingProximityAllianceMembers() )
+
+	                                                                                                                                       
+	                                                                
+	if ( IsUsingProximityAllianceMembers() )
+	{
+		if ( !IsValid( owner ) )
 		{
-			if ( !IsValid( owner ) )
-			{
-				shouldPlayCommsSound = false
-			}
-			else if ( viewPlayer.GetTeam() != owner.GetTeam() )
-			{
-				float maxProximity = GetMaxDistForAllianceMemberProximity()
-				if ( !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), owner.GetOrigin() ) && !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), wp.GetOrigin() ) )
-					shouldPlayCommsSound = false
-			}
+			shouldPlayCommsSound = false
 		}
-                           
+		else if ( viewPlayer.GetTeam() != owner.GetTeam() )
+		{
+			float maxProximity = GetMaxDistForAllianceMemberProximity()
+			if ( !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), owner.GetOrigin() ) && !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), wp.GetOrigin() ) )
+				shouldPlayCommsSound = false
+		}
+	}
+
 	if ( file.commsWaypointSoundsEnabled && shouldPlayCommsSound )
 		EmitSoundOnEntity( wp, Ping_GetSoundForItemPing( pingType, (viewPlayer == owner) ) )
 
@@ -3004,11 +2994,11 @@ array<entity> function Waypoints_GetActiveLootPings()
 			          
 
                       
-		                               
-			              
+                                 
+                 
 
-		                       
-			              
+                         
+                 
       
 
                        
@@ -3085,13 +3075,9 @@ array<entity> function Waypoints_GetActiveLootPings()
 		                     
 		                                            
 		 
-                       
 			                                                                                                                                                                         
 			                                         
-                             
-			 
 				                                                  
-			 
 		 
 		                               
 		 
@@ -3179,6 +3165,12 @@ array<entity> function Waypoints_GetActiveLootPings()
 	 
 		                                                   
 	 
+                    
+                                                                
+   
+                                                    
+   
+       
 
 	        
  
@@ -3331,10 +3323,9 @@ array<entity> function Waypoints_GetActiveLootPings()
 
 	                     
 
-                     
-		                                                                                                                                                                         
-		                                         
-                           
+
+	                                                                                                                                                                         
+	                                         
 		                                      
 
 	                                            

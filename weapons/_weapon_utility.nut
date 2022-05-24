@@ -66,22 +66,11 @@ global function OnWeaponEnergizedStart
                                   
                                                           
                                             
-                     
                                                          
-      
-                         
                                                     
-      
-                    
                                                              
-      
-                         
-                                                            
-      
-                      
+                                                             
                                                                
-      
-
                                                          
                                     
                                        
@@ -91,14 +80,22 @@ global function OnWeaponEnergizedStart
                                               
 #endif
 
+                         
+          
+                                                            
+                                                    
+                    
+          
+                                                
+                    
+                                   
+
 global function Weapon_AddSingleCharge
 
 #if CLIENT
 global function ServerCallback_SetWeaponPreviewState
-                      
 global function ServerCallback_KineticLoaderReloadedThroughSlide
 global function ServerCallback_KineticLoaderReloadedThroughSlideEnd
-      
 #endif
 
 global function OnWeaponTryEnergize
@@ -176,7 +173,6 @@ global function DisplayCenterDotRui
 global function IsTurretWeapon
 global function IsHMGWeapon
 
-                       
                                                                                                                                                       
 global struct MarksmansTempoSettings
 {
@@ -208,9 +204,9 @@ global function MarksmansTempo_SetPerfectTempoMoment
 global function MarksmansTempo_OnFire
 global function MarksmansTempo_RemoveTempo
 global function MarksmansTempo_ClearTempo
-      
 
-                      
+
+
 global enum eShatterRoundsTypes
 {
 	STANDARD,
@@ -227,9 +223,9 @@ global function ShatterRounds_UpdateShatterRoundsThink
 #if SERVER
                                       
 #endif
-      
 
-                    
+
+
 
 global const string SMART_RELOAD_HOPUP = "hopup_smart_reload"
 global const string LMG_FAST_RELOAD_MOD = "fast_reload_mod"
@@ -257,9 +253,7 @@ const int MAX_AMMO_REQUIRED = 11
 global function OnWeaponActivate_Smart_Reload
 global function OnWeaponDeactivate_Smart_Reload
 global function OnWeaponReload_Smart_Reload
-      
 
-                      
 
 global struct KineticLoaderSettings
 {
@@ -286,7 +280,6 @@ global const string KINETIC_LOAD_SFX_SETTING = "kinetic_load_sfx"
 global const string END_KINETIC_LOADER_RUI = "end_kinetic_loader_functionality"
 #endif
 
-      
 
 global const bool PROJECTILE_PREDICTED = true
 global const bool PROJECTILE_NOT_PREDICTED = false
@@ -328,9 +321,8 @@ const GUNSHIP_REBOOT_TIME = 5.0
 const bool DEBUG_BURN_DAMAGE = false
 
 const float BOUNCE_STUCK_DISTANCE = 5.0
-                     
+
 const float GOLD_MAG_TIME_BEFORE_STOWED_RELOAD = 5.0
-      
 
 global const string ARROWS_UNSTICK_SIGNAL = "arrows_unstick"
 
@@ -471,24 +463,23 @@ void function WeaponUtility_Init()
 	RegisterSignal( "EnergyWeapon_ChargeStart" )
 	RegisterSignal( "EnergyWeapon_ChargeReleased" )
 	RegisterSignal( "WeaponSignal_EnemyKilled" )
-                      
+
 	RegisterSignal( "GoldMagPerkEnd" )
-       
-                        
+
 	RegisterSignal( MARKSMANS_TEMPO_FADEOFF_THREAD_ABORT )
-       
-                     
+
 	RegisterSignal ( END_SMART_RELOAD )
-       
-                       
+
 	RegisterSignal ( END_KINETIC_LOADER )
 	RegisterSignal ( END_KINETIC_LOADER_CHOKE )
 	Remote_RegisterClientFunction( "ServerCallback_KineticLoaderReloadedThroughSlide", "int", 0, 32 )
 	Remote_RegisterClientFunction( "ServerCallback_KineticLoaderReloadedThroughSlideEnd" )
+                          
+                                                                        
+                                    
 	#if CLIENT
 	RegisterSignal ( END_KINETIC_LOADER_RUI )
 	#endif
-       
 
 	#if SERVER
 	                                       
@@ -511,19 +502,13 @@ void function WeaponUtility_Init()
 		                                                             
 		                                                                                 
 		                                                                                        
-
-                       
 		                                                                                       
-        
-                      
 		                                                                                           
-        
+		                                                                                           
                            
                                                                                             
         
-                        
 		                                                                                             
-        
 		                                              
 		                                            
 		                                                 
@@ -534,7 +519,6 @@ void function WeaponUtility_Init()
 
 	HOLO_PILOT_TRAIL_FX = PrecacheParticleSystem( $"P_ar_holopilot_trail" )
 
-                       
 		RegisterSignal( SHATTER_ROUNDS_THINK_END_SIGNAL )
 		#if SERVER
 		                                                              
@@ -542,7 +526,6 @@ void function WeaponUtility_Init()
 
 		AddCallback_OnPlayerAddWeaponMod( ShatterRounds_OnPlayerAddedWeaponMod )
 		AddCallback_OnPlayerRemoveWeaponMod( ShatterRounds_OnPlayerRemovedWeaponMod )
-       
 }
 
 #if SERVER
@@ -1591,20 +1574,24 @@ bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vecto
 		vector maxs        = cp.ignoreHullSize ? ZERO_VECTOR: ent.GetBoundingMaxs()
 		vector entPos 	   = cp.pos
 		int traceMask 	   = (ent.IsProjectile() && ent.GetProjectileWeaponSettingBool( eWeaponVar.grenade_use_mask_ability )) ? TRACE_MASK_ABILITY : TRACE_MASK_SHOT
+		array<entity> ignoreEnts = [ent]
+		if ( ent.IsProjectile() && ent.proj.ignoreOwnerForPlaceStickyEnt && IsValid( ent.GetOwner() ) )
+			ignoreEnts.append( ent.GetOwner() )
+
 		TraceResults trace
 		if( ( cp.hitEnt.IsPlayer() || cp.hitEnt.IsNPC() ) && ent.IsProjectile() && ent.ProjectileGetWeaponClassName() == "mp_weapon_cluster_bomb_launcher" )
 		{
 			vector center = cp.hitEnt.GetWorldSpaceCenter()
 			center.z = entPos.z
-			trace = TraceLineHighDetail( entPos, center, [ ent ], traceMask, TRACE_COLLISION_GROUP_NONE )
+			trace = TraceLineHighDetail( entPos, center, ignoreEnts, traceMask, TRACE_COLLISION_GROUP_NONE )
 		}
 		else if( cp.highDetailTrace || ( ent.IsProjectile() && ent.proj.useHighDetailCollisionTraceForPlaceStickyEnt ) )
 		{
-			trace = TraceHullHighDetail( entPos, ( entPos + ( traceDir * cp.traceLength ) ), mins, maxs, [ ent ], ( traceMask & ~CONTENTS_HITBOX ), TRACE_COLLISION_GROUP_NONE )
+			trace = TraceHullHighDetail( entPos, ( entPos + ( traceDir * cp.traceLength ) ), mins, maxs, ignoreEnts, ( traceMask & ~CONTENTS_HITBOX ), TRACE_COLLISION_GROUP_NONE, cp.normal )
 		}
 		else
 		{
-			trace = TraceHull( entPos, ( entPos + ( traceDir * cp.traceLength ) ), mins, maxs, [ ent ], ( traceMask & ~CONTENTS_HITBOX ), TRACE_COLLISION_GROUP_NONE )
+			trace = TraceHull( entPos, ( entPos + ( traceDir * cp.traceLength ) ), mins, maxs, ignoreEnts, ( traceMask & ~CONTENTS_HITBOX ), TRACE_COLLISION_GROUP_NONE, cp.normal )
 		}
 
 		if( moveOnNoHitTrace || trace.fraction < 1.0 )
@@ -1786,6 +1773,9 @@ bool function EntityShouldStickEx( entity stickyEnt, DeployableCollisionParams p
 		return false
                            
 
+	if ( hitEnt.GetScriptName() == DIRTY_BOMB_TARGETNAME && params.hitBox == 0 )
+		return false
+
 	return true
 }
 bool function EntityShouldStick( entity stickyEnt, entity hitEnt )
@@ -1825,14 +1815,12 @@ bool function EntityCanHaveStickyEnts( entity stickyEnt, entity ent )
 	if ( entClassname == "prop_lootroller" && stickyEntWeaponClassName != "" )
 		return true
 
-               
-		                                               
-		if ( ent.GetScriptName() == WRECKING_BALL_BALL_SCRIPT_NAME )
-			return true
-		                                                                                                    
-		if ( stickyEnt.GetScriptName() == RIOT_DRILL_SCRIPT_NAME )
-			return true
-       
+	                                               
+	if ( ent.GetScriptName() == WRECKING_BALL_BALL_SCRIPT_NAME )
+		return true
+	                                                                                                    
+	if ( stickyEnt.GetScriptName() == RIOT_DRILL_SCRIPT_NAME )
+		return true
 
                        
 		                                                                                                                       
@@ -1904,7 +1892,7 @@ void function ShowExplosionRadiusOnExplode( entity ent )
 
 #if SERVER
                                                  
-                                                                                                                     
+                                                                                                                                                           
  
 	                                                                                                                        
 	                                 
@@ -2016,7 +2004,15 @@ void function ShowExplosionRadiusOnExplode( entity ent )
 		 
 	 
 
-	                                                    
+	                              
+	 
+		                                                                                                           
+		                 
+	 
+	    
+	 
+		                                                    
+	 
  
 
                                                                
@@ -2913,6 +2909,17 @@ entity function GetMeleeWeapon( entity player )
 			                                                               
 		 
 	 
+                                
+                            
+  
+                    
+                  
+                                                           
+   
+                                                                  
+   
+  
+      
 	                          
 	 
 		                  
@@ -3710,7 +3717,7 @@ void function RunWeaponModChangedCallbacks( entity weapon, string mod, bool modA
  
 
 
-                                                                                                   
+                                                                                                        
  
 	                     
 		               
@@ -3739,7 +3746,12 @@ void function RunWeaponModChangedCallbacks( entity weapon, string mod, bool modA
 
 	                                                    
 
-	                                                    
+	                                                                        
+	                           
+	 
+		                  
+		                                     
+	 
  
 
                                                        
@@ -3853,7 +3865,6 @@ void function RunWeaponModChangedCallbacks( entity weapon, string mod, bool modA
  
                                    
 
-                         
                                                        
 
                                                                                       
@@ -3876,7 +3887,6 @@ void function RunWeaponModChangedCallbacks( entity weapon, string mod, bool modA
 
 	                                                                           
  
-                               
 
                                                  
  
@@ -4506,8 +4516,6 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 	                                                                          
  
 
-
-                     
                                       
                                                                                                                             
  
@@ -4635,7 +4643,6 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 	                                                                           
 		                                  
  
-      
 
 
                          
@@ -4656,6 +4663,7 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 
                                                                                                                    
   
+                                
                                                                                                  
   
                                                                                                                                  
@@ -4664,10 +4672,21 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
   
  
 
-      
+                                                                   
+ 
+                               
+ 
+                                   
 #endif         
 
 #if CLIENT
+                         
+                                                
+ 
+                                                                    
+ 
+                                   
+
 bool function TryCharacterButtonCommonReadyChecks( entity player )
 {
 	if ( player != GetLocalViewPlayer() )
@@ -4735,7 +4754,6 @@ vector function GetAmmoColorByType( string ammoType )
 bool function EnergyChoke_OnWeaponModCommandCheckMods( entity player, entity weapon, string mod, bool isAdd )
 {
 	weapon.ForceChargeEndNoAttack()
-                      
 	weapon.Signal( END_KINETIC_LOADER_CHOKE )
 	weapon.RemoveMod( "kinetic_choke" )
 	if ( isAdd && weapon.HasMod( KINETIC_LOADER_HOPUP ) && mod == "choke")
@@ -4750,7 +4768,6 @@ bool function EnergyChoke_OnWeaponModCommandCheckMods( entity player, entity wea
 	{
 		weapon.RemoveMod( "hopup_kinetic_choke" )
 	}
-      
 	return true
 }
 
@@ -4993,7 +5010,7 @@ void function DisplayCenterDotRui( entity weapon, string abortSignal, float appe
           
                                                                                                                                                       
           
-                       
+
 bool function MarksmansTempo_Validate( entity weapon, MarksmansTempoSettings settings )
 {
 	#if CLIENT
@@ -5155,7 +5172,7 @@ void function MarksmansTempo_ClearMods( entity weapon )
 	weapon.RemoveMod( MOD_MARKSMANS_TEMPO_ACTIVE )
 	weapon.RemoveMod( MOD_MARKSMANS_TEMPO_BUILDUP )
 }
-      
+
 
 
                                                                                          
@@ -5166,7 +5183,6 @@ void function MarksmansTempo_ClearMods( entity weapon )
           
                                                                                                                                   
           
-                      
                                                                                 
 void function ShatterRounds_OnPlayerAddedWeaponMod( entity player, entity weapon, string mod )
 {
@@ -5297,13 +5313,30 @@ void function ShatterRounds_RemoveShatterRounds( entity weapon )
  
 #endif
 
-      
+#if SERVER
+                                                                                                                                
+ 
+	                        
+		      
 
+	                         
+		      
 
+	                         
+		      
 
+	                                             
+	 
+		                                             
+		 
+			                                                
+		 
+	 
 
-                    
+ 
+#endif
 
+                      
 void function OnWeaponActivate_Smart_Reload ( entity weapon, SmartReloadSettings settings )
 {
 	if ( !IsValid( weapon ) )
@@ -5575,8 +5608,6 @@ void function ApplySmartReloadFunctionality_ServerThink ( entity player, entity 
 	#endif
 }
 
-      
-
 bool function IsTurretWeapon( entity weapon )
 {
 	if( !IsValid( weapon ) || !weapon.IsWeaponX() )
@@ -5593,7 +5624,7 @@ bool function IsHMGWeapon( entity weapon )
 	return ( GetWeaponInfoFileKeyField_GlobalInt_WithDefault( weapon.GetWeaponClassName(), "is_hmg_weapon" , 0 ) == 1 )
 }
 
-                      
+
 void function OnWeaponActivate_Kinetic_Loader( entity weapon)
 {
 	if ( !IsValid( weapon ) )
@@ -5975,4 +6006,3 @@ void function ApplyKineticLoader_ClientThink( entity player, entity weapon )
 		}
 	#endif
 }
-      

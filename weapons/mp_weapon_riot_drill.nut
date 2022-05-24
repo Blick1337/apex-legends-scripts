@@ -190,7 +190,7 @@ void function MpWeaponRiotDrill_Init()
 	file.fxOption_impactTableFXExitRefire	= GetCurrentPlaylistVarFloat( "breaching_spike_impact_fx_exit_refire", 0.2 )
 
                   
-                                                          
+	file.shieldScriptNames.append( MOBILE_SHIELD_SCRIPTNAME )
        
 	file.shieldScriptNames.append( BUBBLE_SHIELD_SCRIPTNAME )
 	file.shieldScriptNames.append( AMPED_WALL_SCRIPT_NAME )
@@ -489,6 +489,8 @@ void function RestoreRiotDrillAmmo( entity owner )
 	                           
 	                              
 	                              
+	                             
+	                                              
 	                                   
 	                                      
 	                                        
@@ -1219,14 +1221,12 @@ void function OnProjectileCollision_weapon_riot_drill( entity projectile, vector
 		                                                                                                       
 		                                                                         
 
-                     
 		                                                               
 		 
 			                                         
 			                                                                                                                            
 			                                                          
 		 
-       
 
 		                      
 		                                                                           

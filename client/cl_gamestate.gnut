@@ -5,6 +5,7 @@ global function ClGameState_Think
 global function ClGameState_GetRui
 global function CLGameState_GetNetGraphRui
 global function ClGameState_SetInfoStatusText
+global function ClGameState_SetHasScreenBorder
 
 global function AddCallback_OnScoreboardCreated
 global function AddCallback_OnGameStateChanged
@@ -110,7 +111,6 @@ void function ClGameState_Init()
 	RegisterSignal( "GameStateChanged" )
 	RegisterNetVarIntChangeCallback( "gameState", ClGameState_Changed )
 	RegisterNetVarBoolChangeCallback( "badRepPresent", UpdateScoreboardBadRepPresentMessage )
-	RegisterNetVarBoolChangeCallback( "anonymizePlayerName", UpdateAnonymousModeSetting )
 
 	AddOnSpectatorTargetChangedCallback( GameState_SpectatorTargetChanged )
 
@@ -225,6 +225,12 @@ void function UpdateCommonScoreRuiTracking( var rui, entity player )
 {
 	RuiTrackInt( rui, "killCount", player, RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "kills" ) )
 	RuiTrackInt( rui, "damageDealt", player, RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "damageDealt" ) )
+
+	if ( IsRankedGame() && !IsArenaMode() )
+	{
+		RuiTrackInt( rui, "participationCount", player, RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "kill_participation" ) )
+	}
+
 	                                                                                                                                         
 	RuiTrackBool( rui, "hasDeathFieldImmunity", player, RUI_TRACK_SCRIPT_NETWORK_VAR_BOOL, GetNetworkedVariableIndex( "hasDeathFieldImmunity" ) )
 	RuiTrackInt( rui, "assistCount", player, RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "assists" ) )
@@ -580,7 +586,7 @@ void function UpdateIsSonyMP()
 }
 
 
-void function ClGameState_Changed( entity playerEnt, int oldVal, int newVal )
+void function ClGameState_Changed( entity playerEnt, int newVal )
 {
 	Assert( newVal >= -1 )
 	Assert( newVal < eGameState._count_ )
@@ -768,7 +774,7 @@ void function SetGameModeSuddenDeathAnnouncementSubtext( string text )
 }
 
 
-void function KillLeaderChangeCallback( entity player, entity old, entity new )
+void function KillLeaderChangeCallback( entity player, entity new )
 {
 	UpdateKillLeaderOnGameStateRui( ClGameState_GetRui() )
 	UpdateKillLeaderOnGameStateRui( GetFullmapGamestateRui() )
@@ -906,7 +912,7 @@ void function PlayRoundWonConversationWithAnnouncementDelay( float conversationD
 }
 
 
-void function UpdateScoreboardBadRepPresentMessage( entity playerEnt, bool oldVal, bool newVal )
+void function UpdateScoreboardBadRepPresentMessage( entity playerEnt, bool newVal )
 {
 	if ( IsLobby() )
 		return
@@ -964,6 +970,10 @@ var function CreateNestedNetGraph( var rui )
 	RuiTrackInt( nestedGraphRui, "netGraphDataBlockSize", null, RUI_TRACK_NETGRAPH_DATABLOCK_SIZE )
 	RuiTrackInt( nestedGraphRui, "netGraphDataBlockPercentDone", null, RUI_TRACK_NETGRAPH_DATABLOCK_PERCENT_DONE )
 
+	#if DEV
+		RuiSetBool( nestedGraphRui, "isDEV", true )
+	#endif
+
 	RuiSetString( nestedGraphRui, "netGraphServerID", GetServerDebugId() )
 
 	                                                                                      
@@ -1012,9 +1022,12 @@ void function OnSettingsUpdated()
 }
 
 
-void function UpdateAnonymousModeSetting( entity playerEnt, bool oldVal, bool newVal )
+void function ClGameState_SetHasScreenBorder( bool value )
 {
-	  
+	                                         
+	var rui = ClGameState_GetRui()
+	if ( IsValid( rui ) )
+	{
+		RuiSetBool( rui, "hasScreenBorder", value )
+	}
 }
-
-                

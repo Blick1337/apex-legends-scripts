@@ -570,6 +570,13 @@ void function Clubs_EditClubSettings( ClubHeader clubHeader )
 	if ( !ClubIsValid() )
 		return
 
+	             
+	Clubs_SetClubQueryState( CLUB_OP_SET_JOIN_REQUIREMENTS, eClubQueryState.PROCESSING )
+	Clubs_SetClubQueryState( CLUB_OP_SET_PRIVACY_SETTING, eClubQueryState.PROCESSING )
+	Clubs_SetClubQueryState( CLUB_OP_SET_SEARCHTAGS, eClubQueryState.PROCESSING )
+	Clubs_SetClubQueryState( CLUB_OP_SET_LOGO, eClubQueryState.PROCESSING )
+	
+	
 	ClubSetPrivacySetting( clubHeader.privacySetting )
 	if ( clubHeader.privacySetting == CLUB_PRIVACY_OPEN_WITH_REQ )
 		ClubSetJoinRequirements( clubHeader.minLevel, clubHeader.minRating )
@@ -588,7 +595,7 @@ void function Clubs_EditClubSettings( ClubHeader clubHeader )
 	                                     
 
 	                      
-	ClubPublishEvent( CLUB_EVENT_EDIT, 0, "" )
+	                                            
 
 	PIN_Club_Setting( clubHeader )
 	thread ClubDataUpdateThread()
@@ -759,16 +766,16 @@ int function Clubs_GetMinHighestRankScoreFromSetting( int minRank )
 		case eClubMinRank.MINRANK_BRONZE:
 			return 0
 		case eClubMinRank.MINRANK_SILVER:
-			return 1
-		case eClubMinRank.MINRANK_GOLD:
 			return 2
-		case eClubMinRank.MINRANK_PLATINUM:
+		case eClubMinRank.MINRANK_GOLD:
 			return 3
-		case eClubMinRank.MINRANK_DIAMOND:
+		case eClubMinRank.MINRANK_PLATINUM:
 			return 4
+		case eClubMinRank.MINRANK_DIAMOND:
+			return 5
 		case eClubMinRank.MINRANK_MASTER:
 		case eClubMinRank.MINRANK_APEXPREDATOR:
-			return 5
+			return 6
 		default:
 			return 0
 	}
@@ -929,18 +936,32 @@ bool function Clubs_DoesMeetJoinRequirements( ClubHeader clubHeader )
 		                                                                                                                                           
 		return false
 	}
-
+	
 	int rankReq                            = Clubs_GetMinHighestRankScoreFromSetting( clubHeader.minRating )
+
+	                                                                     
+
+	              
+	                                          		                                                
+	                                         		                                                        
+	                                       			                                                      
+	                                           		                                                          
+	                                          		                                                         
+	                                         		                                              
+	                                               	                                                     
+
 	SharedRankedTierData highestRankedTier = Ranked_GetHighestHistoricalRankedTierData( GetLocalClientPlayer() )
+
 	if ( highestRankedTier.index < rankReq )
-	{
-		                                                                                                                                                              
+	{		
+	                                                                                                                                                              
 		return false
 	}
 
 	                                                                                                                                                                                             
 	return true
 }
+
 #endif
 
                                                                                        
@@ -2003,8 +2024,8 @@ const int MAX_PLACEMENT_FOR_WINTER_EXPRESS_CLUB_EVENT = 1
        
 
                        
-		                                                                                                                              
-			      
+                                                                                                 
+         
        
 
 	                                                                               
@@ -2278,7 +2299,7 @@ void function DEV_ReportFakePlacementEvent( int forceSquadSize = -1, bool testDu
 #if UI
 void function Clubs_Report( ClubHeader clubHeader )
 {
-	Remote_ServerCallFunction( "ClientCallback_ReportClub", clubHeader.clubID, clubHeader.creatorID, clubHeader.tag, clubHeader.name )
+	Remote_ServerCallFunction( "ClientCallback_ReportClub", clubHeader.clubID, clubHeader.creatorID, clubHeader.tag, clubHeader.name , GetNameFromHardware(clubHeader.hardware))
 }
 #endif
 
@@ -2465,6 +2486,29 @@ void function ClubDataUpdateThread()
 {
 	printf( "ClubDataUpdateThread()" )
 	wait 0.1
+	                                                              
+	bool finishedEditing = false
+	while( !finishedEditing )
+	{
+		wait 0.1
+		
+		if ( Clubs_GetClubQueryState( CLUB_OP_SET_JOIN_REQUIREMENTS ) == eClubQueryState.PROCESSING )
+			continue
+		
+		if ( Clubs_GetClubQueryState( CLUB_OP_SET_PRIVACY_SETTING ) == eClubQueryState.PROCESSING )
+			continue
+		
+		if ( Clubs_GetClubQueryState( CLUB_OP_SET_SEARCHTAGS ) == eClubQueryState.PROCESSING )
+			continue
+		
+		if ( Clubs_GetClubQueryState( CLUB_OP_SET_LOGO ) == eClubQueryState.PROCESSING )
+			continue
+		
+		finishedEditing = true
+	}
+	
+	UpdateClubLobbyDetails()
+	ClubPublishEvent( CLUB_EVENT_EDIT, 0, "" )
 	Clubs_UpdateMyData()
 }
 
@@ -2509,7 +2553,7 @@ void function Clubs_CheckClubPersistenceThread()
 		WaitFrame()
 	}
 
-	if ( ClubEnabled() && IsLobby() )
+	if ( ClubEnabled() && IsLobby() && Remote_ServerCallFunctionAllowed() )
 	{
 		ClubHeader myClubHeader = ClubGetHeader()
 		string persistentClubID = string(GetPersistentVar( "clubID" ))

@@ -354,15 +354,18 @@ void function UpdateMinimapVisibility()
 
 void function OnSpectatorUiStateChanged( int newState )
 {
-	if ( newState == SPEC_UI_STATE_SHOW_ONLY_MINIMAP )
+	if ( GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR )
 	{
-		SetAllHudVisExceptMinimap( false )
-		file.onlyShowMinimap = true
-	}
-	else
-	{
-		SetAllHudVisExceptMinimap( true )
-		file.onlyShowMinimap = false
+		if ( newState == SPEC_UI_STATE_SHOW_ONLY_MINIMAP )
+		{
+			SetAllHudVisExceptMinimap( false )
+			file.onlyShowMinimap = true
+		}
+		else
+		{
+			SetAllHudVisExceptMinimap( true )
+			file.onlyShowMinimap = false
+		}
 	}
 }
 
@@ -1085,7 +1088,7 @@ void function InitChatHUD()
 	UISize screenSize   = GetScreenSize()
 	float resMultiplier = screenSize.height / 1080.0
 	int width           = 630
-	int height          = 155
+	int height          = 200
 
 	Hud_SetSize( HudElement( "IngameTextChat" ), width * resMultiplier, height * resMultiplier )
 }

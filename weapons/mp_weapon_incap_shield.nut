@@ -376,17 +376,17 @@ void function OnWeaponActivate_incap_shield( entity weapon )
 		      
 
                   
-                                                            
-  
-                                                                                                                 
-                                                                                                               
+	                                                           
+	 
+		                                                                                                               
+		                                                                                                             
 
-                                                               
-                      
-                 
+		                                                             
+		                    
+			              
 
-                                                                                         
-  
+		                                                                                       
+	 
        
 
 	                                                                                                                   

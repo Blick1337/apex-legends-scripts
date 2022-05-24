@@ -65,10 +65,6 @@ const string BLACKHOLE_SOUND_PHASE_3 = "Nova_Ultimate_BlackHole_Phase3"
 const string BLACKHOLE_SOUND_PHASE_4 = "Nova_Ultimate_BlackHole_Phase4"
 
 
-                    
-const vector BLACKHOLETROPHY_BOUND_MINS = <-32, -32, 0>
-const vector BLACKHOLETROPHY_BOUND_MAXS = <32, 32, 72>
-
 
                      
 const bool BLACKHOLE_DEBUG = false
@@ -234,6 +230,10 @@ var function OnWeaponPrimaryAttack_weapon_black_hole( entity weapon, WeaponPrima
 		#if SERVER
 			                                      
 
+			                                                                                                                           
+			                              
+				                                                  
+
 			                                                            
 			                            
 				                                                
@@ -394,7 +394,6 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 
 	                                                                                           
 	                                                         
-	                                                                                 
 
 	                   
 	 

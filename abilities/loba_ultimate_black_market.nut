@@ -598,16 +598,16 @@ void function PlacementProxyThread( entity weapon, entity player )
 		                                             
 			                                                  
 		                                                       
-                      
-			                                                                                                                                                                         
-			                                                                                                      
+
+		                                                                                                                                                                         
+		                                                                                                      
+		 
+			                                                                     
 			 
-				                                                                     
-				 
-					                                                    
-				 
+				                                                    
 			 
-                            
+		 
+
 		                                                            
 		                                           
 		                                                 

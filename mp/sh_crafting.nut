@@ -58,6 +58,9 @@ global function Crafting_GetWorkbenchTitleString
 global function Crafting_GetWorkbenchDescString
 
 global function Crafting_IsPlayerAtWorkbench
+#if DEV
+global function DEV_Crafting_TogglePreMatchRotation
+#endif
 #endif
 
       
@@ -98,6 +101,8 @@ const asset WORKBENCH_ENGINE_SMOKE_FX = $"P_lootpod_vent_top"
 const asset WORKBENCH_DOOR_OPEN_FX = $"P_lootpod_door_open"
 const asset WORKBENCH_PRINTING_FX = $"P_replipod_printing_CP"
 
+                                                                                                        
+const array<string> CRAFTED_ITEM_CATEGORIES_FOR_ITEM_NAMES = [ "weapon_one", "weapon_two" ]
 
          
 const int CRAFTING_PASSIVE_REWARD = 5
@@ -160,6 +165,7 @@ global enum eCraftingRotationStyle
 	HOURLY,
 	PERMANENT,
 	LOADOUT_BASED,
+	SEASONAL,
 	COUNT_
 }
 
@@ -243,6 +249,10 @@ struct {
 	array<var>					   nextStepMarkerRuiList
 
 	array< table<var, var> >	   nearbyLiveWorkbenchRui
+
+	#if DEV
+	bool 							DEV_testingRotationRui
+	#endif
 	#endif
 
 	#if SERVER
@@ -1042,6 +1052,23 @@ void function Crafting_OnGameStatePlaying()
  
 	                              
  
+
+                                                                                     
+ 
+	                          
+
+	                                                                                                                              
+
+	                                                             
+	 
+		       
+		                                                              
+		      
+		                                   
+	 
+	                   
+ 
+
 #endif
 
 
@@ -1744,11 +1771,13 @@ void function CreateHarvesterWorldIcon( entity harvester )
 
 	                                                                                                   
  
+
 #endif
 
 int function Crafting_GetPlayerCraftingMaterials( entity player )
 {
-	return player.GetPlayerNetInt( "craftingMaterials" )
+	int playerMaterials = GetCurrentPlaylistVarBool( "crafting_enabled", true ) ? player.GetPlayerNetInt( "craftingMaterials" ) : 0
+	return playerMaterials
 }
 
 #if SERVER || CLIENT
@@ -1762,6 +1791,7 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 
 	return false
 }
+
 #endif
 
 
@@ -1938,8 +1968,6 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 
 	                                             
 	 
-		                                                   
-			                              
 		                                           
 	 
 
@@ -2464,6 +2492,9 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	                                   
 		      
 
+	                               
+		      
+
 	                         
 
 	              
@@ -2476,7 +2507,9 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 		 
 	 
 
+	               
 	                               
+	                          
 	                                                   
  
 
@@ -2489,13 +2522,16 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
                                                                                
  
 	                                          
+
 	                                                                                   
  
 
                                                                
  
 	                               
+	 
 		                                                                                                                
+	 
  
 
                                                     
@@ -2530,8 +2566,6 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 
 			                              
 			 
-				                                                   
-					                              
 				                             
 				                                                                                                                                                               
 				                                                                                    
@@ -2611,6 +2645,8 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	                                                                                                                        
 
 	                                                                             
+
+	                                                                                         
  
 
                                                                                               
@@ -2679,10 +2715,26 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 		                                                                       
 	 
 	                                                  
-	                                                                       
+
+	                                                                                                                    
+	                                                                      
+	 
+		                      
+		                                                                          
+		                                                                                    
+		       
+		                                                            
+		      
+		                                                                                                  
+	 
+	    
+	 
+		                                                                                            
+	 
+
 
 	                    
-	                          
+ 	                          
 	                             
 	 
 		                          
@@ -3007,7 +3059,7 @@ array< string > function GenerateCraftingItemsInCategory( entity player, Craftin
 	int craftingRotation = categoryToCheck.rotationStyle
 
 	                                                                   
-	if ( craftingRotation == eCraftingRotationStyle.PERMANENT )
+	if ( craftingRotation == eCraftingRotationStyle.PERMANENT || craftingRotation == eCraftingRotationStyle.SEASONAL )
 	{
 		CraftingBundle bundle = GetBundleForCategory( categoryToCheck )
 		return bundle.itemsInBundle
@@ -3048,7 +3100,7 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 	int craftingRotation = categoryToCheck.rotationStyle
 
 	                                                                   
-	if ( craftingRotation == eCraftingRotationStyle.PERMANENT || craftingRotation == eCraftingRotationStyle.LOADOUT_BASED )
+	if ( craftingRotation == eCraftingRotationStyle.PERMANENT || craftingRotation == eCraftingRotationStyle.SEASONAL || craftingRotation == eCraftingRotationStyle.LOADOUT_BASED )
 	{
 		Assert( categoryToCheck.bundlesInCategory.len() != 0, "CRAFTING: Bundle list in category " + categoryToCheck.category + " is empty" )
 		return categoryToCheck.bundlesInCategory[categoryToCheck.bundleStrings.top()]
@@ -3101,12 +3153,12 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 
 
 #if SERVER
-                                                                                             
+                                                                               
  
 	                                            
 		      
 
-	                                                                                                         
+	                                                      
 		                                                                                      
  
 
@@ -3133,6 +3185,10 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 
                                                         
  
+	                  
+	                              
+	                         
+
 	                       
 	                                             
 	 
@@ -3186,8 +3242,6 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 
 			                              
 			 
-				                                                   
-					                              
 				                                 
 				                                                                                                                                                                  
 				                                                                                                         
@@ -3426,7 +3480,21 @@ void function Crafting_OnLoseFocus( entity ent )
 		CustomUsePrompt_ClearForEntity( ent )
 }
 
-
+#if DEV
+void function DEV_Crafting_TogglePreMatchRotation()
+{
+	if ( file.DEV_testingRotationRui )
+	{
+		file.DEV_testingRotationRui = false
+	}
+	else
+	{
+		file.gameStartRuiCreated = false
+		file.DEV_testingRotationRui = true
+		OnWaitingForPlayers_Client()
+	}
+}
+#endif
 void function OnWaitingForPlayers_Client()
 {
 	if ( IsFiringRangeGameMode() || IsSurvivalTraining() )
@@ -3440,13 +3508,12 @@ void function OnWaitingForPlayers_Client()
 
 	file.gameStartRuiCreated = true
 	file.gameStartRui.append( RuiCreate( $"ui/crafting_game_start.rpak", clGlobal.topoFullScreen, RUI_DRAW_POSTEFFECTS, 1 ) )
-	                               
-	for ( int i = 0; i < 4; i++ )
+	for ( int i = 0; i < 6; i++ )
 	{
 		var rui = SetupWorkbenchPreview( file.gameStartRui[0], i , "rotation" + i, false )
 		file.gameStartRui.append( rui )
-		if ( i == 1 || i == 3 )
-			RuiSetBool( rui, "shouldDisplayRotation", true )
+		                                  
+			                                                  
 	}
 
 	thread GameStart_CleanupThread()
@@ -3466,6 +3533,12 @@ void function GameStart_CleanupThread()
 		}
 	)
 
+	#if DEV
+	while ( file.DEV_testingRotationRui )
+	{
+		WaitFrame()
+	}
+	#endif
 	while ( GetGameState() == eGameState.WaitingForPlayers )
 	{
 		WaitFrame()
@@ -3617,17 +3690,12 @@ void function OnGameStartedPlaying_Client()
 	                                 
    
 
-void function OnPlayerMatchStateChanged( entity player, int oldState, int newState )
+void function OnPlayerMatchStateChanged( entity player, int newState )
 {
 	if ( player != GetLocalClientPlayer() )
 		return
 
-	if ( oldState == ePlayerMatchState.SKYDIVE_PRELAUNCH && newState == ePlayerMatchState.SKYDIVE_FALLING )
-	{
-		                                   
-	}
-
-	if ( oldState == ePlayerMatchState.SKYDIVE_FALLING && newState == ePlayerMatchState.NORMAL )
+	if ( newState == ePlayerMatchState.NORMAL )
 	{
 		DestroyWorkbenchMarkers()
 	}

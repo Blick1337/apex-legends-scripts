@@ -1055,7 +1055,6 @@ void function TrackingVisionCreatePOIBlueprint( entity waypoint, int poiEventID,
 			waypoint.WaypointSetCheckDist( TRACKING_VISION_DRAW_DIST_MAX )
 			break
 
-              
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START:
@@ -1068,15 +1067,15 @@ void function TrackingVisionCreatePOIBlueprint( entity waypoint, int poiEventID,
 			waypoint.WaypointAddFlag( WPF_VISBILITY_LOS )
 			waypoint.WaypointSetCheckDist( TRACKING_VISION_DRAW_DIST_MAX )
 			break
-      
+
                  
-                                                                                    
-                                                                                  
-                                                                                     
-                                                                                   
-                                                                       
-                                                                 
-        
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_END:
+			waypoint.WaypointAddFlag( WPF_VISBILITY_LOS | WPF_VISIBILITY_SONAR )
+			waypoint.WaypointSetCheckDist( TRACKING_VISION_DRAW_DIST_MAX )
+			break
       
 		default:
 			Assert( 0, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
@@ -1685,7 +1684,6 @@ void function TrackingVision_GetDrawInfo( entity waypoint, TrackingVisionDrawInf
 			drawInfo.displayText = "#WPN_ECHO_LOCATOR"
 			break
 
-              
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_START:
 			drawInfo.drawSize = eTrackingPOIDrawSize.SMALL
 			drawInfo.icon = $"rui/hud/poi_icons/poi_madmaggie_tactical"
@@ -1715,32 +1713,31 @@ void function TrackingVision_GetDrawInfo( entity waypoint, TrackingVisionDrawInf
 			drawInfo.icon = $"rui/hud/poi_icons/poi_white_raven"
 			drawInfo.displayText = "#WPN_WRECKING_BALL_PATH"
 			break
-      
 
                  
-                                                                                    
-                                                 
-                                                                
-                                                   
-        
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_START:
+			drawInfo.drawSize = eTrackingPOIDrawSize.SMALL
+			drawInfo.icon = $"rui/hud/poi_icons/poi_newcastle_ult_launch"
+			drawInfo.displayText = "#WPN_ARMORED_LEAP_START"
+			break
 
-                                                                                  
-                                                 
-                                                                
-                                                 
-        
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_END:
+			drawInfo.drawSize = eTrackingPOIDrawSize.SMALL
+			drawInfo.icon = $"rui/hud/poi_icons/poi_newcastle_ult_deploy"
+			drawInfo.displayText = "#WPN_ARMORED_LEAP_END"
+			break
 
-                                                                                     
-                                                  
-                                                                    
-                                                   
-        
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_START:
+			drawInfo.drawSize = eTrackingPOIDrawSize.NORMAL
+			drawInfo.icon = $"rui/hud/poi_icons/poi_newcastle_tactical_start"
+			drawInfo.displayText = "#WPN_SHIELD_THROW_START"
+			break
 
-                                                                                   
-                                                  
-                                                                  
-                                                 
-        
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_END:
+			drawInfo.drawSize = eTrackingPOIDrawSize.NORMAL
+			drawInfo.icon = $"rui/hud/poi_icons/poi_newcastle_tactical_end"
+			drawInfo.displayText = "#WPN_SHIELD_THROW_END"
+			break
 
       
 
@@ -1805,9 +1802,7 @@ int function GetPingTypeFromPOIType( entity waypoint )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_TRAVERSAL_ELEVATOR_EXIT:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_PASSIVE_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_PASSIVE_END:
-              
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_PATH:
-      
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_ENTER:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_PORTAL_EXIT:
 			return (age > 30) ? ePingType.BLOODHOUND_POI_TRAVELER : ePingType.BLOODHOUND_POI_TRAVELER_RECENT
@@ -1847,17 +1842,15 @@ int function GetPingTypeFromPOIType( entity waypoint )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_VALK_ULTIMATE_END:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_FOCUS_OF_ATTENTION:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ECHO_LOCATOR:
-              
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_RIOT_DRILL_END:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_START:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_MAGGIE_WRECKING_BALL_END:
-      
                  
-                                                                                    
-                                                                                  
-                                                                                     
-                                                                                   
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_END:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_START:
+		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_MOBILE_SHIELD_END:
       
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_ENEMY_TETHERED:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_ASH_DATAKNIFE_USED:
@@ -2002,17 +1995,15 @@ void function TrackingVision_CreateGenericTrackerMarker( entity waypoint )
 
 	entity localViewPlayer = GetLocalViewPlayer()
 
-                     
-		                                                                                                                                                                                                      
-		if ( IsUsingProximityAllianceMembers() )
-		{
-			if ( !IsValid( waypoint ) || !IsValid( localViewPlayer ) )
-				return
+	                                                                                                                                                                                                      
+	if ( IsUsingProximityAllianceMembers() )
+	{
+		if ( !IsValid( waypoint ) || !IsValid( localViewPlayer ) )
+			return
 
-			if ( IsFriendlyTeam( waypoint.GetTeam(), localViewPlayer.GetTeam() ) )
-				return
-		}
-                           
+		if ( IsFriendlyTeam( waypoint.GetTeam(), localViewPlayer.GetTeam() ) )
+			return
+	}
 
 	vector pos = waypoint.WaypointGetPOIPosition()
 	var rui = CreateTransientFullscreenRui( $"ui/tracking_vision_object_icons.rpak", RuiCalculateDistanceSortKey( localViewPlayer.EyePosition(), pos ) )

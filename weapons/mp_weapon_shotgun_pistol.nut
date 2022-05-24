@@ -9,13 +9,13 @@ global function OnProjectileCollision_weapon_shotgun_pistol
 var function OnWeaponPrimaryAttack_weapon_shotgun_pistol( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
                                  
-		if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_APRILFOOLS ) )
-		{
-			#if SERVER
-				                                          
-			#endif
-			return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
-		}
+                                                         
+   
+             
+                                              
+         
+                                                                
+   
                      
 	bool playerFired = true
 	return Fire_ShotgunPistol( weapon, attackParams, playerFired )
@@ -54,17 +54,17 @@ int function Fire_ShotgunPistol( entity weapon, WeaponPrimaryAttackParams attack
 void function OnProjectileCollision_weapon_shotgun_pistol( entity projectile, vector pos, vector normal, entity hitEnt, int hitbox, bool isCritical, bool isPassthrough )
 {
                                  
-		#if SERVER
-		                                                                 
-		 
-			                                                
-		 
-		#endif         
+            
+                                                                   
+   
+                                                   
+   
+                 
                      
 }
 
                                 
-#if SERVER
+          
 
                                         
                                      
@@ -73,136 +73,136 @@ void function OnProjectileCollision_weapon_shotgun_pistol( entity projectile, ve
 
                                                                                          
  
-	                                                                      
-	 
-		                                                                
-		                                              
-	 
+                                                                       
+  
+                                                                  
+                                                
+  
  
 
                                                                                             
  
-	                                         
-	                                                      
-	                                                      
-	                                          
-	                                           
+                                          
+                                                       
+                                                       
+                                           
+                                            
 
-	                                               
-	                                                                                                                                                            
-	                                                         
+                                                
+                                                                                                                                                             
+                                                          
 
-	                                                                 
-	                                                                                                                            
+                                                                  
+                                                                                                                             
 
-	                                                           
-	           
+                                                            
+            
  
 
                                                 
  
-	                                                                                                                
-	                                                            
-	                             
+                                                                                                                 
+                                                             
+                              
 
-	                                      
-	                                     
-	                              
+                                       
+                                      
+                               
 
-	                  
+                   
  
 
                                                                    
  
-	                              
-	                                
-	                
-	                                         
+                               
+                                 
+                 
+                                          
  
 
                                                                               
  
-	                                                                      
-	 
-		                                                         
-		                           
-		 
-			                                                 
-			                                    
-			                            
-			                                           
-			 
-				                      
-			 
-			                                                                                                           
-			                    
-		 
-	 
+                                                                       
+  
+                                                           
+                             
+   
+                                                    
+                                       
+                               
+                                              
+    
+                          
+    
+                                                                                                              
+                       
+   
+  
  
 
                                                                                                                              
  
-	                                                                             
-	                                    
-	                     
-	 
-		                             
-	 
-	                       
-	                                   
-	                                      
-	                             
+                                                                              
+                                     
+                      
+  
+                               
+  
+                        
+                                    
+                                       
+                              
 
-	                                                         
+                                                          
 
-	                                                                                                                  
-	                                 
-	                           
-	 
-		                                                    
-	 
-	                                                  
-	                                                                                                   
+                                                                                                                   
+                                  
+                            
+  
+                                                      
+  
+                                                   
+                                                                                                    
  
 
                                                  
  
-	                                                   
-	                                                       
+                                                    
+                                                        
 
-	                                                   
-	                                    
-	                                    
-	                                       
-	                              
-	                                      
-	                        
-	                           
-	                                              
+                                                    
+                                     
+                                     
+                                        
+                               
+                                       
+                         
+                            
+                                               
  
 
                                                               
  
-	                      
-		      
+                       
+        
 
-	                 
+                  
 
-	                               
-	 
-		                      
-	 
+                                
+  
+                        
+  
 
-	                                                                                
-	 
-		                      
-	 
+                                                                                 
+  
+                        
+  
  
 
                                               
  
-	                                                                                                                                                                  
+                                                                                                                                                                   
  
-#endif
+      
 
                     

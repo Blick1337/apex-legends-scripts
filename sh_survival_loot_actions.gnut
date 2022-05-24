@@ -626,8 +626,10 @@ bool function PickupVaultKeyItem( entity pickup, entity player, int pickupFlags,
 			                                                            
 			                                
 			                                                                                            
+                     
 			                                                      
 				                                    
+         
 			                                                                      
 		#endif
 
@@ -763,8 +765,18 @@ bool function GiveMainWeapon_Internal( entity pickup, entity player, bool dropCu
 {
 	entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 
-	if ( activeWeapon != null && (activeWeapon.IsWeaponOffhand() || activeWeapon.IsDiscarding()) )
-		return false
+	if ( activeWeapon != null )
+	{
+		if ( activeWeapon.IsDiscarding() )
+			return false
+
+		if ( activeWeapon.IsWeaponOffhand() )
+		{
+			var offhandAllowsPickups = activeWeapon.GetWeaponInfoFileKeyField( "offhand_allow_player_interact" )
+			if ( !offhandAllowsPickups || offhandAllowsPickups <= 0 )
+				return false
+		}
+	}
 
 	array<entity> primaryWeapons = SURVIVAL_GetPrimaryWeapons( player )
 	if ( !dropCurrentWeapon && primaryWeapons.len() > 1 )
@@ -781,7 +793,11 @@ bool function GiveMainWeapon_Internal( entity pickup, entity player, bool dropCu
 	}
 
 	#if SERVER
-		                                                                                                                     
+		                                                                                 
+
+		                                            
+
+		                                                                                                                               
 	#else
                    
                                                        
@@ -851,10 +867,10 @@ bool function EquipEquipment( entity pickup, entity player, string equipSlot, en
 				                                                                                                                                     
 			 
                     
-                                                        
-    
-                                                                
-    
+			                                                     
+			 
+				                                                            
+			 
          
 
 			                                                                              

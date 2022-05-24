@@ -46,6 +46,10 @@ global function ServerCallback_RespawnBeaconStart
 global function ServerCallback_RespawnBeaconStop
 
 global function TryPingRespawnItem
+
+                 
+                                                  
+      
 #endif
 
 #if CLIENT
@@ -170,6 +174,9 @@ void function Sh_RespawnBeacon_Init()
 
 	#if SERVER || CLIENT
 		Remote_RegisterServerFunction( "ClientCallback_PingNearestRespawn", "vector", -FLT_MAX, FLT_MAX, 32 )
+                  
+                                                                                 
+       
 	#endif
 
 	#if CLIENT
@@ -188,7 +195,7 @@ void function Sh_RespawnBeacon_Init()
 		RegisterButtonPressedCallback( BUTTON_A, TryPingRespawnItem )
 
 		if ( (GetRespawnStyle() == eRespawnStyle.RESPAWN_CHAMBERS) && RespawnBeaconsAreEnabled() )
-			SetMapFeatureItem( 1000, "#RESPAWN_BEACON", "#RESPAWN_BEACON_DESC", RESPAWN_BEACON_ICON )
+			SetMapFeatureItem( 1100, "#RESPAWN_BEACON", "#RESPAWN_BEACON_DESC", RESPAWN_BEACON_ICON )
 
 	#elseif SERVER
 		                                                        
@@ -285,7 +292,7 @@ void function RegisterMinimapPackages()
 	}
 }
 
-void function RespawnStatusChanged( entity player, int old, int new )
+void function RespawnStatusChanged( entity player, int new )
 {
 	if ( player == GetLocalClientPlayer() )
 		UpdateRespawnStatus( new )
@@ -336,7 +343,7 @@ void function RespawnStatusChanged( entity player, int old, int new )
 	}
 
 	                                                                                                          
-	DeathScreen_RespawnStatusChanged( player, old, new )
+	DeathScreen_RespawnStatusChanged( player, new )
 }
 
 void function UpdateRespawnChamberRuis( var rui, bool waitingToBeRespawned )
@@ -878,6 +885,11 @@ void function MinimapPackage_RespawnChamber( entity ent, var rui )
 
 string function RespawnChamber_TextOverride( entity ent )
 {
+                  
+                                     
+                                   
+       
+
 	if ( file.mobileRespawnSpawnInProgress )
 	{
 		return ""
@@ -888,10 +900,15 @@ string function RespawnChamber_TextOverride( entity ent )
 	if ( GetPlayerArrayOfTeam( team ).len() == GetPlayerArrayOfTeam_Alive( team ).len() ||
 			CountTeammatesWaitingToBeRespawned( team ) == 0 )
 	{
-		return "#HINT_RESPAWN_NEED"
+                   
+                                                                                                        
+                                
+      
+        
+			return "#HINT_RESPAWN_NEED"
 	}
 
-	return "#HINT_RESPAWN_USE"
+		return "#HINT_RESPAWN_USE"
 }
 
 string function RespawnDNA_TextOverride( entity ent )
@@ -901,6 +918,22 @@ string function RespawnDNA_TextOverride( entity ent )
 
 	return "#HINT_DESTROY_DNA_USE"
 }
+
+                 
+                                                              
+ 
+                                     
+
+                          
+        
+
+                       
+        
+
+                                  
+ 
+      
+
 #endif          
 
 float function GetRespawnStationUseTime( entity ent )
@@ -912,9 +945,16 @@ void function RespawnChamberOnUse( entity pickup, entity player, int pickupFlags
 {
 	if ( !(pickupFlags & USE_INPUT_LONG) )
 		return
+                 
+                                                                                                            
+        
 
+                                                                                                                                
+        
+     
 	if ( CountTeammatesWaitingToBeRespawned( player.GetTeam() ) == 0 )
 		return
+      
 
 	float time = Time()
 	RespawnChamberOnUse_Common( pickup, player, time )
@@ -964,7 +1004,13 @@ void function RespawnChamberOnUse_Common( entity pickup, entity player, float st
 		settings.displayRui = $"ui/health_use_progress.rpak"
 		settings.displayRuiFunc = DisplayRuiForRespawnChamber
 		settings.icon = $""
-		settings.hint = "#HINT_RESPAWNING"
+
+                   
+                                                                                                                                                                          
+                                        
+      
+        
+			settings.hint = "#HINT_RESPAWNING"
 		settings.icon = RESPAWN_BEACON_ICON
 		settings.serverStartTime = startTime
 
@@ -1060,9 +1106,55 @@ void function DisplayRuiForRespawnChamber_Internal( var rui, asset icon, float s
 	                                                                                                                                                                        
 	                                                           
  
+                 
+                                                                    
+ 
+           
+                                                                  
+                                                                  
+
+                         
+                        
+                       
+
+                                    
+
+                                                                                     
+                      
+
+                                                                                    
+                    
+
+                           
+
+                                                                                      
+                        
+
+                                     
+                                                         
+                           
+                                                                  
+
+                                                                                                 
+
+                             
+
+                                   
+      
+
+                                
+
+       
+ 
+      
 
                                                                      
  
+                  
+                                                                                                           
+                                               
+       
+
 	                                                                      
 		            
 
@@ -2231,6 +2323,12 @@ void function ServerCallback_RespawnBeaconStop()
 {
 	if ( IsSpectating() )
 		clGlobal.levelEnt.Signal( "SpectatorShowRespawnRui" )
+
+	entity player = GetLocalViewPlayer()
+                 
+                                                                
+                                   
+      
 }
 #endif          
 

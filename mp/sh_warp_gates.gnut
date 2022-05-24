@@ -134,6 +134,8 @@ const string PHASE_GATE_EXIT_1P = "Olympus_Phaserunner_Exit_1p"
 
       
  
+	                     
+
 	                                              
 
 	                                                                              
@@ -227,6 +229,11 @@ void function ShWarpGates_Init()
 	 
 		                                                   
 		 
+			                                    
+			 
+				                            
+			 
+
 			                                
 			                                      
 
@@ -414,11 +421,8 @@ void function ShWarpGates_Init()
 	                       
 	                        
 	                       
-	                                    
-	                             
-	                                                                                                                                                             
-	                 
-		                                              
+	                              
+	  	                                              
 
 	                                   
  
@@ -718,7 +722,7 @@ void function ShWarpGates_Init()
 
 	                                                                  
 	                             
-	                                                                                                                  
+	                                                                                                               
 
 	                                                                        
 

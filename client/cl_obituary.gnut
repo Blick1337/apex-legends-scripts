@@ -20,6 +20,7 @@ const NUM_OBITUARY_LINES = 4
 const obituaryTextBoxWidth = 500
 const obituaryTextBoxHeight = 20
 const defaultCharacterWidth = 5
+const int MAX_OBITUARY_ENTRIES = 20
 
 struct ObituaryData
 {
@@ -105,14 +106,12 @@ ObitEntityInfo function Obituary_GetEntityInfo( entity ent, int damageSourceId, 
 		info.displayColor = localPlayer.GetTeam() == ent.GetTeam() ? GetPlayerInfoColor( ent ) : <255, 255, 255>                              
 	}
 
-                     
-		                                                                                                             
-		if ( IsUsingProximityAllianceMembers() )
-		{
-			if ( localPlayer.GetTeam() != ent.GetTeam() && IsFriendlyTeam( localPlayer.GetTeam(), ent.GetTeam() ) )
-				info.displayColor = TEAM_COLOR_FRIENDLY
-		}
-                           
+	                                                                                                             
+	if ( IsUsingProximityAllianceMembers() )
+	{
+		if ( localPlayer.GetTeam() != ent.GetTeam() && IsFriendlyTeam( localPlayer.GetTeam(), ent.GetTeam() ) )
+			info.displayColor = TEAM_COLOR_FRIENDLY
+	}
 
   
 	                          
@@ -561,7 +560,6 @@ void function Obituary_Print_Control_ObjectivePing( entity subjectEnt, string lo
 					{
 						RuiDestroy( obitData.rui )
 						obitData.rui = null
-						file.obituaryQueue.removebyvalue( obitData )
 					}
 
 					delete file.controlObjectiveToObituaryDataTable[ objectivePing.GetOwner() ]
@@ -719,7 +717,7 @@ void function UpdateObituaryQueue()
 	{
 		ObituaryData obitData = file.obituaryQueue[index]
 
-		if ( Time() - obitData.startTime >= OBITUARY_DURATION || index > 20 || !IsValid( obitData.rui ) )
+		if ( Time() - obitData.startTime >= OBITUARY_DURATION || index > MAX_OBITUARY_ENTRIES || !IsValid( obitData.rui ) )
 		{
 			if ( IsValid( obitData.rui ) )
 			{

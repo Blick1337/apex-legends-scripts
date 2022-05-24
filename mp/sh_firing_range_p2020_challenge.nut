@@ -1,4 +1,3 @@
-              
 #if SERVER || CLIENT
 global function ShFRC_p2020_Init
 #endif
@@ -40,13 +39,10 @@ void function ShFRC_p2020_Init()
 	data.challengeTime = 60.0
 	data.challengeType = eFiringRangeChallengeType.FR_CHALLENGE_TYPE_BEST_DAMAGE
 	data.statTemplate = CAREER_STATS.s12e04_challenge_3
-	data.storyChallengeChapter = 3
-	data.storyChallengeItemFlav = "challenge_s12e04_group3challenge0"
 	data.challengeName = "#FRC_CHALLENGE_3_NAME"
 	data.challengeInteractStr = "#FRC_CHALLENGE_3_INTERACT"
 	data.challengeStartHint = "#FR_CHALLENGE_DUMMIE_HINT"
 	data.rewardTracker = $"settings/itemflav/gcard_tracker/frc_challenge3_score.rpak"
-	data.storyRewardTracker = $"settings/itemflav/gcard_tracker/s12e04_challenge3_score.rpak"
 
 	data.borderName = "frc_challenge3_border"
 	data.borderType = 1
@@ -59,7 +55,6 @@ void function ShFRC_p2020_Init()
 		                                        
 		                                        
 		                                          
-		                                      
 	#endif
 
 	FRC_RegisterChallenge( "mp_weapon_semipistol_challenge", data )
@@ -81,7 +76,6 @@ void function ShFRC_p2020_Init()
 		                                        
 	 
 
-	                                                                          
 	                                           
  
 
@@ -112,7 +106,7 @@ void function ShFRC_p2020_Init()
 	                       
 	                  
 	                        
-	                                                             
+	                                                                      
 
 	            
 		                    
@@ -137,6 +131,11 @@ void function ShFRC_p2020_Init()
 	 
 		                                                                                  
 
+		                                            
+		 
+			     
+		 
+
 		                                 
 		 
 			                                                                                      
@@ -157,7 +156,6 @@ void function ShFRC_p2020_Init()
 		                                                          
 		                                                        
 
-		                                                                                              
 		                                                                                                       
 		                                                                                                                 
 		                                                                           
@@ -193,8 +191,6 @@ void function ShFRC_p2020_Init()
 
 	                                            
 	                                                   
-	                                          
-		                                         
 	         
 	                                
  
@@ -332,23 +328,16 @@ void function ShFRC_p2020_Init()
 	          
 	                            
 
+	                                                                                                 
+	 
+		      
+	 
+
 	                          
 	 
 		                                                                                          
 	 
  
-
-                                                                     
- 
-	                      
-		      
-
-	                                                                                                 
-	 
-		                                     
-	 
- 
-
 
                                                                          
  
@@ -362,114 +351,15 @@ void function ShFRC_p2020_Init()
 	          
 	                            
 
+	                                                                                                 
+	 
+		                                     
+		      
+	 
+
 	                          
 	 
 		                                                                                                          
 	 
  
-
-                                     
- 
-	                                            
-	                                                 
-	                                            
-	                                                
- 
-
-                                 
- 
-	                                                 
-	                                                 
-	                                                
- 
-
-                                    
- 
-	                                                 
-	                                                 
-	                                                
- 
-
-                                                       
- 
-	                          
-		      
-
-	                                
-	                                       
-	       
-		                                       
-	      
-
-	         
-
-	                                                                                  
-	                                               
-	                                                   
-	                               
-
-	            
-		                       
-		 
-			                         
-			 
-				                                                                                   
-				                                              
-				                                                  
-				                              
-			 
-		 
-	 
-
-	                                    
-	 
-		                                                                              
-		                 
-	 
- 
-
-                                                          
- 
-	                                      
-	 
-		                          
-			      
-
-		                                
-
-		                                 
-		                                           
-			      
-
-		               
-		 
-			        
-
-			                                                                     
-		 
-		    
-		 
-			                        
-			                                               
-			                                                   
-			                                                                                    
-			                               
-
-			                                   
-			 
-				                                                                              
-				                 
-			 
-
-			         
-			                                                                  
-			                                       
-
-			         
-
-			                                                                             
-		 
-	   
- 
 #endif
-      

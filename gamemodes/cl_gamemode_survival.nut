@@ -24,9 +24,7 @@ global function ServerCallback_RefreshDeathBoxHighlight
 
 global function ServerCallback_AnnounceDevRespawn
 
-                     
 global function ServerCallback_AutoReloadComplete
-      
 
                          
                                                           
@@ -766,7 +764,7 @@ void function SetCustomPlayerInfoColor( entity player, vector characterColor )
 	if ( !(player in file.customCharacterColor) )
 		file.customCharacterColor[player] <- characterColor
 	file.customCharacterColor[player] = characterColor
-	if ( file.pilotRui != null )
+	if ( file.pilotRui != null && player == GetLocalClientPlayer())
 	{
 		RuiSetColorAlpha( file.pilotRui, "customCharacterColor", SrgbToLinear( file.customCharacterColor[player] / 255.0 ), 1.0 )
 		RuiSetBool( file.pilotRui, "useCustomCharacterColor", true )
@@ -1047,11 +1045,11 @@ void function ScorebarInitTracking( entity player, var statusRui )
 }
 
 
-void function OnHealthPickupTypeChanged( entity player, int oldKitType, int kitType )
+void function OnHealthPickupTypeChanged( entity player, int kitType )
 {
 	if ( WeaponDrivenConsumablesEnabled() )
 	{
-		Consumable_OnSelectedConsumableTypeNetIntChanged( player, oldKitType, kitType )
+		Consumable_OnSelectedConsumableTypeNetIntChanged( player, kitType )
 	}
 
 	if ( !IsLocalViewPlayer( player ) )
@@ -1285,7 +1283,7 @@ void function GameModeScoreBarRules( var gamestateRui )
 }
 
 
-void function OnIsHealingChanged( entity player, bool old, bool new )
+void function OnIsHealingChanged( entity player, bool new )
 {
 	if ( player != GetLocalClientPlayer() )
 		return
@@ -1396,9 +1394,9 @@ string function GetAnnouncementSubtextString(int roundNumber)
 }
 
 
-void function NextCircleStartTimeChanged( entity player, float old, float new )
+void function NextCircleStartTimeChanged( entity player, float new )
 {
-	if ( old == new || ! CircleAnnouncementsEnabled() )
+	if ( !CircleAnnouncementsEnabled() )
 		return
 
 	UpdateFullmapRuiTracks()
@@ -1439,7 +1437,7 @@ void function NextCircleStartTimeChanged( entity player, float old, float new )
 	if ( new < Time() )
 		return
 
-	if ( old != new && GamePlaying() && CircleBannerAnnouncementsEnabled() )
+	if ( GamePlaying() && CircleBannerAnnouncementsEnabled() )
 	{
 		if ( !GetCurrentPlaylistVarBool( "deathfield_starts_after_ship_flyout", true ) && SURVIVAL_GetCurrentDeathFieldStage() == 0 )
 			return                                                                      
@@ -1464,7 +1462,7 @@ void function NextCircleStartTimeChanged( entity player, float old, float new )
 }
 
 
-void function CircleCloseTimeChanged( entity player, float old, float new )
+void function CircleCloseTimeChanged( entity player, float new )
 {
 	var gamestateRui = ClGameState_GetRui()
 	array<var> ruis  = [gamestateRui]
@@ -1480,7 +1478,7 @@ void function CircleCloseTimeChanged( entity player, float old, float new )
 }
 
 
-void function InventoryCountChanged( entity player, int old, int new )
+void function InventoryCountChanged( entity player, int new )
 {
 	ResetInventoryMenu( player )
 }
@@ -1767,16 +1765,12 @@ void function ToggleFireSelect( entity player )
 		if ( DoesModExist( weapon, "energized" ) && GetCurrentPlaylistVarBool( SENTINEL_USE_ENERGIZE_PLAYLIST_VAR, true ) )
 			WeaponSentinel_TryApplyEnergized( player, weapon )
 
-                           
 			if ( weapon.GetWeaponClassName() == "mp_weapon_dragon_lmg" && DoesModExist( weapon, "energized" ) )
 				Weapon_Dragon_LMG_TryApplyEnergized( player, weapon )
-        
 	}
 
-                      
 	if ( weapon.GetWeaponClassName() == "mp_weapon_car")
 		Weapon_CAR_TryApplyAmmoSwap( player, weapon )
-      
 
                   
                                                       
@@ -2119,12 +2113,10 @@ void function TrackPrimaryWeapon( entity player )
       
                                                 
        
-                                              
                                                                           
        
           
        
-                                               
                                                                            
        
       
@@ -2296,7 +2288,7 @@ void function WaitingForPlayersOverlay_Setup( entity player )
 	if ( !GetWaitingForPlayersOverlayEnabled( player ) )
 		return
 
-	s_overlayRui = CreatePermanentCockpitRui( $"ui/waiting_for_players_blackscreen.rpak", -1 )
+	s_overlayRui = CreatePermanentCockpitPostFXRui( $"ui/waiting_for_players_blackscreen.rpak", HUD_Z_BASE )
 	RuiSetResolutionToScreenSize( s_overlayRui )
 	RuiSetBool( s_overlayRui, "isOpaque", PreGame_GetWaitingForPlayersHasBlackScreen() )
 
@@ -3258,67 +3250,28 @@ array<entity> function GetTeamPlayers( bool friendly )
                                
 
 	array<entity> teamPlayers = friendly ? friendlies : enemies
+	return teamPlayers
+}
 
-                                                                                                                                                                                                 
-	                                                                             
-    table < int, array<entity> > teamToTeammateArray
-    foreach ( teamMember in teamPlayers )
-    {
-        if ( IsValid( teamMember ) )
-        {
-			array< entity > currentTeamMemberSquadArray = [ teamMember ]
-			if ( teamMember.GetTeam() in teamToTeammateArray )
-			{
-				currentTeamMemberSquadArray.extend( teamToTeammateArray[ teamMember.GetTeam() ] )
-				teamToTeammateArray[ teamMember.GetTeam() ] = currentTeamMemberSquadArray
-			}
-			else
-			{
-				teamToTeammateArray[ teamMember.GetTeam() ] <- currentTeamMemberSquadArray
-			}
-        }
-    }
+int function VictorySequence_GetPlayerTeamFromEHI( EHI playerEHI )
+{
+	Assert( EHIHasValidScriptStruct( playerEHI ), "Tried to run VictorySequence_GetPlayerTeamFromEHI on an invalid EHI handle" )
 
-	                                                                                                     
-	teamPlayers.clear()
-
-	                                                                                                                     
-	foreach ( key, value in teamToTeammateArray )
-	{
-		teamPlayers.extend( value )
-	}
-
-	                                                                   
-	array<entity> sortedTeamPlayers = []
-	array<entity> localPlayerSquad = GetPlayerArrayOfTeam( localPlayer.GetTeam() )
-	int playerEHandle = localPlayer.GetEncodedEHandle()
-	bool hasLocalPlayersSquad = false
-
-	foreach ( teamPlayer in teamPlayers )
-	{
-		if ( localPlayerSquad.contains( teamPlayer ) )
+	int playerTeam
+                         
+		                                                                                                                            
+		                                                                                                                                      
+		if ( Control_IsModeEnabled() )
 		{
-			if ( teamPlayer.GetEncodedEHandle() == playerEHandle)
-				localPlayerSquad.removebyvalue( teamPlayer )
-
-			hasLocalPlayersSquad = true
-			continue
+			playerTeam = Control_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI )
+		}
+		else
+                               
+		{
+			playerTeam = EHI_GetTeam( playerEHI )
 		}
 
-		sortedTeamPlayers.append( teamPlayer )
-	}
-
-
-	if ( hasLocalPlayersSquad )
-	{
-		foreach (entity player in localPlayerSquad )
-		{
-			sortedTeamPlayers.insert( 0, player )                      
-		}
-		sortedTeamPlayers.insert( 0, localPlayer )                                                       
-	}
-
-	return sortedTeamPlayers
+	return playerTeam
 }
 
 void function ShowMatchStartSequence( bool friendly, float camera_move_duration = 11.5,  bool placementMode = false, bool isDevTest = false )
@@ -3358,7 +3311,11 @@ void function ShowMatchStartSequence( bool friendly, float camera_move_duration 
 	                               
 	VictoryPlatformModelData victoryPlatformModelData = GetVictorySequencePlatformModel()
 	entity platformModel
-	int maxPlayersToShow                              = -1
+	int maxTotalPlayers = GetCurrentPlaylistVarInt( "max_players", MAX_PLAYERS )
+	int maxTeams = GetCurrentPlaylistVarInt( "max_teams", MAX_TEAMS )
+	int squadSize = maxTotalPlayers / maxTeams
+	int maxPlayersToShow = GetCurrentPlaylistVarInt( "podium_max_players_to_show", squadSize )
+
 	if ( victoryPlatformModelData.isSet && IsValid ( player ) )
 	{
 		printf( "VICTORY: Getting platform model" )
@@ -3381,8 +3338,6 @@ void function ShowMatchStartSequence( bool friendly, float camera_move_duration 
 				cleanupEnts.append( platformModel6 )
 				cleanupEnts.append( platformModel7 )
 				cleanupEnts.append( platformModel8 )
-				if ( IsShadowVictory() )
-					maxPlayersToShow = 16
 			}
                         
 
@@ -3402,22 +3357,31 @@ void function ShowMatchStartSequence( bool friendly, float camera_move_duration 
 		entryPodiumRui = CreateFullscreenRui( ENTRY_PODIUM_RUI )
 		RuiSetBool( entryPodiumRui, "isFriendly", friendly )
 
-                                                                                                                                                                                        
-        int teamOfLastPlayer = -1
-        int squadFormationIndex = 0
-        int maxTotalPlayers = GetCurrentPlaylistVarInt( "max_players", MAX_PLAYERS )                                                                                                    
-		int squadSize = maxTotalPlayers / GetCurrentPlaylistVarInt( "max_teams", MAX_TEAMS )
+		                                                                                                                                                                                
+		int teamOfCurrentPlayer = -1
+		int squadFormationIndex = 0
+		int teamIndex
+
+		                                                                                                                                                         
+		array<bool> isFilledPodiumSpotsArray = []
+		isFilledPodiumSpotsArray.resize( maxPlayersToShow, false )
+
+		                                                                                                                                          
+		array<int> uniqueTeamNumbers = []
+		                                                                                                                         
+		if ( friendly )
+			uniqueTeamNumbers.append( playerTeam )
 
 		foreach ( int i, entity teamPlayer in GetTeamPlayers( friendly ) )
 		{
-			if ( maxPlayersToShow > 0 && i > maxPlayersToShow )
+			if ( i > maxPlayersToShow )
 				break
 
 			int eHandle = teamPlayer.GetEncodedEHandle()
+			if ( !EHIHasValidScriptStruct( eHandle ) )
+				continue
 
-			string playerName = ""
-			if ( EHIHasValidScriptStruct( eHandle ) )
-				playerName = GetPlayerNameUnlessAnonymized( eHandle )
+			string playerName = GetPlayerNameUnlessAnonymized( eHandle )
 
 			if ( !LoadoutSlot_IsReady( eHandle, loadoutSlotCharacter ) )
 				continue
@@ -3429,21 +3393,23 @@ void function ShowMatchStartSequence( bool friendly, float camera_move_duration 
 
 			ItemFlavor characterSkin = LoadoutSlot_GetItemFlavor( eHandle, Loadout_CharacterSkin( character ) )
 
-			                                                                                                                                                         
-			                                                                                                                                                                                                        
-			                                                                                                                                                                                                               
-            if ( teamOfLastPlayer > -1 && teamOfLastPlayer != teamPlayer.GetTeam() )
-            {
-                                                                                                                                                                                          
-                while ( squadFormationIndex % squadSize != 0 && ( ( squadFormationIndex < maxPlayersToShow ) || ( maxPlayersToShow < 0 && squadFormationIndex < maxTotalPlayers) ) )
-                {
-                    squadFormationIndex++
-                }
-            }
+			teamOfCurrentPlayer = teamPlayer.GetTeam()
+			if ( !uniqueTeamNumbers.contains( teamOfCurrentPlayer ) )
+				uniqueTeamNumbers.append( teamOfCurrentPlayer )
 
+			teamIndex = uniqueTeamNumbers.find( teamOfCurrentPlayer )
+
+			                                                                                                                                                                
+			for ( int index = 0; index < squadSize; ++index)
+			{
+				squadFormationIndex = index + teamIndex * squadSize
+				if (!isFilledPodiumSpotsArray[squadFormationIndex])
+				{
+					isFilledPodiumSpotsArray[squadFormationIndex] = true
+					break
+				}
+			}
 			vector pos = GetVictorySquadFormationPosition( file.victorySequencePosition, file.victorySequenceAngles, squadFormationIndex )
-            squadFormationIndex++
-            teamOfLastPlayer = teamPlayer.GetTeam()
 
 			                         
 			entity characterNode = CreateScriptRef( pos, characterAngles )
@@ -3634,6 +3600,9 @@ void function ShowVictorySequence( bool placementMode = false, bool isDevTest = 
 	int playerTeam 				= player.GetTeam()
 	int playerEncodedEHandle 	= player.GetEncodedEHandle()
 
+	if ( EHIHasValidScriptStruct( playerEncodedEHandle ) )
+		playerTeam = VictorySequence_GetPlayerTeamFromEHI( playerEncodedEHandle )
+
 	                                                                                                                                                                         
 
                   
@@ -3684,7 +3653,11 @@ void function ShowVictorySequence( bool placementMode = false, bool isDevTest = 
 	                               
 	VictoryPlatformModelData victoryPlatformModelData = GetVictorySequencePlatformModel()
 	entity platformModel
-	int maxPlayersToShow                              = -1
+	int maxTotalPlayers = GetCurrentPlaylistVarInt( "max_players", MAX_PLAYERS )
+	int maxTeams = GetCurrentPlaylistVarInt( "max_teams", MAX_TEAMS )
+	int squadSize = maxTotalPlayers / maxTeams
+	int maxPlayersToShow = GetCurrentPlaylistVarInt( "podium_max_players_to_show", squadSize )
+
 	if ( victoryPlatformModelData.isSet && IsValid ( player ) )
 	{
 		printf( "VICTORY: Getting platform model" )
@@ -3707,8 +3680,6 @@ void function ShowVictorySequence( bool placementMode = false, bool isDevTest = 
 				cleanupEnts.append( platformModel6 )
 				cleanupEnts.append( platformModel7 )
 				cleanupEnts.append( platformModel8 )
-				if ( IsShadowVictory() )
-					maxPlayersToShow = 16
 			}
                         
 
@@ -3727,14 +3698,37 @@ void function ShowVictorySequence( bool placementMode = false, bool isDevTest = 
 		      
 		file.victoryPodiumRui = CreateFullscreenRui( VICTORY_PODIUM_RUI )
 
+		                                                                                                                                                                                
+		int teamOfCurrentPlayer = -1
+		int squadFormationIndex = 0
+		int teamIndex
+
+		                                                                                                                                                         
+		array<bool> isFilledPodiumSpotsArray = []
+		isFilledPodiumSpotsArray.resize( maxPlayersToShow, false )
+
+		                                                                                                                                             
+		array<int> uniqueTeamNumbers = []
+
+		                                                                                                                
+		foreach ( SquadSummaryPlayerData data in file.winnerSquadSummaryData.playerData )
+		{
+			if ( data.eHandle == playerEncodedEHandle )
+			{
+				uniqueTeamNumbers.append( playerTeam )
+				break
+			}
+		}
+
 		foreach ( int i, SquadSummaryPlayerData data in file.winnerSquadSummaryData.playerData )
 		{
-			if ( maxPlayersToShow > 0 && i > maxPlayersToShow )
+			if ( i > maxPlayersToShow )
 				break
 
-			string playerName = ""
-			if ( EHIHasValidScriptStruct( data.eHandle ) )
-				playerName = GetPlayerNameUnlessAnonymized( data.eHandle )
+			if ( !EHIHasValidScriptStruct( data.eHandle ) )
+				continue
+
+			string playerName = GetPlayerNameUnlessAnonymized( data.eHandle )
 
 			if ( !LoadoutSlot_IsReady( data.eHandle, loadoutSlotCharacter ) )
 				continue
@@ -3746,8 +3740,26 @@ void function ShowVictorySequence( bool placementMode = false, bool isDevTest = 
 
 			ItemFlavor characterSkin = LoadoutSlot_GetItemFlavor( data.eHandle, Loadout_CharacterSkin( character ) )
 
-			vector pos = GetVictorySquadFormationPosition( file.victorySequencePosition, file.victorySequenceAngles, i )
+			                                                       
+			teamOfCurrentPlayer = VictorySequence_GetPlayerTeamFromEHI( data.eHandle )
 
+			if ( !uniqueTeamNumbers.contains( teamOfCurrentPlayer ) )
+				uniqueTeamNumbers.append( teamOfCurrentPlayer )
+
+			teamIndex = uniqueTeamNumbers.find( teamOfCurrentPlayer )
+
+			                                                                                                                                                                
+			for ( int index = 0; index < squadSize; ++index)
+			{
+				squadFormationIndex = index + teamIndex * squadSize
+				if (!isFilledPodiumSpotsArray[squadFormationIndex])
+				{
+					isFilledPodiumSpotsArray[squadFormationIndex] = true
+					break
+				}
+			}
+
+			vector pos = GetVictorySquadFormationPosition( file.victorySequencePosition, file.victorySequenceAngles, squadFormationIndex )
 
 			                         
 			entity characterNode = CreateScriptRef( pos, characterAngles )
@@ -3848,56 +3860,6 @@ void function ShowVictorySequence( bool placementMode = false, bool isDevTest = 
 			else
 				dialogueApexChampion = victorySoundPackage.theyAreChampSingular
 		}
-
-                                                                                  
-                                                                                    
-                          
-   
-                                  
-
-                                                                                           
-    
-                                                                     
-             
-
-                                                                                          
-                                                              
-                                                  
-     
-                              
-          
-     
-    
-
-                                                   
-    
-                                                                                                                                               
-    
-                                                   
-    
-                  
-                              
-     
-                                                                                                                                                 
-     
-        
-     
-                                                                                                                                                
-     
-    
-       
-    
-                              
-     
-                                                                                                                                             
-     
-        
-     
-                                                                                                                                            
-     
-    
-   
-                                 
 
 		EmitSoundOnEntityAfterDelay( platformModel, dialogueApexChampion, 0.5 )
 
@@ -4430,7 +4392,7 @@ void function OnPlayerConnectionStateChanged( entity player )
 	}
 }
 
-void function OnPlayerMatchStateChanged( entity player, int oldState, int newState )
+void function OnPlayerMatchStateChanged( entity player, int newState )
 {
 	switch ( newState )
 	{
@@ -4813,8 +4775,6 @@ void function ServerCallback_RefreshDeathBoxHighlight()
 	}
 }
 
-
-                     
 const string magAttachmentName = "mag"
 void function ServerCallback_AutoReloadComplete( entity weapon )
 {
@@ -4858,9 +4818,7 @@ void function ServerCallback_AutoReloadComplete( entity weapon )
 		RuiSetBool( rui, "displayPassiveBonusPopup", true )
 		RuiSetGameTime( rui, "passiveActivationTime", Time() )
 	}
-
 }
-      
 
                          
                                                                                        

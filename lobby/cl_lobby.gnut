@@ -12,6 +12,7 @@ struct
 	array<void functionref( entity )> onPlayerAddedToLobbyCallbacks
 
 	entity lobbyBanner = null
+	bool flyerCreated = false
 } file
 
 void function Lobby_AddLocalPlayer()
@@ -38,6 +39,8 @@ void function Lobby_AddLocalPlayer()
 	CacheLobbyBannerEnt()
 
 	thread ManageJitterVFX_Thread()
+
+	thread S13LobbyCreateFlyerThread()
 }
 
 void function AddCallback_OnPlayerAddedToLobby( void functionref( entity ) onPlayerAddedToLobbyCallback )
@@ -77,4 +80,18 @@ void function Lobby_SetBannerSkin( string playlist )
        
 
 	file.lobbyBanner.SetSkin( skinIndex )
+}
+
+
+void function S13LobbyCreateFlyerThread()
+{
+	if ( file.flyerCreated )
+		return
+
+	entity flyer = CreateClientSidePropDynamic( <-170, 1199, 66>,   <0, 270, 0>, $"mdl/Creatures/flyer/flyer_kingscanyon_animated.rmdl")
+	thread PlayAnim( flyer, "fl_perched_idle_look_loop" )
+	flyer.SetScriptName( "LobbyFlyer" )
+	flyer.SetModelScale( 0.1 )
+	flyer.SetSkin( 1 )
+	file.flyerCreated = true
 }

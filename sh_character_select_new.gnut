@@ -1004,7 +1004,7 @@ void function UpdateMenuButtons()
 			continue
 
 		bool isAvailable = IsItemFlavorUnlockedForLoadoutSlot( LocalClientEHI(), Loadout_Character(), itemFlav, true )
-		bool isOwned     = GRX_IsItemOwnedByPlayer_AllowOutOfDateData( itemFlav, GetLocalClientPlayer() )
+		bool isOwned     = Character_IsCharacterOwnedByPlayer( itemFlav, GetLocalClientPlayer() )
 
 		if ( !isAvailable || CharacterSelect_CustomIsCharacterLockedForPlayer( itemFlav, GetLocalClientPlayer() ) )
 		{
@@ -1762,7 +1762,7 @@ void function PlayerLeftTeam()
 		UpdateButtonStates()
 }
 
-void function OnLockStepPickIndexChanged( entity player, int old, int new )
+void function OnLockStepPickIndexChanged( entity player, int new )
 {
 	if ( GetGlobalNetInt( "characterSelectLockstepIndex" ) == fileLevel.localClientLockstepIndex )
 	{
@@ -1789,7 +1789,7 @@ void function OnLockStepPickIndexChanged( entity player, int old, int new )
 	UpdateButtonStates()
 }
 
-void function OnLockStepPickTimeChanged( entity player, float old, float new )
+void function OnLockStepPickTimeChanged( entity player, float new )
 {
 	UpdateButtonStates()
 }
@@ -1841,7 +1841,7 @@ void function ServerCallback_ForceCharacterLockFeedback( entity player, bool isL
 	UpdateButtonStates()
 }
 
-void function OnPlayerUpdatedCharacterLock( entity player, bool wasLocked, bool isLocked )
+void function OnPlayerUpdatedCharacterLock( entity player, bool isLocked )
 {
 	if ( !fileLevel.menuEntsReady )
 		return
@@ -1867,12 +1867,9 @@ void function OnPlayerUpdatedCharacterLock( entity player, bool wasLocked, bool 
 	ServerCallback_ForceCharacterLockFeedback( player, isLocked )
 }
 
-void function OnPlayerUpdatedCharacterFocus( entity player, int oldCharacterGUID, int newCharacterGUID )
+void function OnPlayerUpdatedCharacterFocus( entity player, int newCharacterGUID )
 {
 	if ( !fileLevel.menuEntsReady )
-		return
-
-	if ( oldCharacterGUID == newCharacterGUID )
 		return
 
 	if ( !IsValid( player ) )
@@ -1923,11 +1920,8 @@ void function OnPlayerUpdatedCharacterFocus( entity player, int oldCharacterGUID
 	Signal( fileLevel.signalDummy, "UpdateScene" )
 }
 
-void function OnLockStepPlayerIndexChanged( entity player, int oldValue, int newValue )
+void function OnLockStepPlayerIndexChanged( entity player, int newValue )
 {
-	if ( oldValue == newValue )
-		return
-
 	if ( player == GetLocalClientPlayer() )
 	{
 		if ( fileLevel.countdownRui != null )
@@ -1988,7 +1982,7 @@ void function ServerCallback_CharacterLockRejected()
 	EmitSoundOnEntity( GetLocalClientPlayer(), "ui_ingame_fd_armoryclose" )
 }
 
-void function OnPlayerUpdatedCharacterLockTime( entity player, float oldTime, float newTime )
+void function OnPlayerUpdatedCharacterLockTime( entity player, float newTime )
 {
 	if ( fileLevel.isBrowseMode && fileLevel.browseModeShowLockedCharacters )
 		UpdateButtonStates()
@@ -2305,23 +2299,23 @@ void function UpdateButtonStates()
 	else if ( SquadMuteLegendSelectEnabled() )
 	{
                         
-			if ( WinterExpress_IsModeEnabled() && GetGameState() == eGameState.Playing )
-			{
-				bottomString = Localize( "#CHAR_SEL_BUTTON_HINT_SELECT_DETAILS" )
-			}
-			else if ( !IsSoloMode() )
-			{
-				bottomString = Localize( IsSquadMuted() ? "#CHAR_SEL_BUTTON_UNMUTE" : "#CHAR_SEL_BUTTON_MUTE" )
-			}
-			else
-			{
-				bottomString = ""
-			}
-       
-                       
+                                                                               
+    
+                                                                     
+    
+                            
+    
                                                                                                    
+    
        
+    
                      
+    
+       
+			if ( !IsSoloMode() )
+				bottomString = Localize( IsSquadMuted() ? "#CHAR_SEL_BUTTON_UNMUTE" : "#CHAR_SEL_BUTTON_MUTE" )
+			else
+				bottomString = ""
         
 	}
 

@@ -637,6 +637,7 @@ global struct PrivateMatchStatsStruct
 	int respawnsGiven
 	int teamNum
 	int teamPlacement
+	bool alive
 }
 
 global struct PrivateMatchAdminChatConfigStruct
@@ -691,6 +692,12 @@ global struct CustomMatch_LobbyPlayer
 	int flags = 0
 }
 
+global struct CustomMatch_MatchHistory
+{
+	int matchNumber
+	int endTime
+}
+
 global struct CustomMatch_LobbyState
 {
 	                
@@ -708,6 +715,7 @@ global struct CustomMatch_LobbyState
 	bool aimAssist = true
 	bool anonMode = false
 	array<CustomMatch_LobbyPlayer> players
+	array<CustomMatch_MatchHistory> matches
 	table<int, string> teamNames
 }
 
@@ -735,12 +743,6 @@ global struct CustomMatch_MatchSummary
 	string gamemode
 	bool inProgress
 	array<CustomMatch_MatchTeam> teams
-}
-
-global struct CustomMatch_MatchHistory
-{
-	int matchNumber
-	float endTime
 }
 
 global struct CustomMatch_LobbyHistory
