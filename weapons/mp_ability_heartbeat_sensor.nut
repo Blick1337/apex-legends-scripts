@@ -981,7 +981,7 @@ void function ManageVictims_Thread( entity player )
 		#if DEV
 			if ( HEARTBEAT_SENSOR_DEBUG_VERBOSE )
 			{
-				DebugDrawSphere( player.EyePosition(), file.heartbeatSensorRange, 255, 0, 0, true, 0.1 )
+				DebugDrawSphere( player.EyePosition(), file.heartbeatSensorRange, COLOR_RED, true, 0.1 )
 			}
 		#endif      
 		float viewportFOV = GetFOVForPlayer( player )
@@ -994,7 +994,7 @@ void function ManageVictims_Thread( entity player )
 			if ( HEARTBEAT_SENSOR_DEBUG )
 			{
 				printt("viewportFOV: " + viewportFOV + " watchRange: " + watchRange)
-				DebugDrawArrow( player.EyePosition(), player.EyePosition() + ( player.GetViewVector() * watchRange ), 10, 255, 0, 0, true, 0.1)
+				DebugDrawArrow( player.EyePosition(), player.EyePosition() + ( player.GetViewVector() * watchRange ), 10, COLOR_RED, true, 0.1)
 			}
 		#endif      
 
@@ -1095,7 +1095,7 @@ void function ManageVictims_Thread( entity player )
 			#if DEV
 			if ( HEARTBEAT_SENSOR_DEBUG )
 			{
-				DebugDrawMark( victimInfo.player.GetWorldSpaceCenter(), 15, [255, 0, 0], true, 0.1 )
+				DebugDrawMark( victimInfo.player.GetWorldSpaceCenter(), 15, COLOR_RED, true, 0.1 )
 			}
 			#endif      
 		}
@@ -1105,7 +1105,7 @@ void function ManageVictims_Thread( entity player )
 			{
 				if ( IsValid( bestVictimForAudio ) )
 				{
-					DebugDrawMark( bestVictimForAudio.EyePosition(), 25, [0, 255, 0], true, 0.1 )
+					DebugDrawMark( bestVictimForAudio.EyePosition(), 25, COLOR_GREEN, true, 0.1 )
 				}
 			}
 		#endif      
@@ -1399,7 +1399,7 @@ ScreenSpaceData function GetScreenSpaceData( entity player, entity victim )
 	#if DEV
 		if ( HEARTBEAT_SENSOR_DEBUG )
 		{
-			DebugDrawMark( victim.GetWorldSpaceCenter(), 5, [255, 0, 0], true, 1.5 )
+			DebugDrawMark( victim.GetWorldSpaceCenter(), 5, COLOR_RED, true, 1.5 )
 		}
 	#endif      
 

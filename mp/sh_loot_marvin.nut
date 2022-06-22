@@ -342,16 +342,16 @@ void function EntitiesDidLoad()
 		 
 			                            
 			 
-				                                                                 
+				                                                                  
 			 
 			                              
 			 
-				                                                                 
+				                                                                   
 				                        
 			 
 			    
 			 
-				                                                                   
+				                                                                    
 			 
 		 
 	 
@@ -1043,7 +1043,6 @@ bool function DoesPlayerHaveMarvinArmInInventory( entity player )
 		                                                                                                                          
 		                                     
 		                                                                    
-		                                                                     
 	 
 
 	                                          

@@ -41,6 +41,7 @@ global function ArenasRanked_DidPlayerEverHaveAFullTeam
 #endif
 
 #if SERVER
+                                             
                                                                                                                                                                        
                                                                   
                                                                    
@@ -794,7 +795,7 @@ array<bool> function ArenasRanked_GetPlacementWinsAsArray( entity player )
 	                                                          
 
 	                                                                                                          
-	                     
+	                                                                        
 	                                                                            
 	 
 		                                                
@@ -1773,6 +1774,13 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 			                                                                                                            
 			                                                                                                                                  
 		 
+
+		                                                         
+			                                                         
+
+		                                                                                                             
+		                                                                                                                        
+		                                              
 	 
  
 
@@ -3056,7 +3064,7 @@ bool function IsLastPlaylistArenasMode()
 	string playlist = string( GetPersistentVar( "lastPlaylist" ) )
 
 	                                                              
-	if( GetPlaylistIndexForName( playlist ) == -1 )
+	if( GetPlaylistIndexForName( playlist ) == -1 || Playlist_ShouldBeHiddenForScheduleBlocks( playlist ) )
 		return false
 
 	                                                  

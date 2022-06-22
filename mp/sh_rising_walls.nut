@@ -586,8 +586,8 @@ bool function DoRisableWallEntsExist()
 		                                                        
 			      
 
-		                                                                     
-		                                                                      
+		                                                                       
+		                                                                       
 
 		           
 	 

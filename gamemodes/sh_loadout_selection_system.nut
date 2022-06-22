@@ -1,4 +1,31 @@
-                                                                                                                             
+                                                                                                            
+                                                                                                                                                   
+                                                                          
+
+                                                                                                                                                                                
+                                                                                                                                                                              
+                                                                                                                                                                                
+                                                                                                                                                                               
+                                                    
+
+                                                                                                      
+                                     
+                                                                                                                                                                          
+                                                           
+
+                   
+                                                                                                                                                                                                      
+                                                                                                                                                                                                                                                                               
+                                                                                                                                           
+
+                                                                                                                                           
+                                                                                                                                     
+
+                                                                                                                           
+                                                                                                                                                                             
+                                                                                                                                                          
+
+
 #if CLIENT || SERVER
 global function LoadoutSelection_Init
 global function LoadoutSelection_RegisterNetworking
@@ -44,15 +71,20 @@ global function LoadoutSelection_GetSelectedLoadoutSlotIndex_UI
 
 global function IsUsingLoadoutSelectionSystem
 global function LoadoutSelection_GetWeaponCountByLoadoutIndex
-global function LoadoutSelection_AreChallengeLoadoutsEnabled
-global function LoadoutSelection_AreFeaturedLoadoutsEnabled
+                          
+                                                            
+                                                           
+                                
 
-                                                                                                                                                                                                
 global const int LOADOUTSELECTION_MAX_LOADOUT_COUNT_REGULAR = 6
-global const int LOADOUTSELECTION_MAX_LOADOUT_COUNT_FEATURED = 1
-global const int LOADOUTSELECTION_MAX_LOADOUT_COUNT_CHALLENGE = 1
-                                                                                                                   
-global const int LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS = 8
+                          
+                                                                
+                                                                 
+                                                                                                                                                                                                   
+     
+global const int LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS = LOADOUTSELECTION_MAX_LOADOUT_COUNT_REGULAR
+                                
+
 global const int LOADOUTSELECTION_MAX_WEAPONS_PER_LOADOUT = 2
 global const int LOADOUTSELECTION_MAX_CONSUMABLES_PER_LOADOUT = 5
 global const int LOADOUTSELECTION_MAX_SCOPE_INDEX = 9
@@ -82,7 +114,10 @@ const asset LOADOUTSELECTION_WEAPON_DATA_DATATABLE = $"datatable/loadoutselectio
 
 const array<string> LOADOUTSELECTION_WEAPON_SET_STRINGS_FOR_TIER = [ WEAPON_LOCKEDSET_SUFFIX_WHITESET, WEAPON_LOCKEDSET_SUFFIX_WHITESET, WEAPON_LOCKEDSET_SUFFIX_BLUESET, WEAPON_LOCKEDSET_SUFFIX_PURPLESET, WEAPON_LOCKEDSET_SUFFIX_GOLD ]
 
+                                                                                                                                                              
                                                            
+                                                                                                                                                                            
+                                                                                                                                                         
 global enum eLoadoutSelectionExclusivity
 {
 	NONE,
@@ -91,6 +126,12 @@ global enum eLoadoutSelectionExclusivity
 	_count
 }
 
+                                                                                                                                                                                          
+                       
+                        
+                         
+                        
+                            
 global enum eLoadoutSelectionRotationStyle
 {
 	GAME,
@@ -102,12 +143,18 @@ global enum eLoadoutSelectionRotationStyle
 }
 #endif                    
 
+                                                                                        
+                                          
+                                
+                                 
 global enum eLoadoutSelectionSlotType
 {
 	INVALID,
 	REGULAR,
-	FEATURED,
-	CHALLENGE,
+                          
+          
+           
+                                
 
 	_count
 }
@@ -172,7 +219,7 @@ struct {
 		asset rotationsDatatable = LOADOUTSELECTION_ROTATIONS_DATATABLE
 		asset loadoutsDatatable = LOADOUTSELECTION_LOADOUTS_DATATABLE
 		asset weaponDataDatatable = LOADOUTSELECTION_WEAPON_DATA_DATATABLE
-		table<int, LoadoutSelectionCategory > loadoutSlotToCategoryDataTable
+		table<int, LoadoutSelectionCategory > loadoutSlotIndexToCategoryDataTable
 		array<LoadoutSelectionCategory> loadoutCategories
 		bool areLoadoutsPopulated = false
 		table< int, WeaponLoadout > loadoutSlotIndexToWeaponLoadoutTable
@@ -232,15 +279,17 @@ bool function LoadoutSelection_ShouldAvoidDuplicateWeaponsInLoadoutRotation()
 	return GetCurrentPlaylistVarBool( "loadoutselection_avoid_duplicate_weapons_in_loadouts", false )
 }
 
-bool function LoadoutSelection_AreChallengeLoadoutsEnabled()
-{
-	return GetCurrentPlaylistVarBool( "loadoutselection_enable_challenge_loadouts", false )
-}
+                          
+                                                            
+ 
+                                                                                        
+ 
 
-bool function LoadoutSelection_AreFeaturedLoadoutsEnabled()
-{
-	return GetCurrentPlaylistVarBool( "loadoutselection_enable_featured_loadouts", false )
-}
+                                                           
+ 
+                                                                                       
+ 
+                                
 
 
 #if CLIENT || SERVER
@@ -289,53 +338,65 @@ void function LoadoutSelection_RegisterNetworking()
                                                                                           
 void function LoadoutSelection_RegisterLoadoutData()
 {
-	                                                                                                            
 	var dataTable = GetDataTable( file.rotationsDatatable )
 	int numRows = minint( GetDataTableRowCount( dataTable ), LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS )
+	int index = 0
+	int row = 0
 
 	for ( int i = 0; i < numRows; i++ )
 	{
 		LoadoutSelectionCategory item
-		item.index = i
-		item.loadoutSlot = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "loadoutSlot" ) )
+		row = i
+		item.loadoutSlot = GetDataTableString( dataTable, row, GetDataTableColumnByName( dataTable, "loadoutSlot" ) )
 
-		string loadoutSlotType = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "loadoutSlotType" ) )
+		                                                       
+		bool isSlotDisabled = GetCurrentPlaylistVarBool( "loadoutselection_dt_override_" + item.loadoutSlot + "_disable", false )
+		if ( isSlotDisabled )
+		{
+			printf( "LOADOUT SELECTION: RegisterLoadoutData skipping " + item.loadoutSlot + " because it is disabled through playlist vars" )
+			continue
+		}
+
+		                                                                               
+		string loadoutSlotToUseAsOverride = GetCurrentPlaylistVarString( "loadoutselection_dt_override_" + item.loadoutSlot + "_loadouts", "" )
+		if ( loadoutSlotToUseAsOverride != "" )
+		{
+			printf( "LOADOUT SELECTION: Overriding Loadout Slot: " + item.loadoutSlot + " with " + loadoutSlotToUseAsOverride )
+			row = GetDataTableRowMatchingStringValue( dataTable, GetDataTableColumnByName( dataTable, "loadoutSlot" ), loadoutSlotToUseAsOverride )
+			Assert( row > -1, "Attempted to override a Loadout Slot through playlist vars using an invalid Loadout Slot or a Slot that is not in the Rotations Datatable" )
+			item.loadoutSlot = GetDataTableString( dataTable, row, GetDataTableColumnByName( dataTable, "loadoutSlot" ) )
+		}
+
+		item.index = index
+
+		string loadoutSlotType = GetDataTableString( dataTable, row, GetDataTableColumnByName( dataTable, "loadoutSlotType" ) )
 		item.loadoutSlotType = LoadoutSelection_GetLoadoutSlotTypeEnumFromString( loadoutSlotType )
 
-		string rotationStyle = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "rotationStyle" ) )
+		string rotationStyle = GetDataTableString( dataTable, row, GetDataTableColumnByName( dataTable, "rotationStyle" ) )
 		item.rotationStyle = LoadoutSelection_GetRotationStyleEnumFromString( rotationStyle )
-		string loadoutContentsString = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "loadoutContentsList" ) )
+		string loadoutContentsString = GetDataTableString( dataTable, row, GetDataTableColumnByName( dataTable, "loadoutContentsList" ) )
 		array<string> loadouts = GetTrimmedSplitString( loadoutContentsString, " " )
 		foreach( loadout in loadouts )
 		{
+			                                                                           
+			string loadoutToUseAsOverride = GetCurrentPlaylistVarString( "loadoutselection_dt_override_loadout_" + loadout, "" )
+			if ( loadoutToUseAsOverride != "" )
+			{
+				printf( "LOADOUT SELECTION: Overriding Loadout: " + loadout + " with " + loadoutToUseAsOverride )
+				loadout = loadoutToUseAsOverride
+			}
+
 			LoadoutSelectionLoadoutContents newLoadoutStruct
 			item.loadoutContentsByNameTable[loadout] <- newLoadoutStruct
 			item.loadoutContentNames.append( loadout )
 		}
 
-		file.loadoutSlotToCategoryDataTable[ i ] <- item
+		file.loadoutSlotIndexToCategoryDataTable[ index ] <- item
 		file.loadoutCategories.append( item )
+		index++
 	}
 
-	printf( "LOADOUT SELECTION: Category Data parsed and registered" )
-
-	                                      
-	foreach ( item in file.loadoutCategories )
-	{
-		string loadoutsPlaylistCheck = GetCurrentPlaylistVarString( "loadoutselection_dt_override_" + item.loadoutSlot + "_loadouts", "" )
-		if ( loadoutsPlaylistCheck != "" )
-		{
-			array<string> loadouts = GetTrimmedSplitString( loadoutsPlaylistCheck, " " )
-			foreach( loadout in loadouts )
-			{
-				LoadoutSelectionLoadoutContents newLoadoutStruct
-				item.loadoutContentsByNameTable.clear()
-				item.loadoutContentsByNameTable[loadout] <- newLoadoutStruct
-				item.loadoutContentNames.clear()
-				item.loadoutContentNames.append( loadout )
-			}
-		}
-	}
+	printf( "LOADOUT SELECTION: RegisterLoadoutData Completed" )
 }
 
                                                                                                                                  
@@ -380,7 +441,6 @@ void function LoadoutSelection_RegisterLoadoutDistribution()
 				{
 					if ( LoadoutSelection_IsRefValidWeapon( weapon ) )
 					{
-						                                                                                                    
 						                                                                                              
 						LootData data = SURVIVAL_Loot_GetLootDataByRef( weapon )
 						if ( !SURVIVAL_Loot_IsRefDisabled( data.baseWeapon ) )
@@ -390,6 +450,7 @@ void function LoadoutSelection_RegisterLoadoutDistribution()
 						else
 						{
 							didDisableWeapon = true
+							Warning( "LOADOUT SELECTION: Attempting to override a weapon for loadout: " + name + " but the override weapon: " + data.baseWeapon + " is disabled (likely through playlist vars)" )
 						}
 					}
 				}
@@ -551,7 +612,7 @@ void function LoadoutSelection_RemoveLoadoutsWithDisabledWeaponsFromCategory( ar
 	                                  
 	if ( emptyLoadoutCategories.len() > 0 )
 	{
-		file.loadoutSlotToCategoryDataTable.clear()
+		file.loadoutSlotIndexToCategoryDataTable.clear()
 
 		foreach ( loadoutCategory in emptyLoadoutCategories )
 		{
@@ -563,7 +624,7 @@ void function LoadoutSelection_RemoveLoadoutsWithDisabledWeaponsFromCategory( ar
 		for ( int index = 0; index < file.loadoutCategories.len(); index++ )
 		{
 			file.loadoutCategories[ index ].index = index
-			file.loadoutSlotToCategoryDataTable[ index ] <- file.loadoutCategories[ index ]
+			file.loadoutSlotIndexToCategoryDataTable[ index ] <- file.loadoutCategories[ index ]
 		}
 	}
 }
@@ -776,7 +837,7 @@ array<string> function LoadoutSelection_GetAvailableWeaponUpgradesForWeaponRef( 
 		 
 		                                                      
 
-		                                                                                        
+		                                                                                    
 		                                                                                                                                                                                                                                                
 		                                                                             
 		 
@@ -835,8 +896,8 @@ array<string> function LoadoutSelection_GetAvailableWeaponUpgradesForWeaponRef( 
                                                 
 LoadoutSelectionLoadoutContents function LoadoutSelection_GenerateLoadoutByLoadoutSlot( int loadoutIndex )
 {
-	Assert( loadoutIndex in file.loadoutSlotToCategoryDataTable, "Running LoadoutSelection_GenerateLoadoutByLoadoutSlot and " + loadoutIndex + " is not a key for the file.loadoutSlotToCategoryDataTable table" )
-	LoadoutSelectionCategory loadoutCategory = file.loadoutSlotToCategoryDataTable[ loadoutIndex ]
+	Assert( loadoutIndex in file.loadoutSlotIndexToCategoryDataTable, "Running LoadoutSelection_GenerateLoadoutByLoadoutSlot and " + loadoutIndex + " is not a key for the file.loadoutSlotIndexToCategoryDataTable table" )
+	LoadoutSelectionCategory loadoutCategory = file.loadoutSlotIndexToCategoryDataTable[ loadoutIndex ]
 	LoadoutSelectionLoadoutContents loadout
 	string activeLoadoutName
 	#if SERVER
@@ -894,6 +955,7 @@ void function LoadoutSelection_PopulateLoadouts()
 	bool didLoadoutCategoryFailToPopulate = false
 	foreach ( loadoutCategory in file.loadoutCategories )
 	{
+		loadoutIndex = loadoutCategory.index
 		                                                     
 		LoadoutSelectionLoadoutContents loadout = LoadoutSelection_GenerateLoadoutByLoadoutSlot( loadoutIndex )
 		file.loadoutSlotIndexToWeaponLoadoutTable[ loadoutIndex ] <- ParseWeaponLoadoutText( loadout.weaponLoadoutString, false )
@@ -917,7 +979,6 @@ void function LoadoutSelection_PopulateLoadouts()
 			didLoadoutCategoryFailToPopulate = true
 
 		file.loadoutSlotIndexToWeaponCountTable[ loadoutIndex ] <- loadout.weaponLoadoutSelectionItemsInLoadout.len()
-		loadoutIndex++
 	}
 	
 	if ( !didLoadoutCategoryFailToPopulate )
@@ -1410,12 +1471,15 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
 	                    
 	                                               
 
-	                                                          
-	                            
-	                             
+                           
+                                                            
+                              
+                               
+                                 
 
 	                                                     
 	 
+		                                    
 		                                                                                                                       
 		                                                          
 		                         
@@ -1429,28 +1493,30 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
 
 		                                                                                                                                                                                                                                                              
 
-		                                                                            
-		 
-			              
-			                      
-		 
+                            
+                                                                               
+    
+                  
+                          
+    
 
-		                                                                             
-		 
-			              
-			                       
-		 
-
-		              
+                                                                                
+    
+                  
+                           
+    
+                                  
 	 
 
 	                                                                                                                         
 
-	                                                    
-		                                                                                                                                  
+                           
+                                                      
+                                                                                                                                     
 
-	                                                     
-		                                                                                                                                    
+                                                       
+                                                                                                                                       
+                                 
 
 	                                                                                                                                                                   
 
@@ -2356,9 +2422,9 @@ void function UICallback_LoadoutSelection_OpticSelectDialogueClose()
 LoadoutSelectionLoadoutContents function LoadoutSelection_GetLoadoutContentsByLoadoutSlotIndex( int loadoutSlotIndex )
 {
 	LoadoutSelectionLoadoutContents	data
-	if ( loadoutSlotIndex in file.loadoutSlotToCategoryDataTable )
+	if ( loadoutSlotIndex in file.loadoutSlotIndexToCategoryDataTable )
 	{
-		LoadoutSelectionCategory loadoutCategory = file.loadoutSlotToCategoryDataTable[ loadoutSlotIndex ]
+		LoadoutSelectionCategory loadoutCategory = file.loadoutSlotIndexToCategoryDataTable[ loadoutSlotIndex ]
 		string loadoutName = loadoutCategory.activeLoadoutName
 
 		if ( loadoutName in loadoutCategory.loadoutContentsByNameTable )

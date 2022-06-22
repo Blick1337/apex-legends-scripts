@@ -5,10 +5,6 @@ global function ShGladiatorCards_Init
 global function ShGladiatorCards_LevelShutdown
 #endif
 
-#if SERVER || CLIENT || UI
-global function AreGladiatorCardsEnabled
-#endif
-
 #if CLIENT
 global function CreateNestedGladiatorCard
 global function CleanupNestedGladiatorCard
@@ -61,7 +57,6 @@ global function DEV_DumpCharacterCaptures
 global function DEV_GladiatorCards_ToggleForceMoving
 global function DEV_GladiatorCards_ToggleShowSafeAreaOverlay
 global function DEV_GladiatorCards_ToggleCameraAlpha
-global function DEV_ForceEnableGladiatorCards
 #endif
 
 #if SERVER || CLIENT || UI
@@ -212,8 +207,7 @@ global enum eGladCardPreviewCommandType
 
 enum eStatTrackerValueFormat
 {
-	BASIC = 0,
-	FLOAT_TWO_POINTS = 1,
+	INTEGER = 0,
 }
 
 #if CLIENT
@@ -395,10 +389,6 @@ struct FileStruct_LifetimeLevel
 
 		array<MenuGladCardPreviewCommand> menuGladCardPreviewCommandQueue
 	#endif
-
-	#if DEV
-		bool DEV_forceEnabled = false
-	#endif
 }
 FileStruct_LifetimeLevel& fileLevel
 #endif
@@ -464,25 +454,11 @@ void function ShGladiatorCards_LevelShutdown()
 #endif
 
 
-
                           
                           
                           
                           
                           
-
-#if SERVER || CLIENT || UI
-bool function AreGladiatorCardsEnabled()
-{
-	#if DEV
-		if ( fileLevel.DEV_forceEnabled )
-			return true
-	#endif
-
-	return GetCurrentPlaylistVarBool( "enable_gladiator_cards", true )
-}
-#endif
-
 
 #if CLIENT
 NestedGladiatorCardHandle function CreateNestedGladiatorCard( var parentRui, string argName, int situation, int presentation )
@@ -541,28 +517,25 @@ void function ChangeNestedGladiatorCardPresentation( NestedGladiatorCardHandle h
 	handle.isBackFace = (handle.presentation > eGladCardPresentation._MARK_BACK_START && handle.presentation < eGladCardPresentation._MARK_BACK_END)
 	handle.shouldShowDetails = (handle.presentation == eGladCardPresentation.FRONT_DETAILS)
 
-	if ( AreGladiatorCardsEnabled() )
-	{
-		asset ruiAsset = $""
-		if ( handle.presentation == eGladCardPresentation.FULL_BOX )
-			ruiAsset = $"ui/gladiator_card_full_box.rpak"
-		else if ( handle.isFrontFace )
-			ruiAsset = $"ui/gladiator_card_frontface.rpak"
-		else if ( handle.isBackFace )
-			ruiAsset = $"ui/gladiator_card_backface.rpak"
+	asset ruiAsset = $""
+	if ( handle.presentation == eGladCardPresentation.FULL_BOX )
+		ruiAsset = $"ui/gladiator_card_full_box.rpak"
+	else if ( handle.isFrontFace )
+		ruiAsset = $"ui/gladiator_card_frontface.rpak"
+	else if ( handle.isBackFace )
+		ruiAsset = $"ui/gladiator_card_backface.rpak"
 
-		RuiDestroyNestedIfAlive( handle.parentRui, handle.argName )
-		if ( handle.cardRui != null )
-		{
-			handle.cardRui = null
-			handle.fgFrameNWS.rui = null
-			handle.bgFrameNWS.rui = null
-			for ( int badgeIndex = 0; badgeIndex < GLADIATOR_CARDS_NUM_BADGES; badgeIndex++ )
-				handle.badgeNWSList[badgeIndex].rui = null
-		}
-		if ( ruiAsset != $"" )
-			handle.cardRui = RuiCreateNested( handle.parentRui, handle.argName, ruiAsset )
+	RuiDestroyNestedIfAlive( handle.parentRui, handle.argName )
+	if ( handle.cardRui != null )
+	{
+		handle.cardRui = null
+		handle.fgFrameNWS.rui = null
+		handle.bgFrameNWS.rui = null
+		for ( int badgeIndex = 0; badgeIndex < GLADIATOR_CARDS_NUM_BADGES; badgeIndex++ )
+			handle.badgeNWSList[badgeIndex].rui = null
 	}
+	if ( ruiAsset != $"" )
+		handle.cardRui = RuiCreateNested( handle.parentRui, handle.argName, ruiAsset )
 
 	TriggerNestedGladiatorCardUpdate( handle )
 }
@@ -1167,14 +1140,6 @@ void function DEV_GladiatorCards_ToggleCameraAlpha( bool ornull forceTo = null )
 #endif
 
 
-#if DEV
-void function DEV_ForceEnableGladiatorCards()
-{
-	fileLevel.DEV_forceEnabled = true
-}
-#endif
-
-
                    
                    
                    
@@ -1541,34 +1506,16 @@ void function OnYouRespawned()
 	                                
 	                                                             
 
-	                                                 
-	 
+	                                                                                                                       
 		                                                                                                                       
-			                                                                                                 
-			                                                                                                                       
-		 
-		                                                                   
-			                                                  
+	 
+	                                                                   
+		                                                  
 
-			                                                                 
-		   
-		                                               
-		                                             
-	 
-	                                                        
-	 
-		                                                                                                                               
-			                                                                                                      
-			                                                                                                                
-		 
-		                                                                   
-			                                                    
-
-			                                                                 
-		   
-		                                                 
-		                                                 
-	 
+		                                                                 
+	   
+	                                               
+	                                             
 
 	             
  
@@ -2307,11 +2254,11 @@ void function DoGladiatorCardCharacterCapture( CharacterCaptureState ccs )
 	ccs.camera.SetMonitorExposure( cameraExposure )
 
 	                                                                                             
-	                                                                                                                                                                                                         
-	                                                                                                                                                                                                        
+	                                                                                                                                                                                                           
+	                                                                                                                                                                                                          
 	  
-	                                                                                                                                                                                                         
-	                                                                                                                                                                                                        
+	                                                                                                                                                                                                           
+	                                                                                                                                                                                                          
 
 	float farZ = 642.0
 
@@ -2723,14 +2670,7 @@ void function UpdateRuiWithStatTrackerData( var rui, string prefix, EHI playerEH
 		{
 			string desiredStatRef = GladiatorCardStatTracker_GetStatRef( trackerFlav, expect ItemFlavor(characterOrNull) )
 			StatEntry desiredStat = GetStatEntryByRef( desiredStatRef )
-			if ( StatEntry_GetType( desiredStat ) == eStatType.INT )
-			{
-				value = float( GetStat_Int( GetLocalClientPlayer(), desiredStat, eStatGetWhen.START_OF_CURRENT_MATCH ) )
-			}
-			else if ( StatEntry_GetType( desiredStat ) == eStatType.FLOAT )
-			{
-				value = GetStat_Float( GetLocalClientPlayer(), desiredStat, eStatGetWhen.START_OF_CURRENT_MATCH )
-			}
+			value = float( GetStat_Int( GetLocalClientPlayer(), desiredStat, eStatGetWhen.START_OF_CURRENT_MATCH ) )
 		}
 	}
 	else
@@ -2763,11 +2703,6 @@ void function UpdateRuiWithStatTrackerData_JustValue( var rui, string prefix, fl
 void function OnPlayerLifestateChanged( entity player, int oldLifeState, int newLifeState )
 {
 	TriggerUpdateOfNestedGladiatorCardsForPlayer( player )
-
-	#if DEV
-		if ( GetLocalClientPlayer() == player && !AreGladiatorCardsEnabled() )
-			player.ClientCommand( "devmenu_alias \"features/GladCards/Force enable (if disabled)\"   \"script_client DEV_ForceEnableGladiatorCards()\"" )
-	#endif
 }
 #endif
 
@@ -3255,6 +3190,8 @@ int function GladiatorCardBadge_GetSortOrdinal( ItemFlavor flavor )
 ItemFlavor ornull function GladiatorCardBadge_GetCharacterFlavor( ItemFlavor flavor )
 {
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.gladiator_card_badge )
+	if ( GladiatorCardBadge_IsCharacterBadge( flavor ) == false )
+		return null
 
 	if ( GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "parentItemFlavor" ) != "" )
 		return GetItemFlavorByAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "parentItemFlavor" ) )
@@ -3460,27 +3397,12 @@ string function GladiatorCardStatTracker_GetFormattedValueText( entity player, I
 
 	StatEntry statEntry = GetStatEntryByRef( statRef )
 
-	float statVal
-	if ( StatEntry_GetType( statEntry ) == eStatType.INT )
-	{
-		statVal = float( GetStat_Int( player, statEntry ) )
-	}
-	else
-	{
-		Assert( StatEntry_GetType( statEntry ) == eStatType.FLOAT )
-		statVal = GetStat_Float( player, statEntry )
-	}
+	int statVal = GetStat_Int( player, statEntry )
 
 	string valueText
-	if ( valueFormat == eStatTrackerValueFormat.FLOAT_TWO_POINTS )
-	{
-		valueText = format( "%0.2f", statVal )
-	}
-	else
-	{
-		Assert( valueFormat == eStatTrackerValueFormat.BASIC )
-		valueText = format( "%i", statVal )
-	}
+
+	Assert( valueFormat == eStatTrackerValueFormat.INTEGER )
+	valueText = format( "%i", statVal )
 
 	return valueText
 }

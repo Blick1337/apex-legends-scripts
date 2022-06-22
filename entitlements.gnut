@@ -44,8 +44,13 @@ global table<entity, bool> playersToCheckForUpgrade
 global array< ItemFlavor > upgradableAccessRewardRefs
 
 #if UI
-global array< asset > dialogAssetQueue
-global array< string > dialogPersistenceQueue 
+struct DialogQueueEntry
+{
+	asset assetRef
+	int entitlementGUID
+	string persistenceVarName
+}
+array< DialogQueueEntry > dialogQueue
 #endif
 
 const string GENERIC_ACKNOWLEDGEMENT_PVAR = "genericEntitlementsAcknowledgement"
@@ -107,7 +112,7 @@ void function Entitlements_LevelInit()
 	#endif
 
 	#if SERVER || CLIENT
-	Remote_RegisterServerFunction( "ClientCallback_MarkEntitlementMenuSeen", "string" )
+	Remote_RegisterServerFunction( "ClientCallback_MarkEntitlementMenuSeen", "int", 0, INT_MAX )
 	#endif
 
 	#if SERVER
@@ -794,7 +799,8 @@ void function UICodeCallback_GRXFirstPartyBundlePurchased( string bundleEnum )
 					if ( GetDialogFlowTablesValueOrPersistence( persistenceVarName ) == false )
 					{
 						asset entitlementAsset = ItemFlavor_GetAsset( entitlementFlav )
-						QueueEntitlementMenu( entitlementAsset, persistenceVarName )
+						int guid = ItemFlavor_GetGUID( entitlementFlav )
+						QueueEntitlementMenu( entitlementAsset, persistenceVarName, guid )
 					}
 				}
 			}
@@ -865,11 +871,12 @@ bool function TryEntitlementMenus()
 			Assert( false, "Unknown entitlementType: " + entitlementType )
 
 		string persistenceVarName = Entitlement_GetMenuPersistenceVarName( entitlementFlav )
+		int guid = ItemFlavor_GetGUID( entitlementFlav )
 
 		if ( hasEntitlement && GetDialogFlowTablesValueOrPersistence( persistenceVarName ) == false )
 		{
 			SetDialogFlowPersistenceTables( persistenceVarName, true )
-			Remote_ServerCallFunction( "ClientCallback_MarkEntitlementMenuSeen", persistenceVarName )
+			Remote_ServerCallFunction( "ClientCallback_MarkEntitlementMenuSeen", guid )
 			Remote_ServerCallFunction( "ClientCallback_lastSeenPremiumCurrency" )
 			OpenEntitlementMenu( entitlementAsset )
 			IncrementNumDialogFlowDialogsDisplayed()
@@ -878,17 +885,16 @@ bool function TryEntitlementMenus()
 		}
 	}
 
-	if ( dialogAssetQueue.len() > 0 )
+	if ( dialogQueue.len() > 0 )
 	{
-		asset entitlementAsset = dialogAssetQueue.pop()
-		string persistenceVarName = dialogPersistenceQueue.pop()
+		DialogQueueEntry dqe = dialogQueue.pop()
 
-		SetDialogFlowPersistenceTables( persistenceVarName, true )
-		Remote_ServerCallFunction( "ClientCallback_MarkEntitlementMenuSeen", persistenceVarName )
+		SetDialogFlowPersistenceTables( dqe.persistenceVarName, true )
+		Remote_ServerCallFunction( "ClientCallback_MarkEntitlementMenuSeen", dqe.entitlementGUID )
 		Remote_ServerCallFunction( "ClientCallback_lastSeenPremiumCurrency" )
-		if ( GetGlobalSettingsBool( entitlementAsset, "isMenuEnabled" ) )
+		if ( GetGlobalSettingsBool( dqe.assetRef, "isMenuEnabled" ) )
 		{
-			OpenEntitlementMenu( entitlementAsset )
+			OpenEntitlementMenu( dqe.assetRef )
 			IncrementNumDialogFlowDialogsDisplayed()
 		}
 		return true
@@ -931,17 +937,47 @@ void function OpenEntitlementMenu( asset entitlementAsset )
 #endif      
 
 #if UI
-void function QueueEntitlementMenu( asset entitlementAsset, string persistenceVar )
+void function QueueEntitlementMenu( asset entitlementAsset, string persistenceVarName, int guid )
 {
-	dialogAssetQueue.append( entitlementAsset )
-	dialogPersistenceQueue.append( persistenceVar )
+	DialogQueueEntry dqe
+	dqe.assetRef = entitlementAsset
+	dqe.persistenceVarName = persistenceVarName
+	dqe.entitlementGUID = guid
+	dialogQueue.append( dqe )
 }
 #endif      
 
 #if SERVER
-                                                                                         
+                                                                                          
  
-	                                            
+	                                               
+		      
+
+	                                                                                                                          
+	                                      
+	 
+		                                                      
+		      
+	 
+
+	                                       
+	 
+		                                                      
+		      
+	 
+	                    
+
+	                                                
+		      
+
+	                                                        
+
+	                                                             
+		      
+
+	                                                                         
+
+	                                                   
  
 #endif          
 

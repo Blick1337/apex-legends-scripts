@@ -301,28 +301,27 @@ float function AreaSonarScan_GetConeFOV()
 					                                             
 					                                                                          
 				 
-
-
-				                                    
-				 
-					                                                                    
-					                                                        
-					   
-					  	                               
-					  	 
-					  		                                                            
-					  	 
-					   
-
-					                                                                   
-					 
-						                               
-						                                  
-						                                                                                                                         
-					 
-					                                                     
-				 
 			 
+			                                    
+			 
+				                                                                    
+				                                                        
+				   
+				  	                               
+				  	 
+				  		                                                            
+				  	 
+				   
+
+				                                                                   
+				 
+					                               
+					                                  
+					                                                                                                                         
+				 
+				                                                     
+			 
+
 			                          
 				                 
 
@@ -450,6 +449,8 @@ float function AreaSonarScan_GetConeFOV()
 	                                    
 		      
 
+	                       
+		      
 
 	                                                   
 	                                                                     
@@ -487,7 +488,7 @@ float function AreaSonarScan_GetConeFOV()
 	                                                                  
 
 	                                 
-	                                                                                      
+	                                                                                         
 	                                                                                                                   
  
 

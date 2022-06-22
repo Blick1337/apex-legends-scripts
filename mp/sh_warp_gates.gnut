@@ -9,7 +9,14 @@ global function ShWarpGates_Init
                                                                      
                                           
                                              
-#endif
+
+       
+                                     
+                                      
+                                      
+                             
+      
+#endif          
 
 #if CLIENT
 global function ServerCallback_StartWarpGateExitSequence
@@ -141,6 +148,12 @@ const string PHASE_GATE_EXIT_1P = "Olympus_Phaserunner_Exit_1p"
 	                                                                              
 	                                                                
 	                                                               
+
+	       
+	                                
+	      
+
+	                        
       
 #endif          
 
@@ -183,6 +196,18 @@ void function ShWarpGates_Init()
  
 	                                                
 		      
+
+	       
+	                                        
+	                      
+	 
+		                              
+		                              
+		                                                                               
+		                                                                                             
+		                                                                                                       
+	 
+	      
 
 	                       
 	                  
@@ -229,6 +254,15 @@ void function ShWarpGates_Init()
 	 
 		                                                   
 		 
+			       
+				                      
+				 
+					                                                                                                          
+					                                                                                         
+					                                                                                                             
+				 
+			      
+
 			                                    
 			 
 				                            
@@ -239,6 +273,17 @@ void function ShWarpGates_Init()
 
 			                                                     
 			 
+				       
+					                      
+					 
+						                                                                                           
+						                                                                                   
+						                                                                                                     
+						                                                          		                                                 
+						                                                                                                            
+					 
+				      
+
 				                                  
 				 
 					                                             
@@ -710,6 +755,13 @@ void function ShWarpGates_Init()
 	                              
 	                                                 
 
+	       
+	                      
+	 	                                                                            
+		                                                                                                                            
+	 
+	      
+
 	                                                                                
 		                     
 
@@ -762,6 +814,13 @@ void function ShWarpGates_Init()
 		 
 			                        
 			 
+				       
+				                      
+				 
+					                                                                                                                     
+				 
+				      
+
 				                
 					                                                                          
 
@@ -817,6 +876,13 @@ void function ShWarpGates_Init()
 		                                                          
 			                                                                           
 
+		       
+			                      
+			 
+				                                                                                                                                                 
+			 
+		      
+
 		                                                                                          
 		                          
 		                       
@@ -824,6 +890,14 @@ void function ShWarpGates_Init()
 
 	                          
 	 
+
+		       
+			                      
+			 
+				                                                                                                                                      
+			 
+		      
+
 		                                                                              
 		                                                                                 
 		                                                                      
@@ -864,12 +938,33 @@ void function ShWarpGates_Init()
 					                                                                    
 
 				                                                                                                      
+
+				       
+					                      
+					 
+						                                                                                                                                                                         
+					 
+				      
+
 				                                                      
 				 
+					       
+						                      
+						 
+							                                                                                                                                         
+						 
+					      
+
 					                                                                                                      
 					                          
 				 
 
+				       
+					                      
+					 
+						                                                                                                                                                                                                       
+					 
+				      
 				                                                    
 
 				          
@@ -895,10 +990,24 @@ void function ShWarpGates_Init()
 		 
 	 
 
+	       
+		                      
+		 
+			                                                                                                                             
+		 
+	      
+
 	                                                                              
 	                                                                
 
 	                                             
+
+	       
+		                      
+		 
+			                                                                                                                                                   
+		 
+	      
 
 	                    
 	               
@@ -924,6 +1033,13 @@ void function ShWarpGates_Init()
 	                           
 	                
 	 
+		       
+			                      
+			 
+				                                                                                                                                                     
+			 
+		      
+		                                      
 		                      
 		                                                                 
 		                                                                     
@@ -1074,6 +1190,18 @@ void function ShWarpGates_Init()
 	                              
 	                                                 
 
+         
+  	                       
+  	 
+  		                                                                                
+  		                                                                   
+  		                                                              
+  		                                                                    
+  		                                                            
+  		                                                                    
+  	 
+        
+
 	                                                      
 	                   
 		            
@@ -1096,6 +1224,7 @@ void function ShWarpGates_Init()
 
 	                                             
 	 
+		                                        
 		                                                            
 		                                    
 		                                                      
@@ -1103,29 +1232,23 @@ void function ShWarpGates_Init()
 	 
 	                              
 	 
-		                                             
-		                  
-		                                                         
-		                               
-		 
-			                                                  
-			 
-				                 
-				     
-			 
-		 
+		                                                                                                                                
+		                                                      
 
 		                          
 		 
-			                                                         
+			                                                                                                                                 
 			                                     
 			                                                    
+		 
+		    
+		 
+			                                                                                                                                                                                   
 		 
 	 
 
 	                                                                                     
 	                              
-
 
 	                             
 
@@ -1137,6 +1260,19 @@ void function ShWarpGates_Init()
 		 
 	 
  
+
+                                                        
+ 
+	                                                         
+	                               
+	 
+		                                                  
+			          
+	 
+
+	           
+ 
+
       
 
                                                                           
@@ -1471,5 +1607,57 @@ void function MinimapPackage_PhaseGate( entity ent, var rui )
 	 
 
 	          
+ 
+#endif
+
+#if SERVER && DEV
+                                      
+ 
+	                                                                      
+	                                     
+ 
+
+                                      
+ 
+	                                                                      
+	                                                                                        
+	                                                  
+	   
+	  	                                                                                    
+	   
+
+	                                  
+	                                                                                     
+	                                           
+	 
+		                                                                                                   
+		 
+			                                                                                                    
+			                                                                       
+		 
+	 
+ 
+
+                                                                    
+ 
+	                               
+	                                                                         
+	                      
+	 
+		                                                                             
+		                                 
+		                                                                   
+		                                
+			                                                                                         
+		                               			                                             
+		                                     	                                             
+		                                                              
+	 
+	                               
+ 
+
+                                                        
+ 
+	                       
  
 #endif

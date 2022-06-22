@@ -662,11 +662,11 @@ void function DoChampionSquadCardsPresentation()
 		shouldPlayChampionVO = false
       
                                                                                  
-                                              
-                         
-  
-                              
-  
+	                                             
+	if ( IsMadMaggieHost() )
+	{
+		shouldPlayChampionVO = false
+	}
                                 
 
 	               
@@ -806,9 +806,9 @@ bool function ShouldPlayIntroQuip()
        
 
                                                                                   
-                                          
-                          
-               
+		                                        
+		if ( IsMadMaggieHost() )
+			return false
        
 
 	return true
@@ -2475,9 +2475,41 @@ void function TryUpdateLightingRig( ItemFlavor character, ItemFlavor characterSk
 
 	        
 	fileLevel.keyLight.SetTweakLightColor( lightData.key_color )
+	fileLevel.keyLight.SetTweakLightBrightness( lightData.key_brightness )
+	fileLevel.keyLight.SetTweakLightCone( lightData.key_cone )
+	fileLevel.keyLight.SetTweakLightInnerCone ( lightData.key_innercone )
+	fileLevel.keyLight.SetTweakLightDistance( lightData.key_distance )
+	fileLevel.keyLight.SetTweakLightHalfBrightFrac( lightData.key_halfbrightfrac )
+	fileLevel.keyLight.SetTweakLightSpecIntensity( lightData.key_specint )
+	fileLevel.keyLight.SetTweakLightPBRFalloff( lightData.key_pbrfalloff )
+	fileLevel.keyLight.SetTweakLightRealtimeShadows( lightData.key_castshadows )
 	fileLevel.fillLight.SetTweakLightColor( lightData.fill_color )
+	fileLevel.fillLight.SetTweakLightBrightness( lightData.fill_brightness )
+	fileLevel.fillLight.SetTweakLightCone( lightData.fill_cone )
+	fileLevel.fillLight.SetTweakLightInnerCone ( lightData.fill_innercone )
+	fileLevel.fillLight.SetTweakLightDistance( lightData.fill_distance )
+	fileLevel.fillLight.SetTweakLightHalfBrightFrac( lightData.fill_halfbrightfrac )
+	fileLevel.fillLight.SetTweakLightSpecIntensity( lightData.fill_specint )
+	fileLevel.fillLight.SetTweakLightPBRFalloff( lightData.fill_pbrfalloff )
+	fileLevel.fillLight.SetTweakLightRealtimeShadows( lightData.fill_castshadows )
 	fileLevel.rimLightL.SetTweakLightColor( lightData.rimL_color )
+	fileLevel.rimLightL.SetTweakLightBrightness( lightData.rimL_brightness )
+	fileLevel.rimLightL.SetTweakLightCone( lightData.rimL_cone )
+	fileLevel.rimLightL.SetTweakLightInnerCone ( lightData.rimL_innercone )
+	fileLevel.rimLightL.SetTweakLightDistance( lightData.rimL_distance )
+	fileLevel.rimLightL.SetTweakLightHalfBrightFrac( lightData.rimL_halfbrightfrac )
+	fileLevel.rimLightL.SetTweakLightSpecIntensity( lightData.rimL_specint )
+	fileLevel.rimLightL.SetTweakLightPBRFalloff( lightData.rimL_pbrfalloff )
+	fileLevel.rimLightL.SetTweakLightRealtimeShadows( lightData.rimL_castshadows )
 	fileLevel.rimLightR.SetTweakLightColor( lightData.rimR_color )
+	fileLevel.rimLightR.SetTweakLightBrightness( lightData.rimR_brightness )
+	fileLevel.rimLightR.SetTweakLightCone( lightData.rimR_cone )
+	fileLevel.rimLightR.SetTweakLightInnerCone ( lightData.rimR_innercone )
+	fileLevel.rimLightR.SetTweakLightDistance( lightData.rimR_distance )
+	fileLevel.rimLightR.SetTweakLightHalfBrightFrac( lightData.rimR_halfbrightfrac )
+	fileLevel.rimLightR.SetTweakLightSpecIntensity( lightData.rimR_specint )
+	fileLevel.rimLightR.SetTweakLightPBRFalloff( lightData.rimR_pbrfalloff )
+	fileLevel.rimLightR.SetTweakLightRealtimeShadows( lightData.rimR_castshadows )
 
 	           
 	fileLevel.lightRigModel.Anim_Play( lightData.animSeq )
@@ -3459,7 +3491,11 @@ void function UpdateCharacterDetailsMenu( var detailsRui, ItemFlavor character, 
 	}
 
 
-	string roleDesc = CharacterClass_GetCharacterRolePerkDesc( character )
+                    
+                                                           
+      
+		string roleDesc = CharacterClass_GetCharacterRolePerkDesc( character )
+       
 	if ( roleDesc == "" )
 	{
 		RuiSetImage( detailsRui, "rolePerkIcon", $"" )
@@ -3497,9 +3533,41 @@ void function SetCharacterSelectSceneForChampionSquad()
 	if ( fileLevel.lightEntsExist && IsValid( fileLevel.lightRigModel ) )
 	{
 		fileLevel.keyLight.SetTweakLightColor( < 0.5, 0.5, 0.5 > )
+		fileLevel.keyLight.SetTweakLightBrightness( 4.0 )
+		fileLevel.keyLight.SetTweakLightCone( 18.0 )
+		fileLevel.keyLight.SetTweakLightInnerCone ( 15.0 )
+		fileLevel.keyLight.SetTweakLightDistance( 1800.0 )
+		fileLevel.keyLight.SetTweakLightHalfBrightFrac( 0.3 )
+		fileLevel.keyLight.SetTweakLightSpecIntensity( 1.0 )
+		fileLevel.keyLight.SetTweakLightPBRFalloff( false )
+		fileLevel.keyLight.SetTweakLightRealtimeShadows( true )
 		fileLevel.fillLight.SetTweakLightColor( < 0.2, 0.2, 0.2 > )
+		fileLevel.fillLight.SetTweakLightBrightness( 0.4 )
+		fileLevel.fillLight.SetTweakLightCone( 15.0 )
+		fileLevel.fillLight.SetTweakLightInnerCone ( 12.0 )
+		fileLevel.fillLight.SetTweakLightDistance( 800.0 )
+		fileLevel.fillLight.SetTweakLightHalfBrightFrac( 0 )
+		fileLevel.fillLight.SetTweakLightSpecIntensity( 1.0 )
+		fileLevel.fillLight.SetTweakLightPBRFalloff( false )
+		fileLevel.fillLight.SetTweakLightRealtimeShadows( true )
 		fileLevel.rimLightL.SetTweakLightColor( < 0.75, 0.75, 0.75 > )
+		fileLevel.rimLightL.SetTweakLightBrightness( 4.0 )
+		fileLevel.rimLightL.SetTweakLightCone( 24.0 )
+		fileLevel.rimLightL.SetTweakLightInnerCone ( 20.0 )
+		fileLevel.rimLightL.SetTweakLightDistance( 800.0 )
+		fileLevel.rimLightL.SetTweakLightHalfBrightFrac( 0 )
+		fileLevel.rimLightL.SetTweakLightSpecIntensity( 1.0 )
+		fileLevel.rimLightL.SetTweakLightPBRFalloff( false )
+		fileLevel.rimLightL.SetTweakLightRealtimeShadows( true )
 		fileLevel.rimLightR.SetTweakLightColor( < 0.6, 0.6, 0.6 > )
+		fileLevel.rimLightR.SetTweakLightBrightness( 4.0 )
+		fileLevel.rimLightR.SetTweakLightCone( 24.0 )
+		fileLevel.rimLightR.SetTweakLightInnerCone ( 20.0 )
+		fileLevel.rimLightR.SetTweakLightDistance( 800.0 )
+		fileLevel.rimLightR.SetTweakLightHalfBrightFrac( 0 )
+		fileLevel.rimLightR.SetTweakLightSpecIntensity( 2.0 )
+		fileLevel.rimLightR.SetTweakLightPBRFalloff( false )
+		fileLevel.rimLightR.SetTweakLightRealtimeShadows( true )
 
 		           
 		fileLevel.lightRigModel.Anim_Play( $"animseq/humans/class/char_select_light_default.rseq" )

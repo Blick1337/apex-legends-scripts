@@ -41,10 +41,11 @@ bool function CharacterInfo_CanUse( entity player )
 			return false
        
 
-	if ( GetGameState() >= eGameState.Resolution )
+	                                                 
+	if ( GetGameState() >= eGameState.Resolution && !IsSurvivalTraining() && !IsFiringRangeGameMode() )
 		return false
 
-	if ( GetGameState() < eGameState.Prematch )
+	if ( GetGameState() < eGameState.Prematch && !IsSurvivalTraining() && !IsFiringRangeGameMode() )
 		return false
 	return true
 }
@@ -64,7 +65,6 @@ void function CharacterInfoOpen( entity player, bool debounce = true )
 		player.SetLookStickDebounce()
 
 	EmitSoundOnEntity( player, OVERLAY_SOUND_ON_OPEN )
-
 	var rui = file.characterInfoRui
 
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
@@ -80,16 +80,18 @@ void function CharacterInfoButton_Up( entity player )
 
 void function CharacterInfo_Shutdown( bool makeSound )
 {
-	DestroyCharacterInfo()
+	if( file.characterInfoRui != null )
+	{
+		DestroyCharacterInfo()
+		entity player = GetLocalViewPlayer()
+		if ( !IsValid( player ) )
+			return
 
-	entity player = GetLocalViewPlayer()
-	if ( !IsValid( player ) )
-		return
+		StopSoundOnEntity( player, OVERLAY_SOUND_ON_OPEN )
 
-	StopSoundOnEntity( player, OVERLAY_SOUND_ON_OPEN )
-
-	if ( makeSound )
-		EmitSoundOnEntity( player, OVERLAY_SOUND_ON_CLOSE )
+		if ( makeSound )
+			EmitSoundOnEntity( player, OVERLAY_SOUND_ON_CLOSE )
+	}
 }
 
 void function DestroyCharacterInfo()

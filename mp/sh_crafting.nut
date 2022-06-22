@@ -26,13 +26,20 @@ global function Crafting_DoesPlayerOwnItem
 
                                                             
                                                          
+                                                   
+                                     
        
                                               
                                                       
+                                     
       
 
                                             
                                         
+#endif
+
+#if DEV
+global function DEV_PrintUsedHarvesters
 #endif
 
 #if CLIENT
@@ -57,11 +64,14 @@ global function MarkAllWorkbenches
 global function Crafting_GetWorkbenchTitleString
 global function Crafting_GetWorkbenchDescString
 
+global function ServerCallback_CL_UpdateAndAnimateHarvesterUsed
+global function ServerCallback_CL_RebuildUsedHarvestersInfo
+
 global function Crafting_IsPlayerAtWorkbench
 #if DEV
 global function DEV_Crafting_TogglePreMatchRotation
-#endif
-#endif
+#endif       
+#endif          
 
       
 const asset CRAFTING_DATATABLE = $"datatable/crafting_workbench.rpak"
@@ -107,6 +117,7 @@ const array<string> CRAFTED_ITEM_CATEGORIES_FOR_ITEM_NAMES = [ "weapon_one", "we
          
 const int CRAFTING_PASSIVE_REWARD = 5
 const int HARVESTER_SUCCESS_REWARD = 25
+const int HARVESTER_TEAMMATE_REWARD = 25
 
                 
 const asset WORKBENCH_ICON_ASSET = $"rui/hud/gametype_icons/survival/crafting_workbench"
@@ -166,6 +177,9 @@ global enum eCraftingRotationStyle
 	PERMANENT,
 	LOADOUT_BASED,
 	SEASONAL,
+                    
+       
+       
 	COUNT_
 }
 
@@ -275,19 +289,36 @@ struct {
 
 	table<entity, entity>		   ambGenericTable
 	array<entity>				   workbenchClusterArray
+
+	                                     
+	                                        
+	                                        
+	table< EHI, array<entity > >   usedHarvesters
+
+                           
+                               
+       
+	bool harvestersUseLinkEnts = false
+
+	#if DEV
+		bool devPrintsOn = false
+	#endif
 } file
-
-
-
-
 
 void function Crafting_Init()
 {
 	RegisterCraftingData()
 	RegisterCraftingDistribution()
+
+                           
+                                                                                          
+                                                                                   
+       
+
+	                                                                                           
+	file.harvestersUseLinkEnts = GetCurrentPlaylistVarBool( "harvesters_use_linkents", false )
+
 	#if SERVER
-
-
 		                                        
 		                           
 
@@ -328,6 +359,7 @@ void function Crafting_Init()
 		AddCreateCallback( "info_target", OnLimitedStockParentCreated )
 	#endif
 
+	RegisterSignal( "Crafting_PlayerStartedPlaying" )
 	RegisterSignal( "CraftingPlayerAttaching" )
 	RegisterSignal( "CraftingComplete" )
 	RegisterSignal( "CraftingPlayerDetached" )
@@ -357,6 +389,7 @@ void function Crafting_Init()
 
 		                                                          
 		                                                                   
+		                                                                    
 	#endif
 	#if CLIENT
 		AddCallback_GameStateEnter( eGameState.WaitingForPlayers, OnWaitingForPlayers_Client )
@@ -369,8 +402,6 @@ void function Crafting_Init()
 		RegisterMinimapPackages()
 		AddCallback_OnPlayerMatchStateChanged( OnPlayerMatchStateChanged )
 		AddCallback_ClientOnPlayerConnectionStateChanged( OnClientConnectionChanged )
-
-		StatusEffect_RegisterEnabledCallback( eStatusEffect.interrupted, TryCloseCraftingMenuFromInterrupted )
 
 		AddCallback_UseEntGainFocus( Crafting_OnGainFocus )
 		AddCallback_UseEntLoseFocus( Crafting_OnLoseFocus )
@@ -411,7 +442,7 @@ void function Crafting_RegisterNetworking()
 	RegisterNetworkedVariable( "Crafting_NumWorkbenches", SNDC_GLOBAL, SNVT_INT, 0 )
 	RegisterNetworkedVariable( "Crafting_StartTime", SNDC_GLOBAL, SNVT_TIME, -1 )
 
-	Remote_RegisterClientFunction( "ServerCallback_CL_MaterialsChanged", "int", -1, INT_MAX, "int", -1, INT_MAX, "string" )
+	Remote_RegisterClientFunction( "ServerCallback_CL_MaterialsChanged", "int", -1, INT_MAX, "int", -1, INT_MAX, "string", "entity" )
 	Remote_RegisterClientFunction( "ServerCallback_CL_HarvesterUsed", "entity", "entity" )
 	Remote_RegisterClientFunction( "ServerCallback_CL_ArmorDeposited" )
 	Remote_RegisterClientFunction( "ServerCallback_PromptNextHarvester", "entity", "entity" )
@@ -422,6 +453,17 @@ void function Crafting_RegisterNetworking()
 	Remote_RegisterClientFunction( "TryCloseCraftingMenu" )
 	Remote_RegisterClientFunction( "MarkAllWorkbenches" )
 	Remote_RegisterClientFunction( "MarkNextStepForPlayer", "entity" )
+
+	Remote_RegisterClientFunction( "ServerCallback_CL_UpdateAndAnimateHarvesterUsed", "entity" )
+	Remote_RegisterClientFunction( "ServerCallback_CL_RebuildUsedHarvestersInfo", "entity" )
+
+	Remote_RegisterServerFunction( "ClientCallback_PlayerStartedPlaying" )
+	Remote_RegisterServerFunction( "DisableUsedHarvesters", "entity", "bool" )
+
+	#if CLIENT
+	AddCallback_OnYouRespawned( OnPlayerRespawned )
+	AddFirstPersonSpectateStartedCallback( OnDeadPlayerSpectating )
+	#endif
 
 	file.isNetworkingRegistered = true
 }
@@ -1061,9 +1103,10 @@ void function Crafting_OnGameStatePlaying()
 
 	                                                             
 	 
-		       
-		                                                              
-		      
+	       
+		                      
+			                                                              
+	      
 		                                   
 	 
 	                   
@@ -1237,21 +1280,7 @@ void function TryCloseCraftingMenuFromDamage( float damage, vector damageOrigin,
 	if ( GetConVarBool( "player_setting_damage_closes_deathbox_menu" ) )
 		TryCloseCraftingMenu()
 }
-
-void function TryCloseCraftingMenuFromInterrupted( entity player, int statusEffect, bool actuallyChanged )
-{
-	if ( player != GetLocalViewPlayer() || (GetLocalViewPlayer() == GetLocalClientPlayer() && !actuallyChanged) )
-		return
-
-	if ( GetCurrentPlaylistVarBool( "interrupted_closes_crafting_menu", true ) )
-		TryCloseCraftingMenu()
-}
 #endif
-
-
-
-
-
 
                            
 #if SERVER
@@ -1389,7 +1418,10 @@ void function PlayHarvesterIdleFX( entity harvester )
 	harvester.EndSignal( "OnDestroy" )
 	harvester.EndSignal( "HarvesterDisabled" )
 
-	                                        
+	#if DEV
+	if( file.devPrintsOn )
+		printt( "FX: harvester idle FX START")
+	#endif
 
 	int attachId = harvester.LookupAttachment( "FX_INSIDE" )
 	int idleFx = StartParticleEffectOnEntity( harvester, GetParticleSystemIndex( HARVESTER_IDLE_FX ), FX_PATTACH_POINT_FOLLOW, attachId )
@@ -1399,7 +1431,10 @@ void function PlayHarvesterIdleFX( entity harvester )
 		{
 			if ( IsValid( idleFx ) )
 			{
-				                                      
+				#if DEV
+				if( file.devPrintsOn )
+					printt( "FX: harvester idle FX END")
+				#endif
 				EffectStop( idleFx, false, true )
 			}
 		}
@@ -1430,66 +1465,180 @@ string function Crafting_Harvester_UseTextOverride( entity ent )
 }
 #endif
 
+                                           
+
+bool function UsedHarvestersTableContainsPlayer( entity player )
+{
+	EHI playerEHI = ToEHI( player )
+	return( playerEHI in file.usedHarvesters )
+}
+
+bool function PlayerHasUsedHarvester( entity player, entity harvester )
+{
+	array< entity > usedHarvesters = GetUsedHarvesters( player )
+	return( usedHarvesters.contains( harvester ) )
+}
+
+void function UsedHarvestersTable_AddHarvester( entity player, entity harvester )
+{
+	EHI playerEHI = ToEHI( player )
+	if( !UsedHarvestersTableContainsPlayer( player ) )
+		file.usedHarvesters[ playerEHI ] <- []
+
+	if( !file.usedHarvesters[ playerEHI ].contains( harvester ) )
+		file.usedHarvesters[ playerEHI ].append( harvester )
+
+	                              
+	foreach( usedHarvester in file.usedHarvesters[ playerEHI ] )
+	{
+		if( !IsValid( usedHarvester  ) )
+			file.usedHarvesters[ playerEHI ].fastremovebyvalue( usedHarvester )
+	}
+}
+
+     
+
+void function UpdateHarvesterUsed( entity player, entity harvester )
+{
+	if( !file.harvestersUseLinkEnts )
+	{
+		                                                                                                 
+		if( !PlayerHasUsedHarvester( player, harvester ) )
+			UsedHarvestersTable_AddHarvester( player, harvester )
+	}
+#if SERVER
+	    
+	 
+		                             
+	 
+#endif
+}
+
+                                                    
+void function CleanupUsedHarvestersTable( entity player )
+{
+	array< entity > usedHarvestersArray = GetUsedHarvesters( player )
+	foreach( usedHarvester in usedHarvestersArray )
+	{
+		if( !IsValid( usedHarvester  ) )
+			usedHarvestersArray.fastremovebyvalue( usedHarvester )
+	}
+}
+
+array< entity > function GetUsedHarvesters( entity player )
+{
+	array< entity > usedHarvesters = []
+	if( !file.harvestersUseLinkEnts )
+	{
+		if( UsedHarvestersTableContainsPlayer( player ) )
+		{
+			EHI playerEHI = ToEHI( player )
+			usedHarvesters =  file.usedHarvesters[ playerEHI ]
+		}
+	}
+	else
+	{
+		array< entity > linkedEnts = player.GetLinkParentArray()
+		foreach ( ent in linkedEnts )
+		{
+			if ( ent.GetScriptName() != HARVESTER_SCRIPTNAME )
+				continue
+
+			usedHarvesters.append( ent )
+		}
+	}
+	return usedHarvesters
+}
 
                                    
 void function HarvestCraftingMaterials( entity harvester, entity player, int pickupFlags )
 {
-	#if SERVER
-		                                              
-
-		                                                                    
-		                             
-		                                                                 
-
-		                                                                        
-		                                                                          
-		                                                                                                                      
-
-		                                                                        
-		                                                   
+	#if DEV
+		if( file.devPrintsOn )
+			printt( format( "%s(): Harvester Using Links? %s", FUNC_NAME(), string( file.harvestersUseLinkEnts )) )
 	#endif
 
-	#if CLIENT
-		file.ambGenericTable[harvester].SetEnabled( false )
-		thread HarvesterAnimThread( file.harvesterToClientProxy[harvester] )
-		thread PROTO_FadeModelIntensityOverTime( file.harvesterToClientProxy[harvester], 1, 1, 0.1 )
-		Signal( file.harvesterToClientProxy[harvester], "HarvesterDisabled" )
-		Signal( harvester, "HarvesterDisabled" )
-	#endif
+                           
+                              
+   
+                                                                     
+    
+                                                                                         
+    
+   
+      
+   
+                                                                                   
+   
+      
+		thread HarvestCraftingMaterials_Single( harvester, player, player, pickupFlags )
+       
 }
 
-void function OnClientConnectionChanged( entity player )
+void function HarvestCraftingMaterials_Single( entity harvester, entity player, entity playerInteractor, int pickupFlags )
 {
-	#if CLIENT
-	if ( player != GetLocalClientPlayer() )
-		return
+	UpdateHarvesterUsed( player, harvester )
 
-	if ( !IsConnected() )
-		return
+#if SERVER
+	                                                       
+	                                                                                     
 
-	foreach ( ent in GetLocalClientPlayer().GetLinkParentArray() )
-	{
-		if ( ent.GetScriptName() != HARVESTER_SCRIPTNAME )
-			continue
+                           
+                                   
+   
+                                                                                                                                    
+                                                                           
+                                                                             
+                                                      
+   
+      
+   
+                                                                                                                          
+                                                                                                         
+                                        
+                                                                           
+                                                            
+    
+                                                                                 
+                                                                   
+                                                                                                   
+    
+   
+      
+		                                                                                                                                 
+		                                                                        
+		                                                                          
+		                                                   
+       
 
-		                                                         
-		HarvestCraftingMaterials( ent, GetLocalClientPlayer(), 0 )
-	}
-	#endif
-
-	#if SERVER
-		                                              
-		 
-			                                                  
-				        
-
-			                                                         
-			                                                                                                          
-		 
-	#endif
+	                                                                        
+#endif
 }
 
 #if CLIENT
+void function OnPlayerRespawned()
+{
+	                                                                   
+	printt( format( "*** Playerflow: %s", FUNC_NAME()) )
+	Remote_ServerCallFunction( "DisableUsedHarvesters", GetLocalClientPlayer(), false )
+}
+
+void function OnDeadPlayerSpectating( entity player, entity currentTarget )
+{
+	                                                                                       
+	printt( format( "*** Playerflow: %s", FUNC_NAME()) )
+	Remote_ServerCallFunction( "DisableUsedHarvesters", currentTarget, false )
+}
+
+void function ServerCallback_CL_UpdateAndAnimateHarvesterUsed( entity harvester )
+{
+	file.ambGenericTable[harvester].SetEnabled( false )
+	thread HarvesterAnimThread( file.harvesterToClientProxy[harvester] )
+	thread PROTO_FadeModelIntensityOverTime( file.harvesterToClientProxy[harvester], 1, 1, 0.1 )
+	Signal( file.harvesterToClientProxy[harvester], "HarvesterDisabled" )
+	Signal( harvester, "HarvesterDisabled" )
+}
+
 void function HarvesterAnimThread( entity harvesterProxy )
 {
 	harvesterProxy.Anim_Stop()
@@ -1504,7 +1653,62 @@ void function HarvesterAnimThread( entity harvesterProxy )
 }
 #endif
 
+void function OnClientConnectionChanged( entity player )
+{
+	#if CLIENT
+		if ( player != GetLocalClientPlayer() )
+			return
+
+		if ( !IsConnected() )
+			return
+
+		if ( IsSpectating() && GetCurrentPlaylistVarBool( "crafting_spectator_fix_enabled", true ) )
+			return
+
+	#endif          
+
+	#if SERVER
+		                                                    
+	#endif          
+}
+
+void function OnClientConnectionRestored( entity player )
+{
+	#if SERVER
+		                                                      
+		                                                 
+	#endif
+}
+
 #if SERVER
+                                                                                                          
+ 
+		                                                                                                                 
+		                      
+			                                                           
+
+		                                                                          
+		       
+			                      
+				                                                                                                                                             
+		      
+		                                            
+		 
+			                                                             
+		 
+ 
+
+                                                                            
+ 
+	       
+		                      
+			                 	                                                                                           
+	      
+
+	                                                                                                  
+	                                                                                                                   
+ 
+
                                                                                
  
 	                       
@@ -1528,8 +1732,13 @@ void function HarvesterAnimThread( entity harvesterProxy )
 		                                                                
 			        
 
+		                                             
+		                                                         
+			        
+
 		                                 
 		     
+		  
 	 
 
 	                                                           
@@ -1606,7 +1815,7 @@ void function HarvesterAnimThread( entity harvesterProxy )
  
 	                                                          
  
-#endif
+#endif          
 
 bool function Crafting_Harvester_IsNotBusy( entity player, entity ent, int useFlags )
 {
@@ -1619,15 +1828,8 @@ bool function Crafting_Harvester_IsNotBusy( entity player, entity ent, int useFl
 	if ( !SURVIVAL_PlayerAllowedToPickup( player ) )
 		return false
 
-	                                                          
-	bool harvesterFound = false
-	foreach( linkedEnt in player.GetLinkParentArray() )
-	{
-		if ( linkedEnt.GetScriptName() == "crafting_harvester" && linkedEnt == ent )
-			harvesterFound = true
-	}
-
-	if ( harvesterFound )
+	                                                           
+	if ( PlayerHasUsedHarvester( player, ent ) )
 		return false
 
 	return true
@@ -1636,6 +1838,15 @@ bool function Crafting_Harvester_IsNotBusy( entity player, entity ent, int useFl
 #if CLIENT
 void function ServerCallback_CL_HarvesterUsed( entity harvester, entity minimapObj )
 {
+#if DEV
+	                                                                                                
+	                                                                 
+#endif      
+	if ( !(harvester in file.harvesterRuiTable) )
+	{
+		return
+	}
+
 	if ( file.harvesterRuiTable[harvester] != null )
 	{
 		RuiDestroyIfAlive( file.harvesterRuiTable[harvester] )
@@ -1644,9 +1855,12 @@ void function ServerCallback_CL_HarvesterUsed( entity harvester, entity minimapO
 	                                                                   
 	RuiSetFloat3( file.harvesterFullmapRuiTable[minimapObj], "iconColor", <0,0,0> )
 	RuiSetFloat3( file.harvesterMinimapRuiTable[minimapObj], "iconColor", <0,0,0> )
+
+	                                                                                                                                    
+	UpdateHarvesterUsed( GetLocalClientPlayer(), harvester )
 }
 
-void function ServerCallback_CL_MaterialsChanged( int amount, int difference, string headerText )
+void function ServerCallback_CL_MaterialsChanged( int amount, int difference, string headerText, entity giver )
 {
 	if ( file.fullmapRui.len() != 0 && file.fullmapRui[0] != null )
 		RuiSetInt( file.fullmapRui[0], "craftingMaterials", amount )
@@ -1660,7 +1874,16 @@ void function ServerCallback_CL_MaterialsChanged( int amount, int difference, st
 	}
 
 	if ( difference > 0 )
-		AnnouncementMessageRight( GetLocalClientPlayer(), header + Localize( "#CRAFTING_HARVESTER_AWARD", difference ), "", <214,214,214>, $"", 2, milesAlias )
+	{
+                            
+                                        
+                                                                                                                                                           
+       
+                                                                                                                                                                                           
+       
+			AnnouncementMessageRight( GetLocalClientPlayer(), header + Localize( "#CRAFTING_HARVESTER_AWARD", difference ), "", <214,214,214>, $"", 2, milesAlias )
+        
+	}
 	else
 		AnnouncementMessageRight( GetLocalClientPlayer(), header + Localize( "#CRAFTING_HARVESTER_BALANCE_UPDATE", amount ), "", <214,214,214>, $"", 2, milesAlias )
 }
@@ -1706,7 +1929,7 @@ void function CreateHarvesterWorldIcon( entity harvester )
                                                                                                                                                                                        
  
 	                              
-		                                                                
+		                                                                        
  
 
                            
@@ -1717,7 +1940,7 @@ void function CreateHarvesterWorldIcon( entity harvester )
 	                                           
 	 
 		                                                                         
-			                                                                             
+			                                                                                     
 	 
  
 
@@ -1739,23 +1962,41 @@ void function CreateHarvesterWorldIcon( entity harvester )
 	                                                                  
 	                                                 
 	 
-		                                                                                 
+		                                                                                         
 	 
  
       
 
-                                                                                                
+                                                                                                              
  
 	                                                                
 	                                                                    
 
-	                                                                                                                        
+                           
+                       
+   
+                                                                                                                                  
+
+                                                                                                                                  
+                                          
+   
+      
+                                                                                                                                   
+      
+		                                                                                                                                
+       
 
 	                                                                                             
 		      
 
 	                                                      
+ 
 
+                                                                                       
+ 
+	          
+	                       
+		                                                                                        
  
 
                                                                             
@@ -1769,7 +2010,7 @@ void function CreateHarvesterWorldIcon( entity harvester )
 
 	                                                           
 
-	                                                                                                   
+	                                                                                                           
  
 
 #endif
@@ -2269,16 +2510,16 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 	                                          
 	 
 		                                    
-		                                                           
-		                                                                          
+		                                                            
+		                                                                           
 	 	                                                
 
 	 
 	                                         
 	 
 		                                    
-		                                                        
-		                                                                       
+		                                                          
+		                                                                         
 	 	                                               
 	 
 
@@ -2423,6 +2664,9 @@ void function UseCraftingWorkbench( entity bench, entity player, int pickupFlags
 		CustomUsePrompt_SetLastUsedTime( Time() )
 	#endif
 
+	if ( player.IsInventoryOpen() )
+		return
+
 	if ( pickupFlags & USE_INPUT_LONG )
 	{
 		entity cluster
@@ -2449,10 +2693,27 @@ void function UseCraftingWorkbench( entity bench, entity player, int pickupFlags
 
 void function WorkbenchThink( entity ent, entity playerUser )
 {
+#if SERVER
+	                                                   
+	                                   
+	                              
+#endif
+
 	ExtendedUseSettings settings = WorkbenchExtendedUseSettings( ent, playerUser )
 
 	ent.EndSignal( "OnDestroy" )
 	playerUser.EndSignal( "StartPhaseShift" )
+
+	OnThreadEnd(
+		function() : ( playerUser )
+		{
+			#if SERVER
+			                                                                                                             
+			                                  
+			                             
+			#endif
+		}
+	)
 
 	waitthread ExtendedUse( ent, playerUser, settings )
 }
@@ -2495,6 +2756,9 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	                               
 		      
 
+	                               
+	                               
+	                          
 	                         
 
 	              
@@ -2507,9 +2771,6 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 		 
 	 
 
-	               
-	                               
-	                          
 	                                                   
  
 
@@ -2723,7 +2984,8 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 		                                                                          
 		                                                                                    
 		       
-		                                                            
+			                      
+				                                                            
 		      
 		                                                                                                  
 	 
@@ -2790,7 +3052,15 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 				                                         
 			 
 			                            
-		        
+		 
+                     
+                                       
+   
+                            
+   
+        
+		    
+		 
 			                                                               
 			                                 
 		 
@@ -2836,6 +3106,14 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 
 	                              
 		                                                     
+
+                    
+                                 
+  
+                                       
+        
+  
+       
 
 	                                                           
 
@@ -3065,6 +3343,21 @@ array< string > function GenerateCraftingItemsInCategory( entity player, Craftin
 		return bundle.itemsInBundle
 	}
 
+                    
+                                                       
+  
+                                                                      
+   
+                                                                  
+                              
+   
+      
+   
+            
+   
+  
+       
+
 	if ( craftingRotation == eCraftingRotationStyle.LOADOUT_BASED )
 	{
 		array< string > itemList
@@ -3100,7 +3393,11 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 	int craftingRotation = categoryToCheck.rotationStyle
 
 	                                                                   
+                   
+                                                                                                                                                                                                                                  
+     
 	if ( craftingRotation == eCraftingRotationStyle.PERMANENT || craftingRotation == eCraftingRotationStyle.SEASONAL || craftingRotation == eCraftingRotationStyle.LOADOUT_BASED )
+      
 	{
 		Assert( categoryToCheck.bundlesInCategory.len() != 0, "CRAFTING: Bundle list in category " + categoryToCheck.category + " is empty" )
 		return categoryToCheck.bundlesInCategory[categoryToCheck.bundleStrings.top()]
@@ -3146,11 +3443,6 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 	int rotationIndex = abs(rotationRaw % ( categoryToCheck.bundleStrings.len() ) )
 	return categoryToCheck.bundlesInCategory[ categoryToCheck.bundleStrings[rotationIndex] ]
 }
-
-
-
-
-
 
 #if SERVER
                                                                                
@@ -3277,8 +3569,53 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 	                                     
  
 
-#endif
+                                                                                                                       
+                                                                  
+ 
+	          
+		                                 
+		 
+			                                                                            
+			                                                                   
+			                                                  
+			 
+				                                                                                                     
+			 
+		 
+	      
+	
+	                                                 
+ 
+#endif          
 
+#if DEV
+void function DEV_PrintUsedHarvesters()
+{
+	if( !file.harvestersUseLinkEnts )
+	{
+		printt( "----- Used Harvesters Table:"  )
+		foreach( player, usedHarvestersArray in file.usedHarvesters )
+		{
+			printt( "	- Player: " + player )
+			foreach( usedHarvester in usedHarvestersArray )
+			{
+				printt( "	--- used Harvester: " + usedHarvester )
+			}
+		}
+
+	}
+	else
+	{
+		printt( "----- file.harvestersUseLinkEnts == true."  )
+		printt( "----- usedHarvesters Table not used."  )
+	}
+}
+
+void function DEV_Crafting_PrintsOn( bool isOn = true )
+{
+	file.devPrintsOn = isOn
+}
+#endif       
 
 
 bool function Crafting_Workbench_IsNotBusy( entity player, entity ent, int useFlags )
@@ -3337,8 +3674,13 @@ array<string> function Crafting_GetLootDataFromIndex( int index, entity player )
 		cumulativeIndex += category.numSlots
 	}
 
-	if ( item.category == "ammo" || item.category == "evo" )
-		return validItemList
+                    
+                                                                                       
+      
+		if ( item.category == "ammo" || item.category == "evo" )
+       
+			return validItemList
+
 
 	if ( validItemList.len() == 0 )
 		return validItemList
@@ -3364,9 +3706,13 @@ CraftingCategory ornull function GetCategoryForIndex( int index )
 }
 
 
-
-
 #if CLIENT
+void function ServerCallback_CL_RebuildUsedHarvestersInfo( entity harvester )
+{
+	entity player = GetLocalClientPlayer()
+	UsedHarvestersTable_AddHarvester( player, harvester )
+}
+
 void function MarkNextStepForPlayer( entity markedEnt )
 {
 	thread NextStepMarkerThread( markedEnt )
@@ -3494,7 +3840,8 @@ void function DEV_Crafting_TogglePreMatchRotation()
 		OnWaitingForPlayers_Client()
 	}
 }
-#endif
+#endif      
+
 void function OnWaitingForPlayers_Client()
 {
 	if ( IsFiringRangeGameMode() || IsSurvivalTraining() )
@@ -3647,6 +3994,13 @@ void function OnGameStartedPlaying_Client()
 
 	file.fullmapInitialized = true
 
+	#if DEV
+	if( file.devPrintsOn )
+		printt( "CLIENT: Player Started Playing: " + GetLocalClientPlayer() )
+	#endif
+	
+	Remote_ServerCallFunction( "ClientCallback_PlayerStartedPlaying" )
+
 	                             
 }
 
@@ -3726,13 +4080,6 @@ vector function GetCraftingColor()
 }
 
 
-
-
-
-
-
-
-
                                               
 void function Crafting_Workbench_OpenCraftingMenu( entity workbench )
 {
@@ -3787,6 +4134,15 @@ bool function Crafting_OnMenuItemSelected( int index, var menuRui )
 					canBuy = false
 			}
 		}
+                     
+                                        
+   
+                                                             
+                 
+       
+                  
+   
+        
 	}
 	else
 	{
@@ -3958,7 +4314,10 @@ void function ServerCallback_PromptNextHarvester( entity playerBeingAddressed, e
 	if ( ShouldMuteCommsActionForCooldown( GetLocalViewPlayer(), eCommsAction.REPLY_CRAFTING_NEXT_HARVESTER_OR_WORKBENCH, null) )
 		return
 
-	thread PromptAfterDelayThread( playerBeingAddressed, eCommsAction.REPLY_CRAFTING_NEXT_HARVESTER_OR_WORKBENCH, "#PING_CRAFTING_NEXT_HARVESTER" , 2.5, 6 )
+	const float DELAY = 0.5
+	const float DURATION = 5.0
+
+	thread PromptAfterDelayThread( playerBeingAddressed, eCommsAction.REPLY_CRAFTING_NEXT_HARVESTER_OR_WORKBENCH, "#PING_CRAFTING_NEXT_HARVESTER" , DELAY, DURATION )
 }
 
 void function ServerCallback_PromptWorkbench( entity playerBeingAddressed, entity workbench )
@@ -3966,7 +4325,10 @@ void function ServerCallback_PromptWorkbench( entity playerBeingAddressed, entit
 	if ( ShouldMuteCommsActionForCooldown( GetLocalViewPlayer(), eCommsAction.REPLY_CRAFTING_NEXT_HARVESTER_OR_WORKBENCH, null) )
 		return
 
-	thread PromptAfterDelayThread( playerBeingAddressed, eCommsAction.REPLY_CRAFTING_NEXT_HARVESTER_OR_WORKBENCH, "#PING_CRAFTING_NEXT_WORKBENCH" , 2.5, 6 )
+	const float DELAY = 2.5
+	const float DURATION = 6.0
+
+	thread PromptAfterDelayThread( playerBeingAddressed, eCommsAction.REPLY_CRAFTING_NEXT_HARVESTER_OR_WORKBENCH, "#PING_CRAFTING_NEXT_WORKBENCH" , DELAY, DURATION )
 }
 
 void function ServerCallback_PromptAllWorkbenches( entity playerBeingAddressed )
@@ -3974,7 +4336,9 @@ void function ServerCallback_PromptAllWorkbenches( entity playerBeingAddressed )
 	if ( ShouldMuteCommsActionForCooldown( GetLocalViewPlayer(), eCommsAction.REPLY_CRAFTING_PING_ALL_WORKBENCHES, null ) )
 		return
 
-	thread PromptAfterDelayThread( playerBeingAddressed, eCommsAction.REPLY_CRAFTING_PING_ALL_WORKBENCHES, "#PING_CRAFTING_ALL_WORKBENCHES", 4 )
+	const float DELAY = 4.0
+
+	thread PromptAfterDelayThread( playerBeingAddressed, eCommsAction.REPLY_CRAFTING_PING_ALL_WORKBENCHES, "#PING_CRAFTING_ALL_WORKBENCHES", DELAY )
 }
 
 void function PromptAfterDelayThread( entity player, int commAction, string promptText, float delay = 2.5, float duration = 10 )
@@ -4007,7 +4371,11 @@ void function Crafting_PopulateItemRuiAtIndex( var rui, int index )
 
 	int cost
 	bool canBuy = true
-	if ( validItemList.len() != 0 && item.category != "evo" )
+                    
+                                                                                        
+      
+		if ( validItemList.len() != 0 && item.category != "evo" )
+       
 	{
 		foreach ( ref in validItemList )
 			cost += item.itemToCostTable[ref]
@@ -4075,6 +4443,23 @@ void function Crafting_PopulateItemRuiAtIndex( var rui, int index )
 				canBuy = false
 		}
 	}
+                    
+                                                                   
+   
+                                                
+                                                                             
+                                       
+
+                                                             
+    
+                 
+    
+       
+    
+                  
+    
+   
+       
 	else
 	{
 		canBuy = false

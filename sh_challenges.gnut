@@ -79,9 +79,7 @@ global function DEV_DumpFavoritePersistenceData
                                                       
                                                          
                                                              
-                    
                                                      
-      
 #endif
 
 #if SERVER && DEV
@@ -170,6 +168,9 @@ global enum eChallengeGameMode
                          
 		CONTROL,
        
+                  
+           
+       
 }
 
 const table<int, string> GAME_MODE_NAME =
@@ -182,6 +183,9 @@ const table<int, string> GAME_MODE_NAME =
 	[eChallengeGameMode.NON_MODE] = "",                                                         
                          
 		[eChallengeGameMode.CONTROL] = "#GAME_MODE_CONTROL",
+       
+                  
+                                                         
        
 }
 
@@ -197,6 +201,9 @@ const table<int, string> GAME_MODE_TAG =
                          
 		[eChallengeGameMode.CONTROL] = "#GAMEMODE_TAG_CONTROL",
        
+                  
+                                                            
+       
 }
 
 const table<int, vector> GAME_MODE_TAG_COLOR =
@@ -209,6 +216,9 @@ const table<int, vector> GAME_MODE_TAG_COLOR =
 	[eChallengeGameMode.NON_MODE] = <0,0,0>,                                                         
                          
 		[eChallengeGameMode.CONTROL] = < 215,154,8 >,
+       
+                  
+                                                
        
 }
 
@@ -223,6 +233,9 @@ const table<int, string> GAME_MODE_TO_STAT_REF_MAP =
 	[eChallengeGameMode.NON_MODE] = "",                                                         
                          
 		[eChallengeGameMode.CONTROL] = "control",
+       
+                  
+                                                     
        
 }
 
@@ -246,9 +259,7 @@ global enum eChallengeTimeSpanKind
 	EVENT_SPECIAL,
 	EVENT_SPECIAL_2,
 	EVENT_HIDDEN,                                                                        
-                     
-		MYTHIC,
-       
+	MYTHIC,
 	FAVORITE,                                             
 }
 
@@ -339,6 +350,9 @@ struct ChallengeSortStruct
                                             
                                         
       
+
+                                                         
+const bool BOTS_HAVE_CHALLENGES = false
 
                        
                        
@@ -511,9 +525,7 @@ void function ShChallenges_LevelInit_PreStats()
 	#endif
 
 	#if SERVER
-                      
-			                                                             
-        
+		                                                             
 	#endif
 
 	file.initialized = true
@@ -647,14 +659,21 @@ void function ShChallenges_LevelInit_PostStats()
 						continue
 					}
                       
-                                                                                                                                                                                                                                   
+                                                                                                                                                                                                                               
           
-					else if ( ( gameModeStatRef != "" && Challenge_GetGameMode( challenge ) != eChallengeGameMode.ANY ) && statRef.toupper().find( gameModeStatRef.toupper() ) == -1 )                                                     
+					else if ( gameModeStatRef != "" && Challenge_GetGameMode( challenge ) != eChallengeGameMode.ANY && statRef.toupper().find( gameModeStatRef.toupper() ) == -1 )                                                     
            
 					{
 						Assert( 0, format( "Challenge '%s' refers to stat that does not match this game mode: '%s'", ItemFlavor_GetHumanReadableRef( challenge ), statRef ) )
 						continue
 					}
+                      
+                                                                                                                                                                         
+      
+                                                                                                                                                                               
+              
+      
+           
 					else if ( gameModeStatRef == "" )                                                   
 					{
 						foreach ( int idx, string val in GAME_MODE_TO_STAT_REF_MAP )
@@ -731,7 +750,7 @@ void function RegisterChallengeSource( ItemFlavor challengeFlav, ItemFlavor sour
 #if SERVER
                                                                                                           
  
-	                     
+	                                                      
 		      
 
 	                                                       
@@ -1928,15 +1947,13 @@ array<ChallengeGroupData> function GetPlayerChallengeGroupData( entity player )
 			groupData.append( CreateChallengeGroup( player, Localize( "#CHALLENGE_GROUP_WEEKLY", i + 1 ), challenges, eChallengeTimeSpanKind.SEASON_WEEKLY ) )
 	}
 
-                     
-		                    
-		challenges = GetAssignedChallengesByTimeSpan( player, eChallengeTimeSpanKind.MYTHIC )
-		groupData.append( CreateChallengeGroup( player, Localize( "#CHALLENGE_GROUP_MYTHIC" ), challenges, eChallengeTimeSpanKind.MYTHIC ) )
-       
+	                    
+	challenges = GetAssignedChallengesByTimeSpan( player, eChallengeTimeSpanKind.MYTHIC )
+	groupData.append( CreateChallengeGroup( player, Localize( "#CHALLENGE_GROUP_MYTHIC" ), challenges, eChallengeTimeSpanKind.MYTHIC ) )
 
-		                       
-		challenges = GetFavoriteChallenges( player )
-		groupData.append( CreateChallengeGroup( player, Localize( "#CATEGORY_FAVORITES" ), challenges, eChallengeTimeSpanKind.FAVORITE ) )
+	                       
+	challenges = GetFavoriteChallenges( player )
+	groupData.append( CreateChallengeGroup( player, Localize( "#CATEGORY_FAVORITES" ), challenges, eChallengeTimeSpanKind.FAVORITE ) )
 
 
 	return groupData
@@ -1978,7 +1995,7 @@ array<ItemFlavor> function GetPinnedChallenges()
 			      
 	      
 
-	                     
+	                                                      
 		      
 
 	                                                
@@ -2103,9 +2120,7 @@ array<ItemFlavor> function GetPinnedChallenges()
 	                                   
 		        
 
-                     
-		                                                                                                         
-       
+	                                                                                                         
 
 	                                                      
 	                                                                                      
@@ -2335,7 +2350,6 @@ bool function Challenge_IsChallengesStateInititated( entity player )
  
 #endif
 
-                    
 #if SERVER
                                                                     
  
@@ -2402,7 +2416,6 @@ bool function Challenge_IsChallengesStateInititated( entity player )
 	 
  
 #endif
-      
 
 #if SERVER
                                                                            
@@ -3338,10 +3351,10 @@ bool function Challenge_IsChallengesStateInititated( entity player )
 			                                                        
 			                                                                 
                    
-                                                                                                     
-                                                                                                            
+                                                                                                    
+                                                                                                           
        
-			                                                                                                   
+			                                                                                                  
         
 	      
 
@@ -3581,10 +3594,7 @@ bool function Challenge_IsChallengesStateInititated( entity player )
 	 
 
 	                                
-	                                                      
-		                                                                                     
-	                                                             
-		                                                                                              
+	                                                                                     
  
 #endif
 
@@ -4098,6 +4108,7 @@ void function UpdateChallengeRowsRui( entity player, array<ItemFlavor> challenge
 		#endif
 
 		ItemFlavor challenge     = challenges[ rowIdx ]
+
 		int tierCount            = Challenge_GetTierCount( challenge )                                                               
 		int activeTier           = Challenge_GetCurrentTier( player, challenge )                              
 		bool isChallengeComplete = Challenge_IsComplete( player, challenge )                                        
@@ -4105,10 +4116,51 @@ void function UpdateChallengeRowsRui( entity player, array<ItemFlavor> challenge
 			activeTier = tierCount - 1                                                         
 		bool challengeIsInfinite = Challenge_LastTierIsInfinite( challenge )               
 
-		int progress = Challenge_GetProgressDisplayValue( player, challenge, activeTier )
-		int goal     = Challenge_GetGoalDisplayVal( challenge, activeTier )
-
 		int maxRewardIcons      = MAX_REWARDS_PER_CHALLENGE_TIER                                                     
+
+		int gameMode
+		string description
+		int progress
+		int goal
+
+                   
+                                                              
+
+
+                           
+   
+                                                                      
+                                                                               
+                                                                                     
+                                                                 
+
+                                                               
+
+                              
+                                           
+    
+                                                 
+                                                                                           
+                                                                                    
+     
+     
+                              
+     
+    
+
+                                            
+                                                  
+                                              
+                                    
+   
+      
+        
+		{
+			gameMode = Challenge_GetGameMode( challenge )
+			description = Challenge_GetDescription( challenge, activeTier )
+			progress = Challenge_GetProgressDisplayValue( player, challenge, activeTier )
+			goal = Challenge_GetGoalDisplayVal( challenge, activeTier )
+		}
 
 		SetSeasonColors( rui )                                         
 
@@ -4121,7 +4173,7 @@ void function UpdateChallengeRowsRui( entity player, array<ItemFlavor> challenge
 		}
 		RuiSetFloat3( rui, "rewardColor", rewardColor )
 
-		RuiSetString( rui, "challengeTierDesc", Challenge_GetDescription( challenge, activeTier ) )
+		RuiSetString( rui, "challengeTierDesc", description )
 
 		#if DEV
 			bool doDebug = (InputIsButtonDown( KEY_LSHIFT ) && InputIsButtonDown( KEY_LCONTROL )) || (InputIsButtonDown( BUTTON_TRIGGER_LEFT_FULL ) && InputIsButtonDown( BUTTON_B ))
@@ -4137,7 +4189,6 @@ void function UpdateChallengeRowsRui( entity player, array<ItemFlavor> challenge
 		RuiSetInt( rui, "challengeTierGoal", goal )
 		RuiSetBool( rui, "challengeCompleted", isChallengeComplete )
 
-		int gameMode = Challenge_GetGameMode( challenge )
 		RuiSetString( rui, "challengeModeTag", Challenge_GetGameModeTag( gameMode ) )
 		RuiSetFloat3( rui, "challengeModeTagColor", Challenge_GetGameModeTagColor( gameMode ) )
 
@@ -4753,8 +4804,13 @@ bool function Challenge_CanRerollChallenge( ItemFlavor challenge )
 
 
 
+
 #if CLIENT || UI
+                 
+                                                                                                                                                                                                        
+     
 void function SetRuiArgsForChallengeTier( var rui, string ruiArgPrefix, ItemFlavor challenge, int ornull displayTierIdx, int maxRewardIcons, int maxExtraRewardIcons )
+      
 {
 	                                                                                    
 	                                                                                                                          
@@ -4770,23 +4826,57 @@ void function SetRuiArgsForChallengeTier( var rui, string ruiArgPrefix, ItemFlav
 	expect int(displayTierIdx)
 	displayTierIdx = ClampInt( displayTierIdx, 0, challengeTierCount - 1 )
 
-	int progress = Challenge_GetProgressDisplayValue( player, challenge, displayTierIdx )                                                                   
-	int goal     = Challenge_GetGoalDisplayVal( challenge, displayTierIdx )                                                     
-
-
 	if ( fileLevel.currentSeason.expirationTimestamp < GetUnixTimestamp() )
 		RefreshCachedSeasonInfo()
 
 	ItemFlavor ornull season = fileLevel.currentSeason.calEventOrNull
 
+	array<string> descriptions
+	array<int> progression
+	array<int> goals
+
+                  
+                          
+  
+                                                                
+                                                                         
+                                                     
+  
+     
+       
+	{
+		descriptions.append( Challenge_GetDescription( challenge, displayTierIdx ) )
+		progression.append( Challenge_GetProgressDisplayValue( player, challenge, displayTierIdx ) )
+		goals.append( Challenge_GetGoalDisplayVal( challenge, displayTierIdx )  )
+	}
+
+	                                                       
+	   
+	  	                                                              
+	   
+
+	foreach( int idx, string description in descriptions)
+	{
+		string modifier = ( idx > 0 ) ? "Alt": ""
+		RuiSetString( rui, p + modifier + "TierDesc", description )
+	}
+
+	foreach( int idx, int progress in progression)
+	{
+		string modifier = ( idx > 0 ) ? "Alt": ""
+		RuiSetInt( rui, p + modifier + "TierProgress", progress )
+	}
+
+	foreach( int idx, int goal in goals)
+	{
+		string modifier = ( idx > 0 ) ? "Alt": ""
+		RuiSetInt( rui, p + modifier + "TierGoal", goal )
+	}
+
 	RuiSetInt( rui, p + "TiersCount", challengeTierCount )
 	RuiSetBool( rui, p + "IsInfinite", challengeIsInfinite )
 	RuiSetInt( rui, p + "ActiveTierIdx", currentTierIdx )
-	RuiSetString( rui, p + "TierDesc", Challenge_GetDescription( challenge, displayTierIdx ) )
-	RuiSetInt( rui, p + "TierProgress", progress )
-	RuiSetInt( rui, p + "TierGoal", goal )
 	RuiSetBool( rui, p + "Completed", Challenge_IsComplete( player, challenge ) )
-
 	SetSeasonColors( rui )
 
 	bool showDiagonalWeapons                  = false
@@ -4989,14 +5079,12 @@ array<ChallengeRewardDisplayData> function GetChallengeRewardDisplayData( ItemFl
 			crdd.tinyLabelPlacementStyle = eTinyLabelPlacementStyle.BOTTOM
 			crdd.tinyLabelText           = FormatAndLocalizeNumber( "1", float( crdd.displayQuantity ), false )
 		}
-                    
 		else if ( ItemFlavor_GetType( flav ) == eItemType.character_skin )
 		{
 			crdd.isMythicSkin = Challenge_GetTimeSpanKind( challenge ) == eChallengeTimeSpanKind.MYTHIC
 			if ( crdd.isMythicSkin )
 				crdd.badgeTier = tierIdx + 1
 		}
-                          
 
 		if ( crdd.tinyLabelText == "" )
 			crdd.tinyLabelText = crdd.displayQuantity > 1 ? FormatAndLocalizeNumber( "1", float( crdd.displayQuantity ), false ) : ""
@@ -5293,10 +5381,10 @@ bool function DoesPlayerHaveChallenge( entity player, ItemFlavor flavor )
 			                                                        
 			                                                                 
                    
-                                                                                                      
-                                                                                                             
+                                                                                                     
+                                                                                                            
        
-				                                                                                                   
+				                                                                                                  
         
 	      
 
@@ -5408,10 +5496,10 @@ bool function DoesPlayerHaveChallenge( entity player, ItemFlavor flavor )
 			                                                        
 			                                                                 
                    
-                                                                                                      
-                                                                                                             
+                                                                                                     
+                                                                                                            
        
-				                                                                                                   
+				                                                                                                  
         
 	      
 
@@ -5439,7 +5527,7 @@ bool function DoesPlayerHaveChallenge( entity player, ItemFlavor flavor )
  
 	                                
 
-	                     
+	                                                      
 		      
 
 	                                                
@@ -5704,9 +5792,7 @@ array<ItemFlavor> function GetAllChallengesOfTimespan( int timeSpan, int weekInd
 	switch ( timeSpan )
 	{
 		case eChallengeTimeSpanKind.EVENT:
-                      
-			case eChallengeTimeSpanKind.MYTHIC:
-        
+		case eChallengeTimeSpanKind.MYTHIC:
 			foreach ( ItemFlavor challenge in GetAllChallenges() )
 			{
 				if ( Challenge_GetTimeSpanKind( challenge ) == timeSpan )
@@ -6875,7 +6961,7 @@ void function RefreshCachedSeasonInfo()
  
                                          
 
-                         
+                               
 
                                                                         
                                                                           
@@ -6889,7 +6975,7 @@ void function RefreshCachedSeasonInfo()
  
                                          
 
-                               
+                                     
 
                                                                                             
                                                                                               
@@ -6902,8 +6988,8 @@ void function RefreshCachedSeasonInfo()
                                                                                    
  
                                          
-
-                                     
+                         
+                                                   
 
                                                                          
                                                                            
@@ -6917,7 +7003,7 @@ void function RefreshCachedSeasonInfo()
  
                                          
 
-                          
+                                
 
                                                                        
                                                                          
@@ -6931,7 +7017,7 @@ void function RefreshCachedSeasonInfo()
  
                                          
 
-                                
+                                        
 
                                                                                 
                                                                                   

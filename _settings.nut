@@ -56,7 +56,6 @@ global const OBITUARY_DURATION						= 10.0
 
 global const OBITUARY_COLOR_DEFAULT 				= <255,255,255>		                                           
 global const OBITUARY_COLOR_FRIENDLY 				= <FRIENDLY_R, FRIENDLY_G, FRIENDLY_B>		                                                                     
-global const OBITUARY_COLOR_PARTY 					= <179,255,204>		  
 global const OBITUARY_COLOR_WEAPON	 				= <255,255,255>		                                                                  
 global const OBITUARY_COLOR_ENEMY 					= <ENEMY_R, ENEMY_G, ENEMY_B>		                                                                  
 global const OBITUARY_COLOR_LOCALPLAYER 			= <LOCAL_R, LOCAL_G, LOCAL_B>		                                                                                   

@@ -725,13 +725,11 @@ void function CustomizeButton_OnRightOrDoubleClick( var button )
 		return
 	}
 
-                    
 	if ( Mythics_IsItemFlavorMythicSkin( cbc.itemFlavor ) )
 	{
 		if( !GRX_IsItemOwnedByPlayer( cbc.itemFlavor ) )
 			return
 	}
-                          
 
 	PreviewCustomizeButtonItem( cbc )
 	EquipCustomizeButtonItemOrShowSlotPickerDialogOrShowUnlockDialog( cbc )
@@ -1336,10 +1334,8 @@ void function UpdateActionButton()
 	bool isEquipped             = IsItemInCBCEquipped( cbc )
 	bool isVisible              = !fileLevel.isParentItemOwned || !isOwned || (isOwned && !isEquipped)
 
-                    
 	if ( Mythics_IsItemFlavorMythicSkin( item ) )
 		isVisible = (isOwned && !isEquipped)
-                          
 
 	Hud_SetVisible( fileLevel.actionButton, isVisible )
 

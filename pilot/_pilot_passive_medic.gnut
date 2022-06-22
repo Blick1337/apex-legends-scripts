@@ -187,7 +187,7 @@ void function PassiveMedic_Init()
 	                                                                                         
 	                                                                   
 
-	                                                                                           
+	                                                                                             
 
 	            
 		                                                  
@@ -196,7 +196,7 @@ void function PassiveMedic_Init()
 			 
 				                                                               
 				                                                          
-					                                                                                          
+					                                                                                            
 			 
 			                               
 			 
@@ -402,7 +402,7 @@ void function PassiveMedic_Init()
 			                                    
 			 
 				                       
-					                                                                                                              
+					                                                                                                                
 					                       
 					              
 				     
@@ -424,7 +424,7 @@ void function PassiveMedic_Init()
 	 
 
 	                       
-		                                                                                            
+		                                                                                              
 	      
 	                             
 		           
@@ -459,7 +459,7 @@ void function PassiveMedic_Init()
 			                       
 				                
 			                       
-				                                                                              
+				                                                                                
 			      
 		 
 		    
@@ -541,11 +541,23 @@ void function PassiveMedic_Init()
 
                                                           
  
-	                                                                                                                     
-	                                                      
-	                                
+	                         
+		      
+
+	                        
+		      
+
+	                                                                      
+	                                      
 	 
-		                                                                    
+		                                                       
+		 
+			                                                        
+			                                  
+			 
+				                                                                      
+			 
+		 
 	 
  
 #endif
@@ -553,14 +565,43 @@ void function PassiveMedic_Init()
 #if CLIENT
 void function AttemptCancelRevive( entity player )
 {
-	if ( !PlayerHasPassive( player, ePassives.PAS_MEDIC ) )
+	if( !player.ContextAction_IsBeingRevived() )
+		return
+
+	if( !IsEntLifelineReviveTarget( player ) )
 		return
 
 	if ( !TryCharacterButtonCommonReadyChecks( player ) )
 		return
 
 	Remote_ServerCallFunction( "ClientCallback_CancelRevive" )
+}
 
+bool function IsEntLifelineReviveTarget( entity ent )
+{
+	if( !IsValid( ent ) )
+		return false
+
+	entity healer = ent.GetPlayerNetEnt( "revivePlayerHealer" )
+	if( !IsValid( healer ) )
+		return false
+	
+	entity healerOwner = healer.GetOwner()
+
+	if( !IsValid( healerOwner ) )
+		return false
+
+	asset settings = healerOwner.GetPlayerSettings()
+
+	array<entity> players = GetPlayerArrayOfTeam_Alive( ent.GetTeam() )
+
+	foreach ( entity teammate in players )
+	{
+		if( teammate.GetPlayerSettings() == settings )
+			return true
+	}
+
+	return false
 }
 
 void function ServerToClient_DisplayCancelReviveHintForPlayer()

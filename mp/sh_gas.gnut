@@ -361,7 +361,7 @@ void function ShGas_Init()
 			                       
 			                                  
 			                                                     
-			                                                                  
+			                                                                    
 			                                                      
 			                                                   
 		 
@@ -681,7 +681,7 @@ void function ShGas_Init()
 	                                         
 
 	                           
-		                                                                        
+		                                                                       
 
 	                                                        
 	                                                        
@@ -817,7 +817,7 @@ void function ShGas_Init()
 					 
 						                                                                                                                      
 					 
-					                                                                                      
+					                                                                                        
 				 
 
 				                           
@@ -911,7 +911,7 @@ void function ShGas_Init()
 				 
 
 				                           
-					                                                                                     
+					                                                                                       
 			 
 
 
@@ -934,9 +934,9 @@ void function ShGas_Init()
 			 
 				                           
 				 
-					                                                                                                                
-					                                                                                                       
-					                                                                                      
+					                                                                                                                  
+					                                                                                                         
+					                                                                                        
 					                                                                              
 				 
 
@@ -1263,8 +1263,8 @@ void function ShowPassiveGasProtectionOnHUD_Internal( entity player )
 				EffectSetControlPointVector( e[ "fxHandle" ], 2, color )
 			}
 
-			                                                                                                                                                                    
-			                                                                                                                                                                    
+			                                                                                                                           
+			                                                                                                                           
 
 		}
 		else

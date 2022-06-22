@@ -35,6 +35,7 @@ void function TimeGatedLoginRewards_Init()
 
 	#if SERVER
 		                                                                           
+		                                                                   
 	#endif
 }
 #endif
@@ -89,23 +90,16 @@ array<ItemFlavor> function GetActiveLoginEvents( int t )
 				        
 		 
 
-		                                                          
 		                                        
 		                                                                                                                             
-		                   
-		                                                                                 
-		 
-			                                        
-		 
-		                                                                                      
-		 
-			                                        
-		 
-		                                                                                      
-		 
-			                                        
-		 
+		                
+		                                                                                    
+		    
+		   		                                        
+		       
 
+		                   
+		                   
 		              
 		                    
 			                                                 
@@ -159,7 +153,7 @@ array<ItemFlavor> function GetActiveLoginEvents( int t )
 		                                        
 		 
 			        
-		 
+		    
 		                                      
 
 		                                        
@@ -193,4 +187,16 @@ array<ItemFlavor> function LoginEvent_GetLoginRewards( ItemFlavor event )
 	}
 	return rewards
 }
+#endif
+
+
+#if SERVER
+                                                              
+ 
+	                
+	 
+		                                              
+			                                              
+	 
+ 
 #endif

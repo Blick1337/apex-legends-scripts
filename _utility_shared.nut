@@ -127,6 +127,15 @@ global struct RingBufferEntity
 	int				sizeFilled
 }
 
+global struct UpdraftTriggerSettings
+{
+	float minShakeActivationHeight = 500.0                                                                       
+	float maxShakeActivationHeight = 400.0                                                                                     
+	float liftSpeed                = 300.0                   	                       
+	float liftAcceleration         = 100.0                 		                                                     
+	float liftExitDuration         = 2.5                   		                                                                                     
+}
+
 const array<string> ALLOWED_SCRIPT_PARENT_ENTS = [
 	"hatch_bunker_entrance_model_z16",
 	"hatch_bunker_entrance_model_z6",
@@ -150,6 +159,8 @@ struct
 	float functionref()			 getDeathCamTimeOverride
 	float functionref()			 getDeathCamSpectateTimeOverride
 	array<string>				 nonInstalledModsTracked
+
+	UpdraftTriggerSettings&      updraftSettings = { ... }
 } file
 
 void function Utility_Shared_Init()
@@ -236,8 +247,12 @@ void function InitWeaponScripts()
 	MeleeCryptoHeirloom_Init()
 	MpWeaponCryptoHeirloomPrimary_Init()
                      
-                           
-                                     
+		MeleeValkyrieSpear_Init()
+		MpWeaponValkyrieSpearPrimary_Init()
+       
+                     
+                          
+                                    
        
 	MeleeGibraltarClub_Init()
 	MpWeaponGibraltarClubPrimary_Init()
@@ -259,8 +274,10 @@ void function InitWeaponScripts()
 
                   
                             
+                                    
                            
                              
+                           
        
 
 	MpWeaponEmoteProjector_Init()
@@ -427,6 +444,8 @@ void function InitWeaponScripts()
                           
                           
                            
+                          
+                            
        
 
                     
@@ -438,6 +457,11 @@ void function InitWeaponScripts()
                         
                            
        
+
+                           
+                              
+       
+
 	VOID_RING_Init()
 	MpWeaponCar_Init()
 
@@ -1283,7 +1307,8 @@ bool function ControlPanel_CanUseFunction( entity playerUser, entity controlPane
 	if ( Bleedout_IsBleedingOut( playerUser ) )
 		return false
 
-	if ( IsValid( playerUser.GetParent() ) )
+	bool canUseWhileParented = EntIsHoverVehicle( playerUser.GetParent() ) && StatusEffect_GetSeverity( playerUser, eStatusEffect.camera_view ) > 0.0	                           
+	if ( IsValid( playerUser.GetParent() ) && !canUseWhileParented )
 		return false
 
 	entity activeWeapon = playerUser.GetActiveWeapon( eActiveInventorySlot.mainHand )
@@ -1379,10 +1404,10 @@ FrontRightDotProductsStruct function GetFrontRightDots( entity baseEnt, entity r
 		                                                                      
 
 		                     
-		                                                                     
+		                                                                       
 
 		                  
-		                                                                   
+		                                                                    
 		return result
 	}
 
@@ -1408,7 +1433,7 @@ array<vector> function GetAllPointsOnBezier( array<vector> points, int numSegmen
 	if ( debugDrawTime )
 	{
 		for ( int i = 0; i < points.len() - 1; i++ )
-			DebugDrawLine( points[i], points[i + 1], 150, 150, 150, true, debugDrawTime )
+			DebugDrawLine( points[i], points[i + 1], <150, 150, 150>, true, debugDrawTime )
 	}
 
 	for ( int i = 0; i < numSegments; i++ )
@@ -1420,7 +1445,7 @@ array<vector> function GetAllPointsOnBezier( array<vector> points, int numSegmen
 	if ( debugDrawTime )
 	{
 		for ( int i = 0; i < curvePoints.len() - 1; i++ )
-			DebugDrawLine( curvePoints[i], curvePoints[i + 1], 200, 0, 0, true, debugDrawTime )
+			DebugDrawLine( curvePoints[i], curvePoints[i + 1], <200, 0, 0>, true, debugDrawTime )
 	}
 
 	return curvePoints
@@ -2194,7 +2219,7 @@ GravityLandData function GetGravityLandData( vector startPos, vector parentVeloc
 		traceEnd += objectVelocity * timeElapsePerTrace
 		returnData.points.append( traceEnd )
 		if ( bDrawPath )
-			DebugDrawLine( traceStart, traceEnd, pathColor[0], pathColor[1], pathColor[2], false, bDrawPathDuration )
+			DebugDrawLine( traceStart, traceEnd, <pathColor[0], pathColor[1], pathColor[2]>, false, bDrawPathDuration )
 
 		traceFrac = TraceLineSimple( traceStart, traceEnd, null )
 		traceCount++
@@ -2282,7 +2307,7 @@ vector function HackGetDeltaToRefOnPlane( vector origin, vector angles, entity e
 	vector P           = origin + planarDelta
 
 	                                                               
-	                                                   
+	                                                     
 
 	return P
 }
@@ -3979,6 +4004,32 @@ void function SetTeam( entity ent, int team )
 }
 
 
+void function SetAllPlayersToTeam( int teamNum = 5 )
+{
+	array< entity > allPlayers = GetPlayerArray()
+	foreach( player in allPlayers )
+	{
+		if( IsValid( player ) )
+			SetTeam( player, teamNum )
+	}
+}
+
+void function SetPlayersToTeam( int minNdx, int maxNdx, int teamNum = 5 )
+{
+	Assert( minNdx <= maxNdx, format( "ERROR: %s(): minNdx needs to be <= maxNdx." ))
+
+	array< entity > allPlayers = GetPlayerArray()
+
+	Assert( minNdx <= allPlayers.len(), format( "ERROR: %s(): minNdx needs to be <= # of all players." ))
+
+	for( int i = minNdx; i <= maxNdx; i++ )
+	{
+		if( IsValid( allPlayers[i] ) )
+			SetTeam( allPlayers[i], teamNum )
+	}
+}
+
+
 void function PrintTraceResults( TraceResults results )
 {
 	printt( "TraceResults: " )
@@ -4175,13 +4226,13 @@ float function GetFractionAlongPath( array<entity> nodes, vector p )
 	float distTraveled = 0.0
 	for ( int i = 0; i < closestSegment; i++ )
 	{
-		                                                                                         
+		                                                                                          
 		distTraveled += Distance( nodes[i].GetOrigin(), nodes[i + 1].GetOrigin() )
 	}
 
 	                                               
 	vector closestPointOnSegment = GetClosestPointOnLineSegment( nodes[closestSegment].GetOrigin(), nodes[closestSegment + 1].GetOrigin(), p )
-	                                                                                                   
+	                                                                                                    
 	distTraveled += Distance( nodes[closestSegment].GetOrigin(), closestPointOnSegment )
 
 	return clamp( distTraveled / totalDistance, 0.0, 1.0 )
@@ -4474,6 +4525,19 @@ string function GetDroneType( entity npc )
 	return expect string( npc.Dev_GetAISettingByKeyField( "drone_type" ) )
 }
 
+float function Round( float num, float decimalPoints )
+{
+	float retVal = num
+	if ( decimalPoints >= 0 )
+	{
+		float factor = pow(10, decimalPoints)
+		retVal *= factor
+		retVal = floor( retVal + 0.5 )
+		retVal /= factor
+
+	}
+	return retVal
+}
 
 vector function FlattenVec( vector vec )
 {
@@ -5082,7 +5146,7 @@ void function DebugDrawLineFromEntToPos( entity ent, vector pos, int r, int g, i
 	float endTime = Time() + duration
 	while( Time() <= endTime )
 	{
-		DebugDrawLine( ent.GetOrigin(), pos, r, g, b, throughGeo, 0.1 )
+		DebugDrawLine( ent.GetOrigin(), pos, <r, g, b>, throughGeo, 0.1 )
 		wait 0.05
 	}
 }
@@ -6414,6 +6478,11 @@ int function GetWeaponIndex( entity player, entity weapon )
  
 #endif
 
+void function OverrideUpdraftTriggerSettings (  UpdraftTriggerSettings customSettings )
+{
+	file.updraftSettings = customSettings
+}
+
 void function OnEnterUpdraftTrigger( entity trigger, entity ent, float activationHeight )
 {
 	Assert( IsValid( trigger ) )
@@ -6424,13 +6493,7 @@ void function OnEnterUpdraftTrigger( entity trigger, entity ent, float activatio
 
 	float entZ = ent.GetOrigin().z
 
-	float minShakeActivationHeight = entZ + 500.0                                                                       
-	float maxShakeActivationHeight = entZ - 400.0                                                                                     
-	float liftActivationHeight     = activationHeight			                                                          
-	float liftSpeed                = 300.0                   	                       
-	float liftAcceleration         = 100.0                 		                                                     
-	float liftExitDuration         = 2.5                   		                                                                                     
-	ent.Player_EnterUpdraft( minShakeActivationHeight, maxShakeActivationHeight, liftActivationHeight, liftSpeed, liftAcceleration, liftExitDuration );
+	ent.Player_EnterUpdraft( file.updraftSettings.minShakeActivationHeight + entZ, entZ - file.updraftSettings.maxShakeActivationHeight, activationHeight, file.updraftSettings.liftSpeed, file.updraftSettings.liftAcceleration, file.updraftSettings.liftExitDuration );
 }
 
 void function OnLeaveUpdraftTrigger( entity trigger, entity ent )

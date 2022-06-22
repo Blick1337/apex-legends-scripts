@@ -250,10 +250,9 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 	                 
 	RegisterSkydiveEmotesForCharacter( characterClass )
 
-                     
-		                         
-		RegisterMythicBundlesForCharacter( characterClass )
-       
+	                         
+	RegisterMythicBundlesForCharacter( characterClass )
+
 }
 
 
@@ -523,11 +522,43 @@ CharacterMenuLightData function CharacterSkin_GetMenuCustomLightData( ItemFlavor
 {
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.character_skin )
 	CharacterMenuLightData data
-	data.key_color = GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuCustomLightColorKey" )
-	data.fill_color = GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuCustomLightColorFill" )
-	data.rimL_color = GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuCustomLightColorRimL" )
-	data.rimR_color = GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuCustomLightColorRimR" )
-	data.animSeq = GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "menuCustomLightAnimSeq" )
+	data.key_color =          GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuCustomLightColorKey" )
+	data.key_brightness =     GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightBrightnessKey" )
+	data.key_cone =           GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightConeKey" )
+	data.key_innercone =      GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightInnerConeKey" )
+	data.key_distance =       GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightDistanceKey" )
+	data.key_halfbrightfrac = GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightHalfBrightFracKey" )
+	data.key_specint =        GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightSpecIntKey" )
+	data.key_pbrfalloff =     GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuCustomLightPbrFalloffKey" )
+	data.key_castshadows =    GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuCustomLightCastShadowsKey" )
+	data.fill_color =         GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuCustomLightColorFill" )
+	data.fill_brightness =    GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightBrightnessFill" )
+	data.fill_cone =          GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightConeFill" )
+	data.fill_innercone =     GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightInnerConeFill" )
+	data.fill_distance =      GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightDistanceFill" )
+	data.fill_halfbrightfrac =GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightHalfBrightFracFill" )
+	data.fill_specint =       GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightSpecIntFill" )
+	data.fill_pbrfalloff =    GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuCustomLightPbrFalloffFill" )
+	data.fill_castshadows =   GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuCustomLightCastShadowsFill" )
+	data.rimL_color =         GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuCustomLightColorRimL" )
+	data.rimL_brightness =    GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightBrightnessRimL" )
+	data.rimL_cone =          GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightConeRimL" )
+	data.rimL_innercone =     GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightInnerConeRimL" )
+	data.rimL_distance =      GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightDistanceRimL" )
+	data.rimL_halfbrightfrac =GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightHalfBrightFracRimL" )
+	data.rimL_specint =       GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightSpecIntRimL" )
+	data.rimL_pbrfalloff =    GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuCustomLightPbrFalloffRimL" )
+	data.rimL_castshadows =   GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuCustomLightCastShadowsRimL" )
+	data.rimR_color =         GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuCustomLightColorRimR" )
+	data.rimR_brightness =    GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightBrightnessRimR" )
+	data.rimR_cone =          GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightConeRimR" )
+	data.rimR_innercone =     GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightInnerConeRimR" )
+	data.rimR_distance =      GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightDistanceRimR" )
+	data.rimR_halfbrightfrac =GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightHalfBrightFracRimR" )
+	data.rimR_specint =       GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuCustomLightSpecIntRimR" )
+	data.rimR_pbrfalloff =    GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuCustomLightPbrFalloffRimR" )
+	data.rimR_castshadows =   GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuCustomLightCastShadowsRimR" )
+	data.animSeq =            GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "menuCustomLightAnimSeq" )
 	return data
 }
 

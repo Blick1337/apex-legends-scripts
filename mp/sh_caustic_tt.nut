@@ -68,6 +68,10 @@ const int CANISTER_DISTANCE_FRAME_TO_LOOT_SQR = 4900
                                                                       
                                                                   
 
+                      
+                                                        
+                                                         
+
                          
                               
                             
@@ -81,6 +85,7 @@ const int CANISTER_DISTANCE_FRAME_TO_LOOT_SQR = 4900
 	       	       
 	       	           
 	       	       
+	       	                    
 	   		                 
 	       	                        
  
@@ -279,6 +284,20 @@ void function EntitiesDidLoad()
 			                          
 
 			                                      
+			                                          
+
+			                                                                                    
+			                                                              
+			                                               
+			                                                                 
+			                                                                                      
+			                                                                                       
+			                                                                                       
+			                                                               
+			                                                                       
+			                                                     
+			                                                        
+			                                                          
 			                                          
 
 			                                                
@@ -522,6 +541,7 @@ void function CanisterSwitch_TrapExpired_Thread()
 					                              
 						                                           
 
+					                                                    
 					                                                                                                                      
 					                                                                                                   
 				 
@@ -530,8 +550,6 @@ void function CanisterSwitch_TrapExpired_Thread()
 
 		                                                          
 			                                                                                             
-
-		                                     
 
 		                                       
 	#endif          
@@ -952,13 +970,41 @@ void function CanisterSwitches_Enabled()
  
 	                                                
 	 
-		                                                                   
-			        
+		                                                    
+	 
+ 
 
-		               
-			                
-		    
-			                  
+                                                                              
+ 
+	                                                                   
+		      
+
+	                                           
+	                                                        
+
+	              
+	 
+		                
+		                                            
+		  
+		       
+			                                                                                                                                                                                                                         
+		      
+		  
+		                                          
+			                                   
+	 
+	    
+	 
+		                  
+		                                            
+		  
+		       
+			                                                                                                                                                                                                                       
+		      
+		  
+		                                          
+			                                  
 	 
  
 #endif          

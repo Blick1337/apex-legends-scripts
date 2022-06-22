@@ -7,7 +7,7 @@ global function OnWeaponTossPrep_ability_shield_throw
 global function OnWeaponTossReleaseAnimEvent_ability_shield_throw
 
 global function IsMobileShieldEnt
-
+global function MobileShield_IsAllowedStickyEnt
 global function CodeCallback_ScriptMoverTraversalStopped
 
 #if SERVER
@@ -100,6 +100,7 @@ struct
 	                                      
 	                                          
 	                                            
+	                                                      
 	#endif
 
 	table<entity, entity> mobileShield = {}
@@ -133,6 +134,7 @@ void function MpAbilityShieldThrow_Init()
 	RegisterSignal( "MobileShield_UpdateDestination" )
 	RegisterSignal( "MobileShield_Deactivate" )
 	RegisterSignal( "MobileShield_Shutdown" )
+	RegisterSignal( "MobileShield_Projectile_Deployed" )
 
 	Remote_RegisterServerFunction("ClientCallback_AttemptChangeShieldDirection", "vector", -100000.0, 100000.0, 32 )
 	Remote_RegisterClientFunction( "ServerToClient_ShieldThrowToggleHint", "entity" )
@@ -224,7 +226,8 @@ var function OnWeaponTossReleaseAnimEvent_ability_shield_throw( entity weapon, W
 	weapon.EmitWeaponSound_1p3p( GetGrenadeThrowSound_1p( weapon ), GetGrenadeThrowSound_3p( weapon ) )
 
 	entity weaponOwner = weapon.GetWeaponOwner()
-	vector desiredPos = ShieldThrow_GetThrowDestination( weaponOwner, weapon )
+	vector desiredPos = ShieldThrow_GetThrowDestination( weaponOwner, weapon, true )
+
 	#if SERVER
 		                                          
 		                                               
@@ -241,6 +244,7 @@ var function OnWeaponTossReleaseAnimEvent_ability_shield_throw( entity weapon, W
 		PlayerUsedOffhand( player, weapon )
 
 		#if SERVER
+			                                               
 			                                                            
 			                            
 				                                                
@@ -252,6 +256,51 @@ var function OnWeaponTossReleaseAnimEvent_ability_shield_throw( entity weapon, W
 
 	return ammoReq
 }
+
+#if SERVER
+                                                                    
+ 
+	                                                
+	                                 
+	                                   
+	                                                          
+
+	            
+		                           
+		 
+			                                           
+		 
+	 
+
+	                           
+
+	                        
+	 
+		                                            
+		       
+		                       
+		 
+			                                                                   
+		 
+		      
+	 
+
+	                                                     
+
+	              
+	 
+		       
+		                       
+		 
+			                                                                     
+		 
+		      
+		
+		                                                                        
+		           		
+	 
+ 
+#endif
 
                                       
                                       
@@ -280,8 +329,8 @@ entity function ThrowShield( entity weapon, WeaponPrimaryAttackParams attackPara
 	#if DEV
 	if ( DEBUG_THROW_CHECK )
 	{
-		DebugDrawMark( attackPos, 5, [255, 0, 0], true, 5.0 )
-		DebugDrawArrow( player.EyePosition(), attackPos, 8, 255, 0, 0, true, 5.0 )
+		DebugDrawMark( attackPos, 5, COLOR_RED, true, 5.0 )
+		DebugDrawArrow( player.EyePosition(), attackPos, 8, COLOR_RED, true, 5.0 )
 		printt("ThrowShield: looking fraction: " + tr.fraction )
 	}
 	#endif      
@@ -290,7 +339,7 @@ entity function ThrowShield( entity weapon, WeaponPrimaryAttackParams attackPara
 	{
 		#if DEV
 		if ( DEBUG_THROW_CHECK )
-			DebugDrawMark( attackPos, 5, [0, 255, 0], true, 5.0 )
+			DebugDrawMark( attackPos, 5, COLOR_GREEN, true, 5.0 )
 		#endif      
 
 		attackPos = tr.endPos
@@ -443,7 +492,7 @@ void function OnDeployableShieldPlanted( entity projectile )
 
 		       
 		                                        
-			                                                                                                                                          
+			                                                                                                                                             
 		            
 	 
 
@@ -473,6 +522,16 @@ void function OnDeployableShieldPlanted( entity projectile )
 
 	                                        
 	                                             
+
+	                            
+	 
+		                                                                                                                                                                                                                
+		                       
+		 
+			                                                              
+		 
+	 
+
 	                                                                              
 	                                
 	                                        
@@ -487,7 +546,20 @@ void function OnDeployableShieldPlanted( entity projectile )
 	                                                                                                                                                                                                 
 	                                          
 	 
+		                              
 		                                                                                                                                                                                                                                                                      
+
+		       
+			                       
+			 
+				                           
+					                                                                                                                                               
+				                                     
+					                                                                                                                                            
+				    
+					                                                                                                                                              
+			 
+		      
 
 		                                                         
 		 
@@ -495,10 +567,59 @@ void function OnDeployableShieldPlanted( entity projectile )
 			                       
 			 
 				                                                            
-				                                                                                                                                         
+				                                                                                      
 			 
 			      
 			                         
+			                        
+		 
+
+
+		                                                                       
+		 
+			                 
+			                                        
+
+			                                                                      
+			 
+				                                                    
+
+				                                                                                                                                                                         
+
+				       
+					                       
+					 
+						                           
+							                                                                   
+						                                     
+							                                                                
+						    
+							                                                                  
+					 
+				      
+
+				                                                                  
+				                           
+					        
+
+				                                  
+				                                 
+					     
+
+				                                                          
+				                                
+				 
+					       
+						                       
+						 
+							                                           
+						 
+					      
+					                         
+
+					     
+				 
+			 
 		 
 	 
 
@@ -519,6 +640,7 @@ void function OnDeployableShieldPlanted( entity projectile )
 		                       
 		                 
 		                                       
+		                                                       
 	 
 
 	                                 
@@ -532,6 +654,12 @@ void function OnDeployableShieldPlanted( entity projectile )
 	                                
 	                                
 	                             
+
+	                                                                                       
+	                                                                                                      
+	                                                            
+	                                                      
+	                                                                        
 
 	                                      
 	                                                    
@@ -609,6 +737,8 @@ void function OnDeployableShieldPlanted( entity projectile )
 	                       
 	                                                        
 	                                                                                                                                                
+	                                  
+	                                                    
 	                                      
 
 	                                        
@@ -632,8 +762,8 @@ void function OnDeployableShieldPlanted( entity projectile )
 	                                                               
 	                                    
 	                                        
-	                              
 	                                      
+	                              
 	                                
 
 	                                             
@@ -964,7 +1094,7 @@ void function OnDeployableShieldPlanted( entity projectile )
 		       
 		                                        
 		 
-			                                                                                                        
+			                                                                                                         
 			                                                               
 		 
 		            
@@ -1102,7 +1232,7 @@ void function CodeCallback_ScriptMoverTraversalStopped( entity ent, bool isBlock
 	                                       
 	                          
 	                                  
-	                                     
+	                                    
 	                                           
 	                                        
 
@@ -1110,6 +1240,11 @@ void function CodeCallback_ScriptMoverTraversalStopped( entity ent, bool isBlock
 	                                                                                 
 
 	                               
+
+                    
+                                            
+       
+
 	                                                                            
 
 	                
@@ -1517,7 +1652,7 @@ void function ShieldThrow_ShieldCommandPromptsRUI_Thread( entity player )
 #endif
 
 
-vector function ShieldThrow_GetThrowDestination( entity ent, entity weapon )
+vector function ShieldThrow_GetThrowDestination( entity ent, entity weapon, bool fromInitialToss=false )
 {
 	vector eyeHitPos
 	array<entity> ignoreArray = MobileShieldIgnoreArray()
@@ -1534,10 +1669,20 @@ vector function ShieldThrow_GetThrowDestination( entity ent, entity weapon )
 	float rangeEffective = rangeNormal / deg_cos( pitchClamped )
 
 	                                                                                          
-	TraceResults initialTrace = TraceLine( eyePos, eyePos + (eyeDir * rangeEffective), ignoreArray, TRACE_MASK_PLAYERSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )                                                             
+	TraceResults initialTrace
+
+	                                                                  
+	if ( fromInitialToss )
+	{
+		initialTrace = TraceLineHighDetail( eyePos, eyePos + (eyeDir * rangeEffective), ignoreArray, TRACE_MASK_SHOT_HULL, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
+	}
+	else                                                                                                                   
+	{
+		initialTrace = TraceLine( eyePos, eyePos + (eyeDir * rangeEffective), ignoreArray, TRACE_MASK_PLAYERSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )                                                              
+	}
 	eyeHitPos = initialTrace.endPos
 
-	TraceResults trace = TraceLine( eyeHitPos, eyeHitPos + <0, 0, -200000>, ent, TRACE_MASK_PLAYERSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )                                                             
+	TraceResults trace = TraceLineHighDetail( eyeHitPos, eyeHitPos + <0, 0, -200000>, ent, TRACE_MASK_PLAYERSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )                                                             
 	Signal( ent, "MobileShield_UpdateDestination" )
 	#if CLIENT
 		thread ShieldThrow_CreateDestinationMarker( ent, trace.endPos, trace.surfaceNormal, trace.hitEnt )
@@ -1699,6 +1844,66 @@ bool function GetShieldThrowIsScriptMoverTraversal()
 bool function EnableFindBetterShieldStartingPos()
 {
 	return GetCurrentPlaylistVarBool( "newcastle_tac_find_better_starting_pos", true )
+}
+
+                                        
+bool function MobileShield_IsAllowedStickyEnt( entity mobileShield, entity stickyEnt, string stickyEntWeaponClassName )
+{
+	bool allowStick = false
+
+	if ( stickyEntWeaponClassName == "mp_weapon_cluster_bomb_launcher" )
+		allowStick = true
+
+	if ( stickyEntWeaponClassName == "mp_weapon_arc_bolt" )
+		allowStick = true
+
+	if ( stickyEntWeaponClassName == "mp_weapon_grenade_emp" )
+		allowStick = true
+
+	if( allowStick )
+		thread MobileShield_TrackStickyEnt_Thread( mobileShield, stickyEnt )
+
+	return allowStick
+}
+
+                                                                                         
+void function MobileShield_TrackStickyEnt_Thread( entity mobileShield, entity stickyEnt )
+{
+	EndSignal( mobileShield, "OnDestroy" )
+	EndSignal( stickyEnt, "OnDestroy" )
+
+	bool hadLoS = true
+
+	array<entity> ignoreArray	= MobileShieldIgnoreArray()
+	TraceResults initialTrace = TraceLine( mobileShield.GetOrigin(), stickyEnt.GetOrigin(), ignoreArray, TRACE_MASK_VISIBLE, TRACE_COLLISION_GROUP_NONE )
+
+	if(initialTrace.fraction < 1)
+		hadLoS = false
+
+	WaitFrame()                                                              
+
+	while ( true )
+	{
+		if( !IsValid( mobileShield ) )
+			return
+		if( !IsValid( stickyEnt ) )
+			return
+
+		ignoreArray	= MobileShieldIgnoreArray()
+		TraceResults results = TraceLine( mobileShield.GetOrigin(), stickyEnt.GetOrigin(), ignoreArray, TRACE_MASK_VISIBLE, TRACE_COLLISION_GROUP_NONE )
+		if(	results.fraction < 1 )
+		{
+			#if SERVER
+			                       
+			            
+				                                        
+			#endif
+			return
+		}
+
+		WaitFrame()
+	}
+
 }
 
 

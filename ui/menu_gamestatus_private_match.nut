@@ -212,6 +212,18 @@ void function InitPrivateMatchGameStatusMenu( var menu )
 				RunUIScript( "EnablePrivateMatchGameStatusMenu", file.enableMenu )
 			}
 
+			if ( GetLocalClientPlayer().HasMatchAdminRole() )
+			{
+				file.adminConfig.chatMode = ACM_ALL_PLAYERS
+				file.adminConfig.spectatorChat = true
+
+				SwitchChatModeButtonText( ACM_ALL_PLAYERS )
+				RunUIScript( "SetSpecatorChatModeState", true, true )
+
+				                                             
+				Remote_ServerCallFunction( "ClientCallback_PrivateMatchSetAdminConfig", file.adminConfig.chatMode, file.adminConfig.spectatorChat )
+			}
+
 			if ( !file.isInitialized )
 			{
 				AddOnSpectatorTargetChangedCallback( OnSpectateTargetChanged )
@@ -360,7 +372,6 @@ void function SetChatModeButtonText( string newText )
 void function SetSpecatorChatModeState( bool isActive, bool isSelected )
 {
 	HudElem_SetRuiArg( file.chatSpectCheckBox, "isActive", isActive )
-
 	HudElem_SetRuiArg( file.chatSpectCheckBox, "isSelected", isSelected )
 }
 
@@ -1019,18 +1030,6 @@ void function TryEnablePrivateMatchGameStatusMenu()
 
 	RunUIScript( "EnablePrivateMatchGameStatusMenu", true )
 	file.enableMenu = true
-
-	if ( GetLocalClientPlayer().HasMatchAdminRole() )
-	{
-		file.adminConfig.chatMode = ACM_ALL_PLAYERS
-		file.adminConfig.spectatorChat = true
-
-		SwitchChatModeButtonText( ACM_ALL_PLAYERS )
-		RunUIScript( "SetSpecatorChatModeState", true, true )
-
-		                                             
-		Remote_ServerCallFunction( "ClientCallback_PrivateMatchSetAdminConfig", file.adminConfig.chatMode, file.adminConfig.spectatorChat )
-	}
 
 	PrivateMatch_PopulateGameStatusMenu( file.menu )
 }

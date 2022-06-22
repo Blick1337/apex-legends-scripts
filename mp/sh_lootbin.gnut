@@ -351,7 +351,7 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 	                                                       
 
 	                            
-		                                                                                                    
+		                                                                                                  
 	      
 
 	                      
@@ -767,7 +767,7 @@ array<entity> function LootBin_GetSpawnedLoot( entity lootBin, bool includeRegul
 	               
 	 
 		                                 
-		                    
+		                                                                                        
 		 
 			                
 			                                                 
@@ -1122,33 +1122,16 @@ bool function CanAccessSecretCompartments( entity lootBin, entity player )
 	if ( !LootBin_HasSecretCompartment( lootBin ) )
 		return false
 
-	if ( player != null )
-	{
-		bool hasSupportTeammate = PlayerHasPassive( player, ePassives.PAS_MEDIC )
+	if ( !IsValid( player ) )
+		return false
 
-		if ( GetCurrentPlaylistVarBool( "supply_bin_secret_compartment_openable_by_teammates", false ) )
-		{
-			foreach ( entity aliveTeammate in GetPlayerArrayOfTeam_Alive( player.GetTeam() ) )
-			{
-				                                                                                                      
-				                                                                           
-				  	        
+                     
+		bool canOpenCompartment = PlayerHasPassive( player, ePassives.PAS_MEDIC )
+      
+                                                                                         
+       
 
-				if ( !PlayerHasPassive( aliveTeammate, ePassives.PAS_MEDIC ) )
-					continue
-
-				if ( Distance( player.GetOrigin(), aliveTeammate.GetOrigin() ) > 200.0 * METERS_TO_INCHES )
-					continue
-
-				hasSupportTeammate = true
-				break
-			}
-		}
-
-		if ( !hasSupportTeammate )
-			return false
-	}
-	return true
+	return canOpenCompartment
 }
 #endif
 
@@ -1296,7 +1279,7 @@ string function GetLootBinUseTextOverride( entity lootBin )
 
 				string hint = "#SURVIVAL_LOOTBIN_LOCKED_FRIENDLY"
 
-				if (lootBinOwner == player)
+				if ( lootBinOwner == player || GetCurrentPlaylistVarBool( "lootbin_locking_disabled", false ) )
 					hint = "#SURVIVAL_LOOTBIN_LOCKED_SELF"
 				else if ( IsEnemyTeam( team, player.GetTeam() ) )
 					hint = "#SURVIVAL_LOOTBIN_LOCKED_ENEMY"

@@ -431,7 +431,7 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 	                                                     
 	                                                                                                                               
 	                                    
-	                                                        
+	                                                         
 
 	                                           
 	                                                         
@@ -569,9 +569,9 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 		 
 			                                                     
 		 
-		                                                        
+		                                                          
+		                                                                  
 		                                                               
-		                                                                
 
 		                                                                                                  
 		 
@@ -607,9 +607,9 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 
                                                             
 
-                                                            
+                                                              
+                                                                      
                                                                    
-                                                                    
 
                                       
      
@@ -1096,10 +1096,10 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 			         
 			                   
 			   
-			  	                                                                           
+			  	                                                                             
 			   
 			      
-			  	                                                                             
+			  	                                                                               
 			        
 
 		 
@@ -1682,7 +1682,7 @@ void function ShowVoidRingRadius( entity weapon )
 	while( IsValid( fxHandle ) )
 	{
 		vector dropPosition = weapon.GetMostRecentGrenadeImpactPos()
-		                                                                         
+		                                                                           
 		EffectSetControlPointVector( fxHandle, 0, dropPosition )
 		WaitFrame()
 	}

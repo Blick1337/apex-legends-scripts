@@ -8,6 +8,10 @@ global function OnProjectileCollision_ability_WreckingBall
 #if SERVER
                                                
                                                   
+                   
+                                               
+                                              
+      
 #endif
 
 #if CLIENT
@@ -28,7 +32,11 @@ global const string WRECKING_BALL_SPEEDTRIGGER_SCRIPT_NAME 	= "wreckingball_spee
                       
 const int WRECKING_BALL_DAMAGE_FINAL				= 20			                                                                            
 const float WRECKING_BALL_FINAL_EXPLOSION_RADIUS	= 300.0			                                                                                           
+                   
+                                                                                                      
+     
 const float WRECKING_BALL_BALL_DURATION 			= 5.0			                                                  
+      
 const float WRECKING_BALL_WAKE_DURATION 			= 60.0			                                                                
 const float WRECKING_BALL_PROXY_DELAY				= 0.5			                                                      
 const float WRECKING_BALL_WAKE_BUFF_DURATION 		= 2				                                                                 
@@ -45,6 +53,11 @@ const float WRECKING_BALL_SPEED_TRIGGER_HEIGHT		= 16.0
 const float WRECKING_BALL_JUMP_PAD_WINDOW			= 0.2			                                                                                    
 const float WRECKING_BALL_FORCE_TO_MOVE				= 600.0			                                                                           
 const float WRECKING_BALL_TRACE_RADIUS				= 40.0			                                                                                                                                                    
+
+                   
+                                                      
+                                                     
+      
 
          
 const asset WRECKING_BALL_PROJ_WRECKING_BALL 		= $"mdl/props/madmaggie_ultimate_ball_static/madmaggie_ultimate_ball_static.rmdl"
@@ -125,6 +138,13 @@ struct
 	bool fxOption_playTempSound
 
 	bool pingWreckingBallOnCast
+
+                   
+          
+                               
+                              
+      
+      
 } file
 
 void function MpAbilityWreckingBall_Init()
@@ -186,6 +206,12 @@ void function MpAbilityWreckingBall_Init()
 		                                          
 		                                                        
 		                                                    
+
+                     
+                                                                 
+                                                                
+        
+
 	#endif         
 
 	#if CLIENT
@@ -556,7 +582,11 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
  
 	                       				       
 	                                   	     		                                             
+                    
+                                                                                 
+      
 	                                   	     		                                     
+       
 	                                	       		                                                                           
 	                                	      		                                                                                         
 	                              		      		                                                                                  
@@ -568,7 +598,11 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 	                                	   			                                                                                     
 
 	                                                                      
-	                                       			      	                                                                                                                                   
+                    
+                                                                                                                                                                                   
+      
+	                                       			     	                                                                                                                                   
+       
 	                                  				      	                                                                                                                                                            
 	                                    			       	                                                     
 
@@ -643,6 +677,37 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 
 	                                                     
 	 
+                     
+                                           
+                                                                                
+                                      
+   
+                                                            
+            
+
+                                
+                           
+                                                               
+
+                                 
+   
+
+                                                                               
+                                      
+   
+                                                            
+            
+
+                                
+                           
+                                                               
+
+                                                                                                      
+   
+                                         
+        
+
+
 		                         
 		                      
 			                          
@@ -690,6 +755,27 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 	                      
 		                                         
  
+                   
+                                                                             
+ 
+                                                                                                                                               
+ 
+
+                                                                            
+ 
+                                                                                                                                             
+ 
+
+                                                            
+ 
+                                                                    
+ 
+
+                                                             
+ 
+                                                                     
+ 
+      
 
                                           
                                           
@@ -1030,7 +1116,7 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
  
 	                             
 	                  
-	                                                                                        
+	                                                                                 
 	                                     
 	 
 		                                                               
@@ -1128,8 +1214,8 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 	 
 		                                          
 		                                                                
-		                                                          
-		                                                                    
+		                                                            
+		                                                                      
 	 
       
 

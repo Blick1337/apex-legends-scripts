@@ -1397,8 +1397,8 @@ void function ServerCallback_RespawnDNAHint()
 	   
 
                           
-                                                                                                                   
-        
+	                                                                                                                  
+		      
       
 
 	                                                                       
@@ -1476,7 +1476,7 @@ void function ServerCallback_RespawnDNAHint()
 			                                                     
 			                                              
                               
-                                  
+					                             
           
 					                                                                               
 		 
@@ -2107,9 +2107,9 @@ bool function CanDeploy( FlightPath flightPath, vector origin, vector angles, ve
 	deployOrigin = deployOrigin - deployFwd * 150                        
 
 	TraceResults results = TraceHull( deployOrigin, deployOrigin - <0, 0, 1000>, <-300, -300, -300>, <300, 300, 300>, null, flightPath.traceMask, TRACE_COLLISION_GROUP_NONE )
-	                                                          
-	                                                                    
-	                                                                       
+	                                                            
+	                                                                      
+	                                                                         
 
 	if ( results.startSolid )
 		return false

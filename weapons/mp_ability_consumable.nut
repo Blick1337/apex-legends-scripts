@@ -15,6 +15,7 @@ global function Consumable_IsValidConsumableInfo
 global function Consumable_GetConsumableInfo
 global function Consumable_CanUseConsumable
 global function Consumable_CreatePotentialHealData
+global function Consumable_CanUseUltAccel
 #if CLIENT
 global function OnCreateChargeEffect_Consumable
 global function OnCreateMuzzleFlashEffect_Consumable
@@ -1805,19 +1806,7 @@ void function Consumable_OnGamestateEnterResolution()
 
                                              
  
-	                                                        
-	                      
-		      
-
-	                                                                      
-	                                                   
-		      
-
-	                                                     
-	                                                      
-		      
-
-	                                         
+	                                           
 		      
 
 	                                                                                                            
@@ -1835,6 +1824,26 @@ void function Consumable_OnGamestateEnterResolution()
 	                                                          
  
 #endif          
+
+bool function Consumable_CanUseUltAccel( entity player )
+{
+	entity ult = player.GetOffhandWeapon( OFFHAND_ULTIMATE )
+	if ( !IsValid( ult ) )
+		return false
+
+	int minToFire = ult.GetWeaponSettingInt( eWeaponVar.ammo_min_to_fire )
+	if ( ult.GetWeaponPrimaryClipCount() >= minToFire )
+		return false
+
+	int maxClipCount = ult.GetWeaponPrimaryClipCountMax()
+	if ( ult.GetWeaponPrimaryClipCount() == maxClipCount )
+		return false
+
+	if( ult.HasMod( MOBILE_HMG_ACTIVE_MOD ) )
+		return false
+
+	return true
+}
 
                                                                                                                          
                                                                                                                         

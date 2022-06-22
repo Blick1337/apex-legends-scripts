@@ -70,6 +70,9 @@ const JUMP_PAD_DESTRUCTION = "jump_pad_destruction"
                       
 const bool GRAVITY_CANNON_DEBUG = false
 const asset GRAVITY_CANNON_MODEL = $"mdl/props/gravity_cannon/gravity_cannon_v21_base_w.rmdl"
+const float GRAVITY_CANNON_RADIUS = 115
+const float GRAVITY_CANNON_ABOVE_HEIGHT = 175
+const float GRAVITY_CANNON_BELOW_HEIGHT = 230
       
 
 void function Sh_JumpPad_Init()
@@ -383,6 +386,11 @@ void function Sh_JumpPad_Init()
 
                                                 
  
+                
+                                                                
+        
+       
+
 	                                                                      
 	                                                         
  
@@ -569,7 +577,7 @@ void function Sh_JumpPad_Init()
 	                      
 
 	                                                                                                           
-	                                                                                                             
+	                                                                                                               
 
 	               
 	                          
@@ -709,6 +717,11 @@ void function _DisplayJumpPadHint()
 void function JumpPad_GiveDoubleJump( entity player )
 {
 	Assert( player.IsPlayer() )
+
+                
+                                                                 
+         
+       
 	
 	if ( !GetCurrentPlaylistVarBool( "octane_jump_pad_give_double_jump", true ) )
 		return
@@ -839,9 +852,9 @@ void function StartGivePlayerDoubleJump(entity player)
 	                                                  
 	                                                             
 	                                                       
-	                                
-	                             
-	                                                                                                                                                     
+	                                                  
+	                                                     
+	                                                     
 	                           
 	                                           
 	                                   
@@ -862,9 +875,9 @@ void function StartGivePlayerDoubleJump(entity player)
 	                                                       
 	                           
 	 
-		                                                                                  	                
-		                                                                                             	                  
-		                                                                               	           
+		                                                                                    	                
+		                                                                                               	                  
+		                                                                                 	           
 	 
 
 	                                                                                                                                                
@@ -884,9 +897,9 @@ void function StartGivePlayerDoubleJump(entity player)
 			 
 				                                                                                                          
 
-				                                                                     
-				                                                                        
-				                                                                                        
+				                                                                       
+				                                                                          
+				                                                                                          
 			 
 		 
 
@@ -905,9 +918,9 @@ void function StartGivePlayerDoubleJump(entity player)
 		 
 			                                                                                                        
 
-			                                                    
-			                                                       
-			                                                                                        
+			                                                      
+			                                                         
+			                                                                                          
 		 
 	 
 

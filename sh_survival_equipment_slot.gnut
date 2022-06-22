@@ -82,6 +82,9 @@ global const table<string, asset> emptyAttachmentSlotImages = {
                          
                                                                                  
        
+                           
+                                                                     
+       
 }
 
 #if CLIENT
@@ -704,6 +707,9 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 
 						case "hopup_dual_loader":
 							return eCommsAction.INVENTORY_NEED_HOPUP_DUAL_SHELL
+
+						case "hopup_kinetic_loader":
+							return eCommsAction.INVENTORY_NEED_HOPUP_KINETIC_FEEDER
 					}
 				}
 

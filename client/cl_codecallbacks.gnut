@@ -203,7 +203,7 @@ void function ClientCodeCallback_OnPlayerConnectionStateChanged( entity player )
 {
 	entity localViewPlayer = GetLocalViewPlayer()
 
-	if ( player.GetTeam() == localViewPlayer.GetTeam() )
+	if ( player.GetTeam() == localViewPlayer.GetTeam() && !IsLobby() )
 	{
 		UpdateFullmapRuiTracks()
 		RefreshUnitframesForPlayer( localViewPlayer )

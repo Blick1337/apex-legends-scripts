@@ -967,6 +967,17 @@ void function Highlight_Init()
 		                                                          
                             
 
+                                             
+                                                                   
+                                                                          
+                                            
+                                                                     
+                                                                      
+                                                 
+                                                                               
+                                                            
+                                                   
+
                         
                                                  
                                                                           
@@ -1861,8 +1872,8 @@ void function ClHighlight_UpdateHighlightFlags( entity ent, int contextId )
 			ent.Highlight_SetVisibilityType( HIGHLIGHT_VIS_ALWAYS )
 			ent.Highlight_SetFadeInTime( 0.15 )
 			ent.Highlight_SetFadeOutTime( 0.15 )
-			if ( IsUsingProximityAllianceMembers() )
-				ent.Highlight_SetFarFadeDist( GetMaxDistForAllianceMemberProximity() )
+			if ( AllianceProximity_IsUsingAllianceProximity() )
+				ent.Highlight_SetFarFadeDist( AllianceProximity_GetMaxDistForProximity() )
 		}
 			break
 	}
@@ -2087,7 +2098,7 @@ void function ClHighlight_DrawWhenLOS_LineThink( entity ent, HighlightContext hi
 		  
 				                                                                         
 				 
-					                                                           
+					                                                             
 					                                
 				 
 		  
@@ -2257,7 +2268,7 @@ void function Highlight_SetAllianceProximityDrawFunc( entity ent, int contextId 
 
 	expect HighlightContext( highlight )
 
-	ent.Highlight_SetFarFadeDist( GetMaxDistForAllianceMemberProximity() )
+	ent.Highlight_SetFarFadeDist( AllianceProximity_GetMaxDistForProximity() )
 	HighlightContext_SetDrawFunc( highlight, eHighlightDrawFunc.ALLIANCE_PROXIMITY )
 }
 #endif
@@ -2347,6 +2358,12 @@ int function GetHighlightContextForEnt( entity viewPlayer, entity ent )
 			{
 				return HIGHLIGHT_CONTEXT_MOVEMENT_REVEALED
 			}
+      
+                 
+                                                                                                                                                                                
+    
+                                                
+    
       
 			else if ( ShouldShowNovaBlackholeHighlight( viewTarget, ent ) && ent.IsHighlightEnabledForTeam( HIGHLIGHT_CHARACTER_SPECIAL_HIGHLIGHT_2, viewTarget.GetTeam() ) )
 			{

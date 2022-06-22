@@ -2431,11 +2431,11 @@ void function OnPlayerLifeStateChanged( entity player, int oldState, int newStat
 			                                                                             
 			 
 				                                                  
-				                                                                     
+				                                                                       
 			 
 			    
 			 
-				                                                  
+				                                                
 				                                                                     
 			 
 
@@ -2662,7 +2662,7 @@ void function OnPlayerLifeStateChanged( entity player, int oldState, int newStat
 	                                                                                             
 
 
-	                                                                                                                                    
+	                                                                                                                                     
 	                                                                                                                                  
 
 

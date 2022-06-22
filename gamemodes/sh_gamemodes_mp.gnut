@@ -64,8 +64,8 @@ void function GameModes_Init_SV_CL()
 	gameMode = GAMEMODE_CONTROL
 	#if SERVER
 		                                                         
-		                                                                             
-		                                                                             
+		                                                                               
+		                                                                               
 		                                          
 	#elseif CLIENT
 		GameMode_AddClientInit( gameMode, ClGamemodeSurvival_Init )

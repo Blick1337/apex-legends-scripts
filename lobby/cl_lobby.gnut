@@ -6,6 +6,7 @@ global function Lobby_SetBannerSkin
 const int LOBBY_BANNER_DEFAULT_SKIN_INDEX = 0
 const int LOBBY_BANNER_ARENAS_SKIN_INDEX = 1
 const int LOBBY_BANNER_CONTROL_SKIN_INDEX = 2
+const int LOBBY_BANNER_LTM_SKIN_INDEX = 3
 
 struct
 {
@@ -71,9 +72,13 @@ void function Lobby_SetBannerSkin( string playlist )
 		}
 	}
 
+	string playlistName = GetParty().playlistName
+
 	int skinIndex = LOBBY_BANNER_DEFAULT_SKIN_INDEX
 	if( playlist != "" && GetPlaylistGamemodeByIndex( playlist, 0 ) == GAMEMODE_ARENAS )
 		skinIndex = LOBBY_BANNER_ARENAS_SKIN_INDEX
+	else if ( GetPlaylistVarBool( playlistName, "is_limited_mode", false ) )
+		skinIndex = LOBBY_BANNER_LTM_SKIN_INDEX
                          
 	else if ( playlist != "" && GetPlaylistGamemodeByIndex( playlist, 0 ) == GAMEMODE_CONTROL )
 		skinIndex = LOBBY_BANNER_CONTROL_SKIN_INDEX

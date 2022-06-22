@@ -66,6 +66,7 @@ void function ShAnimWindows_LevelInit()
 		RegisterAnimWindowType( BOTH, "SetConVar", null, null, AnimWindow_SetConVar_Start, null, AnimWindow_SetConVar_Stop )
 		RegisterAnimWindowType( CLIENT, "FadeAlphaOverTime", null, null, AnimWindow_FadeAlphaOverTime_Start, null, AnimWindow_FadeAlphaOverTime_Stop )
 		RegisterAnimWindowType( CLIENT, "SetSkin", null, null, AnimWindow_SetSkin_Start, null, null )
+		RegisterAnimWindowType( BOTH, "SetPropSkin", null, null, AnimWindow_SetPropSkin_Start, null, null )
 
 		                                        
 		RegisterAnimWindowType( CLIENT, "MirageHoloFX", AnimWindow_MirageHoloFX_Init, AnimWindow_MirageHoloFX_Precache, AnimWindow_MirageHoloFX_Start, AnimWindow_MirageHoloFX_Transition, AnimWindow_MirageHoloFX_Stop )
@@ -283,6 +284,12 @@ void function AnimWindow_CreateProp_Start( ScriptAnimWindow window, var settings
 	{
 		prop.SetSkin( window.ent.GetSkin() )
 		prop.SetCamo( window.ent.GetCamo() )
+	}
+	else
+	{
+		string characterSkinName = window.ent.GetSkinNameByIndex( window.ent.GetSkin() )
+		int characterCamo = window.ent.GetCamo()
+		AbilityCosmetics_Apply( prop, characterSkinName, characterCamo )
 	}
 
 	string scriptCallbackKey = GetSettingsBlockString( settingsBlock, "scriptCallbackKey" )
@@ -721,6 +728,18 @@ void function AnimWindow_SetSkin_Start( ScriptAnimWindow window, var settingsBlo
 	}
 }
 
+                      
+                      
+                     
+                      
+                      
+void function AnimWindow_SetPropSkin_Start( ScriptAnimWindow window, var settingsBlock )
+{
+	string skinName = GetSettingsBlockString( settingsBlock, "skinName" )
+	int camoIndex = GetSettingsBlockInt( settingsBlock, "camoIndex" )
+
+	AbilityCosmetics_Apply ( window.ent, skinName, camoIndex )
+}
 
                       
                       

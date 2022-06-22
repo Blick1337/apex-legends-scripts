@@ -217,8 +217,8 @@ bool function Bleedout_CanRevivePlayer( entity reviver, entity victim, int useFl
 
 	if ( DEBUG_REVIVE_RANGE )
 	{
-		DebugDrawLine( revivorEyePos, victimPos, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, true, 0.3 )
-		DebugDrawLine( reviverPos, victimPos, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, true, 0.3 )
+		DebugDrawLine( revivorEyePos, victimPos, <DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B>, true, 0.3 )
+		DebugDrawLine( reviverPos, victimPos, <DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B>, true, 0.3 )
 	}
 
 	                                                                                                 
@@ -245,9 +245,9 @@ bool function Bleedout_CanRevivePlayer( entity reviver, entity victim, int useFl
 		{
 			DebugDrawArrow( revivorEyePos, revivorEyePos + reviver.GetUpVector() * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, true, 0.3 )
 			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverViewForward * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, true, 0.3 )
-			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverEyeToVictimOntoForwardUpPlaneNormalized * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, 200, 50, 50, true, 0.3 )
-			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverEyeToVictimOntoXYPlaneNormalized * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, 50, 200, 50, true, 0.3 )
-			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverViewForwardOntoXYNormalized * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, 50, 200, 50, true, 0.3 )
+			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverEyeToVictimOntoForwardUpPlaneNormalized * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, <200, 50, 50>, true, 0.3 )
+			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverEyeToVictimOntoXYPlaneNormalized * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, <50, 200, 50>, true, 0.3 )
+			DebugDrawArrow( revivorEyePos, revivorEyePos + reviverViewForwardOntoXYNormalized * DEBUG_REVIVE_VECTOR_LENGTH, DEBUG_REVIVE_ARROW_SIZE, <50, 200, 50>, true, 0.3 )
 		}
 
 		float distanceFrac              = 1 - reviverToVictimSq / EXECUTION_RANGE_SQ                                                                                                                         
@@ -272,7 +272,7 @@ bool function Bleedout_CanRevivePlayer( entity reviver, entity victim, int useFl
 		float reviveRange     = reviveRangeFrac * REVIVE_RANGE
 
 		if ( DEBUG_REVIVE_RANGE )
-			DebugDrawTrigger( victimPos, reviveRange, DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B, 0.3, true )
+			DebugDrawTrigger( victimPos, reviveRange, <DEBUG_REVIVE_COLOR_R, DEBUG_REVIVE_COLOR_G, DEBUG_REVIVE_COLOR_B>, 0.3, true )
 
 		if ( !Bleedout_CheckPlayerUseTargetDist( reviver, victim ) )
 			return false
@@ -473,11 +473,19 @@ bool function Bleedout_PlayerCanRes( entity player )
 	if ( player.GetWeaponDisableFlags() == WEAPON_DISABLE_FLAGS_ALL )
 		return false
 
-	if ( IsValid( player.GetActiveWeapon( eActiveInventorySlot.mainHand ) ) && player.GetActiveWeapon( eActiveInventorySlot.mainHand ).IsWeaponOffhand() )
-		return false
+	entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
+	if ( IsValid( activeWeapon ) )
+	{
+		if( activeWeapon.IsWeaponOffhand() )
+		{
+			var offhandAllowsPickups = activeWeapon.GetWeaponInfoFileKeyField( "offhand_allow_player_interact" )
+			if ( !offhandAllowsPickups || offhandAllowsPickups <= 0 )
+				return false
+		}
+	}
 
-		if ( StatusEffect_GetSeverity( player, eStatusEffect.interrupted ) > 0.0 )
-			return false
+	if ( StatusEffect_GetSeverity( player, eStatusEffect.interrupted ) > 0.0 )
+		return false
 
 
 	return true

@@ -180,10 +180,15 @@ global enum eDamageSourceId
 	mp_weapon_crypto_heirloom
 	
                      
-                      
-                          
+		melee_valkyrie_spear
+		mp_weapon_valkyrie_spear
        
-	
+
+                     
+                     
+                         
+       
+
                                                 
 		melee_shadowsquad_hands
 		melee_shadowroyale_hands
@@ -402,6 +407,10 @@ global enum eDamageSourceId
                                
        
 
+                           
+                          
+       
+
 	mp_weapon_stun_mine
 	mp_weapon_cluster_bomb
 
@@ -431,7 +440,10 @@ global enum eDamageSourceId
                       
                         
                      
+                          
                               
+                      
+                        
        
                 
                       
@@ -470,9 +482,9 @@ global enum eDamageSourceId
                           
        
 
-                        
+                                                                    
                               
-       
+                                                                          
 
                     
                                           
@@ -669,10 +681,15 @@ void function DamageTypes_Init()
 		[ eDamageSourceId.mp_weapon_crypto_heirloom ] = "#DEATH_MELEE_CRYPTO_HEIRLOOM",
 		
                       
-                                                                            
-                                                                               
+			[ eDamageSourceId.melee_valkyrie_spear ] = "#DEATH_MELEE_VALKYRIE_SPEAR",
+			[ eDamageSourceId.mp_weapon_valkyrie_spear] = "#DEATH_MELEE_VALKYRIE_SPEAR",
         
-		
+
+                      
+                                                                          
+                                                                             
+        
+
 		[ eDamageSourceId.melee_rampart_wrench ] = "#DEATH_MELEE_RAMPART_WRENCH",
 		[ eDamageSourceId.mp_weapon_rampart_wrench_primary ] = "#DEATH_MELEE_RAMPART_WRENCH",
 
@@ -687,6 +704,8 @@ void function DamageTypes_Init()
         
                   
                                                                     
+                                                              
+                                                                
                                                               
         
 

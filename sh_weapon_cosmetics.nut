@@ -82,10 +82,8 @@ struct FileStruct_LifetimeLevel
 {
 
 	table<ItemFlavor, LoadoutEntry>             loadoutWeaponSkinSlotMap
-	table<ItemFlavor, table<ItemFlavor, bool> > weaponSkinSetMap
 
 	table<ItemFlavor, LoadoutEntry>             loadoutWeaponCharmSlotMap
-	table<ItemFlavor, table<ItemFlavor, bool> >    weaponCharmSetMap
 
 	table<ItemFlavor, int> cosmeticFlavorSortOrdinalMap
 
@@ -129,7 +127,7 @@ void function OnItemFlavorRegistered_LootMainWeapon( ItemFlavor weaponFlavor )
 	        
 	{
 		array<ItemFlavor> skinList = RegisterReferencedItemFlavorsFromArray( weaponFlavor, "skins", "flavor" )
-		fileLevel.weaponSkinSetMap[weaponFlavor] <- MakeItemFlavorSet( skinList, fileLevel.cosmeticFlavorSortOrdinalMap )
+		MakeItemFlavorSet( skinList, fileLevel.cosmeticFlavorSortOrdinalMap )
 		foreach( ItemFlavor skin in skinList )
 		{
 			SetupWeaponSkin( skin )
@@ -174,7 +172,7 @@ void function OnItemFlavorRegistered_LootMainWeapon( ItemFlavor weaponFlavor )
 	         
 	{
 		array<ItemFlavor> charmList = RegisterReferencedItemFlavorsFromArray( weaponFlavor, "charms", "flavor" )
-		fileLevel.weaponCharmSetMap[weaponFlavor] <- MakeItemFlavorSet( charmList, fileLevel.cosmeticFlavorSortOrdinalMap )
+		MakeItemFlavorSet( charmList, fileLevel.cosmeticFlavorSortOrdinalMap )
 		foreach( ItemFlavor charm in charmList )
 		{
 			SetupWeaponCharm( charm )
@@ -689,7 +687,7 @@ void function WeaponCosmetics_Apply( entity ent, ItemFlavor ornull skinOrNull, I
 
 		if ( camoIndex >= CAMO_SKIN_COUNT )
 		{
-			Assert ( false, "Tried to set camoIndex of " + string(camoIndex) + "but the maximum index is " + string(CAMO_SKIN_COUNT) )
+			Assert ( false, "Tried to set camoIndex of " + string(camoIndex) + " but the maximum index is " + string(CAMO_SKIN_COUNT) )
 			camoIndex = 0
 		}
 

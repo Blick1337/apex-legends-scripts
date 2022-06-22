@@ -36,6 +36,8 @@ global function ScoreboardFocus
 global function ScoreboardLoseFocus
 global function ScoreboardSelectPrevPlayer
 global function ScoreboardSelectNextPlayer
+global function ShowScoreboardOrMap_Teams
+global function HideScoreboardOrMap_Teams
                                         
                                              
 global function AddScoreboardCallback_OnShowing
@@ -113,6 +115,59 @@ void function ClScoreboardMp_Init()
 	clGlobal.showScoreboardFunc = ShowScoreboardMP
 	clGlobal.hideScoreboardFunc = HideScoreboardMP
 	clGlobal.scoreboardInputFunc = ScoreboardInputMP
+}
+
+void function ShowScoreboardOrMap_Teams()
+{
+	Scoreboard_SetVisible( true )
+
+	ShowFullmap()
+	Fullmap_ClearInputContext()
+
+	UpdateMainHudVisibility( GetLocalViewPlayer() )
+
+	HudInputContext inputContext
+	inputContext.keyInputCallback = Teams_HandleKeyInput
+	inputContext.moveInputCallback = Teams_HandleMoveInput
+	inputContext.viewInputCallback = Teams_HandleViewInput
+	                                                             
+	HudInput_PushContext( inputContext )
+}
+
+bool function Teams_HandleKeyInput( int key )
+{
+	bool swallowInput = false
+
+	switch ( key )
+	{
+		case BUTTON_B:
+			HideScoreboard()
+			return true
+		case BUTTON_DPAD_UP:
+		case KEY_F2:
+			RunUIScript( "UI_OpenGameModeRulesDialog" )
+			return true
+	}
+
+	return Fullmap_HandleKeyInput( key )
+}
+
+bool function Teams_HandleMoveInput( float x, float y )
+{
+	return Fullmap_HandleMoveInput( x, y )
+}
+
+bool function Teams_HandleViewInput( float x, float y )
+{
+	return Fullmap_HandleViewInput( x, y )
+}
+
+void function HideScoreboardOrMap_Teams()
+{
+	HudInput_PopContext()
+	Scoreboard_SetVisible( false )
+
+	HideFullmap()
 }
 
 void function ScoreboardFocus( entity player )

@@ -14,7 +14,6 @@ global function Mythics_GetChallengeGUIDForSkinGUID
 global function Mythics_GetChallengeForSkin
 global function Mythics_GetNumTiersUnlockedForSkin
 global function Mythics_GetCustomExecutionForCharacterOrSkin
-global function Mythics_IsCharacterMythic
 global function Mythics_GetCharacterForSkin
 global function Mythics_GetStoreImageForCharacter
 global function Mythics_GetSkinBaseNameForCharacter
@@ -213,16 +212,6 @@ void function Mythics_UpdateTrackingButton()
 
 }
 #endif
-
-bool function Mythics_IsCharacterMythic( ItemFlavor character )
-{
-	string characterRef  = ItemFlavor_GetHumanReadableRef( character ).tolower()
-
-	if ( characterRef != "character_bloodhound" )
-		return false
-
-	return true
-}
 
 int function Mythics_GetSkinTierIntForSkin( ItemFlavor skin )
 {

@@ -329,13 +329,22 @@ void function OnEchoLocatorPlanted( entity projectile, DeployableCollisionParams
 		                                                                                                                
 
 		                                 
+
+                     
+                                               
+        
+
 		                                             
 
 		                             
 		                                        
 
 		                                                          
-		                                                  
+
+		                       
+		 
+			                                                  
+		 
 
 		                                                                                                                            
 		 
@@ -690,14 +699,7 @@ void function OnEchoLocatorPlanted( entity projectile, DeployableCollisionParams
 	                                            
 
 	                                                                                                                                                                         
-	                                                                                                      
-	 
-		                            
-		                                                          
-		 
-			                                                    
-		 
-	 
+	                                                                                               
  
 
                                                               

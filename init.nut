@@ -504,6 +504,12 @@ global struct ConsumableInventoryItem
 	int count
 }
 
+global struct OutsourceViewer_SkinDetails
+{
+	string skinName
+	int skinTier
+}
+
 global struct PingCollection
 {
 	entity latestPing

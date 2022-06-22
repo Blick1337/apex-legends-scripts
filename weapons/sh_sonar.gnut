@@ -261,15 +261,15 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 	                                                                
 
 	                                                                                                                                                                              
-	                                        
+	                                                   
 	 
 		                                                                 
-		                                                               
+		                                                                                                   
 		 
 			                                                                   
 		 
 		                                                                                                                 
-		                                                                       
+		                                                                                         
 		 
 			                                                                                                                     
 		 
@@ -295,6 +295,10 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 					                                                 
 				                                                                                         
 					                                                
+                   
+                                                                                             
+                                                     
+          
                   
                                                                                               
                                                     
@@ -339,6 +343,8 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
  
 	                      
 		      
+
+	                                                                                      
 
 	                                  
 	                           

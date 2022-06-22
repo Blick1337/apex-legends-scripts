@@ -23,6 +23,7 @@ global const string ARMORED_LEAP_SHIELD_LOW_RIGHT = "al_shield_low_r"
 global function IsCastleWallEnt
 global function CastleWall_EntityShouldBeHighlighted
 global function ArmoredLeap_TargetEntityShouldBeHighlighted
+global function ArmoredLeap_Handle_StatusEffectInterrupt
 
 #if SERVER
                                                   
@@ -40,7 +41,6 @@ global function ServerToClient_RescueTargetRui_Activate
 global function ServerToClient_RescueTargetRui_Deactivate
 global function ServerToClient_SetClient_BleedoutWaypoint
 global function ServerToClient_RemoveClient_BleedoutWaypoint
-global function ServerToClient_SetClientActiveLeapFlags
 #endif
 
                              
@@ -62,6 +62,7 @@ const bool DEBUG_BETTER_AIR_POS								= false
 const float ARMORED_LEAP_DISTANCE 							= 1400.0 	       
 const float ARMORED_LEAP_DISTANCE_MIN 						= 50.0
 const float ARMORED_LEAP_MAX_ALLY_RANGE 					= 2800 		                                                               
+const float ARMORED_LEAP_MAX_SLAM_FOLLOW_DISTANCE 			= 1500 		      
 const float ARMORED_LEAP_MAX_LEAP_HEIGHT 					= 800 		       
 const float ARMORED_LEAP_MAX_LEAP_HEIGHT_ALLY 				= 2000 		       
 const float ARMORED_LEAP_MIN_AIR_HEIGHT 					= 100      
@@ -86,6 +87,7 @@ const float ARMORED_LEAP_GROUNDPOS_CHECK_RANGE 				= 80
 const float ARMORED_LEAP_AIR_HOVER_TIME 					= 0.55      
 const float ARMORED_LEAP_AIR_HOVER_GRAVITY 					= 0.45
 const float ARMORED_LEAP_AIR_HOVER_VEL_SCALAR 				= 0.5
+const float ARMORED_LEAP_INTERRUPTED_VELOCITY_SCALE			= 0.35                                                                                         
 
                                  
 const float ARMORED_LEAP_SLAM_SPEED_MAX 					= 3500
@@ -291,6 +293,7 @@ const string ARMORED_LEAP_SOUND_LAUNCH_3P						= "Newcastle_Ultimate_Launch_3p"
 const string ARMORED_LEAP_SOUND_DIVESLAM_3P						= "Newcastle_Ultimate_AirborneBoost_3p" 	                             
 const string ARMORED_LEAP_SOUND_AIR_MVMT_3P						= "Newcastle_Ultimate_AirborneMvmt_3p"
 const string ARMORED_LEAP_SOUND_ACTIVATE_1P						= "Newcastle_Ultimate_UI_LoopStop"
+const string ARMORED_LEAP_SOUND_TO_STOP_1P						= "newcastle_ultimate_ui"                                                                                                                                 
 const string ARMORED_LEAP_SOUND_LAUNCH_1P						= "Newcastle_Ultimate_Launch_1p"		                             
 const string ARMORED_LEAP_SOUND_DIVESLAM_1P						= "Newcastle_Ultimate_AirborneBoost_1p" 	                             
 const string ARMORED_LEAP_SOUND_AIR_MVMT_1P						= "Newcastle_Ultimate_AirborneMvmt_1p"
@@ -304,6 +307,8 @@ const string CASTLE_WALL_BARRIER_DISSOLVE_SOUND 				= "Newcastle_Ultimate_Wall_D
 const string CASTLE_WALL_SHIELD_ANCHOR_DESTROY_SOUND 			= "Newcastle_Ultimate_Wall_Destroy"
 const string CASTLE_WALL_BARRIER_DAMAGE_1P_SOUND 				= "Newcastle_Ultimate_Wall_Damage_1p"
 const string CASTLE_WALL_BARRIER_DAMAGE_3P_SOUND 				= "Newcastle_Ultimate_Wall_Damage_3p"
+
+const string ARMORED_LEAP_ALLY_TARGETED_SFX_1P 					= "Newcastle_Teamscan_Ping"
 
 const string ARMORED_LEAP_ALLY_TARGETED_CHATTER_1P 				= "diag_mp_newcastle_bc_superSquadTargeted_1p"
 const string ARMORED_LEAP_ALLY_TARGETED_CHATTER_3P 				= "diag_mp_newcastle_bc_superSquadTargeted_3p"
@@ -450,7 +455,6 @@ struct
 	table<entity, entity> allyTarget = {}
 
 	table<entity, bool> playerWeaponsHolstered = {}
-	table<entity, bool> playerIsLeaping = {}
 	table<entity, vector> shieldSlamPos = {}
 	table<entity, int> threatVisionHandle = {}
 	table<entity, bool> threatVisionActive = {}
@@ -474,6 +478,7 @@ struct
 	                                   
 
 	                                       
+	                                          
 	#endif
 
 	#if CLIENT
@@ -488,6 +493,7 @@ struct
 		table<entity, entity> bleedoutWP
 
 		var visorRui = null
+		int currentArmoredLeapPhase = PLAYER_ARMORED_LEAP_PHASE_NONE
 	#endif
 
 } file
@@ -563,7 +569,7 @@ void function MpAbilityArmoredLeap_Init()
 	RegisterSignal( "ArmoredLeap_EndTravelGroundPhase" )
 	RegisterSignal( "ArmoredLeap_StartArrivalPhase" )
 	RegisterSignal( "ArmoredLeap_EndArrivalPhase" )
-	RegisterSignal( "ArmoredLeap_Interruped" )
+	RegisterSignal( "ArmoredLeap_Interrupted" )
 
 	AddCallback_PlayerCanUseZipline( ArmoredLeap_CanUseZipline )
 
@@ -600,7 +606,6 @@ void function MpAbilityArmoredLeap_Init()
 		Remote_RegisterClientFunction( "ServerToClient_RescueTargetRui_Deactivate", "entity" )
 		Remote_RegisterClientFunction( "ServerToClient_SetClient_BleedoutWaypoint", "entity", "entity" )
 		Remote_RegisterClientFunction( "ServerToClient_RemoveClient_BleedoutWaypoint", "entity" )
-		Remote_RegisterClientFunction( "ServerToClient_SetClientActiveLeapFlags", "entity" )
 
 	                 
 	file.castleWallHealth			= GetCurrentPlaylistVarInt( "newcastle_armored_leap_castleWallHP", CASTLE_WALL_SHIELD_ANCHOR_HEALTH )
@@ -639,19 +644,21 @@ void function MpAbilityArmoredLeap_Init()
 
 void function OnWeaponActivate_ability_armored_leap( entity weapon )
 {
-	entity ownerPlayer = weapon.GetWeaponOwner()
-	Assert( ownerPlayer.IsPlayer() )
-
-	float raise_time = weapon.GetWeaponSettingFloat( eWeaponVar.raise_time )
-
-	if( ownerPlayer in file.armoredLeapTargetTable )
-		delete file.armoredLeapTargetTable[ownerPlayer]
-
+	#if SERVER
+	                                       
+	                         
+	 
+		                                                                                 
+	 
+	#endif         
 }
 
 void function OnWeaponReadyToFire_ability_armored_leap( entity weapon )
 {
 	entity player = weapon.GetWeaponOwner()
+
+	if ( weapon.GetWeaponPrimaryClipCount() < weapon.GetAmmoPerShot() )
+		return
 
 	                                                                      
 	if( weapon.GetWeaponActivity() == ACT_VM_HOLSTER )                                                                                    
@@ -659,6 +666,9 @@ void function OnWeaponReadyToFire_ability_armored_leap( entity weapon )
 
 	if( player in file.isTargetPlacementActive )
 		return
+
+	if( player in file.armoredLeapTargetTable )
+		delete file.armoredLeapTargetTable[player]
 
 	thread ArmoredLeap_TargetPlacementTracking_Thread( player )
 
@@ -681,17 +691,20 @@ void function OnWeaponDeactivate_ability_armored_leap( entity weapon )
 	Signal( player, "StopArmoredLeapTargetPlacement" )
 
 	#if SERVER
-	                                            
-	 
-		                                        
-		                                                                                      
-	 
+		                                                           
 	#endif
+
+	if ( GetCurrentArmoredLeapPhase( player ) == PLAYER_ARMORED_LEAP_PHASE_NONE )
+	{
+		Signal( player, "VisorMode_DeActivate" )
+	}
 
 	#if CLIENT
 		if ( player == GetLocalViewPlayer() )
 		{
 			weapon.Signal( "StopArmoredLeapTargetPlacement" )
+			                                                                                                                                           
+			StopSoundOnEntity( player, ARMORED_LEAP_SOUND_TO_STOP_1P )
 		}
 	#endif
 	if( player in file.allyLKP )
@@ -778,13 +791,16 @@ var function OnWeaponPrimaryAttack_ability_armored_leap( entity weapon, WeaponPr
 			                                                           
 	#endif
 
+	#if SERVER
+	                                                                      
+	#elseif CLIENT
+	file.currentArmoredLeapPhase = PLAYER_ARMORED_LEAP_PHASE_NONE
+	#endif
+
 	thread ArmoredLeap_Master_Thread( player, info.finalPos, info.airPos, info.hitEnt )
 
 	Signal( player, "StopArmoredLeapTargetPlacement" )
 	#if CLIENT
-		if ( player == GetLocalViewPlayer() )
-			weapon.Signal( "StopArmoredLeapTargetPlacement" )
-
 		if( file.visorRui != null )
 			RuiSetGameTime( file.visorRui, "jumpTime", Time() )
 	#endif
@@ -816,6 +832,7 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 	EndSignal( player, "BleedOut_OnStartDying" )
 	EndSignal( player, "ArmoredLeap_LeapComplete")
 	EndSignal( player, "DeathTotem_PreRecallPlayer" )
+	EndSignal( player, "Interrupted" )
 	#if CLIENT
 		EndSignal( player, "ArmoredLeap_LeapShutdown" )
 	#endif
@@ -823,8 +840,12 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 	entity mover
 
 	vector startpoint = player.GetOrigin()
+	table<entity, bool> didUltDeployOnInterrupted
+	didUltDeployOnInterrupted[player] <- false
 
 	#if SERVER
+
+
 		                                                                                       
 		                                             
 
@@ -839,7 +860,6 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 		 
 
 
-		                                                                                 
 		                                                                               
 
 
@@ -890,7 +910,7 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 
 
 	OnThreadEnd(
-		function() : ( player, mover, startpoint )
+		function() : ( player, mover, startpoint, didUltDeployOnInterrupted )
 		{
 			if ( IsValid( player ) )
 			{
@@ -905,7 +925,6 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 					                              
 						                     
 
-					                                                           
 					                                                           
 
 					                            
@@ -923,28 +942,40 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 						                                         
 						 
 							                                
-							                                                                   
-							                               
-							 
-								                                                            
-								                                                   
-							 
 							                                          
 						 
 					 
+
+					                                                                   
+					                                                                                            
+					 
+						                                                            
+					 
 				#endif
 
-				if( player in file.playerIsLeaping )
-				{
-					if( file.playerIsLeaping[player] )
-					{
-						ArmoredLeap_OnAttemptFailed( player, startpoint )
-						delete file.playerIsLeaping[player]
+				#if SERVER
+				                                                                                    
+				 
+					                                          
+					 
+						                                         
+						 
+							                                                               
+							                                                 
+						 
+					 
+				 
+				#endif
 
-						if ( !GetArmoredLeapUseCode() )
-							player.Player_FinishArmoredLeap_Depricated()
-					}
-				}
+				#if SERVER
+				                                             
+					                                           
+				#elseif CLIENT
+				file.currentArmoredLeapPhase = PLAYER_ARMORED_LEAP_PHASE_NONE
+				#endif
+
+				if ( !GetArmoredLeapUseCode() )
+					player.Player_FinishArmoredLeap_Depricated()
 
 				if ( !GetArmoredLeapUseCode() )
 				{
@@ -962,11 +993,6 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 		}
 	)
 
-	#if SERVER
-		                                    
-		                                       
-		                                                                                          
-	#endif
 	                                                                                                       
 
 	#if CLIENT
@@ -1052,7 +1078,18 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 			float dashSpeed = GraphCapped( Distance( player.GetOrigin(), endPoint ), 0, ARMORED_LEAP_GROUND_DASH_RANGE, file.groundDashSpeedMin, file.groundDashSpeedMax )
 			player.StartArmoredLeapDash( ignoreArray, dashSpeed, ARMORED_LEAP_GROUND_DASH_ACCEL, ARMORED_LEAP_LAUNCH_DASH_CROUCH_TIME, ARMORED_LEAP_RECOVERY_TIME, endPoint, ARMORED_LEAP_TIMEOUT_DASH )
 
-			player.WaitSignal( "ArmoredLeap_StartTravelGroundPhase" )
+			table signalData = player.WaitSignal( "ArmoredLeap_StartTravelGroundPhase", "ArmoredLeap_Interrupted" )
+			bool interrupted = WasArmoredLeapInterrupted( player, signalData )
+
+			if ( interrupted )
+			{
+				#if SERVER
+				                                                                     
+				                                               
+				#endif
+
+				return
+			}
 		}
 		else
 		{
@@ -1080,7 +1117,6 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 	{
 
 		StopSoundOnEntity( player, ARMORED_LEAP_SOUND_ACTIVATE_1P )
-		StopSoundOnEntity( player, ARMORED_LEAP_SOUND_ACTIVATE_3P )
 		if ( GetArmoredLeapUseCode() )
 		{
 			float timeOut
@@ -1099,7 +1135,18 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 			player.StartArmoredLeapJump( ignoreArray, jumpSpeed, ARMORED_LEAP_JUMP_ACCEL, hoverSpeed, ARMORED_LEAP_HOVER_ACCEL, diveSpeed, ARMORED_LEAP_DIVE_ACCEL, ARMORED_LEAP_LAUNCH_CROUCH_TIME, ARMORED_LEAP_RECOVERY_TIME, airPosRange, hoverRange, airPoint, endPoint, timeOut )
 			thread ArmoredLeap_LaunchToAirPosition( player, null,endPoint, airPoint )
 
-			player.WaitSignal( "ArmoredLeap_StartTravelGroundPhase" )
+			table signalData = player.WaitSignal( "ArmoredLeap_StartTravelGroundPhase", "ArmoredLeap_Interrupted" )
+			bool interrupted = WasArmoredLeapInterrupted( player, signalData )
+
+			if ( interrupted )
+			{
+				#if SERVER
+				                                                                     
+				                                               
+				#endif
+
+				return
+			}
 		}
 		else
 		{
@@ -1113,7 +1160,18 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 			player.StartArmoredLeapAirDive( ignoreArray, ARMORED_LEAP_HOVER_DIVE_PREP_SPEED, ARMORED_LEAP_HOVER_DIVE_PREP_ACCEL, diveSpeed, diveSpeed / ARMORED_LEAP_SLAM_EASE_IN_TIME, ARMORED_LEAP_AIR_HOVER_TIME, ARMORED_LEAP_RECOVERY_TIME, endPoint, ARMORED_LEAP_TIMEOUT_AIR_DIVE, armoredLeapType == PLAYER_ARMORED_LEAP_TYPE_AIR_DIVE_LONG )
 			thread ArmoredLeap_LaunchHoverPrep_Thread( player, endPoint, player.EyePosition() )
 
-			player.WaitSignal( "ArmoredLeap_StartTravelGroundPhase" )
+			table signalData = player.WaitSignal( "ArmoredLeap_StartTravelGroundPhase", "ArmoredLeap_Interrupted" )
+			bool interrupted = WasArmoredLeapInterrupted( player, signalData )
+			
+			if ( interrupted )
+			{
+				#if SERVER
+				                                                                     
+				                                               
+				#endif
+
+				return
+			}
 		}
 		else
 		{
@@ -1159,7 +1217,6 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 	      
 
 	StopSoundOnEntity( player, ARMORED_LEAP_SOUND_ACTIVATE_1P )
-	StopSoundOnEntity( player, ARMORED_LEAP_SOUND_ACTIVATE_3P )
 
 	if ( !GetArmoredLeapUseCode() )
 	{
@@ -1177,22 +1234,17 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 	{
 		thread ArmoredLeap_SlamToGroundPosition( player, null, endPoint, airPoint, inDashRange )
 
-		table signalData = player.WaitSignal( "ArmoredLeap_StartArrivalPhase", "ArmoredLeap_Interruped" )
+		table signalData = player.WaitSignal( "ArmoredLeap_StartArrivalPhase", "ArmoredLeap_Interrupted" )
+		bool interrupted = WasArmoredLeapInterrupted( player, signalData )
 
-		bool interrupted = expect bool( signalData.interrupted )
 		if ( interrupted )
 		{
-			vector pOrigin = player.GetOrigin()
-			TraceResults pDownTrace = TraceLine( pOrigin+<0,0,32>, pOrigin + < 0.0, 0.0, -ARMORED_LEAP_GROUNDPOS_CHECK_RANGE >,  GetPlayerArray_AliveConnected(), TRACE_MASK_SOLID_BRUSHONLY, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
+			#if SERVER
+			                                                                     
+			                                               
+			#endif
 
-			if ( pDownTrace.fraction == 1.0 )
-			{
-				                                                               
-				#if SERVER
-				                                                
-				#endif
-				return
-			}
+			return
 		}
 	}
 	else
@@ -1247,53 +1299,18 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 		                       
 			      
 
-		            	                          
-		                                                                                                                                                                                                                 
-		                                                                                                                                             
+		                                  
 		 
 			                                                
 			      
 		 
-		    
-		 
-			                                                   
-			                                                                                 
-			 
-				                                                
-				      
-			 
-		 
-
-		                            
-
-		                                           
-		             
-
-		                   
-		 
-			                                                           
-			                                                                                                                                                                      
-			                              
-		 
-		    
-		 
-			                         
-		 
-
-		                                                                                                                                                
 	#endif
-
-	if( player in file.playerIsLeaping )
-	{
-		if( file.playerIsLeaping[player] )
-			delete file.playerIsLeaping[player]
-	}
 
 	waitthread ArmoredLeap_ReturnControlToPlayerAfterDelay( player, ARMORED_LEAP_RECOVERY_TIME )
 
 	#if SERVER
-		                       
-			                                                
+	                       
+		                                                
 	#endif
 
 	if( player in file.allyTarget )
@@ -1302,12 +1319,128 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 	WaitForever()
 }
 
+bool function WasArmoredLeapInterrupted( entity player, table signalData )
+{
+	bool interrupted = expect bool( signalData.interrupted )
+
+	                                                                                                                                                                                                                                                                                                
+	if ( !interrupted )
+	{
+		if ( GetCurrentArmoredLeapPhase( player ) == PLAYER_ARMORED_LEAP_PHASE_INTERRUPTED )
+		{
+			player.Signal( "ArmoredLeap_Interrupted", { interrupted = true } )
+			interrupted = true
+		}
+	}
+
+	return interrupted
+}
+
+#if SERVER
+                                               
+ 
+	                                                                                                                                                                                                                              
+	                                                                                                                                            
+	 
+		                                                   
+		                                                                                
+		 
+			                            
+			                                 
+
+			           
+		 
+	 
+
+	            
+ 
+
+
+                                                                   
+ 
+	                                           
+	             
+
+	                   
+	 
+		                                                           
+		                                                                                                                                                                      
+		                              
+	 
+	    
+	 
+		                         
+	 
+
+	                                                                                                                                                
+ 
+#endif
+
+int function GetCurrentArmoredLeapPhase( entity player )
+{
+	int leapPhase = PLAYER_ARMORED_LEAP_PHASE_NONE
+
+	#if SERVER
+	                                             
+		                                                
+	#elseif CLIENT
+	leapPhase = file.currentArmoredLeapPhase
+	#endif
+
+	return leapPhase
+}
+
+
+void function ArmoredLeap_Handle_StatusEffectInterrupt( entity player )
+{
+	if ( player.IsArmoredLeapActive() )
+	{
+		player.Signal( "ArmoredLeap_Interrupted", { interrupted = true } )
+		player.EndArmoredLeap()
+
+		#if SERVER
+		                                                  
+
+		                                                                          
+		                           
+		 
+			                                                                                                                    
+		 
+		#endif         
+	}
+}
+
+#if SERVER
+                                                                            
+ 
+	                                   
+
+	                                                                                                                                                                                                                                                                              
+	                                                                           
+	                                                                                                                      
+	 
+		                          
+		           
+	 
+	                                                                    
+	 
+		                                                
+		            
+	 
+
+	            
+ 
+#endif
+
 void function ArmoredLeap_UpdateLKP_Thread( entity player, vector airPoint, vector endPoint )
 {
 	Assert ( IsNewThread(), "Must be threaded off." )
 	player.EndSignal( "OnDestroy" )
 	player.EndSignal( "ArmoredLeap_StartTravelGroundPhase" )
 	player.EndSignal( "ArmoredLeap_EndTravelAirHoverPhase" )
+	player.EndSignal( "ArmoredLeap_Interrupted" )
+	player.EndSignal( "ArmoredLeap_LeapComplete" )
+	player.EndSignal( "Interrupted" )
 
 	while( true )
 	{
@@ -1326,6 +1459,7 @@ void function ArmoredLeap_LaunchPrep_Thread( entity player, vector endPoint, vec
 	EndSignal( player, "OnDeath" )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "Interrupted" )
 
 	#if SERVER
 		                
@@ -1388,6 +1522,7 @@ void function ArmoredLeap_LaunchHoverPrep_Thread( entity player, vector endPoint
 	EndSignal( player, "OnDeath" )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "Interrupted" )
 
 	if( !IsValid( player ) )
 		return
@@ -1461,6 +1596,7 @@ void function ArmoredLeap_LaunchToAirPosition( entity player, entity mover, vect
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
 	EndSignal( player, "ArmoredLeap_AirLaunchComplete" )
+	EndSignal( player, "Interrupted" )
 
 	if ( !IsValid( player ) )
 		return
@@ -1588,8 +1724,10 @@ void function ArmoredLeap_SlamToGroundPosition( entity player, entity mover, vec
 	player.EndSignal( "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
 	EndSignal( player, "ArmoredLeap_GroundDiveComplete" )
+	EndSignal( player, "ArmoredLeap_LeapComplete" )
 	player.EndSignal( "ArmoredLeap_StartArrivalPhase" )
-	player.EndSignal( "ArmoredLeap_Interruped" )
+	player.EndSignal( "ArmoredLeap_Interrupted" )
+	player.EndSignal( "Interrupted" )
 
 	endPoint = endPoint + ARMORED_LEAP_ENDPOINT_BUFFER                                                                 
 	float dist = Distance( player.GetOrigin(), endPoint )
@@ -1697,7 +1835,7 @@ void function ArmoredLeap_SlamToGroundPosition( entity player, entity mover, vec
 
 	if ( GetArmoredLeapUseCode() )
 	{
-		                                                                                                  
+		                                                                                                   
 		WaitForever()
 	}
 	else
@@ -1776,6 +1914,7 @@ void function ArmoredLeap_ReturnControlToPlayerAfterDelay( entity player, float 
 	EndSignal( player, "OnDeath" )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "Interrupted" )
 
 	OnThreadEnd(
 		function() : ( player )
@@ -1816,6 +1955,7 @@ void function ArmoredLeap_CameraRecoveryDelay( entity player, float delay )
 	EndSignal( player, "OnDeath" )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "Interrupted" )
 
 	OnThreadEnd(
 		function() : ( player )
@@ -1869,22 +2009,22 @@ void function CodeCallback_ArmoredLeapPhaseChange( entity player, int newArmored
 		case PLAYER_ARMORED_LEAP_PHASE_PREP:
 			break
 		case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR:
-			player.Signal( "ArmoredLeap_StartTravelAirPhase" )
+			player.Signal( "ArmoredLeap_StartTravelAirPhase", { interrupted = false } )
 			break
 		case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR_HOVER:
-			player.Signal( "ArmoredLeap_StartTravelAirHoverPhase" )
+			player.Signal( "ArmoredLeap_StartTravelAirHoverPhase", { interrupted = false } )
 			break
 		case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_GROUND:
-			player.Signal( "ArmoredLeap_StartTravelGroundPhase" )
+			player.Signal( "ArmoredLeap_StartTravelGroundPhase", { interrupted = false } )
 			break
 		case PLAYER_ARMORED_LEAP_PHASE_ARRIVAL:
 			player.Signal( "ArmoredLeap_StartArrivalPhase", { interrupted = false } )
 			break
 		case PLAYER_ARMORED_LEAP_PHASE_NONE:
-			player.Signal( "ArmoredLeap_LeapComplete" )
+			player.Signal( "ArmoredLeap_LeapComplete", { interrupted = false } )
 			break
 		case PLAYER_ARMORED_LEAP_PHASE_INTERRUPTED:
-			player.Signal( "ArmoredLeap_Interruped", { interrupted = true } )
+			player.Signal( "ArmoredLeap_Interrupted", { interrupted = true } )
 			#if SERVER
 			                                                                                                                                         
 			                                                                                                                  
@@ -1892,6 +2032,12 @@ void function CodeCallback_ArmoredLeapPhaseChange( entity player, int newArmored
 			#endif         
 			break
 	}
+
+	#if SERVER
+	                                                           
+	#elseif CLIENT
+	file.currentArmoredLeapPhase = newArmoredLeapPhase
+	#endif
 }
 
                                                                                                     
@@ -1932,6 +2078,9 @@ void function ServerToClient_ArmoredLeapShutdown( entity player )
 	if ( player != GetLocalClientPlayer() )
 		return
 	Signal( player, "ArmoredLeap_LeapShutdown" )
+
+	if( player in file.armoredLeapTargetTable )                                                                                                                                          
+		delete file.armoredLeapTargetTable[player]
 }
 
 void function ServerToClient_ArmoredLeapInterrupted( entity player )
@@ -1939,19 +2088,10 @@ void function ServerToClient_ArmoredLeapInterrupted( entity player )
 	if ( player != GetLocalClientPlayer() )
 		return
 
-	player.Signal( "ArmoredLeap_Interruped", { interrupted = true } )
+	player.Signal( "ArmoredLeap_Interrupted", { interrupted = true } )
 }
 #endif
 
-#if CLIENT
-void function ServerToClient_SetClientActiveLeapFlags( entity player )
-{
-	if ( player != GetLocalClientPlayer() )
-		return
-	file.playerIsLeaping[player] <- true
-	file.threatVisionActive[player] <- true
-}
-#endif
 
 #if CLIENT
 void function ServerToClient_ArmoredLeap_AirLaunchComplete( entity player )
@@ -1984,13 +2124,16 @@ void function ArmoredLeap_OnAttemptFailed( entity player, vector startpoint )
 			                                                                                 
 		 
 
-		                                                                                              
-		                                         
-		                     			      
-		                              	     
-		                                           
 		                               
-			                                                              
+		 
+			                                                                                              
+			                                         
+			                     			      
+			                              	     
+			                                           
+			                               
+				                                                              
+		 
 
 	#endif
 
@@ -2016,7 +2159,7 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 	vector pPos	  		= player.GetOrigin() + <0,0,35>
 	vector fwd 	  		= Normalize( player.GetForwardVector() )
 
-	                                                                 
+	                                                                  
 
 	array<entity> ignoreArray = ArmoredLeapIgnoreArray()
 	TraceResults results = TraceHull( pPos, destination , mins, maxs, ignoreArray, TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
@@ -2080,7 +2223,8 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 	                                            
 	                                                  
 	                                                         
-	                                             
+	                                              
+	                                  
 
 	                         
 		      
@@ -2134,6 +2278,7 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 	                              
 	                                
 	                                            
+	                                  
 
 	                                                                  
 	                                  
@@ -2162,11 +2307,18 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 	                       
 
 	                             
-	                                                                              
-	                                                                                              
-	                             
-	                                                       
-	                                                                 
+	                                            
+	                       
+	                        
+
+	              
+	 
+		                                                                                        
+		                                                                                                            
+		                             
+		                                                       
+		                                                                 
+	 
 
 	                     
 	                                                                              
@@ -2214,8 +2366,13 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 		                                                                                                         
 		                                                                                                                                                   
 		                                                                                                                                                            
-		                               
+		                                              
 		 
+			                            
+			 
+				                                                       
+			 
+
 			                            
 				                                
 
@@ -2434,6 +2591,8 @@ void function ArmoredLeap_TargetPlacementTracking_Thread( entity ent )
 	EndSignal( ent, "OnDestroy" )
 	EndSignal( ent, "BleedOut_OnStartDying" )
 	EndSignal( ent, "StopArmoredLeapTargetPlacement" )                                                           
+	EndSignal( ent, "ArmoredLeap_LeapComplete" )
+	EndSignal( ent, "ArmoredLeap_Interrupted" )
 
 	                                                                                                   
 	file.isTargetPlacementActive[ent] <- true
@@ -2554,7 +2713,6 @@ void function ArmoredLeap_SetAllyTargetAndLKP( entity ent, ArmoredLeapTargetInfo
 	{
 		file.allyTarget[ent] <- targetAlly
 		vector allyEndPos = targetAlly.GetOrigin() + < 0,0,5 >                           
-		                                                             
 
 		TraceResults groundTrace = TraceLine( allyEndPos, allyEndPos + <0,0,-1000>, ignoreArray, TRACE_MASK_ABILITY, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
 		if( groundTrace.fraction < 1 )                                           
@@ -2562,10 +2720,10 @@ void function ArmoredLeap_SetAllyTargetAndLKP( entity ent, ArmoredLeapTargetInfo
 			entity hitEnt = groundTrace.hitEnt
 			                                                                                                                                               
 			allyEndPos = ArmoredLeap_GetBestAllyLandingPos( ent, groundTrace.endPos, Normalize(ent.GetViewVector()), info )                                  
-			                                                             
+			                                                              
 
 			foundValidEnd  = ArmoredLeap_HasValidLeapPos( ent, targetAlly, allyEndPos, hitEnt, info )
-			                                                                
+			                                                                  
 
 			if( foundValidEnd )
 			{
@@ -2596,6 +2754,14 @@ void function ArmoredLeap_SetAllyTargetAndLKP( entity ent, ArmoredLeapTargetInfo
 				}
 			}
 		}
+		else
+		{
+			if( ent in file.allyTarget )
+				delete file.allyTarget[ent]
+
+			if( ent in file.allyLKP )
+				delete file.allyLKP[ent]
+		}
 	}
 	else
 	{
@@ -2620,11 +2786,17 @@ vector function ArmoredLeap_GetUpdatedLKP( entity player, vector airPoint, vecto
 			if( groundTrace.fraction < 1 )                                           
 			{
 				adjustedEndPos = groundTrace.endPos + < 0,0,5 >
-				TraceResults slamTrace = TraceHull( airPoint, adjustedEndPos, player.GetPlayerMins(), player.GetPlayerMaxs(), ignoreArray, TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
-
-				if ( slamTrace.fraction == 1.0 )
+				float dist2D = Distance2D( airPoint, adjustedEndPos )
+				if( dist2D <= ARMORED_LEAP_MAX_SLAM_FOLLOW_DISTANCE )
 				{
-					file.allyLKP[player] <- slamTrace.endPos
+					                                                                                          
+					adjustedEndPos = groundTrace.endPos + < 0,0,5 >
+					TraceResults slamTrace = TraceHull( airPoint, adjustedEndPos, player.GetPlayerMins(), player.GetPlayerMaxs(), ignoreArray, TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
+
+					if ( slamTrace.fraction == 1.0 )
+					{
+						file.allyLKP[player] <- slamTrace.endPos
+					}
 				}
 			}
 
@@ -2639,8 +2811,8 @@ vector function ArmoredLeap_GetUpdatedLKP( entity player, vector airPoint, vecto
 
 	}
 
-	                                                                     
-	                                                            
+	                                                                       
+	                                                              
 	return targetPos
 }
 
@@ -2662,6 +2834,7 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 	EndSignal( player, "BleedOut_OnStartDying" )
 	EndSignal( player, "VisorMode_DeActivate" )
 	EndSignal( player, "ArmoredLeap_LeapComplete" )
+	EndSignal( player, "ArmoredLeap_Interrupted" )
 
 	int team = player.GetTeam()
 
@@ -2757,6 +2930,7 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 	bool inDashRange 	= false
 	bool isLeaping 		= false
 	string failReason 	= ""
+	entity prevTarget
 
 	                                                                              
 
@@ -2785,7 +2959,9 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 		}
 		#endif      
 
-		if( player in file.playerIsLeaping )                                                                   
+		int leapPhase = GetCurrentArmoredLeapPhase( player )
+
+		if ( leapPhase != PLAYER_ARMORED_LEAP_PHASE_NONE && leapPhase != PLAYER_ARMORED_LEAP_PHASE_PREP )
 		{
 			isLeaping = true
 			break
@@ -2794,8 +2970,8 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 		#if DEV
 			if( DEBUG_ARMORED_LEAP_TARGETING_DRAW )
 			{
-				DebugDrawLine( player.GetOrigin(), info.airPos , 0, 200, 200, true, 0.1 )
-				DebugDrawLine( info.airPos, info.finalPos , 200, 200, 0, true, 0.1 )
+				DebugDrawLine( player.GetOrigin(), info.airPos , <0, 200, 200>, true, 0.1 )
+				DebugDrawLine( info.airPos, info.finalPos , <200, 200, 0>, true, 0.1 )
 			}
 		#endif
 
@@ -2877,7 +3053,11 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 			                  
 			if( info.hasAlly )
 			{
-				entity allyInfoTarget = info.allyTarget
+				if( allyTarget != prevTarget )
+				{
+					EmitSoundOnEntity( player, ARMORED_LEAP_ALLY_TARGETED_SFX_1P )
+					prevTarget = allyTarget
+				}
 				allyMover.Show()
 			}
 			else                
@@ -2896,6 +3076,9 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 					                                                                                                       
 					allyMover.Show()
 				}
+
+				if( IsValid( prevTarget ) )
+					prevTarget = null
 			}
 
 			                
@@ -2952,7 +3135,7 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 					wp = file.bleedoutWP[ally]
 				}
 
-				if( !IsValid( allyRui[ally] ) )
+				if( allyRui[ally] != null )
 					continue
 
 				ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( ally ), Loadout_Character() )
@@ -3029,6 +3212,10 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 	else
 		info = GetArmoredLeapTargetInfo( player )
 
+	                                                                                          
+	EffectSetControlPointVector( screenFxHandle, 1, NC_COLOR_FRIENDLY )                     
+	EffectSetControlPointVector( screenFxHandle, 3, NC_COLOR_BEHIND )                   
+
 	vector endPoint = info.finalPos
 
 
@@ -3038,7 +3225,9 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 		if ( !IsValid( player ) )
 			return
 
-		if( !( player in file.playerIsLeaping ) )
+		int leapPhase = GetCurrentArmoredLeapPhase( player )
+
+		if ( leapPhase == PLAYER_ARMORED_LEAP_PHASE_ARRIVAL || leapPhase == PLAYER_ARMORED_LEAP_PHASE_INTERRUPTED )
 			return
 
 		if( player in file.allyLKP )
@@ -3072,7 +3261,7 @@ void function UpdateAllyTargetRUI( var rui, entity allyTarget, entity allyMover 
 	if( !( IsValid( allyMover ) ) )
 		return
 
-	if( !IsValid( rui ) )
+	if( rui != null )
 		return
 
 	if( !allyTarget.IsPlayer() )
@@ -3129,6 +3318,7 @@ void function ArmoredLeap_VisionMode_Thread( entity player )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
 	EndSignal( player, "ArmoredLeap_LeapComplete" )
+	EndSignal( player, "StopArmoredLeapTargetPlacement" )
 
 
 	                       
@@ -3216,6 +3406,7 @@ void function ArmoredLeap_TrackEnemyAtLandingZone_Thread( entity player, vector 
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
 	EndSignal( player, "VisorMode_DeActivate" )
+	EndSignal( player, "ArmoredLeap_LeapShutdown" )
 
 	int team = player.GetTeam()
 	array<int> arcFXArray
@@ -3509,7 +3700,7 @@ void function ServerToClient_SetClient_AllyInDanger( entity player, entity ally,
 
 	                 
 	                                                           
-	                                                   
+	                                                                   
 
  
 #endif         
@@ -3672,7 +3863,7 @@ ArmoredLeapTargetInfo function GetArmoredLeapTargetInfo( entity ent )
 			              		       
 			            		                                                       
 			            		                                                        
-			DebugDrawSphere( initialTrace.endPos, 5.0, 0, 150, 150, false, 0.1 )                       
+			DebugDrawSphere( initialTrace.endPos, 5.0, <0, 150, 150>, false, 0.1 )                       
 		}
 	#endif
 
@@ -3796,9 +3987,9 @@ ArmoredLeapTargetInfo function GetArmoredLeapTargetInfo( entity ent )
 			#if DEV
 				if( DEBUG_ARMORED_LEAP_TARGETING_DRAW )
 				{
-					DebugDrawSphere( ledgeTraceStart, 8.0, 255, 255, 0, true, 0.1 )                      
-					DebugDrawSphere( ledgeTrace.endPos, 15.0, 255, 175, 0, true, 0.1 )                    
-					DebugDrawCircle( ledgeTrace.endPos, VectorToAngles(ledgeTrace.surfaceNormal), 64, 255, 175, 175, true, 0.1, 3 )
+					DebugDrawSphere( ledgeTraceStart, 8.0, COLOR_YELLOW, true, 0.1 )                      
+					DebugDrawSphere( ledgeTrace.endPos, 15.0, <255, 175, 0>, true, 0.1 )                    
+					DebugDrawCircle( ledgeTrace.endPos, VectorToAngles(ledgeTrace.surfaceNormal), 64, <255, 175, 175>, true, 0.1, 3 )
 				}
 			#endif
 
@@ -3836,7 +4027,7 @@ ArmoredLeapTargetInfo function GetArmoredLeapTargetInfo( entity ent )
 			#if DEV
 				if( DEBUG_ARMORED_LEAP_TARGETING_DRAW )
 				{
-					DebugDrawSphere( downTrace.endPos, 5.0, 0, 255, 0, false, 0.1 )                       
+					DebugDrawSphere( downTrace.endPos, 5.0, COLOR_GREEN, false, 0.1 )                       
 				}
 			#endif
 		}
@@ -3875,8 +4066,8 @@ ArmoredLeapTargetInfo function GetArmoredLeapTargetInfo( entity ent )
 				#if DEV
 					if( DEBUG_ARMORED_LEAP_TARGETING_DRAW )
 					{
-						DebugDrawSphere( intersect, 8.0, 255, 0, 250, false, 0.1 )                    
-						DebugDrawSphere( dropAirTrace.endPos, 15.0, 255, 0, 100, true, 0.1 )                     
+						DebugDrawSphere( intersect, 8.0, <255, 0, 250>, false, 0.1 )                    
+						DebugDrawSphere( dropAirTrace.endPos, 15.0, <255, 0, 100>, true, 0.1 )                     
 					}
 				#endif
 			}
@@ -3884,7 +4075,7 @@ ArmoredLeapTargetInfo function GetArmoredLeapTargetInfo( entity ent )
 			#if DEV
 				if( DEBUG_ARMORED_LEAP_TARGETING_DRAW )
 				{
-					DebugDrawSphere( lowAirTrace.endPos, 5.0, 100, 0, 50, true, 0.1 )                  
+					DebugDrawSphere( lowAirTrace.endPos, 5.0, <100, 0, 50>, true, 0.1 )                  
 				}
 			#endif
 
@@ -3943,7 +4134,8 @@ ArmoredLeapTargetInfo function GetBetterAirPos( entity player, ArmoredLeapTarget
 		playerPos += groundOffset
 		float distCheck           = Distance( player.GetOrigin(), info.finalPos )
 		                                               
-		float airHeight           = info.airPos.z - info.finalPos.z
+		                                                                                                                                                                                                                                                           
+		float airHeight           = info.airPos == ZERO_VECTOR ? ARMORED_LEAP_MAX_AIR_HEIGHT : info.airPos.z - info.finalPos.z
 		TraceResults traceUp      = TraceHull( info.finalPos, info.finalPos + <0, 0, airHeight>, player.GetPlayerMins(), player.GetPlayerMaxs(), ignoreArray, TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
 
 		#if DEV
@@ -3981,8 +4173,8 @@ ArmoredLeapTargetInfo function GetBetterAirPos( entity player, ArmoredLeapTarget
 				#if DEV
 				if ( DEBUG_BETTER_AIR_POS )
 				{
-					DebugDrawMark( iterationTrace.endPos, 10, [0, 255, 0], true, 0.1 )
-					DebugDrawLine( playerPos, traceTarget, 0, 255, 255, true, 0.1 )
+					DebugDrawMark( iterationTrace.endPos, 10, COLOR_GREEN, true, 0.1 )
+					DebugDrawLine( playerPos, traceTarget, COLOR_CYAN, true, 0.1 )
 					DebugDrawText( iterationTrace.endPos, "fraction: " + iterationTrace.fraction, true, 0.1 )
 				}
 				#endif      
@@ -4004,8 +4196,8 @@ ArmoredLeapTargetInfo function GetBetterAirPos( entity player, ArmoredLeapTarget
 				#if DEV
 				if ( DEBUG_BETTER_AIR_POS )
 				{
-					DebugDrawLine( playerPos, traceTarget, 255, 0, 0, true, 0.1 )
-					DebugDrawMark( iterationTrace.endPos, 10, [255, 0, 0], true, 0.1 )
+					DebugDrawLine( playerPos, traceTarget, COLOR_RED, true, 0.1 )
+					DebugDrawMark( iterationTrace.endPos, 10, COLOR_RED, true, 0.1 )
 					DebugDrawText( iterationTrace.endPos, "fraction: " + iterationTrace.fraction, true, 0.1 )
 				}
 				#endif
@@ -4025,8 +4217,8 @@ ArmoredLeapTargetInfo function GetBetterAirPos( entity player, ArmoredLeapTarget
 			#if DEV
 			if ( DEBUG_BETTER_AIR_POS )
 			{
-				DebugDrawMark( abovePlayer, 10, [255, 255, 0], true, 0.1 )
-				DebugDrawMark( aboveDest, 10, [255, 0, 255], true, 0.1 )
+				DebugDrawMark( abovePlayer, 10, COLOR_YELLOW, true, 0.1 )
+				DebugDrawMark( aboveDest, 10, COLOR_MAGENTA, true, 0.1 )
 			}
 			#endif
 
@@ -4059,7 +4251,7 @@ ArmoredLeapTargetInfo function GetBetterAirPos( entity player, ArmoredLeapTarget
 					#if DEV
 						if ( DEBUG_BETTER_AIR_POS )
 						{
-							DebugDrawLine( player.GetOrigin(), traceToWalkbackPos.endPos, 0, 255, 0, true, 0.1 )
+							DebugDrawLine( player.GetOrigin(), traceToWalkbackPos.endPos, COLOR_GREEN, true, 0.1 )
 							DebugDrawText( traceToWalkbackPos.endPos, "fraction: " + traceToWalkbackPos.fraction, true, 0.1 )
 						}
 					#endif
@@ -4072,7 +4264,7 @@ ArmoredLeapTargetInfo function GetBetterAirPos( entity player, ArmoredLeapTarget
 						#if DEV
 							if ( DEBUG_BETTER_AIR_POS )
 							{
-								DebugDrawLine( walkBackIterationPos, traceFinalPos.endPos, 0, 255, 0, true, 0.1 )
+								DebugDrawLine( walkBackIterationPos, traceFinalPos.endPos, COLOR_GREEN, true, 0.1 )
 								                                                                                           
 							}
 						#endif
@@ -4107,8 +4299,8 @@ ArmoredLeapTargetInfo function GetBetterAirPos( entity player, ArmoredLeapTarget
 						#if DEV
 							if ( DEBUG_BETTER_AIR_POS )
 							{
-								DebugDrawLine( walkBackIterationPos, info.finalPos, 255, 0, 0, true, 0.1 )
-								DebugDrawMark( traceFinalPos.endPos, 25, [255, 0, 0], true, 0.1 )
+								DebugDrawLine( walkBackIterationPos, info.finalPos, COLOR_RED, true, 0.1 )
+								DebugDrawMark( traceFinalPos.endPos, 25, COLOR_RED, true, 0.1 )
 								DebugDrawText( traceFinalPos.endPos, "fraction: " + traceFinalPos.fraction, true, 0.1 )
 							}
 						#endif
@@ -4119,8 +4311,8 @@ ArmoredLeapTargetInfo function GetBetterAirPos( entity player, ArmoredLeapTarget
 					#if DEV
 						if ( DEBUG_BETTER_AIR_POS )
 						{
-							DebugDrawLine( player.GetOrigin(), walkBackIterationPos, 255, 0, 0, true, 0.1 )
-							DebugDrawMark( traceToWalkbackPos.endPos, 25, [255, 0, 0], true, 0.1 )
+							DebugDrawLine( player.GetOrigin(), walkBackIterationPos, COLOR_RED, true, 0.1 )
+							DebugDrawMark( traceToWalkbackPos.endPos, 25, COLOR_RED, true, 0.1 )
 							DebugDrawText( traceToWalkbackPos.endPos, "fraction: " + traceToWalkbackPos.fraction, true, 0.1 )
 						}
 					#endif
@@ -4140,8 +4332,8 @@ ArmoredLeapTargetInfo function GetBetterAirPos( entity player, ArmoredLeapTarget
 				              
 				#endif
 
-				DebugDrawMark( info.finalPos, 25, [255, 255, 0], true, drawTime )
-				DebugDrawMark( goodAirPos, 25, [0, 255, 255], true, drawTime )
+				DebugDrawMark( info.finalPos, 25, COLOR_YELLOW, true, drawTime )
+				DebugDrawMark( goodAirPos, 25, COLOR_CYAN, true, drawTime )
 				DebugDrawText( player.GetWorldSpaceCenter(), "foundGoodAirPos found!", true, 0.1 )
 			}
 			#endif      
@@ -4182,8 +4374,8 @@ FindOffsetPosStruct function GetBetterAirPos_FindOffsetPos( entity player, array
 			#if DEV
 			if ( DEBUG_BETTER_AIR_POS )
 			{
-				DebugDrawMark( destinationTrace.endPos, 10, [0, 255, 0], true, 0.1 )
-				DebugDrawLine( offsetTraceTarget, destinationTrace.endPos, 0, 255, 0, true, 0.1 )
+				DebugDrawMark( destinationTrace.endPos, 10, COLOR_GREEN, true, 0.1 )
+				DebugDrawLine( offsetTraceTarget, destinationTrace.endPos, COLOR_GREEN, true, 0.1 )
 				DebugDrawText( offsetTraceTarget, "goodAirPos! fraction: " + destinationTrace.fraction, true, 0.1 )
 			}
 			#endif      
@@ -4197,8 +4389,8 @@ FindOffsetPosStruct function GetBetterAirPos_FindOffsetPos( entity player, array
 			#if DEV
 			if ( DEBUG_BETTER_AIR_POS )
 			{
-				DebugDrawMark( destinationTrace.endPos, 10, [255, 0, 0], true, 0.1 )
-				DebugDrawLine( offsetTraceTarget, destinationTrace.endPos, 255, 0, 0, true, 0.1 )
+				DebugDrawMark( destinationTrace.endPos, 10, COLOR_RED, true, 0.1 )
+				DebugDrawLine( offsetTraceTarget, destinationTrace.endPos, COLOR_RED, true, 0.1 )
 				DebugDrawText( offsetTraceTarget, "fraction: " + destinationTrace.fraction, true, 0.1 )
 			}
 			#endif      
@@ -4254,11 +4446,11 @@ vector function ArmoredLeap_GetBestAllyLandingPos( entity ent, vector endPos, ve
 			bestPos = ridgeTrace.endPos
 			if( ArmoredLeap_HasValidLandingRoom( ent, bestPos, info )  )
 			{
-				                                                               
+				                                                                 
 				return bestPos
 			}
 
-			                                                                 
+			                                                                  
 		}
 	}
 
@@ -4291,7 +4483,7 @@ bool function ArmoredLeap_HasValidLandingRoom( entity ent, vector endPos, Armore
 			float fraction          = ridgeTrace.fraction
 			if ( fraction == 1 )
 			{
-				                                                                             
+				                                                                               
 
 				info.failCase = eFailCase.BLOCKED_LANDING
 				return false
@@ -4406,9 +4598,9 @@ bool function ArmoredLeap_HasValidLeapPos( entity ent, entity targetAlly, vector
 			if( zDist < ARMORED_LEAP_MIN_AIR_HEIGHT || newAirLeapTrace.fraction < 1 || !hasAirSpace)
 			{
 				                                           
-				                                                                                                    
-				                                                                                            
-				                                                                      
+				                                                                                                      
+				                                                                                              
+				                                                                        
 
 				                                                            
 				                                                                                                                                              
@@ -4496,12 +4688,12 @@ bool function ArmoredLeap_HasValidLeapPos( entity ent, entity targetAlly, vector
 
 								if( diveKickTrace.fraction < 1 || !hasAirSpace)
 								{
-									                                                                         
+									                                                                           
 									info.failCase = eFailCase.BLOCKED_LEAP
 									return false
 								}
 							}
-							                                                                        
+							                                                                         
 						}
 
 						                                                                                                                                                                                   
@@ -4658,6 +4850,9 @@ entity function GetAllyTargetInRange( entity owner )
 				continue
 			if( !ShouldPickupDNAFromDeathBox( deathbox, owner  ) )
 				continue
+			float distToBox = Distance2D( owner.GetOrigin(), deathbox.GetOrigin() )
+			if ( distToBox > ARMORED_LEAP_MAX_ALLY_RANGE )
+				continue
 
 			allyInRangeArray.append(deathbox)
 		}
@@ -4705,7 +4900,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
                          
 		if ( Control_IsModeEnabled()  )
 		{
-			alliance = GetAllianceFromTeam( team )
+			alliance = AllianceProximity_GetAllianceFromTeam( team )
 		}
        
 
@@ -4932,8 +5127,15 @@ array<entity> function GetAllyPlayerArray( entity owner )
 	                        
 		      
 
+	                                                                                        
+	                                                                                                       
+	                                                            
+	                                                      
+
 	                             
 	                                                                                                                                                                    
+	                                                                          
+
 	                                                                 
 	                                                                
 
@@ -4968,13 +5170,13 @@ array<entity> function GetAllyPlayerArray( entity owner )
 
 		                   
 		                                             
-		                                                                                               
-		                                                                                         
+		                                                                                                 
+		                                                                                                                           
 
 		                    
 		                                       
-		                                                                                               
-		                                                                                          
+		                                                                                                 
+		                                                                                                                            
 	 
 
 	                                   
@@ -4990,7 +5192,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 
 
 #if SERVER
-                                                                                                                                          
+                                                                                                                                                                                       
  
 	                                
 	                     
@@ -5028,6 +5230,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 
 	                                                                                                      
 	                                                                                                                                     
+	                                                                          
 	                                                
 
 	                                      
@@ -5082,7 +5285,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 		 
 			                                                                                                                                                  
 
-			                                                                                                             
+			                                                                                                              
 
 			                                                                                                                                                                                                                                                                                       
 			                                      
@@ -5093,7 +5296,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 	 
 
 	                                                                                      
-	                                                                        
+	                                                                           
 
 	                                                                                 
 	               
@@ -5153,7 +5356,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 
 
 	                                  
-	                                                                                           
+	                                                                                                                             
 	                                 
 
 
@@ -5212,8 +5415,8 @@ array<entity> function GetAllyPlayerArray( entity owner )
 		       
 		                      
 		 
-			                                                               
-			                                                       
+			                                                                
+			                                                        
 		 
 		      
 
@@ -5322,8 +5525,8 @@ array<entity> function GetAllyPlayerArray( entity owner )
 	                                              
 	                                                                                                        
 
+	                                                                                                             
 	                                                                                                           
-	                                                                                                         
 	                                                                                                                                                                                                       
 	                            
 		                          
@@ -5360,7 +5563,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 	                       
 		      
 
-	                                                                                       
+	                                                                                                                         
 
 	                                                
 
@@ -5368,7 +5571,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 #endif         
 
 #if SERVER
-                                                                                                                                   
+                                                                                                                                                                                
  
 	                                                                      
 		      
@@ -5376,6 +5579,8 @@ array<entity> function GetAllyPlayerArray( entity owner )
 	                                                                        
 	                                                                                            
 	                                                                                                                                 
+	                                                                      
+
 
 	                                                                                                
 	                                                     
@@ -5421,7 +5626,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 #endif
 
 #if SERVER
-                                                                                                                                          
+                                                                                                                                                                                       
  
 	                               
 	                                                 
@@ -5488,7 +5693,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 				                                                                                 
 				 
 					                    
-					                                                                                                                                                                                                                             
+					                                                                                                                                                                                                                                                               
 
 					                               
 					                                                                                                               
@@ -5526,7 +5731,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 
 
 #if SERVER
-                                                                                                                    
+                                                                                                                                                                 
  
 	                     
 
@@ -5549,7 +5754,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 		                                                                                                                                     
 		                                                   
 	 
-
+	                                                                          
 
 	                                                
 
@@ -5646,7 +5851,7 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 		#if DEV
 			if( DEBUG_SNAKE_DRAW )
 			{
-				DebugDrawSphere( downCliffTrace.endPos, 6.0, 255, 0, 0, true, 15.0, 8 )
+				DebugDrawSphere( downCliffTrace.endPos, 6.0, COLOR_RED, true, 15.0, 8 )
 			}
 		#endif
 
@@ -5697,7 +5902,7 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 					#if DEV
 					if( DEBUG_SNAKE_DRAW )
 					{
-						DebugDrawSphere( ledgeBendTrace.endPos, 6.0, 255, 0, 0, true, 15.0 )                                             
+						DebugDrawSphere( ledgeBendTrace.endPos, 6.0, COLOR_RED, true, 15.0 )                                             
 					}
 					#endif
 
@@ -5847,7 +6052,10 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 								                                               
 								 
 									            	                     
-									                                                                                                                             
+									                                                                     
+
+									                               
+										                                                                                              
 								 
 							 
 						 
@@ -5960,8 +6168,8 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 		 
 
 		                                                                                                                                                                                       
+		                                                                                                            
 		                                                                                                          
-		                                                                                                        
 		                              
 		                                                  
 		 
@@ -6139,6 +6347,11 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 			 
 		  
 	                            
+
+                    
+                                         
+       
+
 	                                                      
 	                                                               
 	                                                                   
@@ -6311,7 +6524,7 @@ vector function CastleWall_OffsetDamageNumbers( entity shieldEnt, vector damageF
 			           	                                         
 		 
 
-		                                                                              
+		                                                                                               
 		                                                                      
 
 		                                 
@@ -6531,20 +6744,20 @@ bool function IsCastleWallEnt( entity ent )
 			                                      
 			 
 				                                                                 
-				                                                                                                                     
-				                                                                                                                     
-				                                                                                                       
-				                                                                                                       
+				                                                                                                                       
+				                                                                                                                       
+				                                                                                                         
+				                                                                                                         
 
 			 
 
 			                                     
 			 
 				                                                               
-				                                                                                                                      
-				                                                                                                                      
-				                                                                                                        
-				                                                                                                          
+				                                                                                                                        
+				                                                                                                                        
+				                                                                                                         
+				                                                                                                            
 			 
 		 
 	      
@@ -6815,7 +7028,7 @@ bool function IsCastleWallEnt( entity ent )
 	       
 		                                
 		 
-			                                                                                  
+			                                                                                    
 		 
 	      
 
@@ -6960,6 +7173,7 @@ bool function CastleWall_CanUse( entity player, entity ent, int useFlags )
 		 
 
 		                                                                                                  
+		                     
 		                                           
 	 
 	                                          
@@ -6994,6 +7208,8 @@ void function CastleWall_OnPropScriptCreated( entity ent )
 	if ( ent.GetScriptName() == ARMORED_LEAP_SHIELD_ANCHOR_SCRIPTNAME )
 	{
 		AddEntityCallback_GetUseEntOverrideText( ent, CastleWall_UseTextOverride )
+		AddCallback_OnUseEntity_ClientServer( ent, CastleWall_OnUseWall )
+
 		int shieldTeam = ent.GetTeam()
 
 		bool startThreatIndicatorThread = false
@@ -7039,6 +7255,26 @@ void function CastleWall_OnPropScriptCreated( entity ent )
 			}
 		}
 	}
+}
+
+void function CastleWall_OnUseWall( entity wallProxy, entity player, int useFlags )
+{
+	if ( IsControllerModeActive() )
+	{
+		if ( ! ( useFlags & USE_INPUT_LONG ) )
+		{
+			thread IssueReloadCommand( player )
+		}
+	}
+}
+
+void function IssueReloadCommand( entity player )
+{
+	EndSignal( player, "OnDestroy" )
+
+	player.ClientCommand( "+reload" )
+	WaitFrame()
+	player.ClientCommand( "-reload" )
 }
 
 void function TrackCastleWallEnergizedState_Thread( entity ent )
@@ -7293,8 +7529,8 @@ void function DoCastleWallThreatIndicatorAndSound_Thread( entity player, int shi
 		#if DEV
 		if ( DEBUG_THREAT_INDICATORS )
 		{
-			DebugDrawMark( closestPositionEnt.GetOrigin(), 20, [255, 0, 0], true, 0.1 )
-			DebugDrawMark( farthestPositionEnt.GetOrigin(), 10, [0, 0, 255], true, 0.1 )
+			DebugDrawMark( closestPositionEnt.GetOrigin(), 20, COLOR_RED, true, 0.1 )
+			DebugDrawMark( farthestPositionEnt.GetOrigin(), 10, COLOR_BLUE, true, 0.1 )
 		}
 		#endif      
 
@@ -7392,7 +7628,7 @@ array<CastleWallThreatIndicatorLine> function BuildThreatLines( entity startingA
 			#if DEV
 			if ( DEBUG_THREAT_INDICATORS )
 			{
-				DebugDrawArrow( line.startPos, line.endPos, 10, 0, 255, 0, true, 0.1 )
+				 DebugDrawArrow( line.startPos, line.endPos, 10, COLOR_GREEN, true, 0.1 )
 			}
 			#endif      
 		}

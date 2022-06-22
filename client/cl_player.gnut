@@ -825,7 +825,7 @@ void function BloodSprayDecals_Think( entity player, entity victim, vector damag
 
 		vector primaryTraceEndPos = traceResult.endPos
 		primaryTraceNormal = traceResult.surfaceNormal
-		                                                             
+		                                                               
 		                                                                
 
 		bool doGravitySplat = isMelee ? false : true
@@ -855,7 +855,7 @@ void function BloodSprayDecals_Think( entity player, entity victim, vector damag
 
 			if ( downTraceResult.fraction < 1.0 )
 			{
-				                                                                                    
+				                                                                                      
 				                                                                    
 
 				vector normAng = VectorToAngles( downTraceResult.surfaceNormal )

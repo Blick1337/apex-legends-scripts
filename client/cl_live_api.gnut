@@ -424,12 +424,16 @@ void function ServerCallback_LiveAPI_LogNetwork_PlayerIntStatChanged( entity pla
               
 void function LiveAPI_OnDeathFieldStartShrink( DeathFieldStageData deathFieldData )
 {
-    LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.ringStartClosing, [ SURVIVAL_GetCurrentDeathFieldStage() ], [ "stage" ] )
+    LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.ringStartClosing,
+		[ SURVIVAL_GetCurrentDeathFieldStage(),	LiveAPI_ConvertVectorToTable(Cl_SURVIVAL_GetDeathFieldCenter()),	Cl_SURVIVAL_GetDeathFieldCurrentRadius(),	deathFieldData.endRadius,	deathFieldData.shrinkDuration ],
+		[ "stage", 								"center", 															"currentRadius", 							"endRadius",				"shrinkDuration" ] )
 }
 
 void function LiveAPI_OnDeathFieldStopShrink( DeathFieldStageData deathFieldData )
 {
-	LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.ringFinishedClosing, [ SURVIVAL_GetCurrentDeathFieldStage() ], [ "stage" ] )
+	LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.ringFinishedClosing,
+		[ SURVIVAL_GetCurrentDeathFieldStage(),	LiveAPI_ConvertVectorToTable(Cl_SURVIVAL_GetDeathFieldCenter()),	Cl_SURVIVAL_GetDeathFieldCurrentRadius(),	deathFieldData.shrinkDuration ],
+		[ "stage",								"center",															"currentRadius",							"shrinkDuration" ] )
 }
                    
 

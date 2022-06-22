@@ -25,8 +25,8 @@ const float DEPLOYABLE_MEDIC_ICON_HEIGHT = 32.0
            
 const int DEPLOYABLE_MEDIC_HEAL_MAX_TARGETS = 3
 const float DEPLOYABLE_MEDIC_HEAL_START_DELAY = 1.0
-const float DEPLOYABLE_MEDIC_HEAL_RADIUS = 128.0
-const int DEPLOYABLE_MEDIC_HEAL_AMOUNT = 150
+const float DEPLOYABLE_MEDIC_HEAL_RADIUS = 256.0        
+const int DEPLOYABLE_MEDIC_HEAL_AMOUNT = 9999      
 const float DEPLOYABLE_MEDIC_MAX_LIFETIME = 20
 const float DEPLOYABLE_MEDIC_HEAL_PER_SEC = 8
 const ROPE_LENGTH = DEPLOYABLE_MEDIC_HEAL_RADIUS + 50
@@ -561,7 +561,7 @@ void function OnDeployableMedicPlanted( entity projectile )
 	                                                               
 
 	                                                               
-	                                                                           
+	                                                                             
 	                                        
 
 	                     
@@ -580,8 +580,8 @@ void function OnDeployableMedicPlanted( entity projectile )
 		  	     
 		  	       
 		   
-		                                                                                                           
-		                                                                 
+		                                                                                                             
+		                                                                   
 
 		                                                                                                    
 		                                                                
@@ -626,7 +626,7 @@ void function OnDeployableMedicPlanted( entity projectile )
 		                                                                                             
 		                               
 
-		                                                                                                      
+		                                                                                                       
 		                                                               
 		           
 	 
@@ -645,10 +645,10 @@ void function OnDeployableMedicPlanted( entity projectile )
 		                                                                     
 		                                                                                                               
 
-		                                                                          
-		                                                                              
+		                                                                            
+		                                                                                
 		                                                                         
-		                                                                        
+		                                                                          
 
 
 		                      
@@ -671,8 +671,8 @@ void function OnDeployableMedicPlanted( entity projectile )
 	  	       
 	  	     
 	   
-	                                                                                 
-	                                                                        
+	                                                                                   
+	                                                                          
 
 	                                                   
 		           

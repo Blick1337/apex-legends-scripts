@@ -325,7 +325,7 @@ void function ShCalEvent_LevelInit()
 	                                                          
 	                                                                                                                                                             
 
-	                                                                            
+	                                                               
 	                                                            
 
 	                                                            
@@ -335,7 +335,6 @@ void function ShCalEvent_LevelInit()
 	                                
 
 	                                                 
-	                                                                    
 	                                                                           
  
 #endif

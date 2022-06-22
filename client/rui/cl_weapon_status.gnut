@@ -212,7 +212,10 @@ void function ClWeaponStatus_AddClient( entity player )
 		RuiTrackFloat( rui, "minAmmoToFireFrac", GetLocalClientPlayer(), RUI_TRACK_WEAPON_CLIP_MIN_AMMO_FRACTION )
 		RuiTrackBool( rui, "canShowReloadHint", null, RUI_TRACK_CAN_SHOW_RELOAD_PROMPT )
 
+
 		file.ammo_status_hint = rui
+		if  ( AmmoSatusIsDisabled() )
+			RuiSetBool( rui, "isVisible", false )
 	}
 
 	{
@@ -223,7 +226,6 @@ void function ClWeaponStatus_AddClient( entity player )
 		RuiTrackFloat( rui, "silencedTimeRemaining", player, RUI_TRACK_STATUS_EFFECT_TIME_REMAINING, eStatusEffect.silenced )
 		RuiSetFloat( rui, "silenceEffectDuration", Silence_GetEffectDuration() )
 		RuiSetFloat( rui, "sonicBlastEffectDuration", GetSonicBlastSilenceDuration() )
-		
 		file.ability_center_hud = rui
 	}
 
@@ -250,14 +252,16 @@ void function ClWeaponStatus_AddClient( entity player )
 
 	{
 		var rui = CreateCockpitPostFXRui( SURVIVAL_HUD_WEAPON_RUI, HUD_Z_BASE )
-		                                                                      
+
+		if  ( WeaponHudIsDisabled() )
+			RuiSetBool( rui, "isVisible", false )
+
 		RuiTrackFloat( rui, "reviveEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "reviveEndTime" ) )
 		RuiTrackFloat( rui, "bleedoutEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
 		file.weapon_hud_rui = rui
 		UpdateWeaponStatusOnBindingChange()
 	}
 }
-
 
 void function ClWeaponStatus_RefreshWeaponInfo()
 {
@@ -273,11 +277,25 @@ void function UpdateHudDataForCurrentActiveWeapon()
 }
 
 
+bool function WeaponHudIsDisabled()
+{
+	return GetCurrentPlaylistVarBool( "hide_ui_weapon", false )
+}
+
+bool function AbilitiesHudIsDisabled()
+{
+	return GetCurrentPlaylistVarBool( "hide_ui_abilities", false )
+}
+
+bool function AmmoSatusIsDisabled()
+{
+	return GetCurrentPlaylistVarBool( "hide_ui_ammo_warning", false )
+}
+
 void function UpdateAmmoStatusVisibility()
 {
 	RuiSetVisible( file.ammo_status_hint, ShouldAmmoStatusBeVisible() )
 }
-
 
 bool function ShouldAmmoStatusBeVisible()
 {
@@ -286,6 +304,9 @@ bool function ShouldAmmoStatusBeVisible()
 		return false
 
 	if( IsCommsMenuActive() )
+		return false
+
+	if  ( AmmoSatusIsDisabled() )
 		return false
 
 	return true
@@ -703,7 +724,10 @@ void function ClearRuiWeaponData( var rui, bool isTitan )
 
 	ClearWeaponToggleHUD()
 
-	RuiSetBool( rui, "isVisible", (GetHudDefaultVisibility() && file.ammo_counter_visible && !isTitan) )
+	if (!WeaponHudIsDisabled())
+		RuiSetBool( rui, "isVisible", (GetHudDefaultVisibility() && file.ammo_counter_visible && !isTitan ) )
+	else
+		RuiSetBool( rui, "isVisible", (false) )
 }
 
 
@@ -717,7 +741,9 @@ void function UpdateRUIWeaponData( entity player, var rui, entity weapon, int ta
 		Weapon_UpdateAltAmmoRui( rui, player, weapon, true, false )
 		UpdateModsOnSurvivalWeaponRui( rui, weapon )
 
-		RuiSetBool( rui, "isVisible", (GetHudDefaultVisibility() && file.ammo_counter_visible && !player.IsTitan()) )
+			if (!WeaponHudIsDisabled())
+				RuiSetBool( rui, "isVisible", (GetHudDefaultVisibility() && file.ammo_counter_visible && !player.IsTitan()) )
+			else RuiSetBool( rui, "isVisible", (false) )
 		RuiSetBool( rui, "isTitan", player.IsTitan() )
 		RuiSetBool( rui, "isWeaponAmped", weapon.GetWeaponSettingBool( eWeaponVar.is_burn_mod ) )
 
@@ -2077,7 +2103,12 @@ void function InitOffhandRui( var rui, entity player, entity weapon )
 	RuiSetGameTime( rui, "hintTime", Time() )
 
 	RuiSetBool( rui, "isTitan", player.IsTitan() )
-	RuiSetBool( rui, "isVisible", (GetHudDefaultVisibility() && !player.IsTitan()) )
+
+	if ( !AbilitiesHudIsDisabled() )
+		RuiSetBool( rui, "isVisible", (GetHudDefaultVisibility() && !player.IsTitan()) )
+	else RuiSetBool( rui, "isVisible", false  )
+
+
 	RuiSetBool( rui, "isReverseCharge", false )
 	bool isPaused = weapon.HasMod( "survival_ammo_regen_paused" )
 	RuiSetBool( rui, "isPaused", isPaused )
@@ -2207,9 +2238,7 @@ var function GetRuiForIndex( entity player, int offhandIndex )
 
 bool function GetHudDefaultVisibility()
 {
-	if ( Freelance_IsHubLevel() )
-		return false
-	return true
+		return true
 }
 
 
@@ -2380,7 +2409,7 @@ void function UpdateWeaponEnergizeRui( entity player, entity weapon, asset cross
 
 		                       
 		{
-			if( energizeState == ENERGIZE_ENERGIZED )
+			if( weapon == activeWeapon && energizeState == ENERGIZE_ENERGIZED )
 			{
 				RuiSetBool( crosshairRui, "isActive", true )
 				RuiSetFloat( crosshairRui, "energizeFrac", max( weapon.GetEnergizedEndTime() - Time(), 0 ) / energizedDuration )

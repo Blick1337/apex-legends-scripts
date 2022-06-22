@@ -447,6 +447,7 @@ void function DestroyAfterTime( int fxHandle, float time )
 			                                 
 		 
 
+		                                       
 		                          
 		                     
 	 
@@ -652,14 +653,9 @@ void function DestroyAfterTime( int fxHandle, float time )
 	                                         
 	                                                                                        
 	                          
-	                                        
-	 
-		                                                                   
-	 
-	                                         
-	 
-		                                                      
-	 
+
+	                                                                                     
+	                                                                                     
 
 	                                   
 

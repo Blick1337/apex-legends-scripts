@@ -706,19 +706,21 @@ void function AttemptCancelCharge( entity player )
 
 	Remote_ServerCallFunction( "Remote_CancelCharge", weapon )
 }
-
 #endif
 
 #if SERVER
                                                                  
  
-	                         
+	                                               
 	 
 		                                                                
 		      
 	 
 
-	                         
+	                                                
+		      
+	
+	                                        
 		      
 
 	                               

@@ -591,7 +591,7 @@ void function OnProjectileCollision_arc_bolt( entity projectile, vector pos, vec
 		                               
 			                                                             
 		    
-			                                                               
+			                                                                
 	 
 
 	                                                        
@@ -786,7 +786,8 @@ void function OnProjectileCollision_arc_bolt( entity projectile, vector pos, vec
 			                                                                                                                
 			                              
 		 
-		                                     
+		                                                      
+			                                     
 	 
 
 	                        
@@ -894,7 +895,7 @@ void function OnProjectileCollision_arc_bolt( entity projectile, vector pos, vec
 		                            
 		                            
 
-		                                                                      
+		                                                                        
 	 
 	                      
 	 
@@ -913,7 +914,7 @@ void function OnProjectileCollision_arc_bolt( entity projectile, vector pos, vec
 			                            
 			                            
 
-			                                                    
+			                                                      
 		 
 		                           
 	 

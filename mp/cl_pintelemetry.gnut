@@ -1,6 +1,7 @@
 global function PIN_Init
 global function PIN_Customization
 global function PIN_UltimateReadyPing
+global function PIN_NET_TraceRouteResult
 
 #if UI
 global function UICodeCallback_PINEvent
@@ -868,4 +869,9 @@ void function PIN_UltimateReadyPing( entity player, string pingType, bool isUlti
 			ult_inv = isUltinInventory,
 		}
 	)
+}
+
+void function PIN_NET_TraceRouteResult(entity player, table result)
+{
+	AddPINTelemetryEvent("trace_route_result", PIN_StandardHeader(), result)
 }

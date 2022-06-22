@@ -1200,7 +1200,7 @@ void function OnProjectileCollision_weapon_riot_drill( entity projectile, vector
 		               	                             
 
 		                                                                                                                                                        
-		                                                                      
+		                                                                        
 
 		                                                                      
 		                                                                                             

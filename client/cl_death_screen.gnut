@@ -20,6 +20,7 @@ global function SetClearDeathRecapOnClose
 global function DeathScreen_SetModeSpecificRuiUpdateFunc
 global function DeathScreen_SetDataRuiAssetForGamemode
 
+global function UICallback_ShowScoreboard
 global function UICallback_ShowSquadSummary
 global function UICallback_HideSquadSummary
 global function UICallback_ShowDeathRecap
@@ -539,6 +540,16 @@ void function UpdateEnabledTabs()
 	                                            
 	if ( !IsAlive( clientPlayer ) )
 		EnableDeathScreenTab( eDeathScreenPanel.SPECTATE, true )
+
+	if ( GetGameState() < eGameState.WinnerDetermined && GetCurrentPlaylistVarBool( "enable_death_scoreboard", false ) )
+	{
+		EnableDeathScreenTab( eDeathScreenPanel.SCOREBOARD, true )
+	}
+	else if( GetGameState() > eGameState.WinnerDetermined && GetCurrentPlaylistVarBool( "enable_match_end_scoreboard", false ) )
+	{
+		EnableDeathScreenTab( eDeathScreenPanel.SCOREBOARD, true )
+	}
+
 }
 
 
@@ -583,7 +594,7 @@ void function DeathScreenUpdate()
 {
 	                                   
 
-	if ( GetCurrentTabIndex() == eDeathScreenPanel.SPECTATE )
+	if ( GetCurrentTabIndex() == eDeathScreenPanel.SPECTATE || GetCurrentTabIndex() == eDeathScreenPanel.SCOREBOARD  )
 		RunUIScript( "UI_DeathScreenUpdateHeader" )
 
 	if ( GetCurrentTabIndex() == eDeathScreenPanel.SQUAD_SUMMARY )
@@ -605,10 +616,10 @@ void function DeathScreenUpdateHeader( var headerElem )
 
 	int respawnStyle = GetRespawnStyle()
                            
-                                                                                                  
-   
-                                               
-   
+		if ( IsSecondChanceGameMode() && ShGameMode_SecondChance_CanPlayerStillRespawn( clientPlayer ) )
+		{
+			respawnStyle = eRespawnStyle.SKYDIVE_RESPAWN
+		}
                                  
 
 	int respawnStatus  = GetRespawnStatus( clientPlayer )
@@ -652,6 +663,10 @@ void function DeathScreenUpdateHeader( var headerElem )
 
 		case eDeathScreenPanel.SQUAD_SUMMARY:
 			animateBanner = !file.hasShownSquadSummary
+			break
+
+		case eDeathScreenPanel.SCOREBOARD:
+			displayBanner = false
 			break
 	}
 
@@ -777,7 +792,6 @@ void function ClearHeaderBannerOverrideFunc()
 {
 	file.deathScreenBannerOverrideFunc = null
 }
-
 
 void function UICallback_ShowSquadSummary( var headerElem, var headerDataElem )
 {
@@ -979,6 +993,22 @@ void function UICallback_HideSquadSummary()
 		clientPlayer.ClearMenuCameraEntity()
 }
 
+void function UICallback_ShowScoreboard( var headerElem )
+{
+	entity clientPlayer = GetLocalClientPlayer()
+	if ( !IsValid( clientPlayer ) )
+		return
+
+	Signal( clientPlayer, "SwitchedTab" )
+
+	int oldTabIndex = GetCurrentTabIndex()
+	SetCurrentTabIndex( eDeathScreenPanel.SCOREBOARD )
+
+	UpdateMenuBackground()
+	DeathScreenUpdateHeader( headerElem )
+
+	UpdateMainHudVisibility( GetLocalViewPlayer() )
+}
 
 void function UICallback_ShowDeathRecap( var headerElem, var recapElem, var b0, var b1, var b2, var b3, var b4, var b5, var b6, var b7, var b8, var b9 )
 {

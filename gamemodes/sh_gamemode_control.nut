@@ -36,6 +36,11 @@ global function Control_RegisterNetworking
                                                 
                                           
                                    
+
+                    
+                                                   
+                          
+
 #endif          
 
 #if CLIENT
@@ -57,10 +62,6 @@ global function UICallback_Control_SpawnButtonClicked
 global function UICallback_Control_LaunchSpawnMenuProcessThread
 global function UICallback_ControlMenu_MouseWheelUp
 global function UICallback_ControlMenu_MouseWheelDown
-global function UICallback_Control_ReportMenu_BindTeamHeader
-global function UICallback_Control_ReportMenu_BindTeamRow
-global function UICallback_Control_ReportMenu_BindTeamButton
-global function UICallback_Control_ReportMenu_OnReportClicked
 
 global function ServerCallback_Control_ProcessImmediatelyOpenCharacterSelect
 global function ServerCallback_Control_OnPlayerChoosingRespawnChoiceChanged
@@ -78,6 +79,13 @@ global function ServerCallback_Control_TransferCameraData
 global function ServerCallback_PlayMatchEndMusic_Control
 global function ServerCallback_PlayPodiumMusic
 global function ServerCallback_Control_SetControlGeoValidForAirdropsOnClient
+global function ServerCallback_Control_DisplayLockoutUnavailableWarning
+
+                    
+                                                                   
+                                                                    
+                                                                          
+                          
 
 global function Control_OpenCharacterSelect
 global function Control_AnnouncementMessageWarning
@@ -110,7 +118,10 @@ global function Control_CloseCharacterSelectOnlyIfOpen
 global function Control_GetObjectiveNameFromObjectiveID_Localized
 #endif          
 
-global function Control_GetAllianceFromTeam
+
+#if UI
+global function Control_PopulateAboutText
+#endif      
 
 #if CLIENT || SERVER
 global function Control_GetTeamScore
@@ -118,13 +129,12 @@ global function Control_GetScoreLimit
 global function Control_GetPlayerExpTotal
 global function Control_GetPlayerExpTier
 global function Control_DidPlayerPingSameObjective
-global function Control_GetPingCountForObjectiveForTeam
+global function Control_GetPingCountForObjectiveForAlliance
 global function Control_GetObjectiveStarterPings
 global function Control_GetStarterPingFromTraceBlockerPing
 global function Control_IsPlayerAbandoning
 global function Control_GetDefaultWeaponTier
 global function Control_GetAbandonPenaltyLength
-global function Control_GetOriginalPlayerTeam_FromPlayerEHI
 
 global const float CONTROL_MESSAGE_DURATION = 5.0
 const float CONTROL_MATCH_TIME_LIMIT_WARNING_TIME = 300.0                                                                       
@@ -135,33 +145,33 @@ const float ANNOUNCER_DIALOGUE_DELAY = 1.5
                                                                                                                                                              
 const string CONTROL_EXPEVENT_ELIMINATION = "Control_Exp_Elimination"
 const string CONTROL_EXPEVENT_ASSIST = "Control_Exp_Assist"
-const string CONTROL_EXPEVENT_SQUADWIPE = "Control_Exp_SquadWipe"
 const string CONTROL_EXPEVENT_ATTACKERKILL = "Control_Exp_AttackerKill"
 const string CONTROL_EXPEVENT_DEFENDERKILL = "Control_Exp_DefenderKill"
 const string CONTROL_EXPEVENT_HIGHTIERKILL = "Control_Exp_HighTierKill"
 const string CONTROL_EXPEVENT_REALLYHIGHTIERKILL = "Control_Exp_ReallyHighTierKill"
 const string CONTROL_EXPEVENT_CONTESTING = "Control_Exp_ContestingObjective"
 const string CONTROL_EXPEVENT_CAPTURING = "Control_Exp_CapturingObjective"
-const string CONTROL_EXPEVENT_DEFENDING = "Control_Exp_DefendingObjective"
 const string CONTROL_EXPEVENT_DEFENDING_ACTIVEPOINT = "Control_Exp_DefendingActiveObjective"
 const string CONTROL_EXPEVENT_CAPTURED = "Control_Exp_CapturedObjective"
 const string CONTROL_EXPEVENT_TEAM_CAPTURED = "Control_Exp_TeamCapturedObjective"
 const string CONTROL_EXPEVENT_NEUTRALIZED = "Control_Exp_NeutralizedObjective"
 const string CONTROL_EXPEVENT_TEAM_NEUTRALIZED = "Control_Exp_TeamNeutralizedObjective"
-const string CONTROL_EXPEVENT_BOUNTYCLAIMED = "Control_Exp_BountyClaimed"
 const string CONTROL_EXPEVENT_WITHSQUADBONUS = "Control_Exp_WithSquadBonus"
 const string CONTROL_EXPEVENT_KILLEXPLEADER = "Control_Exp_KillEXPLeader"
+const string CONTROL_EXPEVENT_DEFENDING = "Control_Exp_DefendingObjective"
+const string CONTROL_EXPEVENT_BOUNTYCLAIMED = "Control_Exp_BountyClaimed"
 const string CONTROL_EXPEVENT_LOCKOUTBROKEN = "Control_Exp_TeamCanceledLockout"
 const string CONTROL_EXPEVENT_SPAWNONBASE = "Control_Exp_SpawnOnBase"
 const string CONTROL_EXPEVENT_RESPAWN = "Control_Exp_Respawn"
-
-                                                                                                               
-const array<string> CONTROL_EXPEVENTS_WITH_SET_POINT_VALUES = [ CONTROL_EXPEVENT_ELIMINATION, CONTROL_EXPEVENT_ASSIST, CONTROL_EXPEVENT_SQUADWIPE, CONTROL_EXPEVENT_ATTACKERKILL, CONTROL_EXPEVENT_DEFENDERKILL,CONTROL_EXPEVENT_HIGHTIERKILL, CONTROL_EXPEVENT_REALLYHIGHTIERKILL, CONTROL_EXPEVENT_CONTESTING, CONTROL_EXPEVENT_CAPTURING, CONTROL_EXPEVENT_DEFENDING, CONTROL_EXPEVENT_DEFENDING_ACTIVEPOINT, CONTROL_EXPEVENT_CAPTURED, CONTROL_EXPEVENT_TEAM_CAPTURED, CONTROL_EXPEVENT_NEUTRALIZED, CONTROL_EXPEVENT_TEAM_NEUTRALIZED, CONTROL_EXPEVENT_WITHSQUADBONUS, CONTROL_EXPEVENT_KILLEXPLEADER ]
+                    
+                                                                          
+                                                                     
+                          
 
 const bool CONTROL_ARE_AIRDROPS_ALLOWED_ON_CONTROL_GEO = false                                                                                                                                                                                                 
 const int CONTROL_VEHICLE_AIRDROP_BAD_PLACE_RADIUS = 300
 const int CONTROL_SKYDIVE_LAUNCHER_AIRDROP_BAD_PLACE_RADIUS = 150
-const int CONTROL_CONTROL_POINT_AIRDROP_BAD_PLACE_RADIUS = 800
+const int CONTROL_DEFAULT_MAX_PLAYERS = 18
 #endif                    
 
 #if DEV && SERVER
@@ -204,6 +214,8 @@ const string CONTROL_OBJECTIVE_DEFAULT_NAME = "Default Objective Name"
 const int CONTROL_OBJECTIVE_A_INDEX = 0
 const int CONTROL_OBJECTIVE_B_INDEX = 1
 const int CONTROL_OBJECTIVE_C_INDEX = 2
+const int CONTROL_FOB_INDEX_ALLIANCE_A = 0
+const int CONTROL_FOB_INDEX_ALLIANCE_B = 2
 
 const INT_TEAM0_SCORE = 4
 const INT_TEAM1_SCORE = 5
@@ -231,6 +243,10 @@ global const int CONTROL_WAYPOINT_BASE0_INDEX = 0
 global const int CONTROL_WAYPOINT_BASE1_INDEX = 1
 global const int CONTROL_WAYPOINT_PLAYER_INDEX = 2
 global const int CONTROL_WAYPOINT_POINT_INDEX = 3
+                    
+                                               
+                                                   
+                          
 
                                                                    
 string WAYPOINT_CONTROL_PLAYERLOC = "waypoint_control_playerloc"
@@ -264,19 +280,30 @@ const string CONTROL_PIN_VICTORYCONDITION_LOCKOUT = "lockout"
 global const int CONTROL_MAX_EXP_TIER = 4
 global const int CONTROL_MAX_LOOT_TIER = 3
 
+global const int CONTROL_TEAMSCORE_LOCKOUTBROKEN = 50
+
 #if SERVER
                                                                          
                                                                 
                                                         
                                                  
+                                                      
+                                                    
+                                                    
+                                                                                                                                                                                                                                            
+
                                   
                                              
                                         
                                          
-                                              
                                                     
                                                        
                                                                                                                    
+
+                    
+                                                                                                                                                   
+                          
+
                                                                      
                                                                          
                                                                            
@@ -297,9 +324,19 @@ global const int CONTROL_MAX_LOOT_TIER = 3
                                                                            
                                                          
                                                                    
+
+                    
+                                                       
+                          
+
                                                                          
                                                                          
                                                                    
+
+                    
+                                                                                                                                 
+                                                                                                                               
+                          
 
                              
                                                              
@@ -308,7 +345,13 @@ global const int CONTROL_MAX_LOOT_TIER = 3
 #if SERVER || CLIENT
 const int CONTROL_VICTORY_FLAGS_SCORE = ( 1 << 1 )
 const int CONTROL_VICTORY_FLAGS_LOCKOUT = ( 1 << 2 )
-#endif
+
+                    
+                                                                                            
+                                                                   
+                                               
+                          
+#endif                    
 
 #if CLIENT
                      
@@ -342,14 +385,15 @@ const string CONTROL_SFX_CAPTURE_BONUS_CLAIMED_ENEMY = "Ctrl_CaptureBonus_Claime
 const string CONTROL_SFX_GAME_END_VICTORY = "Ctrl_Victory_1p"
 const string CONTROL_SFX_GAME_END_LOSS = "Ctrl_Loss_1p"
 const string CONTROL_SFX_MATCH_TIME_LIMIT = "Ctrl_Match_End_Warning_1p"
+
+                    
+                                                                                                 
+                          
 #endif          
 
 #if DEV
 const float SPAWNPOINT_RADIUS = 20
 const float SPAWNPOINT_HEIGHT = 128
-const table<string, int> SPAWNPOINT_COLOR_BLUE = { r=0, g=0, b=255}
-const table<string, int> SPAWNPOINT_COLOR_RED = { r=255, g=0, b=0}
-const table<string, int> SPAWNPOINT_COLOR_GREEN = { r=0 , g=255, b=0}
 const float SPAWNPOINT_DISPLAY_TIME = 60
 #endif       
 
@@ -384,6 +428,10 @@ global enum eControlPlayerRespawnChoice
 	SPAWN_ON_SQUAD,
 	SPAWN_ON_POINT,
 
+                     
+              
+                           
+
 	_count
 }
 
@@ -406,6 +454,10 @@ enum eControlSpawnAlertCode
 	SPAWN_FAILED,
 	SPAWN_CANCELLED,
 	SPAWN_LOST_SPAWNPOINT,
+	
+                     
+                
+                           
 
 	_count
 }
@@ -466,7 +518,6 @@ global struct ControlPointData
 	float lastBountyAward = FLT_MAX
 	bool hasBountyBeenSet = false
 }
-
 
 struct ControlTeamSpawnData
 {
@@ -532,7 +583,7 @@ const ControlTeamData ControlTeamDataDefaults = {
 }
 
 struct {
-	array<entity> spawnWaypoints
+	array<entity> spawnWaypoints                                                                                                                                                  
 	bool isLockout = false
 	bool isRampUp = false
 
@@ -574,6 +625,8 @@ struct {
 		                                            
 		                                            
 		                                                
+		                                
+		                                        
 
 		                                       
 		                                             
@@ -620,12 +673,20 @@ struct {
 		                            
 		                                  
 		                                  
+
+                      
+                     
+                             
+                   
+                   
+                        
+                            
+
 	#endif          
 
 	#if CLIENT || SERVER
 		array< entity > playersUsingLosingTeamExpTiersArray
 		table< entity, float > playerToLastEXPEvoBadWeaponCheckTimeTable
-		table< EHI, int > playerEHIToOriginalTeamTable                                                                                         
 
 		                 
 		array<entity> objectiveStarterPings
@@ -719,10 +780,6 @@ void function Control_Init()
 		AddCallback_EntitiesDidLoad( EntitiesDidLoad )
 	#endif                    
 
-	#if CLIENT
-		RegisterSignal( "Threaded_PopulateRowForPlayer" )
-	#endif
-
 	#if SERVER
 		       
 			                                                
@@ -807,7 +864,6 @@ void function Control_Init()
 		PrecacheParticleSystem( $"P_wpn_evo_upgrade_FP" )
 		PrecacheParticleSystem( $"P_wpn_evo_upgrade" )
 
-
                        
                                              
                                                  
@@ -815,6 +871,7 @@ void function Control_Init()
 	#endif
 
 	#if SERVER
+		                                             
 		                                                        
 
                        
@@ -843,12 +900,8 @@ void function Control_Init()
 		                                                                               
 		                                                       
 
-		                                
-		                                                                                 
-		                                                                             
-
 		                                        
-		                                           
+		                                                   
 
 		                                                                            
 		                                                                       
@@ -863,8 +916,6 @@ void function Control_Init()
 			                                                                                     
 			                                                                         
 		 
-
-		                                                         
 
 		                                     
 		                                                                                                               
@@ -896,6 +947,22 @@ void function Control_Init()
 		                                                                   
 		                                                               
 		                                                               
+
+                      
+                                             
+    
+                                                                 
+                                                                
+                                            
+                                                  
+                                                                                   
+                                                                               
+                                                                     
+                                                                            
+                                                                            
+                                                                          
+    
+                            
 
 	#endif          
 
@@ -938,7 +1005,7 @@ void function Control_Init()
 		AddCallback_OnCharacterSelectMenuClosed( Control_OnCharacterSelectMenuClosed )
 		AddCallback_OnFindFullMapAimEntity( Control_GetObjectiveUnderAim, Control_PingObjectiveUnderAim )
 
-		                                          
+		                                        
 		Fullmap_AddCallback_OnFullmapCreated( Control_OnFullmapCreated )
 		AddCallback_OnScoreboardCreated( Control_OnScoreboardCreated )
 		AddCreateCallback( "player", Control_OnPlayerCreated )
@@ -968,8 +1035,29 @@ void function Control_Init()
 		RegisterSignal( "OnSpawnMenuClosed" )
 		RegisterSignal( "Control_OnAnnouncementThreadStarted" )
 
-		Control_SetupAboutGameMode()
+
+                      
+                                             
+                                                                                    
+                            
 	#endif
+
+                     
+                                            
+   
+                         
+                       
+                                                       
+                                            
+                  
+
+             
+                                         
+                   
+
+                             
+   
+                           
 }
 
 #if CLIENT || SERVER
@@ -979,8 +1067,6 @@ void function EntitiesDidLoad()
 		                                                                  
 		                      
 	#endif         
-
-	Control_InitEXPScoreValues()
 
 	#if CLIENT
 		if( Control_IsModeEnabled() )
@@ -1041,10 +1127,9 @@ void function Control_RegisterNetworking()
 	Remote_RegisterClientFunction( "ServerCallback_Control_UpdateLastPingedObjective", "entity", "entity", "entity", "int", INT_MIN, INT_MAX, "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_Control_SetIsPlayerUsingLosingExpTiers", "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_Control_DisplaySpawnAlertMessage", "int", 0, eControlSpawnAlertCode._count )
-	Remote_RegisterClientFunction( "ServerCallback_Control_DisplayWaveSpawnBarStatusMessage", "bool", "int", 0, 3 )
+	Remote_RegisterClientFunction( "ServerCallback_Control_DisplayWaveSpawnBarStatusMessage", "bool", "int", 0, eControlPlayerRespawnChoice._count )
 	Remote_RegisterClientFunction( "ServerCallback_Control_TransferCameraData", "vector", -FLT_MAX, FLT_MAX, 32, "vector", -FLT_MAX, FLT_MAX, 32 )
 	Remote_RegisterClientFunction( "ServerCallback_Control_SetControlGeoValidForAirdropsOnClient", "entity" )
-
 	Remote_RegisterClientFunction( "ServerCallback_Control_PlayAllWeaponEvoUpgradeFX", "entity", "int", 0, CONTROL_MAX_EXP_TIER + 1, "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_Control_Play3PEXPLevelUpFX", "entity", "int", 0, CONTROL_MAX_EXP_TIER + 1 )
 	Remote_RegisterClientFunction( "ServerCallback_Control_PlayCaptureZoneEnterExitSFX", "bool" )
@@ -1052,6 +1137,14 @@ void function Control_RegisterNetworking()
 	Remote_RegisterClientFunction( "ServerCallback_Control_EXPLeaderKilled", "entity", "entity" )
 	Remote_RegisterClientFunction( "ServerCallback_PlayMatchEndMusic_Control", "int", 0, eControlVictoryCondition._count )
 	Remote_RegisterClientFunction( "ServerCallback_PlayPodiumMusic" )
+	Remote_RegisterClientFunction( "ServerCallback_Control_DisplayLockoutUnavailableWarning" )
+
+                     
+                                                                                                  
+                                                                                                                                                                      
+                                                                                               
+
+                           
 
 	Remote_RegisterUIFunction( "Control_RemoveAllButtonSpawnIcons" )
 	Remote_RegisterUIFunction( "ControlSpawnMenu_SetLoadoutAndLegendSelectMenuIsEnabled", "bool" )
@@ -1094,6 +1187,13 @@ bool function Control_ShouldUseRecoveredExpPercentIfGreaterThanDefaults()
 {
 	return GetCurrentPlaylistVarBool( "exp_recover_exp_percent_if_greater_than_default", true )
 }
+
+                    
+                                                 
+ 
+                                                                     
+ 
+                          
 
 #if SERVER
 
@@ -1169,11 +1269,6 @@ bool function Control_ShouldUseRecoveredExpPercentIfGreaterThanDefaults()
 	                                                
  
 
-                                              
- 
-	                                                             
- 
-
                                                                 
  
 	                                                                                          
@@ -1187,9 +1282,15 @@ bool function Control_ShouldUseRecoveredExpPercentIfGreaterThanDefaults()
 	                     
  
 
+                                                                                        
+                                      
+ 
+	                                                                 
+ 
+
                                                   
  
-	                                                           
+	                                                                         
  
 
                                                 
@@ -1210,31 +1311,21 @@ bool function Control_ShouldUseRecoveredExpPercentIfGreaterThanDefaults()
 #endif          
 
 #if CLIENT || SERVER
-                                                                                                                                                                             
-void function Control_InitEXPScoreValues()
-{
-	var dataTable = GetDataTable( $"datatable/score_events.rpak" )
-	int numRows = GetDataTableRowCount( dataTable )
-
-	for ( int i = 0; i < numRows; i++ )
-	{
-
-		string eventName = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "name" ) )
-
-		if ( CONTROL_EXPEVENTS_WITH_SET_POINT_VALUES.contains( eventName ) )
-		{
-			ScoreEvent event = GetScoreEvent( eventName )
-			int pointValue = int( GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "pointValue" ) ) )
-			ScoreEvent_SetPointValue( event, pointValue )
-		}
-	}
-}
-
                                                                
 
 bool function Control_GetAreAirdropsEnabled()
 {
-	return GetCurrentPlaylistVarBool( "control_enable_airdrops", false )
+	return GetCurrentPlaylistVarBool( "control_enable_airdrops", true )
+}
+
+bool function Control_GetAreBonusCaptureTimedEventsEnabled()
+{
+	return GetCurrentPlaylistVarBool( "control_enable_bonus_capture_events", true )
+}
+
+bool function Control_GetIsLockoutEnabled()
+{
+	return GetCurrentPlaylistVarBool( "control_enable_lockout", true )
 }
 
 bool function Control_GetIsWeaponEvoEnabled()
@@ -1256,21 +1347,6 @@ int function Control_GetDefaultEquipmentTier()
 int function Control_GetDefaultWeaponTier()
 {
 	return GetCurrentPlaylistVarInt( "control_default_weapon_tier", 1 )
-}
-
-                                                                                
-int function Control_GetOriginalPlayerTeam_FromPlayerEHI( EHI playerEHI )
-{
-	Assert(  EHIHasValidScriptStruct( playerEHI ), "Attempted to run Control_GetOriginalPlayerTeam_FromPlayerEHI on an Invalid playerEHI" )
-
-	int team = EHI_GetTeam( playerEHI )
-
-	if ( playerEHI in file.playerEHIToOriginalTeamTable )
-	{
-		team = file.playerEHIToOriginalTeamTable[ playerEHI ]
-	}
-
-	return team
 }
 
                                                                                       
@@ -1303,6 +1379,66 @@ float function Control_GetMaxDeathScreenTime()
 	return GetCurrentPlaylistVarFloat( "control_max_deathscreen_time", 20.0 )
 }
 #endif                    
+
+#if UI
+                                                                           
+array< aboutGamemodeDetailsTab > function Control_PopulateAboutText()
+{
+	array< aboutGamemodeDetailsTab > tabs
+	string playlistUiRules = GetPlaylist_UIRules()
+
+	if ( !GameModeHasRules() || playlistUiRules != GAMEMODE_CONTROL )
+		return tabs
+
+	aboutGamemodeDetailsTab tab1
+	aboutGamemodeDetailsTab tab2
+	aboutGamemodeDetailsTab tab3
+	aboutGamemodeDetailsTab tab4
+
+	array< aboutGamemodeDetailsData > tab1Rules
+	array< aboutGamemodeDetailsData > tab2Rules
+	array< aboutGamemodeDetailsData > tab3Rules
+	array< aboutGamemodeDetailsData > tab4Rules
+
+	int withSquadBonusEXPVal = GetCurrentPlaylistVarInt( "exp_value_playing_with_squad", 5 )
+
+	                                              
+	tab1.tabName = "#CONTROL_RULES_OVERVIEW_TAB_NAME"
+	tab1Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_CAPTURING_HEADER", "#CONTROL_RULES_CAPTURING_BODY", $"rui/hud/gametype_icons/control/about_capture" ) )
+	tab1Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_RATINGS_HEADER", "#CONTROL_RULES_RATINGS_BODY", $"rui/hud/gametype_icons/control/about_ratings" ) )
+	tab1Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_TIMEDEVENT_HEADER", "#CONTROL_RULES_TIMEDEVENT_BODY", $"rui/hud/gametype_icons/control/about_events" ) )
+
+	                                          
+	tab2.tabName = "#CONTROL_RULES_RATINGS_TAB_NAME"
+	string killRatingsBody = Localize( "#CONTROL_RULES_KILL_RATINGS_BODY", string( GetCurrentPlaylistVarInt( "exp_value_kill", 20 ) ), string( GetCurrentPlaylistVarInt( "exp_value_kill_assist", 20 ) ), string( withSquadBonusEXPVal ) )
+	string specialKillRatingsBody = Localize( "#CONTROL_RULES_SPECIAL_KILL_RATINGS_BODY", string( GetCurrentPlaylistVarInt( "exp_value_kill_attacker", 15 ) ), string( GetCurrentPlaylistVarInt( "exp_value_kill_defender", 15 ) ), string( GetCurrentPlaylistVarInt( "exp_value_kill_high_tier", 15 ) ), string( GetCurrentPlaylistVarInt( "exp_value_kill_reallyhigh_tier", 25 ) ), string( GetCurrentPlaylistVarInt( "exp_value_kill_expleader", 50 ) ) )
+	string objectiveRatingsBody = Localize( "#CONTROL_RULES_OBJECTIVE_RATINGS_BODY", string( GetCurrentPlaylistVarInt( "exp_value_capturing", 5 ) ), string( GetCurrentPlaylistVarInt( "exp_value_contesting", 10 ) ), string( GetCurrentPlaylistVarInt( "exp_value_defending_active", 10 ) ), string( GetCurrentPlaylistVarInt( "exp_value_neutralize", 50 ) ), string( GetCurrentPlaylistVarInt( "exp_value_capture", 50 ) ), string( withSquadBonusEXPVal ) )
+	string teamRatingsBody = Localize( "#CONTROL_RULES_TEAM_RATINGS_BODY", string( GetCurrentPlaylistVarInt( "exp_value_team_neutralize", 25 ) ), string( GetCurrentPlaylistVarInt( "exp_value_team_capture", 25 ) ), string( CONTROL_TEAMSCORE_LOCKOUTBROKEN ) )
+	tab2Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_KILL_RATINGS_HEADER", killRatingsBody, $"rui/hud/gametype_icons/control/about_kill_ratings" ) )
+	tab2Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_SPECIAL_KILL_RATINGS_HEADER", specialKillRatingsBody, $"rui/hud/gametype_icons/control/about_special_kill_ratings" ) )
+	tab2Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_OBJECTIVE_RATINGS_HEADER", objectiveRatingsBody, $"rui/hud/gametype_icons/control/about_objective_ratings" ) )
+	tab2Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_TEAM_RATINGS_HEADER", teamRatingsBody, $"rui/hud/gametype_icons/control/about_team_ratings" ) )
+
+	                                   
+	tab3.tabName = "#CONTROL_RULES_SPAWNING_TAB_NAME"
+	string baseSpawnBody = Localize( "#CONTROL_RULES_BASE_SPAWN_BODY", string( Control_GetDefaultExpPercentToAwardForBaseSpawn() * 100 ) )
+	tab3Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_BASE_SPAWN_HEADER", baseSpawnBody, $"rui/hud/gametype_icons/control/about_base_spawns" ) )
+	tab3Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_FORWARDBASE_SPAWN_HEADER", "#CONTROL_RULES_FORWARDBASE_SPAWN_BODY", $"rui/hud/gametype_icons/control/about_forwardbase_spawns" ) )
+	tab3Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_CENTRAL_SPAWN_HEADER", "#CONTROL_RULES_CENTRAL_SPAWN_BODY", $"rui/hud/gametype_icons/control/about_central_spawns" ) )
+
+	tab1.rules = tab1Rules
+	tab2.rules = tab2Rules
+	tab3.rules = tab3Rules
+	tab4.rules = tab4Rules
+
+	tabs.append( tab1 )
+	tabs.append( tab2 )
+	tabs.append( tab3 )
+	tabs.append( tab4 )
+
+	return tabs
+}
+#endif      
 
                                                                                                                           
   
@@ -1392,7 +1528,7 @@ float function Control_GetMaxDeathScreenTime()
 		      
 
 	                                              
-	                                                          
+	                                                                 
 	 
 		                                             
 		                         
@@ -1567,7 +1703,7 @@ float function Control_GetMaxDeathScreenTime()
 	                      
 	 
 		                                                                                                       
-		                                                                                                                    
+		                                                                                                                      
 	 
  
 
@@ -1763,8 +1899,11 @@ float function Control_GetMaxDeathScreenTime()
 	                                             
 	 
 		                                        
-		                                                                                                         
-		                                                                                                                      
+		                                                            
+		                                                            
+		                                                              
+		                                                                 
+		                                                                                        
 	 
  
 
@@ -1965,7 +2104,7 @@ float function Control_GetMaxDeathScreenTime()
 
 		                                  
 		                                      
-		                                          
+		                                                    
 		                                    
 		                                        
 		                                       
@@ -2118,7 +2257,36 @@ float function Control_GetMaxDeathScreenTime()
 
 	                                    
 	                               
-	                                                                                          
+ 
+
+                                                                
+                                                    
+ 
+	                                               
+
+	                                                                           
+	                              
+
+	            
+	               
+	 
+		                                   
+		                                                            
+		                               
+	 
+	 
+	                        
+	
+	                                                                                                   
+	                                                                 
+	                                               
+
+	                                                                                                                                                        
+	                                     
+	                                                       
+
+	                     
+		               
  
 
 
@@ -2286,10 +2454,11 @@ float function Control_GetMaxDeathScreenTime()
 
                                        
  
-	      
+	                                         
 
+	                                   
+	                             
 
-	                 
 	                                                             
 	 
 		               
@@ -2297,7 +2466,7 @@ float function Control_GetMaxDeathScreenTime()
 			                                           
 		                                                   
 
-		                                                            
+		                                                                      
 
 		              
 		                                                         
@@ -2308,7 +2477,7 @@ float function Control_GetMaxDeathScreenTime()
 
 	                                                        
 	 
-		                                
+		                           
 		 
 			                                               
 		 
@@ -2369,7 +2538,7 @@ float function Control_GetMaxDeathScreenTime()
 		                                        
 
 	                                                  
-	                                                                                                                         
+	                                                                                                                                   
 		                                                                                                                             
  
 
@@ -2397,7 +2566,7 @@ float function Control_GetMaxDeathScreenTime()
 		 
 			                                                 
 			 
-				                                                                                                                        
+				                                                                                                                                  
 				 
 					                                                                                                                            
 					                                                                                              
@@ -2438,16 +2607,6 @@ float function Control_GetMaxDeathScreenTime()
 #endif                   
 
 #if CLIENT
-void function Control_SetupAboutGameMode()
-{
-	RunUIScript( "UI_ClearAboutGameMode" )
-
-	RunUIScript( "UI_AddAboutGameModeTitle", "#GAME_MODE_CONTROL" )
-	RunUIScript( "UI_AddAboutGameModeDetails", "#CONTROL_RULES_CAPTURING_HEADER", "#CONTROL_RULES_CAPTURING_BODY", $"rui/hud/gametype_icons/control/about_capture" )
-	RunUIScript( "UI_AddAboutGameModeDetails", "#CONTROL_RULES_RATINGS_HEADER", "#CONTROL_RULES_RATINGS_BODY", $"rui/hud/gametype_icons/control/about_ratings" )
-	RunUIScript( "UI_AddAboutGameModeDetails", "#CONTROL_RULES_TIMEDEVENT_HEADER", "#CONTROL_RULES_TIMEDEVENT_BODY", $"rui/hud/gametype_icons/control/about_events" )
-}
-
                                                                                                                                                                                                                         
 void function ServerCallback_Control_SetControlGeoValidForAirdropsOnClient( entity geo )
 {
@@ -2470,28 +2629,34 @@ void function ServerCallback_Control_SetDeathScreenCallbacks()
 #endif          
 
 #if SERVER || CLIENT
+                                                                                        
+                                                                                   
+                                                                                                                                                                             
 void function Control_RegisterTimedEvents()
 {
-	                   
-	TimedEventData bountyData
-	bountyData.shouldHideUntilPrembleDone = true
-	#if SERVER
-		                                  
-		                                            
-		                                                          
-		                               
-		                               
-		                            
-		                                                                            
-	#endif
+	                                       
+	if ( Control_GetAreBonusCaptureTimedEventsEnabled() )
+	{
+		TimedEventData bountyData
+		bountyData.shouldHideUntilPrembleDone = true
+		#if SERVER
+			                                  
+			                                            
+			                                                          
+			                                 
+			                                 
+			                              
+			                                                                            
+		#endif
 
-	#if CLIENT
-		bountyData.eventName = "#EVENT_STARTS_IN"
-		bountyData.eventDesc = "#EVENT_BOUNTY_DESC"
-		bountyData.infoOverrideFunctionThread = Control_BountyInfoOverride
-	#endif
+		#if CLIENT
+			bountyData.eventName = "#EVENT_STARTS_IN"
+			bountyData.eventDesc = "#EVENT_BOUNTY_DESC"
+			bountyData.infoOverrideFunctionThread = Control_BountyInfoOverride
+		#endif
 
-	TimedEvents_RegisterTimedEvent( bountyData )
+		TimedEvents_RegisterTimedEvent( bountyData )
+	}
 
 	                                       
 	if ( Control_GetAreAirdropsEnabled() )
@@ -2517,27 +2682,64 @@ void function Control_RegisterTimedEvents()
 		TimedEvents_RegisterTimedEvent( airdropData )
 	}
 
-	                   
-	TimedEventData lockoutData
-	lockoutData.shouldShowPreamble = false
+	                                       
+	if (  Control_GetIsLockoutEnabled() )
+	{
+		TimedEventData lockoutData
+		lockoutData.shouldShowPreamble = false
 
-	#if SERVER
-		                                   
-		                                            
-		                                                            
-		                               
-		                              
-		                                                        
-		                                                                              
-		                                               
-	#endif
+		#if SERVER
+			                                   
+			                                            
+			                                                            
+			                                 
+			                                
+			                              
+			                                                                              
+			                                               
+		#endif
 
-	#if CLIENT
-		lockoutData.eventName = "#EVENT_LOCKOUT_NAME"
-		lockoutData.infoOverrideFunctionThread = Control_LockoutInfoOverride
-	#endif
+		#if CLIENT
+			lockoutData.eventName = "#EVENT_LOCKOUT_NAME"
+			lockoutData.infoOverrideFunctionThread = Control_LockoutInfoOverride
+		#endif
 
-	TimedEvents_RegisterTimedEvent( lockoutData )
+		TimedEvents_RegisterTimedEvent( lockoutData )
+	}
+
+                     
+                                            
+
+                                                                  
+                                                                                
+                                      
+                                      
+                                       
+                                       
+
+                                            
+   
+                              
+
+             
+                                        
+                                                 
+                                                                        
+                                       
+                                       
+                                    
+                                                                                         
+         
+
+             
+                                                
+                                              
+                                              
+         
+
+                                                 
+   
+                           
 }
 #endif
 
@@ -2595,14 +2797,6 @@ bool function Control_PingObjectiveUnderAim( entity objective )
                                                                                                                                                                                                                                     
                                            
  
-	                                 
-	 
-		                                               
-			                                             
-		    
-			                                             
-	 
-
 	                                            
 	 
 		                                      
@@ -2615,7 +2809,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                                                          
 	                                     
 	 
-		                                                                                                                                       
+		                                                                                                                                                                                  
 			                                                                   
 	 
  
@@ -2635,7 +2829,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
                                                                     
  
 	                                                                                                           
-	                                                            
+	                                                                              
 	                                                  
 	                                                                                                                                   
 
@@ -2658,25 +2852,21 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 
                                                 
  
-	                                                                           
+	                                                                                             
 	                                                                                                                                   
 	                                                             
 	                                  
 
-	                                                                                                                                       
+	                                                                                                                                                                                  
 		                                                                   
 
-	                                                                                                                                                                       
-	                                                                                                                                                                                                   
+	                                                                                                                                                                                              
 	                                                              
 	 
 		                
 		                                                           
 		                                                                   
-
-		                                                                        
 	 
-
  
 
                                                  
@@ -2684,7 +2874,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
  
 	                        
 	 
-		                                                                           
+		                                                                                             
 	 
  
 
@@ -2753,7 +2943,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 			      
 
 		                                 
-		                                                                 
+		                                     
 
 		                                                 
 		 
@@ -2787,8 +2977,15 @@ bool function Control_PingObjectiveUnderAim( entity objective )
                                                                                           
 
                                                                                                
-#if SERVER
+#if SERVER || CLIENT
+                                                                    
+bool function Control_IsPointAnFOB( int pointIndex )
+{
+	return pointIndex == CONTROL_FOB_INDEX_ALLIANCE_A || pointIndex == CONTROL_FOB_INDEX_ALLIANCE_B
+}
+#endif                    
 
+#if SERVER
                                                                               
  
 	                               
@@ -2845,7 +3042,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	 
 
 	                                  
-	                                                    
+	                                                              
 	 
 		                                                     
 		                                 
@@ -2997,319 +3194,6 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	 
  
 
-                                         
-                                                                         
- 
-	                                               
-
-	                                 
-	                                  
-	                                      
-	                                                                      
-
-
-	                                         
-	                                                               
-
-	                                                  
-	                                                
-	                                                                      
-	                                                                                                                
-	                                                                                                                                
-
-	                                                  
-	                                       
-	                                                                                
-
-	                                     
-	                                                   
-	                                                         
-	 
-		               
-
-		                             
-		 
-			                                      
-			                                                            
-		 
-
-		                                                 
-		                                         
-			                          
-
-		                                                                                          
-		 
-			                                                                                                               
-			                
-			                                                                            
-			                                                                                                              
-			                                                                                                                
-
-			                                                                                                        
-
-			                                                                                                 
-				                          
-			                                                              
-				                          
-		 
-		                                                                                     
-		 
-			                                        
-			                    
-				                          
-
-		 
-		                                      
-	 
-
-	                                      
-	                                    
-	                                               
-	 
-		                                                                      
-		 
-			                           
-			        
-		 
-		                                        
-		 
-			                                                                                             
-				                           
-		 
-	 
-
-	                                        
-	                                              
-	 
-		                                                                       
-		            
-			                                    
-			 
-				              
-				                                              
-					                                                                       
-
-				                                            
-			 
-		 
-
-		                                                                                            
-
-		                                                                                
-		                                                                                  
-		                                           
-		                                            
-
-		                                                 
-
-		                                                                                      
-		                      
-		                                               
-	 
-	    
-	 
-		                                                                
-		                             
-	 
-
-	                                 
-	                                                         
-
-	                                     
-	                                         
-		                                                                                                                               
-
-	                                      
-
-	                                            
-	                                                             
-	 
-		                                           
-
-		                             
-	 
-	    
-	 
-		                                                                         
-		                                           
-		                                                                
-			           
-
-		                                           
-
-		                             
-	 
- 
-
-                                                      
-                                     
-                                                                                                                                                             
-                                                                 
- 
-	                                        
-	                                                                       
-	                                                                                                              
-	                                                                                           
-	                                                                                                                         
- 
-
-                                                                         
-                                                                
-                                                                    
- 
-	                                        
-	                                                                                           
-	                                                                                              
-	                                               
- 
-
-                                        
-                                                                
- 
-	                                        
-	                                                                               
-	                                                                                                                                         
-	                                                                                          
-	                                                                                
- 
-
-                                                                 
- 
-	                                                                                       
-	                                                                  
-	                                                                              
- 
-
-
-                                                                          
- 
-	                                               
-
-	                                         
-	                                                               
-
-	                  
-	                                 
-
-	            
-		                  
-		 
-			                                                    
-			                      
-
-			                                 
-			 
-				                              
-				                                                 
-				                   
-				      
-			 
-			    
-			 
-				                                                       
-				                                                                 
-			 
-
-			                                            
-			                    
-			 
-				                        
-					                                                   
-				                             
-					                                                   
-				                             
-					                                                   
-				                             
-					                                                  
-			 
-			    
-			 
-				                              
-				                                                 
-			 
-		 
-	 
-
-	                     
-	                                                  
-
-	                                                  
-	                                                
-	                                                                                                                                 
-
-	                              
-	                                                                                                                                             
-	                                                                       
-	                                         
-
-	                                         
-		                                                                                                                        
-
-	                                                       
-	 
-		                       
-		 
-			                                
-			                        
-			     
-		 
-
-		           
-	 
-
-	                        
-	 
-		                                                
-		                                                                                                                           
-		                                                                          
-	 
-	    
-	 
-		                                                                                                                         
-		                                          
-	 
-
-	                             
- 
-
-
-                                                   
- 
-	                                  
-	                                                                   
-	 
-		                                                                
-
-		                                               
-			            
-
-		             
-		 
-			                                        
-		 
-		    
-		 
-			                                                
-				            
-		 
-	 
-
-	           
- 
-
-                                                              
- 
-	                                                                       
-	                                                        
-	 
-		                                              
-			           
-	 
-
-	            
- 
-
-
                                                                                                     
                                                                                           
  
@@ -3352,10 +3236,10 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 
 		                                                                                                                 
 		                                            
-		                                                                                                                                                
+		                                                                                                                                                                         
 
 		                                                         
-		                                                                                                          
+		                                                                                                                                   
 
 		                                                            
 		                                                                                                    
@@ -3411,31 +3295,32 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 		                     
 		                          
 		 
-			                                                              
+			                                                           
 			                                             
-			                                                        
+			                                                       
+			                                                     
 
-			               
-			                                                                                   
+			                                                          
+			                                                                                                           
 			 
 				                                                                     
-				                                                                                   
+				                                                                                  
 				                                           
 			 
 
 			                                                                           
-			                                                                                                                                         
+			                                                                                                                                                                 
 			 
 				                                                                    
-				                                                                               
+				                                                                              
 				                                           
 			 
 
 			                           
-			                                                                                       
+			                                                                                                               
 			 
 				                                                                     
-				                                                                                   
+				                                                                                  
 				                                               
 			 
 		 
@@ -3481,6 +3366,11 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                                         
 
 	                                                  
+
+	                                                       
+	                            
+		      
+	
 	                                                                                                      
 	                                                                                                    
 	                                                                                                                                                                                            
@@ -3533,11 +3423,11 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                     
 
 	                                          
-	                                                                           
+	                                            
 	            
 	 
 		                                           
-		                                                                                                                 
+		                                                                                                                                                                       
 		                                                                
 
 		                                                                                                                                     
@@ -3555,7 +3445,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	    
 	 
 		                                                                                      
-		                                                
+		                                                                                                      
 		                                                                                     
 		                                                                                           
 		                                                                   
@@ -3602,6 +3492,15 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                                                                             
 
 	                                                                                                                                                                              
+
+	                                                                                                            
+	                                                                                                                                                                 
+	 
+		                                          
+		 
+			                                                                                                  
+		 
+	 
  
 
                                                 
@@ -3613,24 +3512,24 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                         
 
 	                                                                                                                          
-	                                                                                                                                                                         
+	                                                                                                                                                                                     
 	 
 		                                                                    
 	 
-	    
+	                                                                                                                                                            
 	 
 		                    
 		 
 			                                                       
 			                 
 			 
-				       
+				                               
 					                                                               
 					     
-				       
+				                               
 					                                                               
 					     
-				       
+				                               
 					                                                               
 					     
 			 
@@ -3638,13 +3537,13 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 			                                                             
 			                 
 			 
-				       
+				                               
 					                                                                  
 					     
-				       
+				                               
 					                                                                  
 					     
-				       
+				                               
 					                                                                  
 					     
 			 
@@ -3652,7 +3551,8 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 		 
 	 
 
-	                                                                                                                          
+	                             
+		                                                                                                                          
  
 
 
@@ -3719,13 +3619,13 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                           
 	                    
 	 
-		       
+		                               
 			                                                                                                        
 			     
-		       
+		                               
 			                                                                                                        
 			     
-		       
+		                               
 			                                                                                                        
 			     
 		        
@@ -3760,7 +3660,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                     
 	 
 		                                            
-		                                                                     
+		                                                                               
 		                                                                                   
 
 		                                                               
@@ -3769,18 +3669,12 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 
 	                                      
 	 
-		                                                                                                                                                
+		                                                                                                                                
 		                                                       
 		                                             
 		                                                     
 		                                               
 		                                              
-
-		                                 
-		                                                             
-
-		                                                                                        
-			                                                                                                                                    
 	 
  
 
@@ -3791,7 +3685,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 
 	                                      
 	 
-		                                                                                                                                      
+		                                                                                                                                  
 		                                                       
 		                                             
 		                                                     
@@ -3803,29 +3697,34 @@ bool function Control_PingObjectiveUnderAim( entity objective )
                                                                                 
  
 	                                                                                                    
-	                                                                                    
-	                                                                                                                                                   
+
+	                                                                                                                              
+	                                                                        
+	 
+		                                                                                    
+		                                                                                                                                                   
+	 
 
 	                                      
 	 
-		                                                                                      
+		                                                            
 		                                                    
 		 
-			                                                                                                                               
+			                                                                                   
 			 
-				                                                                                                                                          
+				                                                                                                                                
 			 
 		 
 	 
 
 	                                               
 	 
-		                                                                                              
+		                                                                                                        
 		 
 			                                                                                                                                                                                                                                               
 			                                      
 			 
-				                                                                                                                                
+				                                                                                                                      
 				                                             
 			 
 			                                                                                                    
@@ -3847,7 +3746,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                                             
 	                                                    
 	 
-		                                                                         
+		                                                                                   
 		 
 			                                                                                          
 			                                                                                                                                                                                                                                                                              
@@ -3857,7 +3756,6 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 			                                      
 			 
 				                                                                                    
-				                                             
 			 
 		 
 	 
@@ -3885,12 +3783,12 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 
 	                                      
 	 
-		                                                                                         
+		                                                               
 		                                                     
 		 
-			                                                                                                                               
+			                                                                                   
 			 
-				                                                                                                                                                
+				                                                                                                                                      
 			 
 		 
 	 
@@ -3898,12 +3796,12 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                                    
 	                                               
 	 
-		                                                                                              
+		                                                                                                        
 		 
 			                                                                                                                                                                                                                                                  
 			                                      
 			 
-				                                                                                                                                      
+				                                                                                                                            
 				                                             
 			 
 		 
@@ -3921,7 +3819,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	 
 		                 
 		 
-			                                                                    
+			                                                                              
 			 
 				                      
 			 
@@ -3938,51 +3836,55 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 		                         
 			        
 
-		                                                                                                                                        
-		                                                                                                                                    
+		                                                                                                                                                  
+		                                                                                                                                              
 
 		                                            
-		                                                                                
+		                                                                                          
 		 
 			                                                   
 			                                                  
 			 
 				                                                                                                                                                                                                                                                
-				                                                                                                            
+				                                                                          
+				                                                             
 				 
-					                                                                                                                                  
+					                                                                                   
 					                                             
 				 
 			 
 			                                                                                                           
 			 
 				                                                                                                                                                                                                                                                 
-				                                                                                                             
+				                                                                             
+				                                                              
 				 
-					                                                                                                                                    
+					                                                                                     
 					                                             
 				 
 			 
 		 
 
 		                                               
-		                                                                                
+		                                                                                          
 		 
 			                                                                                      
 			 
 				                                                                                                                                                                                                                                                
-				                                                                                                            
+				                                                                          
+				                                                              
 				 
-					                                                                                                                                  
+					                                                                                   
 					                                             
 				 
 			 
 			                                                                                          
 			 
 				                                                                                                                                                                                                                                                            
-				                                                                                                                        
+				                                                                                        
+				                                                                   
 				 
-					                                                                                                                                                          
+					                                                                                                     
 					                                             
 				 
 			 
@@ -3999,15 +3901,12 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                                              
 	                                                    
 	 
-		                                                                         
+		                                                                                   
 		 
 			                                                                                                             
 
 			                                                                             
-			 
 				                                                                                                       
-				                                             
-			 
 		 
 	 
 
@@ -4019,13 +3918,6 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	 
 		                                                           
 	 
- 
-
-                                                     
-                                                                    
- 
-	                                                     
-	                                             
  
 
                                                                
@@ -4058,6 +3950,12 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 				                                                  
 
 			                                                           
+
+                       
+                                                                                                                                                
+                                                                                                                                                                                                                          
+                                                      
+                             
 		 
 
 		                                                                      
@@ -4067,7 +3965,9 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                          
 	                                                                                                                                                           
  
+#endif          
 
+#if SERVER
                                                                        
                                                                                   
  
@@ -4104,7 +4004,8 @@ bool function Control_PingObjectiveUnderAim( entity objective )
                                                                                    
                                                                   
  
-	                                                                                                                                                                             
+	                                                                                        
+	                                                                                                                               
 		      
 
 	                              
@@ -4119,8 +4020,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	 
 
 	                        
-		                                                                                                                                            
-
+		                                                                                             
  
 
                                                                          
@@ -4133,7 +4033,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                                                                                     
 	                                                        
 	 
-		                                                                                                                                                                               
+		                                                                                                                                                                                         
 		 
 			                       
 			     
@@ -4143,9 +4043,9 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                       
 	 
 		                                                        
-
-		                                                                                                                                                    
-			                                                                                                                                        
+		                                                                                  
+		                                                                                                     
+			                                                                                         
 	 
  
 
@@ -4159,7 +4059,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                                                                                     
 	                                                        
 	 
-		                                                                                                                                                                               
+		                                                                                                                                                                                         
 		 
 			                       
 			     
@@ -4169,9 +4069,9 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                       
 	 
 		                                                         
-
-		                                                                                                                                                    
-			                                                                                                                                        
+		                                                                                  
+		                                                                                                     
+			                                                                                         
 	 
  
 
@@ -4188,11 +4088,11 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	 
 		                          
 		 
-			                                                                                                                                                    
+			                                                                                                                                             
 		 
 		                              
 		 
-			                                                                                                                                        
+			                                                                                                                                 
 		 
 	 
  
@@ -4204,7 +4104,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 		      
 
 	                                                                                                                               
-		                                                                                                                                                  
+		                                                                                                                                          
  
 
                                                        
@@ -4518,7 +4418,7 @@ bool function Control_PingObjectiveUnderAim( entity objective )
 	                                          
 		        
 
-	                                                                    
+	                                                                              
 	                                                             
  
 
@@ -4751,7 +4651,7 @@ void function Control_OnGamestateEnterResolution_Client()
 
 void function Control_DeregisterModeButtonPressedCallbacks( bool shouldCloseCharacterSelect = true )
 {
-	RunUIScript( "UI_CloseAboutGameModeDialog" )
+	RunUIScript( "UI_CloseGameModeRulesDialog" )
 	RunUIScript( "Control_SetAllButtonsDisabled" )
 
 	if ( shouldCloseCharacterSelect )
@@ -4794,13 +4694,6 @@ void function Control_OnPlayerCreated( entity player )
 {
 	ObjectiveScoreTracker_PopulatePlayerData( GetFullmapGamestateRui() )
 	ObjectiveScoreTracker_PopulatePlayerData( ClGameState_GetRui() )
-
-	                                                                                                                                                                       
-	                                                                                                                                                                                                          
-	if ( GetGameState() < eGameState.WinnerDetermined && IsValid( player ) )
-	{
-		file.playerEHIToOriginalTeamTable[ ToEHI( player ) ] <- player.GetTeam()
-	}
 }
 
 
@@ -4892,7 +4785,7 @@ void function SetupObjectiveWaypoint( entity wp, var rui )
 		RuiTrackInt( rui, "currentControllingTeam", wp, RUI_TRACK_WAYPOINT_INT, INT_TEAM_CAPTURING )
 		RuiTrackInt( rui, "currentOwner", wp, RUI_TRACK_WAYPOINT_INT, CONTROL_INT_OBJ_TEAM_OWNER )
 		RuiTrackInt( rui, "neutralPointOwnership", wp, RUI_TRACK_WAYPOINT_INT, CONTROL_INT_OBJ_NEUTRAL_TEAM_OWNER )
-		RuiSetInt( wp.wp.ruiHud, "yourTeamIndex", GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) )
+		RuiSetInt( wp.wp.ruiHud, "yourTeamIndex", AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) )
 		RuiTrackInt( rui, "team0PlayersOnObj", wp, RUI_TRACK_WAYPOINT_INT, INT_TEAM0_PLAYERSONOBJ )
 		RuiTrackInt( rui, "team1PlayersOnObj", wp, RUI_TRACK_WAYPOINT_INT, INT_TEAM1_PLAYERSONOBJ )
 
@@ -4970,7 +4863,7 @@ void function ObjectiveFlareFXThink( entity wp )
 			{
 				if ( wp.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == ALLIANCE_NONE )
 					EffectSetControlPointVector( flareFX, 1, <150,150,150> )
-				else if ( wp.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == Control_GetAllianceFromTeam( player.GetTeam() ) )
+				else if ( wp.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == AllianceProximity_GetAllianceFromTeam( player.GetTeam() ) )
 					EffectSetControlPointVector( flareFX, 1, CONTROL_OBJECTIVE_GREEN )
 				else
 					EffectSetControlPointVector( flareFX, 1, CONTROL_OBJECTIVE_RED )
@@ -4998,6 +4891,12 @@ void function ObjectiveWaypointThink( entity wp, var rui )
 	{
 		entity player = GetLocalViewPlayer()
 
+		if ( !IsValid( player ) )
+			return
+
+		int playerTeam = player.GetTeam()
+		int playerAlliance = AllianceProximity_GetAllianceFromTeam( playerTeam )
+
 		if ( Control_ShouldShow2DMapIcons() )
 		{
 			var minimapRui
@@ -5010,7 +4909,7 @@ void function ObjectiveWaypointThink( entity wp, var rui )
 			asset iconToSet
 			if ( wp.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == ALLIANCE_NONE )
 				iconToSet = CONTROL_OBJ_DIAMOND_EMPTY
-			else if ( wp.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == Control_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) )
+			else if ( wp.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == playerAlliance )
 				iconToSet = CONTROL_OBJ_DIAMOND_YOURS
 			else
 				iconToSet = CONTROL_OBJ_DIAMOND_ENEMY
@@ -5026,7 +4925,7 @@ void function ObjectiveWaypointThink( entity wp, var rui )
 		else
 			RuiSetBool( rui,"hasEmphasis", false )
 
-		RuiSetInt( rui, "numTeamPings", Control_GetPingCountForObjectiveForTeam( wp, GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) ) )
+		RuiSetInt( rui, "numTeamPings", Control_GetPingCountForObjectiveForAlliance( wp, playerAlliance ) )
 
 		RuiSetBool( rui, "localPlayerOnObjective",  Control_Client_IsOnObjective( wp, player ) )
 
@@ -5052,7 +4951,7 @@ void function ObjectiveGameStateTrackerThink( entity wp, var gameStateRui, bool 
 	var mainTrackerRui = RuiCreateNested( gameStateRui, "objective" + waypointIndex, $"ui/control_mode_progress_tracker.rpak" )
 
 	              
-	RuiSetInt( mainTrackerRui, "yourTeamIndex", GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) )
+	RuiSetInt( mainTrackerRui, "yourTeamIndex", AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) )
 	RuiSetString( mainTrackerRui, "name", Control_GetObjectiveNameFromObjectiveID_Localized( waypointIndex ) )
 
 	RuiTrackFloat( mainTrackerRui, "capturePercentage", wp, RUI_TRACK_WAYPOINT_FLOAT, FLOAT_CAP_PERC )
@@ -5136,12 +5035,12 @@ void function ObjectiveScoreTracker_PopulatePlayerData( var parentRui )
 	if ( parentRui == null )
 		ObjectiveScoreTrackerSetup( ClGameState_GetRui() )
 
-	if ( GetLocalClientPlayer() == null )
+	if ( GetLocalClientPlayer() == null || GetGameState() < eGameState.Prematch)
 		return                                                                                                                                                                
 
 	entity localPlayer = GetLocalClientPlayer()
-	int friendlyAlliance = Control_GetAllianceFromTeam( localPlayer.GetTeam() )
-	int enemyAlliance = (friendlyAlliance == ALLIANCE_A) ? ALLIANCE_B : ALLIANCE_A
+	int friendlyAlliance = AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() )
+	int enemyAlliance = AllianceProximity_GetOtherAlliance( friendlyAlliance )
 	table<int, var> nestedRuiTable
 
 	if ( parentRui == ClGameState_GetRui() )
@@ -5313,7 +5212,7 @@ void function Control_ObjectiveScoreTracker_UpdateAnnouncement( entity wp,
 	RuiSetFloat( GetFullmapGamestateRui(), "announcementLength", file.currentAnnouncement.displayLength )
 
 	entity linkedEnt = file.currentAnnouncement.wp.GetParent()
-	int yourTeamIndex = GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
+	int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
 	vector colorOverride
 
 	if ( IsValid( linkedEnt ) )
@@ -5412,7 +5311,7 @@ void function Control_BountyInfoOverride( entity wp, TimedEventLocalClientData d
 {
 	EndSignal( wp, "OnDestroy" )
 
-	int yourTeamIndex = GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
+	int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
 	string originalName = data.eventName
 
 	Control_ObjectiveScoreTracker_PushAnnouncement( wp,
@@ -5500,7 +5399,7 @@ void function Control_LockoutInfoOverride( entity wp, TimedEventLocalClientData 
 
 	file.isLockout = true
 
-	int yourTeamIndex = GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
+	int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
 	string originalName = data.eventName
 
 	while ( !IsValid( wp ) )
@@ -5642,7 +5541,7 @@ void function ServerCallback_Control_ProcessObjectiveStateChange( entity objecti
 	if ( !IsValid( localViewPlayer ) )
 		return
 
-	int localPlayerAlliance = Control_GetAllianceFromTeam( localViewPlayer.GetTeam() )
+	int localPlayerAlliance = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )
 	int objectiveID = objective.GetWaypointInt( INT_OBJECTIVE_ID )
 	string objectiveName = Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID )
 
@@ -5691,8 +5590,8 @@ void function Control_UpdateScoreGenerationOnClient()
 	if ( !IsValid( localViewPlayer ) )
 		return
 
-	int localPlayerAlliance = Control_GetAllianceFromTeam( localViewPlayer.GetTeam() )
-	int enemyAlliance = localPlayerAlliance == ALLIANCE_A ? ALLIANCE_B : ALLIANCE_A
+	int localPlayerAlliance = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )
+	int enemyAlliance = AllianceProximity_GetOtherAlliance( localPlayerAlliance )
 
 	                                                                                                                         
 	                                                        
@@ -5786,7 +5685,7 @@ void function ServerCallback_Control_BountyClaimedAlert( entity wp, int bountyAm
 	if ( !IsValid( localClientPlayer ) )
 		return
 
-	int localPlayerAlliance = Control_GetAllianceFromTeam( localViewPlayer.GetTeam() )
+	int localPlayerAlliance = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )
 
 	string teamName = localPlayerAlliance == capturingTeam ? "#PL_YOUR_TEAM" : "#PL_ENEMY_TEAM"
 	teamName = Localize( teamName )
@@ -5812,7 +5711,7 @@ void function ServerCallback_Control_BountyActiveAlert( entity wp )
 	if ( !IsValid( localClientPlayer ) )
 		return
 
-	int localPlayerAlliance = Control_GetAllianceFromTeam( localViewPlayer.GetTeam() )
+	int localPlayerAlliance = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )
 	int ownerTeam = wp.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER )
 	vector announcementColor = localPlayerAlliance == ownerTeam ? CONTROL_OBJECTIVE_GREEN : CONTROL_OBJECTIVE_RED
 	int objectiveID = wp.GetWaypointInt( INT_OBJECTIVE_ID )
@@ -5835,15 +5734,15 @@ string function Control_GetObjectiveNameFromObjectiveID_Localized( int objective
 	bool didGetValidObjectiveName = false
 	switch ( objectiveID )
 	{
-		case 0:
+		case CONTROL_OBJECTIVE_A_INDEX:
 			objectiveName = "#CONTROL_OBJECTIVE_A"
 			didGetValidObjectiveName = true
 			break
-		case 1:
+		case CONTROL_OBJECTIVE_B_INDEX:
 			objectiveName = "#CONTROL_OBJECTIVE_B"
 			didGetValidObjectiveName = true
 			break
-		case 2:
+		case CONTROL_OBJECTIVE_C_INDEX:
 			objectiveName = "#CONTROL_OBJECTIVE_C"
 			didGetValidObjectiveName = true
 			break
@@ -5864,13 +5763,13 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 	string objectiveName = CONTROL_OBJECTIVE_DEFAULT_NAME
 	switch ( objectiveID )
 	{
-		case 0:
+		case CONTROL_OBJECTIVE_A_INDEX:
 			objectiveName = CONTROL_OBJECTIVE_A_NAME
 			break
-		case 1:
+		case CONTROL_OBJECTIVE_B_INDEX:
 			objectiveName = CONTROL_OBJECTIVE_B_NAME
 			break
-		case 2:
+		case CONTROL_OBJECTIVE_C_INDEX:
 			objectiveName = CONTROL_OBJECTIVE_C_NAME
 			break
 	}
@@ -5929,6 +5828,9 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 		      
 
 	                                                                    
+		      
+
+	                        
 		      
 
 	                 
@@ -5997,7 +5899,7 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 			 
 		 
 
-		                                                                
+		                                                                          
 		 
 			                                                                   
 			 
@@ -6012,11 +5914,11 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 
 			                                             
 			 
-				                                                                                                         
+				                                                                                                                   
 					                                                                                                                                             
 			 
 		 
-		                                                                    
+		                                                                              
 		 
 			                                                                   
 			 
@@ -6031,11 +5933,11 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 
 			                                             
 			 
-				                                                                                                         
+				                                                                                                                   
 					                                                                                                                                             
 			 
 		 
-		                                                                                
+		                                                                                                                             
 	 
  
 
@@ -6048,11 +5950,11 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 		                                                                    
 			      
 
-		                       
+		                                                                    
 		                 
 		                                                                         
 		 
-			                                                        
+			                             
 			 
 				                                                                   
 				 
@@ -6068,11 +5970,11 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 				                                       
 				                                             
 				 
-					                                                                                                         
+					                                                                                                                   
 						                                                                                                                                                          
 				 
 			 
-			                                                             
+			                                  
 			 
 				                                                                   
 				 
@@ -6088,31 +5990,31 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 				                                       
 				                                             
 				 
-					                                                                                                         
+					                                                                                                                   
 						                                                                                                                                                          
 				 
 			 
-			                                                                    
+			                                                                            
 		 
 	 
  
 
                                                                        
-                                                                                             
+                                                                                                     
  
 	                                                                                                          
 		      
 
 	                                                 
 
-	                                                                                                                
+	                                                                                     
 		                                             
 
-	                                                                                  
+	                                                                                          
 	                             
 	                                     
 	 
-		                                                                                                                  
+		                                                                                                 
 			                                
 	 
 
@@ -6124,7 +6026,7 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 		                       
 			        
 
-		                                                                                           
+		                                                                          
 			        
 
 		                                                                       
@@ -6151,7 +6053,7 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 					                                                                        
 					                                                                                                                          
 					 
-						                                                                                                    
+						                                                                
 							                                        
 					 
 				 
@@ -6229,9 +6131,9 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 			                             
 			              
 
-			                                                             
+			                                                                       
 			 
-				                                                            
+				                                                                      
 				 
 					                                                                                                                                                                           
 				 
@@ -6240,9 +6142,9 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 					                                                                                                                                                                           
 				 
 			 
-			                                                                  
+			                                                                            
 			 
-				                                                            
+				                                                                      
 				 
 					                                                                                                                                                                           
 				 
@@ -6253,11 +6155,11 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 			 
 			    
 			 
-				                                                            
+				                                                                      
 				 
 					                                                                                                                                                                           
 				 
-				                                                                 
+				                                                                           
 				 
 					                                                                                                                                                                           
 				 
@@ -6307,14 +6209,15 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 
 	                                                                                    
 	 
+		                                                                                                                                       
+		                                                                                           
+
 		                                                                                          
-		
+
 		                                                
 		                                                         
 		                                                                                            
 		                                                                  
-
-		                                                                                           
 	 
 	    
 	 
@@ -6403,17 +6306,17 @@ array<entity> function Control_GetObjectiveStarterPings()
 }
 
                                                                      
-int function Control_GetPingCountForObjectiveForTeam( entity wp, int team )
+int function Control_GetPingCountForObjectiveForAlliance( entity wp, int alliance )
 {
 	int pingCount = 0
 
 	if ( IsValid( wp ) && wp.GetWaypointType() == eWaypoint.CONTROL_OBJECTIVE )
 	{
-		if ( Control_GetAllianceFromTeam( team ) == ALLIANCE_A && wp in file.objectiveToPingCountTableAllianceA )
+		if ( alliance == ALLIANCE_A && wp in file.objectiveToPingCountTableAllianceA )
 		{
 			pingCount = file.objectiveToPingCountTableAllianceA[ wp ]
 		}
-		else if ( Control_GetAllianceFromTeam( team ) == ALLIANCE_B && wp in file.objectiveToPingCountTableAllianceB )
+		else if ( alliance == ALLIANCE_B && wp in file.objectiveToPingCountTableAllianceB )
 		{
 			pingCount = file.objectiveToPingCountTableAllianceB[ wp ]
 		}
@@ -6448,7 +6351,7 @@ entity function Control_GetStarterPingFromTraceBlockerPing( entity pingedEnt, in
 					if ( pingedObjective == objective )
 					{
 						int objectiveWaypointPingType = Waypoint_GetPingTypeForWaypoint( ping )
-						bool isPingTeamPlayerTeam = Control_GetAllianceFromTeam( playerTeam ) == ping.GetTeam() ? true : false
+						bool isPingTeamPlayerTeam = AllianceProximity_GetAllianceFromTeam( playerTeam ) == ping.GetTeam() ? true : false
 
 						if ( isPingTeamPlayerTeam )
 						{
@@ -6604,7 +6507,7 @@ bool function Control_DidPlayerPingSameObjective( entity player, entity wp, enti
 
 int function Control_GetTeamScore( int team )
 {
-	int allianceIndex = Control_GetAllianceFromTeam( team )
+	int allianceIndex = AllianceProximity_GetAllianceFromTeam( team )
 	return GetAllianceTeamsScore( allianceIndex )
 }
 
@@ -6654,12 +6557,6 @@ int function Control_GetMinHeldObjectivesToGenerateScore_ForAlliance( int allian
 	return ( minNumOwnedObjectivesToGainScore > 0 && ( !Control_GetIsMinHeldObjectivesOnlyForWinningTeam() || Control_ShouldUseCatchupMechanics() && Control_GetLeadingAlliance() == alliance ) ) ? minNumOwnedObjectivesToGainScore : 0
 }
 #endif                    
-
-                                                  
-int function Control_GetAllianceFromTeam( int team )
-{
-	return team % 2
-}
 
 
 #if SERVER
@@ -6763,7 +6660,7 @@ int function Control_GetAllianceFromTeam( int team )
 			                              
 
 		                                                                                                                 
-		                                                                                                                                             
+		                                                                                                      
 			                                               
 
 		                                                
@@ -6790,6 +6687,23 @@ int function Control_GetAllianceFromTeam( int team )
 
 	                             
 	                                                                                                                        
+ 
+
+                                                               
+ 
+	                                                  
+		            
+
+	                                                                   
+	                                 
+		       	     
+
+	                                                                 
+	                                                                
+	                                       
+		           
+
+	            
  
 
                                                                                     
@@ -7136,23 +7050,100 @@ int function Control_GetAllianceFromTeam( int team )
 	 
 	    
 	 
-		                                 
+		                                                                                               
 
-		                               
-		                             
+		                                                                                
+		                                                                                                                                                       
+                      
+                         
+                            
+		                    
+		                       
+		                       
+
 		                                      
+		                                       
 		 
-			                                                                                 
+			                       
 			 
-				                         
-				                                
+				                                                            
+				                      
+				 
+					                                  
+						                                                       
+							                 
+						     
+					                                  
+						                                                       
+							                 
+						     
+                         
+                                     
+                                                                                       
+                                              
+                       
+           
+                               
+				 
 			 
 		 
 
-		                            
-			                                                                                             
-		      
-			                                                                                              
+		                                  
+		                                       
+		 
+			                          
+
+			                    
+			 
+				                          
+				                                           
+				                                        
+				 
+					                     
+					 
+						                               
+							              
+							     
+						                               
+							           
+							     
+						                               
+							              
+							     
+					 
+				 
+			 
+		 
+
+		                                              
+		                           
+                      
+                          
+    
+                         
+                                                                                         
+    
+                            
+		
+		                      
+		 
+			                                          
+			 
+				                                                                                     
+			 
+			                             
+			 
+				                                                                                        
+			 
+			                             
+			 
+				                                                                                       
+			 
+			    
+			 
+				                                                         
+			 
+		 
 	 
  
 
@@ -7208,6 +7199,10 @@ int function Control_GetAllianceFromTeam( int team )
 			                                                                                              
 			                                                                                                                                                                                                
 			                                                          
+
+			                                                                    
+			                     
+				                                
 		 
 	 
  
@@ -7275,7 +7270,14 @@ int function Control_GetAllianceFromTeam( int team )
                                     
                                                                                                         
  
-	                                                                                                                                                                  
+	                                                                                                                                                                                           
+
+                     
+                                                                  
+                              
+                           
+
+	                           
 	 
 		                                                     
 		                                                         
@@ -7351,9 +7353,15 @@ int function Control_GetAllianceFromTeam( int team )
 
 	                                                    
 	                                                        
+	                                                                                                                                                     
+
+                     
+                                                                  
+                              
+                           
 
 	                                                                                                       
-	                                                                                                                                
+	                           
 	 
 		                    
 		                                                                 
@@ -7362,7 +7370,7 @@ int function Control_GetAllianceFromTeam( int team )
 		 
 		                                                                       
 		 
-			                                                                                                                                                     
+			                                                                                                                                                               
 			 
 				               
 			 
@@ -7371,6 +7379,13 @@ int function Control_GetAllianceFromTeam( int team )
 				                                                                 
 			 
 		 
+
+                      
+                                                                   
+    
+                                                                   
+    
+                            
 
 		                                                                                                                              
 		              
@@ -7426,7 +7441,7 @@ int function Control_GetAllianceFromTeam( int team )
 
 
                                          
-                                                                                                        
+                                                                                                                                         
  
 	                                  
 	                                                                
@@ -7455,36 +7470,40 @@ int function Control_GetAllianceFromTeam( int team )
 
 	                                           
 
-	                                    
-	                                   
-	                              
+	                                                                                                                 
+	                          
 	 
-		                                                                                              
-		                                                
-		                                                                                 
-		                             
+		                                    
+		                                   
+		                              
+		 
+			                                                                                              
+			                                                
+			                                                                                 
+			                             
 
-		       
-		                                                                                                                         
-		                                                                                                       
-		                                                                                                                 
+			       
+			                                                                                                                           
+			                                                                                                       
+			                                                                                                                 
+		 
+
+		              
+		                              
+			                                                
+		                                              
+		                       
+
+		                                      
+
+		                              
+		 
+			                                                          
+		 
+
+		                         
+			                                                  
 	 
-
-	              
-	                              
-		                                                
-	                                              
-	                       
-
-	                                      
-
-	                              
-	 
-		                                                          
-	 
-
-	                         
-		                                                  
 
 	                                                                                                                                                  
 	                                                                            
@@ -7692,7 +7711,7 @@ int function Control_GetAllianceFromTeam( int team )
 	                                                                                                    
 
 	                                       
-	                                                                    
+	                                                                              
 	                               
 	                             
 	 
@@ -7703,7 +7722,7 @@ int function Control_GetAllianceFromTeam( int team )
 			 
 				                          
 				                                 
-				                                                                                             
+				                                                                                               
 				                                                                                                                       
 				        
 			 
@@ -7712,20 +7731,20 @@ int function Control_GetAllianceFromTeam( int team )
 			 
 				                                    
 				                                 
-				                                                                                         
+				                                                                                            
 				                                                                                                                        
 				        
 			 
 
 			                                                                   
-			                                                                                         
+			                                                                                          
 			                                                                                                                     
 		 
 		    
 		 
 			                                                                     
 			                                 
-			                                                                                         
+			                                                                                          
 			                                                                                                
 		 
 	 
@@ -7756,6 +7775,97 @@ int function Control_GetAllianceFromTeam( int team )
 
 	           
  
+
+                    
+                                                                               
+ 
+                                 
+              
+
+                                                                       
+                                                                                                                                                                    
+                                         
+              
+
+                                              
+                                          
+                      
+                      
+                             
+                                
+
+                                                                                      
+  
+                                               
+
+                                  
+                                                                                            
+                                                
+                                                                                                                                           
+                                
+                                                                                  
+                                                 
+   
+                                                     
+                       
+
+                          
+    
+           
+                                                    
+          
+           
+                                                    
+          
+           
+                                                    
+          
+           
+                                                    
+          
+    
+
+                                                 
+    
+                                                                                            
+                                                                                
+                                                                                                                                                                                      
+                
+    
+
+                               
+                                                            
+
+                                            
+                                                       
+
+                                                                                                                
+                                                                                                      
+                           
+            
+
+                                                                                         
+              
+   
+  
+
+                                                                                                                          
+
+                                    
+              
+
+                                                     
+                                                                                        
+
+                      
+                         
+
+                                                                                             
+                                                                                                       
+
+            
+ 
+                          
 
                                                                 
  
@@ -7805,7 +7915,7 @@ int function Control_GetAllianceFromTeam( int team )
 		                         
 		 
 			                      
-			                                                                                                   
+			                                                                                                    
 			                                                                                     
 		 
 	   
@@ -7818,7 +7928,7 @@ int function Control_GetAllianceFromTeam( int team )
 	       
 
 	                       
-	                                                                                                   
+	                                                                                                      
  
 
 
@@ -7826,7 +7936,7 @@ int function Control_GetAllianceFromTeam( int team )
                                                                                            
  
        
-	                                                             
+	                                                          
       
 	                                
 	 
@@ -7837,20 +7947,20 @@ int function Control_GetAllianceFromTeam( int team )
 			 
        
 				                    
-					                                                                                                                                                                                                         
+					                                                                                                                                          
       
 				            
 			 
        
 			                    
-				                                                                                                                                                                                                      
+				                                                                                                                                         
       
 
 			        
 		 
        
 		                    
-			                                                                                                                                                                                                            
+			                                                                                                                                           
       
 		            
 	 
@@ -7861,7 +7971,7 @@ int function Control_GetAllianceFromTeam( int team )
                                                                                                           
  
        
-	                                                             
+	                                                          
       
 	                         
 	                                
@@ -7876,194 +7986,23 @@ int function Control_GetAllianceFromTeam( int team )
 			 
        
 				                    
-					                                                                                                                                                                                                         
+					                                                                                                                                          
       
 				                           
 			 
        
 			                    
-				                                                                                                                                                                                                      
+				                                                                                                                                         
       
 			        
 		 
        
 		                    
-			                                                                                                                                                                                                            
+			                                                                                                                                           
       
 		                           
 	 
 	                  
- 
-
-                                                          
- 
-	                             
-	                          
-
-	                                                              
-	                                                                 
-
-	                                 
-	 
-		                                         
-			                                                            
-		    
-			                                                         
-	 
-
-	                                                        
-	 
-		                                                            
-			                                       
-		    
-			                                    
-	 
-
-	                                 
-		                                                                                               
-	                              
-		                                                                                           
-
-	                     
-	                                                                       
-	                                                                             
-
-	                                                      
-	                                                                                                    
-	                             
-		                   
-
-	                                                 
-	 
-		                 
-	 
-
-	       
-		                                                             
-		                      
-		 
-			                                                                  
-			                                                                   
-			                                                                 
-		 
-	      
-
-	                                 
- 
-
-                                                                                        
- 
-	                                                                 
-
-	                             
-	                          
-
-	                                 
-	                                                              
-	                                                                 
-
-	                                 
-	 
-		                                         
-			                                                            
-		    
-			                                                         
-	 
-
-	                                                        
-	 
-		                                                            
-			                                       
-		    
-			                                    
-	 
-
-	                                 
-		                                                                                               
-	                              
-		                                                                                           
-
-	                     
-	                                                                       
-	                                                                             
-
-	                   
-
-	                                                                                      
-	                                   
-
-	                                                         
-	                                                                                                       
-	                                                             
-
-	       
-		            
-		 
-			                                                                  
-			                                                                   
-			                                                                 
-		 
-	      
-
-
-	                                
-	                              
-
-	                                   
-	 
-		                                             
-		                                                                            
-		                                                                    
-
-		                                                                                                                         
-		                                                               
-		                                  
-		                                                                     
-
-		                                                                         
-
-		                                                                           
-			                                                                                                                                                                               
-
-
-		                                                                                 
-		                                                                                                      
-
-		                                 
-
-		                                  
-		 
-			                                     
-		 
-		    
-		 
-			                                               
-			 
-				                                                      
-				                            
-				 
-					                                        
-					     
-				 
-			 
-		 
-	 
-
-	               
-
-	                                  
-	                                               
-	         
-	                                    
-	 
-		                                                                                                          
-		                                                                      
-		   
-	   
-
-	                            
-
-	                       
  
 
                                                                                                         
@@ -8412,8 +8351,8 @@ int function Control_GetAllianceFromTeam( int team )
 	                          
 
 	                                 
-	                                                              
-	                                                                 
+	                                                                        
+	                                                                        
 
 	                                 
 	 
@@ -8438,129 +8377,6 @@ int function Control_GetAllianceFromTeam( int team )
 
 	                         
  
-
-
-                                                                                 
- 
-	                                            
-		            
-
-	                                                                                                 
-
-	                                             
-	                                             
-	                     
-	                      
-
-	                                                                            
-
-	                 
-	 
-		               
-		               
-	 
-
-	                            
-	                               
-	                                                                                     
-	 
-		                                             
-
-		                                                                                                                                                        
-		                                                                                                                     									                                              
-		                                                                                						                              
-		                                               
-		 
-			                                                  
-			                    
-
-			                       
-			 
-				       
-					                                               
-					     
-				       
-					                                               
-					     
-				       
-					                                               
-					     
-				       
-					                                               
-					     
-			 
-
-			                                              
-			 
-				                                                                                        
-				                                                                            
-				                                                                                                                                                                                  
-				            
-			 
-
-			                            
-			                                                         
-
-			                                         
-			                                                    
-
-			                                                                                                             
-			                                                                                                   
-			                        
-				        
-
-			                                                                                      
-			           
-		 
-	 
-
-	                                                                                                                         
-	                                   
-		            
-
-	                 
-		                                                 
-	                                                                                       
-
-	                     
-	                        
-	                                                                                            
-
-	           
- 
-
-
-                                                            
- 
-	                               
- 
-
-
-                                                               
- 
-	                                                     
- 
-
-
-                                                                   
- 
-	                                                                                        
-
-	                                                                      
-	                                                                            
-	                                                    
-	                                 
-
-	            
-		                         
-		 
-			                                                                      
-		 
-	 
-
-	             
- 
-
 
                                                                                         
  
@@ -8720,7 +8536,7 @@ int function Control_GetAllianceFromTeam( int team )
 			                 
 			 
 				                                                                  
-				                                                                
+				                                                                  
 				                                        
 			 
 		      
@@ -8732,7 +8548,7 @@ int function Control_GetAllianceFromTeam( int team )
 		 
 			                   
 			 
-				                                                              
+				                                                                
 				                                                                  
 			 
 			    
@@ -8746,6 +8562,37 @@ int function Control_GetAllianceFromTeam( int team )
 
 
   
+
+                    
+                                                               
+ 
+                                                      
+ 
+
+                                                                   
+ 
+                                                                                         
+
+                                                                                                                            
+                                                                             
+                                                     
+                                  
+
+             
+                           
+   
+                                                                         
+   
+  
+
+              
+ 
+
+                                                            
+ 
+                                                   
+ 
+                          
 
                                                           
  
@@ -8763,7 +8610,7 @@ int function Control_GetAllianceFromTeam( int team )
 
                                                                                                   
  
-	                                                       
+	                                                                         
 	                                                                 
  
 
@@ -8790,7 +8637,7 @@ int function Control_GetAllianceFromTeam( int team )
 
 	                                 
 	 
-		                                                                                             
+		                                                                                                                 
 		 
 			                                                                                        
 			                                                          
@@ -8848,9 +8695,29 @@ int function Control_GetAllianceFromTeam( int team )
  
 
 
-                                                                                 
-                                                                                                                                   
+
+                                                                                                                                           
  
+                     
+                                                                                                                       
+                                                                                                
+                                                                                                        
+   
+                                                                                          
+                             
+
+                                                    
+                                         
+    
+                                                                                                                                  
+                                                 
+    
+   
+                           
+
+	                                                                                
+	                                                                                         
+	  
 	                                      
 		      
 
@@ -8862,10 +8729,11 @@ int function Control_GetAllianceFromTeam( int team )
 	 
 		                                                         
 		 
-			                                                                                                              
+			                                                                                                                                  
 				                                                                                              
 		 
 	 
+	  
  
 
                                                                 
@@ -8879,7 +8747,7 @@ int function Control_GetAllianceFromTeam( int team )
 		                                 
 		                                                             
 		 
-			                                                                                                                                        
+			                                                                                                                                                            
 			 
 				                                                                                                                                                           
 			 
@@ -8896,19 +8764,36 @@ void function Control_OnPlayerSentSpawnRequest( entity player, entity wp )
 	int respawnChoice = -1
 
 	if ( wp.GetWaypointInt( INT_WAYPOINT_TYPE ) == CONTROL_WAYPOINT_BASE0_INDEX || wp.GetWaypointInt( INT_WAYPOINT_TYPE ) == CONTROL_WAYPOINT_BASE1_INDEX )
+	{
 		respawnChoice = eControlPlayerRespawnChoice.SPAWN_AT_BASE
-	else if ( wp.GetWaypointInt( INT_WAYPOINT_TYPE ) == CONTROL_WAYPOINT_PLAYER_INDEX )
-		respawnChoice = eControlPlayerRespawnChoice.SPAWN_ON_SQUAD
+	}
 	else if ( wp.GetWaypointInt( INT_WAYPOINT_TYPE ) == CONTROL_WAYPOINT_POINT_INDEX )
+	{
 		respawnChoice = eControlPlayerRespawnChoice.SPAWN_ON_POINT
+	}
+	else if ( wp.GetWaypointInt( INT_WAYPOINT_TYPE ) == CONTROL_WAYPOINT_PLAYER_INDEX )
+	{
+		respawnChoice = eControlPlayerRespawnChoice.SPAWN_ON_SQUAD
+	}
+
+                     
+                                                                             
+                                                           
+                           
 
 	printf( "CONTROL: Sending spawn request from " + wp.GetTargetName() + " of type " + respawnChoice )
 
 	entity entityToSpawnOn = null
 	if ( respawnChoice == eControlPlayerRespawnChoice.SPAWN_ON_SQUAD )
 		entityToSpawnOn = wp.GetParent()              
+
 	if ( respawnChoice == eControlPlayerRespawnChoice.SPAWN_ON_POINT )
 		entityToSpawnOn = wp.GetParent()                 
+
+                     
+                                                                  
+                                                     
+                           
 
 	Control_SendRespawnChoiceToServer( respawnChoice, entityToSpawnOn )
 }
@@ -8916,10 +8801,10 @@ void function Control_OnPlayerSentSpawnRequest( entity player, entity wp )
 
 void function Control_WaypointCreated_Spawn( entity wp )
 {
-	thread SetupRespawnWaypoint( wp )
+	thread Control_ManageRespawnWaypoint_Thread( wp )
 }
 
-void function SetupRespawnWaypoint( entity wp )
+void function Control_ManageRespawnWaypoint_Thread( entity wp )
 {
 	Assert( IsNewThread(), "Must be threaded off" )
 
@@ -8947,14 +8832,19 @@ void function SetupRespawnWaypoint( entity wp )
 		{
 			RuiSetImage( wp.wp.ruiHud, "outerIcon", CONTROL_WAYPOINT_BASE_ICON )
 		}
-		else if ( waypointType == CONTROL_WAYPOINT_PLAYER_INDEX )
-		{
-			RuiSetImage( wp.wp.ruiHud, "outerIcon", CONTROL_WAYPOINT_PLAYER_ICON )
-		}
 		else if ( waypointType == CONTROL_WAYPOINT_POINT_INDEX )
 		{
 			RuiSetImage( wp.wp.ruiHud, "outerIcon", CONTROL_OBJ_DIAMOND_YOURS )
 		}
+		else if ( waypointType == CONTROL_WAYPOINT_PLAYER_INDEX )
+		{
+			RuiSetImage( wp.wp.ruiHud, "outerIcon", CONTROL_WAYPOINT_PLAYER_ICON )
+		}
+
+                      
+                                                    
+                                                                 
+                            
 
 		file.spawnWaypoints.append( wp )
 	}
@@ -8985,7 +8875,7 @@ void function SetupRespawnWaypoint( entity wp )
 		if ( waypointType == CONTROL_WAYPOINT_POINT_INDEX )
 		{
 			int owner = parentObjective.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER )
-			if ( Control_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) == owner )
+			if ( AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) == owner )
 				RuiSetBool( wp.wp.ruiHud, "isHidden", false )
 			else
 				RuiSetBool( wp.wp.ruiHud, "isHidden", true )
@@ -8999,6 +8889,11 @@ void function SetupRespawnWaypoint( entity wp )
 			else
 				RuiSetBool( wp.wp.ruiHud, "isHidden", true )
 		}
+
+                      
+                                                    
+                                                 
+                            
 	}
 }
 
@@ -9168,7 +9063,6 @@ void function ServerCallback_Control_TransferCameraData( vector cameraPosition, 
 	}
 }
 
-                                                                              
 void function ServerCallback_PlayMatchEndMusic_Control( int victoryCondition )
 {
 	                                                                                                                              
@@ -9490,7 +9384,7 @@ void function ProcessSpawnMenu( entity player )
 	while ( !IsAlive( player ) )
 	{
 		bool shouldShowWaypoints = player.GetPlayerNetBool( "Control_IsPlayerOnSpawnSelectScreen" )
-		int localPlayerAlliance = Control_GetAllianceFromTeam( player.GetTeam() )
+		int localPlayerAlliance = AllianceProximity_GetAllianceFromTeam( player.GetTeam() )
 
 		foreach( wp in file.spawnWaypoints )
 		{
@@ -9523,6 +9417,15 @@ void function ProcessSpawnMenu( entity player )
 
 							shouldWaypointBeUsable = isSpawnUsable ? ( isYourWaypoint ? 1 : -1 ) : 0
 						}
+                          
+                                                                                      
+       
+                                    
+                                                                                     
+                                                                 
+                                                       
+       
+                                
 						else
 						{
 							shouldShowThisWaypoint = true                    
@@ -9569,7 +9472,7 @@ void function SpawnMenu_ButtonUpdate( entity wp, bool shouldShowWaypoint, int sh
 		{
 			case CONTROL_WAYPOINT_BASE0_INDEX:
 			case CONTROL_WAYPOINT_BASE1_INDEX:
-				nameInformation = Localize("#CONTROL_BASE")
+				nameInformation = Localize( "#CONTROL_BASE" )
 				break
 			case CONTROL_WAYPOINT_PLAYER_INDEX:
 				if ( IsValid( wp.GetParent() ) && wp.GetParent().IsPlayer() )
@@ -9582,14 +9485,22 @@ void function SpawnMenu_ButtonUpdate( entity wp, bool shouldShowWaypoint, int sh
 					nameInformation = Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID )
 				}
 				break
+                       
+                                   
+                                    
+     
+                                                            
+     
+         
+                             
 		}
 
 		if ( !IsValid( GetLocalViewPlayer() ) )
 			return
 
-		int yourTeamIndex = ( Control_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) == 0 ) ? 0 : 1
+		int yourTeamIndex = ( AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) == 0 ) ? 0 : 1
 
-		if ( waypointType != CONTROL_WAYPOINT_POINT_INDEX )
+		if ( waypointType == CONTROL_WAYPOINT_BASE0_INDEX || waypointType == CONTROL_WAYPOINT_BASE1_INDEX  )
 		{
 			RunUIScript( "SetWaypointDataForUI",
 									waypointEHI,
@@ -9609,7 +9520,7 @@ void function SpawnMenu_ButtonUpdate( entity wp, bool shouldShowWaypoint, int sh
 									false
 			)
 		}
-		else
+		else if ( waypointType == CONTROL_WAYPOINT_POINT_INDEX )
 		{
 
 			entity objective = wp.GetParent()
@@ -9620,7 +9531,7 @@ void function SpawnMenu_ButtonUpdate( entity wp, bool shouldShowWaypoint, int sh
 			int neutralPointOwnership = objective.GetWaypointInt( CONTROL_INT_OBJ_NEUTRAL_TEAM_OWNER )
 			float capturePercentage = objective.GetWaypointFloat( FLOAT_CAP_PERC )
 			bool hasEmphasis = objective.GetWaypointFloat( FLOAT_BOUNTY_AMOUNT ) > 0
-			bool isFOB = Control_GetAllianceFromTeam( objID ) == 0                        
+			bool isFOB = Control_IsPointAnFOB( objID )
 
 			RunUIScript( "SetWaypointDataForUI",
 				waypointEHI,
@@ -9641,6 +9552,33 @@ void function SpawnMenu_ButtonUpdate( entity wp, bool shouldShowWaypoint, int sh
 				objective.GetWaypointInt( INT_TEAM0_PLAYERSONOBJ ),
 				objective.GetWaypointInt( INT_TEAM1_PLAYERSONOBJ ) )
 		}
+
+                      
+                                                    
+    
+
+                                                                                           
+                                             
+
+                                        
+                 
+          
+                            
+           
+        
+                  
+                  
+                  
+                     
+       
+                            
+                  
+                   
+                   
+          
+     
+    
+                            
 	}
 	else
 	{
@@ -9841,6 +9779,12 @@ void function ServerCallback_Control_DisplaySpawnAlertMessage( int spawnAlertMes
 			message = "#CONTROL_LOST_SELECTED_SPAWN"
 			isMessageCodeValid = true
 			break
+                      
+                                             
+                                           
+                            
+        
+                            
 		default:
 			break
 	}
@@ -9881,6 +9825,11 @@ void function ServerCallback_Control_DisplayWaveSpawnBarStatusMessage( bool isSh
 				case eControlPlayerRespawnChoice.SPAWN_ON_SQUAD:
 					spawnChoice = "#CONTROL_SQUAD"
 					break
+                        
+                                                  
+                                 
+          
+                              
 				default:
 					spawnChoice = ""
 					break
@@ -10523,6 +10472,9 @@ void function OnVehicleBaseSpawned( entity vehicleBase )
 
                                                                          
  
+	                                 
+		      
+
 	                                   
 	                                                                   
 	                            
@@ -10533,7 +10485,7 @@ void function OnVehicleBaseSpawned( entity vehicleBase )
 	                                                              
 	                                                                
 	                                                                                                                    
-	                                                                                                                                
+	                                                                                                                                  
 
 	                                                    
  
@@ -10583,6 +10535,9 @@ void function OnVehicleBaseSpawned( entity vehicleBase )
  
 	                                               
 
+	                          
+		      
+
 	                                
 
 	            
@@ -10601,6 +10556,9 @@ void function OnVehicleBaseSpawned( entity vehicleBase )
  
 	                                               
 
+	                              
+		      
+
 	                        
 	             
 
@@ -10617,6 +10575,9 @@ void function OnVehicleBaseSpawned( entity vehicleBase )
 		                            
 		                                        
 		 
+			                          
+				        
+
 			                                                                                                    
 			 
 				                      
@@ -10940,12 +10901,17 @@ void function ServerCallback_Control_NewEXPLeader( entity expLeader, int exp )
 	if ( !IsValid( expLeader ) )
 		return
 
+	entity localPlayer = GetLocalViewPlayer()
+
+	if ( !IsValid( localPlayer ) )
+		return
+
 	string playerName = GetPlayerNameFromEHI( playerEHI )
-	vector playerNameColor = expLeader.GetTeam() == GetLocalViewPlayer().GetTeam() ? GetPlayerInfoColor( expLeader ) : GetKeyColor( COLORID_ENEMY )
+	vector playerNameColor = expLeader.GetTeam() == localPlayer.GetTeam() ? GetPlayerInfoColor( expLeader ) : GetKeyColor( COLORID_ENEMY )
 
 	Obituary_Print_Localized( Localize( "#CONTROL_NEW_EXPLEADER_OBIT", playerName, exp ), playerNameColor )
 
-	if ( GetLocalViewPlayer() == expLeader )
+	if ( localPlayer == expLeader )
 	{
 		AnnouncementData announcement = Announcement_Create( "" )
 		Announcement_SetStyle( announcement, ANNOUNCEMENT_STYLE_RATING_LEADER )
@@ -10954,7 +10920,7 @@ void function ServerCallback_Control_NewEXPLeader( entity expLeader, int exp )
 		Announcement_SetPriority( announcement, 200 )
 		Announcement_SetSoundAlias( announcement, SOUND_NEW_KILL_LEADER )
 		announcement.duration = CONTROL_MESSAGE_DURATION
-		AnnouncementFromClass( GetLocalViewPlayer(), announcement )
+		AnnouncementFromClass( localPlayer, announcement )
 	}
 }
 
@@ -11016,16 +10982,13 @@ void function ServerCallback_Control_PlayCaptureZoneEnterExitSFX( bool isEnterin
 #if CLIENT
 void function Control_ScoreboardSetup()
 {
-	Teams_RegisterSignals()
-	Teams_SetMapOptions( false, false, true )
-
 	clGlobal.showScoreboardFunc = Control_ShowScoreboardOrMap_Teams
 	clGlobal.hideScoreboardFunc = Control_HideScoreboardOrMap_Teams
+
 	Teams_AddCallback_ScoreboardData( Control_GetScoreboardData )
-	Teams_AddCallback_ShowMap( Control_OnInGameMapShow )
-	Teams_AddCallback_HideMap( Control_OnInGameMapHide )
 	Teams_AddCallback_PlayerScores( Control_GetPlayerScores )
 	Teams_AddCallback_SortScoreboardPlayers( Control_SortPlayersByScore )
+	Teams_AddCallback_Header( Control_ScoreboardUpdateHeader )
 }
 
 void function Control_ShowScoreboardOrMap_Teams()
@@ -11037,13 +11000,63 @@ void function Control_ShowScoreboardOrMap_Teams()
 		thread Control_CameraInputManager_Thread( player )
 	}
 
-	ShowScoreboardOrMap_Teams()
+	Scoreboard_SetVisible( true )
+	UpdateFullmapRuiTracks()
+	Fullmap_ClearInputContext()
+	UpdateMainHudVisibility( GetLocalViewPlayer() )
+
+	HudInputContext inputContext
+	inputContext.keyInputCallback = Control_HandleKeyInput
+	inputContext.moveInputCallback = Control_ShowScoreboardOrMapHandleMoveInput
+	inputContext.viewInputCallback = Control_ShowScoreboardOrMapHandleViewInput
+	HudInput_PushContext( inputContext )
+
+	Control_OnInGameMapShow()
+}
+
+bool function Control_HandleKeyInput( int key )
+{
+	bool swallowInput = false
+
+	switch ( key )
+	{
+		case BUTTON_B:
+			HideScoreboard()
+			return true
+		case BUTTON_DPAD_UP:
+		case KEY_F2:
+			RunUIScript( "UI_OpenGameModeRulesDialog" )
+			return true
+	}
+
+	return Fullmap_HandleKeyInput( key )
+}
+
+
+bool function Control_ShowScoreboardOrMapHandleMoveInput( float x, float y )
+{
+	return Fullmap_HandleMoveInput( x, y )
+
+	unreachable
+}
+
+bool function Control_ShowScoreboardOrMapHandleViewInput( float x, float y )
+{
+	return Fullmap_HandleViewInput( x, y )
+
+	unreachable
 }
 
 void function Control_HideScoreboardOrMap_Teams()
 {
 	entity player = GetLocalClientPlayer()
-	HideScoreboardOrMap_Teams()
+
+	HudInput_PopContext()
+	Scoreboard_SetVisible( false )
+
+	HideFullmap()
+	Control_OnInGameMapHide()
+
 	if ( IsValid( player ) )
 	{
 		player.Signal( "Control_PlayerHideScoreboardMap" )
@@ -11055,14 +11068,24 @@ void function Control_OnInGameMapShow()
 	if ( IsValid( file.inGameMapRui ) )
 		return
 
-	var rui = CreateTransientFullscreenRui( $"ui/control_teams_map.rpak", CONTROL_TEAMMATE_ICON_SORTING + 1)
+	var rui = CreateTransientFullscreenRui( $"ui/control_teams_map.rpak", 0)
 	RuiSetBool( rui, "showBottomBar", true )
+
+	string playlist = GetCurrentPlaylistName()
+	string playlistUiRules = GetPlaylistVarString( playlist, "ui_rules", "" )
+	RuiSetBool( rui, "rulesEnabled", playlistUiRules != "" )
 
 	foreach( int idx, wp in file.spawnWaypoints )
 	{
 		int waypointType = wp.GetWaypointInt( INT_WAYPOINT_TYPE )
+		bool isSpawnWaypoint = waypointType == CONTROL_WAYPOINT_BASE0_INDEX || waypointType == CONTROL_WAYPOINT_BASE1_INDEX || waypointType == CONTROL_WAYPOINT_POINT_INDEX
 
-		if( waypointType == CONTROL_WAYPOINT_BASE0_INDEX || waypointType == CONTROL_WAYPOINT_BASE1_INDEX || waypointType == CONTROL_WAYPOINT_POINT_INDEX )
+                      
+                                                    
+                          
+                            
+
+		if( isSpawnWaypoint )
 		{
 			var nestedRui = RuiCreateNested( rui, "spawn" + idx, $"ui/control_spawn_button.rpak"  )
 
@@ -11078,6 +11101,11 @@ void function Control_OnInGameMapShow()
 				RuiTrackInt( nestedRui, "team0PlayersOnObj", objective, RUI_TRACK_WAYPOINT_INT, INT_TEAM0_PLAYERSONOBJ )
 				RuiTrackInt( nestedRui, "team1PlayersOnObj", objective, RUI_TRACK_WAYPOINT_INT, INT_TEAM1_PLAYERSONOBJ )
 			}
+
+                       
+                                                     
+                                                                 
+                             
 		}
 	}
 
@@ -11104,7 +11132,7 @@ void function Thread_Control_InGameMapData()
 				screenPos[0] =  screenPos[0] / screenSize.width
 				screenPos[1] =  screenPos[1] / screenSize.height
 
-				int yourTeamIndex = ( Control_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) == 0 ) ? 0 : 1
+				int yourTeamIndex = ( AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) == 0 ) ? 0 : 1
 
 				string nameInformation = ""
 				asset waypointImage = $""
@@ -11130,10 +11158,27 @@ void function Thread_Control_InGameMapData()
 						}
 						shouldShowObjective = true
 						break
+                         
+                                     
+                                                             
+                                         
+                                 
+           
+                               
 				}
 
+				bool isSpawnWaypoint = waypointType == CONTROL_WAYPOINT_BASE0_INDEX || waypointType == CONTROL_WAYPOINT_BASE1_INDEX || waypointType == CONTROL_WAYPOINT_POINT_INDEX
+				bool isValidNonHomeBaseSpawn = true
 
-				if( waypointType == CONTROL_WAYPOINT_BASE0_INDEX || waypointType == CONTROL_WAYPOINT_BASE1_INDEX || waypointType == CONTROL_WAYPOINT_POINT_INDEX )
+                        
+                                                      
+      
+                            
+                                     
+      
+                              
+
+				if( isSpawnWaypoint )
 				{
 					RuiSetString( nestedRui, "objectiveName", nameInformation )
 					RuiSetImage( nestedRui, "centerImage", waypointImage )
@@ -11142,18 +11187,19 @@ void function Thread_Control_InGameMapData()
 					RuiSetBool( nestedRui, "isDisabled", true )
 					RuiSetBool( nestedRui, "shouldShowObjective", shouldShowObjective )
 				}
+
 				if ( waypointType == CONTROL_WAYPOINT_BASE0_INDEX || waypointType == CONTROL_WAYPOINT_BASE1_INDEX )
 				{
 					if ( waypointType == yourTeamIndex )
 						RuiSetFloat2( file.inGameMapRui, "baseSpawnScreenspace", < screenPos[0], screenPos[1], 0.0 >  )
 				}
-				else
+				else if ( isValidNonHomeBaseSpawn )
 				{
 					int objID = wp.GetParent().GetWaypointInt( INT_OBJECTIVE_ID )
 					int waypointOwner = wp.GetParent().GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER )
-					bool isFOB = Control_GetAllianceFromTeam( objID ) == 0                        
+					bool isFOB = Control_IsPointAnFOB( objID )
 					bool isFOBForLocalPlayer = isFOB && ( ( objID == 0 && yourTeamIndex == 0) || (objID != 0 && yourTeamIndex !=  0) )
-					bool isYourWaypoint = waypointOwner == Control_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
+					bool isYourWaypoint = waypointOwner == AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
 					if ( isFOBForLocalPlayer )
 					{
 						RuiSetFloat2( file.inGameMapRui, "fobSpawnScreenspace", < screenPos[0], screenPos[1], 0.0 > )
@@ -11201,62 +11247,16 @@ ScoreboardData function Control_GetScoreboardData()
 	{
 		data.columnDisplayIcons.append( $"rui/hud/gametype_icons/control/control_ratings" )
 		data.columnNumDigits.append( 5 )
+		data.columnDisplayIconsScale.append( 1.0 )
 	}
 
 	data.columnDisplayIcons.append( $"rui/hud/gamestate/player_kills_icon" )
 	data.columnNumDigits.append( 3 )
+	data.columnDisplayIconsScale.append( 1.0 )
 
 	data.numScoreColumns = data.columnDisplayIcons.len()
 
 	return data
-}
-
-void function UICallback_Control_ReportMenu_BindTeamHeader( var button, bool friendly, float rowWidth, bool hasSpacer )
-{
-	var rui = Hud_GetRui( button )
-	Teams_PopulateHeaderRui( rui, Control_GetScoreboardData(), friendly, rowWidth, hasSpacer )
-}
-
-
-void function UICallback_Control_ReportMenu_BindTeamRow( var button, bool friendly, float rowWidth, bool hasSpacer )
-{
-	var rui = Hud_GetRui( button )
-	int row = int( Hud_GetScriptID( button ) )
-
-	if ( !BindTeamButtonCommon( button, friendly ) )
-		return
-
-	array<entity> teamPlayers = GetTeamPlayers( friendly )
-	thread Threaded_PopulateRowForPlayer( rui, teamPlayers[ row ], rowWidth, hasSpacer )
-}
-
-void function UICallback_Control_ReportMenu_BindTeamButton( var button, bool friendly )
-{
-	var rui = Hud_GetRui( button )
-	int row = int( Hud_GetScriptID( button ) )
-
-	if ( !BindTeamButtonCommon( button, friendly ) )
-		return
-
-	array<entity> teamPlayers = GetTeamPlayers( friendly )
-	if ( teamPlayers[ row ] == GetLocalClientPlayer() )
-		Hud_Hide( button )
-}
-
-
-void function UICallback_Control_ReportMenu_OnReportClicked( var button, bool friendly )
-{
-	var rui = Hud_GetRui( button )
-	int row = int( Hud_GetScriptID( button ) )
-
-	array<entity> teamPlayers = GetTeamPlayers( friendly )
-
-	if ( row >= teamPlayers.len() )
-	{
-		return
-	}
-
-	ReportPlayer( ToEHI( teamPlayers[ row ] ) )
 }
 
 bool function BindTeamButtonCommon( var button, bool friendly )
@@ -11293,7 +11293,7 @@ array<entity> function GetTeamPlayers( bool friendly )
 			enemies.clear()
 			foreach( matchPlayer in GetPlayerArray() )
 			{
-				if ( IsValid( matchPlayer ) && Control_GetAllianceFromTeam( matchPlayer.GetTeam() ) == Control_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) )
+				if ( IsValid( matchPlayer ) && AllianceProximity_GetAllianceFromTeam( matchPlayer.GetTeam() ) == AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) )
 				{
 					friendlies.append( matchPlayer )
 				}
@@ -11344,21 +11344,36 @@ array< entity > function Control_SortPlayersByScore( array< entity > teamPlayers
 	return teamPlayers
 }
 
-void function Threaded_PopulateRowForPlayer( var rui, entity player, float rowWidth, bool hasSpacer )
+void function Control_ScoreboardUpdateHeader( var headerRui, var frameRui,  int team )
 {
-	Assert( IsNewThread(), "Must be threaded off" )
+	bool isFriendly = team == AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() )
 
-	clGlobal.levelEnt.EndSignal( "Threaded_PopulateRowForPlayer" )
-	player.EndSignal( "OnDestroy" )
+	if( headerRui != null )
+	{
+		RuiSetString( headerRui, "headerText", Localize( isFriendly ? "#ALLIES" : "#ENEMIES" ) )
 
-	if ( !IsValid( player ) )                             
-		return
+		vector color  = SrgbToLinear( GetKeyColor( COLORID_CONTROL_FRIENDLY ) / 255 )
+		if( !isFriendly )
+			color  = SrgbToLinear( GetKeyColor( COLORID_CONTROL_ENEMY ) / 255 )
 
-	ItemFlavor character = LoadoutSlot_WaitForItemFlavor( ToEHI( player ), Loadout_Character() )
+		RuiSetColorAlpha( headerRui, "teamColor", color, 1.0 )
 
-	Teams_PopulatePlayerRow( rui, player, Control_GetScoreboardData(), false ,rowWidth, hasSpacer )
+		if( frameRui != null )
+			RuiSetColorAlpha( frameRui, "teamColor", color, 1.0 )
+	}
+
+
+	if( team >= 0 )
+	{
+		ControlTeamData data = file.teamData[ team ]
+		if( headerRui != null )
+		{
+			RuiSetInt( headerRui, "teamScoreFromPoints", data.teamScoreFromPoints )
+			RuiSetInt( headerRui, "teamScoreFromBonus", data.teamScoreFromBonus )
+			RuiSetInt( headerRui, "teamScorePerSec", data.teamScorePerSec )
+		}
+	}
 }
-
 
                                                                                          
 void function ServerCallback_Control_UpdateExtraScoreBoardInfo( int teamIndex, int scoreFromPoints, int scoreFromBonuses )
@@ -11366,40 +11381,17 @@ void function ServerCallback_Control_UpdateExtraScoreBoardInfo( int teamIndex, i
 	if ( !IsValid( GetLocalViewPlayer() ) )
 		return
 
-	int index = ( GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) == teamIndex )? 0: 1
+	int index = ( AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) == teamIndex )? 0: 1
 
 	ControlTeamData data
 	data.teamScoreFromBonus = scoreFromPoints
 	data.teamScoreFromBonus = scoreFromBonuses
 	data.teamScorePerSec = file.teamData[index].teamScorePerSec
 
-
 	file.teamData[index] = data
 }
 
-void function Control_ScoreboardUpdateHeader()
-{
-	if ( !IsValid( GetLocalViewPlayer() ) )
-		return
 
-	array<var> headerRuis = Teams_GetScoreboardHeaderRuis()
-
-	foreach(int idx, ControlTeamData data in file.teamData)
-	{
-		if(headerRuis.len() <= idx)
-			break
-
-		var rui = headerRuis[idx]
-		if( rui != null )
-		{
-			RuiSetInt( rui, "teamScoreFromPoints", data.teamScoreFromPoints )
-			RuiSetInt( rui, "teamScoreFromBonus", data.teamScoreFromBonus )
-			RuiSetInt( rui, "teamScorePerSec", data.teamScorePerSec )
-			RuiSetBool( rui, "isEnemyTeam", idx != 0 )
-
-		}
-	}
-}
 
 bool function Control_IsPlayerInMapCameraView ( entity player )
 {
@@ -11531,7 +11523,7 @@ bool function Control_IsPlayerInMapCameraView ( entity player )
 
 	                                  
 	 
-		                                                              
+		                                                                        
 		                                                  
 		                                        
 			                                                                       
@@ -11559,8 +11551,7 @@ bool function Control_IsPlayerInMapCameraView ( entity player )
 	    
 	 
 		                 
-		                                      
-		                                                                                                                             
+		                                                                                                            
 		                                                                          
 
 		               
@@ -11571,6 +11562,16 @@ bool function Control_IsPlayerInMapCameraView ( entity player )
 		                                                                                                            
 		                                                                             
 	 
+
+                     
+                                                                              
+                                                                                                                 
+   
+                                                                                           
+                                                                         
+                                                                                                        
+   
+                           
 
 	                                                                     
 	         
@@ -11622,8 +11623,8 @@ void function UICallback_Control_Loadouts_OnClosed()
 
 	entity player = GetLocalClientPlayer()
 	                                                                                             
-	if( IsValid( player ) && !file.tutorialShown && GetStat_Int( player, ResolveStatEntry( CAREER_STATS.modes_games_played, "control" ), eStatGetWhen.CURRENT ) == 0 )
-		RunUIScript( "UI_OpenAboutGameModeDialog" )
+	if( IsValid( player ) && !file.tutorialShown && GetStat_Int( player, ResolveStatEntry( CAREER_STATS.modes_games_played, GAMEMODE_CONTROL ), eStatGetWhen.CURRENT ) == 0 )
+		RunUIScript( "UI_OpenGameModeRulesDialog" )
 
 	file.tutorialShown = true
 
@@ -11645,12 +11646,26 @@ void function UICallback_Control_Loadouts_OnClosed()
                                                           
                                                      
  
+                     
+                                                                    
+                                              
+   
+                                                                               
+                                                                                 
+    
+                              
+                                                           
+    
+   
+                           
+
 	                                                                   
 		                                   
  
 
                                                                                                                 
-                                              
+                                               
+                                                
                                                   
                                                   
                                          
@@ -11675,19 +11690,32 @@ void function UICallback_Control_Loadouts_OnClosed()
 		 
 			                                                  
 			                                                                         
-			                                                                                
+
+			                                                                      
 			                                           
 			 
-				                                          
+				                                                                                                                                                  
+				 
 					                                              
-
-				                                                                                          
+				 
+				                                                                                        
+				 
+					                                                                                                                   
+					 
+						                                            
+					 
+					                                                                                                                           
+					 
+						                                              
+					 
+				 
+				                                                                                                                                                                                                            
+				 
 					                                              
-
-				                                                                                                                                 
-					                                              
+				 
 			 
 
+			                                                                         
 			                                               
 			 
 				                                           
@@ -12159,7 +12187,7 @@ bool function Control_IsPlayerUltReady( entity player )
 				 
 			 
 
-			                                                          
+			                                                                                             
 			                           
 			                
 			 
@@ -12184,6 +12212,11 @@ bool function Control_IsPlayerUltReady( entity player )
 			 
 				                                               
 				                                                
+				                                         
+
+				                                                                       
+				                                                           
+					                                     
 			 
 
 
@@ -12369,13 +12402,433 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 }
 #endif          
 
+
   
-				                                                  
-			                                                       
-			                                                     
-		                                                          
-		                                                           
-		                                                          
+                                                                                 
+                                                                                  
+                                                                                
+                                                                                 
+                                                                                  
+                                                                                 
+
+               
+  
+
+#if SERVER
+                                                                         
+                                                                
+                                                                                                
+ 
+	                                        
+	                                                                                           
+	                                                                               
+
+	                                                                      
+ 
+#endif          
+
+#if SERVER
+                                                                                                  
+                                                                 
+ 
+	                                                                           
+	                                                                                                                                               
+	                                                                
+	                                                                                            
+
+	                                                                                     
+	                                                                        
+	 
+		                                          
+		 
+			                                                                                                  
+		 
+		                                       
+	 
+
+	                                                                                                   
+	                                                                                       
+ 
+#endif          
+
+#if SERVER
+                                                      
+                                     
+                                                                                                                                                             
+                                                                                                       
+ 
+	                                        
+	                                                                       
+	                                                                                                              
+	                                                                            
+
+	                                                                                                            
+ 
+#endif          
+
+#if CLIENT
+                                                                   
+void function ServerCallback_Control_DisplayLockoutUnavailableWarning()
+{
+	var scoreTrackerRui = file.scoreTrackerRui[1]
+	var mapScoreTrackerRui = file.fullmapScoreTrackerRui[1]
+	float currentTime = Time()
+
+	if ( IsValid( scoreTrackerRui ) )
+	{
+		RuiSetGameTime( scoreTrackerRui, "lastLockoutBlockedMessageDisplayTime", currentTime )
+	}
+
+	if ( IsValid( mapScoreTrackerRui ) )
+	{
+		RuiSetGameTime( mapScoreTrackerRui, "lastLockoutBlockedMessageDisplayTime", currentTime )
+	}
+}
+#endif          
+
+#if SERVER
+                                        
+                                                                
+ 
+	                                        
+	                                                                               
+	                                                                                                                                         
+	                                                                                          
+	                                                                                
+ 
+#endif          
+
+#if SERVER
+                                                                 
+ 
+	                                                                                       
+	                                                                  
+	                                                                              
+ 
+#endif          
+
+                    
+          
+                                                                       
+ 
+                                                                                                  
+ 
+                
+                          
+
+  
+	                                                                                       
+	                                                                                        
+	                                                                                     
+	                                                                                      
+	                                                                                       
+	                                                                                        
+
+	                               
+  
+
+#if SERVER
+                                         
+                                                                         
+ 
+	                                               
+
+	                                 
+	                                  
+	                                      
+	                                                                     
+
+
+	                                         
+	                                                               
+
+	                                                  
+	                                                
+	                                                                                               
+	                                                                                                                
+	                                                                                                                                
+
+	                                                  
+	                                       
+	                                                                                
+
+	                                     
+	                                                   
+	                                                         
+	 
+		               
+
+		                             
+		 
+			                                      
+			                                                            
+		 
+
+		                                                 
+		                                         
+			                          
+
+		                                                                                          
+		 
+			                                                                                                               
+			                
+			                                                                            
+			                                                                                                              
+			                                                                                                                
+
+			                                                                                                        
+
+			                                                                                                 
+				                          
+			                                                              
+				                          
+		 
+		                                                                                     
+		 
+			                                        
+			                    
+				                          
+
+		 
+		                                      
+	 
+
+	                                      
+	                                    
+	                                               
+	 
+		                                                                      
+		 
+			                           
+			        
+		 
+		                                        
+		 
+			                                                                                             
+				                           
+		 
+	 
+
+	                                        
+	                                              
+	 
+		                                                                       
+		            
+			                                    
+			 
+				              
+				                                              
+					                                                                       
+
+				                                            
+			 
+		 
+
+		                                                                                            
+
+		                                                                                
+		                                                                                  
+		                                           
+		                                            
+
+		                                                 
+
+		                                                                                      
+		                      
+		                                               
+	 
+	    
+	 
+		                                                                
+		                             
+	 
+
+	                                 
+	                                                         
+
+	                                     
+	                                         
+		                                                                                                                               
+
+	                                      
+
+	                                            
+	                                                             
+	 
+		                                           
+
+		                             
+	 
+	    
+	 
+		                                                                         
+		                                           
+		                                                                
+			           
+
+		                                           
+
+		                             
+	 
+ 
+#endif          
+
+  
+		                                             
+		                                               
+		                                            
+		                                            
+		                                            
+		                                            
+
+          
+  
+
+#if SERVER
+                                                                          
+ 
+	                                               
+
+	                                         
+	                                                               
+
+	                  
+	                                 
+
+	            
+		                  
+		 
+			                                                    
+			                      
+
+			                                 
+			 
+				                              
+				                                                 
+				                   
+				      
+			 
+			    
+			 
+				                                                       
+				                                                                 
+			 
+
+			                                            
+			                    
+			 
+				                        
+					                                                   
+				                             
+					                                                   
+				                             
+					                                                   
+				                             
+					                                                  
+			 
+			    
+			 
+				                              
+				                                                 
+			 
+		 
+	 
+
+	                     
+	                                                  
+
+	                                                  
+	                                                
+	                                                                                                                                 
+
+	                              
+	                                                                                                                                             
+	                                                                       
+	                                         
+
+	                                         
+	 
+		                                                                                                                        
+		                                                                                  
+		                                                                                     
+	 
+
+	                                                       
+	 
+		                       
+		 
+			                                
+			                        
+			     
+		 
+
+		           
+	 
+
+	                        
+	 
+		                                                
+		                                                                          
+	 
+	    
+	 
+		                                          
+	 
+
+	                             
+ 
+#endif          
+
+#if SERVER
+                                                   
+ 
+	                                  
+	                                                                   
+	 
+		                                                                
+
+		                                               
+			            
+
+		             
+		 
+			                                        
+		 
+		    
+		 
+			                                                
+				            
+		 
+	 
+
+	           
+ 
+#endif          
+
+#if SERVER
+                                                              
+ 
+	                                                                       
+	                                                        
+	 
+		                                              
+			           
+	 
+
+	            
+ 
+#endif          
+
+
+  
+			                                                  
+		                                                       
+		                                                     
+	                                                          
+	                                                           
+	                                                          
+
+	        
   
 
 #if SERVER
@@ -12384,12 +12837,6 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
  
 	                                               
 
-	                                   
-	                                    
-	                                   
-	                                       
-	                                                     
-
 	                                                                                       
 	                                
 	 
@@ -12397,6 +12844,7 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 		                             
 	 
 	                                                                                         
+	                        
 
 	            
 		                        
@@ -12405,8 +12853,74 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 		 
 	 
 
+	                                                                                                                       
+
+	                                                          
+	                         
+	                                                         
+	 
+		                                                     
+
+		                                             
+		 
+			                                                  
+			                                                                
+
+			                                  
+				                                                     
+		 
+		                                                           
+		 
+			                                               
+			                                                                              
+
+			                                  
+				                                                    
+		 
+
+		                    
+		                                                                                           
+		                     
+		                                                                                            
+	 
+
+	                                         
+	 
+		                                                                                                                     
+		                                                             
+
+		                                                                                  
+		                                                                        
+	 
+
+	                                        
+	                            
+		                                  
+
+	                                            
+	 
+		                                                                                                                  
+	 
+
+	                                              
+
+	                                           
+ 
+#endif          
+
+#if SERVER
+                                                                                                     
+                                                              
+                                                                                                     
+ 
+	                                   
+	                                    
+	                                   
+	                                       
+	                                                     
+
 	                                                                    
-	                                                                      
+	                                                                                               
 	                                                  
 
 	                                                                                    
@@ -12440,7 +12954,7 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 			 
 				                        
 				 
-					                                                                   
+					                                                                             
 						                     
 					    
 						                        
@@ -12476,7 +12990,7 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 			 
 				                        
 				 
-					                                                                         
+					                                                                                   
 						                       
 					    
 						                      
@@ -12640,63 +13154,17 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 	                                             
 		                                      
 
-	                                                          
-	                         
-	                                                         
-	 
-		                                                     
-
-		                                             
-		 
-			                                                  
-			                                                                
-
-			                                  
-				                                                     
-		 
-		                                                           
-		 
-			                                               
-			                                                                              
-
-			                                  
-				                                                    
-		 
-
-		                    
-		                                                         
-		                     
-		                                                                                            
-	 
-
-	                                         
-	 
-		                                                                                                                     
-		                                                             
-
-		                                                                                  
-		                                                                        
-	 
-
-	                                        
-	                            
-		                                  
-
-	                                            
-	 
-		                                                                                                                  
-	 
-
-	                     
+	                                   
  
+#endif          
 
+#if SERVER
                         
-                                                
+                                                                    
  
 	                             
 	                            
 
-	                                                     
 	                                                           
 	                                      
 
@@ -12711,10 +13179,12 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 	                                      
 	                      
  
+#endif          
 
+#if SERVER
                      
                                                                                                                                                                    
-                                                                                                                     
+                                                                                                                                                             
  
 	                                               
 
@@ -12724,7 +13194,7 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 
 	                                             
 	                                                                                                                   
-	                                                                                              
+	                                    
 
 	                                                                                                                                                   
 	                                                                               
@@ -12770,9 +13240,17 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 	                                                    
 	                                            
 
+                     
+                                                                                 
+                                  
+                                                          
+                           
+
 	                                                                                               
  
+#endif          
 
+#if SERVER
                                                                                                                               
                                                                             
  
@@ -12785,23 +13263,34 @@ void function Control_Play3PEXPLevelUpFX_Thread( entity player, int expTier )
 		                                                              
 	 
  
+#endif          
 
+#if SERVER
                                                                                                                           
                                                                           
  
 	                
 	                                                                                                                        
-	
+
 	                                             
 		                                                 
 
 	                                                             
 	                                                            
 	                          
+
+                     
+                                                                                                  
+                                                                                                         
+                                                              
+                           
+
 	                                            
 	                           
  
+#endif          
 
+#if SERVER
                                                    
                                                                       
  
@@ -12830,8 +13319,18 @@ void function InstanceWPControlAirdrop( entity wp )
 		int lootTier = wp.GetWaypointInt( AIRDROP_WAYPOINT_LOOTTIER_INT )
 		thread Control_CreateAirdropIcon_Thread( wp, lootTier )
 	}
-}
 
+                     
+                                                     
+                                                                                                             
+   
+                                                   
+   
+                           
+}
+#endif          
+
+#if CLIENT
                                
 void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 {
@@ -12882,9 +13381,489 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 }
 #endif          
 
-#if DEV && SERVER
+                    
+  
+                                                                                                  
+                                                                                                   
+                                                                                                
+                                                                                                
+                                                                                                
+                                                                                                
+
+                
+  
+
+          
+                                                                                                                                                                     
+                                                              
+                                                   
+ 
+                        
+ 
+                
+
+          
+                                   
+                                                    
+                                                            
+                                                                         
+                                                    
+                                                                                    
+                                        
+                                                                                 
+ 
+                                                
+                                                         
+                        
+
+             
+                          
+   
+                                                        
+                                                          
+     
+                                            
+    
+                                                                                                                               
+    
+     
+                           
+                                
+   
+  
+
+                                                          
+   
+                                          
+  
+                                                                                                                               
+  
+   
+
+                                                                                                        
+
+                                                                                       
+                          
+                                              
+  
+                                                    
+                                                                  
+
+                                    
+                                                       
+  
+                                                            
+  
+                                           
+                                                                                
+
+                                    
+                                                       
+  
+
+                                                               
+                     
+                                                                                              
+                      
+                                                                                                   
+
+                                                                  
+                                                                                                  
+                                                                                                                                   
+
                                                         
 
+                                                                                               
+                          
+
+                                                                                     
+                     
+ 
+                
+
+          
+                                                                                                         
+                                                                  
+ 
+                                                                        
+                                 
+  
+                                                                                          
+                                                                                
+                                      
+                             
+
+                                              
+   
+                            
+            
+
+                                                                                                                 
+   
+
+                                              
+  
+                                                               
+ 
+                
+
+          
+                                                                                                                 
+                                               
+                                                   
+ 
+                                                
+
+                                       
+        
+
+                                                    
+                                                                                                                   
+
+                                             
+                                           
+
+                                  
+
+                                                                                                                                                   
+  
+                                                                 
+                                                                                                                    
+  
+ 
+                
+
+
+          
+                                                                  
+                                                
+ 
+                                                                                 
+                                                            
+ 
+                
+
+
+          
+                                                      
+                                                                                            
+ 
+                                                                                                 
+                                 
+  
+                                                            
+                           
+   
+                                      
+                                                                                                                                                 
+   
+      
+   
+                                           
+                                                                                                                                                  
+   
+  
+                                                               
+ 
+                
+
+          
+                                                       
+                                                             
+                                                                        
+ 
+                                                                                       
+                                        
+        
+
+                                                
+
+                                      
+                                        
+                                                         
+                                                                              
+
+              
+  
+                                            
+                                                                                                      
+                                                       
+  
+ 
+                
+
+          
+                                                            
+                                                               
+ 
+                                                    
+                                                    
+ 
+                
+
+          
+                                                          
+                                                                                  
+ 
+                          
+        
+
+                                          
+
+                               
+        
+
+                             
+                                
+
+                                
+                                     
+  
+                                                    
+                                                               
+  
+     
+  
+                                          
+                                                                                                             
+   
+                                                                                          
+                                                                 
+   
+                                            
+   
+                                                       
+                                                                  
+   
+  
+
+                                                                        
+                                           
+                                                   
+ 
+
+                
+
+
+          
+                                                                                                                                
+ 
+                          
+        
+
+                                          
+
+                               
+        
+
+                                                                                  
+                             
+  
+                                                             
+                                 
+
+                                                                                 
+   
+                                                
+    
+                                                              
+                                                                                                
+          
+                                                                
+                                                                                               
+          
+                                                             
+                                                                                               
+          
+
+            
+                                                                                                
+          
+    
+   
+
+                                                                         
+                                            
+                                                    
+  
+                               
+  
+                                                                                                                                    
+                                                                                                                                             
+
+                                                                         
+                                            
+                                                    
+  
+ 
+                
+
+          
+                                                                                                                               
+                                                                                                                                                           
+ 
+                          
+        
+
+                                              
+        
+
+                                                      
+
+                        
+        
+
+                                 
+                              
+ 
+                
+
+          
+                                                                 
+                                                             
+ 
+                               
+                                                                                   
+                            
+                                      
+
+                                                                        
+                                                                          
+
+               
+ 
+                
+
+          
+                                                        
+                                  
+ 
+                               
+
+                          
+        
+
+                               
+
+                                                                               
+                                       
+  
+                                                                                                                                                                                                        
+   
+                                                                                                                                                                                                                                 
+                                                                                 
+   
+  
+
+                      
+                           
+                                            
+                 
+ 
+                
+
+
+                    
+                                                       
+                                                                                                                                                 
+                                                     
+ 
+                                    
+                                                               
+        
+
+           
+                                                                                                       
+                                              
+                                                                        
+                                    
+                                 
+               
+                          
+                   
+                                                                                    
+
+                      
+                                                                                     
+                                             
+                                                     
+       
+ 
+                          
+
+
+          
+                                                                                 
+                                                                          
+ 
+                                          
+
+                               
+        
+
+                                
+  
+                                                                                          
+
+                                                                            
+                                                                                                            
+  
+     
+  
+                                                                                                      
+  
+ 
+
+                
+
+          
+                                                              
+                                                    
+                                                              
+ 
+                                                
+
+                              
+                                     
+                                            
+        
+
+                                
+                            
+
+                                                                    
+                                                    
+                                                                    
+                                                            
+                                                                                  
+
+             
+                          
+   
+                            
+                         
+   
+  
+
+              
+ 
+                
+
+
+                          
+
+  
+	                                   
+	                                    
+	                                   
+	                                    
+	                                    
+	                                    
+
+	                  
+  
+
+#if DEV && SERVER
                                               
                                                                                            
  
@@ -12903,7 +13882,9 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 			                                                                            
 	 
  
+#endif                 
 
+#if DEV && SERVER
                                                                          
                                                                           
  
@@ -12930,7 +13911,9 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 		 
 	 
  
+#endif                 
 
+#if DEV && SERVER
                   
                                                                            
  
@@ -12943,7 +13926,7 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 			                                                                                                                                                             
 			      
 		 
-		                                                          
+		                                                                    
 	 
 
 	                                                        
@@ -12954,7 +13937,9 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 		                                  
 	 
  
+#endif                 
 
+#if DEV && SERVER
                         
                                              
  
@@ -12965,7 +13950,9 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 
 	                                                             
  
+#endif                 
 
+#if DEV && SERVER
                              
                                                                                                  
  
@@ -13001,7 +13988,7 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 					                                                                                                                                                                 
 					      
 				 
-				                                                          
+				                                                                    
 			 
 		 
 
@@ -13015,7 +14002,9 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 		                                                                                                              
 	 
  
+#endif                 
 
+#if DEV && SERVER
                                 
                                                                       
  
@@ -13046,7 +14035,9 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 		                                                                                                                 
 	 
  
+#endif                 
 
+#if DEV && SERVER
                                      
                                                                                               
  
@@ -13064,19 +14055,23 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 			                                                                                                                                                                   
 			      
 		 
-		                                                          
+		                                                                    
 	 
 
 	                                                       
 	                                           
  
+#endif                 
 
+#if DEV && SERVER
                                        
                                                      
  
 	                                                          
  
+#endif                 
 
+#if DEV && SERVER
                         
                                                                                                                                      
  
@@ -13095,7 +14090,7 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
 			                                                                                                                                                           
 			      
 		 
-		                                                                 
+		                                                                           
 	 
 
 	                                                          
@@ -13176,7 +14171,7 @@ void function Control_CreateAirdropIcon_Thread( entity wp, int lootTier )
                                                                                
                                          
 
-                                                                                      
+                                                                                             
                                
 
  

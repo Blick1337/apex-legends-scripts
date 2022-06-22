@@ -1,85 +1,80 @@
 global function Teams_RegisterSignals
-global function ShowScoreboardOrMap_Teams
-global function HideScoreboardOrMap_Teams
-global function Teams_ShowScoreboard
-global function Teams_HideScoreboard
 global function Teams_AddCallback_ScoreboardData
-global function Teams_SetScoreboardMode
 global function Teams_AddCallback_PlayerScores
-global function Teams_AddCallback_ShowMap
-global function Teams_AddCallback_HideMap
 global function Teams_AddCallback_SortScoreboardPlayers
-global function Teams_PopulateScoreboardRui
+global function Teams_AddCallback_Header
 global function Teams_PopulatePlayerRow
 global function Teams_PopulateHeaderRui
-global function Teams_SetMapOptions
-global function Teams_GetScoreboardHeaderRuis
+
+global function UICallback_ScoreboardMenu_BindTeamHeader
+global function UICallback_ScoreboardMenu_BindTeamRow
+global function UICallback_Scoreboard_OnReportClicked
+
+global function ClientCallback_Teams_SetScoreboardData
+global function ClientCallback_Teams_CloseScoreboard
 
 global struct ScoreboardData
 {
 	int             numScoreColumns
 	array< int > 	columnNumDigits
 	array< asset >  columnDisplayIcons
+	array< float >  columnDisplayIconsScale
 }
 
+                                   
+global struct TeamsScoreboardPlayerStats
+{
+	int score
+	int numDigits
+}
+
+global struct TeamsScoreboardPlayer
+{
+	EHI playerEHI                           
+
+	string playerName
+	string platformIcon
+
+	asset playerImage
+	asset playerBG
+
+	bool isRatingLeader
+	bool isKillLeader
+	bool isFriendly
+	bool isLocalPlayer
+	bool isAlive
+	bool isValid = false
+
+	vector customCharacterColor
+	bool useCustomCharacterColor
+
+	vector enemyBackgroundColor
+
+	array< TeamsScoreboardPlayerStats > stats
+	int team
+}
+
+struct
+{
+	table< int, array< TeamsScoreboardPlayer > > teamsOfPlayers
+} teamsScoreboardCachedData
+
 struct {
-	var scoreboardRui
-	var mapRui
-	var backgroundRui
-	array<var> scoreboardHeaderRuis
-
-	bool isScoreboardMode = true
-	int scoreboardSelectedIndex = -1
-	ScoreboardData functionref( ) Callback_ScoreboardData                                  
-	array< int > functionref( entity ) Callback_PlayerScores                                  
-	array< entity > functionref( array< entity >, ScoreboardData ) Callback_SortScoreboardPlayers                                  
-
-	bool useFlatMap = true
-	bool alwaysShowMap = false
-	bool showBackgroundBlur = false
-
-	void functionref( ) Callback_ShowMap                                  
-	void functionref( ) Callback_HideMap                                  
-
+	ScoreboardData functionref( ) Callback_ScoreboardData
+	array< int > functionref( entity ) Callback_PlayerScores
+	array< entity > functionref( array< entity >, ScoreboardData ) Callback_SortScoreboardPlayers
+	void functionref( var, var, int ) Callback_Header
 } file
 
 void function Teams_RegisterSignals()
 {
 	RegisterSignal( "Teams_HideScoreboard" )
+
+	AddCallback_GameStateEnter( eGameState.WinnerDetermined, Teams_OnWinnerDetermined )
 }
 
-void function ShowScoreboardOrMap_Teams()
-{
-	Teams_ShowBackgroundBlur()
-	Scoreboard_SetVisible( true )
-	file.scoreboardSelectedIndex = 0
 
-	ShowFullmap()
-	Fullmap_ClearInputContext()
-	Teams_UpdateScoreboardVisibility()
-
-	UpdateMainHudVisibility( GetLocalViewPlayer() )
-
-	HudInputContext inputContext
-	inputContext.keyInputCallback = Teams_HandleKeyInput
-	inputContext.moveInputCallback = Teams_HandleMoveInput
-	inputContext.viewInputCallback = Teams_HandleViewInput
-	                                                             
-	HudInput_PushContext( inputContext )
-}
-
-void function HideScoreboardOrMap_Teams()
-{
-	HudInput_PopContext()
-	Scoreboard_SetVisible( false )
-
-	Teams_HideScoreboard()
-	Teams_HideMap( false )
-	Teams_HideBackgroundBlur()
-
-	HideFullmap()
-}
-
+           
 void function Teams_AddCallback_ScoreboardData( ScoreboardData functionref(  ) callbackFunc )
 {
 	Assert( !IsValid( file.Callback_ScoreboardData ), "ScoreboardData already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
@@ -92,504 +87,392 @@ void function Teams_AddCallback_PlayerScores( array< int > functionref( entity )
 	file.Callback_PlayerScores = callbackFunc
 }
 
-void function Teams_AddCallback_ShowMap( void functionref(  ) callbackFunc )
-{
-	Assert( !IsValid( file.Callback_ShowMap ), "ShowMap already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
-	file.Callback_ShowMap = callbackFunc
-}
-
-void function Teams_AddCallback_HideMap( void functionref(  ) callbackFunc )
-{
-	Assert( !IsValid( file.Callback_HideMap ), "HideMap already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
-	file.Callback_HideMap = callbackFunc
-}
-
 void function Teams_AddCallback_SortScoreboardPlayers(  array< entity > functionref( array< entity >, ScoreboardData ) callbackFunc )
 {
 	Assert( !IsValid( file.Callback_SortScoreboardPlayers ), "SortScoreboardPlayers already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
 	file.Callback_SortScoreboardPlayers = callbackFunc
 }
 
-void function Teams_SetMapOptions( bool useFlatMap = true, bool alwaysShowMap = false, bool showBackgroundBlur = false )
+void function Teams_AddCallback_Header(  void functionref( var, var, int ) callbackFunc )
 {
-	file.useFlatMap = useFlatMap
-	file.alwaysShowMap = alwaysShowMap
-	file.showBackgroundBlur = showBackgroundBlur
+	Assert( !IsValid( file.Callback_Header ), "_Header already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
+	file.Callback_Header = callbackFunc
 }
 
-array<var> function Teams_GetScoreboardHeaderRuis()
-{
-	return file.scoreboardHeaderRuis
-}
-
-const int RUI_MAX_ROWS = 12
-const int RUI_MAX_COLUMNS = 3
-
-void function Teams_ShowScoreboard( int order = 0, float xOffset = 0, float yOffset = 0, bool showBottomBar = true, float backgroundAlpha = 0.0 )
-{
-	if ( IsValid( file.scoreboardRui ) )
-		return
-
-	var rui
-	if(Control_IsModeEnabled())
-		rui = CreateFullscreenRui( $"ui/teams_scoreboard_control.rpak", order)
+         
+ScoreboardData function GetScoreboardData(){
+	if( IsValid(file.Callback_ScoreboardData) )
+	{
+		return file.Callback_ScoreboardData()
+	}
 	else
-		rui = CreateFullscreenRui( $"ui/teams_scoreboard.rpak", order)
+	{
+		ScoreboardData data
+		data.numScoreColumns = 0
 
-	file.scoreboardRui = rui
+		return data
+	}
 
-	RuiSetFloat2( file.scoreboardRui, "offset", < xOffset, yOffset, 0 > )
-	RuiSetBool (file.scoreboardRui, "showBottomBar", showBottomBar)
-	RuiSetFloat (file.scoreboardRui, "backgroundAlpha", backgroundAlpha)
-	Teams_PopulateScoreboardRui( rui, 610, false )
-
+	unreachable
 }
 
-void function Teams_ShowBackgroundBlur()
-{
-	if(file.backgroundRui == null && file.showBackgroundBlur)
-		file.backgroundRui = CreateFullscreenRui( $"ui/control_teams_map_background.rpak", 0)
-}
-
-void function Teams_HideBackgroundBlur()
-{
-	if(file.backgroundRui != null)
-		RuiDestroy(file.backgroundRui)
-
-	file.backgroundRui = null
-
-}
-
-void function Teams_ShowMap()
-{
-	if( file.useFlatMap )
-		Fullmap_SetVisible_MapOnly( true )
+array<int> function GetPlayerScores( entity player ){
+	if( IsValid(file.Callback_PlayerScores) )
+	{
+		return file.Callback_PlayerScores( player )
+	}
 	else
-		Fullmap_SetVisible_MapOnly( false )
+	{
+		array<int> empty = []
 
-	if(file.Callback_ShowMap != null)
-		file.Callback_ShowMap()
+		return empty
+	}
 
+	unreachable
 }
 
-var function CreateNesterHeaderRui( ScoreboardData data, var rui, bool friendly, float rowWidth, bool hasSpacer )
+TeamsScoreboardPlayer function GetPlayer( int teamIndex, int row )
 {
-	string arg = friendly ? "scoreHeaderNestedHandleFriendly" : "scoreHeaderNestedHandleEnemy"
+	TeamsScoreboardPlayer data
 
-	var scoreHeaderRui
-
-	if( Control_IsModeEnabled() )
-		scoreHeaderRui = RuiCreateNested( rui, arg, $"ui/teams_score_header_control.rpak" )
+	if ( (GetGameState() >= eGameState.WinnerDetermined) )
+	{
+		if( teamsScoreboardCachedData.teamsOfPlayers.len() > teamIndex )
+		{
+			array<TeamsScoreboardPlayer> cachedTeamData = teamsScoreboardCachedData.teamsOfPlayers[teamIndex]
+			if ( cachedTeamData.len() > row )
+				data = cachedTeamData[ row ]
+		}
+	}
 	else
-		scoreHeaderRui = RuiCreateNested( rui, arg, $"ui/teams_score_header.rpak" )
+	{
+		array<entity> teamPlayers = ScoreboardMenu_GetPlayersOnTeam( teamIndex )
+		if ( teamPlayers.len() > row )
+		{
+			entity player = teamPlayers[ row ]
 
-	RuiSetFloat( scoreHeaderRui, "rowWidth", rowWidth )
-	RuiSetBool( scoreHeaderRui, "hasSpacer", hasSpacer )
+			if ( LoadoutSlot_IsReady( ToEHI( player ), Loadout_Character() ) )
+			{
+				data = GetTeamsScoreboardPlayer( player )
+			}
+		}
+	}
 
-	Teams_PopulateHeaderRui( scoreHeaderRui, data, friendly, rowWidth, hasSpacer )
-	return scoreHeaderRui
+	return data
 }
 
-void function Teams_PopulateHeaderRui( var scoreHeaderRui, ScoreboardData data, bool friendly, float rowWidth, bool hasSpacer = false )
+array<entity> function ScoreboardMenu_GetPlayersOnTeam( int teamIndex )
+{
+	array<entity> teamPlayers =  []
+
+	if ( AllianceProximity_IsUsingAlliances() )
+	{
+		teamPlayers = AllianceProximity_GetAllPlayersInAlliance( teamIndex, false )
+	}
+	else
+	{
+		teamPlayers = GetPlayerArrayOfTeam( teamIndex + 2 )
+	}
+
+	if( IsValid(file.Callback_SortScoreboardPlayers) )
+	{
+		ScoreboardData data = GetScoreboardData()
+		teamPlayers = file.Callback_SortScoreboardPlayers( teamPlayers, data )
+	}
+
+	return teamPlayers
+}
+
+int function GetTeamCount()
+{
+	if ( AllianceProximity_IsUsingAlliances() )
+		return AllianceProximity_GetMaxNumAlliances()
+	else
+		return GetCurrentPlaylistVarInt( "max_teams", 2 )
+
+	unreachable
+}
+
+int function GetMaxTeamSize()
+{
+	if( AllianceProximity_IsUsingAlliances() )
+		return AllianceProximity_GetMaxNumPlayersPerAlliance()
+	else
+		return GetMaxTeamSizeForPlaylist( GetCurrentPlaylistName() )
+
+	unreachable
+}
+
+                  
+void function ClientCallback_Teams_SetScoreboardData( var panel )
+{
+	array<int> teams = GetAllValidPlayerTeams()
+	int maxTeamSize = GetMaxTeamSizeForPlaylist( GetCurrentPlaylistName() )
+
+	int localPlayerTeamIndex
+
+	entity localplayer = GetLocalClientPlayer()            
+	if ( localplayer.GetTeam() == TEAM_SPECTATOR )
+		localPlayerTeamIndex = -1
+	else
+	{
+		if( AllianceProximity_IsUsingAlliances() )
+			localPlayerTeamIndex = AllianceProximity_GetAllianceFromTeam( localplayer.GetTeam() )
+		else
+			localPlayerTeamIndex = localplayer.GetTeam() - 2
+	}
+
+	                                                                  
+	int mode = 0
+	if( IsArenaMode() )
+		mode = 1
+	else if( Control_IsModeEnabled() )
+		mode = 2
+                         
+                             
+          
+       
+                       
+                                         
+          
+       
+	RunUIScript( "UI_SetScoreboardTeamData", panel, GetTeamCount(), GetMaxTeamSize(), localPlayerTeamIndex, mode )
+
+}
+
+void function ClientCallback_Teams_CloseScoreboard( )
+{
+	Signal( clGlobal.levelEnt, "Teams_HideScoreboard" )
+}
+
+              
+void function UICallback_ScoreboardMenu_BindTeamHeader( var header, var frame, int teamIndex, float rowWidth )
+{
+	thread Thread_Teams_PopulateHeaderRui( header, frame, teamIndex, rowWidth )
+}
+
+void function UICallback_ScoreboardMenu_BindTeamRow( var panel, var button, int teamIndex, int row, float rowWidth )
+{
+	thread Threaded_PopulateRowForPlayer( panel, button, teamIndex, row, rowWidth )
+}
+
+void function UICallback_Scoreboard_OnReportClicked( var button, int teamIndex, int row )
+{
+	TeamsScoreboardPlayer data = GetPlayer( teamIndex, row )
+
+	if( data.isValid )
+		ReportPlayer( data.playerEHI )
+}
+
+            
+void function Teams_OnWinnerDetermined()
+{
+	                              
+	teamsScoreboardCachedData.teamsOfPlayers.clear()                                       
+
+	int teamCount = GetTeamCount()
+	int maxTeamSize = GetMaxTeamSize()
+
+	for( int i = 0; i < teamCount; i++ )
+	{
+		array<entity> teamPlayers = ScoreboardMenu_GetPlayersOnTeam( i )
+		array< TeamsScoreboardPlayer > players
+
+		for( int j = 0; j < teamPlayers.len(); j++ )
+		{
+			TeamsScoreboardPlayer playerData = GetTeamsScoreboardPlayer( teamPlayers[j] )
+			players.append( playerData )
+		}
+
+		teamsScoreboardCachedData.teamsOfPlayers[i] <- players
+	}
+}
+        
+void function Thread_Teams_PopulateHeaderRui(var header, var frame, int teamIndex, float rowWidth )
+{
+	EndSignal( clGlobal.levelEnt, "Teams_HideScoreboard" )
+
+	var headerRui = Hud_GetRui( header )
+	var frameRui = Hud_GetRui( frame )
+
+	while ( true )
+	{
+		ScoreboardData data = GetScoreboardData()
+		Teams_PopulateHeaderRui( headerRui, teamIndex, data, rowWidth )
+		Teams_PopulateFrameRui( frameRui, teamIndex, data, rowWidth )
+
+		TeamsScoreboardPlayer playerData = GetPlayer( teamIndex, 0 )
+		int team = -1
+
+		if( AllianceProximity_IsUsingAlliances() )
+		{
+			team = teamIndex
+		}
+		else
+		{
+			team = teamIndex + 2
+		}
+
+
+		if( IsValid(file.Callback_Header) )
+			file.Callback_Header( headerRui, frameRui, team )
+
+
+		WaitFrame()
+	}
+}
+void function Teams_PopulateHeaderRui( var scoreHeaderRui, int teamIndex, ScoreboardData data, float rowWidth )
 {
 	RuiSetInt( scoreHeaderRui, "numScoreColumns", data.numScoreColumns )
 
 	for( int i = 0; i < data.numScoreColumns; i++ )
 	{
 		RuiSetString( scoreHeaderRui, "playerScore" + ( i + 1 ) + "Image", data.columnDisplayIcons[i] )
+		RuiSetFloat( scoreHeaderRui, "playerScore" + ( i + 1 ) + "ImageScale", data.columnDisplayIconsScale[i] )
 		RuiSetInt( scoreHeaderRui, "playerScore" + ( i + 1 ) + "NumDigits", data.columnNumDigits[i] )
 	}
 
 	RuiSetBool( scoreHeaderRui, "winningTeamIsFriendly", true )                                                        
-	RuiSetString( scoreHeaderRui, "headerText", friendly ? "#ALLIES" : "#ENEMIES" )
+	RuiSetString( scoreHeaderRui, "headerText", Localize( "#TEAM_NUMBERED", (teamIndex + 1) ) )
 	RuiSetFloat( scoreHeaderRui, "rowWidth", rowWidth )
-	RuiSetBool( scoreHeaderRui, "hasSpacer", hasSpacer )
+
+	vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+	RuiSetColorAlpha( scoreHeaderRui, "teamColor", smokeColor, 1 )
 }
 
-void function Thread_Teams_PopulateHeaderRui()
+void function Teams_PopulateFrameRui( var scoreFrameRui, int teamIndex, ScoreboardData data, float rowWidth )
 {
-	EndSignal( clGlobal.levelEnt, "Teams_HideScoreboard" )
-
-	while ( true )
-	{
-		if ( Control_IsModeEnabled() )
-			Control_ScoreboardUpdateHeader()
-
-		WaitFrame()
-	}
+	vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+	RuiSetColorAlpha( scoreFrameRui, "teamColor", smokeColor, 1 )
 }
 
-void function Teams_PopulateScoreboardRui( var rui, float rowWidth, bool hasSpacer )
+        
+  
+                                                                                                               
+  
+TeamsScoreboardPlayer function GetTeamsScoreboardPlayer( entity player )
 {
-	Assert( IsValid( file.Callback_ScoreboardData ), "ScoreboardData is missing a callback to obtain the data, ensure your game mode has provided a callback in the setup function - Teams_AddCallback_ScoreboardData" )
-	ScoreboardData data = file.Callback_ScoreboardData()
-	Assert( data.numScoreColumns <= RUI_MAX_COLUMNS, "Requested " + data.numScoreColumns + "columns, Scoreboard only allows " + RUI_MAX_COLUMNS )
-
-	file.scoreboardHeaderRuis.clear()
-	file.scoreboardHeaderRuis.append( CreateNesterHeaderRui( data, rui, true, rowWidth, hasSpacer ) )
-	file.scoreboardHeaderRuis.append( CreateNesterHeaderRui( data, rui, false, rowWidth, hasSpacer ) )
-	thread Thread_Teams_PopulateHeaderRui()
-
-	                                                                                   
-	array< var > friendlyRowRuis;
-	for( int i = 0; i < RUI_MAX_ROWS; i++ )
-	{
-		var r = RuiCreateNested( rui, "myTeamPlayer" + i + "NestedHandle", $"ui/teams_scoreboard_player_row.rpak" )
-		RuiSetFloat( r, "rowWidth", rowWidth )
-		RuiSetFloat( r, "rowWidthCurr", rowWidth )
-		RuiSetBool( r, "hasSpacer", hasSpacer )
-		RuiSetFloat( r, "fadeAlpha", 0 )
-		friendlyRowRuis.append( r )
-	}
-
-	array< var > enemyRowRuis;
-	for( int i = 0; i < RUI_MAX_ROWS; i++ )
-	{
-		var r = RuiCreateNested( rui, "enemyTeamPlayer" + i + "NestedHandle", $"ui/teams_scoreboard_player_row.rpak" )
-		                                        
-		                                         
-		RuiSetFloat( r, "rowWidthCurr", rowWidth )
-		RuiSetFloat( r, "fadeAlpha", 0 )
-		enemyRowRuis.append( r )
-	}
-
-	thread ScoreboardUpdate( rui, friendlyRowRuis, enemyRowRuis, rowWidth, hasSpacer  )
-}
-
-void function ScoreboardUpdate( var rui, array< var > friendlyRowRuis, array< var > enemyRowRuis, float rowWidth, bool hasSpacer )
-{
-	EndSignal( clGlobal.levelEnt, "Teams_HideScoreboard" )
-
-	entity player = GetLocalClientPlayer()
-
-	player.EndSignal( "OnDestroy" )
-
-	if ( player.GetTeam() == TEAM_SPECTATOR )
-		return
-
-	while ( true )
-	{
-		ScoreboardData data = file.Callback_ScoreboardData()
-
-		array<entity> friendlies = GetPlayerArrayOfTeam( player.GetTeam() )
-
-		int enemyTeam = GetOtherTeam( player.GetTeam() )
-		array<entity> enemies = GetPlayerArrayOfTeam( enemyTeam )
-
-                          
-			if ( Control_IsModeEnabled() )
-			{
-				friendlies.clear()
-				enemies.clear()
-				foreach( matchPlayer in GetPlayerArray() )
-				{
-					if ( IsValid( matchPlayer ) && Control_GetAllianceFromTeam( matchPlayer.GetTeam() ) == Control_GetAllianceFromTeam( player.GetTeam() ) )
-					{
-						friendlies.append( matchPlayer )
-					}
-					else if ( IsValid( matchPlayer ) )
-					{
-						enemies.append( matchPlayer )
-					}
-				}
-			}
-                                
-
-		RuiSetFloat( rui, "numFriendlyRows", float( friendlies.len() ) )
-		RuiSetFloat( rui, "numEnemyRows", float( enemies.len() ) )
-
-		Teams_FillTeamData( friendlyRowRuis, friendlies, data, file.scoreboardSelectedIndex, rowWidth, hasSpacer )
-		Teams_FillTeamData( enemyRowRuis, enemies, data, file.scoreboardSelectedIndex - friendlies.len(), rowWidth, hasSpacer )
-
-		WaitFrame()
-	}
-}
-
-void function Teams_FillTeamData( array< var > teamRowRuis, array< entity > teamPlayers, ScoreboardData gameData, int selectedIndex, float rowWidth, bool hasSpacer  )
-{
-	Assert( IsValid( file.Callback_PlayerScores ), "PlayerScores is missing a callback, ensure your game mode has provided a callback in the setup function - Teams_AddCallback_PlayerScores" )
-
-	array < entity > sortedPlayers = teamPlayers
-
-	if( IsValid(file.Callback_SortScoreboardPlayers) )
-		sortedPlayers = file.Callback_SortScoreboardPlayers( teamPlayers, gameData )
-
-	for ( int i=0; i<teamRowRuis.len(); i++ )
-	{
-		if ( i < teamPlayers.len() )
-		{
-			RuiSetFloat( teamRowRuis[i], "fadeAlpha", 1 )
-			Teams_PopulatePlayerRow( teamRowRuis[i], teamPlayers[i], gameData, selectedIndex == i, rowWidth, hasSpacer )
-		}
-		else
-		{
-			RuiSetFloat( teamRowRuis[i], "fadeAlpha", 0 )
-		}
-	}
-}
-
-void function Teams_PopulatePlayerRow( var rui, entity player, ScoreboardData gameData, bool selected, float rowWidth, bool hasSpacer = false)
-{
-	RuiSetBool( rui, "isFriendly", player.GetTeam() == GetLocalClientPlayer().GetTeam() )
-
-                         
-		if ( Control_IsModeEnabled() )
-			RuiSetBool( rui, "isFriendly", Control_GetAllianceFromTeam( player.GetTeam() ) == Control_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) )
-
-                               
-
-	if ( CrossplayEnabled() && CrossplayUserOptIn() )
-		RuiSetString( rui, "platformIcon", PlatformIDToIconString( GetHardwareFromName( player.GetHardwareName() ) ) )
+	TeamsScoreboardPlayer data
 
 	EHI playerEHI = ToEHI( player )
-
-	RuiSetString( rui, "playerName", GetPlayerNameFromEHI( playerEHI ) )
-
-	RuiSetBool( rui, "selectedRow", selected )
-	RuiSetBool( rui, "hasSpacer", hasSpacer )
-	RuiSetInt( rui, "numScoreColumns", gameData.numScoreColumns )
-	RuiSetFloat( rui, "rowWidth", rowWidth )
-
-	array< int > scores = file.Callback_PlayerScores( player )
-	for( int j = 0; j < gameData.numScoreColumns; j++ )
-	{
-		RuiSetInt( rui, "playerScore" + ( j + 1 ) , scores[j] )
-		RuiSetInt( rui, "playerScore" + ( j + 1 ) + "NumDigits" , gameData.columnNumDigits[j] )
-	}
-
+	entity localPlayer = GetLocalClientPlayer()
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
 
-	entity localPlayer = GetLocalClientPlayer()
+	data.playerEHI = playerEHI
+	data.playerName = GetPlayerNameFromEHI( playerEHI )
+	data.playerImage = CharacterClass_GetGalleryPortrait( character )
+	data.playerBG = CharacterClass_GetGalleryPortraitBackground( character )
+	data.isRatingLeader = GradeFlagsHas( player, eTargetGrade.EXP_LEADER )
+	data.isKillLeader = GradeFlagsHas( player, eTargetGrade.CHAMP_KILLLEADER )
+	data.isLocalPlayer = player == localPlayer
+	data.isAlive = IsAlive( player )
 
-	RuiSetImage( rui, "playerImage", CharacterClass_GetGalleryPortrait( character ) )
-	RuiSetImage( rui, "playerBG", CharacterClass_GetGalleryPortraitBackground( character ) )
+	data.customCharacterColor = SrgbToLinear( GetPlayerInfoColor( player ) / 255.0 )
+	data.useCustomCharacterColor = localPlayer.GetTeam() == player.GetTeam()
+	data.enemyBackgroundColor =  SrgbToLinear( GetKeyColor( COLORID_ENEMY ) / 255.0 )
 
-	bool isRatingLeader = GradeFlagsHas( player, eTargetGrade.EXP_LEADER )
-	bool isKillLeader = GradeFlagsHas( player, eTargetGrade.CHAMP_KILLLEADER )
-	RuiSetBool( rui, "isRatingLeader", isRatingLeader )
-	RuiSetBool( rui, "isKillLeader", isKillLeader )
+                         
+                                                                                  
+       
 
-	RuiSetBool( rui, "isLocalPlayer", player == localPlayer )
-	RuiSetBool( rui, "isAlive", IsAlive( player ) )
-	RuiSetColorAlpha( rui, "customCharacterColor", SrgbToLinear( GetPlayerInfoColor( player ) / 255.0 ), 1.0 )
-	RuiSetBool( rui, "useCustomCharacterColor", localPlayer.GetTeam() == player.GetTeam() )
-}
-
-void function Teams_HideScoreboard()
-{
-	if ( IsValid( file.scoreboardRui ) )
+	if( AllianceProximity_IsUsingAlliances() )
 	{
-		Signal( clGlobal.levelEnt, "Teams_HideScoreboard" )
-		file.scoreboardHeaderRuis.clear()
-		RuiDestroy( file.scoreboardRui )
-		file.scoreboardRui = null
+		data.team = AllianceProximity_GetAllianceFromTeam( player.GetTeam() )
+		data.isFriendly = AllianceProximity_GetAllianceFromTeam( player.GetTeam() ) == AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() )
+		if ( (GetGameState() >= eGameState.WinnerDetermined) )
+		{
+			data.useCustomCharacterColor = AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( ToEHI( localPlayer ) ) == AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI )
+		}
 	}
-}
-
-void function Teams_HideMap( bool isToggle = true )
-{
-	if( (file.useFlatMap && !file.alwaysShowMap ) || !isToggle)
-		Fullmap_SetVisible_MapOnly( false )
-
-	if(file.Callback_HideMap != null)
-		file.Callback_HideMap()
-}
-
-void function Teams_SetScoreboardMode( bool scoreboardMode )
-{
-	file.isScoreboardMode = scoreboardMode
-	Teams_UpdateScoreboardVisibility()
-}
-
-void function Teams_ToggleScoreboardMode()
-{
-	file.isScoreboardMode = !file.isScoreboardMode
-	Teams_UpdateScoreboardVisibility()
-}
-
-void function Teams_UpdateScoreboardVisibility()
-{
-	if ( !IsScoreboardShown() )
-		return
-
-	if ( file.isScoreboardMode )
+	else
 	{
-		if(file.alwaysShowMap)
-			Teams_ShowMap()
+		data.team = player.GetTeam()
+		data.isFriendly = player.GetTeam() == localPlayer.GetTeam()
+	}
+
+	data.isValid = true
+
+	array< int > scores = GetPlayerScores( player )
+	ScoreboardData gameData = GetScoreboardData()
+
+	for( int j = 0; j < gameData.numScoreColumns; j++ )
+	{
+		TeamsScoreboardPlayerStats stats
+		stats.score = scores[j]
+		stats.numDigits = gameData.columnNumDigits[j]
+
+		data.stats.append(stats)
+	}
+
+	return data
+}
+
+void function Threaded_PopulateRowForPlayer( var panel, var button, int teamIndex, int row, float rowWidth )
+{
+	var rui = Hud_GetRui( button )
+	EndSignal( clGlobal.levelEnt, "Teams_HideScoreboard" )
+
+	while( true )
+	{
+		TeamsScoreboardPlayer data = GetPlayer( teamIndex, row )
+		Hud_Show( button )
+		if ( data.isValid )
+		{
+			Hud_SetLocked( button, false )
+			                                         
+
+			RunUIScript( "UI_ToggleReportTooltip", button, !data.isLocalPlayer )
+			RuiSetBool( rui, "isEmpty", false )
+			RuiSetString( rui, "status", "" )
+			Teams_PopulatePlayerRow( rui, data, rowWidth )
+
+		}
 		else
-			Teams_HideMap()
+		{
+			RunUIScript( "UI_ToggleReportTooltip", button, false )
+			Hud_SetLocked( button, true )
+			RuiSetString( rui, "status", "" )
+			                                                          
+			RuiSetBool( rui, "isEmpty", true )
+			RuiSetString( rui, "playerName", "" )
+			RuiSetBool( rui, "isFriendly", true )
+			RuiSetBool( rui, "isRatingLeader", false )
+			RuiSetBool( rui, "isKillLeader", false )
+			RuiSetBool( rui, "isLocalPlayer", false )
+			RuiSetBool( rui, "useCustomCharacterColor", false )
+			RuiSetString( rui, "platformIcon", $"" )
+			RuiSetInt( rui, "numScoreColumns", 0 )
+		}
 
-		                                  
-		Teams_ShowScoreboard( FULLMAP_Z_BASE, 0.1, 0.25 , true, 0)
+
+		wait 0.2
 	}
-	else
+}
+
+void function Teams_PopulatePlayerRow( var rui, TeamsScoreboardPlayer data, float rowWidth )
+{
+	RuiSetFloat( rui, "rowWidth", rowWidth )
+	RuiSetInt( rui, "numScoreColumns", data.stats.len() )
+
+	for( int j = 0; j < data.stats.len(); j++ )
 	{
-		Teams_HideScoreboard()
-		Teams_ShowMap()
+		RuiSetInt( rui, "playerScore" + ( j + 1 ) , data.stats[j].score )
+		RuiSetInt( rui, "playerScore" + ( j + 1 ) + "NumDigits" , data.stats[j].numDigits )
 	}
 
-}
+	if ( CrossplayEnabled() && CrossplayUserOptIn() )
+		RuiSetString( rui, "platformIcon", data.platformIcon )
 
-bool function Teams_HandleKeyInput( int key )
-{
-	bool swallowInput = false
+	RuiSetString( rui, "playerName", data.playerName )
+	RuiSetBool( rui, "isFriendly", data.isFriendly )
+	RuiSetImage( rui, "playerImage", data.playerImage )
+	RuiSetImage( rui, "playerBG", data.playerBG )
+	RuiSetBool( rui, "isRatingLeader", data.isRatingLeader )
+	RuiSetBool( rui, "isKillLeader", data.isKillLeader )
+	RuiSetBool( rui, "isLocalPlayer", data.isLocalPlayer )
+	RuiSetBool( rui, "isAlive", data.isAlive )
+	RuiSetColorAlpha( rui, "customCharacterColor", data.customCharacterColor, 1.0 )
+	RuiSetBool( rui, "useCustomCharacterColor", data.useCustomCharacterColor )
 
-	switch ( key )
-	{
-		case BUTTON_DPAD_DOWN:
-		case KEY_Z:
-			Teams_ToggleScoreboardMode()
-			return true
-		case BUTTON_B:
-			HideScoreboard()
-			return true
-		case KEY_SPACE:
-		case BUTTON_X:
-			if( file.isScoreboardMode )
-			{
-				clGlobal.levelEnt.Signal( "Threaded_PopulateRowForPlayer" )
-				RunUIScript( "OpenTeamsScoreboardReportMenu" )
-				HideScoreboard()
-				return true
-			}
-			else
-				return false
-		case BUTTON_DPAD_UP:
-		case KEY_F2:
-			RunUIScript( "UI_OpenAboutGameModeDialog" )
-			return true
-	}
-
-	if ( !file.isScoreboardMode )
-		return Fullmap_HandleKeyInput( key )
-	else
-		return Scoreboard_HandleKeyInput( key )
-	return swallowInput
-}
-
-bool function Teams_HandleMoveInput( float x, float y )
-{
-	if ( !file.isScoreboardMode )
-		return Fullmap_HandleMoveInput( x, y )
-	else
-		return Scoreboard_HandleMoveInput( x, y )
-
-	unreachable
-}
-
-bool function Teams_HandleViewInput( float x, float y )
-{
-	if ( !file.isScoreboardMode )
-		return Fullmap_HandleViewInput( x, y )
-	else
-		return Scoreboard_HandleMoveInput( x, y )
-
-	unreachable
-}
-
-bool function Scoreboard_HandleKeyInput( int key )
-{
-	bool swallowInput = false
-
-	int max = RUI_MAX_ROWS * 2
-
-	switch ( key )
-	{
-		case BUTTON_DPAD_UP:
-		case MOUSE_WHEEL_UP:
-			while ( true )
-			{
-				file.scoreboardSelectedIndex += max
-				file.scoreboardSelectedIndex -= 1
-				file.scoreboardSelectedIndex = file.scoreboardSelectedIndex % max
-				if ( GetScoreboardSelectedPlayer() != null )
-					break
-			}
-			return true
-
-		case BUTTON_DPAD_DOWN:
-		case MOUSE_WHEEL_DOWN:
-			while ( true )
-			{
-				file.scoreboardSelectedIndex += 1
-				file.scoreboardSelectedIndex = file.scoreboardSelectedIndex % max
-				if ( GetScoreboardSelectedPlayer() != null )
-					break
-			}
-			return true
-
-		case BUTTON_X:
-		case MOUSE_LEFT:
-			entity player = GetScoreboardSelectedPlayer()
-
-			if ( IsValid( player ) )
-			{
-				ReportPlayer( ToEHI( player ) )
-			}
-			return true
-	}
-
-	return swallowInput
-}
-
-entity function GetScoreboardSelectedPlayer()
-{
-	entity player
-
-	if ( file.scoreboardSelectedIndex < 0 )
-		return player
-
-	if ( file.scoreboardSelectedIndex < RUI_MAX_ROWS )
-	{
-		array<entity> teammates = GetPlayerArrayOfTeam( GetLocalClientPlayer().GetTeam() )
-                          
-			if ( Control_IsModeEnabled() )
-			{
-				teammates.clear()
-				foreach( matchPlayer in GetPlayerArray() )
-				{
-					if ( IsValid( matchPlayer ) && Control_GetAllianceFromTeam( matchPlayer.GetTeam() ) == Control_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) )
-					{
-						teammates.append( matchPlayer )
-					}
-				}
-			}
-                                
-
-		if ( teammates.len() > file.scoreboardSelectedIndex )
-			player = teammates[ file.scoreboardSelectedIndex ]
-	}
-	else
-	{
-		array<entity> enemies = GetPlayerArrayOfTeam( GetOtherTeam( GetLocalClientPlayer().GetTeam() ) )
-
-                          
-			if ( Control_IsModeEnabled() )
-			{
-				enemies.clear()
-				foreach( matchPlayer in GetPlayerArray() )
-				{
-					if ( IsValid( matchPlayer ) && Control_GetAllianceFromTeam( matchPlayer.GetTeam() ) != Control_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) )
-					{
-						enemies.append( matchPlayer )
-					}
-				}
-			}
-                                
-
-		if ( enemies.len() > file.scoreboardSelectedIndex - RUI_MAX_ROWS )
-			player = enemies[ file.scoreboardSelectedIndex - RUI_MAX_ROWS ]
-	}
-
-	return player
-}
-
-bool function Scoreboard_HandleMoveInput( float x, float y )
-{
-	return false
-}
-
-bool function Scoreboard_HandleViewInput( float x, float y )
-{
-	return false
+	RuiSetColorAlpha( rui, "enemyBackgroundColor", data.enemyBackgroundColor, 1.0 )
 }

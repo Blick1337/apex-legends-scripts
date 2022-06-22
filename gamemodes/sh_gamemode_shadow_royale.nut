@@ -8,7 +8,7 @@ global function Gamemode_ShadowRoyale_RegisterNetworking
 #if CLIENT
 	global function ServerCallback_ModeShadowRoyale_AnnouncementSplash
 	global function ServerCallback_PlaySpectatorAnnouncer
-
+	global function ServerCallback_PlayerRespawned
 #endif
 
                                      		                                                            
@@ -126,6 +126,7 @@ void function Gamemode_ShadowRoyale_RegisterNetworking()
 
 	Remote_RegisterClientFunction( "ServerCallback_ModeShadowRoyale_AnnouncementSplash", "int", 0, eShadowRoyaleMessage._count )
 	Remote_RegisterClientFunction( "ServerCallback_PlaySpectatorAnnouncer", "int", 0, eShadowRoyaleSpectatorAudio._count )
+	Remote_RegisterClientFunction( "ServerCallback_PlayerRespawned", "entity" )
 }
             
 
@@ -455,7 +456,10 @@ void function ShadowRoyale_OnPlaying()
 		                                                                                                                                 
 	   
 
-	                                                    
+	                                                                  
+	                               
+		                                                                                   
+
 	                                       
 
  
@@ -519,7 +523,7 @@ void function ShadowRoyale_OnPlaying()
 	                                                
 	                                                
 	                                                
-	                                                                                                                       
+	                                                                                                                
 	                              
 	                                      
 	 
@@ -956,31 +960,6 @@ VictorySoundPackage function GetVictorySoundPackage()
 			     
 		 
 	   
-
-	                                                                                  
-	                                    
-	 
-		                              
-		                                           
-
-		        
-		
-		                     
-		                                                       
-		                      
-		                                          
-		 
-			                            
-				        
-
-			                            
-				        
-
-			                                                                    
-			     
-		 
-	   
-
  
 #endif         
 
@@ -1418,6 +1397,16 @@ void function OnVictoryCharacterModelSpawned( entity characterModel, ItemFlavor 
 		                                             
 	 
  
+#endif          
+
+#if CLIENT
+void function ServerCallback_PlayerRespawned( entity respawnedPlayer )
+{
+	if ( !IsValid( respawnedPlayer ) )
+		return
+
+	respawnedPlayer.SetTargetInfoIcon( ICON_SPAWN_SHADOW_FRIEND )
+}
 #endif          
 
 #if CLIENT

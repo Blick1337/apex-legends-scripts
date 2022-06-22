@@ -820,7 +820,7 @@ string function GetPlayerNameFromEHI( EHI playerEHI )
 		                                                                                                             
 		if ( Control_IsModeEnabled() )
 		{
-			if ( isSetToObsfuscatedName && !isPlayerEHISameAsLocalClientEHI && Control_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI ) != Control_GetOriginalPlayerTeam_FromPlayerEHI( LocalClientEHI() ) )
+			if ( isSetToObsfuscatedName && !isPlayerEHISameAsLocalClientEHI && AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI ) != AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( LocalClientEHI() ) )
 				return GetObsfuscatedName( playerEHI )
 		}
                                

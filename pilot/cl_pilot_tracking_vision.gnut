@@ -1996,7 +1996,7 @@ void function TrackingVision_CreateGenericTrackerMarker( entity waypoint )
 	entity localViewPlayer = GetLocalViewPlayer()
 
 	                                                                                                                                                                                                      
-	if ( IsUsingProximityAllianceMembers() )
+	if ( AllianceProximity_IsUsingAllianceProximity() )
 	{
 		if ( !IsValid( waypoint ) || !IsValid( localViewPlayer ) )
 			return

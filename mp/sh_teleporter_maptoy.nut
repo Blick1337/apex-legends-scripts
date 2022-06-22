@@ -1,4 +1,3 @@
-                          
 global function PhaseDriver_Init
 #if DEV && SERVER
                                    
@@ -516,5 +515,3 @@ void function PhaseDriverCooldown()
 	                                                                                       
  
 #endif                 
-
-                                

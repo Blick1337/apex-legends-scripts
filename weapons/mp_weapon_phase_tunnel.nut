@@ -192,6 +192,7 @@ void function MpWeaponPhaseTunnel_Init()
 		                                                      
 		                                                
 		                                                    
+		                                                  
 		                                             
 		                                                                               
 		                                                          
@@ -1053,16 +1054,16 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 	                                                  
 	 
 		                                                                                                   
-		                                                                                                                                                                                      
+		                                                                                                                                                                                        
 
-		                                                                                                             
+		                                                                                                            
+		                                                                                                    
+
 		                                                                                                  
 
-		                                                                                                 
-
-		                                                                                                                                  
+		                                                                                                                                    
 		                                                                                                                               
-		                                                                                                                               
+		                                                                                                                                
 	 
  
 
@@ -1089,9 +1090,9 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 		                                                              
 		                                                              
 
-		                                                              
-		                                                              
-		                                                              
+		                                                                
+		                                                                
+		                                                                
 	 
 
 	                                     
@@ -1127,6 +1128,8 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 	 
 		                                                                        
 	 
+
+	                                               
 
 	            
 		                                
@@ -1234,7 +1237,7 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 		 
 			                         
 			 
-				                                                                        
+				                                                                          
 			 
 			    
 			 
@@ -1263,7 +1266,7 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 		 
 			                                           
 			 
-				                                                                                                                           
+				                                                                                                                             
 			 
 			    
 			 
@@ -1509,7 +1512,7 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 
 	                                              
 	 
-		                                                          
+		                                                            
 		                                                                   
 	 
 
@@ -1554,11 +1557,22 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 			            
        
 
+
 	                                        
-		            
+	 
+                   
+		                                      
+			            
+        
+	 
 
 	                                            
-		            
+	 
+                   
+		                                           
+			            
+        
+	 
 
 	                                                                                               
 		            
@@ -1969,7 +1983,7 @@ bool function PhaseTunnel_IsPortalExitPointValid( entity player, vector testOrg,
 	if ( result.startSolid || result.fraction < 1 || result.surfaceNormal != <0, 0, 0> )
 	{
 		if ( PHASE_TUNNEL_DEBUG_DRAW_PLAYER_TELEPORT )
-			DebugDrawBox( result.endPos, mins, maxs, 255, 0, 0, 1, 20.0 )
+			DebugDrawBox( result.endPos, mins, maxs, COLOR_RED, 1, 20.0 )
 
 		if ( !onlyCheckWorld )
 			return false
@@ -1979,7 +1993,7 @@ bool function PhaseTunnel_IsPortalExitPointValid( entity player, vector testOrg,
 	}
 
 	if ( PHASE_TUNNEL_DEBUG_DRAW_PLAYER_TELEPORT )
-		DebugDrawBox( result.endPos, mins, maxs, 0, 255, 0, 1, 20.0 )
+		DebugDrawBox( result.endPos, mins, maxs, COLOR_GREEN, 1, 20.0 )
 
 	return true
 }
@@ -2012,7 +2026,7 @@ bool function PhaseTunnel_IsPortalExitPointValid( entity player, vector testOrg,
 	 
 
 	                                              
-		                                                             
+		                                                               
 
 	           
  

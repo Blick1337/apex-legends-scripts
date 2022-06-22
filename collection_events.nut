@@ -7,7 +7,7 @@ global function CollectionEvents_Init
 
 #if SERVER || CLIENT || UI
 global function GetActiveCollectionEvent
-global function CollectionEvent_GetChallenges
+global function CollectionEvent_GetChallenges                                
 global function CollectionEvent_GetFrontPageRewardBoxTitle
 global function CollectionEvent_GetCollectionName
                                               
@@ -15,15 +15,12 @@ global function CollectionEvent_GetCollectionName
 global function CollectionEvent_GetMainPackFlav
 global function CollectionEvent_GetMainPackShortPluralName
 global function CollectionEvent_GetMainPackImage
-global function CollectionEvent_GetPrimaryCompletionRewardItem
-global function CollectionEvent_GetCompletionRewardPack
-global function CollectionEvent_GetCompletionSequenceName
                                                  
                                                             
 global function CollectionEvent_GetFrontPageGRXOfferLocation
                                                          
 global function CollectionEvent_GetRewardGroups
-global function CollectionEvent_GetAboutText
+global function CollectionEvent_GetAboutText                                
 global function CollectionEvent_GetMainIcon
 global function CollectionEvent_GetMainThemeCol
 global function CollectionEvent_GetFrontPageBGTintCol
@@ -33,24 +30,37 @@ global function CollectionEvent_GetFrontPageTimeRemainingCol
                                                          
                                                              
                                                              
-global function CollectionEvent_GetTabBGDefaultCol
-global function CollectionEvent_GetTabBarDefaultCol
-global function CollectionEvent_GetTabBGFocusedCol
-global function CollectionEvent_GetTabBarFocusedCol
-global function CollectionEvent_GetTabBGSelectedCol
-global function CollectionEvent_GetTabBarSelectedCol
-global function CollectionEvent_GetAboutPageSpecialTextCol
 global function CollectionEvent_GetBGPatternImage
 global function CollectionEvent_GetBGTabPatternImage
-global function CollectionEvent_GetHeaderIcon
-global function CollectionEvent_GetItemCount
-global function CollectionEvent_GetCurrentRemainingItemCount
-global function CollectionEvent_AwardHeirloomShards
-                    
-global function CollectionEvent_IsRewardMythicSkin
-                          
-
+global function CollectionEvent_GetTabBGDefaultCol                                 
+global function CollectionEvent_GetTabBarDefaultCol                                
+global function CollectionEvent_GetTabBGFocusedCol                                
+global function CollectionEvent_GetTabBarFocusedCol                                
+global function CollectionEvent_GetTabBGSelectedCol                                
+global function CollectionEvent_GetTabBarSelectedCol                                
+global function CollectionEvent_GetAboutPageSpecialTextCol                                
+global function CollectionEvent_GetHeaderIcon                                
 #endif
+
+                                                      
+#if SERVER || CLIENT || UI
+global function HeirloomEvent_GetItemCount
+global function HeirloomEvent_GetCurrentRemainingItemCount
+global function HeirloomEvent_GetPrimaryCompletionRewardItem
+global function HeirloomEvent_GetCompletionRewardPack
+global function HeirloomEvent_GetCompletionSequenceName
+global function HeirloomEvent_AwardHeirloomShards
+global function HeirloomEvent_IsRewardMythicSkin
+#endif
+
+#if UI
+global function HeirloomEvent_GetHeirloomButtonImage
+global function HeirloomEvent_GetMythicButtonImage
+global function HeirloomEvent_GetHeirloomHeaderText
+global function HeirloomEvent_GetHeirloomUnlockDesc
+#endif
+                      
+
 
 #if CLIENT || UI
 global function CollectionEvent_GetFrontTabText
@@ -63,15 +73,11 @@ global function CollectionEvent_GetCurrentMaxEventPackPurchaseCount
 
 #if UI
                                                   
-global function CollectionEvent_GetPackOffer
 global function CollectionEvent_GetHeaderTextColor
-global function CollectionEvent_GetLobbyButtonImage
-global function CollectionEvent_GetTitleTextColor
-global function CollectionEvent_HasLobbyTheme
-global function CollectionEvent_GetHeirloomButtonImage
-global function CollectionEvent_GetMythicButtonImage
-global function CollectionEvent_GetHeirloomHeaderText
-global function CollectionEvent_GetHeirloomUnlockDesc
+global function CollectionEvent_GetPackOffer                                
+global function CollectionEvent_GetLobbyButtonImage                                
+global function CollectionEvent_GetTitleTextColor                                
+global function CollectionEvent_HasLobbyTheme                                
 #endif
 
 #if SERVER
@@ -97,6 +103,7 @@ global struct CollectionEventRewardGroup
 }
 #endif
 
+global const array< int > HEIRLOOM_EVENTS = [ eItemType.calevent_collection, eItemType.calevent_themedshop ]
 
                        
                        
@@ -149,7 +156,7 @@ void function CollectionEvents_Init()
 
 	#if SERVER
 		                                                                                    
-		                                                                             
+		                                                                        
 	#endif
 }
 #endif
@@ -270,43 +277,41 @@ asset function CollectionEvent_GetMainPackImage( ItemFlavor event )
 
 
 #if SERVER || CLIENT || UI
-bool function CollectionEvent_AwardHeirloomShards( ItemFlavor event )
+bool function HeirloomEvent_AwardHeirloomShards( ItemFlavor event )
 {
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
 	return GetGlobalSettingsBool( ItemFlavor_GetAsset( event ), "awardHeirloomShards" )
 }
 #endif
 
 
 #if SERVER || CLIENT || UI
-ItemFlavor function CollectionEvent_GetPrimaryCompletionRewardItem( ItemFlavor event )
+ItemFlavor function HeirloomEvent_GetPrimaryCompletionRewardItem( ItemFlavor event )
 {
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
 
-	if ( CollectionEvent_AwardHeirloomShards( event ) )
+	if ( HeirloomEvent_AwardHeirloomShards( event ) )
 		return GetItemFlavorByAsset( $"settings/itemflav/currency_bundle/heirloom.rpak" )
 
 	return GetItemFlavorByAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "primaryCompletionRewardItem" ) )
 }
 #endif
 
-                    
 #if SERVER || CLIENT || UI
-bool function CollectionEvent_IsRewardMythicSkin( ItemFlavor event )
+bool function HeirloomEvent_IsRewardMythicSkin( ItemFlavor event )
 {
-	ItemFlavor primaryRewardItem =  CollectionEvent_GetPrimaryCompletionRewardItem( event )
+	ItemFlavor primaryRewardItem =  HeirloomEvent_GetPrimaryCompletionRewardItem( event )
 	return Mythics_IsItemFlavorMythicSkin( primaryRewardItem )
 }
 #endif
-                          
 
 
 #if SERVER || CLIENT || UI
-ItemFlavor function CollectionEvent_GetCompletionRewardPack( ItemFlavor event )
+ItemFlavor function HeirloomEvent_GetCompletionRewardPack( ItemFlavor event )
 {
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
 
-	if ( CollectionEvent_AwardHeirloomShards( event ) )
+	if ( HeirloomEvent_AwardHeirloomShards( event ) )
 		return GetItemFlavorByAsset( $"settings/itemflav/pack/heirloom_shards.rpak" )
 
 	return GetItemFlavorByAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "completionRewardPack" ) )
@@ -315,9 +320,9 @@ ItemFlavor function CollectionEvent_GetCompletionRewardPack( ItemFlavor event )
 
 
 #if SERVER || CLIENT || UI
-string function CollectionEvent_GetCompletionSequenceName( ItemFlavor event )
+string function HeirloomEvent_GetCompletionSequenceName( ItemFlavor event )
 {
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
 	return GetGlobalSettingsString( ItemFlavor_GetAsset( event ), "completionSequenceName" )
 }
 #endif
@@ -577,22 +582,22 @@ asset function CollectionEvent_GetHeaderIcon( ItemFlavor event )
 
 
 #if UI
-asset function CollectionEvent_GetHeirloomButtonImage( ItemFlavor event )
+asset function HeirloomEvent_GetHeirloomButtonImage( ItemFlavor event )
 {
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
 	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "heirloomButtonImage" )
 }
 #endif
 
 #if UI
-asset function CollectionEvent_GetMythicButtonImage( ItemFlavor event, int tier )
+asset function HeirloomEvent_GetMythicButtonImage( ItemFlavor event, int tier )
 {
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
 
 	if ( tier == 1 )
-		return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "PrestigeButtonImage2" )
+		return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "prestigeButtonImage2" )
 	else if ( tier == 2 )
-		return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "PrestigeButtonImage3" )
+		return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "prestigeButtonImage3" )
 
 	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "heirloomButtonImage" )
 }
@@ -600,17 +605,15 @@ asset function CollectionEvent_GetMythicButtonImage( ItemFlavor event, int tier 
 
 
 #if UI
-string function CollectionEvent_GetHeirloomHeaderText( ItemFlavor event )
+string function HeirloomEvent_GetHeirloomHeaderText( ItemFlavor event )
 {
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
 
 	string headerText = "#COLLECTION_EVENT_HEIRLOOM_BOX_TITLE"
-	if ( CollectionEvent_AwardHeirloomShards( event ) )
+	if ( HeirloomEvent_AwardHeirloomShards( event ) )
 		headerText = "#CURRENCY_HEIRLOOM_NAME_SHORT"
-                    
-	else if ( CollectionEvent_IsRewardMythicSkin( event ) )
+	else if ( HeirloomEvent_IsRewardMythicSkin( event ) )
 		headerText = "#COLLECTION_EVENT_MYTHIC_BOX_TITLE"
-                          
 
 	return Localize( headerText ).toupper()
 }
@@ -618,9 +621,9 @@ string function CollectionEvent_GetHeirloomHeaderText( ItemFlavor event )
 
 
 #if UI
-string function CollectionEvent_GetHeirloomUnlockDesc( ItemFlavor event )
+string function HeirloomEvent_GetHeirloomUnlockDesc( ItemFlavor event )
 {
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
 	return GetGlobalSettingsString( ItemFlavor_GetAsset( event ), "heirloomUnlockDesc" )
 }
 #endif
@@ -662,40 +665,55 @@ vector function CollectionEvent_GetHeaderTextColor( ItemFlavor event )
 
 
 #if SERVER || CLIENT || UI
-int function CollectionEvent_GetItemCount( ItemFlavor event, bool onlyOwned, entity player = null, bool dontCheckInventoryReady = false )
+int function HeirloomEvent_GetItemCount( ItemFlavor event, bool onlyOwned, entity player = null, bool dontCheckInventoryReady = false )
 {
-	Assert( dontCheckInventoryReady || !onlyOwned || (player != null && GRX_IsInventoryReady( player )) )
+	Assert( dontCheckInventoryReady || !onlyOwned || ( player != null && GRX_IsInventoryReady( player ) ) )
 
-	array<CollectionEventRewardGroup> rewardGroups = CollectionEvent_GetRewardGroups( event )
 	int count = 0
-	foreach ( CollectionEventRewardGroup rewardGroup in rewardGroups )
+	array < ItemFlavor > eventItems
+	if ( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
 	{
-		foreach ( ItemFlavor reward in rewardGroup.rewards )
+		eventItems = []
+		array<CollectionEventRewardGroup> rewardGroups = CollectionEvent_GetRewardGroups( event )
+		foreach ( CollectionEventRewardGroup rewardGroup in rewardGroups )
 		{
-			                                                                                                                                                            
-			#if SERVER
-				                                                                            
-					       
-
-				                                                                                                                       
-				                                                                    
-					                                                            
-			#endif
-			#if CLIENT || UI
-				if ( !onlyOwned || GRX_HasItem( ItemFlavor_GetGRXIndex( reward ) ) )
-					count++
-			#endif
+			foreach ( ItemFlavor reward in rewardGroup.rewards )
+			{
+				eventItems.append( reward )
+			}
 		}
 	}
+	else if ( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	{
+		eventItems = GRXPack_GetPackContents( GetItemFlavorByAsset( ThemedShopEvent_GetAssociatedPack( event ) ) )
+	}
+
+	foreach ( ItemFlavor item in eventItems )
+	{
+		                                                                                                                                                            
+		#if SERVER
+			                                                                          
+				       
+
+			                                                                                                                       
+			                                                                                                                                                
+				                                                          
+		#endif
+		#if CLIENT || UI
+			if ( !onlyOwned || GRX_HasItem( ItemFlavor_GetGRXIndex( item ) ) )
+				count++
+		#endif
+	}
+
 	return count
 }
 #endif
 
 
 #if SERVER || CLIENT || UI
-int function CollectionEvent_GetCurrentRemainingItemCount( ItemFlavor event, entity player )
+int function HeirloomEvent_GetCurrentRemainingItemCount( ItemFlavor event, entity player )
 {
-	return CollectionEvent_GetItemCount( event, false ) - CollectionEvent_GetItemCount( event, true, player )
+	return HeirloomEvent_GetItemCount( event, false ) - HeirloomEvent_GetItemCount( event, true, player )
 }
 #endif
 
@@ -733,40 +751,45 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 		int ownedPackCount = GRX_GetPackCount( ItemFlavor_GetGRXIndex( packFlav ) )
 	#endif
 
-	return CollectionEvent_GetCurrentRemainingItemCount( event, player ) - ownedPackCount
+	return HeirloomEvent_GetCurrentRemainingItemCount( event, player ) - ownedPackCount
 }
 #endif
 
 #if SERVER
                                                                      
  
+	                                                                                                         
+	      
+
 	                                                                                                           
 	                                                                                                      
 	                                                
 	                                                              
 	                                                            
+	                                                                                           
 
 	                                           
-	                                                                                   
+	                                           
+	                                                   
 		      
 
-	                                                             
+	                                                     
 
-	                                                                                             
-	                                                                                            
+	                                                                                           
+	                                                                                          
 
 	                                      
 	                                                         
 		      
 
-	                                                                             
+	                                                                           
 	                                                         
 
 	                                                                   
 	                 
 		      
 
-	                                                                                        
+	                                                                                      
 	                                                                            
 	                                
 	                
@@ -807,11 +830,12 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 	 
 
 	                         
-	                                                                   
+	                                   
 	                                     
 
 	                                               
-	                                                                 
+	                                                     
+	                            
 	                                                                     
 
 	                        
@@ -920,17 +944,25 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 #if SERVER
                                                                  
  
+	                                            
 	                                                                                        
-	                                    
-		      
-	                                        
+	                                                                                        
 
-	                                                 
+	                                    
+		                                           
+	                                         
+		                                           
+
+	                                  
+		      
+	                                      
+
+	                                                                                                         
+	                                                                                  
 	 
 		                                                 
 
-		                
-		                                                                                         
+		                                                                                       
 		 
 			                                                              
 				        
@@ -938,11 +970,12 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 			                                                               
 			                                                                                                             
 			                                                  
-			                                                  
+			                                                                               
+				                                                  
 
 			                      
 			                                                 
-			                                      
+			                                    
 			                       
 			                                            
 			                                            
@@ -952,24 +985,27 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 	                                                     
 	 
 		                                 
-		                                                                                                   
-		                                                                                                  
+		                                                                                               
+		                                                                                              
 
 		                                                         
 		 
-			                                                                                   
+			                                                                               
 			                                                         
 
 			                 
 			 
-				                                                               
-				                                                           
-				                                                  
-				                                                     
+				                                                                               
+				 
+					                                                               
+					                                                         
+					                                                  
+					                                                     
+				 
 
 				                                                     
 
-				                                                                                              
+				                                                                                          
 
 				                                
 				                                                                             
@@ -992,16 +1028,45 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
                                                             
  
 	                  
-	                                                                                         
-	                                                                  
+
+	                               
+	                                                                   
 	 
-		                                                    
+		               
+		                                                                                         
+		                                                                  
 		 
-			                                                              
-				                                                                                                 
+			                                                    
+			 
+				                           
+			 
 		 
+	 
+	                                                                        
+	 
+		                                                                                                          
+	 
+
+	                                           
+	 
+		                                                              
+			                                                                                                 
 	 
 
 	              
+ 
+#endif
+
+#if SERVER
+                                                                   
+ 
+	                
+	 
+		                                              
+			                                              
+
+		                                                  
+			                                                  
+	 
  
 #endif

@@ -198,7 +198,7 @@ void function MpSpaceElevator_Init()
 	                                    
 	                                                                              
 
-	                                                                                                         
+	                                                                                                            
 
 	                      
 	                   
@@ -542,8 +542,8 @@ void function MpSpaceElevator_Init()
 	 
 	                          
 	 
-		                                                                                                                                                               
-		                                                                                                                                                                                
+		                                                                                                                                                                 
+		                                                                                                                                                                                  
 	 
 	             
  
@@ -588,8 +588,8 @@ void function SPACEELEVATOR_TriggerEnter( entity trigger, entity ent )
 	                               
 	 
 		                                                                                                                                                    
-		                                                                                               
-		                                                           
+		                                                                                                 
+		                                                             
 
 		           
 	 
@@ -645,7 +645,7 @@ void function SPACEELEVATOR_TriggerEnter( entity trigger, entity ent )
 	 
 		                                
 		 
-			                                                               
+			                                                                 
 		 
 
 		              
@@ -676,9 +676,9 @@ void function SPACEELEVATOR_TriggerEnter( entity trigger, entity ent )
 
 		                                
 		 
-			                                                                                                      
-			                                                                                                                
-			                                                                                                    
+			                                                                                                        
+			                                                                                                                  
+			                                                                                                     
 		 
 		                                
 		                                   
@@ -897,7 +897,7 @@ void function SPACEELEVATOR_InTriggerThread( entity trigger, entity player )
 		{
 			if ( SPACEELEVATOR_DEBUG )
 			{
-				DebugDrawSphere( player.GetOrigin(), 11, 75, 0, 150, true, TICK_RATE )
+				DebugDrawSphere( player.GetOrigin(), 11, <75, 0, 150>, true, TICK_RATE )
 			}
 
 			if ( StatusEffect_GetSeverity( player, eStatusEffect.in_space_elevator ) <= 0 )
@@ -955,7 +955,7 @@ void function SPACEELEVATOR_InTriggerThread( entity trigger, entity player )
 
 				                          
 				 
-					                                                                                                                                                                            
+					                                                                                                                                                                             
 					                                                                                
 				 
 

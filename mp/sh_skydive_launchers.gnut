@@ -322,7 +322,14 @@ void function Sh_SkydiveLaunchers_Init()
 	                                     
 	                                                                
 	                                
-	                                                                     
+	                                                            
+	 
+		                                                              
+	 
+	    
+	 
+		                                                                     
+	 
 	                                               
 	                                   
 
@@ -381,7 +388,11 @@ void function Sh_SkydiveLaunchers_Init()
 	                                                       
 	                                          
 	                            
-	                                                                                                                                                    
+	                                                            
+		                            
+	    
+		                                                                                                                       
+		                            
 	                           
 	                                     
 	                                                                       
@@ -453,7 +464,7 @@ void function Sh_SkydiveLaunchers_Init()
  
 	              
 	 
-		                                                                                                                                                                           
+		                                                                                                                                                                            
 		           
 	 
  
@@ -920,7 +931,7 @@ void function Cl_ManageAmbientSound_Thread( entity trigger, entity clientAG )
 	                      
 
 	                                                                                                           
-	                                                                                                             
+	                                                                                                               
 
 	               
 	                          

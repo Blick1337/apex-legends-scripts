@@ -2,6 +2,7 @@ global function Sh_Ranked_Init
 global function Sh_Ranked_ItemRegistrationInit
 global function GetCurrentRankedDivisionFromScoreAndLadderPosition
 global function GetCurrentRankedDivisionFromScore
+global function GetCurrentRankedDivisions
 global function GetNextRankedDivisionFromScore
 global function GetPlayerRankScore
 global function IsRankedPersistenceValid
@@ -94,6 +95,8 @@ global function SharedRanked_GetAbandonPenaltyLength
                                                       
                                                            
                                                               
+                                                          
+                                                           
                                
                                         
                                                          
@@ -154,23 +157,17 @@ global function GetKillPointsWithTierDiff
 global function GetTierDifference
 global function GetTierDifferenceByEntity
 global const RANKED_MAX_KILL_SCORE_BY_SKILL = 175
-                
 global const float PARTICIPATION_MODIFIER = 0.5
-     
-                                               
-      
 global function Ranked_GetParticipationMutlipler
 
-                                         
-
-                
 global const RANKED_RP_PROMOTION_BONUS = 100
 
-const int MASTER_PLUS_SCALING_RP = 5
-const int MASTER_PLUS_SCALING_RP_INTERVAL = 1000
+global const int MASTER_PLUS_SCALING_RP = 5
+global const int MASTER_PLUS_SCALING_RP_INTERVAL = 1000
 const int MASTER_PLUS_SCALING_RP_MAX = 170
 const int MASTER_PLUS_TIER_INDEX = 6
 
+                                         
 const int RANKED_RP_TIER_MINUS_4 = 0
 const int RANKED_RP_TIER_MINUS_3 = 3
 const int RANKED_RP_TIER_MINUS_2 = 7
@@ -179,16 +176,6 @@ const int RANKED_RP_TIER_EQUAL   = 10
 const int RANKED_RP_TIER_PLUS_1  = 10
 const int RANKED_RP_TIER_PLUS_2  = 15
 const int RANKED_RP_TIER_PLUS_3  = 20
-     
-                                    
-                                    
-                                    
-                                    
-                                     
-                                     
-                                     
-                                     
-      
 
 global enum emblemDisplayMode                                            
 {
@@ -737,18 +724,18 @@ string function SharedRanked_GetNumPlayerOnLaddersOverridePlaylistVar( ItemFlavo
 }
 
 
-SharedRankedTierData function Ranked_GetHighestHistoricalTierAcrossSplitsForPlayer( entity player, ItemFlavor rankedPeriod )
+SharedRankedTierData function Ranked_GetHighestHistoricalTierAcrossSplitsForPlayer( entity player, ItemFlavor rankedPeriod, bool highScore )
 {
 	Assert( SharedRankedPeriod_HasSplits( rankedPeriod ) )
 	Assert( GetActiveRankedPeriodByType( GetUnixTimestamp(), eItemType.calevent_rankedperiod ) != rankedPeriod )
 
 	string rankedPeriodGUID = ItemFlavor_GetGUIDString( rankedPeriod )
 
-	int firstSplitRankedScore                 = Ranked_GetHistoricalFirstSplitRankScore( player, rankedPeriodGUID )
+	int firstSplitRankedScore                 = Ranked_GetHistoricalFirstSplitRankScore( player, rankedPeriodGUID, highScore )
 	int firstSplitLadderPosition              = Ranked_GetHistoricalLadderPosition( player, rankedPeriodGUID, true )
 	SharedRankedTierData firstSplitRankedTier = Ranked_GetHistoricalRankedDivisionFromScoreAndLadderPosition( firstSplitRankedScore, firstSplitLadderPosition, rankedPeriodGUID ).tier
 
-	int secondSplitRankedScore                 = Ranked_GetHistoricalRankScore ( player, rankedPeriodGUID )
+	int secondSplitRankedScore                 = Ranked_GetHistoricalRankScore ( player, rankedPeriodGUID, highScore )
 	int secondSplitLadderPosition              = Ranked_GetHistoricalLadderPosition( player, rankedPeriodGUID, false )
 	SharedRankedTierData secondSplitRankedTier = Ranked_GetHistoricalRankedDivisionFromScoreAndLadderPosition( secondSplitRankedScore, secondSplitLadderPosition, rankedPeriodGUID ).tier
 
@@ -940,6 +927,10 @@ SharedRankedDivisionData function GetCurrentRankedDivisionFromScoreAndLadderPosi
 	return GetCurrentRankedDivisionFromScore( score )
 }
 
+array<SharedRankedDivisionData> function GetCurrentRankedDivisions ()
+{
+	return file.rankedDivisions
+}
 
 SharedRankedDivisionData function GetCurrentRankedDivisionFromScore( int score )
 {
@@ -1032,7 +1023,6 @@ SharedRankedDivisionData ornull function GetNextRankedDivisionFromScore( int sco
 
 int function Ranked_GetCostForEntry( SharedRankedDivisionData currentRank , int rankScore = 0)
 {
-                 
 	if ( GetCurrentPlaylistVarBool( "ranked_scaling_entry_cost_enabled", true ))
 	{
 		if (currentRank.tier.index < MASTER_PLUS_TIER_INDEX )
@@ -1064,9 +1054,6 @@ int function Ranked_GetCostForEntry( SharedRankedDivisionData currentRank , int 
 
 	          
 	return (currentRank.tier.entryCost)
-      
-                                    
-       
 }
 
 
@@ -1382,8 +1369,11 @@ int function Ranked_GetPenaltyPointsForAbandon( SharedRankedDivisionData current
 }
 
 
-int function Ranked_GetHistoricalRankScore( entity player, string rankedSeasonGUID )
+int function Ranked_GetHistoricalRankScore( entity player, string rankedSeasonGUID, bool highScore = false )
 {
+	                                                                                 
+	                                                      
+
 #if UI
 	if ( !IsFullyConnected() )
 		return 0
@@ -1402,7 +1392,16 @@ int function Ranked_GetHistoricalRankScore( entity player, string rankedSeasonGU
 		Assert ( player == GetLocalClientPlayer() )
 	#endif
 
-	var score = Ranked_GetHistoricalRankedPersistenceData( player, "currentRankedScore", rankedSeasonGUID )
+	var score
+
+	if ( highScore )
+	{
+		score = Ranked_GetHistoricalRankedPersistenceData( player, "highestRankedScore", rankedSeasonGUID )
+	}
+	else
+	{
+		score = Ranked_GetHistoricalRankedPersistenceData( player, "currentRankedScore", rankedSeasonGUID )
+	}
 
 	if ( score == null )
 		return 0
@@ -1411,7 +1410,7 @@ int function Ranked_GetHistoricalRankScore( entity player, string rankedSeasonGU
 }
 
 
-int function Ranked_GetHistoricalFirstSplitRankScore( entity player, string rankedSeasonGUID )
+int function Ranked_GetHistoricalFirstSplitRankScore( entity player, string rankedSeasonGUID, bool highScore = false )
                                          
 {
 #if UI
@@ -1432,7 +1431,16 @@ int function Ranked_GetHistoricalFirstSplitRankScore( entity player, string rank
 		Assert ( player == GetLocalClientPlayer() )
 	#endif
 
-	var score = Ranked_GetHistoricalRankedPersistenceData( player, "firstSplitRankedScore", rankedSeasonGUID )
+	var score
+
+	if ( highScore )
+	{
+		score = Ranked_GetHistoricalRankedPersistenceData( player, "firstSplitHighScore", rankedSeasonGUID )
+	}
+	else
+	{
+		score = Ranked_GetHistoricalRankedPersistenceData( player, "firstSplitRankedScore", rankedSeasonGUID )
+	}
 
 	if ( score == null )
 		return 0
@@ -1582,6 +1590,7 @@ SharedRankedDivisionData function Ranked_GetNewDivisionForNewSeasonReset( entity
 
 		case RANKED_SEASON_13_GUIDSTRING:
 			resetDivisionCount = 2                                                                                                                                                
+			break
 
 		default:
 			resetDivisionCount = RANKED_RESET_DIVISION_COUNT
@@ -1591,13 +1600,14 @@ SharedRankedDivisionData function Ranked_GetNewDivisionForNewSeasonReset( entity
 	                                                                                                                                                             
 	int previousRankedScore             = Ranked_GetHistoricalRankScore( player, previousRankedPeriodRef )
 	SharedRankedDivisionData divData    = Ranked_GetHistoricalRankedDivisionFromScore( previousRankedScore, previousRankedPeriodRef )                                                                                       
-	int resetDivisionIndex = divData.index
 
-	if ( divData.index > RANKED_RESET_DIVISION_FLOOR )
+	int resetDivisionIndex = maxint( 0,  divData.index - resetDivisionCount )
+
+	                                                             
+	if ( divData.index >= RANKED_RESET_DIVISION_FLOOR )
 	{
-		resetDivisionIndex = maxint( RANKED_RESET_DIVISION_FLOOR, divData.index - resetDivisionCount )
+		resetDivisionIndex = maxint( RANKED_RESET_DIVISION_FLOOR, resetDivisionIndex )
 	}
-
 	SharedRankedDivisionData newDivData = file.historicalRankedDivisions[ newRankedPeriodRef ][ resetDivisionIndex ]
 
 	return newDivData
@@ -1612,8 +1622,9 @@ SharedRankedDivisionData function Ranked_GetNewDivisionForSeasonSplitReset( enti
 	switch ( rankedPeriodRef )
 	{
 		                                   
-		  	                                                                           
-		  	     
+		case RANKED_SEASON_13_GUIDSTRING:
+			resetDivisionCount = 4                                                                                 
+			break
 
 		default:
 			resetDivisionCount = RANKED_RESET_DIVISION_COUNT
@@ -1624,11 +1635,12 @@ SharedRankedDivisionData function Ranked_GetNewDivisionForSeasonSplitReset( enti
 	int previousRankedScore             = Ranked_GetHistoricalRankScore( player, rankedPeriodRef )
 	SharedRankedDivisionData divData    = Ranked_GetHistoricalRankedDivisionFromScore( previousRankedScore, rankedPeriodRef )                                                                                       
 
-	int resetDivisionIndex = divData.index
+	int resetDivisionIndex = maxint( 0,  divData.index - resetDivisionCount )
 
-	if ( divData.index > RANKED_RESET_DIVISION_FLOOR )
+	                                                             
+	if ( divData.index >= RANKED_RESET_DIVISION_FLOOR )
 	{
-		resetDivisionIndex = maxint( RANKED_RESET_DIVISION_FLOOR, divData.index - resetDivisionCount )
+		resetDivisionIndex = maxint( RANKED_RESET_DIVISION_FLOOR, resetDivisionIndex )
 	}
 
 	SharedRankedDivisionData newDivData = file.historicalRankedDivisions[ rankedPeriodRef ][ resetDivisionIndex ]
@@ -2039,10 +2051,7 @@ bool function Ranked_HasPlayerWaitedTooLongAfterBannerWasPickedUp( entity player
  
 	                                                                      
 	                                                                          
-
-                 
 	                                                                                       
-       
  
 
 
@@ -2068,9 +2077,7 @@ bool function Ranked_HasPlayerWaitedTooLongAfterBannerWasPickedUp( entity player
 	                                    
 	 
 		                                                                      
-                  
 		                                                                       
-        
 	 
 
  
@@ -2195,6 +2202,48 @@ int function GetDemotionProtectionBuffer ( entity player )
  
 
 
+                                                                          
+ 
+	                                                                                                                   
+	                                                                                
+
+	                                                                                                                          
+
+	                                                           
+ 
+
+
+                                                                           
+ 
+	                                                                                                                   
+	                                                                                
+	                                                                                                                          
+
+
+	                                                                                                        
+	                                                                            
+
+	                                                                                                                      
+
+	                                                            
+ 
+
+
+                                                                                           
+ 
+	                                                                         
+	                                                                                                         
+	                                                                                                      
+	                                                                                          
+	                                                                                       
+
+	                                                                   
+	                                                               
+	                                                       
+	                                                   
+ 
+
+
                                                                                                                                                    
  
 	                                                                                                                     
@@ -2234,24 +2283,16 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                 
 	                            
 	                                  
-                 
+
 	                             
 	                                             
 	                                               
 	                                                     
-      
-                                            
-                                              
-                                                    
-       
+
 	                                                                                                                                                                                                                                                                                      
  
 
-                
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
-     
-                                                                                                                                                                                                                                                                                                                                                                                                                                                       
-      
  
 	                                             
 	 
@@ -2264,9 +2305,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 		                                                                    
 		                                                                       
 		                                                                               
-                  
 		                                                                  
-        
 		                                                                                 
 		                                                                       
 		                                                                                   
@@ -2461,9 +2500,8 @@ int function GetDemotionProtectionBuffer ( entity player )
 		                                                                
 	      
 
-                 
+
 	                                                                                     
-       
 	                                                                        
 	                                                                              
 	                                                                                  
@@ -2477,10 +2515,8 @@ int function GetDemotionProtectionBuffer ( entity player )
 	 
 		                                              
 		                                                                                                            
+		                                                                                                  
 
-                  
-			                                                                                                  
-        
 	 
 	
 	                         
@@ -2565,12 +2601,7 @@ int function GetDemotionProtectionBuffer ( entity player )
                                                                                                                                                                      
                                                                                                                         
  
-
-                    
 	                                                                                                                                                                                                       
-      
-                                                                                                                                                                       
-       
 
 	                                                                                                        
 	                                                                                                                                                                                       
@@ -2585,8 +2616,14 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                            
 	                                             
 
+	       
+	          
+	                                                      
+	      
+
 	                                               
  
+
 
                                                                                               
  
@@ -2640,51 +2677,47 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                                                                                                                                                
 	                                                                                                                                                              
 
-                
-	                                                                                 
-	                  
+	                       
+	                                                                                                      
 	 
-      
-		                                                                    
+		                                                       
+		                                                                                                       
 		 
-			                                                                   
+			                
 			                                                                          
+			                                                                   
 			                                                
 		 
-                
-	 
-	    
-	 
-		                       
-		                                                                                                      
+		    
 		 
-			                                                       
-			                                                                                                       
-			 
-				                
-				                                                                          
-				                                                                   
-				                                                
-			 
-			    
-			 
-				               
-				                                                        
-				                                                                       
+			               
+			                                                        
+			                                                                       
 
-				                                                                          
-				                                                          
+			                                                                          
+			                                                          
 
-				                                                         
-			 
+			                                                         
 		 
 	 
-      
+
 	            
  
 
+       
+                                                                                          
+ 
+	                                                                                   
+	                    
+	 
+		                                                                             
+		                                                                                                                                            
+	 
+	            
+ 
+      
 
-                
+
                                                                                  
  
 
@@ -2700,10 +2733,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 			                                                     
 		 
 
-		                                  
-		 
-			                                                                                                            
-		 
+		                                                                                                            
 
 		                                                           
 		                                                              
@@ -2716,7 +2746,6 @@ int function GetDemotionProtectionBuffer ( entity player )
  
 	                                                     
  
-      
 
 
                                                                                  
@@ -2941,6 +2970,13 @@ int function GetDemotionProtectionBuffer ( entity player )
 			                                                                                                      
 			                                                                                                                           
 		 
+
+		                                                   
+			                                                   
+
+		                                                                                                             
+		                                                                                                                        
+		                                        
 	 
  
 
@@ -3073,141 +3109,98 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                    
 	                                                
 
-                
-	                                                                             
+	                         
+	                                                                         
+	                                                                              
+
+	                                          
+	                                                                                      
+
+	                        
+	                                                                                    
+	                                                                                            
+	                                                                                                       
+	                                                                                                               
+
+	                                                                                                     
+	                                
+	                                           
 	 
-      
-		                                   
-
-		                                                                         
-		                                                                             
-
-		                                          
-		                                                                                    
-
-		                        
-		                                                                                    
-		                                                                                          
-
-		                                                                                                       
-		                                                                                                               
-
-		                        
-		                                                                  
-
-		                     
-		                                                                               
-
-		                                                                         
-		                                                                                                           
-
-		                        
-		                                                                                                                            
-
-		                                                                                
-
-		                                                  
-
-                
-	 
-	    
+		                                                                                             
+		                                         
+		 
+			                                             
+		 
 	 
 
-		                         
-		                                                                         
-		                                                                              
-
-		                                          
-		                                                                                      
-
-		                        
-		                                                                                    
-		                                                                                            
-		                                                                                                       
-		                                                                                                               
-
-		                                                                                                     
-		                                
+	                                             
+	 
+		                                                                                             
 		                                           
 		 
-			                                                                                             
-			                                         
-			 
-				                                             
-			 
+			                                            
 		 
-
-		                                             
-		 
-			                                                                                             
-			                                           
-			 
-				                                            
-			 
-		 
-
-		                                                   
-		 
-			                                                                                             
-			                                                 
-			 
-				                                                                                  
-			 
-		 
-
-		                          
-		                                                       
-
-		                       
-		                                                     
-		 
-			                                    
-			 
-				                                                                                                                                                      
-				                        
-
-				       
-					                                                                
-				      
-			 
-		 
-
-		                                                                  
-
-
-		                                   
-
-		                     
-		                                                                               
-
-		                                                                        
-		                                                                                        
-		                                            
-
-		                        
-		                                                
-
-		                                                                                
-
-		                                                  
-
-		       
-			                                                          
-			                                                                     
-			                                                      
-			                                                 
-		      
-
-
 	 
-      
+
+	                                                   
+	 
+		                                                                                             
+		                                                 
+		 
+			                                                                                  
+		 
+	 
+
+	                          
+	                                                       
+
+	                       
+	                                                     
+	 
+		                                    
+		 
+			                                                                                                                                                      
+			                        
+
+			       
+				                                                                
+			      
+		 
+	 
+
+	                                                                  
+
+
+	                                   
+
+	                     
+	                                                                               
+
+	                                                                        
+	                                                                                        
+	                                            
+
+	                        
+	                                                
+
+	                                                                                
+
+	                                                  
+
+	       
+		                                                          
+		                                                                     
+		                                                      
+		                                                 
+	      
+
 	             
  
 
 
                                                             
  
-	                                                               
+	                                                                                             
 
 	                                            
 		          
@@ -3460,14 +3453,12 @@ int function GetDemotionProtectionBuffer ( entity player )
 
 				                                                                                        
 				 
-					                                           
+					                                            
 					                                           
 				 
 
-                    
-					                                                            
-					                                                                
-          
+				                                                            
+				                                                                
 
 				                                  
 					                                                                                                                                
@@ -3556,15 +3547,16 @@ int function GetDemotionProtectionBuffer ( entity player )
 		                                           
 	 
 
-	                                                                                                          
+	                                                                                        
+	                                                                                                                
 	                                                                                                               
+	                                                                                                          
 	                                                                                                  
 
-                 
-		                           
-		                                                            
-		                                                                
-       
+	                           
+	                                                            
+	                                                                
+
 
 	                                                                                                                                                                     
 	 
@@ -3592,6 +3584,8 @@ int function GetDemotionProtectionBuffer ( entity player )
                                                              
                                                        
  
+
+	                                                                                                         
 	       
 		                                    
 			      
@@ -3666,25 +3660,42 @@ int function GetDemotionProtectionBuffer ( entity player )
 			        
 		 
 
-		                                                                                                                                                       
+		                                                                                                                                                                                           
 
 		                                   
 
+		                                                  
+		                                                                        
+		                                                                                                           
+
 		                                                   
 		 
-			                                                                                             
+			                                                                                                                       
 		 
 		    
 		 
-			                                                                                     
-			                                                                                                            
+			                                                                                                                
+			                                
+			 
+				                                                                                                            
+			 
+			    
+			 
+				                                                                                          
+				                                                                                                                                                    
+			 
 		 
+
+		                                                                                         
 
 		                         
 		                                                                     
 		 
 			                                      
+			 
 				                                                                  
+				                                                                                                    
+			 
 		 
 
 		                                            
@@ -3704,6 +3715,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 			                                                                                 
 			 
 				                                                                      
+				                                                                                                                              
 			  
 			                                                                                     
 				                                                                             

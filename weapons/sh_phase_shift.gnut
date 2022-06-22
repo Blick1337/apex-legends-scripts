@@ -189,7 +189,9 @@ int function PhaseShift( entity ent, float warmupTime, float duration, int shift
 			&& !ent.ContextAction_IsLeeching()
 			&& !ent.ContextAction_IsInVehicle()
 			&& !HoverVehicle_IsPlayerInAnyVehicle( ent )
-			&& !Crafting_IsPlayerAtWorkbench( ent ) )
+			&& !Crafting_IsPlayerAtWorkbench( ent )
+			&& !( IsEntNewcastleReviver( ent ) )
+			&& !( IsEntNewcastleReviveTarget( ent ) ) )
 		{
 			return 0
 		}

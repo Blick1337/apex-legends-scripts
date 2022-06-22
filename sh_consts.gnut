@@ -51,6 +51,7 @@ global enum eDeathScreenPanel
 	NONE = -1,
 	SPECTATE,
 	DEATH_RECAP,
+	SCOREBOARD,
 	SQUAD_SUMMARY
 }
 
@@ -344,7 +345,7 @@ global enum eRespawnStyle
 		ROLLING_RESPAWN,
        
                            
-                  
+		SKYDIVE_RESPAWN,
        
 	_COUNT,
 }
@@ -531,6 +532,8 @@ global enum PerfIndexServer
 	AddToInventory,
 
 	SmartLoot,
+
+	WreckingBall,
 }
 
 global const SharedPerfIndexStart = 100
@@ -1242,6 +1245,8 @@ global enum eCommsAction
 	PING_ENEMY_SPOTTED_SPECIFIC,
                 
                              
+                         
+                               
        
                             
                                     
@@ -1328,7 +1333,6 @@ global enum eCommsAction
 	PING_LAVA,
                           
 		PING_TRAIN,
-		PING_TRAIN_AT_STATION,
        
 	  
 	CANCELED_PING,
@@ -1536,10 +1540,6 @@ global enum eCommsAction
 
                 
 		PING_PHASE_RUNNER,
-       
-
-                
-		PING_BOXING_RING,
        
 
 	PING_WEAPON_3030,
@@ -1790,10 +1790,12 @@ global enum eCommsAction
 	PING_GO_CAREPACKAGE,
 
                     
-              
-                       
-                       
+		PING_MEDBAY,
+		PING_MEDBAY_COOLDOWN,
+		PING_MEDBAY_DISABLED,
        
+
+	PING_CAREPACKAGE_INCOMING,
 
 	_count
 }
@@ -1810,6 +1812,9 @@ global const string CARE_PACKAGE_TARGETNAME = "care_package"
 global const string CARE_PACKAGE_LIFELINE_TARGETNAME = "care_package_lifeline"
 global const string SURVEY_BEACON_SCRIPTNAME = "survey_beacon"
 global const string REVIVE_SHIELD_SCRIPTNAME = "revive_shield"
+global const string GENERIC_PING_PANEL_SCRIPTNAME = "generic_panel"
+global const string GENERIC_PING_PANEL_SCRIPTNAME_COOLDOWN = "generic_panel_cooldown"
+global const string GENERIC_PING_PANEL_SCRIPTNAME_INACTIVE = "generic_panel_inactive"
 global const string JUMP_PAD_TARGETNAME = "jump_pad"
 global const string SKYDIVE_LAUNCHER_TARGETNAME = "skydive_launcher"
 

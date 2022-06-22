@@ -385,7 +385,7 @@ void function ShieldRegen_CreateShieldRegenUI()
 	if ( IsValid( file.armorShieldRegenRui ) )
 		return
 
-	file.armorShieldRegenRui = CreateCockpitRui( $"ui/armor_shieldregen.rpak" )
+	file.armorShieldRegenRui = CreateCockpitPostFXRui( $"ui/armor_shieldregen.rpak" , MINIMAP_Z_BASE )
 	RuiSetFloat( file.armorShieldRegenRui, "maxRegenDelay", file.shieldRegenBreakDelayTime )
 }
 

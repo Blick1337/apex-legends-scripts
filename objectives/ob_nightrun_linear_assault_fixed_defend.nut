@@ -3195,7 +3195,7 @@ bool function IsHardMode()
 		                      
 			     
 		                            
-		                                                
+		                                              
 		                         
 			                                             
 	 

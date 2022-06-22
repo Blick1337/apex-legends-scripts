@@ -236,7 +236,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                                      
     
                                                                                  
-                                                                                             
+                                                                                         
     
                        
                            
@@ -548,6 +548,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                                
     
                                                                          
+                                                                                                                                     
 
                                                     
                                                      
@@ -556,8 +557,19 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                     
                                                                                                       
                                                                      
-                                                       
-                                                                                                                     
+    
+                                                                                     
+    
+                                                                         
+
+                                                    
+                                                     
+                                                     
+                                                    
+                                                    
+                                                                                                      
+                                                                     
+                                                        
     
       
 		else

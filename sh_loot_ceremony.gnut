@@ -52,9 +52,7 @@ global function ClientToUI_ClearInspectModeIsActive
 global function ClientToUI_PlayLootCeremonySound
 global function ClientToUI_StopLootCeremonySound
 global function ClientToUI_LootCeremonyMarkItemAsNoLongerNew
-                    
 global function ClientToUI_TrackMythicChallenge
-                          
 
 global function LootCeremony_UpdateOpenAdditionalButton
 
@@ -230,10 +228,8 @@ struct FileLevelStruct
 		entity cameraEnt
 
 		table<string, var>            rewardPlacards = { RewardLeftButton = null, RewardCenterButton = null, RewardRightButton = null }
-                    
 		array<entity>				  characterSkinModels
 		bool						  inspectModeActive
-                          
 
 		array< ItemPresentationData > itemPresentationDatas
 
@@ -658,7 +654,6 @@ void function UIToClient_OnGRXPackOpeningResultsAvailable()
 		rightCurrencyIPD.quantity = rightCurrencyAmount
 		fileLevel.itemPresentationDatas.append( rightCurrencyIPD )
 	}
-                     
 	else if ( bag.flavors.len() == 1 && Mythics_IsItemFlavorMythicSkin( bag.flavors[0] ) )
 	{
 		array<ItemFlavor> mythicSkins = Mythics_GetAllSkinsFromBase( bag.flavors[0] )
@@ -685,7 +680,6 @@ void function UIToClient_OnGRXPackOpeningResultsAvailable()
 			fileLevel.itemPresentationDatas.append( data )
 		}
 	}
-                           
 	else
 	{
 		for ( int i = 0; i < bag.quantities.len(); i++ )
@@ -1644,9 +1638,7 @@ void function LootCeremonySequenceShowRewards()
 	RunUIScript( "ClientToUI_SetLootHasBeenPresented", heirloomShards )
 	RunUIScript( "ClientToUI_UpdateStoreButtonVisibility" )
 	RunUIScript( "LootCeremony_UpdateOpenAdditionalButton" )
-                    
 	thread MythicUpdateAllEffects( true )
-                          
 
 	                                      
 	for ( int i = 0; i < TICK_LOOT_ATTACHMENTS.len(); i++ )
@@ -1930,10 +1922,8 @@ void function ShowRewards_CharacterSkin( ItemFlavor item, vector origin, vector 
 	thread FlashMenuModel( characterModel, flashType, flashColor )
 	LootCeremonyUpdateSpotLights( attachment, true, eItemType.character_skin )
 
-                    
 	if ( Mythics_IsItemFlavorMythicSkin( item ) && displayIndex != 1 )
 		fileLevel.characterSkinModels.append( characterModel )
-                          
 
 	OnThreadEnd(
 		function() : ( mover, characterModel, attachment )
@@ -2949,7 +2939,6 @@ void function ShowRewards_Placard( ItemFlavor item, vector origin, vector angles
 		ItemFlavor currencyFlav = GRXCurrencyBundle_GetCurrencyFlav( item )
 		RuiSetString( ruiPlacard, "nameText", ItemFlavor_GetShortName( currencyFlav ) )
 	}
-                    
 	else if ( Mythics_IsItemFlavorMythicSkin( item ) )
 	{
 		int tierIndex = Mythics_GetSkinTierIntForSkin( item )
@@ -2963,7 +2952,6 @@ void function ShowRewards_Placard( ItemFlavor item, vector origin, vector angles
 		if ( tierIndex > 1 )
 			RuiSetBool( ruiPlacard, "isLocked", true )
 	}
-                          
 	else
 	{
 		RuiSetString( ruiPlacard, "nameText", ItemFlavor_GetTypeName( item ) )
@@ -3004,13 +2992,10 @@ void function UIToClient_RewardPlacard_Hover( var menuButton, bool isHovered )
 	if ( IsValid( rui ) )
 		RuiSetBool( rui, "isHovered", isHovered )
 
-                    
 	MythicSetButtonModelFade( menuButton, !isHovered )
-                          
 }
 #endif
 
-                    
 #if CLIENT
 void function MythicUpdateAllEffects( bool enable )
 {
@@ -3088,7 +3073,6 @@ void function MythicModelClear( entity model )
 	}
 }
 #endif
-                          
 
 #if CLIENT
 var function RewardPlacard_GetRuiFromMenuButton( var menuButton )
@@ -3296,10 +3280,8 @@ void function UIToClient_RewardInspectActivate_Threaded( var menuButton )
 	RunUIScript( "LootCeremony_UpdateOpenAdditionalButton" )
 	DisableFakeInspectButtons()
 
-                    
 	fileLevel.inspectModeActive = true
 	thread MythicUpdateAllEffects( false )
-                          
 
 	               
 	string menuButtonName = Hud_GetHudName( menuButton )
@@ -3684,10 +3666,8 @@ void function UIToClient_RewardInspectNavBack_Threaded()
 	RunUIScript( "LootCeremony_UpdateOpenAdditionalButton" )
 	EnableFakeInspectButtons()
 	RunUIScript( "ClientToUI_PlayLootCeremonySound", SOUND_HOLOGRAM_APPEAR_RESETVIEW )
-                    
 	fileLevel.inspectModeActive = false
 	thread MythicUpdateAllEffects( true )
-                          
 
 	Signal( fileLevel.signalDummy, "LootCeremonyInspectModeEndComplete" )
 
@@ -3975,7 +3955,6 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 		itemTypeName = ItemFlavor_GetLongName( item )
 		itemName = ""
 	}
-                    
 	else if ( Mythics_IsItemFlavorMythicSkin( item ) )
 	{
 		int mythicTier = Mythics_GetSkinTierIntForSkin( item )
@@ -3983,7 +3962,6 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 		itemName = Localize( ItemFlavor_GetLongName( item ) )
 		itemTypeName = Localize( "#MYTHIC_SKIN" )
 	}
-                          
 	else
 	{
 		itemName = Localize( ItemFlavor_GetLongName( item ) )
@@ -4014,7 +3992,6 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 	var equipButtonRui = Hud_GetRui( fileLevel.equipButton )
 
 	                        
-                    
 	if ( Mythics_IsItemFlavorMythicSkin( item ) )
 	{
 		var trackButtonRui = Hud_GetRui( fileLevel.trackChallengeButton )
@@ -4028,7 +4005,6 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 		Hud_SetEnabled( fileLevel.trackChallengeButton, true )
 	}
 	else
-                          
 	{
 
 		Hud_SetVisible( fileLevel.trackChallengeButton, false )
@@ -4128,14 +4104,12 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 			Hud_SetEnabled( fileLevel.equipButton, true )
 			Hud_SetLocked( fileLevel.equipButton, false )
 
-                    
 			if( Mythics_IsItemFlavorMythicSkin( item ) && Mythics_GetSkinTierIntForSkin( item ) > 1)
 			{
 				Hud_SetLocked( fileLevel.equipButton, true )
 				RuiSetString( equipButtonRui, "buttonText", "#EQUIP_LOCKED")
 				RuiSetString( equipButtonRui, "descText", "#CHALLENGE_MYTHIC_LOCKED_ICON")
 			}
-                          
 		}
 	}
 }
@@ -5533,14 +5507,12 @@ void function SetChallengeRewardPresentationModeActive( ItemFlavor itemFlav, int
 	fileLevel.specialPurchaseDialogConfig = null
 	fileLevel.onNavigatingBackFunc = null
 
-                    
 	if( Mythics_IsItemFlavorMythicSkin( itemFlav ) )
 	{
 		fileLevel.specialItemPriceHeader = "#EQUIP_LOCKED"
 		fileLevel.specialItemFormattedPrice = "#CHALLENGE_MYTHIC_LOCKED_ICON"
 	}
 	else
-                          
 	{
 		fileLevel.specialItemPriceHeader = priceHeader
 		fileLevel.specialItemFormattedPrice = subHeader
@@ -5762,14 +5734,14 @@ void function ClientToUI_EquipButtonShowDialog( SettingsAssetGUID itemGUID )
 	)
 }
 
-                    
+
 void function ClientToUI_TrackMythicChallenge( SettingsAssetGUID skinGUID )
 {
 	SettingsAssetGUID challengeGUID = Mythics_GetChallengeGUIDForSkinGUID( skinGUID )
 	ItemFlavor challenge = GetItemFlavorByGUID( challengeGUID )
 	Mythics_ToggleTrackChallenge( challenge, fileForever.trackChallengeButton )
 }
-                          
+
 
 void function EquipToWheelButtonOnClick( var button )
 {

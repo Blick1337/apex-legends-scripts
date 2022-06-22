@@ -212,7 +212,7 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 	                                                                           
 
 	                              
-	                                                                                                    
+	                                                                                             
 	                                   
 	 
 		                                                                                                                                                                            
@@ -338,8 +338,8 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 	 
 		                                    
 			                                                                            
-			                                                                          
-			                                                            
+			                                                                             
+			                                                              
 		      
 	 
 
@@ -396,7 +396,7 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 			                
 		 
 		                                    
-			                                                                       
+			                                                                         
 		      
 
 		                                                                                                 
@@ -413,7 +413,7 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 			                                                                                   
 		 
 		                                    
-			                                                                             
+			                                                                              
 		      
 
 		                                                                                               
@@ -556,12 +556,12 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 	              
 	 
 		                                    
-			                                                                                                                               
-			                                                                                              
-			                                                               
+			                                                                                                                             
+			                                                                                            
+			                                                                 
 			                                                                                   
+			                                                                                        
 			                                                                                     
-			                                                                                   
 		      
 		           
 	 
@@ -844,7 +844,7 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 
 	                                                                                                                                        
 	                                    
-		                                                              
+		                                                               
 	      
 
 	                    
@@ -900,7 +900,7 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 	               
 		                                                    
 	    
-		                                                    
+		                                                     
       
 
 

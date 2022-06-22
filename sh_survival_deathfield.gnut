@@ -16,9 +16,11 @@ global function Sh_ArenaDeathField_Init
 #if SERVER
                                            
 
+                    
                                                    
                                              
                                            
+      
 
                                   
                                       
@@ -48,7 +50,7 @@ global function Sh_ArenaDeathField_Init
                                   
                                          
                                   
-                                            
+                                               
                                            
                                           
 
@@ -92,11 +94,12 @@ global function Survival_GetNumDeathfieldStages
 global function AddCallback_OnSurvivalDeathFieldStageChanged
 global function RemoveCallback_OnSurvivalDeathFieldStageChanged
 
+                    
 global function ReconClassCharacter_PassiveChanged
-
-                      
-global function HasActiveSurveyZone
       
+
+global function HasActiveSurveyZone
+global function TeamHasActiveSurveyZone
 
 #if CLIENT
 table < float, string > distanceToSound =
@@ -184,6 +187,7 @@ global struct DeathFieldStageData
  
 #endif
 
+                    
 struct SurveyBeaconData
 {
 	int passiveSource
@@ -195,6 +199,7 @@ struct SurveyBeaconData
 	                    
 	#endif
 }
+      
 
 struct
 {
@@ -221,7 +226,9 @@ struct
 		      
 	#endif
 
-	table< entity, SurveyBeaconData > surveyBeaconData
+                     
+		table< entity, SurveyBeaconData > surveyBeaconData
+       
 
 	array<DeathFieldStageData> deathFieldStageData
 
@@ -266,20 +273,15 @@ void function Sh_ArenaDeathField_Init()
 	PrecacheParticleSystem( $"P_ring_radCP1_opaCP2_1k_x_5k" )
 	PrecacheParticleSystem( $"P_ring_radCP1_opaCP2_1k_x_100k" )
 
-	AddCallback_OnPassiveChanged( ePassives.PAS_PATHFINDER, ReconClassCharacter_PassiveChanged )
-
-                       
-
+                     
+		AddCallback_OnPassiveChanged( ePassives.PAS_PATHFINDER, ReconClassCharacter_PassiveChanged )
 		AddCallback_OnPassiveChanged( ePassives.PAS_TRACKING_VISION, ReconClassCharacter_PassiveChanged )
 		AddCallback_OnPassiveChanged( ePassives.PAS_CRYPTO, ReconClassCharacter_PassiveChanged )
 		AddCallback_OnPassiveChanged( ePassives.PAS_VALK, ReconClassCharacter_PassiveChanged )
-
 		AddCallback_OnPassiveChanged( ePassives.PAS_PARIAH, ReconClassCharacter_PassiveChanged )
-
                  
-                                                                                           
+                                                                                            
         
-
        
 
               
@@ -312,11 +314,11 @@ void function Sh_ArenaDeathField_Init()
 		                                           
 
 		                                                         
-		                                                                                     
+		                                                                                  
 		                                                                       
 
-		                                                                                                          
-		                                                                                                         
+		                                                                                                       
+		                                                                                                      
 
 		                                                                                     
 		                                
@@ -530,10 +532,12 @@ bool function TeamShouldSeeBeaconMarker( int team )
 	return shouldSee
 }
 
+                    
 bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 {
 	return player in file.surveyBeaconData || player.GetTeam() == TEAM_SPECTATOR
 }
+      
 
 
 #if SERVER
@@ -967,18 +971,18 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 			                                                                    
 
                              
-                                   
-     
-                                                                                             
+				                               
+				 
+					                                                                                        
 
-                                                                    
-      
-                                                
-                                                                                  
-                                                          
-      
-     
-        
+					                                                               
+					 
+						                                          
+						                                                                            
+						                                                    
+					 
+				 
+				    
          
 				 
 					                                        
@@ -1115,7 +1119,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 		                                        
 			                                                                         
 
-		                              
+		                                 
 
 		                                       
 
@@ -1564,20 +1568,21 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 				                                   
 
 				                                                                                      
-				                                                                                                                      
+				                                                   
 
-				                                                                                                                                                                                         
-				                                                                                                                                                                                           
-				                                                                                                                                                                                           
-				                                                                                                                                                                                         
+				                                                                          
+				                                                                                                                                             
+				                                                                                                                                               
+				                                                                                                                                               
+				                                                                                                                                             
 
 				                                                               
 					                                                    
 
 				                                                   
 				 
-					                                                                                          
-					                                                                                
+					                                                                                            
+					                                                                                  
 				 
 			 
 		 
@@ -1592,7 +1597,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 				                                                                                                  
 
 			                     
-				                                                                                                          
+				                                                                                                           
 
 			   
 		 
@@ -1636,16 +1641,16 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 	                                                                  
 	                                                   
 
-	                                                                                      
-	                                                                                      
-	                                                                                      
-	                                                                                      
-	                                                                  
-	                                                                
+	                                                                                        
+	                                                                                        
+	                                                                                        
+	                                                                                        
+	                                                                    
+	                                                                 
 
-	                                                                                                                     
+	                                                                                                                      
+	                                                                                                        
 	                                                                                                         
-	                                                                                                       
 
 	                               
 	                                                         
@@ -1746,11 +1751,11 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 			                                   
 		 
 
-		                                                                                                                    
-		                                                                        
+		                                                                                    
+		                                                                          
 		                                                                                      
 
-		                                                                                                                                      
+		                                                                                                                                        
 		                       
 		                                  
 		 
@@ -2108,8 +2113,8 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 			                       
 			 
 				                   
-				                                                                     
-				                                                                                         
+				                                                                      
+				                                                                                           
 				                   
 				                                        
 				 
@@ -2121,7 +2126,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 					 
 						                                         
 						                
-						                                                            
+						                                                             
 						     
 					 
 				 
@@ -2225,14 +2230,14 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 						                                     
 						 
 							                                     
-								                                                              
+								                                                                  
 
 							     
 						 
 						    
 						 
 							                                     
-								                                                            
+								                                                              
 
 							                                                                                                                                                        
 							                                                                                                                  
@@ -2243,7 +2248,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 					    
 					 
 						                                     
-							                                                            
+							                                                               
 
 						     
 					 
@@ -2315,8 +2320,11 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 	 
 		                                                      
 
+		                                                                                                                   
+		                                                                                                           
+		                                                                                                                            
 		                                                                         
-		                                                                                                                               
+		                                                                                                                     
 		                                      
 
 		                                                                             
@@ -2370,7 +2378,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 			 
 
 			                   
-				                                                                                                                 
+				                                                                                                                   
 
 			                       
 			                        
@@ -2402,7 +2410,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 
 	                       
 
-	                                                            
+	                                                                
 
 	                                                 
 		            
@@ -2427,7 +2435,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 
 		                       
 
-		                                                              
+		                                                                  
 
 		                                                              
 			            
@@ -2529,6 +2537,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 	                                    
  
 
+                    
                                                                                     
  
 	                                           
@@ -2536,6 +2545,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 
 	                                                             
  
+      
 
                                                                                           
  
@@ -2557,7 +2567,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 	 
  
 
-             
+                                  
                                                                  
  
                             
@@ -2604,6 +2614,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
  
       
 
+                    
                                                                  
  
 	                           
@@ -2620,7 +2631,6 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 	                                                
 	                                                           
 	 
-                        
 		                                                                  
 		                               
 		 
@@ -2659,9 +2669,9 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 			 
 			                                                                                       
 		 
-        
 	 
  
+      
 
                                                                                                                             
  
@@ -2818,7 +2828,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 	                                       
  
 
-                                            
+                                               
  
 	                                         
 	 
@@ -2843,7 +2853,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 	 
  
 
-                                                   
+                                                
  
 	                              
 	                                
@@ -2918,14 +2928,6 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 
 	                                        
 	 
-		                                                                                         
-		                                             
-		                                                                               
-		                                            
-		                                            
-		                                                  
-		                                 
-
 		                                        
 		                         
 		                             
@@ -2939,7 +2941,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 		 
 			                               
 			                                       
-			 
+		 
 
 		                                   
 	 
@@ -2978,7 +2980,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player )
 	 
  
 
-                                                               
+                                                            
  
 	                                                                           
 	 
@@ -3328,11 +3330,10 @@ void function ServerCallback_Survival_PathfinderSurveyNotifications( entity beac
 	{
 		case ePathfinderNotifications.TEAM_SUCCESS:
 			                                               
-                      
 			entity localViewPlayer = GetLocalViewPlayer()
 			if ( IsValid( localViewPlayer ) && PlayerHasPassive( localViewPlayer, ePassives.PAS_PATHFINDER ) )
 				AddPlayerHint( 2.5, 0.25, $"rui/hud/ultimate_icons/ultimate_pathfinder", "#SURVEY_PATHFINDER_SUCCESS" )
-      
+
 			clGlobal.levelEnt.Signal( "UpdateSurveyBeaconVisibility" )
 
 			break
@@ -3577,7 +3578,22 @@ float function Cl_SURVIVAL_GetDeathFieldCurrentRadius()
  
 #endif
 
+             
+                                                                
+ 
+                                                   
+  
+            
+                                                                                                                    
+                 
+              
+  
 
+            
+ 
+      
+
+                    
 bool function SurveyBeacon_CanUseFunction( entity player, entity beacon, int useFlags )
 {
 
@@ -3607,21 +3623,6 @@ bool function SurveyBeacon_CanUseFunction( entity player, entity beacon, int use
 
 	return true
 }
-
-             
-                                                                
- 
-                                                   
-  
-            
-                                                                                                                    
-                 
-              
-  
-
-            
- 
-      
 
 bool function Recon_CanUseBeacon( entity player, entity beacon )
 {
@@ -3661,6 +3662,7 @@ void function ShowSurveyBeaconTeamHint( entity player )
 		AddPlayerHint( 0.1, 0, $"rui/hud/gametype_icons/survival/survey_beacon_only_pathfinder", "#SURVEY_TEAM_MESSAGE" )
 }
 #endif         
+                         
 
 bool function HasActiveSurveyZone( entity player )
 {
@@ -3934,13 +3936,17 @@ void function DisplayHolsterWeaponHint()
   
                
    
-                                                                             
-                                       
+                       
+                                                                              
+                                        
+         
 
              
                                                           
-                                          
-                                                                 
+                        
+                                           
+                                                                  
+          
          
    
       
@@ -3948,13 +3954,15 @@ void function DisplayHolsterWeaponHint()
           
                                                          
       
-                                                   
+                       
+                                                    
+         
    
   
  
       
 
-
+                    
 void function ReconClassCharacter_PassiveChanged( entity player, int passive, bool didHave, bool nowHas )
 {
 	if ( nowHas != didHave )
@@ -3974,54 +3982,37 @@ void function ReconClassCharacter_PassiveChanged( entity player, int passive, bo
 			case ePassives.PAS_VALK:
 			{
 				calloutLine  = "bc_surveyBeaconScanValkyrie"
-				player1pAnim = "medium"
-				player3pAnim = "medium"
-				panelAnim    = "medium"
 				break
 			}
 			case ePassives.PAS_TRACKING_VISION:
 			{
 				calloutLine  = "bc_surveyBeaconScanBloodhound"
-				player1pAnim = "medium"
-				player3pAnim = "bloodhound"
-				panelAnim    = "medium"
 				break
 			}
 			case ePassives.PAS_CRYPTO:
 			{
-				if ( IsCryptoSword ( player ) )
+				if ( HasCryptoSword ( player ) )
 				{
-					printt("IsCryptoSword: " + true)
 					calloutLine  = "bc_surveyBeaconScanCrypto"
 					player1pAnim = "crypto"
 					player3pAnim = "crypto"
-					panelAnim    = "medium"
 				}
 				else
 				{
-					printt("IsCryptoSword: " + false)
 					calloutLine  = "bc_surveyBeaconScanCrypto"
-					player1pAnim = "medium"
 					player3pAnim = "crypto"
-					panelAnim    = "medium"
 				}
 				break
 			}
 			case ePassives.PAS_PARIAH:
 			{
 				calloutLine  = "bc_surveyBeaconScanSeer"
-				player1pAnim = "medium"
-				player3pAnim = "medium"
-				panelAnim    = "medium"
 				break
 			}
                
                               
     
                                                
-                           
-                           
-                           
          
     
       
@@ -4029,15 +4020,11 @@ void function ReconClassCharacter_PassiveChanged( entity player, int passive, bo
 				break
 		}
 
-		#if DEV
-		Assert( calloutLine != "" &&  player1pAnim != "" && player3pAnim!= "" && panelAnim != "" , "Values missing when trying to RegisterSurveyBeaconData for Passive: " + DEV_GetEnumStringSafe( "ePassives", passive )  )
-		#endif
-
 		RegisterSurveyBeaconData( player, passive, nowHas, calloutLine, player1pAnim, player3pAnim, panelAnim )
 	}
 }
 
-bool function IsCryptoSword( entity player )
+bool function HasCryptoSword( entity player )
 {
 
 	string meleeSkinName
@@ -4078,19 +4065,28 @@ void function RegisterSurveyBeaconData( entity player, int passive, bool nowHas,
 
 
 #if SERVER
-                                                                                                       
+                                                                                                                   
  
-	                                                                        
-	                                                                     
-	                                                                    
+	                         
+		                   
 
-	                                                                        
-	                                                                     
-	                                                                    
+	                         
+		                      
 
+	                      
+		                
+
+	                                                                          
 	                                                                        
-	                                                                     
-	                                                                    
+	                                                                        
+
+	                                                                  
+	                                                                
+	                                                                
+
+	                                                                           
+	                                                                         
+	                                                                         
  
 #endif
 
@@ -4113,6 +4109,7 @@ SurveyBeaconData function SurveyBeacon_RegisterPlayer( entity player, int passiv
 
 	return data
 }
+      
 
 #if CLIENT
 entity function Cl_SURVIVAL_GetDeathField()
@@ -4131,6 +4128,7 @@ int function Survival_GetNumDeathfieldStages()
 	return file.deathFieldStageData.len()
 }
 
+                    
 #if SERVER
                                                                                         
  
@@ -4154,6 +4152,8 @@ int function Survival_GetNumDeathfieldStages()
 	           
  
 #endif
+      
+
 #if CLIENT
 void function MinimapPackage_SurveyBeacon( entity ent, var rui )
 {

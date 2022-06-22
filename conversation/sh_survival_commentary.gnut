@@ -877,7 +877,7 @@ void function CommentaryDebugText( vector origin, string text, float time )
 void function CommentaryDebugSphere( vector origin, int r, int g, int b, float time, float size = 16 )
 {
 	if ( file.commentaryDebug )
-		DebugDrawSphere( origin, size, r, g, b, true, time )
+		DebugDrawSphere( origin, size, <r, g, b>, true, time )
 }
 
 

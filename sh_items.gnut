@@ -70,9 +70,7 @@ global function MakeItemFlavorBag
 global function ItemFlavorBag_ClearZeroQuantityFlavors
 global function ItemFlavorBag_GetSingleOutputItemFlavor_Assert
 global function ItemFlavorBag_GetMeleeSkinItem
-                    
 global function ItemFlavorBag_GetMythicSkinItem
-                          
 global function ItemFlavorBag_ToQuantityMap
                       
 global function DEV_DescribeItemFlavorBag
@@ -214,10 +212,8 @@ global enum eItemType
 	club_logo_element
 	club_search_tag
 
-                     
-		                                                             
-		mythic_bundle                                            
-       
+	                                                             
+	mythic_bundle                                            
 
 	COUNT
 }
@@ -373,9 +369,7 @@ global const string CHALLENGE_TIER_STAT_REF = "tier%d_stat%d"
                                                                      
       
 
-                    
 global const string HAS_MYTHIC_PREREQ = "has_mythic_prereq"
-      
 
                        
                        
@@ -421,6 +415,8 @@ struct
 {
 	table<string, bool functionref(entity player)> unlockFuncs
 } file
+
+const array< string > HIDDEN_CHARACTER_REFS = [ "character_dummie", "character_random" ]
 
                          
                          
@@ -852,6 +848,19 @@ string function ItemFlavor_GetRewardShortDescription( ItemFlavor flav )
 			ItemFlavor ref = CharacterSkin_GetCharacterFlavor( flav )
 			return Localize( "#REWARD_SKIN", Localize( ItemFlavor_GetLongName( ref ) ) )
 
+		case eItemType.character_execution:
+			ItemFlavor ref = CharacterExecution_GetCharacterFlavor( flav )
+			return Localize( "#REWARD_FINISHER", Localize( ItemFlavor_GetLongName( ref ) ) )
+
+		case eItemType.character_emote:
+			ItemFlavor ornull ref = CharacterQuip_GetCharacterFlavor( flav )
+			if ( ref == null )
+				return ""
+
+			expect ItemFlavor( ref )
+
+			return Localize( "#REWARD_EMOTE", Localize( ItemFlavor_GetLongName( ref ) ) )
+
 		case eItemType.gladiator_card_stat_tracker:
 			ItemFlavor ornull ref = GladiatorCardStatTracker_GetCharacterFlavor( flav )
 			if ( ref == null )
@@ -972,6 +981,9 @@ int function ItemFlavor_GetAccountPackType( ItemFlavor pack )
                                                                                                            
 int function GetPlaylistAvailabilityByRef( string ref )
 {
+	if ( HIDDEN_CHARACTER_REFS.len() > 0 && HIDDEN_CHARACTER_REFS.contains( ref ) )
+		return eItemFlavorPlaylistAvailability.HIDDEN
+
 	if ( fileLevel.itemsWithPlaylistAvailability.len() == 0 || fileLevel.itemsWithPlaylistAvailability.contains( ref ) == false )
 		return eItemFlavorPlaylistAvailability.NONE
 
@@ -1001,12 +1013,37 @@ int function GetPlaylistAvailabilityByRef( string ref )
 }
 
 
+#if DEV
+                                                                                                                                                                                     
+int function DEV_Character_GetPlaylistAvailability( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
+	string ref = ItemFlavor_GetHumanReadableRef( flavor )
+
+	if ( HIDDEN_CHARACTER_REFS.len() > 0 && HIDDEN_CHARACTER_REFS.contains( ref ) )
+		return eItemFlavorPlaylistAvailability.HIDDEN
+
+	string playlistVar = GetCurrentPlaylistVarString( ref, "~none~" ).tolower()
+
+	if ( playlistVar == "~none~" || playlistVar == "enable" )
+		return eItemFlavorPlaylistAvailability.NONE
+
+	if ( playlistVar == "hide" )
+		return eItemFlavorPlaylistAvailability.HIDDEN
+
+	return eItemFlavorPlaylistAvailability.DISABLED
+}
+#endif
+
+
 int function ItemFlavor_GetPlaylistAvailability( ItemFlavor flavor )
 {
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 
-	if ( fileLevel.itemsWithPlaylistAvailability.len() == 0 )
-		return eItemFlavorPlaylistAvailability.NONE
+	#if DEV
+		if ( ItemFlavor_GetType( flavor ) == eItemType.character )
+			return DEV_Character_GetPlaylistAvailability( flavor )
+	#endif
 
 	string ref = ItemFlavor_GetHumanReadableRef( flavor )
 	return GetPlaylistAvailabilityByRef( ref )
@@ -1347,15 +1384,12 @@ array<ItemFlavor> function RegisterReferencedItemFlavorsFromArray( ItemFlavor pa
 }
 
 
-table<ItemFlavor, bool> function MakeItemFlavorSet( array<ItemFlavor> list, table<ItemFlavor, int> sortOrdinalMap = {} )
+void function MakeItemFlavorSet( array<ItemFlavor> list, table<ItemFlavor, int> sortOrdinalMap = {} )
 {
-	table<ItemFlavor, bool> out
 	foreach ( int index, ItemFlavor flavor in list )
 	{
-		out[flavor] <- true
 		sortOrdinalMap[flavor] <- index                                                               
 	}
-	return out
 }
 
 const string itemSettingsPathPattern = "^settings/itemflav/([^.]+)\\.rpak$"
@@ -1564,7 +1598,6 @@ ItemFlavor function ItemFlavorBag_GetMeleeSkinItem( ItemFlavorBag bag )
 }
 #endif
 
-                    
 #if SERVER || CLIENT || UI
 ItemFlavor function ItemFlavorBag_GetMythicSkinItem( ItemFlavorBag bag )
 {
@@ -1587,7 +1620,6 @@ ItemFlavor function ItemFlavorBag_GetMythicSkinItem( ItemFlavorBag bag )
 	return mythicSkin
 }
 #endif
-                          
 
 #if SERVER || CLIENT || UI
 table<ItemFlavor, int> function ItemFlavorBag_ToQuantityMap( ItemFlavorBag bag )

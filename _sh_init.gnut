@@ -125,6 +125,14 @@ void function SV_CL_Init()
 	ShCharacters_LevelInit()
 	ShPassives_Init()
 	ShCharacterAbilities_LevelInit()
+                    
+              
+                        
+                          
+                               
+                            
+                          
+       
 	ShCharacterCosmetics_LevelInit()
 	ShCalEvent_LevelInit()
 	Vouchers_LevelInit()
@@ -147,9 +155,7 @@ void function SV_CL_Init()
                  
                         
        
-                     
-		ShMythics_LevelInit()
-       
+	ShMythics_LevelInit()
 	ShLoadscreen_Init()
 	ShLoadscreen_LevelInit()
 	ShMusic_LevelInit()
@@ -162,8 +168,8 @@ void function SV_CL_Init()
 	PassiveGrenadier_Init()
 
                  
-                           
                          
+                           
        
 
 	Clubs_Init()
@@ -224,6 +230,7 @@ void function SV_CL_Init()
 	ShGas_Init()
                  
                 
+                         
        
                     
                
@@ -399,12 +406,12 @@ void function SV_CL_Init()
 	PassiveHeartbeatSensor_Init()
 
                            
-                                
-                               
-                             
-                                
-                             
-                             
+		ShGameMode_DeathTrigger_Init()
+		ShGameMode_ShieldRegen_Init()
+		ShGameMode_AutoCards_Init()
+		ShGameMode_SecondChance_Init()
+		ShGameMode_GlowZones_Init()
+		ShGameMode_ArmedDrop_Init()
        
 
                     
@@ -421,7 +428,7 @@ void function SV_CL_Init()
 		ControlGunRackPanels_Init()
        
 
-	SHTeams_Init()
+	AllianceProximity_Init()
 	LoadoutSelection_Init()
 
                                 
@@ -458,6 +465,9 @@ void function SV_CL_Init()
                        
 		SpectreShacks_MapInit()
        
+
+	NET_TraceRoute_Init()
+
 }
 
 #if SERVER
@@ -565,6 +575,11 @@ void function SV_CL_Init()
                       
        
 	                            
+
+                       
+                           
+       
+
                  
                          
                           
@@ -750,6 +765,7 @@ void function Client_Init()
        
 
 	ShEpilogue_Init()
+
 }
 #endif          
 
@@ -792,6 +808,14 @@ void function Shared_Lobby_Init()
 	ShCharacters_LevelInit()
 	ShPassives_Init()
 	ShCharacterAbilities_LevelInit()
+                    
+              
+                        
+                          
+                               
+                            
+                          
+       
 	ShCharacterCosmetics_LevelInit()
 	ShCalEvent_LevelInit()
 	Vouchers_LevelInit()
@@ -813,9 +837,7 @@ void function Shared_Lobby_Init()
                  
                         
        
-                     
-		ShMythics_LevelInit()
-       
+	ShMythics_LevelInit()
 	ShLoadscreen_Init()
 	ShLoadscreen_LevelInit()
 	ShMusic_LevelInit()

@@ -681,7 +681,7 @@ PhaseBreachTargetInfo function GetPhaseBreachTargetInfo( entity player )
 		int i              = 0
 		while ( airTraceDist < (rangeEffective - 250.0) && (DotProduct( eyeTrace.adjustedEndPos - eyePos, airPos - eyePos ) > 0) )
 		{
-			TraceResults airDownTrace = TraceLine( airPos, airPos - <0.0, 0.0, DOWN_TRACE_DISTANCE>, ignoredEnts, TRACE_MASK_ABILITY, TRACE_COLLISION_GROUP_PLAYER )
+			TraceResults airDownTrace = TraceHull( airPos, airPos - <0.0, 0.0, DOWN_TRACE_DISTANCE>, <-5,-5,-5>, <5,5,5>, ignoredEnts, TRACE_MASK_ABILITY_HULL, TRACE_COLLISION_GROUP_PLAYER )
 			DrawDebugSphereIfDebugging( airPos, 0, 255, 255 )
 			DrawDebugSphereIfDebugging( airDownTrace.endPos, 255, 0, 255 )
 			if ( airDownTrace.fraction < 1.0 )
@@ -905,7 +905,7 @@ void function DrawDebugSphereIfDebugging( vector origin, int r, int g, int b )
 {
 	#if DEV
 		if ( DEBUG_DRAW_PLACEMENT_TRACES )
-			DebugDrawSphere( origin, 5.0, r, g, b, false, 0.1 )
+			DebugDrawSphere( origin, 5.0, <r, g, b>, false, 0.1 )
 	#endif
 }
 

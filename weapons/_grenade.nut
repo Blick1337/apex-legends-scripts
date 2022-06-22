@@ -29,6 +29,7 @@ global function Grenade_OnProjectileCollision
               
                                        
                                   
+                                     
       
                                      
 #endif
@@ -79,6 +80,14 @@ const SOLDIER_ARC_STUN_ANIMS = [
 	"pt_react_ARC_stumble_F",
 	"pt_react_ARC_stumble_R" ]
 
+struct
+{
+               
+                               
+                                
+       
+} file
+
 void function Grenade_FileInit()
 {
 	PrecacheParticleSystem( CLUSTER_BASE_FX )
@@ -88,6 +97,9 @@ void function Grenade_FileInit()
 	RegisterSignal( "OnEMPPilotHit" )
 	RegisterSignal( "StopGrenadeClientEffects" )
 	RegisterSignal( "DisableTrapWarningSound" )
+               
+                                        
+       
 
 	                             
 
@@ -618,7 +630,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
                                                                                                             
          
 
-                                            
+                                                       
          
 
                                            
@@ -654,7 +666,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
                     
                   
                            
-                                                    
+                                             
        
        
 }
@@ -666,9 +678,9 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
  
 
                                                                                                         
-                                                                                                 
+                                                                                   
  
-                                       
+                                        
 
              
                                 
@@ -678,11 +690,43 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
    
   
                                                       
-                                                                
+                                                                      
 
                                                                 
 
                                  
+
+                                                               
+                       
+               
+  
+                                            
+                                             
+                              
+                                                      
+   
+                                                          
+                                                                                                                                                           
+    
+                          
+                     
+     
+                                                  
+                     
+     
+         
+    
+   
+
+                                 
+        
+
+          
+  
+
+                                                                    
+                                                          
+                                             
 
                                                     
                                                             
@@ -693,7 +737,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
 
                                                                                                                                                                  
                                                                
-                        
+                           
                                                                                 
 
                                                                      
@@ -707,7 +751,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
   
 
                                        
-                                                       
+                                                          
   
                                                     
    
@@ -724,7 +768,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
                                
    
 
-                                                                                                                       
+                                                                                                                
                                   
    
                                                          
@@ -761,6 +805,9 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
   
                              
                           
+
+                                                       
+                                                          
 
                                                
    

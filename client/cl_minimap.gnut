@@ -712,15 +712,22 @@ void function MinimapObjectThread( entity ent )
 				                                                                                                                                               
 
 				                                                                                                                                                                         
-				if ( IsUsingProximityAllianceMembers() )
+				if ( AllianceProximity_IsUsingAllianceProximity() )
 				{
 					switch ( ent.Minimap_GetCustomState() ) {
 						              
 						case eMinimapObject_prop_script.ARC_TRAP:
 						case eMinimapObject_prop_script.TROPHY_SYSTEM:
 						case eMinimapObject_prop_script.OBJECTIVE_AREA:
+						case eMinimapObject_prop_script.DIRTY_BOMB:
+                      
+                                                 
+           
+                                                   
+                                                       
+           
 						{
-							thread ManageTeamProximity_IconVisibility_Thread( ent, e["rui"], false, false )           
+							thread AllianceProximity_ManageIconVisibility_Thread( ent, e["rui"], false, false )           
 							break;
 						}
 						                       
@@ -732,8 +739,8 @@ void function MinimapObjectThread( entity ent )
 						case eMinimapObject_prop_script.RAMPART_TURRET:
 						case eMinimapObject_prop_script.BLACK_MARKET:
 						{
-							thread ManageTeamProximity_IconVisibility_Thread( ent, e["rui"], false, false )           
-							thread ManageTeamProximity_IconVisibility_Thread( ent, e["fullRui"], true, false )       
+							thread AllianceProximity_ManageIconVisibility_Thread( ent, e["rui"], false, false )           
+							thread AllianceProximity_ManageIconVisibility_Thread( ent, e["fullRui"], true, false )       
 							break;
 						}
 						default:
@@ -929,9 +936,7 @@ var function Minimap_CommonAdd( asset ruiAsset, int zOrder, vector objPos = < 0,
 
 	RuiSetFloat3( rui, "objectPos", objPos )
 	RuiSetFloat3( rui, "objectAngles", objAng )
-
-	  
-	RuiSetVisible( rui, file.minimapEnabled )
+	RuiSetVisible( rui, file.minimapEnabled)
 	file.minimapOtherRuis.append( rui )
 	return rui
 }
@@ -1721,6 +1726,9 @@ string function GetRingClosingString(int roundNumber)
 
 void function UpdateFullmapRuiTracks()
 {
+	if ( IsLobby() )
+		return
+
 	entity viewPlayer = GetLocalViewPlayer()
 	entity clientPlayer = GetLocalClientPlayer()
 	if ( !IsValid( viewPlayer ) )
@@ -1817,6 +1825,9 @@ void function UpdateFullmapRuiTracks()
 			SeasonQuest_UpdateMinimapRui( file.fullmap_questBoxRui )
 	}
 
+	string playlist = GetCurrentPlaylistName()
+	string playlistUiRules = GetPlaylistVarString( playlist, "ui_rules", "" )
+	RuiSetBool( file.fullmap_legendRui, "rulesEnabled", playlistUiRules != "" )
 	RuiTrackBool( file.fullmap_legendRui, "pingEnabled", viewPlayer, RUI_TRACK_SCRIPT_NETWORK_VAR_BOOL, GetNetworkedVariableIndex( "pingEnabled" ) )
 
 	                  

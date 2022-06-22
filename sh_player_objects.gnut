@@ -1,0 +1,49 @@
+global function PlayerObjects_Init
+#if SERVER
+                                        
+#endif
+
+                                                                                      
+
+void function PlayerObjects_Init()
+{
+}
+
+#if SERVER
+                                                                                                             
+		                                                                                                                   
+ 
+	                       
+	 
+		                                        
+	 
+
+	                     
+	 
+		                                                
+		                                                   
+		                         
+	 
+
+	                  
+		                            
+
+                 
+                       
+                                      
+       
+
+	                                   
+		                                                   
+
+	                       
+	 
+                     
+                                                                         
+                                                          
+        
+	 
+
+	           
+ 
+#endif

@@ -246,6 +246,7 @@ struct {
 	#endif
 
 		table<int, string> clubNames
+		bool shouldShowButtonHintsLocal
 	#endif
 } file
 
@@ -380,6 +381,7 @@ void function ShGamemodeArenas_Init()
 	                                                        
 
 	                                           
+	                   
 
 	                                                        
 
@@ -647,7 +649,41 @@ void function EntitiesDidLoad()
 #endif
 }
 
+                                                                                        
+float function GetMinJIPTime()
+{
+	return GetCurrentPlaylistVarFloat( "min_jip_time", 30.0 )
+}
+
 #if SERVER
+                                                                
+                          
+ 
+	                                               
+
+	                              
+
+	            
+		               
+		 
+			                                   
+			                               
+		 
+	 
+	                        
+
+	                                                                                                   
+	                                                                 
+	                                               
+
+	                                                                                                                                                        
+	                                     
+	                                               
+
+	                     
+		               
+ 
+
                                                          
  
 	                        
@@ -1408,8 +1444,11 @@ void function EntitiesDidLoad()
 	                                        
 
 	       
-	                                                  
+	                                                 
 	 
+		                      
+			     
+
 		                                                        
 			        
 
@@ -2637,13 +2676,13 @@ void function ServerCallback_Arenas_AnnounceRoundStart( int announceStyle )
 		case eArenasRoundStartAnnounce.MATCHPOINT_ENEMY:
 			main = Localize( "#ARENAS_MATCH_POINT" )
 			subtext = Localize( "#ARENAS_MATCH_POINT_ENEMY_SUBTEXT" )
-			color = GetKeyColor( COLORID_HUD_ARENAS_MATCHPOINT_ENEMY )
+			color = GetKeyColor( COLORID_ENEMY )
 			break
 
 		case eArenasRoundStartAnnounce.MATCHPOINT_YOU:
 			main = Localize( "#ARENAS_MATCH_POINT" )
 			subtext = Localize( "#ARENAS_MATCH_POINT_YOU_SUBTEXT" )
-			color = GetKeyColor( COLORID_HUD_ARENAS_MATCHPOINT_FRIENDLY )
+			color = GetKeyColor( COLORID_FRIENDLY )
 			break
 
 		case eArenasRoundStartAnnounce.TIEBREAKER:
@@ -2654,7 +2693,7 @@ void function ServerCallback_Arenas_AnnounceRoundStart( int announceStyle )
 		case eArenasRoundStartAnnounce.SUDDEN_DEATH:
 			main = Localize( "#ARENAS_SUDDEN_DEATH" )
 			subtext = Localize( "#ARENAS_SUDDEN_DEATH_SUBTEXT" )
-			color = GetKeyColor( COLORID_HUD_ARENAS_SUDDEN_DEATH )
+			color = GetKeyColor( COLORID_ENEMY )
 			break
 	}
 
@@ -2886,6 +2925,14 @@ void function GameModeScoreBarRules( var rui )
 	{
 		file.lastRoundUpdated = GetRoundsPlayed()
 		PopulateFightRui( file.arenasScoreRui )                         
+
+		bool showButtonHints = ShouldShowButtonHints()
+		if ( file.shouldShowButtonHintsLocal != showButtonHints)
+		{
+			ClWeaponStatus_UpdateShowButtonHint()
+
+			file.shouldShowButtonHintsLocal = showButtonHints
+		}
 	}
 }
 

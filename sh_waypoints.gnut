@@ -192,7 +192,7 @@ global enum eWaypoint
        
 
                     
-              
+		MEDBAY_STATE
        
 
 		ABILITY_ECHO_LOCATOR,
@@ -301,7 +301,7 @@ void function Waypoint_NetNotify( entity wp, int waypointNotifyType )
 				               
 				                                     
 				 
-					                                                                                                                    
+					                                                                                                                                        
 						                        
 				 
 			 
@@ -873,9 +873,9 @@ void function InstanceWP_Basic( entity wp )
 
 				                                                                                                                                               
 				                                                                                                                                                                         
-				if ( IsUsingProximityAllianceMembers() )
+				if ( AllianceProximity_IsUsingAllianceProximity() )
 				{
-					thread ManageTeamProximity_IconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )                                                                                    
+					thread AllianceProximity_ManageIconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )                                                                                    
 				}
 			}
 		}
@@ -2000,9 +2000,9 @@ void function InstanceLocationPing( entity wp )
 	                                                                                                                                               
 	                                                                                                                                                               
 	                                                                                                                 
-	if ( IsUsingProximityAllianceMembers() && !IsPVEMode() )
+	if ( AllianceProximity_IsUsingAllianceProximity() && !IsPVEMode() )
 	{
-		if ( Control_GetAllianceFromTeam( viewPlayer.GetTeam() ) != Control_GetAllianceFromTeam( wp.GetTeam() ) && pingType != ePingType.SPAWN_REGION )
+		if ( AllianceProximity_IsTeamInAnAlliance( wp.GetTeam() ) && AllianceProximity_GetAllianceFromTeam( viewPlayer.GetTeam() ) != AllianceProximity_GetAllianceFromTeam( wp.GetTeam() ) && pingType != ePingType.SPAWN_REGION )
 			return
 	}
 
@@ -2067,7 +2067,7 @@ void function InstanceLocationPing( entity wp )
 		                                                                                                                            
 		if ( Control_IsModeEnabled() && !isSameTeam )
 		{
-			int viewPlayerAlliance = Control_GetAllianceFromTeam( viewPlayer.GetTeam() )
+			int viewPlayerAlliance = AllianceProximity_GetAllianceFromTeam( viewPlayer.GetTeam() )
 			if ( viewPlayerAlliance != -1 )
 				isSameTeam = IsTeamInAlliance( owner.GetTeam(), viewPlayerAlliance )
 		}
@@ -2157,7 +2157,7 @@ void function InstanceLocationPing( entity wp )
 			}
 
 			                                                                                                                                                                                                          
-			if ( IsUsingProximityAllianceMembers() )
+			if ( AllianceProximity_IsUsingAllianceProximity() )
 			{
 				completeAdsFade = true
 				RuiSetImage( rui, "animImage", $"rui/hud/unitframes/frame_status_fill" )
@@ -2246,9 +2246,9 @@ void function InstanceLocationPing( entity wp )
 
 	                                                                                                                                       
 	                                                                
-	if ( IsUsingProximityAllianceMembers() && viewPlayer.GetTeam() != owner.GetTeam() )
+	if ( AllianceProximity_IsUsingAllianceProximity() && viewPlayer.GetTeam() != owner.GetTeam() )
 	{
-		float maxProximity = GetMaxDistForAllianceMemberProximity()
+		float maxProximity = AllianceProximity_GetMaxDistForProximity()
 		if ( !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), owner.GetOrigin() ) && !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), wp.GetOrigin() ) )
 			shouldPlayPingSound = false
 	}
@@ -2326,11 +2326,11 @@ void function InstanceLocationPing( entity wp )
 
 	                                                                                                                                                                          
 	                                                                                                         
-	if ( IsUsingProximityAllianceMembers() && pingType != ePingType.CONTROL_OBJECTIVE_DEFEND && pingType != ePingType.CONTROL_OBJECTIVE_ATTACK )
+	if ( AllianceProximity_IsUsingAllianceProximity() && pingType != ePingType.CONTROL_OBJECTIVE_DEFEND && pingType != ePingType.CONTROL_OBJECTIVE_ATTACK )
 	{
-		thread ManageTeamProximity_IconVisibility_Thread( wp, rui, false, true )
-		thread ManageTeamProximity_IconVisibility_Thread( wp, wp.wp.ruiMinimap, false, false )
-		thread ManageTeamProximity_IconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )
+		thread AllianceProximity_ManageIconVisibility_Thread( wp, rui, false, true )
+		thread AllianceProximity_ManageIconVisibility_Thread( wp, wp.wp.ruiMinimap, false, false )
+		thread AllianceProximity_ManageIconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )
 	}
 }
 
@@ -2397,7 +2397,7 @@ void function InstanceObjectivePing( entity wp )
 		                                                                                                                            
 		if ( Control_IsModeEnabled() && !isSameTeam )
 		{
-			int viewPlayerAlliance = Control_GetAllianceFromTeam( viewPlayer.GetTeam() )
+			int viewPlayerAlliance = AllianceProximity_GetAllianceFromTeam( viewPlayer.GetTeam() )
 			if ( viewPlayerAlliance != -1 )
 				isSameTeam = IsTeamInAlliance( owner.GetTeam(), viewPlayerAlliance )
 		}
@@ -2521,12 +2521,12 @@ void function InstanceLootPing( entity wp )
 	}
 
 	                                                                                                                                                               
-	if ( IsUsingProximityAllianceMembers() && !IsPVEMode() )
+	if ( AllianceProximity_IsUsingAllianceProximity() && !IsPVEMode() )
 	{
 		if ( !IsValid( wp ) )
 			return
 
-		if ( Control_GetAllianceFromTeam( viewPlayer.GetTeam() ) != Control_GetAllianceFromTeam( wp.GetTeam() ) )
+		if ( AllianceProximity_GetAllianceFromTeam( viewPlayer.GetTeam() ) != AllianceProximity_GetAllianceFromTeam( wp.GetTeam() ) )
 			return
 	}
 
@@ -2615,7 +2615,7 @@ void function InstanceLootPing( entity wp )
 
 	                                                                                                                                       
 	                                                                
-	if ( IsUsingProximityAllianceMembers() )
+	if ( AllianceProximity_IsUsingAllianceProximity() )
 	{
 		if ( !IsValid( owner ) )
 		{
@@ -2623,7 +2623,7 @@ void function InstanceLootPing( entity wp )
 		}
 		else if ( viewPlayer.GetTeam() != owner.GetTeam() )
 		{
-			float maxProximity = GetMaxDistForAllianceMemberProximity()
+			float maxProximity = AllianceProximity_GetMaxDistForProximity()
 			if ( !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), owner.GetOrigin() ) && !IsPositionWithinRadius( maxProximity, viewPlayer.GetOrigin(), wp.GetOrigin() ) )
 				shouldPlayCommsSound = false
 		}
@@ -3075,9 +3075,8 @@ array<entity> function Waypoints_GetActiveLootPings()
 		                     
 		                                            
 		 
-			                                                                                                                                                                         
-			                                         
-				                                                  
+			                                                                                     
+			                                                                                
 		 
 		                               
 		 
@@ -3166,10 +3165,10 @@ array<entity> function Waypoints_GetActiveLootPings()
 		                                                   
 	 
                     
-                                                                
-   
-                                                    
-   
+		                                                              
+		 
+			                                                 
+		 
        
 
 	        
@@ -3323,10 +3322,8 @@ array<entity> function Waypoints_GetActiveLootPings()
 
 	                     
 
-
-	                                                                                                                                                                         
-	                                         
-		                                      
+	                                                                                     
+	                                                                    
 
 	                                            
 	                                      
@@ -3611,23 +3608,33 @@ void function TogglePlayerWaypointMute( entity player )
 
                         
                                                                                                                                                                                                
-                                                                                                                  
+                                                                                                                      
  
 	                                                        
 		                      
 
 	                                                                   
 
+	                                                                                                                
+	                                                                             
+	                   
+	                              
+	 
+		                         
+	 
+	    
+	 
+		                                                                                                                                             
+	 
+
 	                  
 	                                 
 	                                            
 	 
-		                                                                                                                                                                         
-		                                         
-		 
-			                                      
-		 
+		                                                                                     
+		                                                                    
 	 
+
 	                                      
 	                                        
 	                                         

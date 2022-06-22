@@ -13,6 +13,7 @@ global function GetPlaylistIndexForName
 global function Playlist_GetLTMSlotPlaylist
 global function Playlist_GetNewModeVersion
 global function Playlist_GetScheduleData
+global function Playlist_ShouldBeHiddenForScheduleBlocks
 global function ShPlaylist_Init
 global function GetPlaylistRotationGroup
 #endif
@@ -98,14 +99,14 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 		tournament = $"rui/menu/gamemode/tournament",
        
                            
-                                                             
-                                                               
-                                                     
-                                                       
-                                                               
-                                                                         
-                                                                               
-                                                                                 
+		salvo_wargames_kc = $"rui/menu/gamemode/salvo_wargames_kc",
+		salvo_wargames_oly = $"rui/menu/gamemode/salvo_wargames_oly",
+		wargames_duos = $"rui/menu/gamemode/wargames_duos",
+		wargames_trios = $"rui/menu/gamemode/wargames_trios",
+		deathtrigger = $"rui/menu/gamemode/playlist_bg_deathtrigger",
+		deathtrigger_kc = $"rui/menu/gamemode/playlist_bg_kc_mu3_deathtrigger",
+		deathtrigger_oly = $"rui/menu/gamemode/playlist_bg_olympus_mu1_deathtrigger",
+		deathtrigger_we = $"rui/menu/gamemode/playlist_bg_worldsedge_mu3_deathtrigger",
        
                                
                                                      
@@ -128,24 +129,28 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
                         
 		arenas_party_crasher = $"rui/menu/gamemode/playlist_bg_arena_party_crasher",
 		arenas_phase_runner = $"rui/menu/gamemode/playlist_bg_arena_phase_runner",
-		arenas_thermal_station = $"rui/menu/gamemode/playlist_bg_arena_thermal_station",
-		arenas_artillery = $"rui/menu/gamemode/playlist_bg_arena_artillery",
-		arenas_golden_gardens = $"rui/menu/gamemode/playlist_bg_arena_golden_gardens",
 		arenas_overflow = $"rui/menu/gamemode/playlist_bg_arena_overflow",
 		arenas_skull_town = $"rui/menu/gamemode/playlist_bg_arena_skull_town",
 		arenas_dome = $"rui/menu/gamemode/playlist_bg_arena_dome",
 		arenas_oasis = $"rui/menu/gamemode/playlist_bg_arena_oasis",
-		arenas_hillside = $"rui/menu/gamemode/playlist_bg_arena_hillside",
 		arenas_encore = $"rui/menu/gamemode/playlist_bg_arena_encore",
 		arenas_habitat = $"rui/menu/gamemode/playlist_bg_arena_habitat",
-		arenas_lava_siphon = $"rui/menu/gamemode/playlist_bg_arena_lava_siphon",
-		arenas_barometer = $"rui/menu/gamemode/playlist_bg_arena_barometer",
 		arenas_drop_off = $"rui/menu/gamemode/playlist_bg_arena_drop_off",
+
+		                                                                                             
+		                                                                                  
+		                                                                                
+		                                                                      
+		                                                              
+		                                                            
+		                                                                      
+		                                                                    
        
                          
 		control_barometer = $"rui/menu/gamemode/playlist_bg_control_barometer",
 		control_hammond_labs = $"rui/menu/gamemode/playlist_bg_control_hammond_labs",
 		control_caustic_tt = $"rui/menu/gamemode/playlist_bg_control_caustic_tt",
+		control_lava_siphon = $"rui/menu/gamemode/playlist_bg_control_lava_siphon",
        
 }
 
@@ -200,14 +205,14 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 		tournament = $"rui/menu/gamemode/tournament",
        
                            
-                                                             
-                                                               
-                                                     
-                                                       
-                                                                  
-                                                                            
-                                                                                  
-                                                                                    
+		salvo_wargames_kc = $"rui/menu/gamemode/salvo_wargames_kc",
+		salvo_wargames_oly = $"rui/menu/gamemode/salvo_wargames_oly",
+		wargames_duos = $"rui/menu/gamemode/wargames_duos",
+		wargames_trios = $"rui/menu/gamemode/wargames_trios",
+		deathtrigger = $"rui/menu/gamemode/playlist_bg_sq_deathtrigger",
+		deathtrigger_kc = $"rui/menu/gamemode/playlist_bg_sq_kc_mu3_deathtrigger",
+		deathtrigger_oly = $"rui/menu/gamemode/playlist_bg_sq_olympus_mu1_deathtrigger",
+		deathtrigger_we = $"rui/menu/gamemode/playlist_bg_sq_worldsedge_mu3_deathtrigger",
        
                                
                                                      
@@ -230,25 +235,27 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
                         
 		arenas_party_crasher = $"rui/menu/gamemode/playlist_bg_sq_arena_party_crasher"
 		arenas_phase_runner = $"rui/menu/gamemode/playlist_bg_sq_arena_phase_runner",
-		arenas_thermal_station = $"rui/menu/gamemode/playlist_bg_sq_arena_thermal_station",
-		arenas_artillery = $"rui/menu/gamemode/playlist_bg_sq_arena_artillery",
-		arenas_golden_gardens = $"rui/menu/gamemode/playlist_bg_sq_arena_golden_gardens",
 		arenas_overflow = $"rui/menu/gamemode/playlist_bg_sq_arena_overflow",
 		arenas_skull_town = $"rui/menu/gamemode/playlist_bg_sq_arena_skull_town",
-		arenas_dome = $"rui/menu/gamemode/playlist_bg_sq_arena_dome",
-		arenas_oasis = $"rui/menu/gamemode/playlist_bg_sq_arena_oasis",
-		arenas_hillside = $"rui/menu/gamemode/playlist_bg_sq_arena_hillside",
 		arenas_encore = $"rui/menu/gamemode/playlist_bg_sq_arena_encore",
 		arenas_habitat = $"rui/menu/gamemode/playlist_bg_sq_arena_habitat",
-		arenas_lava_siphon = $"rui/menu/gamemode/playlist_bg_sq_arena_lava_siphon",
-		arenas_barometer = $"rui/menu/gamemode/playlist_bg_sq_arena_barometer",
 		arenas_drop_off = $"rui/menu/gamemode/playlist_bg_sq_arena_drop_off",
+
+		                                                                                             
+		                                                                                     
+		                                                                                   
+		                                                                         
+		                                                                 
+		                                                               
+		                                                                         
+		                                                                       
        
 
                          
 		control_barometer = $"rui/menu/gamemode/playlist_bg_sq_control_barometer",
 		control_hammond_labs = $"rui/menu/gamemode/playlist_bg_sq_control_hammond_labs",
 		control_caustic_tt = $"rui/menu/gamemode/playlist_bg_sq_control_caustic_tt",
+		control_lava_siphon = $"rui/menu/gamemode/playlist_bg_sq_control_lava_siphon",
        
 }
 
@@ -632,7 +639,7 @@ PlaylistScheduleData function Playlist_GetNonCachedScheduleData( string plName )
 
 
 #if SERVER || CLIENT || UI
-bool function PlaylistShouldBeHiddenForScheduleBlocks( string plName )
+bool function Playlist_ShouldBeHiddenForScheduleBlocks( string plName )
 {
 	PlaylistScheduleData scheduleData = Playlist_GetScheduleData( plName )
 	if ( scheduleData.blocks.len() > 0 )
@@ -759,7 +766,7 @@ array<string> function GetVisiblePlaylistNames( bool isPrivateMatchQuery = false
 			continue
 		}
 
-		if ( PlaylistShouldBeHiddenForScheduleBlocks( playlistData.name ) )
+		if ( Playlist_ShouldBeHiddenForScheduleBlocks( playlistData.name ) )
 			continue
 
 		list.append( playlistData.name )
@@ -826,13 +833,13 @@ const table<string, asset> GAMEMODE_EMBLEM_MAP = {
                                                               
        
                            
-                                                                             
-                                                                   
-                                                                             
-                                                                       
-                                                                       
-                                                                           
-                                                                       
+		death_trigger = $"rui/menu/gamemode_emblem/emblem_war_games_death_trigger",
+		flare_up = $"rui/menu/gamemode_emblem/emblem_war_games_flare_up",
+		second_chance = $"rui/menu/gamemode_emblem/emblem_war_games_second_chance",
+		armed_drop = $"rui/menu/gamemode_emblem/emblem_war_games_armed_drop",
+		glow_zones = $"rui/menu/gamemode_emblem/emblem_war_games_glow_zones",
+		shield_regen = $"rui/menu/gamemode_emblem/emblem_war_games_shield_regen",
+		auto_cards = $"rui/menu/gamemode_emblem/emblem_war_games_auto_cards",
        
                                
                                                             

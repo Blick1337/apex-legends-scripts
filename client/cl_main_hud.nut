@@ -967,7 +967,11 @@ bool function ShouldMainHudBeVisible( entity player )
 	#if DEV
 		if ( IsModelViewerActive() )
 			return false
-	#endif
+	#if PC_PROG
+		if ( OutsourceViewer_IsActive() )
+			return false
+	#endif               
+	#endif           
 
 	return true
 }
@@ -1059,7 +1063,11 @@ bool function ShouldPermanentHudBeVisible( entity player )
 	#if DEV
 		if ( IsModelViewerActive() )
 			return false
-	#endif
+	#if PC_PROG
+		if ( OutsourceViewer_IsActive() )
+			return false
+	#endif               
+	#endif           
 
 	return true
 }

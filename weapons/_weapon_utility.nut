@@ -281,6 +281,14 @@ global const string END_KINETIC_LOADER_RUI = "end_kinetic_loader_functionality"
 #endif
 
 
+                          
+                                 
+                                           
+          
+                                            
+      
+      
+
 global const bool PROJECTILE_PREDICTED = true
 global const bool PROJECTILE_NOT_PREDICTED = false
 
@@ -474,6 +482,9 @@ void function WeaponUtility_Init()
 	RegisterSignal ( END_KINETIC_LOADER_CHOKE )
 	Remote_RegisterClientFunction( "ServerCallback_KineticLoaderReloadedThroughSlide", "int", 0, 32 )
 	Remote_RegisterClientFunction( "ServerCallback_KineticLoaderReloadedThroughSlideEnd" )
+                           
+                                                                 
+                                    
                           
                                                                         
                                     
@@ -497,6 +508,7 @@ void function WeaponUtility_Init()
 	#if SERVER
 		                                                                                          
 		                                                                                              
+		                                                  
 		                                                            
 		                                                                  
 		                                                             
@@ -1125,9 +1137,9 @@ array<vector> function GetProjectileShotgunBlastVectors( vector pos, vector forw
 			                                    
 			                                                                                                  
 
-			                                               
-			                                               
-			                                               
+			                                                
+			                                                
+			                                                
 		 
 
 		                                  
@@ -1430,9 +1442,9 @@ bool function PlantStickyEntityOnConsistentSurface( entity projectile, Deployabl
 	#if DEV
 		if ( DEBUG_SURFACE_TEST )
 		{
-			                                                                                                  
+			                                                                                                   
 			                                                                                                
-			DebugDrawArrow( collisionParams.pos, collisionParams.pos + collisionParams.normal * SURFACE_TEST_TRACE_LENGTH / 2, 10, 0, 255, 0, true, DEBUG_SURFACE_TEST_TIME )
+			 DebugDrawArrow( collisionParams.pos, collisionParams.pos + collisionParams.normal * SURFACE_TEST_TRACE_LENGTH / 2, 10, COLOR_GREEN, true, DEBUG_SURFACE_TEST_TIME )
 		}
 	#endif
 
@@ -1448,7 +1460,7 @@ bool function PlantStickyEntityOnConsistentSurface( entity projectile, Deployabl
 		#if DEV
 			if ( DEBUG_SURFACE_TEST )
 			{
-				DebugDrawArrow( origin, endOrigin, 5, 0, 255, 255, true, DEBUG_SURFACE_TEST_TIME )
+				DebugDrawArrow( origin, endOrigin, 5, COLOR_CYAN, true, DEBUG_SURFACE_TEST_TIME )
 			}
 		#endif
 		TraceResults traceResult = TraceLine( origin, endOrigin, [ projectile ], TRACE_MASK_NPCWORLDSTATIC, TRACE_COLLISION_GROUP_NONE )
@@ -1462,7 +1474,7 @@ bool function PlantStickyEntityOnConsistentSurface( entity projectile, Deployabl
 				#if DEV
 					if ( DEBUG_SURFACE_TEST )
 					{
-						DebugDrawArrow( traceResult.endPos, traceResult.endPos + traceResult.surfaceNormal * 20, 5, 255, 100, 0, true, DEBUG_SURFACE_TEST_TIME )
+						DebugDrawArrow( traceResult.endPos, traceResult.endPos + traceResult.surfaceNormal * 20, 5, <255, 100, 0>, true, DEBUG_SURFACE_TEST_TIME )
 					}
 				#endif
 			}
@@ -1472,7 +1484,7 @@ bool function PlantStickyEntityOnConsistentSurface( entity projectile, Deployabl
 				#if DEV
 					if ( DEBUG_SURFACE_TEST )
 					{
-						DebugDrawArrow( traceResult.endPos, traceResult.endPos + traceResult.surfaceNormal * 20, 5, 100, 255, 0, true, DEBUG_SURFACE_TEST_TIME )
+						DebugDrawArrow( traceResult.endPos, traceResult.endPos + traceResult.surfaceNormal * 20, 5, <100, 255, 0>, true, DEBUG_SURFACE_TEST_TIME )
 					}
 				#endif
 			}
@@ -1553,7 +1565,8 @@ bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vecto
 	Assert( !ent.IsMarkedForDeletion(), "" )
 	Assert( !cp.hitEnt.IsMarkedForDeletion(), "" )
 
-	                                                                                      
+	                                                                                       
+	Assert( LengthSqr( cp.normal ) > FLT_EPSILON , "PlantStickyEntity: normal vector " + cp.normal + " is a zero vector. Entity: '" + ent + "' is sticking to HitEnt: '" + cp.hitEnt + "' at position: " + cp.pos )
 	vector plantAngles = AnglesCompose( VectorToAngles( cp.normal ), angleOffset )
 	vector plantPosition
 	if ( ignoreHullTrace )
@@ -1565,8 +1578,8 @@ bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vecto
 		#if DEV
 		if ( DEBUG_DRAW_PLANT_STICKY )
 		{
-			DebugDrawSphere( cp.pos, 5, 255, 255, 0, false, 60 )
-			DebugDrawArrow( cp.pos, cp.pos + cp.normal*20, 10, 255, 255, 0, false, 60 )
+			DebugDrawSphere( cp.pos, 5, COLOR_YELLOW, false, 60 )
+			DebugDrawArrow( cp.pos, cp.pos + cp.normal*20, 10, COLOR_YELLOW, false, 60 )
 		}
 		#endif
 		vector traceDir    = cp.normal * -1
@@ -1601,7 +1614,7 @@ bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vecto
 			#if DEV
 			if ( DEBUG_DRAW_PLANT_STICKY )
 			{
-				DebugDrawSphere( plantPosition, 3, 255, 0, 0, false, 60 )
+				DebugDrawSphere( plantPosition, 3, COLOR_RED, false, 60 )
 			}
 			#endif
 		}
@@ -1612,7 +1625,7 @@ bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vecto
 			#if DEV
 			if ( DEBUG_DRAW_PLANT_STICKY )
 			{
-				DebugDrawSphere( plantPosition, 3, 0, 0, 255, false, 60 )
+				DebugDrawSphere( plantPosition, 3, COLOR_BLUE, false, 60 )
 			}
 			#endif
 		}
@@ -1815,6 +1828,10 @@ bool function EntityCanHaveStickyEnts( entity stickyEnt, entity ent )
 	if ( entClassname == "prop_lootroller" && stickyEntWeaponClassName != "" )
 		return true
 
+	                                                           
+	if ( ent.GetScriptName() == MOBILE_SHIELD_SCRIPTNAME )
+		return MobileShield_IsAllowedStickyEnt( ent, stickyEnt, stickyEntWeaponClassName )
+
 	                                               
 	if ( ent.GetScriptName() == WRECKING_BALL_BALL_SCRIPT_NAME )
 		return true
@@ -1884,15 +1901,15 @@ void function ShowExplosionRadiusOnExplode( entity ent )
 
 	vector org    = ent.GetOrigin()
 	vector angles = <0, 0, 0>
-	thread DebugDrawCircle( org, angles, innerRadius, 255, 255, 51, true, 3.0 )
-	thread DebugDrawCircle( org, angles, outerRadius, 255, 255, 255, true, 3.0 )
+	thread DebugDrawCircle( org, angles, innerRadius, <255, 255, 51>, true, 3.0 )
+	thread DebugDrawCircle( org, angles, outerRadius, COLOR_WHITE, true, 3.0 )
 }
 #endif       
 
 
 #if SERVER
                                                  
-                                                                                                                                                           
+                                                                                                                                                                                                 
  
 	                                                                                                                        
 	                                 
@@ -1985,26 +2002,22 @@ void function ShowExplosionRadiusOnExplode( entity ent )
 
 	                          
 		      
+	
+               
+                                                                                           
+  
+                           
+                     
+                              
+                                     
+                                                   
+                                   
 
-	                          
-	 
-		                          
-		 
-			                                                     
-			                            
-		 
-		    
-		 
-			                                                 
-			                              
-			 
-				                                                                               
-				                                
-			 
-		 
-	 
-
-	                              
+                                      
+  
+     
+       
+	                           
 	 
 		                                                                                                           
 		                 
@@ -2168,7 +2181,7 @@ void function InitMissileForRandomDriftForVortexLow( entity missile, vector star
 	                             
 
 	                                                                                         
-	                                                                                      
+	                                                                                        
 
 	                              
 	                           
@@ -2233,7 +2246,7 @@ void function InitMissileForRandomDriftForVortexLow( entity missile, vector star
 		 
 
 		                                                             
-		                                                                                          
+		                                                                                            
 
 		                                             
 		                      
@@ -2541,7 +2554,7 @@ void function DebugDrawMissilePath( entity missile )
 		WaitFrame()
 		if ( !IsValid( missile ) )
 			return
-		DebugDrawLine( lastPos, missile.GetOrigin(), 0, 255, 0, true, 20.0 )
+		DebugDrawLine( lastPos, missile.GetOrigin(), COLOR_GREEN, true, 20.0 )
 		lastPos = missile.GetOrigin()
 	}
 }
@@ -3390,7 +3403,12 @@ entity function GetMeleeWeapon( entity player )
 	              
  
 
-
+                                                
+ 
+                         
+                               
+                                   
+ 
 
                                                                                               
  
@@ -4663,7 +4681,6 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 
                                                                                                                    
   
-                                
                                                                                                  
   
                                                                                                                                  
@@ -4839,7 +4856,7 @@ ArcSolution function SolveBallisticArc( vector launchOrigin, float launchSpeed, 
 		return as;
 
 	as.valid = true
-	root = sqrt(root);
+	root = sqrt( root );
 
 	float lowAng = atan2(speed2 - root, gx)
 	float highAng = atan2(speed2 + root, gx)
@@ -4847,8 +4864,9 @@ ArcSolution function SolveBallisticArc( vector launchOrigin, float launchSpeed, 
 	float goodAngle = ( lowAngle ) ? lowAng : highAng
 
 	vector groundDir = Normalize( diffXZ )
-	as.fire_velocity = (groundDir*cos(goodAngle)*launchSpeed) + (<0, 0, 1>*sin(goodAngle)*launchSpeed )
+	as.fire_velocity = ( groundDir * cos( goodAngle ) *launchSpeed ) + ( < 0, 0, 1 > * sin( goodAngle ) * launchSpeed )
 	float groundSpeed = Length( FlattenVec( as.fire_velocity ) )
+	groundSpeed = ( groundSpeed > 0 ) ? groundSpeed : 1.0
 	as.duration = groundDist / groundSpeed
 
 	return as;
@@ -5401,15 +5419,28 @@ void function OnWeaponReload_Smart_Reload ( entity weapon, int milestoneIndex )
 	else
 	{
 		#if SERVER
-		                                                                  
+		                                                                                                                   
 		 
-			                                                            
-			                                                                      
+			                                                                                        
+
+			                                                                  
+			                      
+			 
+				                                                                                                      
+				                                                                
+
+				                                                        
+				                                               
+			 
+			    
+			 
+				                                                            
+				                                                                      
+			 
 		 
 		#endif
 
 		weapon.RemoveMod( LMG_OVERLOADED_AMMO_MOD )
-
 	}
 }
 
@@ -6006,3 +6037,59 @@ void function ApplyKineticLoader_ClientThink( entity player, entity weapon )
 		}
 	#endif
 }
+
+                          
+                                                   
+ 
+                          
+        
+
+                                                                                                         
+                                               
+  
+                                                  
+
+                         
+         
+
+                                            
+   
+                                             
+                                                                               
+                                               
+                                                                      
+
+                                               
+                                                                                                                                                      
+
+                                            
+                                                                 
+                                                                                         
+
+                                                                                                       
+    
+                              
+                        
+                                                                           
+
+                         
+                                                                                       
+
+              
+                                                                                             
+                                                                           
+          
+    
+   
+  
+ 
+
+
+                                              
+ 
+           
+                                           
+                                                                                  
+       
+ 
+      

@@ -110,7 +110,7 @@ bool function IsLegalFlightPath( FlightPath flightPath, vector origin, vector fo
 		{
 			if ( result.hitSky )
 			{
-				                                                                             
+				                                                                               
 				continue
 			}
 
@@ -125,10 +125,10 @@ bool function IsLegalFlightPath( FlightPath flightPath, vector origin, vector fo
 		}
 
 		             
-		  	                                                                           
+		  	                                                                             
 	}
 
-	                                                                                           
+	                                                                                            
 	DoTraceCoordCheck( true )
 	return true
 }
@@ -150,14 +150,14 @@ bool function IsLegalFlightPath_OverTime( FlightPath flightPath, vector origin, 
 			if ( result.hitSky )
 			{
 				if ( draw )
-					DebugDrawLine( orgs[i - 1], orgs[i], 0, 255, 0, true, ANALYSIS_PREVIEW_TIME )
+					DebugDrawLine( orgs[i - 1], orgs[i], COLOR_GREEN, true, ANALYSIS_PREVIEW_TIME )
 				continue
 			}
 
 			if ( Distance( result.endPos, endPos ) > 16 )
 			{
 				if ( draw )
-					DebugDrawLine( orgs[i - 1], orgs[i], 255, 0, 0, true, ANALYSIS_PREVIEW_TIME )
+					DebugDrawLine( orgs[i - 1], orgs[i], COLOR_RED, true, ANALYSIS_PREVIEW_TIME )
 
 				DoTraceCoordCheck( true )
 				return false
@@ -165,12 +165,12 @@ bool function IsLegalFlightPath_OverTime( FlightPath flightPath, vector origin, 
 		}
 
 		if ( draw )
-			DebugDrawLine( orgs[i - 1], orgs[i], 0, 255, 0, true, ANALYSIS_PREVIEW_TIME )
+			DebugDrawLine( orgs[i - 1], orgs[i], COLOR_GREEN, true, ANALYSIS_PREVIEW_TIME )
 
 		WaitFrame()
 	}
 
-	                                                                                           
+	                                                                                            
 	DoTraceCoordCheck( true )
 	return true
 }
@@ -229,7 +229,7 @@ bool function IsLegalFlightPath_OverTime( FlightPath flightPath, vector origin, 
 		                                      
 		                            
 		                                          
-		                                                                        
+		                                                                          
 		       
 	 
 
@@ -245,7 +245,7 @@ bool function IsLegalFlightPath_OverTime( FlightPath flightPath, vector origin, 
 
                                                                                                                                                                         
  
-	                                                                     
+	                                                                       
 	                                                    
 	                 
 	 
@@ -260,7 +260,7 @@ bool function IsLegalFlightPath_OverTime( FlightPath flightPath, vector origin, 
 		 
 	 
 
-	                                                                                                
+	                                                                                                  
 
 	                                                  
 
@@ -283,7 +283,7 @@ bool function IsLegalFlightPath_OverTime( FlightPath flightPath, vector origin, 
 		                                                 
 		                                     
 			        
-		                                                                                                     
+		                                                                                                      
 
 		                                                                   
 		                            
@@ -368,7 +368,7 @@ float function FixYaw( float yaw )
 		                                                     
 		                                                              
 		 
-			                                                               
+			                                                                 
 			        
 		 
 
@@ -376,12 +376,12 @@ float function FixYaw( float yaw )
 		                                      
 		                                
 		 
-			                                                               
+			                                                                 
 			        
 		 
 
 
-		                                                             
+		                                                               
 		                         
 
 		                
@@ -550,8 +550,8 @@ float function FixYaw( float yaw )
 	                           
 	   
 	  	                                             
-	  	                                                                      
-	  	                                                                          
+	  	                                                                       
+	  	                                                                            
 	   
 	                               
 	                         
@@ -745,7 +745,7 @@ float function FixYaw( float yaw )
 	                        
 		                          
 
-	                                                                          
+	                                                                            
 	                                         
 	                          
 
@@ -959,9 +959,9 @@ bool function VerifyAirdropPoint( vector baseOrigin, float yaw, bool isCarePacka
 		failCode = failCode | 0x0001
 		#if DEBUG_DROP_POINTS_LINES
 			                                                                                  
-			                                                                                          
-			                                                                                                        
-			                                                                                   
+			                                                                                            
+			                                                                                                         
+			                                                                                 
 		#endif
 	}
 
@@ -994,7 +994,7 @@ bool function VerifyAirdropPoint( vector baseOrigin, float yaw, bool isCarePacka
 		{
 			failCode = failCode | 0x0080
 			#if DEBUG_DROP_POINTS_LINES
-				                                                                                       
+				                                                                                         
 			#endif
 			break
 		}
@@ -1012,7 +1012,7 @@ bool function VerifyAirdropPoint( vector baseOrigin, float yaw, bool isCarePacka
 		if ( sightTrace.fraction < 1 )
 		{
 			#if DEBUG_DROP_POINTS_LINES
-				                                                                                                                
+				                                                                                                                   
 			#endif
 			continue                                                                                                              
 		}
@@ -1074,7 +1074,7 @@ bool function VerifyAirdropPoint( vector baseOrigin, float yaw, bool isCarePacka
 
 				#if DEBUG_DROP_POINTS_LINES
 					                                                                                
-					                                                                                   
+					                                                                                     
 				#endif
 				break
 			}
@@ -1105,8 +1105,8 @@ bool function VerifyAirdropPoint( vector baseOrigin, float yaw, bool isCarePacka
 	#if DEBUG_DROP_POINTS
 		if ( DEBUG_DROP_POINTS_LINES && failCode & 0x0005 )
 		{
-			DebugDrawCylinder( trace.endPos, < -90, 0, 0 >, maxs.x, maxs.z, 250, 50, 0, false, DEBUG_DRAW_TIME )
-			DebugDrawCylinder( baseOrigin, < -90, 0, 0 >, maxs.x, maxs.z, 70, 70, 70, false, DEBUG_DRAW_TIME )
+			DebugDrawCylinder( trace.endPos, < -90, 0, 0 >, maxs.x, maxs.z, <250, 50, 0>, false, DEBUG_DRAW_TIME )
+			DebugDrawCylinder( baseOrigin, < -90, 0, 0 >, maxs.x, maxs.z, <70, 70, 70>, false, DEBUG_DRAW_TIME )
 		}
 
 		if ( failCode )
@@ -1182,7 +1182,7 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
   
                                                                                                                                                                                                                                           
 
-                                                                         
+                                                                           
 
                                         
                                   
@@ -1232,7 +1232,7 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
    
                                
                                 
-                                                                                           
+                                                                                             
                                       
                                    
                 
@@ -1276,7 +1276,7 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
                                     
     
              
-                                                                                                              
+                                                                                    
     
    
                                        
@@ -1286,7 +1286,7 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
                                                 
     
               
-                                                                                                                                                        
+                                                                                                  
     
    
 
@@ -1381,9 +1381,9 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
 		                                                  
 
 		                                               
-		                                                                                        
+		                                                                                          
 		                                                                                
-		                                                                                   
+		                                                                                     
 	      
 
 	                       
@@ -1515,6 +1515,36 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
 				                                                                              
 			 
                                 
+
+		                                                                              
+		                                                                                          
+		                                 
+		 
+			                                  
+			                     
+				                                
+			                          
+
+			                              
+			                                        
+			                                                 
+			                                              
+
+			                                                                                                                                        
+			                       
+			 
+				                     
+					                                                                                                                                              
+				                          
+				           
+			 
+			                     
+			    
+			 
+				                                                                                             
+			 
+			                          
+		 
 
 		           
 		 
@@ -1722,7 +1752,7 @@ void function ServerCallback_DestroyAirdropBadPlace( int id )
 	                                                       
 	                                                                    
 	                                                                                                                                                                           
-	                                                                    
+	                                                                      
 	                          
 	 
 		                                                                  

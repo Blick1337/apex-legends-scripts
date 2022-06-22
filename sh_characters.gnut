@@ -15,6 +15,7 @@ global function CharacterClass_GetMenuLightData
 global function CharacterClass_GetHudUltimateColorData
 global function CharacterClass_GetChromaGradient
 global function CharacterClass_GetItemInspectOffset
+global function CharacterClass_GetThematicPreviewOffset
 global function CharacterClass_GetGalleryModelOffset
 global function CharacterClass_GetGalleryPortrait
 global function CharacterClass_GetGalleryPortraitBackground
@@ -22,7 +23,9 @@ global function CharacterClass_GetCharacterSelectPortrait
 global function CharacterClass_GetCharacterLockedPortrait
 global function CharacterClass_GetCharacterUnlockedStoreIcon
 global function CharacterClass_GetCharacterRoleImage
+                    
 global function CharacterClass_GetCharacterRolePerkDesc
+      
 global function CharacterClass_GetReadyUpVoicelineEventList
 global function CharacterClass_IsAvailable
 global function CharacterClass_GetDamageScale
@@ -72,6 +75,9 @@ global enum eCharacterClassRole
 {
 	UNDECIDED,
 	OFFENSE,
+                    
+             
+       
 	DEFENSE,
 	SUPPORT,
 	RECON,
@@ -80,18 +86,53 @@ global enum eCharacterClassRole
 
 const table<int, asset> CHARACTER_ROLE_ICONS = {
 	[eCharacterClassRole.UNDECIDED] = $"",
-	[eCharacterClassRole.OFFENSE] = $"rui/menu/character_select/utility/util_role_offense",
-	[eCharacterClassRole.DEFENSE] = $"rui/menu/character_select/utility/util_role_defense",
-	[eCharacterClassRole.SUPPORT] = $"rui/menu/character_select/utility/util_role_support",
-	[eCharacterClassRole.RECON] = $"rui/menu/character_select/utility/util_role_recon",
+	[eCharacterClassRole.OFFENSE]   = $"rui/menu/character_select/utility/util_role_offense",
+                    
+                                                                                          
+       
+	[eCharacterClassRole.DEFENSE]   = $"rui/menu/character_select/utility/util_role_defense",
+	[eCharacterClassRole.SUPPORT]   = $"rui/menu/character_select/utility/util_role_support",
+	[eCharacterClassRole.RECON]     = $"rui/menu/character_select/utility/util_role_recon",
 }
 
 global struct CharacterMenuLightData
 {
 	vector key_color
+	float key_brightness
+	float key_cone
+	float key_innercone
+	float key_distance
+	float key_halfbrightfrac
+	float key_specint
+	bool key_pbrfalloff
+	bool key_castshadows
 	vector fill_color
+	float fill_brightness
+	float fill_cone
+	float fill_innercone
+	float fill_distance
+	float fill_halfbrightfrac
+	float fill_specint
+	bool fill_pbrfalloff
+	bool fill_castshadows
 	vector rimL_color
+	float rimL_brightness
+	float rimL_cone
+	float rimL_innercone
+	float rimL_distance
+	float rimL_halfbrightfrac
+	float rimL_specint
+	bool rimL_pbrfalloff
+	bool rimL_castshadows
 	vector rimR_color
+	float rimR_brightness
+	float rimR_cone
+	float rimR_innercone
+	float rimR_distance
+	float rimR_halfbrightfrac
+	float rimR_specint
+	bool rimR_pbrfalloff
+	bool rimR_castshadows
 	asset  animSeq
 }
 
@@ -127,6 +168,9 @@ struct
 {
 	table<int, string> characterRolePerkDesc
 	table<string, CharacterDamageStruct> characterDamageData
+                    
+                                              
+       
 } file
 
                          
@@ -147,15 +191,15 @@ void function ShCharacters_LevelInit()
 	AddCallback_RegisterRootItemFlavors( OnRegisterRootItemFlavors )
 	AddCallback_OnItemFlavorRegistered( eItemType.character, OnItemFlavorRegistered_Character )
 
-	file.characterRolePerkDesc = {
-		[eCharacterClassRole.UNDECIDED] = "Undecided Role",
-		[eCharacterClassRole.OFFENSE] = "",
-		[eCharacterClassRole.DEFENSE] = "",
-                      
-		[eCharacterClassRole.RECON] = "#RECON_PERK_DESC",
-      
-		[eCharacterClassRole.SUPPORT] = "",
-	}
+                     
+		file.characterRolePerkDesc = {
+			[eCharacterClassRole.UNDECIDED] = "Undecided Role",
+			[eCharacterClassRole.OFFENSE] = "",
+			[eCharacterClassRole.DEFENSE] = "",
+			[eCharacterClassRole.RECON] = "#RECON_PERK_DESC",
+			[eCharacterClassRole.SUPPORT] = "",
+		}
+       
 }
 #endif
 
@@ -235,6 +279,30 @@ void function OnItemFlavorRegistered_Character( ItemFlavor character )
 	#if SERVER
 		                                   
 	#endif
+
+                    
+                                                                    
+
+                                                                                  
+                                                  
+                                                                       
+
+                                                                                
+                                                  
+                                                                         
+
+                                                                             
+                                                  
+                                                                         
+
+                                                                                
+                                                  
+                                                                            
+
+                                                                             
+                                                  
+                                                                         
+       
 }
 #endif
 
@@ -324,6 +392,12 @@ int function CharacterClass_GetRole( ItemFlavor flavor )
 {
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
 
+                    
+                                                                                                                         
+                                             
+                                              
+       
+
 	return eCharacterClassRole[GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "role" )]
 }
 
@@ -364,11 +438,43 @@ CharacterMenuLightData function CharacterClass_GetMenuLightData( ItemFlavor flav
 {
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
 	CharacterMenuLightData data
-	data.key_color = GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuLightColorKey" )
-	data.fill_color = GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuLightColorFill" )
-	data.rimL_color = GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuLightColorRimL" )
-	data.rimR_color = GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuLightColorRimR" )
-	data.animSeq = GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "menuLightAnimSeq" )
+	data.key_color =          GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuLightColorKey" )
+	data.key_brightness =     GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightBrightnessKey" )
+	data.key_cone =           GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightConeKey" )
+	data.key_innercone =      GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightInnerConeKey" )
+	data.key_distance =       GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightDistanceKey" )
+	data.key_halfbrightfrac = GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightHalfBrightFracKey" )
+	data.key_specint =        GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightSpecIntKey" )
+	data.key_pbrfalloff =     GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuLightPbrFalloffKey" )
+	data.key_castshadows =    GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuLightCastShadowsKey" )
+	data.fill_color =         GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuLightColorFill" )
+	data.fill_brightness =    GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightBrightnessFill" )
+	data.fill_cone =          GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightConeFill" )
+	data.fill_innercone =     GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightInnerConeFill" )
+	data.fill_distance =      GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightDistanceFill" )
+	data.fill_halfbrightfrac =GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightHalfBrightFracFill" )
+	data.fill_specint =       GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightSpecIntFill" )
+	data.fill_pbrfalloff =    GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuLightPbrFalloffFill" )
+	data.fill_castshadows =   GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuLightCastShadowsFill" )
+	data.rimL_color =         GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuLightColorRimL" )
+	data.rimL_brightness =    GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightBrightnessRimL" )
+	data.rimL_cone =          GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightConeRimL" )
+	data.rimL_innercone =     GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightInnerConeRimL" )
+	data.rimL_distance =      GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightDistanceRimL" )
+	data.rimL_halfbrightfrac =GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightHalfBrightFracRimL" )
+	data.rimL_specint =       GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightSpecIntRimL" )
+	data.rimL_pbrfalloff =    GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuLightPbrFalloffRimL" )
+	data.rimL_castshadows =   GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuLightCastShadowsRimL" )
+	data.rimR_color =         GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "menuLightColorRimR" )
+	data.rimR_brightness =    GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightBrightnessRimR" )
+	data.rimR_cone =          GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightConeRimR" )
+	data.rimR_innercone =     GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightInnerConeRimR" )
+	data.rimR_distance =      GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightDistanceRimR" )
+	data.rimR_halfbrightfrac =GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightHalfBrightFracRimR" )
+	data.rimR_specint =       GetGlobalSettingsFloat( ItemFlavor_GetAsset( flavor ), "menuLightSpecIntRimR" )
+	data.rimR_pbrfalloff =    GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuLightPbrFalloffRimR" )
+	data.rimR_castshadows =   GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "menuLightCastShadowsRimR" )
+	data.animSeq =            GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "menuLightAnimSeq" )
 	return data
 }
 
@@ -407,6 +513,13 @@ vector function CharacterClass_GetGalleryModelOffset( ItemFlavor flavor )
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
 
 	return GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "galleryModelOffset" )
+}
+
+vector function CharacterClass_GetThematicPreviewOffset( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
+
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( flavor ), "thematicPreviewOffset" )
 }
 
 
@@ -458,6 +571,7 @@ asset function CharacterClass_GetCharacterRoleImage( ItemFlavor flavor )
 	return CHARACTER_ROLE_ICONS[role]
 }
 
+                    
 string function CharacterClass_GetCharacterRolePerkDesc( ItemFlavor flavor )
 {
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
@@ -465,7 +579,7 @@ string function CharacterClass_GetCharacterRolePerkDesc( ItemFlavor flavor )
 	int role = CharacterClass_GetRole( flavor )
 	return file.characterRolePerkDesc[role]
 }
-
+      
 
 array<string> function CharacterClass_GetReadyUpVoicelineEventList( ItemFlavor flavor )
 {

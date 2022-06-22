@@ -130,6 +130,12 @@ void function Rampart_TT_Init()
 
 	                 
 	                 
+
+	                           
+	                        
+	 
+		                 
+	 
  
 #endif         
 
@@ -145,6 +151,14 @@ void function Rampart_TT_Init()
 		                 
  
 #endif         
+
+                                             
+#if SERVER || CLIENT
+bool function RampartHasStock()
+{
+	return GetCurrentPlaylistVarBool( "rampart_tt_stocked", true )
+}
+#endif                   
 
 
 
@@ -190,46 +204,55 @@ void function Rampart_TT_Init()
 			                                                         
 			                                                      
 
-			                          
-			                                                     
-			                                                        
-			                                           
-			                             
-			                                                  
-			                           
-			                             
-
-
 			                 
 			                                                     
 			 
 				                                                    
 				 
-					                  
+					                       
 					 
-						                    
+						                  
 						 
-							                                                       
-							     
-						 
+							                    
+							 
+								                                                       
+								     
+							 
 
-						                      
-						 
-							                                                         
-							     
-						 
+							                      
+							 
+								                                                         
+								     
+							 
 
-						                    
-						 
-							                                                       
-							     
+							                    
+							 
+								                                                       
+								     
+							 
 						 
 					 
 				 
 				                                                                      
 				 
-					                                               
-					                         
+					                       
+					 
+						                                               
+						                         
+
+						                          
+						                                                     
+						                                                        
+						                                           
+						                             
+						                                                  
+						                           
+						                             
+					 
+					    
+					 
+						                            
+					 
 				 
 			 
 		 

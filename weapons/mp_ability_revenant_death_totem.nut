@@ -244,11 +244,13 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 
                           
                                               
-                                                    
+                                                                                              
+                                                                             
+                                             
       
 		                                 
-		                                         
        
+	                                         
 	                               
 	                                            
 	                                                                                      
@@ -267,6 +269,10 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                           
 	                           
 	                                           
+
+	                                                                                                                                                                         
+	                                                                             
+
 	                                          
 	                                                    
 	                                          
@@ -413,6 +419,10 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 
 	                                                   
 
+                    
+                                             
+       
+
 	                                                   
 	                           
 	                                            
@@ -444,7 +454,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 		 
 			                        
 			 
-				                                                                  
+				                                                                    
 				                            
 			 
 
@@ -472,7 +482,10 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 								                                                                                                                               
 								                          
 
+
+                                  
 								                                                 
+              
 								 
 									                                                                                                                                                                                                           
 									                                                                                                    
@@ -495,7 +508,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 		    
 		 
 			                        
-				                                                                      
+				                                                                        
 		 
 
 		               
@@ -684,6 +697,9 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                             
 	                                                                                                   
 
+	                                                                             
+		                                              
+
 	                                                                                                     
 
 	                                         
@@ -713,9 +729,9 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                          
 	                        
 	 
-		                                                           
-		                                                       
+		                                                              
 		                                                         
+		                                                          
 	 
 
 	                                                                                                                       
@@ -733,8 +749,8 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	 
 		                                         
 		                                                                                
-		                                                             
-		                                                                         
+		                                                                 
+		                                                                           
 
 	 
 
@@ -1312,7 +1328,7 @@ void function DeathTotem_MarkLocation( entity player, entity totemProxy )
 
 		                        
 		 
-			                                                                                           
+			                                                                                             
 			                                                                                                                      
 		 
 
@@ -1627,6 +1643,7 @@ void function OnWeaponActivate_ability_revenant_death_totem( entity weapon )
 
 void function OnWeaponDeactivate_ability_revenant_death_totem( entity weapon )
 {
+                          
 	#if SERVER
 		                           
 			                                     
@@ -1634,6 +1651,7 @@ void function OnWeaponDeactivate_ability_revenant_death_totem( entity weapon )
 		if ( weapon.GetWeaponOwner() == GetLocalViewPlayer() )
 			weapon.SetWeaponPrimaryClipCount( 0 )
 	#endif
+      
 }
 
 
@@ -1683,14 +1701,14 @@ DeathTotemPlacementInfo function CalculateDeathTotemPosition( entity weaponOwner
 	totemBoundMaxs = < totemBoundMaxs.x + dx, totemBoundMaxs.y + dy, totemBoundMaxs.z >
 
 	TraceResults traceResults = TraceHull( startPos, startPos + viewVector * magnitude, totemBoundMins, totemBoundMaxs, [weaponOwner, totemProxy], TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_PLAYER )
-	                                                                        
+	                                                                          
 	bool isUpwardSlope        = (IsValid( traceResults.hitEnt ) && traceResults.hitEnt.IsWorld()) && forwardVector.Dot( traceResults.surfaceNormal ) < -0.05
 	if ( isUpwardSlope )
 	{
 		float slopeAngle   = 180 - RAD_TO_DEG * acos( forwardVector.Dot( traceResults.surfaceNormal ) )
 		vector slopeVector = ClampViewVectorToMaxAngle( upVector, viewVector, angle )
 		traceResults = TraceHull( startPos, startPos + slopeVector * magnitude, totemBoundMins, totemBoundMaxs, [weaponOwner, totemProxy], TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_PLAYER )
-		                                                                        
+		                                                                         
 	}
 	TraceResults traceResultsDown = TraceLine( traceResults.endPos, traceResults.endPos + <0, 0, -150>, [weaponOwner, totemProxy], TRACE_MASK_SOLID_BRUSHONLY, TRACE_COLLISION_GROUP_NONE )
 	                                                                                                                                                                                                                       

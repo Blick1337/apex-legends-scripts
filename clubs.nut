@@ -350,6 +350,7 @@ global enum eClubSearchTagType
 	_count
 }
 
+                                                    
 global enum eClubInternalReportReason
 {
 	REASON_CHAT_OFFENSIVE,

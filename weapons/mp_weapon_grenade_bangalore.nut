@@ -167,10 +167,10 @@ void function OnProjectileIgnite_weapon_grenade_bangalore( entity projectile )
 
 		                                              
 		                                                                         
-		                                                                                       
+		                                                                                      
 
 		                                                                     
-		                                                                                     
+		                                                                                      
 
 		                                                                        
 		                                                                                                                 
@@ -181,13 +181,13 @@ void function OnProjectileIgnite_weapon_grenade_bangalore( entity projectile )
 			                                                          
 		 
 		                                                              
-		                                                                                             
+		                                                                                               
 
 		                                                                  
 		                                                                       
 		                                                                              
 		                                                                                                                                               
-		                                                                                         
+		                                                                                           
 
 		                                              
 
@@ -263,7 +263,7 @@ void function OnProjectileIgnite_weapon_grenade_bangalore( entity projectile )
 	                                                                                     
 	                                                                                                                            
 	                               
-	                                                           
+	                                                            
 
 	                                                                 
 	                                                                           
@@ -336,7 +336,7 @@ void function OnProjectileIgnite_weapon_grenade_bangalore( entity projectile )
 	                                                          
 
 	                                 
-	                                                    
+	                                                       
 
                     
                                                                     

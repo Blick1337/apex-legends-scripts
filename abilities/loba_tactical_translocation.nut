@@ -31,6 +31,7 @@ const bool TRANSLOCATION_DEBUG = false
 const float TRANSLOCATION_DEBUG_TIMEOUT = 40
 const int MAX_BACKUP_CANDIDATE_SPOTS = 2                                                                          
 const bool TRANSLOCATION_DO_VERIFICATION = true                                                                                                                     
+const bool TRANSLOCATION_ADDITIONAL_DEBUG = true
 
 const bool FORCE_TELEPORT_FAIL = false
 
@@ -134,7 +135,7 @@ void function OnWeaponActivate_ability_translocation( entity weapon )
 			return
 
 		weapon.w.translocate_predictedInitialProjectile = null
-		weapon.w.translocate_predictedInitialProjectile = null
+		weapon.w.translocate_predictedRedirectedProjectile = null
 		weapon.w.translocate_impactRumbleObj = null
 	#endif
 
@@ -149,6 +150,9 @@ void function OnWeaponDeactivate_ability_translocation( entity weapon )
 	#if CLIENT
 		if ( !InPrediction() )
 			return
+		#if TRANSLOCATION_ADDITIONAL_DEBUG
+			printt( "TRANSLOCATION: Weapon deactivated" )
+		#endif
 	#endif
 
 	Signal( weapon, "Translocation_Deactivate" )
@@ -173,6 +177,10 @@ void function TranslocationLifetimeThread( entity owner, entity weapon )
 	bool[1] haveLockedForToss = [false]
 
 	OnThreadEnd( void function() : ( owner, weapon, rui, haveLockedForToss ) {
+		#if CLIENT && TRANSLOCATION_ADDITIONAL_DEBUG
+			printt( "TRANSLOCATION: translocation lifetime thread end" )
+		#endif
+
 		if ( IsValid( weapon ) )
 		{
 			if ( weapon.w.translocate_isADSForced )
@@ -482,17 +490,7 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 					                                        
 				 
 
-				                        
-				                                                           
-				 
-					                                                            
-					                                                             
-				 
-				                                                             
-				 
-					                                                               
-					                                                          
-				 
+				                                                                             
 
 				                                    
 					                                                    
@@ -500,6 +498,10 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 				                                      
 				                                                           
 				 
+					                                  
+						                                                
+					      
+
 					                              
 					                                                                        
 					                                                       
@@ -511,6 +513,10 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 					                       
 					                       
 					 
+						                                  
+							                                                                                                   
+						      
+
 						                                               
 						                                                                              
 						                                                                         
@@ -661,6 +667,10 @@ void function OnProjectilePlanted( entity projectile, DeployableCollisionParams 
 		return
 
 	#if SERVER
+		                                  
+			                                             
+		      
+
 		                                                
 		                                                                                                    
 
@@ -677,6 +687,10 @@ void function ServerToClient_Translocation_ClientProjectilePlantedHandler( entit
 {
 	if ( !IsValid( weapon ) || !IsValid( projectile ) )
 		return
+
+	#if TRANSLOCATION_ADDITIONAL_DEBUG
+		printt( "TRANSLOCATION: Client Projectile planted" )
+	#endif
 
 	ClientProjectilePlantHandler( weapon, projectile )
 }
@@ -697,6 +711,10 @@ void function ClientProjectilePlantHandler( entity weapon, entity projectile )
 #if CLIENT
 void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 {
+	#if TRANSLOCATION_ADDITIONAL_DEBUG
+		printt( "TRANSLOCATION: Client teleport failed" )
+	#endif
+
 	if ( !IsValid( weapon ) )
 		return
 
@@ -723,7 +741,7 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 
 	                       
 		                                                                    
-		                                                                                 
+		                                                                                     
 		                                      
 		 
 			                                                                 
@@ -744,6 +762,7 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 	                            
 	 
 		                                        
+		                                                                    
 		                                                    
 		      
 	 
@@ -971,7 +990,7 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 	                       
 		                                                
 		 
-			                                                                                            
+			                                                                                              
 		 
 	      
 

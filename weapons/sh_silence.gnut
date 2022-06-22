@@ -67,6 +67,8 @@ void function MpAbilitySharedSilence_Init()
 	StatusEffect_RegisterEnabledCallback( eStatusEffect.silenced_seer_visuals, AbilitySilence_StartVisualEffect )
 	StatusEffect_RegisterDisabledCallback( eStatusEffect.silenced_seer_visuals, AbilitySilence_StopVisualEffect )
 
+	StatusEffect_RegisterEnabledCallback( eStatusEffect.interrupted, Interrupted_ClientCallbacks )
+
 #else
 	Bleedout_AddCallback_OnPlayerStartBleedout( OnPlayerStartBleedout_Silence )
 	RegisterSignal( "StopSilence")
@@ -179,6 +181,14 @@ void function MpAbilitySharedSilence_Init()
 		                                                    
 		 
 			                       
+		 
+
+		                                                   
+		 
+			                                
+			 
+				                                               
+			 
 		 
 
 		                              
@@ -518,6 +528,23 @@ void function AbilitySilence_ScreenEffectThread( entity viewPlayer, int fxHandle
 			StopSoundOnEntity( viewPlayer, silenceSound )
 		}
 		WaitFrame()
+	}
+}
+
+                                                                                                 
+void function Interrupted_ClientCallbacks( entity ent, int statusEffect, bool actuallyChanged )
+{
+	if ( ent != GetLocalViewPlayer() || ( GetLocalViewPlayer() == GetLocalClientPlayer() && !actuallyChanged) )
+		return
+
+	Signal( ent, "Interrupted" )
+
+	if ( GetCurrentPlaylistVarBool( "interrupted_closes_crafting_menu", true ) )
+		TryCloseCraftingMenu()
+
+	if ( PlayerHasPassive( ent, ePassives.PAS_AXIOM ) )
+	{
+		ArmoredLeap_Handle_StatusEffectInterrupt( ent )
 	}
 }
 #endif         

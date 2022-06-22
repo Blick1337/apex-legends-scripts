@@ -304,6 +304,11 @@ global const AUTOPICKUP_DISTANCE = 64.0
                                                                           
       
 
+const int EVOLVING_ARMOR_DAMAGE_TIER1 = 100
+const int EVOLVING_ARMOR_DAMAGE_TIER2 = 150
+const int EVOLVING_ARMOR_DAMAGE_TIER3 = 300
+const int EVOLVING_ARMOR_DAMAGE_TIER4 = 750
+
 const FX_SHIELD_EVO_UPGRADE_FP = $"P_armor_evo_upgrade_FP"
 global const FX_SHIELD_EVO_UPGRADE_3P = $"P_armor_evo_upgrade"
 
@@ -500,6 +505,32 @@ struct
 	bool initialized
 
 	bool useAltInteractForArmorSwap
+
+	int evoArmor_ReqDamage_Tier1
+	int evoArmor_ReqDamage_Tier2
+	int evoArmor_ReqDamage_Tier3
+	int evoArmor_ReqDamage_Tier4
+
+	bool evoArmor_SquadPetsEnabled
+	bool evoArmor_AiPointsEnabled
+	float evoMultiplier_SquadPets
+	float evoMultiplier_Prowlers
+	float evoMultiplier_Flyers
+                    
+                              
+       
+                   
+                             
+       
+                          
+		float evoMultiplier_JungleSpiders
+       
+                       
+		float evoMultiplier_Spectres
+       
+	float evoMultiplier_Armorsmith
+	float evoMultiplier_Shadows
+
 
 	table<string, int> maxAmmoForType
 
@@ -952,14 +983,39 @@ void function SURVIVAL_Loot_InitShared()
 		}
 	}
 
-	#if SERVER
-		                                                              
-	#endif
 	RegisterNetworkedVariable( NV_EVOLVING_ARMOR_KILL_COUNT, SNDC_PLAYER_EXCLUSIVE, SNVT_UNSIGNED_INT, 0 )
 
 	Remote_RegisterServerFunction( CMDNAME_PLAYER_SWITCHED_WEAPONS, "int", -1, 2 )
 
-	file.useAltInteractForArmorSwap = GetCurrentPlaylistVarBool( "alt_interact_armor_swap", GetCurrentPlaylistName() == "survival_nitro" )                                                                               
+	file.useAltInteractForArmorSwap = GetCurrentPlaylistVarBool( "alt_interact_armor_swap", false )
+
+	file.evoArmor_ReqDamage_Tier1  = GetCurrentPlaylistVarInt( "evolving_armor_damage_requirement_tier1", EVOLVING_ARMOR_DAMAGE_TIER1 )
+	file.evoArmor_ReqDamage_Tier2  = GetCurrentPlaylistVarInt( "evolving_armor_damage_requirement_tier2", EVOLVING_ARMOR_DAMAGE_TIER2 )
+	file.evoArmor_ReqDamage_Tier3  = GetCurrentPlaylistVarInt( "evolving_armor_damage_requirement_tier3", EVOLVING_ARMOR_DAMAGE_TIER3 )
+	file.evoArmor_ReqDamage_Tier4  = GetCurrentPlaylistVarInt( "evolving_armor_damage_requirement_tier4", EVOLVING_ARMOR_DAMAGE_TIER4 )
+	file.evoArmor_SquadPetsEnabled = GetCurrentPlaylistVarBool( "squad_pets_enabled", false )
+	file.evoArmor_AiPointsEnabled  = GetCurrentPlaylistVarBool( "should_ai_reward_evo_pts", true )
+	file.evoMultiplier_SquadPets   = GetCurrentPlaylistVarFloat( "squad_pets_evo_multiplier", 0.25 )
+	file.evoMultiplier_Prowlers    = GetCurrentPlaylistVarFloat( "ai_prowler_evo_pt_percent", 0.25 )
+	file.evoMultiplier_Flyers      = GetCurrentPlaylistVarFloat( "wildlife_ai_flyer_evo_pt_percent", 0.25 )
+                    
+                                                                                              
+       
+                   
+                                                                                             
+       
+                          
+		file.evoMultiplier_JungleSpiders = GetCurrentPlaylistVarFloat( "ai_spider_jungle_evo_pt_percent", 0.25 )
+       
+                       
+		file.evoMultiplier_Spectres = GetCurrentPlaylistVarFloat( "ai_spectre_evo_pt_percent", 0.25 )
+       
+                   
+                                                                                          
+       
+                               
+		file.evoMultiplier_Shadows = GetCurrentPlaylistVarFloat( "shadow_evo_multiplier", 0.5 )
+       
 }
 
 #if SERVER
@@ -4244,7 +4300,7 @@ bool function SurvivalLoot_PlayerLookingAtLine( entity player, entity ent )
 		return false
 
 	                                                           
-	                                                                  
+	                                                                   
 	return true
 
 
@@ -4699,51 +4755,21 @@ int function EvolvingArmor_GetEvolvingArmorHealthForTier( int tier )
 	return 0
 }
 
-bool function EvolveMethodIsTrackDamage()
-{
-	return GetCurrentPlaylistVarBool( "evolving_armor_evolution_method", true )
-}
-
-const int EVOLVING_ARMOR_KILLS_TIER1 = 1
-const int EVOLVING_ARMOR_KILLS_TIER2 = 1
-const int EVOLVING_ARMOR_KILLS_TIER3 = 2
-const int EVOLVING_ARMOR_KILLS_TIER4 = 3
-
-const int EVOLVING_ARMOR_DAMAGE_TIER1 = 100
-const int EVOLVING_ARMOR_DAMAGE_TIER2 = 150
-const int EVOLVING_ARMOR_DAMAGE_TIER3 = 300
-const int EVOLVING_ARMOR_DAMAGE_TIER4 = 750
 int function EvolvingArmor_GetRequirementForEvolution( int tier )
 {
-	                                                                                           
-
-	bool trackDamage = EvolveMethodIsTrackDamage()
-
 	switch ( tier )
 	{
 		case 0:
-			if ( trackDamage )
-				return GetCurrentPlaylistVarInt( "evolving_armor_damage_requirement_tier1", EVOLVING_ARMOR_DAMAGE_TIER1 )
-			else
-				return GetCurrentPlaylistVarInt( "evolving_armor_kill_requirement_tier1", EVOLVING_ARMOR_KILLS_TIER1 )
+			return file.evoArmor_ReqDamage_Tier1
 
 		case 1:
-			if ( trackDamage )
-				return GetCurrentPlaylistVarInt( "evolving_armor_damage_requirement_tier2", EVOLVING_ARMOR_DAMAGE_TIER2 )
-			else
-				return GetCurrentPlaylistVarInt( "evolving_armor_kill_requirement_tier2", EVOLVING_ARMOR_KILLS_TIER2 )
+			return file.evoArmor_ReqDamage_Tier2
 
 		case 2:
-			if ( trackDamage )
-				return GetCurrentPlaylistVarInt( "evolving_armor_damage_requirement_tier3", EVOLVING_ARMOR_DAMAGE_TIER3 )
-			else
-				return GetCurrentPlaylistVarInt( "evolving_armor_kill_requirement_tier3", EVOLVING_ARMOR_KILLS_TIER3 )
+			return file.evoArmor_ReqDamage_Tier3
 
 		case 3:
-			if ( trackDamage )
-				return GetCurrentPlaylistVarInt( "evolving_armor_damage_requirement_tier4", EVOLVING_ARMOR_DAMAGE_TIER4 )
-			else
-				return GetCurrentPlaylistVarInt( "evolving_armor_kill_requirement_tier4", EVOLVING_ARMOR_KILLS_TIER4 )
+			return file.evoArmor_ReqDamage_Tier4
 
 		default:
 			return 0
@@ -4799,21 +4825,25 @@ int function EvolvingArmor_GetEvolutionProgress( entity player )
 
                                                                                                                                                                     
  
-	                                                              
-
-	                                   
-		      
+	                                                                  
 
 	                                                                           
 		      
 
+	                       
+		      
+
+	                                        
+		      
+
+	                           
 	                         
 	 
-		                                                                                 
+		                                                       	                                                                                            
 		 
-			                                                                                                         
+			                                              
 		 
-		                                                                                                     
+		                                                                     
 		 
 			                     
 			 
@@ -4825,63 +4855,63 @@ int function EvolvingArmor_GetEvolutionProgress( entity player )
 				                                
 				 
 					                   
-						                                                                                                         
+						                                             
 						     
                         
                         
-                                                                                                              
+                                                   
            
            
                        
                        
-                                                                                                              
+                                                  
            
            
                               
 					                         
-						                                                                                                               
+						                                                  
 						     
            
                            
 					                   
-						                                                                                                         
+						                                             
 						     
            
 					        
-						                                              
+						                      
 				 
-				                                      
 			 
 			                                                     
 			 
-				                                                                                                                
-				                                      
+				                                           
 			 
 		 
 		                                                      
 			      
 	 
 
-	                       
-		      
+	                                                          
+	                                              
 
-	                                        
-		      
-
-	                                        
-		      
+	                             
 
                    
                                                           
-                                                                                                       
+                                                     
        
 
                                
 		                                                                                  
-			                                                                                                    
+			                                               
        
 
-	                                                   
+                    
+                                                                          
+                                                                 
+       
+
+	                                                            
+	                                                       
  
 
                                                                        
@@ -4920,64 +4950,6 @@ int function EvolvingArmor_GetEvolutionProgress( entity player )
 		                                                                                       
 		                                                          
 		                                            
-	 
- 
-
-                                                                                                
- 
-	                                  
-		      
-
-	                           
-		      
-
-	                         
-		      
-
-	                        
-	                                       
-	 
-		                                                                
-		                                                                 
-			                         
-	 
-
-	                                                                      
-	                                                               
-		      
-
-	                                                                            
-	                                           
-	                                                                             
-	                                                            
-
-	                                                                    
-
-	                                                                                     
-	                                                  
-
-	                                                                     
-
-	                                      
-	 
-		                                                                                  
-		                                                                                           
-		                                                                                           
-		                                                      
-	 
-	                                      
-	 
-		                                                                                  
-		                                                                                           
-		                                                                                           
-		                                                      
-	 
-	                                      
-	 
-		                                                                                  
-		                                                                                           
-		                                                                                           
-		                                                      
 	 
  
 
@@ -5070,22 +5042,6 @@ void function ServerCallback_Play3PEvoShieldUpgradeFX( entity player )
 	int shield3pFXHandle = StartParticleEffectOnEntity( player, file.evoShieldUpgradeFX3P, FX_PATTACH_POINT_FOLLOW, attachID )
 	EffectSetControlPointVector( shield3pFXHandle, 1, shieldColor )
 }
-
-                                                 
-                                                                                                         
-   
-  	                         
-  		      
-  
-  	                                       
-  		      
-  
-  	                                                                                                      
-  		      
-  
-  	                       
-  		      
-   
 #endif         
 
 int function SortByPriorityThenTier( ConsumableInventoryItem a, ConsumableInventoryItem b )
@@ -5705,25 +5661,33 @@ int function SURVIVAL_GetInventorySlotCountForPlayer( entity player, LootData da
 	if ( data.lootType == eLootType.ORDNANCE )
 	{
 		result += GetCurrentPlaylistVarInt( "boost_ordnance_stack_size", 0 )
+		if ( PlayerHasPassive( player, ePassives.PAS_FUSE ) )
+			result++
 	}
-
-	if ( PlayerHasPassive( player, ePassives.PAS_FUSE ) && data.lootType == eLootType.ORDNANCE )
+	else if ( data.lootType == eLootType.AMMO )
 	{
-		result++
+                     
+                                                                        
+    
+                                       
+    
+        
 	}
+	else if ( data.lootType == eLootType.HEALTH )
+	{
+		if ( PlayerHasPassive( player, ePassives.PAS_BATTERY_POWERED ) && data.ref == "health_pickup_ultimate" )
+		{
+			result += Pas_GetWattsonUltAccelExtraCount()
+		}
                       
-                                                                                                    
-  
-                                                                                            
-              
-                                                                                                                                           
-           
-  
+                                                                
+   
+                                                                                             
+               
+                                                                                                                                            
+            
+   
       
-
-	if ( PlayerHasPassive( player, ePassives.PAS_BATTERY_POWERED ) && data.ref == "health_pickup_ultimate" )
-	{
-		result += Pas_GetWattsonUltAccelExtraCount()
 	}
 
 	return result

@@ -1129,13 +1129,13 @@ void function OnSpiderEggCreated( entity eggEntity )
 		       
 			                       
 			       
-			                                                        
+			                                                          
 			     
 
 		       
 			                       
 			      
-			                                                        
+			                                                         
 			     
 	 
 
@@ -1251,7 +1251,7 @@ void function OnSpiderEggCreated( entity eggEntity )
 							       
 						 
 
-						                                                                                                                     
+						                                                                                                                       
 					 
 				 
 			 

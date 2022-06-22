@@ -2796,6 +2796,8 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 			fileLevel.sceneRefOrigin += <-5, 90, 0>
 		else if ( itemType == eItemType.weapon_skin )
 			fileLevel.sceneRefOrigin += <5, 0, 5>
+		else if ( itemType == eItemType.character_skin )
+			fileLevel.sceneRefOrigin += CharacterClass_GetThematicPreviewOffset( CharacterSkin_GetCharacterFlavor( flav ) )
 
 		                                      
 #if NX_PROG || PC_PROG_NX_UI		

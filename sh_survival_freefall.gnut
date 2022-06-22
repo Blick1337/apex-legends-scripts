@@ -359,10 +359,8 @@ vector function GetSkydiveSmokeColorForTeam( int team )
 
 SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entity player )                               
 {
-#if CLIENT
-	if ( IsPrivateMatch() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR )
+	if ( IsPrivateMatch() )
 		return SkydiveTrail_GetSkyDiveTrailPackageFromItemFlavor( GetItemFlavorByAsset( SKYDIVE_TRAIL_DEFAULT ) )
-#endif
 
 	int index = player.GetPlayerNetInt( "skyDiveTrailOverrideIndex" )
 	                                                     
@@ -406,7 +404,7 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 		      
 
 	                                                 
-	                                                                                                                         
+	                                                                                                                
 	                                  
 	                                            
 
@@ -963,7 +961,11 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 	                              
 	                                    
 
-	        
+	                          
+	                                                       
+		                                                                                                  
+
+	                   
 
 	                                                                                
 
@@ -1322,14 +1324,14 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 
 				                                                                  
 
-				                                                                      
-				                                                                                                                 
+				                                                                        
 				                                                                                                               
-				                                                                                                                
-				                                                                                                   
+				                                                                                                                 
+				                                                                                                                 
+				                                                                                                     
 
-				                                                                                                                
-				                                                                                               
+				                                                                                                                 
+				                                                                                             
 		        
 
 		           
@@ -1553,7 +1555,7 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 		                                                                                                                         
 		                                                                    
 
-		                                                                       
+		                                                                        
 		                                                    
 
 		                                                                                                                
@@ -2204,7 +2206,7 @@ void function Freefall_DisplayEnemiesOnMinimap_Thread( entity skydiver )
 
 	while ( true )
 	{
-		players = GetPlayerArrayEx( "pilot", TEAM_ANY, TEAM_ANY, skydiver.GetOrigin(), ( SKYDIVE_ENEMY_DETECT_RANGE * 2.0 ) )
+		players = GetPlayerArrayEx( TEAM_ANY, TEAM_ANY, skydiver.GetOrigin(), ( SKYDIVE_ENEMY_DETECT_RANGE * 2.0 ) )
 
 		float timeToStartFade = Time() + ENEMY_DISPLAY_TIME
 		float timeToEndFade = timeToStartFade + ENEMY_FADE_TIME

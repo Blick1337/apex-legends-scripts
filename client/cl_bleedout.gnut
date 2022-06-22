@@ -294,8 +294,10 @@ void function ShowWoundedMarker( entity woundedPlayer, float endTime )
 
 			RuiSetString( shieldRUI, "nameText", lootData.pickupString )
 
-			if ( incapShieldTier >= 4 )
-				RuiSetString( shieldRUI, "nameText", "#BLEEDOUT_USE_SELF_RES_TITLE" )
+                          
+				if ( incapShieldTier >= 4 )
+					RuiSetString( shieldRUI, "nameText", "#BLEEDOUT_USE_SELF_RES_TITLE" )
+         
 
 			RuiSetBool( shieldRUI, "hasKOShield", true )
 			RuiSetInt( shieldRUI, "shieldTier", incapShieldTier )
@@ -490,7 +492,7 @@ void function BleedoutScreenFX_Start( entity woundedPlayer, float startTime, flo
 	                                     
 	float currentLerpTime
 	float lerpTime = endTime
-	while ( Bleedout_IsBleedingOut( woundedPlayer ) )
+	while ( IsValid( woundedPlayer) && Bleedout_IsBleedingOut( woundedPlayer ) )
 	{
 		if ( !IsValid( Bleedout_GetRevivingPlayer( woundedPlayer ) ) && !woundedPlayer.ContextAction_IsMeleeExecutionTarget() )
 		{

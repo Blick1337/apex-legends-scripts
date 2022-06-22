@@ -632,10 +632,13 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
 #if SERVER
                                                   
  
-	                                                       
-		            
+	                                                     
+		                                                                                                               
 
-	                                                                                                               
+	                                                             
+		           
+
+	            
  
 
                                                
@@ -657,7 +660,7 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
 		 
 			                                                                
 			 
-				                                                                       
+				                                                                                                                                          
 				 
 					                                         
 					                                               
@@ -1033,10 +1036,10 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
           
                                                                                            
  
-              
-  
-                                                                      
-  
+                
+    
+                                                                        
+    
  
       
       

@@ -709,12 +709,12 @@ void function CreateClientSideEmoteIcon( entity wp, int guid, float startTime, b
 
 	if ( lastsForever )
 	{
-		waitthread OrientToLocalPlayer( wp, mover, 9999 )
+		waitthread OrientToLocalPlayer( wp, mover, 9999, model)
 	}
 	else
 	{
 		if ( delay > 0 )
-			waitthread OrientToLocalPlayer( wp, mover, delay )
+			waitthread OrientToLocalPlayer( wp, mover, delay, model )
 
 		foreach ( rui in ruis )
 			RuiSetGameTime( rui, "fadeOutTime", Time() )
@@ -735,7 +735,7 @@ void function CreateClientSideEmoteIcon( entity wp, int guid, float startTime, b
 }
 
 
-void function OrientToLocalPlayer( entity wp, entity mover, float duration )
+void function OrientToLocalPlayer( entity wp, entity mover, float duration, entity model )
 {
 	wp.EndSignal( "OnDestroy" )
 	mover.EndSignal( "OnDestroy" )
@@ -764,7 +764,18 @@ void function OrientToLocalPlayer( entity wp, entity mover, float duration )
 			vector closestPoint    = GetClosestPointOnLine( camPos, camPos + (AnglesToRight( camAng ) * 100.0), mover.GetOrigin() )
 
 			vector angles = VectorToAngles( mover.GetOrigin() - closestPoint )
-			mover.SetAngles( < -90, angles.y, 0> )
+			mover.SetAngles( < -90 * ( 1 - player.GetAdsFraction() ), angles.y, 0> )
+
+			                                
+			if (  player.GetAdsFraction() > 0.99 )
+			{
+				model.Hide()
+			}
+			else
+			{
+				model.Show()
+			}
+
 			WaitFrame()
 		}
 	}

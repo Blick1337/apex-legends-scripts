@@ -23,6 +23,11 @@ const float VALK_JETPACK_REACTIVATION_DELAY = 0.25
 const asset SKYWARD_JUMPJETS_FRIENDLY = $"P_valk_jet_fly_ON"
 const asset SKYWARD_JUMPJETS_ENEMY = $"P_valk_jet_fly_ON"
 
+                    
+const asset VALK_AMB_EXHAUST_FP = $"P_valk_spear_thruster_idle"
+const asset VALK_AMB_EXHAUST_3P = $"P_valk_spear_thruster_idle_3P"
+                              
+
 struct
 {
 	#if CLIENT
@@ -70,6 +75,11 @@ void function MpAbilityValkJets_Init()
 
 		file.colorCorrection = ColorCorrection_Register( "materials/correction/launch_hud.raw_hdr" )
 	#endif
+	
+                    
+	PrecacheParticleSystem( VALK_AMB_EXHAUST_FP )
+	PrecacheParticleSystem( VALK_AMB_EXHAUST_3P )
+                              
 }
 
 #if SERVER
@@ -309,7 +319,7 @@ void function OnValkTrackingChanged( entity player, bool new )
 	if ( player.GetTeam() != GetLocalViewPlayer().GetTeam() )
 	{
 		                                                                                                                                                                                                             
-		if ( !IsUsingProximityAllianceMembers() || !IsValid( player ) || !IsFriendlyTeam( player.GetTeam(), GetLocalViewPlayer().GetTeam() ) || !IsPositionWithinRadius( GetMaxDistForAllianceMemberProximity(), GetLocalViewPlayer().GetOrigin(), player.GetOrigin() ) )
+		if ( !AllianceProximity_IsUsingAllianceProximity() || !IsValid( player ) || !IsFriendlyTeam( player.GetTeam(), GetLocalViewPlayer().GetTeam() ) || !IsPositionWithinRadius( AllianceProximity_GetMaxDistForProximity(), GetLocalViewPlayer().GetOrigin(), player.GetOrigin() ) )
 			return
 	}
 
@@ -403,10 +413,11 @@ bool function OnWeaponAttemptOffhandSwitch_ability_valk_jets( entity weapon )
 	if ( !IsValid( lastWpn ) )
 		return false
 
-	if ( lastWpn.GetWeaponClassName() != "mp_weapon_melee_survival" )
-	{
-		                                                     
-	}
+
+	entity primaryMelee = weaponOwner.GetNormalWeapon( WEAPON_INVENTORY_SLOT_PRIMARY_2 )
+	if( IsValid( primaryMelee ) && primaryMelee == lastWpn && primaryMelee.GetWeaponSettingBool( eWeaponVar.is_heirloom ) )
+		primaryMelee.AddMod( "using_jets" )
+
 
 	if ( weaponOwner.IsZiplining() || weaponOwner.IsMantling() || weaponOwner.GetPlayerNetBool( "isHealing" ) )
 		return false
@@ -460,6 +471,16 @@ void function OnWeaponActivate_ability_valk_jets( entity weapon )
 			                                             
 		}
 	#endif
+
+                    
+	if ( weapon.HasMod( "heirloom" ) )
+	{
+		weapon.PlayWeaponEffect( VALK_AMB_EXHAUST_FP, VALK_AMB_EXHAUST_3P, "fx_l_thruster_top" , true )
+		weapon.PlayWeaponEffect( VALK_AMB_EXHAUST_FP, VALK_AMB_EXHAUST_3P, "fx_l_thruster_bot" , true )
+		weapon.PlayWeaponEffect( VALK_AMB_EXHAUST_FP, VALK_AMB_EXHAUST_3P, "fx_r_thruster_top" , true )
+		weapon.PlayWeaponEffect( VALK_AMB_EXHAUST_FP, VALK_AMB_EXHAUST_3P, "fx_r_thruster_bot" , true )
+	}
+                              
 }
 
 #if SERVER
@@ -499,6 +520,17 @@ void function OnWeaponDeactivate_ability_valk_jets( entity weapon )
 	#if SERVER
 		                                 
 	#endif
+
+                                                                                                       
+  	                                  
+  	 
+  		                                                                   
+  		                                                                                               
+  		                                                                                               
+  		                                                                                               
+  		                                                                                               
+  	 
+                                
 
 }
 

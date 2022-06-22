@@ -361,6 +361,7 @@ void function MpWeaponTeslaTrap_Init()
 		AddCallback_PlayerClassActuallyChanged( TeslaTrap_OnPlayerClassChanged )
 		AddCallback_OnPlayerChangedTeam( TeslaTrap_OnPlayerTeamChanged )
 		AddCallback_MinimapEntShouldCreateCheck_Scriptname( TESLA_TRAP_NAME, Minimap_DontCreateRuisForEnemies )
+		AddCallback_ModifyDamageFlyoutForScriptName( TESLA_TRAP_NAME, OnModifyDamageFlyout )
 		RegisterMinimapPackage( "prop_script", eMinimapObject_prop_script.ARC_TRAP, MINIMAP_ARC_TRAP_RUI, RegisterTeslaTrapMinimapRui, $"ui/in_world_minimap_tesla_trap.rpak", RegisterTeslaTrapMinimapRui )
 	#endif         
 
@@ -785,18 +786,18 @@ TeslaTrapPlacementInfo function TeslaTrap_GetPlacementInfo( entity player, entit
 
 	if ( TESLA_TRAP_DEBUG_DRAW_PLACEMENT )
 	{
-		DebugDrawBox( fwdResults.endPos, TESLA_TRAP_BOUND_MINS, TESLA_TRAP_BOUND_MAXS, 0, 255, 0, 1, 1.0 )                                 
-		DebugDrawBox( downResults.endPos, TESLA_TRAP_BOUND_MINS, TESLA_TRAP_BOUND_MAXS, 0, 0, 255, 1, 1.0 )                                  
-		DebugDrawLine( eyePos + viewVec * min( TESLA_TRAP_PLACEMENT_RANGE_MIN, maxRange ), fwdResults.endPos, 0, 255, 0, true, 1.0 )                    
-		DebugDrawLine( fwdResults.endPos, eyePos + viewVec * maxRange, 255, 0, 0, true, 1.0 )                            
-		DebugDrawLine( fwdResults.endPos, downResults.endPos, 0, 0, 255, true, 1.0 )                     
-		DebugDrawBox( upResults.endPos, TESLA_TRAP_BOUND_MINS, TESLA_TRAP_BOUND_MAXS, 0, 255, 255, 1, 1.0 )                                   
-		DebugDrawLine( upStart, upResults.endPos, 0, 255, 255, true, 1.0 )                     
-		DebugDrawLine( roofTraceStart, roofTraceEnd, 255, 0, 255, true, 1.0 )             
-		DebugDrawLine( player.GetOrigin(), player.GetOrigin() + (AnglesToForward( angles ) * file.balance_teslaTrapRange), 0, 255, 0, true, 1.0 )                     
-		DebugDrawLine( eyePos + <0, 0, 8>, eyePos + <0, 0, 8> + (viewVec * file.balance_teslaTrapRange), 0, 255, 0, true, 1.0 )                     
+		DebugDrawBox( fwdResults.endPos, TESLA_TRAP_BOUND_MINS, TESLA_TRAP_BOUND_MAXS, COLOR_GREEN, 1, 1.0 )                                 
+		DebugDrawBox( downResults.endPos, TESLA_TRAP_BOUND_MINS, TESLA_TRAP_BOUND_MAXS, COLOR_BLUE, 1, 1.0 )                                  
+		DebugDrawLine( eyePos + viewVec * min( TESLA_TRAP_PLACEMENT_RANGE_MIN, maxRange ), fwdResults.endPos, COLOR_GREEN, true, 1.0 )                    
+		DebugDrawLine( fwdResults.endPos, eyePos + viewVec * maxRange, COLOR_RED, true, 1.0 )                            
+		DebugDrawLine( fwdResults.endPos, downResults.endPos, COLOR_BLUE, true, 1.0 )                     
+		DebugDrawBox( upResults.endPos, TESLA_TRAP_BOUND_MINS, TESLA_TRAP_BOUND_MAXS, COLOR_CYAN, 1, 1.0 )                                   
+		DebugDrawLine( upStart, upResults.endPos, COLOR_CYAN, true, 1.0 )                     
+		DebugDrawLine( roofTraceStart, roofTraceEnd, COLOR_MAGENTA, true, 1.0 )             
+		DebugDrawLine( player.GetOrigin(), player.GetOrigin() + (AnglesToForward( angles ) * file.balance_teslaTrapRange), COLOR_GREEN, true, 1.0 )                     
+		DebugDrawLine( eyePos + <0, 0, 8>, eyePos + <0, 0, 8> + (viewVec * file.balance_teslaTrapRange), COLOR_GREEN, true, 1.0 )                     
 
-		DebugDrawLine( eyePos + <0, 0, 4>, viewTraceResults.endPos + <0, 0, 4>, 0, 255, 0, true, 1.0 )                              
+		DebugDrawLine( eyePos + <0, 0, 4>, viewTraceResults.endPos + <0, 0, 4>, COLOR_GREEN, true, 1.0 )                              
 	}
 
 	TeslaTrapPlacementInfo placementInfo = TeslaTrap_GetPlacementInfoFromTraceResults( player, proxy, downResults, upResults, viewTraceResults, ignoreEnts, idealPos )
@@ -813,7 +814,7 @@ TeslaTrapPlacementInfo function TeslaTrap_GetPlacementInfo( entity player, entit
 
 		if ( TESLA_TRAP_DEBUG_DRAW_PLACEMENT )
 		{
-			DebugDrawBox( downFallbackResults.endPos, TESLA_TRAP_BOUND_MINS, TESLA_TRAP_BOUND_MAXS, 255, 0, 0, 1, 1.0 )                                           
+			DebugDrawBox( downFallbackResults.endPos, TESLA_TRAP_BOUND_MINS, TESLA_TRAP_BOUND_MAXS, COLOR_RED, 1, 1.0 )                                           
 		}
 
 		placementInfo = TeslaTrap_GetPlacementInfoFromTraceResults( player, proxy, downFallbackResults, upResults, viewTraceResults, ignoreEnts, idealPos )
@@ -961,7 +962,7 @@ TeslaTrapPlacementInfo function TeslaTrap_GetPlacementInfoFromTraceResults( enti
 
 			if ( TESLA_TRAP_DEBUG_DRAW_GROUND_CLAMP_PLACEMENT )
 			{
-				DebugDrawLine( testPos, traceResult.endPos, 255, 0, 0, true, 0.05 )
+				DebugDrawLine( testPos, traceResult.endPos, COLOR_RED, true, 0.05 )
 			}
 
 			float dot = DotProduct( testNormal, traceResult.surfaceNormal )
@@ -1026,7 +1027,7 @@ TeslaTrapPlacementInfo function TeslaTrap_GetPlacementInfoFromTraceResults( enti
 		int linkCount = int( height / TESLA_TRAP_LINK_HEIGHT )
 		success = success && linkCount >= TESLA_TRAP_LINK_FX_MIN
 
-  		                                                                             
+  		                                                                               
   		                                                                           
 	}
 
@@ -1506,7 +1507,7 @@ void function TeslaTrap_SnapClientOnlyModel( entity player, entity weapon, entit
 			RuiSetBool( linkRui, "showDial", true )
 
 			if ( TESLA_TRAP_DEBUG_DRAW_CLIENT_TRAP_LINKING )
-				DebugDrawLine( model.GetOrigin(), focalTrap.GetOrigin(), 0, 255, 0, true, 0.1 )
+				DebugDrawLine( model.GetOrigin(), focalTrap.GetOrigin(), COLOR_GREEN, true, 0.1 )
 
 			if ( lastFocalTrap != focalTrap )
 			{
@@ -1684,7 +1685,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 
 			if ( TESLA_TRAP_DEBUG_DRAW_CLIENT_TRAP_LINKING )
 			{
-				DebugDrawLine( proxy.GetOrigin(), focalTrap.GetOrigin(), 0, 255, 0, true, 0.1 )
+				DebugDrawLine( proxy.GetOrigin(), focalTrap.GetOrigin(), COLOR_GREEN, true, 0.1 )
 			}
 
 			if ( lastFocalTrap != focalTrap )
@@ -1765,6 +1766,10 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 	                                                                                   
 	                                                                  
 	                                               
+
+	                                                                                                                                                                         
+	                                                                                
+
 	                                   
 
 	  	                                                                                                                   
@@ -1791,17 +1796,11 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 	                                 
 	                                                                                                                                                
 
-	                                                
-	                       
-	                                      
-	                          
+	                                                                                     
 
                  
                               
        
-
-	                                                       
-	                                                          
 
 	                           
 	                                                       
@@ -2016,15 +2015,9 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 
 	                                                                                           
 	                   
-	                                                                                                                                                                         
-	                                        
-	 
-		                                                                    
-	 
-	                                         
-	 
-		                                                       
-	 
+
+	                                                                                     
+	                                                                                     
 
 	                             
 	         
@@ -2157,6 +2150,13 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 
 		                         
 			                                        
+	 
+
+	                          
+	 
+		                                                                                                                    
+									                                                                                              
+									                                                                                                                            
 	 
 
 	                                
@@ -2370,7 +2370,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 		                                             
 		 
 			                                                                
-			                                                                  
+			                                                                    
 		 
 
 		                              
@@ -2614,7 +2614,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 
 	                            
 	 
-		                                                                                                             
+		                                                                                                              
 	 
 
 	                                                                      
@@ -2680,8 +2680,8 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 
 	                            
 	 
-		                                                                                                                                                                 
 		                                                                                                                                                                  
+		                                                                                                                                                                   
 	 
 
 	                                                                   
@@ -2712,7 +2712,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 
 		                                       
 
-		                                                                                                                                                                                  
+		                                                                                                                                                                                    
 		                                                                                                                                                                                                                                                                                                                                                 
 		                                 
 		 
@@ -2757,7 +2757,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 			                            
 			 
 				                                                                 
-				                                                                   
+				                                                                     
 			 
 
 			                              
@@ -2826,7 +2826,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 			                                              
 			 
 				                                                              
-				                                                                
+				                                                                  
 			 
 
 			                             
@@ -3146,9 +3146,9 @@ void function OnFocusTrapChanged( entity player, entity newEnt )
 		                                                              
 		                                                              
 
-		                                                              
-		                                                              
-		                                                              
+		                                                                
+		                                                                
+		                                                                
 	 
 
 	                                     
@@ -3170,6 +3170,7 @@ void function OnFocusTrapChanged( entity player, entity newEnt )
 
 	                
 	                                                                                                                                                                         
+	                                             
 	                                                                           
 	                                                          
 
@@ -3335,9 +3336,9 @@ float function TeslaTrap_GetTrapViewRating( TeslaTrapPlayerPlacementData mainPla
 	vector playerToOther = Normalize( otherOrigin - mainPlacementData.playerOrigin )
 
 	                                                                                                                           
-	                                                                                                                                                 
+	                                                                                                                                               
 	                                                                                                                                 
-	                                                                                                                                                       
+	                                                                                                                                                     
 
 	                                                                                     
 	float viewDot    = DotProduct( viewToOther, mainPlacementData.viewForward )
@@ -3776,7 +3777,7 @@ void function TeslaTrap_CreateClientEffects( entity trigger, entity start, entit
 	{
 		float heightOffset = TESLA_TRAP_LINK_HEIGHT * i
 
-		                                                                                                       
+		                                                                                                        
 
 		int fxIdxTeam = StartParticleEffectOnEntityWithPos( start, fxIDTeam, FX_PATTACH_ABSORIGIN_FOLLOW, -1, (startUp * (heightOffset + file.proxyBaseOffset)), <0, 0, 0> )
 		EffectSetPlayFriendlyOnly( fxIdxTeam )
@@ -4023,6 +4024,11 @@ void function ClientCodeCallback_TeslaTrapVisibilityChanged( entity trigger, ent
 		}
 	}
 }
+
+vector function OnModifyDamageFlyout( entity ent, vector pos )
+{
+	return ( pos - < 0, 0, ent.GetBoundingMaxs().z * 0.8 > )
+}
 #endif              
 
 bool function TrippedEntIsFriendly( entity crossingEnt, entity trapStart )
@@ -4174,9 +4180,9 @@ void function CodeCallback_TeslaTrapCrossed( entity trigger, entity start, entit
 			                                                                                                             
 
 			                                                                                                                                                                         
-			                                                                                                      
+			                                                                                                                 
 			 
-				                                                                              
+				                                                                                                   
 				 
 					                                                                                                                 
 				 
@@ -4196,9 +4202,9 @@ void function CodeCallback_TeslaTrapCrossed( entity trigger, entity start, entit
 				                                                                                                             
 
 				                                                                                                                                                                         
-				                                                                                                      
+				                                                                                                                 
 				 
-					                                                                              
+					                                                                                                   
 					 
 						                                                                                                                 
 					 
@@ -4430,8 +4436,8 @@ int function TeslaTrap_GetLinkLOSBeamCount( vector mainOrigin, vector mainUp, ve
 
 		if ( TESLA_TRAP_DEBUG_DRAW )
 		{
-			DebugDrawLine( results.endPos, endOffset, 255, 0, 0, true, 20.0 )
-			DebugDrawLine( startOffset, results.endPos, 0, 255, 0, true, 20.0 )
+			DebugDrawLine( results.endPos, endOffset, COLOR_RED, true, 20.0 )
+			DebugDrawLine( startOffset, results.endPos, COLOR_GREEN, true, 20.0 )
 		}
 
 		                              
@@ -4454,7 +4460,7 @@ bool function TeslaTrap_IsLinkAngleTooSteep( vector proxyTestPos, entity otherTr
 	{
 		vector otherToTrap = Normalize( trap.GetOrigin() - otherTrap.GetOrigin() )
 
-		                                                                                                   
+		                                                                                                     
 
 		float dot = DotProduct2D( otherToProxy, otherToTrap )
 		                                

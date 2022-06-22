@@ -254,7 +254,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_valk_skyward( entity weapon )
 	if ( !owner.IsOnGround() )
 		return false
 
-	if ( owner.ContextAction_IsZipline() )
+	if ( owner.IsZiplining() )
 		return false
 
 	if ( StatusEffect_GetSeverity( owner, eStatusEffect.in_olympus_rift ) > 0.0 )
@@ -671,7 +671,7 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
                                                                                          
  
 	                         
-	                                                                                                                                  
+	                                                                      
 	                                      
 
 	                                                                                
@@ -727,7 +727,6 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 	                                                     
 
 	                                                                        
-	                                                                       
 
 	                                                                   
 	                                                              
@@ -775,7 +774,6 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 			                     
 			 
 				                                                                           
-				                                                                          
 
 				                                                              
 				                                                              
@@ -1131,7 +1129,7 @@ bool function ValkUlt_CanUseAlly( entity ally, entity proxy, int useFlags )
 	entity valk = proxy.GetParent()
 
 	                                   
-	if ( ally.Player_IsSkywardLaunching() && PlayerHasPassive( ally, ePassives.PAS_VALK ) )
+	if( ally.Player_IsSkywardLaunching() && !IsPlayerAttachedToValkUlt( ally, proxy ) )
 		return false
 
 	                       
@@ -1141,15 +1139,13 @@ bool function ValkUlt_CanUseAlly( entity ally, entity proxy, int useFlags )
 	if ( Bleedout_IsBleedingOut( ally ) )
 		return false
 
-
-	if (!ally.Player_IsSkywardLaunching())
+	if ( !ally.Player_IsSkywardLaunching() )
 	{
 		if ( ally.Player_IsSkydiving() )
 			return false
 
 		if ( !ally.IsOnGround() )
 			return false
-
 	}
 
 	if ( Crafting_IsPlayerAtWorkbench( ally ) )
@@ -1191,10 +1187,7 @@ bool function ValkUlt_CanUseAlly( entity ally, entity proxy, int useFlags )
 
 void function ValkUlt_AllyUse( entity proxy, entity ally, int useInputFlags )
 {
-	                                                                                                            
-	                                                                                                         
-	                                                                                                              
-	                                                           
+	                                                                           
 
 	if ( ally.p.nextAllowUseValkUltTime > Time() )
 		return
@@ -1207,8 +1200,9 @@ void function ValkUlt_AllyUse( entity proxy, entity ally, int useInputFlags )
 	{
 		return
 	}
+
 	#if SERVER
-		                                               
+		                                                                                   
 		 
 			                          
 			      
@@ -1229,6 +1223,7 @@ void function ValkUlt_AllyUse( entity proxy, entity ally, int useInputFlags )
 		return
 
 	#if SERVER
+		                                                                                                                      
 		                                                             
 	#endif
 

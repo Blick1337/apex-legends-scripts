@@ -316,7 +316,7 @@ void function DrawAnalysis( FlightPath flightPath )
 	{
 		AttachPoint point1 = points[i - 1]
 		AttachPoint point2 = points[i]
-		DebugDrawLine( point1.origin, point2.origin, 255, 0, 0, true, 15.0 )
+		DebugDrawLine( point1.origin, point2.origin, COLOR_RED, true, 15.0 )
 	}
 }
 
@@ -425,18 +425,18 @@ void function CopyAttachPoint( AttachPoint source, AttachPoint destination )
 
 void function DrawAnalysisArray( Array )
 {
-	array< table<string, int> > colors
-	colors.append( { r = 255, g = 155, b = 10 } )
-	colors.append( { r = 55, g = 55, b = 250 } )
+	array< vector > colors
+	colors.append( <255, 155, 10> )
+	colors.append( <55, 55, 250> )
 
 	int index = 0
-	table<string, int> color
+	vector color
 	for ( int i = 0; i + 1 < Array.len(); i++ )
 	{
 		index++
 		index %= colors.len()
 		color = colors[ index ]
-		DebugDrawLine( Array[i].origin, Array[i + 1].origin, color.r, color.g, color.b, true, 15.0 )
+		DebugDrawLine( Array[i].origin, Array[i + 1].origin, color, true, 15.0 )
 	}
 }
 
@@ -1059,7 +1059,7 @@ array<table> function FillFlightAnalysisPoints2( entity dropship, string anim )
 			                                                                                                                                             
 			                                                     
 			 
-				                                                                          
+				                                                                            
 				      
 			 
 			    
@@ -1113,14 +1113,14 @@ array<table> function FillFlightAnalysisPoints2( entity dropship, string anim )
                                                     
                                                     
 
-                                                                  
-                                                                 
                                                                     
+                                                                   
+                                                                      
           
     
        
     
-                                                                                   
+                                                                                     
     
    
   

@@ -514,12 +514,12 @@ array<vector> function GetCircleToCircleIntersectionPoints( vector org1, float r
 	{
 		#if SERVER || CLIENT
 		                 
-		DebugDrawLine( org1, org1 + < 0, 0, 32 >, 255, 0, 0, true, 1.0 )
-		DebugDrawLine( org2, org2 + < 0, 0, 32 >, 0, 255, 0, true, 1.0 )
+		DebugDrawLine( org1, org1 + < 0, 0, 32 >, COLOR_RED, true, 1.0 )
+		DebugDrawLine( org2, org2 + < 0, 0, 32 >, COLOR_GREEN, true, 1.0 )
 
 		                               
-		DebugDrawLine( org2, intersectionPoints[ 0 ] + org1, 255, 255, 255, true, 1.0 )
-		DebugDrawLine( org2, intersectionPoints[ 1 ] + org1, 0, 0, 0, true, 1.0 )
+		DebugDrawLine( org2, intersectionPoints[ 0 ] + org1, COLOR_WHITE, true, 1.0 )
+		DebugDrawLine( org2, intersectionPoints[ 1 ] + org1, COLOR_BLACK, true, 1.0 )
 		#endif
 	}
 
@@ -716,17 +716,10 @@ bool function IsAprilFools_S8_Mode()
 	return GetCurrentPlaylistVarBool( "is_april_fools_s8", false )
 }
 
-bool function IsUsingProximityAllianceMembers()
+bool function HasBoundaryWall()
 {
-	return GetCurrentPlaylistVarBool( "use_proximity_alliance_members", false )
+	return GetCurrentPlaylistVarBool( "has_boundary_wall", false )
 }
-
-#if SERVER || CLIENT
-int function GetAllianceFromTeam( int team )
-{
-	return IsTeamInAlliance( team, ALLIANCE_A ) ? ALLIANCE_A : ALLIANCE_B
-}
-#endif                    
 
                         
 bool function Control_IsModeEnabled()
@@ -3499,10 +3492,10 @@ bool function AreClubInvitesEnabled()
 
                                                                                  
                                                                                                                                            
-                               
- 
-                                                            
- 
+bool function IsMadMaggieHost()
+{
+	return GetCurrentPlaylistVarBool( "is_maggie_host", false )
+}
                                 
 
 #if SERVER || CLIENT
@@ -3799,6 +3792,58 @@ bool function IsEqualVector( vector a, vector b )
 bool function IsEqualFloat( float left, float right )
 {
 	return fabs( left - right ) < FLT_EPSILON
+}
+
+float function CalculateFloatArrayVarianceWithGivenPercentile( array<float> inArr, float percentile )
+{
+	array<float> arr = inArr
+	arr.sort()
+
+	                                                      
+	int maxIndex = int( percentile * arr.len() )
+
+	float average = 0
+	for( int i = 0; i < maxIndex; i++ )
+	{
+		average += arr[i]
+	}
+
+	average /= maxIndex
+
+	float sumOfSquares = 0
+	for( int i = 0; i < maxIndex; i++ )
+	{
+		float deviationFromAvg = arr[i] - average
+		sumOfSquares += ( deviationFromAvg * deviationFromAvg )
+	}
+
+	return sumOfSquares / maxIndex
+}
+
+float function CalculateIntArrayVarianceWithGivenPercentile( array<int> inArr, float percentile )
+{
+	array<int> arr = inArr
+	arr.sort()
+
+	                                                      
+	int maxIndex = int( 0.9 * arr.len() )
+
+	float average = 0
+	for( int i = 0; i < maxIndex; i++ )
+	{
+		average += float( arr[i] )
+	}
+
+	average /= maxIndex
+
+	float sumOfSquares = 0
+	for( int i = 0; i < maxIndex; i++ )
+	{
+		float deviationFromAvg = ( float( arr[i] ) - average )
+		sumOfSquares += ( deviationFromAvg * deviationFromAvg )
+	}
+
+	return sumOfSquares / maxIndex
 }
 
 #endif                    

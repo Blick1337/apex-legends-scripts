@@ -713,7 +713,7 @@ void function DropModelStartTrace()
 
 		file.dropModelTraceResult = TraceLine( traceStartPos, traceEndPos, null, TRACE_MASK_NPCWORLDSTATIC, TRACE_COLLISION_GROUP_NONE )
 
-		DebugDrawCircle( file.dropModelTraceResult.endPos, <0,0,0>, 16.0, 255, 0, 0, true, 0.02 )
+		DebugDrawCircle( file.dropModelTraceResult.endPos, <0,0,0>, 16.0, COLOR_RED, true, 0.02 )
 
 		wait( 0.0 )
 	}
@@ -939,11 +939,7 @@ void function ShowModelSectionBounds()
 				vector mins = ( modelIndex >= file.modelBounds.len() || modelIndex < 0 ) ? <-32,-32,-32> : file.modelBounds[ modelIndex ].mins
 				vector maxs = ( modelIndex >= file.modelBounds.len() || modelIndex < 0 ) ? <32,32,32> : file.modelBounds[ modelIndex ].maxs
 
-				int r = int( color.x )
-				int g = int( color.y )
-				int b = int( color.z )
-
-				DrawAngledBox( model.GetOrigin(), model.GetAngles(), mins, maxs, r, g, b, true, 0.02 )
+				DrawAngledBox( model.GetOrigin(), model.GetAngles(), mins, maxs, color, true, 0.02 )
 			}
 		}
 		wait( 0.0 )

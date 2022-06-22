@@ -142,6 +142,10 @@ global function InputModeChanged_SetCharacterInfoOverlayPrompt
 
 global function SetSummaryDataDisplayStringsCallback
 
+                   
+                                   
+      
+
 global struct NextCircleDisplayCustomData
 {
 	float  circleStartTime
@@ -355,6 +359,7 @@ void function ClGamemodeSurvival_Init()
 	Cl_Survival_InventoryInit()
 	Cl_Survival_LootInit()
 	Cl_SquadDisplay_Init()
+	Teams_RegisterSignals()
 
 	Bleedout_SetFirstAidStrings( "#SURVIVAL_APPLYING_FIRST_AID", "#SURVIVAL_RECIEVING_FIRST_AID" )
 
@@ -374,7 +379,6 @@ void function ClGamemodeSurvival_Init()
 	{
 		file.gameStateOverrideCallback()
 	}
-
 
 	SetGameModeScoreBarUpdateRulesWithFlags( GameModeScoreBarRules, sbflag.SKIP_STANDARD_UPDATE )
 	AddCallback_OnPlayerMatchStateChanged( OnPlayerMatchStateChanged )
@@ -613,7 +617,6 @@ void function Cl_Survival_AddClient( entity player )
 	#else
 		file.pilotRui = CreatePermanentCockpitPostFXRui( SURVIVAL_HUD_PLAYER, HUD_Z_BASE )
 	#endif
-
 	RuiSetBool( file.pilotRui, "isVisible", GetHudDefaultVisibility() )
 	RuiSetBool( file.pilotRui, "useShields", true )
 
@@ -1399,9 +1402,12 @@ void function NextCircleStartTimeChanged( entity player, float new )
 	if ( !CircleAnnouncementsEnabled() )
 		return
 
-	UpdateFullmapRuiTracks()
-
 	var gamestateRui = ClGameState_GetRui()
+
+	if  (GameSateHudIsDisabled())
+		RuiSetBool( gamestateRui, "isVisible", false )
+
+	UpdateFullmapRuiTracks()
 	array<var> ruis  = [gamestateRui]
 	var cameraRui    = GetCameraCircleStatusRui()
 	if ( IsValid( cameraRui ) )
@@ -1675,6 +1681,9 @@ void function OnPilotCockpitCreated( entity cockpit, entity player )
 	if ( file.pilotRui != null )
 		RuiSetBool( file.pilotRui, "isVisible", GetHudDefaultVisibility() )
 
+	if ( PlayerInfoIsDisabled())
+		   RuiSetBool( file.pilotRui, "isVisible", false )
+
 	if ( player == GetLocalViewPlayer() )
 	{
 		RuiTrackBool( file.dpadMenuRui, "inventoryEnabled", GetLocalViewPlayer(), RUI_TRACK_SCRIPT_NETWORK_VAR_BOOL, GetNetworkedVariableIndex( "inventoryEnabled" ) )
@@ -1760,14 +1769,6 @@ void function ToggleFireSelect( entity player )
    
        
 
-	if( !GetConVarBool( "enable_code_weapon_energize" ) )
-	{
-		if ( DoesModExist( weapon, "energized" ) && GetCurrentPlaylistVarBool( SENTINEL_USE_ENERGIZE_PLAYLIST_VAR, true ) )
-			WeaponSentinel_TryApplyEnergized( player, weapon )
-
-			if ( weapon.GetWeaponClassName() == "mp_weapon_dragon_lmg" && DoesModExist( weapon, "energized" ) )
-				Weapon_Dragon_LMG_TryApplyEnergized( player, weapon )
-	}
 
 	if ( weapon.GetWeaponClassName() == "mp_weapon_car")
 		Weapon_CAR_TryApplyAmmoSwap( player, weapon )
@@ -1777,35 +1778,7 @@ void function ToggleFireSelect( entity player )
                                              
       
 
-                  
-		if ( DoesModExist( weapon, "hopup_paintball" ) && IsModActive( weapon, "hopup_paintball" ) )
-		{
-			if ( IsModActive( weapon, "paintball_color01" ) )
-			{
-				WeaponModCommand_Toggle( "paintball_color01" )
-				WeaponLmg_TryNextPaintballMod( player, weapon, 0 )
-				return
-			}
-			else if ( IsModActive( weapon, "paintball_color02" ) )
-			{
-				WeaponModCommand_Toggle( "paintball_color02" )
-				WeaponLmg_TryNextPaintballMod( player, weapon, 1 )
-				return
-			}
-			else if ( IsModActive( weapon, "paintball_color03" ) )
-			{
-				WeaponModCommand_Toggle( "paintball_color03" )
-				WeaponLmg_TryNextPaintballMod( player, weapon, 2 )
-				return
-			}
-			else if ( IsModActive( weapon, "paintball_color_random" ) )
-			{
-				WeaponModCommand_Toggle( "paintball_color_random" )
-				WeaponLmg_TryNextPaintballMod( player, weapon, 3 )
-				return
-			}
-		}
-       
+
 
 	                    
 	if ( DoesModExist( weapon, "vertical_firestar" ) )
@@ -1829,7 +1802,6 @@ void function ToggleFireSelect( entity player )
   
        
 }
-
 
 void function ServerCallback_SUR_PingMinimap( vector origin, float duration, float spreadRadius, float ringRadius, int colorID, float frequency, float frequencyVariation, int airdropType )
 {
@@ -2379,6 +2351,20 @@ void function Survival_RunCharacterSelection_Thread()
 
 		thread ShowMatchStartSequence( false, startSequenceTime )
 	}
+                        
+                           
+  
+                                                             
+                                                                          
+                                    
+      
+                                
+
+                               
+                                                                            
+              
+  
+       
 	else
 	{
 		                         
@@ -2474,7 +2460,9 @@ void function OnGamestatePrematch()
 void function SetDpadMenuVisible()
 {
 	Assert( IsValid(file.dpadMenuRui) )
-	RuiSetBool( file.dpadMenuRui, "isVisible", GetHudDefaultVisibility() )
+	if (!DpadHudIsDisabled())
+		RuiSetBool( file.dpadMenuRui, "isVisible", GetHudDefaultVisibility() )
+	else SetDpadMenuHidden()
 }
 
 
@@ -2660,7 +2648,7 @@ void function PROTO_ContainersThink()
 				if ( !state.isLit )
 				{
 					state.light = CreateClientSideDynamicLight( state.container.GetWorldSpaceCenter(), <0, 0, 0>, <0, 0, 0>, 0.0 )
-					                                                                                                       
+					                                                                                                      
 					state.isLit = true
 				}
 			}
@@ -3237,7 +3225,7 @@ array<entity> function GetTeamPlayers( bool friendly )
 			enemies.clear()
 			foreach( matchPlayer in GetPlayerArray() )
 			{
-				if ( IsValid( matchPlayer ) && Control_GetAllianceFromTeam( matchPlayer.GetTeam() ) == Control_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) )
+				if ( IsValid( matchPlayer ) && AllianceProximity_GetAllianceFromTeam( matchPlayer.GetTeam() ) == AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) )
 				{
 					friendlies.append( matchPlayer )
 				}
@@ -3263,7 +3251,7 @@ int function VictorySequence_GetPlayerTeamFromEHI( EHI playerEHI )
 		                                                                                                                                      
 		if ( Control_IsModeEnabled() )
 		{
-			playerTeam = Control_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI )
+			playerTeam = AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI )
 		}
 		else
                                
@@ -4466,7 +4454,7 @@ void function UICallback_QueryPlayerCanBeRespawned()
       
 	else
 	{
-		if ( !GetCurrentPlaylistVarBool( "survival_abandonment_enable", true ) )                                                                                                                 
+		if ( !GetCurrentPlaylistVarBool( "survival_abandonment_enable", false ) )                                                                                                                 
 		{
 			penaltyMayBeActive = false
 		}
@@ -4867,6 +4855,17 @@ void function EvolvingArmor_SetEvolutionRuiAnimTime()
 	RuiSetGameTime( file.pilotRui, "evolvingArmorUpgradeStartTime", Time() )
 }
 
+                   
+                                                                
+ 
+                               
+  
+                                                               
+                                                                 
+  
+ 
+      
+
 void function OnSettingsUpdated()
 {
 	ServerCallback_RefreshInventoryAndWeaponInfo()
@@ -4905,6 +4904,21 @@ var function GetPilotRui(){
 var function GetDpadMenuRui()
 {
 	return file.dpadMenuRui
+}
+
+bool function PlayerInfoIsDisabled()
+{
+	return GetCurrentPlaylistVarBool( "hide_ui_playerinfo", false )
+}
+
+bool function DpadHudIsDisabled()
+{
+	return GetCurrentPlaylistVarBool( "hide_ui_dpadmenu", false )
+}
+
+bool function GameSateHudIsDisabled()
+{
+	return GetCurrentPlaylistVarBool( "hide_ui_gamestate", false )
 }
 
 void function ServerCallback_AnnounceDevRespawn()

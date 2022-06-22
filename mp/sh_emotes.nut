@@ -11,7 +11,7 @@ global function CheckPlayerCanEmote
                                          
                                     
                                   
-                                                  
+                                                 
                                            
                                                
                                                        
@@ -63,6 +63,7 @@ const string EMOTE_PIN_ACTION_INTERRUPT 			= "interrupted"
                                                             	                                  
 
                                                           
+                                                                             
 #endif
 
                        
@@ -762,7 +763,7 @@ bool function ShouldCullPlayer( entity localPlayer, entity p, vector initialEyeA
 		}
 		else
 		{
-			                                                                                  
+			                                                                                    
 		}
 	}
 
@@ -1478,11 +1479,42 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
 	             
  
 
-                                                                                     
+                                                                                                     
  
-	                                                                                                                                                                                                             
+	                                                      
+	                    
+	 
+		                                                                                                                          
+		      
+	 
+	                                                                        
+	                                                    
+	                                                      
+
+	                                                                                                                                            
 
 	                                                       
+ 
+
+                                                              
+ 
+	                                                                                        
+	                  
+	 
+		              
+			                   
+			     
+		                      
+			                            
+			     
+		        
+		 
+			                                                                                                                 
+			                  
+		 
+	 
+
+	           
  
 
                                                                             

@@ -202,29 +202,7 @@ float function PlacementEasing( float frac )
 
 int function GetSkinForCarePackageModel( entity player )
 {
-	LoadoutEntry characterSlot = Loadout_Character()
-
-	#if DEV
-		if ( !LoadoutSlot_IsReady( ToEHI( player ), characterSlot ) )
-			printt( "Need to get character for player, but the data is not available" )
-	#endif
-
-	ItemFlavor character = LoadoutSlot_WaitForItemFlavor( ToEHI( player ), characterSlot )
-	string characterRef = ItemFlavor_GetHumanReadableRef( character )
-
-	#if DEV
-		printt( "got character", characterRef )
-	#endif
-
-	switch( characterRef )
-	{
-		case "character_lifeline":
-		default:
-			return 1
-	}
-	                                                                                 
-
-	unreachable
+	return 1
 }
 
 #if CLIENT

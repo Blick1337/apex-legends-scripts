@@ -70,7 +70,7 @@ global function IsValidLoadoutSlotContentsIndex
 global function GetAllLoadoutSlots
 global function IsLoadoutSlotActive
 
-#if DEV
+#if UI && DEV
 global function DEV_GetValidItemFlavorsForLoadoutSlotForDev
 #endif
 
@@ -265,6 +265,8 @@ void function ShLoadouts_VMInit()
 
 void function ShLoadouts_LevelInit_Begin()
 {
+	                                                       
+	                                                                        
 	FileStruct_LifetimeLevel newFileLevel
 	fileLevel = newFileLevel
 
@@ -535,7 +537,7 @@ void function ShLoadouts_LevelInit_Finish()
 #if UI
 void function ShLoadouts_LevelShutdown()
 {
-	fileLevel.isInitialized = false
+	                                                                                         
 }
 #endif
 
@@ -690,6 +692,10 @@ array<ItemFlavor> function LoadoutSlot_GetUsableFavorites( EHI playerEHI, Loadou
 
 ItemFlavor function LoadoutSlot_WaitForItemFlavor( EHI playerEHI, LoadoutEntry entry )
 {
+	#if SERVER
+		                                   
+	#endif
+
 	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
 
 	int slotContentsIndex
@@ -1048,7 +1054,7 @@ array<ItemFlavor> function GetValidItemFlavorsForLoadoutSlot( EHI playerEHI, Loa
 }
 
 
-#if DEV
+#if UI && DEV
 array<ItemFlavor> function DEV_GetValidItemFlavorsForLoadoutSlotForDev( EHI playerEHI, LoadoutEntry entry )
 {
 	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )

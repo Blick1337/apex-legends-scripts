@@ -30,6 +30,7 @@ global function ServerCallback_SpectreShacksUpdateLootBinRarity
                                               
                                            
                                      
+                     
                                                                            
        
                                                  
@@ -49,6 +50,8 @@ global const asset HATCH_OPEN_DUST_FX = $"P_ss_door_steam"
 global const asset ARMORY_DOOR_DESTRUCTION_FX = $"P_ss_door_blast"
 global const asset ARMORY_SMART_SCAN_FX = $"P_ss_smrt_scan"
 global const asset ARMORY_TELEPORTER_3P_FX = $"P_ability_warp_ss"
+global const asset ARMORY_ELECTRIC_ROOF_FX = $"P_ss_defense_elec"
+global const asset ARMORY_ELECTRIC_ROOF_CENTER_FX = $"P_ss_defense_elec_middle"
 
 #if CLIENT
 table<entity, array< var > > ruiLookupTable
@@ -58,16 +61,17 @@ bool inShackProximity = false
 
 void function SpectreShacks_MapInit()
 {
-	if ( !SpectreShacksAreEnabled() )
+                      
+	if( !SpectreShacksAreEnabled() )
 		return
 
 	if( !IsSurvivalMode() )
 		return
 
-	if( GetMapName().find( "mp_rr_tropic_island" ) < 0 )
+	if( !MapContainsArmories() )
 		return
 
-#if SERVER || CLIENT
+	#if SERVER || CLIENT
 		Remote_RegisterClientFunction( "Cl_SpectreShack_OnProximityTriggerEnter", "entity" )
 		Remote_RegisterClientFunction( "Cl_SpectreShack_OnProximityTriggerLeave", "entity" )
 	#endif
@@ -77,18 +81,19 @@ void function SpectreShacks_MapInit()
 	#if CLIENT
 		SpectreShack_Init_Client()
 	#endif
+      
 }
 
 void function SpectreShacks_Bootstrap()
 {
                       
-	if ( !SpectreShacksAreEnabled() )
+	if( !SpectreShacksAreEnabled() )
 		return
 
 	if( !IsSurvivalMode() )
 		return
 
-	if( GetMapName().find( "mp_rr_tropic_island" ) < 0 )
+	if( !MapContainsArmories() )
 		return
 
 	#if SERVER || CLIENT
@@ -108,6 +113,22 @@ void function SpectreShacks_Bootstrap()
 	#endif          
 
                             
+}
+
+bool function MapContainsArmories()
+{
+                      
+	string mapName = GetMapName()
+
+	if( mapName.find( "mp_rr_tropic_island" ) > -1 )
+		return true
+	#if DEV
+	else if( mapName.find( "mp_rr_spectreshack_actionblock_02" ) > -1 )
+		return true
+	printt( "ARMORIES | map does not contain armories" )
+	#endif
+      
+	return false
 }
 
 #if CLIENT
@@ -143,6 +164,8 @@ void function SpectreShacks_InitGlobalDependencies()
 		PrecacheParticleSystem( ARMORY_DOOR_DESTRUCTION_FX )
 		PrecacheParticleSystem( ARMORY_SMART_SCAN_FX )
 		PrecacheParticleSystem( ARMORY_TELEPORTER_3P_FX )
+		PrecacheParticleSystem( ARMORY_ELECTRIC_ROOF_FX )
+		PrecacheParticleSystem( ARMORY_ELECTRIC_ROOF_CENTER_FX )
 		PrecacheParticleSystem( ARMORY_TOP_PRIZE_VFX )
 		PrecacheModel( STANDING_SPECTRE_STATIC )
 		PrecacheModel( HANGING_SPECTRE_STATIC )
@@ -256,7 +279,8 @@ void function SpectreShackControl_Init( entity cp )
 #if SERVER
 	                       
 	                                
-	                                                      
+	                                                                     
+	               
 
 #endif          
 

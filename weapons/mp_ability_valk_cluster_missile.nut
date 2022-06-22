@@ -183,7 +183,7 @@ void function MpAbilityValkClusterMissile_Init()
 
 		                                                                       
 
-		                         
+		                                                                              
 			                                        
 	 
  
@@ -507,7 +507,7 @@ void function ValkTacManageThreatIndicator()
 				continue
 
 			vector point = warningLoc.GetOrigin()
-			                                                    
+			                                                      
 			if ( firstLoop )
 			{
 				closestPoint = point

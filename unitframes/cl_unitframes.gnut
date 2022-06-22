@@ -23,6 +23,7 @@ global function SetUnitFrameDataFromOwner
 global function OverwriteWithCustomUnitFrameInfo
 
 global function RefreshUnitframesForPlayer
+global function SquadMemberIndexSort
 
 #if DEV
 global function PrintUnitFrames
@@ -289,18 +290,20 @@ void function CreateTeamUnitFrame( entity player )
 	if ( GetCurrentPlaylistVarBool( "teammate_huds_enabled", true ) == false )
 		return
 
+
+
 	                                                                                                          
 	if ( player == GetLocalViewPlayer() && ( !IsSpectating() || IsAlive( player ) ) )
 		return
 
                            
-                                 
-   
-                                                                                           
-    
-          
-    
-   
+		if ( IsSecondChanceGameMode() )
+		{
+			if ( ( !IsAlive( player ) && ShGameMode_SecondChance_CanPlayerStillRespawn( player ) ) )
+			{
+				return
+			}
+		}
        
 
 	if ( PlayerHasUnitFrame( player ) )
@@ -312,6 +315,10 @@ void function CreateTeamUnitFrame( entity player )
 
 	asset unitFrameAsset = GetUnitFrameAssetForGameMode()
 	var rui              = CreatePermanentCockpitPostFXRui( unitFrameAsset, HUD_Z_BASE )
+
+	if  ( SquadInfoIsDisabled())
+		RuiSetBool( rui, "isVisible", false )
+
 
 	UnitFrameDef unitFrame
 	unitFrame.rui = rui
@@ -377,7 +384,6 @@ asset function GetUnitFrameAssetForGameMode()
 		if ( IsFallLTM() )
 			return $"ui/unitframe_shadow_squad.rpak"
        
-
 	return $"ui/unitframe_survival_v3.rpak"
 }
 
@@ -398,7 +404,7 @@ void function SetUnitFrameDataFromOwner( var rui, entity ent, entity localPlayer
 		WaitFrame()                                      
 
 	ItemFlavor character = LoadoutSlot_WaitForItemFlavor( ToEHI( ent ), Loadout_Character() )
-	asset classIcon      = CharacterClass_GetGalleryPortrait( character )
+	asset characterIcon  = CharacterClass_GetGalleryPortrait( character )
 
 	                                                                                 
 	                                                                                                           
@@ -412,7 +418,7 @@ void function SetUnitFrameDataFromOwner( var rui, entity ent, entity localPlayer
 	RuiTrackFloat( rui, "shieldFrac", ent, RUI_TRACK_SHIELD_FRACTION )
 	RuiTrackGameTime( rui, "lastFireTime", ent, RUI_TRACK_LAST_FIRED_TIME )
 	RuiSetBool( rui, "isLocalPlayer", (ent == GetLocalViewPlayer()) )
-	RuiSetImage( rui, "icon", classIcon )
+	RuiSetImage( rui, "icon", characterIcon )
 	RuiTrackFloat( rui, "reviveEndTime", ent, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "reviveEndTime" ) )
 	RuiTrackInt( rui, "reviveType", ent, RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "reviveType" ) )
 	RuiTrackFloat( rui, "bleedoutEndTime", ent, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
@@ -447,15 +453,27 @@ void function SetUnitFrameDataFromOwner( var rui, entity ent, entity localPlayer
        
 
 
+	if (!SquadInfoIsDisabled())
 	RuiSetBool( rui, "isVisible", true )
+	else RuiSetBool( rui, "isVisible", false )
 
 	RuiTrackInt( rui, "squadID", ent, RUI_TRACK_SQUADID )
+
+                    
+                                                       
+   
+                                                                      
+                                                   
+   
+       
 	                                           
 }
 
 void function SetUnitFrameDataFromRAS( var rui, entity ent, bool forceUpdate = false )
 {
-	RuiSetBool( rui, "isVisible", true )
+	if (!SquadInfoIsDisabled())
+		RuiSetBool( rui, "isVisible", true )
+	else RuiSetBool( rui, "isVisible", false )
 	RuiTrackInt( rui, "squadID", ent, RUI_TRACK_SQUADID )
 }
 
@@ -800,6 +818,11 @@ void function OverwriteWithCustomUnitFrameInfo( entity player, var rui )
 	{
 		RuiSetBool( rui, "useCustomCharacterColor", false )
 	}
+}
+
+bool function SquadInfoIsDisabled()
+{
+	return GetCurrentPlaylistVarBool( "hide_ui_squadinfo", false )
 }
 
 

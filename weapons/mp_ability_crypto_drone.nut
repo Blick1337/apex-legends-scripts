@@ -832,7 +832,6 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 			 
 		 
                     
-                      
 		                                                                                                      
 		 
 			                                                             
@@ -841,7 +840,6 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 				              
 			 
 		 
-      
 
 		              
 		 
@@ -1083,15 +1081,7 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 	                                           
 
 	                                                                                                                                                                         
-	                                                                                                      
-	 
-		                           
-		                            
-		                                                          
-		 
-			                                                   
-		 
-	 
+	                                                                             
 
 	                            
 	                                                           
@@ -1221,16 +1211,9 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
                                                    
   
                                             
+
                                                                                                                                                                           
-                                                                                                       
-  
-                             
-                              
-                                                            
-   
-                                                      
-   
-  
+                                                                              
 
                              
                                                             
@@ -1281,7 +1264,7 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
                                
                                                       
  
-	                                          
+	                                                                   
 	                                       
 	                                    
 
@@ -1805,7 +1788,7 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 
                                                                
  
-	                                                                                                            
+	                                                                                                   
 
 	                               
 	                       
@@ -1993,6 +1976,8 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 
                                                      
  
+	                                                                                   
+
 	                                                                                                               
 		      
 
@@ -2357,7 +2342,6 @@ void function TempUpdateRuiDistance( entity player )
 				{
 					targetString = "#CAMERA_HOLD_INTERACT_LORE_MESSAGE"
 				}
-                      
 				else if ( trace.hitEnt.GetScriptName() == SURVEY_BEACON_SCRIPTNAME )
 				{
 					if ( ControlPanel_CanUseFunction( player, trace.hitEnt, 0 ) )
@@ -2368,7 +2352,6 @@ void function TempUpdateRuiDistance( entity player )
 							targetString = "#CAMERA_INTERACT_SURVEY_BEACON"
 					}
 				}
-      
 
 				if ( (targetString != "") && useInputPressed )
 					RuiSetGameTime( file.cameraRui, "playerAttemptedUse", Time() )
@@ -2726,7 +2709,7 @@ bool function PlayerCanUseCamera( entity ownerPlayer, bool needsValidCamera )
 
                                                                                
  
-	                                                                                                    
+	                                                                                             
 	                                                                                           
 
                       
@@ -2997,16 +2980,16 @@ var function GetCameraCircleStatusRui()
 var function CreateCameraCircleStatusRui()
 {
                            
-                                 
-   
-                                                                                                    
-   
+		if ( IsDeathTriggerGameMode() )
+		{
+			file.cameraCircleStatusRui = CreateFullscreenRui( $"ui/camera_circle_status_death_trigger.rpak" )
+		}
+		else
+		{
+			file.cameraCircleStatusRui = CreateFullscreenRui( $"ui/camera_circle_status.rpak" )
+		}
       
-   
-                                                                                      
-   
-      
-		file.cameraCircleStatusRui = CreateFullscreenRui( $"ui/camera_circle_status.rpak" )
+                                                                                     
        
 	entity localViewPlayer = GetLocalViewPlayer()
 	RuiTrackFloat( file.cameraCircleStatusRui, "deathfieldDistance", localViewPlayer, RUI_TRACK_DEATHFIELD_DISTANCE )

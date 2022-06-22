@@ -570,6 +570,21 @@ void function GrenadeArrowThink( entity player, entity grenade, float damageRadi
 					else if ( visibilityType == eThreatIndicatorVisibility.INDICATOR_SHOW_TO_SELF )
 						shouldBeVisible = isSelf
 				}
+				else
+				{
+					entity grenadeOwner = grenade.GetOwner()
+					int grenadeTeam     = grenade.GetTeam()
+
+					bool isEnemy = IsEnemyTeam( player.GetTeam(), grenadeTeam )
+					bool isSelf  = IsValid( grenadeOwner ) ? grenadeOwner == player : false
+
+					if ( visibilityType == eThreatIndicatorVisibility.INDICATOR_SHOW_TO_ENEMIES )
+						shouldBeVisible = isEnemy
+					else if ( visibilityType == eThreatIndicatorVisibility.INDICATOR_SHOW_TO_SELF_AND_ENEMIES )
+						shouldBeVisible = isSelf || isEnemy
+					else if ( visibilityType == eThreatIndicatorVisibility.INDICATOR_SHOW_TO_SELF )
+						shouldBeVisible = isSelf
+				}
 
 				break
 		}
@@ -733,6 +748,11 @@ asset function GetIndicatorModel( entity grenade )
 	if ( grenade.GetTargetName() == BLACKHOLE_THREAT_TARGETNAME )
 		return GRENADE_INDICATOR_GENERIC
 
+                 
+                                                             
+                                  
+       
+
               
                                                           
                                         
@@ -785,6 +805,11 @@ vector function GetIndicatorTraceOffset( entity grenade )
 {
 	if ( grenade.GetTargetName() == CREEPING_BOMBARDMENT_TARGETNAME )
 		return <0, 0, 16>
+
+                 
+                                                             
+                   
+       
 
 	return <0, 0, 0>
 }

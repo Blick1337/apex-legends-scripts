@@ -134,6 +134,9 @@ void function CreateScoreRUI()
 	RuiTrackBool( rui, "netIssueCongestion", null, RUI_TRACK_NET_ISSUE_CONGESTION )
 	RuiTrackBool( rui, "netIssueLatency", null, RUI_TRACK_NET_ISSUE_LATENCY )
 	RuiTrackBool( rui, "netIssuePredictionError", null, RUI_TRACK_NET_ISSUE_PREDICTION_ERROR )
+	RuiTrackBool( rui, "netIssueLagCompFail", null, RUI_TRACK_NET_ISSUE_LAG_COMP_FAIL )
+	RuiTrackBool( rui, "netIssueUserCmdDelay", null, RUI_TRACK_NET_ISSUE_USERCMD_DELAY )
+
 	RuiTrackFloat( rui, "hdTextureProgress", null, RUI_TRACK_GAME_FULLY_INSTALLED_PROGRESS )
 	RuiTrackBool( rui, "hdTextureNeedsReboot", null, RUI_TRACK_GAME_HAS_NON_FULLY_INSTALLED_ASSETS_LOADED )
 
@@ -151,6 +154,7 @@ void function CreateScoreRUI()
 
 	RuiSetInt( rui, "maxPlayerCount", GetCurrentPlaylistVarInt( "max_players", 12 ) )
 	RuiSetString( rui, "gameModeString", GetCurrentPlaylistVarString( "gameModeString", "" ) )
+	RuiSetString( rui, "mapName", Localize(GetMapDisplayName( GetMapName() ) ) )
 	file.gamestateRui        = rui
 	file.gameStateRuiCreated = true
 

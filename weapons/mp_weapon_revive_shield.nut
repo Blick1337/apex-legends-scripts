@@ -8,7 +8,8 @@ global function OnWeaponActivate_revive_shield
 global function OnWeaponDeactivate_revive_shield
 
 global function ReviveShield_GetMaxShieldHealthFromTier
-
+global function IsEntNewcastleReviver
+global function IsEntNewcastleReviveTarget
 
 #if SERVER
                                           
@@ -20,7 +21,6 @@ global function ReviveShield_GetMaxShieldHealthFromTier
 #if CLIENT
 global function PassiveAxiom_BeginClientReviveShield_RUI
 
-global function PassiveAxiom_ServerToClient_TrackShieldCharge
 global function PassiveAxiom_ActivateKDShieldHUDMeter
 global function PassiveAxiom_DeActivateKDShieldHUDMeter
 
@@ -38,7 +38,7 @@ const REVIVE_SHIELD_FX_COL 								= $"mdl/fx/down_shield_NC.rmdl"
 const REVIVE_SHIELD_FX_BREAK 							= $"P_NC_down_shield_break_CP"
 const REVIVE_SHIELD_FX_ARM_BEAM							= $"P_NC_down_shield_arm_glow"
 
-const string REVIVE_SHIELD_IMPACT_FX_TABLE 				= "newcastle_revive_jetwash"   	                                                       
+const string REVIVE_SHIELD_IMPACT_FX_TABLE 				= "newcastle_revive_jetwash"
 
 const float REVIVE_SHIELD_MOVE_SLOW_SEVERITY 			= 0.05
 const float REVIVE_SHIELD_TURN_SLOW_SEVERITY 			= 0.6
@@ -53,6 +53,8 @@ const int REVIVE_SHIELD_MAX_SHIELD_HEALTH_TIER_1 		= 150
 const int REVIVE_SHIELD_MAX_SHIELD_HEALTH_TIER_2 		= 250      
 const int REVIVE_SHIELD_MAX_SHIELD_HEALTH_TIER_3 		= 500      
 
+const string NEWCASTLE_REVIVE_SHIELD_HEALTH_NETVAR 		= "newcastleReviveShieldHP"
+
                         
 const float SHIELD_REGEN_RATE_PER_SECOND 				= 8.5 				                                              
 
@@ -64,7 +66,7 @@ const string RECHARGING_START_SOUND_3P 					= "CampFire_Healing_Start_3P"
 const string RECHARGING_SHIELDS_SOUND_3P 				= "CampFire_Healing_Loop_3P"
 const string RECHARGING_COMPLETE_SOUND_3P 				= "CampFire_Healing_End_3P"
 
-
+const string SOUND_REVIVE_BASE_3P 						= "Newcastle_ReviveShield_OgRevive_3p"
 const string SOUND_REVIVE_SHIELD_3P 					= "Newcastle_ReviveShield_Sustain_3p"
 const string SOUND_REVIVE_SHIELD_1P 					= "Newcastle_ReviveShield_Sustain_1p"
 
@@ -90,17 +92,16 @@ struct
 	float reviveShield_TurnSlow		= REVIVE_SHIELD_TURN_SLOW_SEVERITY
 
 	array<entity> reviveShieldEnts
-	table<entity, int> incapShieldHealth = {}
+	table<entity, bool> hasReviveShield = {}
 	table<entity, string> reviveShieldRef = {}
 	table<entity, bool> isReviveShieldRegen = {}
+	table<entity, bool> isReviveIntro = {}
+	table<entity, bool> isReviveHPTracking = {}
 
 	#if SERVER
 	                                       
 	#endif
 
-	#if CLIENT
-		float cl_shieldHealth
-	#endif
 } file
 
 
@@ -135,13 +136,13 @@ void function MpWeaponReviveShield_Init()
 	RegisterSignal( REVIVE_SHIELD_SIGNAL_END_HUD_METER )
 	RegisterSignal( REVIVE_SHIELD_SIGNAL_AUTO_REVIVE_END )
 
-	Remote_RegisterClientFunction( "PassiveAxiom_ServerToClient_TrackShieldCharge", "entity", "float", 0.0, 10000.0, 32 )
 	Remote_RegisterClientFunction( "PassiveAxiom_BeginClientReviveShield_RUI", "entity" )
 	Remote_RegisterClientFunction( "PassiveAxiom_ActivateKDShieldHUDMeter", "entity" )
 	Remote_RegisterClientFunction( "PassiveAxiom_DeActivateKDShieldHUDMeter", "entity" )
 
 	AddCallback_OnPassiveChanged( ePassives.PAS_AXIOM, OnPassiveChanged )
 
+	RegisterNetworkedVariable( NEWCASTLE_REVIVE_SHIELD_HEALTH_NETVAR, SNDC_PLAYER_EXCLUSIVE, SNVT_INT, -1 )
 
 	Remote_RegisterServerFunction( "ClientCallback_Cancel_NewcastleRevive" )
 	Remote_RegisterClientFunction( "ServerToClient_DisplayCancelNewcastleReviveHintForPlayer" )
@@ -227,16 +228,23 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 	                                                                                          
 
 	                                                               
+
+	                                         
+	                                                                                                       
+		            
+
 	                  
 	 
-		                                            
+		                                      
+		                                                                         
 	 
 	    
 	 
 		                                                                             
 		                         
 		 
-			                                                                                              
+			                                      
+			                                                                                                                           
 		 
 	 
 
@@ -260,10 +268,12 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 
 	                                                     
 	 
-		                                       
-		 
-			                                                                             
-		 
+		                                                                              
+		                   
+			                                                                                                                                
+
+		                                                     
+		                            
 
 		                                                           
 		                                                                                          
@@ -290,12 +300,14 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 			                                       
 		 
 
+		                                     
 		                                        
 		                                                             
 
 		                                                                                                                             
 
 		                                                   
+		                                                             
 
 		                                                                                             
 		                                                                                                
@@ -341,7 +353,7 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 			                                   
 			                                                  
 			                                                                                                                                                                     
-			                                                                    
+			                                                                     
 			                                  
 			 
 				                                  
@@ -387,8 +399,8 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 			                                                                       
 		 
 
-		                                       
-			                                                               
+		                                    
+			                                                                                             
 	 
 
  
@@ -409,10 +421,8 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 			                                               
 				                                                  
 
-			                                       
-			 
-				                                                         
-			 
+			                       
+				                                                                                        
 
 			                        
 				                                                                                               
@@ -508,23 +518,15 @@ void function OnWeaponActivate_revive_shield( entity weapon )
 		                                                           
 		 
 			                                                
+				                                                                 
+
+			                                              
 			 
-				                                                                                                             
-				                                                                                                               
-
-				                                                                          
-
-				                                                                   
-
-				                                                    
-					                                                                     
-
-
-				                                                             
+				                                                                                            
 			 
 			    
 			 
-				                                                             
+				                                                                                            
 			 
 		 
 
@@ -623,10 +625,7 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 	                                             
 	 
 		                                 
-		                                      
-		 
-			                                            
-		 
+		                                                                          
 
 		                                                 
 
@@ -771,8 +770,15 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 	                		              
 	                                                 
 
+	                	        
+	                 	     
+
 	              
 	 
+		                                  
+			                                                                    
+				                                   
+
 		                                                            
 
 		            		                                               
@@ -806,8 +812,7 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 	                       
 		        
 
-	                                      
-		                                               
+	                                                                              
 
 	                   
  
@@ -827,6 +832,8 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 	                         
 		      
 
+	                                       
+
 	                                             
 		                                         
 
@@ -834,13 +841,23 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 	                                                                            
 
 	                                                                      
-	                     
+	                        
 	 
-		                                       
+		                         
+			      
+
+		                                     
 			                                     
 
 		                                                                                          
-		      
+
+		                                                               
+		                     
+		 
+			     
+		 
+
+		           
 	 
 
 	                                                                             
@@ -852,22 +869,30 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 		                                                                                        
 	 
 
-	                                           
+	                                         
 	 
+		                                      
 		                         
-			                                                                                              
+		 
+			                                                                                                                           
+		 
+
 	 
 
 	            
 		                       
 		 
 			                       
+			 
 				                                                 
+				                                       
+					                                      
+			 
 
 			                                     
 				                                   
 
-			                                      
+			                                    
 			 
 				                                                                                 
 				                                                                            
@@ -914,9 +939,9 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 				 
 			 
 
-			                                      
+			                                    
 			 
-				                                                   
+				                                                                                  
 				                                     	                  
 				 
 					                              
@@ -951,7 +976,6 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 
 				 
 
-				                                                                                                                       
 			 
 		 
 		    
@@ -984,7 +1008,7 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 	                            
 		      
 
-	                                           
+	                                         
 		      
 
 	                                             
@@ -992,7 +1016,7 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 	                        
 	                      
 
-	                                                               
+	                                                                                              
 
 	            
 		                        
@@ -1006,7 +1030,7 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 		                  
 		                                           
 
-		                                           
+		                                         
 			      
 
 		                                                                                                                       
@@ -1017,10 +1041,11 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 		                                 
 			                           
 
-		                                                                     
+		                                                                                                    
+		                                                                                                                                     
 
 		                       
-			                                                  
+			                                                                                
 
 		           
 	 
@@ -1036,15 +1061,6 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
                               
                               
 
-#if CLIENT
-void function PassiveAxiom_ServerToClient_TrackShieldCharge( entity player, float chargeValue )
-{
-	if ( player != GetLocalClientPlayer() )
-		return
-
-	file.cl_shieldHealth = chargeValue
-}
-#endif
 
 #if CLIENT
 void function PassiveAxiom_ActivateKDShieldHUDMeter( entity player )
@@ -1084,10 +1100,10 @@ void function CL_PassiveAxiom_KDShieldChargeRUI_Thread( entity player )
 		{
 			foreach ( rui in ruis )
 				RuiDestroyIfAlive( rui )
-			file.cl_shieldHealth = 0.0
 		}
 	)
 
+	float shieldHealth = player.GetPlayerNetInt( NEWCASTLE_REVIVE_SHIELD_HEALTH_NETVAR ).tofloat()
 	float maxShieldHealth = 0.0
 	int incapShieldTier = EquipmentSlot_GetEquipmentTier( player, "incapshield" )
 	if( incapShieldTier > 0 )
@@ -1098,7 +1114,7 @@ void function CL_PassiveAxiom_KDShieldChargeRUI_Thread( entity player )
 		RuiSetInt( rui, "shieldTier", incapShieldTier )
 	}
 
-	RuiSetFloat( rui, "shieldHealth", file.cl_shieldHealth )
+	RuiSetFloat( rui, "shieldHealth", shieldHealth )
 	RuiSetFloat( rui, "maxShieldHealth", maxShieldHealth )
 
 	RuiTrackFloat( rui, "bleedoutEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
@@ -1106,7 +1122,9 @@ void function CL_PassiveAxiom_KDShieldChargeRUI_Thread( entity player )
 
 	while ( IsValid( rui ) )
 	{
-		RuiSetFloat( rui, "shieldHealth", file.cl_shieldHealth )
+		shieldHealth = player.GetPlayerNetInt( NEWCASTLE_REVIVE_SHIELD_HEALTH_NETVAR ).tofloat()
+
+		RuiSetFloat( rui, "shieldHealth", shieldHealth )
 		RuiSetFloat( rui, "maxShieldHealth", maxShieldHealth )
 		incapShieldTier = EquipmentSlot_GetEquipmentTier( player, "incapshield" )
 		if( incapShieldTier > 0 )
@@ -1154,6 +1172,7 @@ void function PassiveAxiom_BeginClientReviveShield_RUI( entity reviver )
 void function CL_PassiveAxiom_KDShieldReviveChargeRUI_Thread( entity player, entity weapon )
 {
 	EndSignal( player, REVIVE_SHIELD_SIGNAL_END_HUD_METER )
+	EndSignal( player, REVIVE_SHIELD_SIGNAL_AUTO_REVIVE_END )
 	weapon.EndSignal( "OnDestroy" )
 	weapon.EndSignal( REVIVE_SHIELD_SIGNAL_END_CHARGE )
 
@@ -1174,7 +1193,6 @@ void function CL_PassiveAxiom_KDShieldReviveChargeRUI_Thread( entity player, ent
 		{
 			foreach ( rui in ruis )
 				RuiDestroyIfAlive( rui )
-			file.cl_shieldHealth = 0.0
 		}
 	)
 
@@ -1188,7 +1206,9 @@ void function CL_PassiveAxiom_KDShieldReviveChargeRUI_Thread( entity player, ent
 		RuiSetInt( rui, "shieldTier", incapShieldTier )
 	}
 
-	RuiSetFloat( rui, "shieldHealth", file.cl_shieldHealth )
+	float shieldHealth = player.GetPlayerNetInt( NEWCASTLE_REVIVE_SHIELD_HEALTH_NETVAR ).tofloat()
+
+	RuiSetFloat( rui, "shieldHealth", shieldHealth )
 	RuiSetFloat( rui, "maxShieldHealth", maxShieldHealth )
 
 	RuiTrackFloat( rui, "bleedoutEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
@@ -1196,7 +1216,9 @@ void function CL_PassiveAxiom_KDShieldReviveChargeRUI_Thread( entity player, ent
 
 	while ( IsValid( rui ) )
 	{
-		RuiSetFloat( rui, "shieldHealth", file.cl_shieldHealth )
+		shieldHealth = player.GetPlayerNetInt( NEWCASTLE_REVIVE_SHIELD_HEALTH_NETVAR ).tofloat()
+
+		RuiSetFloat( rui, "shieldHealth", shieldHealth )
 		RuiSetFloat( rui, "maxShieldHealth", maxShieldHealth )
 		incapShieldTier = EquipmentSlot_GetEquipmentTier( player, "incapshield" )
 		if( incapShieldTier > 0 )
@@ -1504,5 +1526,70 @@ void function _DisplayCancelNewcastleReviveHintForPlayer()
 	                                                                                                                                   
  
 #endif
+
+bool function IsEntNewcastleReviver( entity ent )
+{
+	if( !( ent in file.isReviveIntro ) )
+		return false
+
+	if( file.isReviveIntro[ent] )
+		return false
+
+	if( ent.GetPlayerSettings() == $"settings/player/mp/pilot_survival_newcastle.rpak" && ent.ContextAction_IsReviving() )
+		return true
+
+	return false
+}
+
+bool function IsEntNewcastleReviveTarget( entity ent )
+{
+	if( !( ent.ContextAction_IsBeingRevived() ) )
+		return false
+
+	entity parentEnt = ent.GetParent()
+	if( !IsValid( parentEnt ) )
+		return false
+
+	if( IsEntNewcastleReviver( parentEnt ) )
+		return true
+
+	return false
+}
+
+#if SERVER
+                                                                              
+ 
+	                             
+	                           
+	                                         
+	                                         
+	                                            
+	                                                  
+
+	                                
+	                              
+	                                                     
+
+	            
+		                    
+		 
+			                  
+			 
+				                                         
+				                                                   
+				                                                                                           
+				                                      
+				                                              
+			 
+
+		 
+	 
+
+	                                              
+
+	             
+ 
+#endif
+
 
       

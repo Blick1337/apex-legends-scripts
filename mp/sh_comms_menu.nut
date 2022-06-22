@@ -819,7 +819,30 @@ string[2] function GetPromptsForMenuOption( int index )
 			array<string> validItems = Crafting_GetLootDataFromIndex( op.craftingIndex, player )
 			if ( validItems.len() > 0 )
 			{
-				if ( validItems[0] != "evo_points" )
+				if ( validItems[0] == "evo_points" )
+				{
+					promptTexts[0] = Localize( "#CRAFTING_EVO_POINTS" )
+					promptTexts[1] = Localize( "#CRAFTING_EVO_POINTS_DESC", GetCurrentPlaylistVarInt( "crafting_override_evo_grant", CRAFTING_EVO_GRANT ) )
+
+					LootData existingArmorData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalClientPlayer(), "armor" )
+					if ( existingArmorData.ref.find( "evolving" ) == -1 )
+					{
+						promptTexts[1] = Localize( "#CRAFTING_EVO_POINTS_FAIL_DESC" )
+					}
+					else
+					{
+						if ( existingArmorData.tier >= 5 )
+							promptTexts[1] = Localize( "#CRAFTING_EVO_POINTS_FAIL_DESC" )
+					}
+				}
+                       
+                                                  
+     
+                               
+                                                            
+     
+          
+				else
 				{
 					LootData data = SURVIVAL_Loot_GetLootDataByRef( validItems[0] )
 					promptTexts[0] = Localize( data.pickupString )
@@ -835,20 +858,6 @@ string[2] function GetPromptsForMenuOption( int index )
 						LootData altData = SURVIVAL_Loot_GetLootDataByRef( validItems[1] )
 						promptTexts[1] = promptTexts[0] + " + " + Localize( altData.pickupString )
 						promptTexts[0] = Localize( "#LOOT_CAT_AMMO" )
-					}
-				} else {
-					promptTexts[0] = Localize( "#CRAFTING_EVO_POINTS" )
-					promptTexts[1] = Localize( "#CRAFTING_EVO_POINTS_DESC", GetCurrentPlaylistVarInt( "crafting_override_evo_grant", CRAFTING_EVO_GRANT ) )
-
-					LootData existingArmorData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalClientPlayer(), "armor" )
-					if ( existingArmorData.ref.find( "evolving" ) == -1 )
-					{
-						promptTexts[1] = Localize( "#CRAFTING_EVO_POINTS_FAIL_DESC" )
-					}
-					else
-					{
-						if ( existingArmorData.tier >= 5 )
-							promptTexts[1] = Localize( "#CRAFTING_EVO_POINTS_FAIL_DESC" )
 					}
 				}
 			}
@@ -1261,7 +1270,7 @@ void function SetRuiOptionsForChatPage( var rui, int chatPage )
 	RuiSetFloat3( rui, "outerCircleColor", SrgbToLinear( outerCircleColor / 255.0 ) )                                                                           
 }
 
-const int MAX_COMMS_MENU_OPTIONS = 10
+const int MAX_COMMS_MENU_OPTIONS = 11
 void function ShowCommsMenu( int chatPage )
 {
 	RunUIScript( "ClientToUI_SetCommsMenuOpen", true )

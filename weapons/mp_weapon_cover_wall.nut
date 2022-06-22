@@ -397,18 +397,7 @@ void function PlaceWallWithoutHolstering( entity player )
 	                                          
 
 	                                                                                                                                                                         
-	                                                                                                      
-	 
-		                    
-		                                             
-			                                                
-		                      
-		                                                     
-		                                                                     
-		 
-			                                                  
-		 
-	 
+	                                                                            
 
 	                                                 
 
@@ -418,14 +407,7 @@ void function PlaceWallWithoutHolstering( entity player )
 	                                                            
 	                                                               
 
-	                            
-	                                           
-
-	                               
-
-                 
-                                         
-       
+	                                                                                         
 
 	                                                                                                     
 	                                
@@ -434,6 +416,10 @@ void function PlaceWallWithoutHolstering( entity player )
 
 	                                                             
 	                                                                     
+
+                    
+                                            
+       
 
 	                     
 	                                                  
@@ -579,8 +565,8 @@ void function PlaceWallWithoutHolstering( entity player )
 		                                                                                            
 
 		                                                                                                                                                                                       
+		                                                                                                            
 		                                                                                                          
-		                                                                                                        
 		                              
 		                                                  
 		 
@@ -715,6 +701,10 @@ void function PlaceWallWithoutHolstering( entity player )
 	                                                 
 
 	                               
+
+                     
+                                            
+       
 
 	                                                           
 
@@ -1000,7 +990,7 @@ void function PlaceWallWithoutHolstering( entity player )
 	 
 
                  
-                                
+                                 
                                                                                
        
  
@@ -1075,6 +1065,21 @@ void function PlaceWallWithoutHolstering( entity player )
 
 		                                      
 			                                                                                          
+
+		                                                
+		                                                   
+		                                                                                                    
+		                             
+		 
+			                     
+				        
+
+			                                      
+			 
+				                   
+				                                               
+			 
+		 
 	 
  
 
@@ -1246,6 +1251,11 @@ bool function CoverWall_CanUse( entity player, entity ent, int useFlags )
 	if ( ! IsValid( player ) )
 		return false
 
+                
+                                                         
+             
+      
+
 	entity weapon = player.GetOffhandWeapon( OFFHAND_TACTICAL )
 	if ( !IsValid( weapon ) || weapon.GetWeaponClassName() != COVER_WALL_WEAPON_NAME )
 		return false
@@ -1302,7 +1312,8 @@ string function CoverWall_UseTextOverride( entity ent )
 {
 	entity player = GetLocalViewPlayer()
 
-	if ( player.IsTitan() || !CoverWall_CanUse( player, ent, USE_FLAG_NONE ) )
+	entity weapon = player.GetOffhandWeapon( OFFHAND_TACTICAL )
+	if ( player.IsTitan() || !CoverWall_CanUse( player, ent, USE_FLAG_NONE ) || !IsValid( weapon ) || weapon.GetWeaponClassName() != COVER_WALL_WEAPON_NAME )
 	{
 		CustomUsePrompt_Hide()
 	}

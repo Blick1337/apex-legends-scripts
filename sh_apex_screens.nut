@@ -1080,11 +1080,11 @@ void function DEV_ActiveApexScreenDebugThread()
 			if ( screen.visibleInPVS )
 			{
 				activeCount += 1
-				DebugDrawRotatedBox( <0, 0, 0>, screen.spawnMins + <-1, -1, -3>, screen.spawnMaxs + <-1, -1, -3>, <0, 0, 0>, 140, 185, 255, true, interval + 0.1 )
+				DebugDrawRotatedBox( <0, 0, 0>, screen.spawnMins + <-1, -1, -3>, screen.spawnMaxs + <-1, -1, -3>, <0, 0, 0>, <140, 185, 255>, true, interval + 0.1 )
 			}
 			else
 			{
-				DebugDrawRotatedBox( <0, 0, 0>, screen.spawnMins + <-1, -1, -3>, screen.spawnMaxs + <-1, -1, -3>, <0, 0, 0>, 25, 25, 80, true, interval + 0.1 )
+				DebugDrawRotatedBox( <0, 0, 0>, screen.spawnMins + <-1, -1, -3>, screen.spawnMaxs + <-1, -1, -3>, <0, 0, 0>, <25, 25, 80>, true, interval + 0.1 )
 			}
 		}
 		printt( "ACTIVE SCREEN COUNT: " + activeCount + " (of " + totalCount + ") (" + activeTVCount + " TVs)" )

@@ -1178,6 +1178,13 @@ ItemFlavorBag function SeasonQuest_GetTreasurePackRewardsForIndex( ItemFlavor fl
 	{
 		asset flavorAsset = GetSettingsBlockAsset( rewardBlock, "flavor" )
 		int quantity      = GetSettingsBlockInt( rewardBlock, "quantity" )
+
+		if ( !IsValidItemFlavorSettingsAsset( flavorAsset ) )
+		{
+			Warning( "Skipping item reward #%d of quest '%s' because the asset is not a valid item flavor: '%s'", rewardIndex, ItemFlavor_GetHumanReadableRef( flav ), string(flavorAsset) )
+			continue
+		}
+
 		rewards.flavors.append( GetItemFlavorByAsset( flavorAsset ) )
 		rewards.quantities.append( quantity )
 	}

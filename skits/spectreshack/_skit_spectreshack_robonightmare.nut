@@ -25,6 +25,7 @@ global function SpectreShackControl_V4_ClientInit
 
 #if SERVER
                                                                               
+                                                      
 
                                  
                                                
@@ -125,11 +126,15 @@ struct MyVars
 		                                                                                    
 	            
 
+	          
+
 	                          
 
 	                   
 	                     
-	                           
+	                                                                                      
+	                             
+	                             
 	         
 	                            
 	               
@@ -138,15 +143,9 @@ struct MyVars
 	                       
 	              
 	                      
-	                              
 	                                                   
 	                                                 
 	                          
-	                     
-	                     
-	                               
-	                            
-	                            
 	                              
 	                 
 	                                
@@ -162,17 +161,12 @@ struct MyVars
 	                                
 	                              
 	                             
-	                             
 	             
 	                      
-	                    
 	                           
-	                                
-	                                  
-	                                               
+	                    
 	                 
 	                        
-	                               
 	                     
 	                        
 	                       
@@ -182,19 +176,26 @@ struct MyVars
 	                    
 	                
 	                                             
-	                             
-	                             
 	                                     
 	                             
 	                        
+	                             
 	                   
 	                   
 	                              
 	                             
 	                           
-	                                        
 	                                  
 	                   
+	                         
+	                     
+	                                          
+	                                                 
+	                                          
+	                                           
+	                             
+	                          
+	                                         
 
        
 	                          
@@ -427,7 +428,7 @@ table<entity, MyVars> sh_cpToVars
 	                                                                                                                    
  
 
-                                                                  
+                                                                              
  
 	                         
 	 
@@ -441,6 +442,7 @@ table<entity, MyVars> sh_cpToVars
 	                            
 	                      
 
+	                    
 	                                                   
 	                           
 	                    
@@ -455,6 +457,9 @@ table<entity, MyVars> sh_cpToVars
 	                                   
 	                                  
 	                                                   
+	                                  
+	                                                                                                         
+	                                                                                                              
 
 	                          
 	                                                                                                           
@@ -519,30 +524,8 @@ table<entity, MyVars> sh_cpToVars
 			 
 		 
 
-		                                                      
-		 
-			                              
-			                                                                     
-				                                                                              
-			   
-		 
-
-		                                                            
-		 
-			                                   
-		 
-
-		                                                    
-		 
-			                                            
-			 
-				                                      
-				                               
-			 
-		 
-
 		              
-		                                                   
+		                                       
 		 
 			                                     
 			 
@@ -570,12 +553,12 @@ table<entity, MyVars> sh_cpToVars
 			 
 		 
 
-		                                                             
+		                                                 
 		 
 			                                  
 		 
 
-		                                                           
+		                                               
 		 
 			                                                  
 			                                           
@@ -585,12 +568,12 @@ table<entity, MyVars> sh_cpToVars
 			 
 			             
 		 
-		                                                                    
+		                                                        
 		 
 			                                    
 		 
 
-		                                                             
+		                                                 
 		 
 			                                
 			                                                     
@@ -601,12 +584,10 @@ table<entity, MyVars> sh_cpToVars
 			                                                                                  
 			                                                                                  
 
-			       
-				                                       
-			             
+			                                                    
 		 
 
-		                                                        
+		                                            
 		 
 			                                            
 			 
@@ -635,27 +616,27 @@ table<entity, MyVars> sh_cpToVars
 			 
 		 
 
-		                                               
+		                                   
 		 
 			                            
 		 
 
-		                                                       
+		                                           
 		 
 			                            
 		 
 
-		                                                          
+		                                              
 		 
 			                         
 		 
 
-		                                                   
+		                                       
 		 
 			                           
 		 
 
-		                                                           
+		                                               
 		 
 			                           
 
@@ -667,7 +648,7 @@ table<entity, MyVars> sh_cpToVars
 				                             
 				 
 					       
-						                                                                                   
+						                                                                                       
 					      
 					        
 				 
@@ -682,7 +663,7 @@ table<entity, MyVars> sh_cpToVars
 			 
 		 
 
-		                                                            
+		                                                
 		 
 			                            
 
@@ -694,7 +675,7 @@ table<entity, MyVars> sh_cpToVars
 				                             
 				 
 					       
-						                                                                                   
+						                                                                                       
 					      
 					        
 				 
@@ -709,30 +690,50 @@ table<entity, MyVars> sh_cpToVars
 			 
 		 
 
-		                                                           
+		                                               
 		 
 			                             
 		 
 
-		                                                                 
+		                                                     
 		 
 			                      
 		 
 
-		                                                                                
+		                                                                    
 		 
 			                        
 		 
 
-		                                                                 
+		                                                     
 		 
 			                    
 		 
 
-		                                                                 
+		                                                     
 		 
 			                                        
 		 
+
+		                                                  
+		 
+			                                             
+		 
+
+		                                                         
+		 
+			                                                    
+		 
+
+		                                                   
+		 
+			                             
+		 
+	 
+
+	                                           
+	 
+		                                                                                    
 	 
 
 	                                             
@@ -783,33 +784,42 @@ table<entity, MyVars> sh_cpToVars
 
                                                                                   
  
-	       
-		                                       
-	      
+	                       
+	 
+		                                                     
+		      
+	 
+
+	                         
+	 
+		                                                             
+		      
+	 
 
 	                                                      
 	                    
 	 
+		                                                             
 		      
 	 
 
 	                              
-	                                              
+	                        
 	 
+		                                                               
 		      
 	 
 
-	                                                       
 	                                                             
 	                                
-	       
-		                                                                  
-	      
 
-	                                                                                                 
+	                                         
+		                                                       
+		                                             
 	 
 		                                      
 		 
+			                                     
 			                                   
 		 
 	 
@@ -819,7 +829,7 @@ table<entity, MyVars> sh_cpToVars
 	 
 		                                                      
 		       
-			                                                 
+			                                                           
 		      
 		                                                           
 		 
@@ -827,10 +837,8 @@ table<entity, MyVars> sh_cpToVars
 		 
 	 
 
-	       
-		                                                                                        
-		                                                                                                          
-	      
+	                                                                                                   
+	                                                                                                                      
 
 	                                                                                             
 	 
@@ -841,17 +849,15 @@ table<entity, MyVars> sh_cpToVars
  
                                                                                   
  
-	       
-		                                       
-	      
-
 	                        
 	 
+		                                                                 
 		      
 	 
 
 	                                             
 	 
+		                                                                     
 		      
 	 
 
@@ -859,6 +865,7 @@ table<entity, MyVars> sh_cpToVars
 
 	                    
 	 
+		                                                                          
 		      
 	 
 
@@ -868,23 +875,25 @@ table<entity, MyVars> sh_cpToVars
 	                                                   
 	                                                                
 
+	                                                                                                
+	                                                                                                                      
 	       
-		                                                                                     
-		                                                                                                           
 		                                               
 		 
-			                                                                           
+			                                                                               
 		 
 	      
 
-	                                                               
-			                                                      
+	                                                                 
+			                                                         
+			                                      
 	 
 		                                              
-		                                                                                           
+		                                                                      
 
 		                                        
 		 
+			                                                                                                                               
 			                 
 			                               
 		 
@@ -1004,8 +1013,8 @@ table<entity, MyVars> sh_cpToVars
 	 
 
 	       
-		                                                                 
-		                                                                                                              
+		                                                                     
+		                                                                                                                  
 	      
 	                                              
 	 
@@ -1023,6 +1032,13 @@ table<entity, MyVars> sh_cpToVars
 
                    
                       
+	                                                                                                                 
+	                                                                                                    
+
+	                           
+	 
+		                                 
+	 
 
 	                 
 
@@ -1065,8 +1081,8 @@ table<entity, MyVars> sh_cpToVars
 	                            
 		                                                                                                            
 		       
-			                                                                         
-			                                                                                                              
+			                                                                             
+			                                                                                                                  
 		      
 		                                 
 		                                               
@@ -1104,8 +1120,8 @@ table<entity, MyVars> sh_cpToVars
 	                
 	                                     
 	       
-		                                                       
-		                                                                                                              
+		                                                           
+		                                                                                                                  
 	      
 	                                              
 	 
@@ -1150,14 +1166,17 @@ table<entity, MyVars> sh_cpToVars
 			                                                         
 
 			       
-				                                                  
-				                                                                                                              
+				                                                      
+				                                                                                                                  
 			      
 			                                              
 			 
-				                    
+				                  
 				 
-					                                                   
+					                    
+					 
+						                                                   
+					 
 				 
 			 
 
@@ -1174,8 +1193,8 @@ table<entity, MyVars> sh_cpToVars
 					                  
 					                                                                                                              
 					       
-						                                                                          
-						                                                                                                              
+						                                                                              
+						                                                                                                                  
 					      
 					                                 
 					                                               
@@ -1237,8 +1256,8 @@ table<entity, MyVars> sh_cpToVars
 	 
 		                                                                                                            
 		       
-			                                                                         
-			                                                                                                              
+			                                                                             
+			                                                                                                                  
 		      
 		                                 
 		                                              
@@ -1267,6 +1286,17 @@ table<entity, MyVars> sh_cpToVars
 		                      
 
 		                                                                      
+
+		                                                                               
+		 
+			                                                
+			 
+				                                                        
+				 
+					                         
+				 
+			 
+		 
 		                                                                                     
 		                     
 		                                         
@@ -1304,7 +1334,9 @@ table<entity, MyVars> sh_cpToVars
 			                                       
 			                               
 			                                      
-			                                                                                            
+			                                                                                     
+			                                                                                
+			                                                                                
 
 			                                               
 			                 
@@ -1319,6 +1351,24 @@ table<entity, MyVars> sh_cpToVars
 					                                                                      
 					                                                             
 						        
+
+					                                                             
+					 
+						                         
+						 
+							                                       
+								        
+						 
+						    
+						 
+							                                       
+								        
+						 
+
+						                                         
+						   
+						        
+					 
 
 					                       
 					 
@@ -1359,7 +1409,6 @@ table<entity, MyVars> sh_cpToVars
 			 
 
 			                                 
-			                                           
 			                       
 			                                  
 			                                            
@@ -1536,6 +1585,8 @@ table<entity, MyVars> sh_cpToVars
 						 
 					 
 					                                                                                                               
+					                       
+						     
 				 
 			 
 		 
@@ -1676,9 +1727,9 @@ table<entity, MyVars> sh_cpToVars
 								                                   
 
 								       
-									                                                                                               
-									                                                                                                
-									                                                                                                                               
+									                                                                                                   
+									                                                                                                    
+									                                                                                                                                   
 								      
 
 								                                 
@@ -1742,12 +1793,8 @@ table<entity, MyVars> sh_cpToVars
 					 
 				 
 
-				                                                                                                               
+				                                                                                                                
 				 
-					                                                                                                                                                                                           
-					                                   
-					                                                   
-
 					                                                                                                          
 					                                                                                                                                                                                    
 					                                 
@@ -1824,6 +1871,14 @@ table<entity, MyVars> sh_cpToVars
 	 
 
 	                              
+
+	                                
+	                                                                        
+	 
+		                          
+		        
+	 
+
 	                                            
 
 	                                     
@@ -1887,7 +1942,7 @@ table<entity, MyVars> sh_cpToVars
 		                      
 		                                     
 		                                                            
-		                                        
+		                                              
 
 		                 
 		                                         
@@ -1923,7 +1978,7 @@ table<entity, MyVars> sh_cpToVars
 			                                                                      
 			                                                                   
 			                        
-				                                                              
+				                                                                    
 		 
 	 
 
@@ -1933,37 +1988,36 @@ table<entity, MyVars> sh_cpToVars
                                                                                                 
                                                                                        
 
-                                                                                    
+                                                                                                 
  
 	                              
 
 	        
 
-	       
-	                                                                             
-	      
-
 	                                                
 		      
+
+	                                                                         
 
 	                                                  
 
 	                                  
 	                                       
 
+	                                              
+		                    
+			            
+		       
+		                        
+			                                                                                  
+		      
+	   
+
 	                                                
 	 
 		           
 	 
 
-	                                        
-		                    
-			            
-		       
-		                        
-			                                                                                      
-		      
-	   
  
 
                                                                                                                   
@@ -1984,8 +2038,8 @@ table<entity, MyVars> sh_cpToVars
 	 
 		       
 			       
-				                                                    
-				                                                                                                              
+				                                                        
+				                                                                                                                  
 			      
 			                                              
 			 
@@ -2001,8 +2055,8 @@ table<entity, MyVars> sh_cpToVars
 			                                                                                                     
 			             
 			       
-				                                                    
-				                                                                                                              
+				                                                        
+				                                                                                                                  
 			      
 			                                              
 			 
@@ -2069,9 +2123,7 @@ table<entity, MyVars> sh_cpToVars
 					                                                  
 				 
 				                                                
-				       
-					                                                                                                                               
-				      
+				                                                                                                                                  
 				                                           
 				                                 
 				                                 
@@ -2085,9 +2137,7 @@ table<entity, MyVars> sh_cpToVars
 					                                                  
 				 
  				                                                
-				       
-					                                                                                                                              
-				      
+				                                                                                                                                    
 				                                           
 				                                 
 				                                 
@@ -2185,14 +2235,17 @@ table<entity, MyVars> sh_cpToVars
 		 
 			                                                                            
 			       
-				                                                                                    
-				                                                                                                              
+				                                                                                        
+				                                                                                                                  
 			      
 			                                              
 			 
-				                    
+				                  
 				 
-					                                                        
+					                     
+					 
+						                                                        
+					 
 				 
 			 
 		 
@@ -2219,6 +2272,9 @@ table<entity, MyVars> sh_cpToVars
 	         
 
 	                     
+		      
+
+	                     
 	 
 		                             
 		 
@@ -2241,6 +2297,27 @@ table<entity, MyVars> sh_cpToVars
                                                                                                                                                  
                                                                                                                                          
 
+                                                                       
+ 
+	                        
+	 
+		            
+	 
+
+	                    
+	 
+		            
+	 
+
+	                            
+
+	                              
+	                               
+	 
+		           
+	 
+	            
+ 
 
                                                                                             
  
@@ -2256,19 +2333,26 @@ table<entity, MyVars> sh_cpToVars
 	           
  
 
-                                                                                                   
+                                                                              
  
 	                        
 	 
 		            
 	 
 
+	                    
+	 
+		            
+	 
+
+	                            
 	                              
+
 	                                                                  
 
 	                                
 	 
-		                                                
+		                                                   
 		 
 			            
 		 
@@ -2286,7 +2370,6 @@ table<entity, MyVars> sh_cpToVars
 
                                                                                     
  
-	                                  
 	                                   
 	           
 	                                      
@@ -2298,6 +2381,11 @@ table<entity, MyVars> sh_cpToVars
 	                                                                                     
 
 	                           
+	 
+		      
+	 
+
+	                                                                      
 	 
 		      
 	 
@@ -2339,8 +2427,6 @@ table<entity, MyVars> sh_cpToVars
 
                                                                
  
-	                               
-	             
 	                            
 
 	                             
@@ -2348,9 +2434,14 @@ table<entity, MyVars> sh_cpToVars
 		      
 	 
 
+	                                                                            
+	 
+		      
+	 
+
 	                                               
 	 
-		                                                                                                                                                                                                             
+		                                                                                                                                                                                                                  
 
 		                                                               
 		                      
@@ -2367,9 +2458,9 @@ table<entity, MyVars> sh_cpToVars
 			                         
 		 
 
-		                                                                                                    
+		                                                                                                         
 		         
-		                              
+		                                   
 
 		                                                                                                                                                                                 
 		                                            
@@ -2393,7 +2484,7 @@ table<entity, MyVars> sh_cpToVars
 	                           
 	                 
 	       
-		                                                                                                          
+		                                                                                                              
 	      
 
 	                                              
@@ -2418,15 +2509,13 @@ table<entity, MyVars> sh_cpToVars
 	                              
 	                                                        
 
-	       
-		                                                                     
-	      
+	                                                                             
 	                                         
 	 
-		       
-			                                                                     
-		      
-		             
+		                        
+		 
+			             
+		 
 	 
  
 #endif          
@@ -2478,13 +2567,14 @@ table<entity, MyVars> sh_cpToVars
 
 				                                                                                                                  
 				       
-					                                                                            
-					                                                                                                              
+					                                                                                       
+					                                                                                                                         
 				      
 				                                 
 				                                              
 				 
 					                                           
+					                                                                                      
 				 
 
 				                                                                                                                                                                  
@@ -2532,13 +2622,16 @@ table<entity, MyVars> sh_cpToVars
 
 	                                                                                                      
 	       
-		                                                                      
-		                                                                                                              
+		                                                                                 
+		                                                                                                                         
 	      
 	                                 
 	                                               
 	 
-		                                           
+		                  
+		 
+			                                           
+		 
 	 
  
 
@@ -2552,8 +2645,8 @@ table<entity, MyVars> sh_cpToVars
 		                                           
 		 
 			       
-				                                                                         
-				                                                                                                              
+				                                                                                    
+				                                                                                                                         
 			      
 			                                               
 			 
@@ -2586,6 +2679,9 @@ table<entity, MyVars> sh_cpToVars
 	                                
 
 	                            
+	                                                                                 
+
+	                                                                                                                      
 
 	                                                                   
 	                                        
@@ -2610,6 +2706,10 @@ table<entity, MyVars> sh_cpToVars
 	 
 		                                                                                                                         
 		                                     
+	 
+	    
+	 
+		                                                                                            
 	 
 
 	                                                     
@@ -2656,20 +2756,215 @@ table<entity, MyVars> sh_cpToVars
 	 
 		                                                             
 	 
+
+	                                                
+	                                                       
+
 	                                
+
+	                                   
 
 	                                                            
 	                                                                      
 
 	                                                                                                                
 	       
-		                                                                           
-		                                                                                                               
+		                                                                               
+		                                                                                                                   
 	      
 	                                 
 	                                              
 	 
 		                                           
+	 
+ 
+
+                                                     
+ 
+	                     
+		      
+
+	                            
+
+	                                                                                                        
+		      
+
+	                                          
+		      
+
+	                                                                                                                                                                                               
+	                                                                    
+	                                                                                                                                                                                                           
+	                                                                                
+
+	                                               
+	 
+		                                             
+		                  
+		 
+			                    
+			                                            
+		 
+	 
+	                                                      
+	 
+		                                             
+		                  
+		 
+			                    
+			                                             
+		 
+	 
+
+	                                
+	 
+		                                                                      
+	 
+
+	            
+		                                    
+		 
+			                    
+			 
+				      
+			 
+
+			                            
+			                             
+			                                                                      
+			                                               
+			 
+				                  
+				 
+					           
+				 
+			 
+		 
+	 
+
+	                                         
+	 
+		           
+	 
+
+	        
+ 
+
+                                                                             
+ 
+	                    
+		           
+
+	                                                       
+	                                      
+	                                  
+	                                  
+	                                              
+	                                              
+
+	                                                                                   
+	 
+		       
+			                                     
+		      
+		                     
+			      
+
+		                     
+			      
+
+		                                                    
+	   
+
+	                                        
+	                                          
+	                                            
+
+	                            
+	                                        
+
+	                  
+ 
+
+                                                                                      
+ 
+	                            
+
+	                                     
+	 
+		                                                               
+		                                                
+		 
+			                                                     
+			      
+		 
+
+		                                     
+	 
+	    
+	 
+		                                      
+	 
+
+	                                  
+	 
+		           
+	 
+
+	                                             
+	 
+		      
+	 
+
+	                                                          
+	                                    
+	 
+		      
+	 
+
+	                                                       
+	                                                   
+	                                    
+	                   
+	                                          
+	                                           
+	                     
+	       
+		                       
+		                 
+		 
+			                                                       
+			                                                                                        
+		 
+	             
+	                       
+	                                                
+
+	                                                                                
+	                                                                                  
+
+	                                                                          
+	                                                              
+	                                                                  
+
+	                                                     
+ 
+
+                                                                                          
+ 
+	                    
+		           
+	                            
+
+	                              
+
+	                                            
+	 
+		                                                          
+		                                      
+		 
+			                                                       
+		 
 	 
  
 
@@ -2683,7 +2978,6 @@ table<entity, MyVars> sh_cpToVars
                                                                          
  
 	                            
-
 	              
 
 	                                            
@@ -2694,22 +2988,27 @@ table<entity, MyVars> sh_cpToVars
 		 
 	 
 
-	                      
-	                                             
-	   
-	  	                             
-	  	                                                                          
-	  	                                                      
-	  	 
-	  		                                      
-	  		                                                           
-	  	 
-	  	    
-	  	 
-	  		                                          
-	  		                                                            
-	  	 
-	   
+	        
+
+	                                            
+	 
+		                                         
+	 
+
+	                                                
+	 
+		                  
+		 
+			           
+		 
+	 
+
+	        
+
+	                                            
+	 
+		                                     
+	 
  
 
                                                   
@@ -2834,20 +3133,20 @@ table<entity, MyVars> sh_cpToVars
  
 	                    
 	 
-		       
-			                                                                         
-		      
-
 		                                                      
-		                   
+		                                                         
 		 
 			                            
-			                                                                                       
-			                                                                    
+			                                                                             
+			                                              
 			 
 				                                     
 				                                              
 			 
+		 
+		    
+		 
+			                                                                                                  
 		 
 	 
  
@@ -2855,12 +3154,14 @@ table<entity, MyVars> sh_cpToVars
                                                                              
  
 	                            
+
+	                                                                                                
+	 
+		           
+	 
+
 	                                
 	 
-		                                                                                                
-		 
-			           
-		 
 		                         
 	 
 
@@ -2882,10 +3183,10 @@ table<entity, MyVars> sh_cpToVars
 				           
 			 
 			                              
-			                                                                                                                                                                                                            
-			                                                                                       
-			                                            
-			                                                                                                                 
+			                                                                                                                                                                                                                 
+			                                                                                            
+			                                                 
+			                                                                                                                      
 
 			         
 
@@ -2901,6 +3202,10 @@ table<entity, MyVars> sh_cpToVars
 				        
 				                        
 				                         
+				                                          
+				 
+					                                   
+				 
 			 
 		 
 	 
@@ -2929,6 +3234,11 @@ table<entity, MyVars> sh_cpToVars
 	                                    
 	 
 		           
+	 
+
+	                       
+	 
+		      
 	 
 
 	                          
@@ -2995,10 +3305,7 @@ table<entity, MyVars> sh_cpToVars
 	   
 
 	                     
-	             
-	 
-		           
-	 
+	           
  
 
        
@@ -3027,14 +3334,11 @@ table<entity, MyVars> sh_cpToVars
 		      
 	 
 
-	       
-		                                                         
-	      
-
 	                                                       
 	                    
 	 
 		                            
+		                                                            
 		                                 
 		 
 			      
@@ -3055,9 +3359,7 @@ table<entity, MyVars> sh_cpToVars
 	 
 	    
 	 
-		       
-			                                                 
-		      
+		                                                                                                     
 	 
  
 
@@ -3117,13 +3419,12 @@ table<entity, MyVars> sh_cpToVars
 
                       
 #if SERVER
-                                                                       
+                                                                                   
  
-	                                                          
+	                                                                  
 	                    
 	 
 		                                                    
-		             
 	 
 
 	                            
@@ -3146,7 +3447,6 @@ table<entity, MyVars> sh_cpToVars
  
 	                            
 
-	                         
 	                                                             
 	                     
 
@@ -3166,8 +3466,8 @@ table<entity, MyVars> sh_cpToVars
 	                                                            
 	 
 		       
-			                                                                  
-			                                                                                                              
+			                                                                       
+			                                                                                                                  
 		      
 		                                              
 		 
@@ -3181,8 +3481,8 @@ table<entity, MyVars> sh_cpToVars
 	 
 		                                                                                                                                
 		       
-			                                                                                   
-			                                                                                                              
+			                                                                                       
+			                                                                                                                  
 		      
 		                                 
 		                                              
@@ -3196,8 +3496,8 @@ table<entity, MyVars> sh_cpToVars
 	                                                            
 	 
 		       
-			                                                                   
-			                                                                                                              
+			                                                                       
+			                                                                                                                  
 		      
 		                                              
 		 
@@ -3210,8 +3510,8 @@ table<entity, MyVars> sh_cpToVars
 	 
 		                                                                                                                                
 		       
-			                                                                            
-			                                                                                                       
+			                                                                                       
+			                                                                                                                  
 		      
 		                                 
 		                                              
@@ -3233,10 +3533,10 @@ table<entity, MyVars> sh_cpToVars
 	                                       
  
 
-                                                                               
+                                                                                            
  
 	       
-		                                                
+		                                             
 
 		                        
 		 
@@ -3250,17 +3550,15 @@ table<entity, MyVars> sh_cpToVars
  
 	                                  
 	 
-		       
-			                                                       
-		             
-
 		                                            
 		                    
 		 
+			                                                                                                      
 			      
 		 
 
 		                            
+		                                                         
 
 		                                                
 		 
@@ -3287,9 +3585,7 @@ table<entity, MyVars> sh_cpToVars
 
 		                                                            
 		 
-			       
-				                                                                      
-			      
+			                                                                           
 
 			                  
 
@@ -3323,16 +3619,13 @@ table<entity, MyVars> sh_cpToVars
 			                                               
 			 
 				                          
-				       
-					                                                                      
-				      
+				                                                                           
+
 				                                           
 			 
 			    
 			 
-				       
-					                                             
-				      
+				                                                
 			 
 		 
 	 
@@ -3354,9 +3647,6 @@ void function SpectreShackControl_V4_ClientInit( entity cp )
 {
 	if( !IsValid( cp ) )
 		return
-
-	             
-	                            
 }
 #endif          
 
@@ -3376,6 +3666,29 @@ entity function GetSpectreShackSmartLootBinForLoot( entity lootEnt )
 	return null
 }
 #endif                    
+
+void function ArmoryPrint( MyVars ornull varsOrNull, string message, bool devOnly = true )
+{
+	string armoryString = "IMC ARMORY - "
+#if SERVER
+	                          
+	 
+		                                       
+		                                                     
+	 
+#endif         
+
+	if( devOnly )
+	{
+		#if DEV
+			printf( armoryString + message )
+		#endif      
+	}
+	else
+	{
+		printf( armoryString + message )
+	}
+}
 
 #if DEV && SERVER
                                                                                      
@@ -3455,7 +3768,10 @@ entity function GetSpectreShackSmartLootBinForLoot( entity lootEnt )
 	                                                        
 	                                         
 	 
-		             
+		                        
+		 
+			             
+		 
 	 
  
 
@@ -3503,23 +3819,6 @@ entity function GetSpectreShackSmartLootBinForLoot( entity lootEnt )
 				                              
 				                    
 			 
-			                                    
-			                      
-		 
-	 
- 
-
-                                                             
- 
-	                    
-	 
-		                            
-
-		                                                                                                                   
-		 
-			                                                                                                        
-			                                                                                                        
-			                                                                            
 		 
 	 
  

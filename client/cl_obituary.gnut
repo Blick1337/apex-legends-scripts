@@ -103,30 +103,28 @@ ObitEntityInfo function Obituary_GetEntityInfo( entity ent, int damageSourceId, 
 	}
 	else
 	{
-		info.displayColor = localPlayer.GetTeam() == ent.GetTeam() ? GetPlayerInfoColor( ent ) : <255, 255, 255>                              
+		if ( GetCurrentPlaylistVarBool( "show_team_color_obituary", false) && ent.IsPlayer() )
+		{
+			info.displayColor = GetPlayerInfoColor( ent )
+
+				if ( GetCurrentPlaylistVarBool( "show_team_color_obituary_enemies_red", false) && !IsFriendlyTeam( localPlayer.GetTeam(), ent.GetTeam() ) )
+				{
+					info.displayColor = OBITUARY_COLOR_ENEMY
+				}
+		}
+		else
+		{
+			info.displayColor = localPlayer.GetTeam() == ent.GetTeam() ? GetPlayerInfoColor( ent ) : <255, 255, 255>                              
+		}
 	}
 
 	                                                                                                             
-	if ( IsUsingProximityAllianceMembers() )
+	if ( AllianceProximity_IsUsingAllianceProximity() )
 	{
 		if ( localPlayer.GetTeam() != ent.GetTeam() && IsFriendlyTeam( localPlayer.GetTeam(), ent.GetTeam() ) )
 			info.displayColor = TEAM_COLOR_FRIENDLY
 	}
-
-  
-	                          
-	 
-		                                    
-		                                                                                                                         
-			                                        
-
-		                         
-			                                              
-		                                                       
-			                                              
-	 
-  
-
+	
 	return info
 }
 
@@ -408,6 +406,10 @@ void function Obituary_Print_Localized( string localizedPrint, vector altColor1 
 	if( !bCheckForDuplicateEntry || (bCheckForDuplicateEntry && !bFoundDuplicateEntry ) )
 	{
 		var rui = CreatePermanentCockpitPostFXRui( $"ui/obituary_crawl_localized.rpak", HUD_Z_BASE )
+
+		if  (ObituaryHudIsDisabled())
+			RuiSetBool( rui, "isVisible", false )
+
 		RuiSetGameTime( rui, "startTime", Time() )
 		RuiSetGameTime( rui, "updateTime", Time() )
 		RuiSetFloat( rui, "duration", OBITUARY_DURATION )
@@ -438,6 +440,10 @@ void function Obituary_Print_PlayerDeath( string attackerString, asset weaponIco
 		return
 
 	var rui = CreatePermanentCockpitPostFXRui( $"ui/obituary_crawl_player_death.rpak" )
+
+	if  (ObituaryHudIsDisabled())
+		RuiSetBool( rui, "isVisible", false )
+
 	RuiSetGameTime( rui, "startTime", Time() )
 	RuiSetGameTime( rui, "updateTime", Time() )
 	RuiSetFloat( rui, "duration", OBITUARY_DURATION )
@@ -606,8 +612,8 @@ void function Obituary_Print_Control_ObjectivePing( entity subjectEnt, string lo
                                                                        
 int function Obituary_SortControlObjectivePingsByCount( entity objectivePingA, entity objectivePingB )
 {
-	int objectiveAPingCount = Control_GetPingCountForObjectiveForTeam( objectivePingA.GetOwner(), objectivePingA.GetTeam() )
-	int objectiveBPingCount = Control_GetPingCountForObjectiveForTeam( objectivePingB.GetOwner(), objectivePingB.GetTeam() )
+	int objectiveAPingCount = Control_GetPingCountForObjectiveForAlliance( objectivePingA.GetOwner(), AllianceProximity_GetAllianceFromTeam( objectivePingA.GetTeam() ) )
+	int objectiveBPingCount = Control_GetPingCountForObjectiveForAlliance( objectivePingB.GetOwner(), AllianceProximity_GetAllianceFromTeam( objectivePingB.GetTeam() ) )
 
 	if ( objectiveAPingCount > objectiveBPingCount )
 		return -1
@@ -836,4 +842,9 @@ void function Obituary_SetVerticalOffset( int offset )
 	file.verticalOffset = offset
 
 	UpdateObituaryQueue()
+}
+
+bool function ObituaryHudIsDisabled()
+{
+	return GetCurrentPlaylistVarBool( "hide_ui_obituary", false )
 }

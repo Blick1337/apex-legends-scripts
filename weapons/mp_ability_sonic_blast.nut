@@ -419,43 +419,18 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 	                                               
 	                                                       
 
-	                                                                                                                          
-	                                                                         
-
-	                                                                                                                       
-	                                                             
-	                                                          
-	                                                                                                                                                                                                                                                                                    
-	                                                         
-
 	       
 		                        
 		 
-			                                                     
-			                                                                                                          
+			                                                    
+			                                                                                                        
 			                                                                                                     
 		 
 	            
 
-	                                     
-	 
-		                                                                       
-
-		       
-			                        
-			 
-				                                                                                                             
-				                                                                                     
-				                                                                                                                      
-				                                                                                                                                             
-			 
-		            
-
-		                                                                                                                        
-	 
+	                                                                                        
 
 	                                                                                      
-
 
 	                                                                                                                
 	                                              
@@ -528,7 +503,7 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 	       
 		                        
 		 
-			                                                                
+			                                                                  
 		 
 	            
 
@@ -910,26 +885,16 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 	                                               
 	                                                                                   
 
+	              
+	                                                                                                                                             
+	                                              
+
+	                                                                                                                                              
+	                                                
+
+	                                                                                                                                                               
+	                                                       
 	                                                         
-	 
-		                       
-		       
-		                        
-		 
-			                                                                                                                                           
-		 
- 		            
-		              
-		                                                                                                                                                                          
-		                                              
-
-		                                                                                                                                                                           
-		                                                
-
-		                                                                                                                                                               
-		                                                       
-		                                                         
-	 
  
 
                                                                                     
@@ -1174,7 +1139,7 @@ void function DoClientSideDetonationSound_Thread( float detonationTime, vector s
 				       
 					                              
 					 
-						                                                     
+						                                                    
 						                                                                        
 					 
 				            
@@ -1184,7 +1149,7 @@ void function DoClientSideDetonationSound_Thread( float detonationTime, vector s
 				       
 				                              
 				 
-					                                                       
+					                                                    
 					                                                                        
 				 
 				            
@@ -1195,7 +1160,7 @@ void function DoClientSideDetonationSound_Thread( float detonationTime, vector s
 			       
 			                              
 			 
-				                                                     
+				                                                   
 			 
 			            
 		 
@@ -1222,7 +1187,7 @@ void function DoClientSideDetonationSound_Thread( float detonationTime, vector s
 			                              
 			 
 				                                                                                                                                 
-				                                                                                                                                 
+				                                                                                                                                  
 				                                                                                                                                                                                                      
 				                                                                                                                                                                                                      
 			 
@@ -1233,7 +1198,7 @@ void function DoClientSideDetonationSound_Thread( float detonationTime, vector s
 			       
 			                              
 			 
-				                                                                               
+				                                                                                  
 			 
 			            
 
@@ -1251,7 +1216,7 @@ void function DoClientSideDetonationSound_Thread( float detonationTime, vector s
 	       
 	                              
 	 
-		                                                             
+		                                                               
 	 
 	            
 

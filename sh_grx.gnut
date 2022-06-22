@@ -58,6 +58,8 @@ global function GRXOffer_GetEventThematicPackCollectionInfo
 global function GRXOffer_GetEventThematicPackCollectionInfoFromScriptOffer
 global function GRX_IsLocationActive
 global function GRX_ScriptOfferFromCraftingOffer
+global function GRX_GetPostGameRewards
+global function GRX_MarkRewardAcknowledged
 #endif
 
 #if SERVER || UI
@@ -142,7 +144,6 @@ global function DEV_GRX_PrintStoreOfferLocations
 global function DEV_GRX_PrintNextCurrencyExpirationInfo
 global function DEV_GRX_TestOpenPack
 global function DEV_GRX_TestPurchase
-global function DEV_GRX_SetTimeDelta
 global function DEV_GRX_PreviewStoreItem
 #endif
 #endif
@@ -504,8 +505,6 @@ struct FileStruct_LifetimeVM
 	bool WORKAROUND_wasUserInfoUpdatedBeforeLevelInit = false
 
 	#if DEV
-		int grxTimeDeltaMinutes = 0
-
 		string grxStorePreviewItem = ""
 	#endif
 }
@@ -620,6 +619,7 @@ void function ShGRX_LevelInit()
 	#endif
 
 	#if SERVER
+		                                                            
 		       
 			                                           
 		      
@@ -920,9 +920,6 @@ bool function GRX_IsInventoryReady( entity player = null )
 #if SERVER || CLIENT || UI
 bool function GRX_HasInventoryEverBeenReady( entity player = null )
 {
-	if ( !GRX_IsGRXEnabled() )
-		return true
-
 	#if SERVER
 		                                             
 	#elseif CLIENT
@@ -952,14 +949,7 @@ int function GRX_GetPlayerEdition( entity player = null )
 			player = GetLocalClientPlayer()
 	#endif
 
-	int marketplaceEdition
-	if ( GRX_IsGRXEnabled() )
-	{
-		                                                                                                                                        
-		marketplaceEdition = GetPlayerGRXScriptState( player ).marketplaceEdition
-	}
-
-	return marketplaceEdition
+	return GetPlayerGRXScriptState( player ).marketplaceEdition
 }
 #endif
 
@@ -984,9 +974,6 @@ bool function GRX_IsItemOwnedByPlayer_AllowOutOfDateData( ItemFlavor flav, entit
 }
 bool function IsItemOwnedByPlayerInternal( ItemFlavor flav, entity player = null )
 {
-	if ( !GRX_IsGRXEnabled() )
-		return true
-
 	#if SERVER
 		                                             
 	#elseif CLIENT
@@ -1033,7 +1020,7 @@ bool function IsItemOwnedByPlayerInternal( ItemFlavor flav, entity player = null
 			                                                                                                                                  
 			                                                               
 
-			                                                                                                                            
+			                                                                                                                             
 				                                                            
 		 
 		#endif
@@ -2059,19 +2046,6 @@ void function RemoveCallback_OnGRXBundlesRefreshed( void functionref() cb )
                        
                        
                        
-#if (SERVER || CLIENT || UI)
-bool function GRX_IsGRXEnabled()
-{
-	if ( !GetCurrentPlaylistVarBool( "enable_grx", true ) )
-	{
-		Warning( "enable_grx (playlist var) is set to 0" )
-		return false
-	}
-	return true
-}
-#endif
-
-
 #if DEV && UI
 void function DEV_GRX_PrintStoreOfferLocations()
 {
@@ -2529,40 +2503,42 @@ void function GRXDbg( entity player, string label, ... )
  
 	                                
 	                                    
-	                                    
 	                                                  
 
-	                        
-	                         
-	 
-		                                        
-	 
-	    
-	 
-		                                                      
-		                                                     
-	 
-	                                                    
+	                                                                 
  
 #endif
 
 
 #if SERVER
-                                                      
+                                             
+                                                            
+   
+  	                                               
+  		      
+  
+  	                                                                    
+  
+  	                                    
+  	                                                                                              
+  	                                                                                                  
+  	 
+  		                                                                                                              
+  	 
+  
+  	                            
+   
+#endif
+
+
+#if SERVER
+                                                       
  
-	                                               
-		      
-
-	                                                                    
-
-	                                    
-	                                                                                              
-	                                                                                                  
+	                
 	 
-		                                                                                                              
+		                                            
+			                                            
 	 
-
-	                            
  
 #endif
 
@@ -2747,9 +2723,7 @@ void function UpdatePlayerGRXScriptState( entity player, GRXUserInfo ornull code
 					                                                                             
 					                                                                            
 					                                                                            
-					                      
 					                           	                                
-					        
 				 
 			#endif
 		}
@@ -2902,28 +2876,23 @@ bool function DisplayQueuedRewardsGiven()
 	for ( int persistentArrayIdx = 0; persistentArrayIdx < QUEUED_REWARDS_MAX_COUNT; persistentArrayIdx++ )
 	{
 		Assert( QUEUED_REWARDS_MAX_ITEMS_COUNT == 1 )
-		SettingsAssetGUID rewardItemFlavGUID = expect int( GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].rewardGUIDs[0]", persistentArrayIdx ) ) )
-		if ( rewardItemFlavGUID == 0 )
+		SettingsAssetGUID ornull rewardItemFlavGUID = GetQueuedRewardOrNull( persistentArrayIdx )
+		if ( rewardItemFlavGUID == null)
 			continue
-		if ( !IsValidItemFlavorGUID( rewardItemFlavGUID, eValidation.ASSERT ) )
-			continue                                                                                                                                           
-		ItemFlavor rewardItemFlav = GetItemFlavorByGUID( rewardItemFlavGUID )
 
-		bool rewardGiven        = expect bool( GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].rewardGiven", persistentArrayIdx )  ) )                                                                                      
-		bool rewardAcknowledged = expect bool( GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].rewardAcknowledged", persistentArrayIdx )  )  )                                                                                      
-		if ( !rewardGiven || rewardAcknowledged )
-			continue
+		expect SettingsAssetGUID( rewardItemFlavGUID )
+		ItemFlavor rewardItemFlav = GetItemFlavorByGUID( rewardItemFlavGUID )
 
 		Assert( QUEUED_REWARDS_MAX_ITEMS_COUNT == 1 )
 		int quantity = expect int(  GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].rewardQuantities[0]", persistentArrayIdx )  ) )                                                                                      
 
 		SettingsAssetGUID sourceItemFlavGUID   = expect int(  GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].sourceGUID", persistentArrayIdx ) )  )                                                                                      
 		int sourceItemExtraData                = expect int( GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].sourceGUID_extraData", persistentArrayIdx ) ) )                                                                                      
-		ItemFlavor ornull sourceItemFlavOrNull = null
+		ItemFlavor ornull sourceItemFlav       = null
 		if ( sourceItemFlavGUID != 0 )
 		{
 			if ( IsValidItemFlavorGUID( sourceItemFlavGUID ) )
-				sourceItemFlavOrNull = GetItemFlavorByGUID( sourceItemFlavGUID )
+				sourceItemFlav = GetItemFlavorByGUID( sourceItemFlavGUID )
 			else
 				Warning( "Found unregistered ItemFlavorGUID " + string(sourceItemFlavGUID) + ". This is probably because the source asset has been deleted from Bakery." )
 		}
@@ -2932,9 +2901,9 @@ bool function DisplayQueuedRewardsGiven()
 		string descText  = ""
 		string headerText = ""
 		bool noShowLow   = false
-		if ( sourceItemFlavOrNull != null )
+		if ( sourceItemFlav != null )
 		{
-			ItemFlavor sourceItemFlav = expect ItemFlavor(sourceItemFlavOrNull)
+			expect ItemFlavor( sourceItemFlav )
 			switch( ItemFlavor_GetType( sourceItemFlav ) )
 			{
 				case eItemType.challenge:
@@ -3005,15 +2974,7 @@ bool function DisplayQueuedRewardsGiven()
 			noShowLow,
 			true )
 
-		                                                                                    
-		SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].sourceGUID", persistentArrayIdx ), 0 )
-		SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].sourceGUID_extraData", persistentArrayIdx ), 0 )
-		SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].rewardGUIDs[0]", persistentArrayIdx ), 0 )
-		SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].rewardQuantities[0]", persistentArrayIdx ), 0 )
-		SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].rewardGiven", persistentArrayIdx ), false )                                                                                                                                                                                              
-		SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].rewardAcknowledged", persistentArrayIdx ), false )                                                                                                                                                                                              
-
-		Remote_ServerCallFunction( "ClientCallback_acknowledge_reward", persistentArrayIdx, rewardItemFlavGUID )
+		GRX_MarkRewardAcknowledged( rewardItemFlavGUID, persistentArrayIdx )
 
 		return true                                           
 	}
@@ -3069,9 +3030,6 @@ bool function DisplayQueuedRewardsGiven()
 #if SERVER || UI
 void function RunGRXOperations( entity player, PlayerGRXScriptState scriptState )
 {
-	if ( !GRX_IsGRXEnabled() )
-		return
-
 	if ( !scriptState.isInventoryReady )
 		return
 
@@ -3393,9 +3351,6 @@ void function HandleGRXQueryCompleted( entity player, int queryScriptId, int que
 		}
 	#endif
 
-	if ( !GRX_IsGRXEnabled() )
-		return
-
 	  
 		                               
 
@@ -3680,9 +3635,9 @@ void function HandleGRXQueryCompleted( entity player, int queryScriptId, int que
 	                                                                                        
 	 
 		                                                                                                       
-		                                                                                                                        
+		                                                                                                                      
 		 
-			                                                                                                                                                                                                  
+			                                                                                                                                                                                                
                                        
 			            
 		 
@@ -3744,17 +3699,6 @@ void function UICodeCallback_GRXOffersRefreshed( int offersState, array< GRXCraf
 
 #if DEV
 #if UI
-void function DEV_GRX_SetTimeDelta( int minutes )
-{
-	thread _DEV_GRX_SetTimeDelta( minutes )
-}
-
-void function _DEV_GRX_SetTimeDelta( int minutes )
-{
-	fileVM.grxTimeDeltaMinutes = minutes
-	thread _Force_Refresh_Offers()
-}
-
 void function DEV_GRX_PreviewStoreItem( string grxRef )
 {
 	fileVM.grxStorePreviewItem = grxRef
@@ -3961,13 +3905,6 @@ void function HandleGRXOffersRefreshed( int offersState, array< GRXCraftingOffer
 		scriptOffer.purchaseLimit = ( "purchaselimit" in scriptOffer.attributes ? scriptOffer.attributes["purchaselimit"].tointeger() : 1 )
 		scriptOffer.displayPriority = ( "displaypriority" in codeOffer.attrs ? int(codeOffer.attrs.displaypriority) : 0 )
 		scriptOffer.expireTime = ("expireSeconds" in codeOffer.attrs ? int(codeOffer.attrs.expireSeconds) + GetUnixTimestamp() : 0)
-		if ( scriptOffer.expireTime > 0 )
-		{
-			scriptOffer.expireTime -= SECONDS_PER_MINUTE * 30                                       
-			#if DEV
-				scriptOffer.expireTime += (SECONDS_PER_MINUTE * fileVM.grxTimeDeltaMinutes)
-			#endif
-		}
 
 		if ( GetConVarBool( "assetdownloads_enabled" ) && IsLobby() && scriptOffer.imageRef != "" )
 			RunClientScript( "RequestDownloadedImagePakLoad", scriptOffer.imageRef, ePakType.DL_STORE_TALL )
@@ -4306,9 +4243,6 @@ void function ClientToUI_WORKAROUND_GRXPackOpened_Finish()
 #if CLIENT
 void function ClientCodeCallback_GRXPackOpened( array<int> balanceDiffs, array<int> newItems, int packError )
 {
-	if ( !GRX_IsGRXEnabled() )
-		return
-
 	ItemFlavorBag bag
 
 	for ( int currencyIndex = 0; currencyIndex < GRX_CURRENCY_COUNT; currencyIndex++ )
@@ -5022,4 +4956,75 @@ bool function GRX_CheckBundleAndUpdateOfferPrices( GRXScriptOffer offer )
 
 	                       
  
+#endif
+
+
+#if UI
+table<int, int> function GRX_GetPostGameRewards()
+{
+	                                                                                                                       
+	                                                                                                                                         
+	table<int, int> postGameRewards = {}
+	entity player = GetLocalClientPlayer()
+
+	if ( !IsLocalClientEHIValid() )
+		return postGameRewards
+
+	for ( int persistentArrayIdx = 0; persistentArrayIdx < QUEUED_REWARDS_MAX_COUNT; persistentArrayIdx++ )
+	{
+		SettingsAssetGUID ornull rewardItemFlavGUID = GetQueuedRewardOrNull( persistentArrayIdx )
+		if ( rewardItemFlavGUID == null)
+			continue
+
+		expect SettingsAssetGUID( rewardItemFlavGUID )
+
+		SettingsAssetGUID sourceItemFlavGUID   = expect int( GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].sourceGUID", persistentArrayIdx ) ) )
+		if ( sourceItemFlavGUID != 0 && IsValidItemFlavorGUID( sourceItemFlavGUID, eValidation.ASSERT ) )
+		{
+			switch( ItemFlavor_GetType( GetItemFlavorByGUID( sourceItemFlavGUID ) ) )
+			{
+				case eItemType.challenge:                                                                 
+					if ( ItemFlavor_GetType( GetItemFlavorByGUID( rewardItemFlavGUID ) ) == eItemType.gladiator_card_badge )
+						postGameRewards[ rewardItemFlavGUID ] <- persistentArrayIdx
+
+					break
+			}
+		}
+	}
+
+	return postGameRewards
+}
+#endif
+
+#if UI
+SettingsAssetGUID ornull function GetQueuedRewardOrNull( int persistentArrayIdx )
+{
+	SettingsAssetGUID rewardItemFlavGUID = expect int( GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].rewardGUIDs[0]", persistentArrayIdx ) ) )
+	if ( rewardItemFlavGUID == 0 )
+		return null
+	if ( !IsValidItemFlavorGUID( rewardItemFlavGUID, eValidation.ASSERT ) )
+		return null                                                                                                                                           
+
+	bool rewardGiven        = expect bool( GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].rewardGiven", persistentArrayIdx )  ) )                                                                                      
+	bool rewardAcknowledged = expect bool( GetDialogFlowTablesValueOrPersistence( format( "grxQueuedRewards[%d].rewardAcknowledged", persistentArrayIdx )  )  )                                                                                      
+	if ( !rewardGiven || rewardAcknowledged )
+		return null
+
+	return rewardItemFlavGUID
+}
+#endif
+
+
+#if UI
+void function GRX_MarkRewardAcknowledged( int rewardItemFlavGUID, int persistentArrayIdx )
+{
+	SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].sourceGUID", persistentArrayIdx ), 0 )
+	SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].sourceGUID_extraData", persistentArrayIdx ), 0 )
+	SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].rewardGUIDs[0]", persistentArrayIdx ), 0 )
+	SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].rewardQuantities[0]", persistentArrayIdx ), 0 )
+	SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].rewardGiven", persistentArrayIdx ), false )
+	SetDialogFlowPersistenceTables( format( "grxQueuedRewards[%d].rewardAcknowledged", persistentArrayIdx ), false )
+
+	Remote_ServerCallFunction( "ClientCallback_acknowledge_reward", persistentArrayIdx, rewardItemFlavGUID )
+}
 #endif

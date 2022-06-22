@@ -277,13 +277,13 @@ PlacementInfo function GetPlacementInfo( entity player )
 	info.angles = AnglesCompose( angles, <0, 180, 0> )
 
 	#if BLACK_MARKET_DEBUG_DRAW_PLACEMENT
-		                                                                                                                                       
-		                                                                                                                                  
-		                                                                                                                                               
-		                                                                                                              
-		                                                                                          
-		                                                                                                                                                                   
+		                                                                                                                                         
+		                                                                                                                                   
 		                                                                                                                                                 
+		                                                                                                              
+		                                                                                           
+		                                                                                                                                                                     
+		                                                                                                                                                   
 	#endif
 
 	if ( info.success && downResults.fraction > 0.99 )
@@ -375,8 +375,8 @@ PlacementInfo function GetPlacementInfo( entity player )
 		]
 
 		#if BLACK_MARKET_DEBUG_DRAW_PLACEMENT
-			                                                                                                       
-			                                                                                                           
+			                                                                                                         
+			                                                                                                            
 		#endif
 
 		                                                     
@@ -401,7 +401,7 @@ PlacementInfo function GetPlacementInfo( entity player )
 		}
 	}
 
-	                                                                                                                                    
+	                                                                                                                                     
 
 	info.origin += BLACK_MARKET_PLACEMENT_OFFSET
 
@@ -548,6 +548,7 @@ void function PlacementProxyThread( entity weapon, entity player )
 	 
 		                                                 
 		                                                    
+		                                                     
 
 		                                                     
 		                                
@@ -600,13 +601,7 @@ void function PlacementProxyThread( entity weapon, entity player )
 		                                                       
 
 		                                                                                                                                                                         
-		                                                                                                      
-		 
-			                                                                     
-			 
-				                                                    
-			 
-		 
+		                                                                                        
 
 		                                                            
 		                                           
@@ -642,6 +637,11 @@ void function PlacementProxyThread( entity weapon, entity player )
 		                            
 		                                        
 		                                            
+
+                     
+                                               
+        
+
 		                                         
 			                                    
 
@@ -802,7 +802,7 @@ void function BlackMarketRumbleOnReadyThread( entity ent )
 		                                                                                                                                              
 
                  
-                             
+                              
                                                                                
        
 
@@ -1263,6 +1263,9 @@ bool function CanUseBlackMarket( entity player, entity ent, int useFlags )
 void function OnBlackMarketUsed( entity blackMarket, entity player, int useInputFlags )
 {
 	if ( (useInputFlags & USE_INPUT_LONG) == 0 )
+		return
+
+	if ( ( useInputFlags & USE_INPUT_ALT ) == 1 )
 		return
 
 	#if CLIENT

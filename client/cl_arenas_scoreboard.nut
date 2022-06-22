@@ -2,38 +2,27 @@ global function ClArenasScoreboard_Init
 
 global function Arenas_ScoreboardSetup
 
-global function UICallback_ReportMenu_BindTeamRow
-global function UICallback_ReportMenu_OnReportClicked
-global function UICallback_ReportMenu_BindTeamButton
-global function UICallback_ReportMenu_BindTeamHeader
-global function UICallback_ReportMenu_OnClosed
-
 struct {
 	var scoreboardRui
 } file
 
 void function ClArenasScoreboard_Init()
 {
-	RegisterSignal( "Threaded_PopulateRowForPlayer" )
 
-	AddCreateCallback( "player", UpdateArenasReportMenuForPlayer )
-	AddOnDeathOrDestroyCallback( "player", UpdateArenasReportMenuForPlayer )
 }
 
 void function Arenas_ScoreboardSetup()
 {
-	Teams_RegisterSignals()
 	clGlobal.showScoreboardFunc = ShowScoreboardOrMap_Arenas
 	clGlobal.hideScoreboardFunc = HideScoreboardOrMap_Arenas
 	Teams_AddCallback_ScoreboardData( Arenas_GetScoreboardData )
 	Teams_AddCallback_PlayerScores( Arenas_GetPlayerScores )
+	Teams_AddCallback_Header( Arenas_ScoreboardUpdateHeader )
+	Teams_AddCallback_SortScoreboardPlayers( Arenas_ScoreboardSortPlayers )
 }
-
 
 void function ShowScoreboardOrMap_Arenas()
 {
-	Scoreboard_SetVisible( true )
-
 	ShowFullmap()
 	Fullmap_ClearInputContext()
 
@@ -45,13 +34,7 @@ void function ShowScoreboardOrMap_Arenas()
 	inputContext.viewInputCallback = Arenas_HandleViewInput
 	HudInput_PushContext( inputContext )
 
-	if ( !IsLocalPlayerOnTeamSpectator() )
-	{
-		var rui = CreateFullscreenRui( $"ui/teams_scoreboard_small.rpak", 0 )
-		file.scoreboardRui = rui
-		Teams_PopulateScoreboardRui( rui, 485, false )
-	}
-	else
+	if ( IsLocalPlayerOnTeamSpectator() )
 	{
 		string playlistName = GetCurrentPlaylistName()
 
@@ -77,13 +60,8 @@ void function ShowScoreboardOrMap_Arenas()
 void function HideScoreboardOrMap_Arenas()
 {
 	HudInput_PopContext()
-	Scoreboard_SetVisible( false )
 	HideFullmap()
-	Signal( clGlobal.levelEnt, "Teams_HideScoreboard" )
-	if(IsValid(file.scoreboardRui))
-		RuiDestroy( file.scoreboardRui )
 }
-
 
 bool function Arenas_HandleKeyInput( int key )
 {
@@ -91,15 +69,6 @@ bool function Arenas_HandleKeyInput( int key )
 
 	switch ( key )
 	{
-		case BUTTON_Y:
-		case KEY_SPACE:
-			if ( !IsLocalPlayerOnTeamSpectator() )
-			{
-				clGlobal.levelEnt.Signal( "Threaded_PopulateRowForPlayer" )
-				RunUIScript( "OpenArenasReportMenu" )
-				HideScoreboard()
-			}
-			return true
 		default:
 			return Fullmap_HandleKeyInput( key )
 	}
@@ -123,9 +92,19 @@ ScoreboardData function Arenas_GetScoreboardData()
 
 	data.columnNumDigits.append( 2 )
 	data.columnDisplayIcons.append( $"rui/hud/gamestate/player_kills_icon" )
+	data.columnDisplayIconsScale.append( 1.0 )
+
+	data.columnNumDigits.append( 2 )
+	data.columnDisplayIcons.append( $"rui/hud/gamestate/assist_count_icon2" )
+	data.columnDisplayIconsScale.append( 1.0 )
 
 	data.columnNumDigits.append( 4 )
 	data.columnDisplayIcons.append( $"rui/hud/gamestate/player_damage_dealt_icon" )
+	data.columnDisplayIconsScale.append( 1.0 )
+
+	data.columnNumDigits.append( 4 )
+	data.columnDisplayIcons.append( $"rui/hud/gametype_icons/survival/crafting_currency_white" )
+	data.columnDisplayIconsScale.append( 0.7 )
 
 	data.numScoreColumns       = data.columnDisplayIcons.len()
 
@@ -139,108 +118,52 @@ array< int > function Arenas_GetPlayerScores( entity player )
 	int kills = player.GetPlayerNetInt( "kills" )
 	scores.append( kills )
 
+	int assists = player.GetPlayerNetInt( "assists" )
+	scores.append( assists )
+
 	int damage = player.GetPlayerNetInt( "damageDealt" )
 	scores.append( damage )
+
+	int cash = player.GetPlayerNetInt( "arenas_current_cash" )
+	scores.append( cash )
 
 	return scores
 }
 
-void function Threaded_PopulateRowForPlayer( var rui, entity player, float rowWidth, bool hasSpacer )
+void function Arenas_ScoreboardUpdateHeader( var headerRui, var frameRui, int team )
 {
-	clGlobal.levelEnt.EndSignal( "Threaded_PopulateRowForPlayer" )
-	player.EndSignal( "OnDestroy" )
-
-	if ( !IsValid( player ) )                             
+	if ( !IsValid( GetLocalViewPlayer() ) )
 		return
 
-	ItemFlavor character = LoadoutSlot_WaitForItemFlavor( ToEHI( player ), Loadout_Character() )
+	if( headerRui != null )
+	{
+		bool isFriendly = team == GetLocalViewPlayer().GetTeam()
+		RuiSetString( headerRui, "headerText", Localize( isFriendly ? "#ALLIES" : "#ENEMIES" ) )
+		RuiSetInt( headerRui, "roundsWon", Arenas_GetTeamWins( team ) )
 
-	Teams_PopulatePlayerRow( rui, player, Arenas_GetScoreboardData(), false, rowWidth, hasSpacer )
+		vector color  = SrgbToLinear( GetKeyColor( COLORID_FRIENDLY ) / 255 )
+		if( !isFriendly )
+			color  = SrgbToLinear( GetKeyColor( COLORID_ENEMY ) / 255 )
+
+		RuiSetColorAlpha( headerRui, "teamColor", color, 1.0 )
+
+		if( frameRui != null )
+			RuiSetColorAlpha( frameRui, "teamColor", color, 1.0 )
+	}
 }
 
-array<entity> function GetTeamPlayers( bool friendly )
+array< entity > function Arenas_ScoreboardSortPlayers( array< entity > teamPlayers, ScoreboardData gameData )
 {
-	if ( IsLocalPlayerOnTeamSpectator() )
-		return []
+	teamPlayers.sort( int function( entity a, entity b )
+		{
+			int aScore = a.GetPlayerNetInt( "kills" )
+			int bScore = b.GetPlayerNetInt( "kills" )
 
-	array<entity> teamPlayers = GetPlayerArrayOfTeam( friendly ? GetLocalClientPlayer().GetTeam() : GetOtherTeam( GetLocalClientPlayer().GetTeam() ) )
+			if ( aScore > bScore ) return -1
+			else if ( aScore < bScore ) return 1
+			return 0
+		}
+	)
+
 	return teamPlayers
-}
-
-bool function BindTeamButtonCommon( var button, bool friendly )
-{
-	array<entity> teamPlayers = GetTeamPlayers( friendly )
-
-	int row = int( Hud_GetScriptID( button ) )
-
-	if ( row >= teamPlayers.len() )
-	{
-		Hud_Hide( button )
-		return false
-	}
-
-	Hud_Show( button )
-
-	return true
-}
-
-void function UICallback_ReportMenu_BindTeamButton( var button, bool friendly )
-{
-	var rui = Hud_GetRui( button )
-	int row = int( Hud_GetScriptID( button ) )
-
-	if ( !BindTeamButtonCommon( button, friendly ) )
-		return
-
-	array<entity> teamPlayers = GetTeamPlayers( friendly )
-	if ( teamPlayers[ row ] == GetLocalClientPlayer() )
-		Hud_Hide( button )
-}
-
-void function UICallback_ReportMenu_BindTeamHeader( var button, bool friendly, float rowWidth, bool hasSpacer = false )
-{
-	var rui = Hud_GetRui( button )
-	Teams_PopulateHeaderRui( rui, Arenas_GetScoreboardData(), friendly, rowWidth, hasSpacer )
-}
-
-void function UICallback_ReportMenu_BindTeamRow( var button, bool friendly, float rowWidth, bool hasSpacer = false)
-{
-	var rui = Hud_GetRui( button )
-	int row = int( Hud_GetScriptID( button ) )
-
-	if ( !BindTeamButtonCommon( button, friendly ) )
-		return
-
-	array<entity> teamPlayers = GetTeamPlayers( friendly )
-	thread Threaded_PopulateRowForPlayer( rui, teamPlayers[ row ], rowWidth, hasSpacer )
-}
-
-void function UpdateArenasReportMenuForPlayer( entity player )
-{
-	RunUIScript( "UpdateArenasReportMenu" )
-}
-
-void function UICallback_ReportMenu_OnReportClicked( var button, bool friendly )
-{
-	var rui = Hud_GetRui( button )
-	int row = int( Hud_GetScriptID( button ) )
-
-	array<entity> teamPlayers = GetTeamPlayers( friendly )
-
-	if ( row >= teamPlayers.len() )
-	{
-		return
-	}
-
-	ReportPlayer( ToEHI( teamPlayers[ row ] ) )
-}
-
-void function UICallback_ReportMenu_OnClosed()
-{
-	clGlobal.levelEnt.Signal( "Threaded_PopulateRowForPlayer" )
-
-	if(IsSpectating())
-	{
-		ShowDeathScreen( eDeathScreenPanel.SPECTATE )
-	}
 }

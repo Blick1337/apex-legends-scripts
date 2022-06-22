@@ -2417,7 +2417,8 @@ void function UpdateHealHint( entity player )
 	}
 	else if ( ShouldShowUltHint( player ) )
 	{
-		if ( Time() - file.lastUltHintDisplayTime < ULT_HINT_COOLDOWN )
+		float timeSinceUltHint = Time() - file.lastUltHintDisplayTime
+		if ( timeSinceUltHint < ULT_HINT_COOLDOWN )
 			return
 
 		entity ultWeapon = GetLocalClientPlayer().GetOffhandWeapon( OFFHAND_ULTIMATE )
@@ -2427,7 +2428,7 @@ void function UpdateHealHint( entity player )
 		float maxUltChargeFracForHint = 1.0 - ( kitInfo.ultimateAmount / 100.0 )
 
 
-		if ( IsValid( ultWeapon ) && ultWeapon.GetWeaponPrimaryClipCountMax() > 0 )
+		if ( Consumable_CanUseUltAccel( GetLocalClientPlayer() ) )
 		{
 			float ultChargeFrac = ultWeapon.GetWeaponPrimaryClipCount() / float( ultWeapon.GetWeaponPrimaryClipCountMax() )
 

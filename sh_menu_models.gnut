@@ -1651,7 +1651,7 @@ void function EnableLobbyMenuCameraZoom()
 		cameraTargetIndex = eCameraTargetNames.store_inspect_camera_target
 	}
 
-	                                                             
+	                                                              
 
 	entity cameraTarget      = file.cameraTargets[ cameraTargetIndex ]
 	vector cameraStartOrigin = file.cameraStartOriginsAngles[ cameraTargetIndex ]["origin"]
@@ -4816,7 +4816,7 @@ void function DrawLightDebug( vector origin, vector angles, vector color, float 
 {
 	vector endOrigin = origin + AnglesToForward( angles ) * dist
 
-	DebugDrawArrow( origin, endOrigin, 4, int(color.x * 255), int(color.y * 255), int(color.z * 255), true, 999999 )
+	DebugDrawArrow( origin, endOrigin, 4, (color * 255), true, 999999 )
 }
 #endif       
 #endif          

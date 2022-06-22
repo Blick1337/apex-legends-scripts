@@ -1,5 +1,6 @@
 global function LiveAPI_RegisterNetworking
 global function LiveAPI_GetEventNameFromEnum
+global function LiveAPI_ConvertVectorToTable
 global function LiveAPI_GetPlayerIdentity
 global function LiveAPI_GetPlayerIdentityTable
 global function LiveAPI_GetWritableData
@@ -124,11 +125,15 @@ var function LiveAPI_GetPlayerIdentityTable( entity player )
 		int playerTeamID = player.GetTeam()
 
 		table<var> data = {
-			name = player.GetPlayerName(),
-			                                                  
-			teamId = playerTeamID,
-			pos = LiveAPI_ConvertVectorToTable( player.GetOrigin() ),
-			angles = LiveAPI_ConvertVectorToTable ( player.GetAngles() )
+			name			= player.GetPlayerName(),
+			         		                                        
+			teamId			= playerTeamID,
+			pos				= LiveAPI_ConvertVectorToTable( player.GetOrigin() ),
+			angles			= LiveAPI_ConvertVectorToTable ( player.GetAngles() ),
+			currentHealth	= player.GetHealth(),
+			maxHealth		= player.GetMaxHealth(),
+			shieldHealth	= player.GetShieldHealth(),
+			shieldMaxHealth	= player.GetShieldHealthMax()
 		}
 
 		if ( GameRules_IsTeamIndexValid( playerTeamID ) )

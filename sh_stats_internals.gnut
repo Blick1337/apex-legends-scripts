@@ -4,9 +4,7 @@ global function ShStatsInternals_LevelInit
 
 #if SERVER || CLIENT || UI
 global function ResolveStatEntry
-global function GetStat_Bool
 global function GetStat_Int
-global function GetStat_Float
                                       
 global function GetStatEntryByIndex
 global function IsValidStatEntryRef
@@ -18,11 +16,8 @@ global function StatEntry_GetBehavior
 global function StatEntry_GetFlags
 global function DoesStatSatisfyValue
 
-global function RegisterAccumulatedStat_Bool
 global function RegisterAccumulatedStat_Int
-global function RegisterAccumulatedStat_Float
 global function RegisterVariableStat_Int
-global function RegisterVariableStat_Bool
 global function RegisterExpensiveCalculatedStat_Int
 global function RegisterCachedCalculatedStat_Int
 global function RegisterStatEnumStruct
@@ -36,19 +31,15 @@ global function HasStatCachingOptimizations
                                   
 
                                    
-                                     
-                              
                              
 
-                                            
-                                               
                                            
                                               
-                                             
-                                                
 
                                        
                                                             
+
+                                                  
 #endif
 
 #if SERVER && DEV
@@ -57,7 +48,7 @@ global function HasStatCachingOptimizations
 #endif
 
 const bool STATS_DEBUG_PRINT_SPAM = false
-
+const int UNINITIALIZED = -2                                                                                  
 
                       
                       
@@ -69,9 +60,7 @@ const bool STATS_DEBUG_PRINT_SPAM = false
 global enum eStatType
 {
 	INVALID,
-	BOOL,
 	INT,
-	FLOAT,
 }
 global enum eStatBehavior
 {
@@ -107,9 +96,7 @@ global enum eStatGetWhen
 
 
 #if SERVER || CLIENT || UI
-global typedef StatChangedCallbackType_Bool void functionref( entity player, bool oldValue, bool newValue )
 global typedef StatChangedCallbackType_Int void functionref( entity player, int oldValue, int newValue )
-global typedef StatChangedCallbackType_Float void functionref( entity player, float oldValue, float newValue )
 #endif
 
 
@@ -131,10 +118,7 @@ global struct StatEntry
 	array<string> enumKeys
 
 	                                                           
-
-	bool functionref( entity player, array<StatEntry> sourceEntries, int when )      calcFunc_Bool
 	int functionref( entity player, array<StatEntry> sourceEntries, int when )       calcFunc_Int
-	float functionref( entity player, array<StatEntry> sourceEntries, int when )     calcFunc_Float
 	array<StatEntry> ornull															calcSourceEntries = null
 	array<StatEntry> ornull															dependents = null
 }
@@ -144,9 +128,7 @@ global struct StatEntry
 #if SERVER || CLIENT || UI
 global struct StatCalcFuncInfo
 {
-	bool functionref( entity player, array<StatEntry> sourceEntries, int when )  calcFunc_Bool
 	int functionref( entity player, array<StatEntry> sourceEntries, int when )   calcFunc_Int
-	float functionref( entity player, array<StatEntry> sourceEntries, int when ) calcFunc_Float
 
 	array<StatEntry> ornull															sourceEntries
 }
@@ -189,7 +171,7 @@ global struct StatTemplate
 
 	StatEnumStruct ornull parentEnumStruct
 
-	int  type = eStatType.INVALID                    
+	int  type = eStatType.INVALID       
 	int  behavior                                     
 	int  flags = 0
 	bool shouldCache = false                             
@@ -222,19 +204,6 @@ struct StatEnumStruct_Children
                        
                        
                        
-struct AdditionalStatsPlayerState
-{
-	#if CLIENT || UI
-		table<int, bool>  cachedStats_Bool
-		table<int, int>   cachedStats_Int
-		table<int, float> cachedStats_Float
-
-		table<int, array<StatChangedCallbackType_Bool> >  watchCallbacks_Bool
-		table<int, array<StatChangedCallbackType_Int> >   watchCallbacks_Int
-		table<int, array<StatChangedCallbackType_Float> > watchCallbacks_Float
-	#endif
-}
-
 struct FileStruct_LifetimeLevel
 {
 	#if SERVER || CLIENT || UI
@@ -243,9 +212,7 @@ struct FileStruct_LifetimeLevel
 			table<StatEnumStruct, StatEnumStruct_Children> sesChildrenMap        
 		#endif
 
-		array<StatEntry> stats_Bool
 		array<StatEntry> stats_Int
-		array<StatEntry> stats_Float
 
 		array<StatEntry>         allStats
 		table<string, StatEntry> refStatEntryMap
@@ -258,6 +225,9 @@ struct FileStruct_LifetimeLevel
 	#endif
 
 	int calculatedStatsCacheDurationSec = 30
+	bool doOnDemandStats = false
+
+	table< entity, array<StatEntry> > playerDirtyStats
 }
 FileStruct_LifetimeLevel& fileLevel
 
@@ -301,12 +271,17 @@ void function ShStatsInternals_LevelInit()
 		                                                          
 	#endif
 
+	#if SERVER || CLIENT
+		Remote_RegisterServerFunction( "ClientCallback_UpdateSOPMStatValue", "string" )
+	#endif
+
 	#if SERVER && DEV
 		                                                                                   
 	#endif
 
 	int lobbyMultiplier = IsLobby() ? 10 : 1                                                     
 	fileLevel.calculatedStatsCacheDurationSec = lobbyMultiplier * GetCurrentPlaylistVarInt( "calc_stats_cache_duration_sec", 30 )
+	fileLevel.doOnDemandStats = GetCurrentPlaylistVarBool( "do_on_demand_stats", true )
 }
 #endif
 
@@ -333,56 +308,6 @@ bool function HasStatCachingOptimizations()
 }
 #endif
 
-#if SERVER || CLIENT || UI
-bool function GetStat_Bool( entity player, StatEntry entry, int when = eStatGetWhen.CURRENT )
-{
-	Assert( entry.type == eStatType.BOOL )
-	#if CLIENT || UI
-		if ( !(entry.flags & eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY) )
-			Assert( when != eStatGetWhen.CURRENT || IsLobby(), format( "Cannot get current stats in client or UI VM during a match (they could be out of date): %s", entry.persistenceFullKey_Current ) )
-	#endif
-
-	if ( entry.behavior == eStatBehavior.CALCULATED && !entry.shouldCache )
-		return entry.calcFunc_Bool( player, GetCalcSourceEntriesFromEntry( entry ), when )
-
-	#if DEV
-		                                                               
-		if ( DEV_ShouldIgnorePersistence() )
-			return false
-	#endif
-
-	#if SERVER
-		                                   
-		 
-			                                                      
-		 
-		                                                       
-		 
-			                                                             
-		 
-		                                                        
-		 
-			                                                                                                                                                                                                     
-			                                                                                            
-		 
-		           
-	#elseif CLIENT || UI
-		if ( when == eStatGetWhen.CURRENT || when == eStatGetWhen.START_OF_CURRENT_MATCH )
-		{
-			if ( !(entry.flags & eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY) )
-				Assert( when != eStatGetWhen.CURRENT || IsLobby() )
-			return expect bool(player.GetPersistentVar( entry.persistenceFullKey_Current ))
-		}
-		else if ( when == eStatGetWhen.START_OF_PREVIOUS_MATCH )
-		{
-			Assert( entry.flags & eStatFlags.STORE_START_OF_PREVIOUS_MATCH, "Tried to get with eStatGetWhen.START_OF_PREVIOUS_MATCH on a stat that does not have eStatFlags.STORE_START_OF_PREVIOUS_MATCH set." )
-			return expect bool(player.GetPersistentVar( entry.persistenceFullKey_StartOfPreviousMatch ))
-		}
-		unreachable
-	#endif
-}
-#endif
-
 
 #if SERVER || CLIENT || UI
 int function GetStat_Int( entity player, StatEntry entry, int when = eStatGetWhen.CURRENT )
@@ -396,7 +321,15 @@ int function GetStat_Int( entity player, StatEntry entry, int when = eStatGetWhe
 	if ( HasStatCachingOptimizations() )
 	{
 		int unixTime = GetUnixTimestamp()
-		                                                                                                                                     
+		                                                                                                                                                                    
+		                                                                                                                                         
+		                                                                                                                                
+
+		                                               
+		                                                                      
+		                                                                                                           
+		                                                                                      
+		   
 		if ( ( when == eStatGetWhen.CURRENT || when == eStatGetWhen.START_OF_CURRENT_MATCH )
 				&& entry.behavior == eStatBehavior.CALCULATED && !entry.shouldCache )
 		{
@@ -448,17 +381,25 @@ int function GetStat_Int( entity player, StatEntry entry, int when = eStatGetWhe
 	#endif
 
 	#if SERVER
+
+		                            
+		                                
+				                                                                     
+
 		                                   
 		 
+			                                                                         
 			                                                     
 		 
 		                                                       
 		 
+			                                                                                
 			                                                            
 		 
 		                                                        
 		 
 			                                                                                                                                                                                                     
+			                                                                                                   
 			                                                                                           
 		 
 		           
@@ -473,57 +414,6 @@ int function GetStat_Int( entity player, StatEntry entry, int when = eStatGetWhe
 		{
 			Assert( entry.flags & eStatFlags.STORE_START_OF_PREVIOUS_MATCH, "Tried to get with eStatGetWhen.START_OF_PREVIOUS_MATCH on a stat that does not have eStatFlags.STORE_START_OF_PREVIOUS_MATCH set." )
 			return expect int(player.GetPersistentVar( entry.persistenceFullKey_StartOfPreviousMatch ))
-		}
-		unreachable
-	#endif
-}
-#endif
-
-
-#if SERVER || CLIENT || UI
-float function GetStat_Float( entity player, StatEntry entry, int when = eStatGetWhen.CURRENT )
-{
-	Assert( entry.type == eStatType.FLOAT )
-	#if CLIENT || UI
-		if ( !(entry.flags & eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY) )
-			Assert( when != eStatGetWhen.CURRENT || IsLobby(), format( "Cannot get current stats in client or UI VM during a match (they could be out of date): %s", entry.persistenceFullKey_Current ) )
-	#endif
-
-	if ( entry.behavior == eStatBehavior.CALCULATED && !entry.shouldCache )
-		return entry.calcFunc_Float( player, GetCalcSourceEntriesFromEntry( entry ), when )
-
-	#if DEV
-		                                                               
-		if ( DEV_ShouldIgnorePersistence() )
-			return 0
-	#endif
-
-	#if SERVER
-		                                   
-		 
-			                                                       
-		 
-		                                                       
-		 
-			                                                              
-		 
-		                                                        
-		 
-			                                                                                                                                                                                                     
-			                                                                                             
-		 
-		           
-	#elseif CLIENT || UI
-		if ( when == eStatGetWhen.CURRENT || when == eStatGetWhen.START_OF_CURRENT_MATCH )
-		{
-			if ( !(entry.flags & eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY) )
-				Assert( when != eStatGetWhen.CURRENT || IsLobby() )
-			return expect float(player.GetPersistentVar( entry.persistenceFullKey_Current ))
-		}
-		else if ( when == eStatGetWhen.START_OF_PREVIOUS_MATCH )
-		{
-			Assert( entry.flags & eStatFlags.STORE_START_OF_PREVIOUS_MATCH, "Tried to get with eStatGetWhen.START_OF_PREVIOUS_MATCH on a stat that does not have eStatFlags.STORE_START_OF_PREVIOUS_MATCH set." )
-			return expect float(player.GetPersistentVar( entry.persistenceFullKey_StartOfPreviousMatch ))
 		}
 		unreachable
 	#endif
@@ -598,51 +488,10 @@ int function StatEntry_GetFlags( StatEntry entry )
 #if SERVER || CLIENT || UI
 bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkValue, int when = eStatGetWhen.CURRENT )
 {
-	if ( entry.type == eStatType.BOOL )
-	{
-		Assert( checkValue == 0.0 || checkValue == 1.0 )
-		bool value    = GetStat_Bool( player, entry, when )
-		bool wantTrue = (checkValue == 1.0)
-		return (value == wantTrue)
-	}
-	else if ( entry.type == eStatType.INT )
-	{
-		Assert( float(int(checkValue)) == checkValue )
-		int value = GetStat_Int( player, entry, when )
-		return (value >= int(checkValue))
-	}
-	else if ( entry.type == eStatType.FLOAT )
-	{
-		float value = GetStat_Float( player, entry, when )
-		return value >= checkValue
-	}
-	unreachable
+	Assert( float(int(checkValue)) == checkValue )
+	int value = GetStat_Int( player, entry, when )
+	return (value >= int(checkValue))
 }
-#endif
-
-
-#if SERVER
-                                                                                                             
- 
-	                                                                                                                                                                           
-	                                                                                
-	                                                                      
-		                                                                         
-	    
-		                                                                          
-
-	                                                              
-	                      
- 
-                                                                                                                
- 
-	                                                                                                   
-	                                                                                                                                                
-	                                                            
-	                                 
-	                           
-		                                                                    
- 
 #endif
 
 
@@ -666,31 +515,6 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
 	                                                            
 	                                 
 	                           
-		                                                                   
- 
-#endif
-
-
-#if SERVER
-                                                                                                               
- 
-	                                                                                                                                                                             
-	                                                                                  
-	                                                                       
-		                                                                          
-	    
-		                                                                           
-
-	                                                              
-	                      
- 
-                                                                                                                  
- 
-	                                                                                                    
-	                                                                                                                                                   
-	                                                            
-	                                 
-	                           
 		                                                                     
  
 #endif
@@ -700,12 +524,10 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
                                        
  
 	                                                  
-
+	                                                                                                               
 	                                      
 	 
 		                    
-		                                               
-			                                               
 	 
  
 #endif
@@ -714,12 +536,16 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
 #if SERVER
                                                     
  
-	                                                                    
-	                                                                           
-	                                                              
-	                                                                     
-	                                                                    
-	                                                                           
+	                                
+	 
+		                                                                          
+		                                                                                 
+	 
+	    
+	 
+		                                                              
+		                                                                     
+	 
 
 	       
 		                                                               
@@ -727,43 +553,17 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
 			      
 	      
 
-	                                                              
+	                                         
 	 
-		                                                                      
+		                                                             
 		 
-			                                                                                                          
-			                                                                        
-		 
-		                                                                                                             
-		 
-			                                                                                            
+			                                                                    
 		 
 	 
-
-	                                                             
+	    
 	 
-		                                                                      
-		 
-			                                                                                                        
-			                                                                      
-		 
-		                                                                                                             
-		 
-			                                                                                          
-		 
-	 
-
-	                                                               
-	 
-		                                                                      
-		 
-			                                                                                                            
-			                                                                          
-		 
-		                                                                                                             
-		 
-			                                                                                              
-		 
+		                                              
+		                                          
 	 
  
 #endif
@@ -773,8 +573,14 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
                                                                            
  
 	                    
-	                                               
+	                
+	 
 		                                               
+			                                               
+
+		                                           
+			                                           
+	 
  
 #endif
 
@@ -834,14 +640,8 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
  
 	                                        
 
-	                                                              
-		                                                                                     
-
 	                                                             
 		                                                                                    
-
-	                                                               
-		                                                                                      
  
 #endif
 
@@ -858,19 +658,8 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
 	 
 
 	                                              
+	                                                  
 
-	                                   
-	 
-		                                                    
-	 
-	                                       
-	 
-		                                                  
-	 
-	                                         
-	 
-		                                                      
-	 
  
 #endif
 
@@ -987,10 +776,17 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
 			                                                                                 
 	      
 
-	                                                                   
+	                            
+	                                
+		                                                                     
+
 	                                                             
 	                                         
 	                                                         
+
+	                                   
+	                                
+		      
 
 	                             
 		                                                                                                                             
@@ -1006,82 +802,13 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
       
 	 
 		                                                                                                           
+		 
 			                                                                     
-	 
- 
-#endif
-
-
-#if SERVER
-                                                                                                                             
- 
-	                                       
-	                                                                                                 
-	                                
-
-	       
-		                                        
-	      
-
-	       
-		                                           
-			                                                                 
-	      
-
-	                                                                     
-	                                                                 
-	                                           
-	                                                           
-
-	                             
-		                                                                                                                               
-
-	                                                                       
-		                                                                                                             
-			                                
-
-	                                                                 
-
-       
-	                                     
-      
-	 
-		                                                                                                           
-			                                                                     
-	 
- 
-#endif
-
-
-#if SERVER
-                                                                                                              
- 
-	                                      
-	                                                                                                                                                                                                                                   
-
-	       
-		                                        
-	      
-
-	                                                            
-	                                                               
-	                                                          
-
-	                             
-		                                                                                                                        
-
-	                                                                      
-		                                                                                                           
-			                                
-
-	                                                                 
-
-       
-	                                     
-      
-	 
-		                                                                                                           
-			                                                                     
+		 
+		                                     
+		 
+			                                         
+		 
 	 
  
 #endif
@@ -1101,7 +828,14 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
 			                                                                   
 	      
 
+	                                
+		                                                                     
+
 	                                                             
+	                                   
+	                                                        
+		      
+
 	                                                                                                                                                
 		                                                                                                            
 	                                                         
@@ -1120,45 +854,13 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
       
 	 
 		                                                                                                           
+		 
 			                                                                     
-	 
- 
-#endif
-
-
-#if SERVER
-                                                                                                                
- 
-	                                       
-
-	       
-		                                        
-	      
-
-	       
-		                                                                  
-			                                                   
-	      
-
-	                                                                 
-	                                                                                                                                                 
-	                                                           
-
-	                             
-		                                                                                                                       
-
-	                                                                       
-		                                                                                                             
-			                                
-
-	                                                                 
-
-       
-	                                     
-      
-	 
-		                                                                                                           
-			                                                                     
+		 
+		                                     
+		 
+			                                         
+		 
 	 
  
 #endif
@@ -1169,32 +871,19 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
  
 	                                                                         
 
-	                                   
-	 
-		                                                                                                        
-		                                                       
-		                
-			                                                                                                                        
+	                                
+		                                                                     
 
-		                             
-			                                                                                                            
+	                                                                                                      
+	                                
+	                                                                                        
 	 
-	                                       
-	 
-		                                                                                                      
 		                                                      
-		                
-			                                                                                                                        
 
-		                             
-			                                                                                                            
-	 
-	                                         
-	 
-		                                                                                                          
-		                                                        
 		                
 			                                                                                                                        
+		                                     
+			                                         
 
 		                             
 			                                                                                                            
@@ -1206,35 +895,12 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
 #if SERVER
                                                                                     
  
-	                                       
+	                                                                         
 	 
-		                                                                          
-		 
-			                     
-			                                                 
-			                                                                                                               
-				                                
-		 
-	 
-	                                           
-	 
-		                                                                         
-		 
-			                
-			                                                                                        
-			                                                                                                             
-				                                
-		 
-	 
-	                                             
-	 
-		                                                                           
-		 
-			                    
-			                                                   
-			                                                                                                                 
-				                                
-		 
+		                
+		                                                                                        
+		                                                                                                             
+			                                
 	 
 
 	                                                                     
@@ -1357,22 +1023,8 @@ StatTemplate function InternalRegisterStatCommon( StatEnumStruct ornull parentSE
 
 		fileLevel.refStatEntryMap[template.rootEntry.persistenceFullKey_Current] <- template.rootEntry
 
-		if ( template.type == eStatType.BOOL )
-		{
-			                                                                                                                
-			template.rootEntry.indexWithinType = fileLevel.stats_Bool.len()
-			fileLevel.stats_Bool.append( template.rootEntry )
-		}
-		else if ( template.type == eStatType.INT )
-		{
-			template.rootEntry.indexWithinType = fileLevel.stats_Int.len()
-			fileLevel.stats_Int.append( template.rootEntry )
-		}
-		else if ( template.type == eStatType.FLOAT )
-		{
-			template.rootEntry.indexWithinType = fileLevel.stats_Float.len()
-			fileLevel.stats_Float.append( template.rootEntry )
-		}
+		template.rootEntry.indexWithinType = fileLevel.stats_Int.len()
+		fileLevel.stats_Int.append( template.rootEntry )
 
 		#if DEV
 			fileLevel.rootFieldsList.childStatTemplates.append( template )
@@ -1466,21 +1118,9 @@ StatTemplateEnumKeyResolver function BuildStatTemplateEnumKeyResolversRecursive(
 
 			fileLevel.refStatEntryMap[entry.persistenceFullKey_Current] <- entry
 
-			if ( template.type == eStatType.BOOL )
-			{
-				entry.indexWithinType = fileLevel.stats_Bool.len()
-				fileLevel.stats_Bool.append( entry )
-			}
-			else if ( template.type == eStatType.INT )
-			{
-				entry.indexWithinType = fileLevel.stats_Int.len()
-				fileLevel.stats_Int.append( entry )
-			}
-			else if ( template.type == eStatType.FLOAT )
-			{
-				entry.indexWithinType = fileLevel.stats_Float.len()
-				fileLevel.stats_Float.append( entry )
-			}
+			entry.indexWithinType = fileLevel.stats_Int.len()
+			fileLevel.stats_Int.append( entry )
+
 
 			resolver.entries[choice] <- entry
 
@@ -1507,25 +1147,9 @@ StatTemplateEnumKeyResolver function BuildStatTemplateEnumKeyResolversRecursive(
 
 
 #if SERVER || CLIENT || UI
-StatTemplate function RegisterAccumulatedStat_Bool( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags = 0 )
-{
-	return InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.BOOL, eStatBehavior.ACCUMULATED, flags, false )
-}
-#endif
-
-
-#if SERVER || CLIENT || UI
 StatTemplate function RegisterAccumulatedStat_Int( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags = 0 )
 {
 	return InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.INT, eStatBehavior.ACCUMULATED, flags, false )
-}
-#endif
-
-
-#if SERVER || CLIENT || UI
-StatTemplate function RegisterAccumulatedStat_Float( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags = 0 )
-{
-	return InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.FLOAT, eStatBehavior.ACCUMULATED, flags, false )
 }
 #endif
 
@@ -1537,12 +1161,6 @@ StatTemplate function RegisterVariableStat_Int( StatEnumStruct ornull enumStruct
 }
 #endif
 
-#if SERVER || CLIENT || UI
-StatTemplate function RegisterVariableStat_Bool( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags = 0 )
-{
-	return InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.BOOL, eStatBehavior.VARIABLE, flags, false )
-}
-#endif
 
 #if SERVER || CLIENT || UI
 StatTemplate function InternalRegisterCalculatedStatCommon( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags, bool shouldCache,
@@ -1556,9 +1174,7 @@ StatTemplate function InternalRegisterCalculatedStatCommon( StatEnumStruct ornul
 	foreach( StatEntry entry in stat.allEntries )
 	{
 		StatCalcFuncInfo calcInfo = setupFunc( entry, sourceTemplates )
-		entry.calcFunc_Bool = calcInfo.calcFunc_Bool
 		entry.calcFunc_Int = calcInfo.calcFunc_Int
-		entry.calcFunc_Float = calcInfo.calcFunc_Float
 		entry.calcSourceEntries = calcInfo.sourceEntries
 
 		if ( calcInfo.sourceEntries != null )
@@ -1610,50 +1226,112 @@ StatTemplate function RegisterCachedCalculatedStat_Int( StatEnumStruct ornull en
 	      
 
 	                                                                                                                                             
-
-	                                                              
+	                                
 	 
-		                                                                      
+		                                           
 		 
-			                                                                                                
-			                                                                                                           
-		 
-		                                                                                                                     
-		 
-			                                                                                                                    
-			                                                                                                                               
+			                                                                   
+			 
+				                                 
+				                                                                                   
+			 
 		 
 	 
-
-	                                                             
+	    
 	 
-		                                                                      
+		                                                             
 		 
-			                                                                                               
-			                                                                                                          
-		 
-		                                                                                                                     
-		 
-			                                                                                                                   
-			                                                                                                                              
-		 
-	 
-
-	                                                               
-	 
-		                                                                      
-		 
-			                                                                                                 
-			                                                                                                            
-		 
-		                                                                                                                     
-		 
-			                                                                                                                     
-			                                                                                                                                
+			                                                                                   
 		 
 	 
  
 
+#endif
+
+#if SERVER
+                                                                        
+ 
+	       
+		                                    
+			      
+	      
+
+	                                                                      
+	 
+		                                                    
+	 
+ 
+#endif
+
+#if SERVER
+                                                                                                                  
+ 
+	                                 
+	                                                                        
+	 
+		                                                                      
+		 
+			                                                                                                         
+			                                                                      
+
+			                                                                                                                                                           
+		 
+
+		                                                                                                             
+		 
+			                                                                                          
+			                                                                                                                                                       
+		 
+	 
+ 
+#endif
+
+
+#if SERVER
+                                                                             
+ 
+	                                                                 
+
+	                                               
+		      
+
+	                                    
+	                                 
+	 
+		                                          
+		                                                                    
+			      
+
+		                                                                   
+		                                                                                                                                      
+		                                  
+			                                                                                                   
+	 
+ 
+#endif
+
+
+#if SERVER
+                                                                                                                           
+ 
+	                                                                      
+	 
+		                                                                                               
+		                                               
+		                                                                                                                         
+		                                  
+			                                                                                      
+	 
+
+	                                                                                                                     
+	 
+		                                                                                                                   
+		                                                      
+		                                                                                                                                      
+		                                  
+			                                                                                                   
+	 
+ 
 #endif
 
 
@@ -1783,24 +1461,7 @@ StatTemplate function RegisterCachedCalculatedStat_Int( StatEnumStruct ornull en
 	 
 
 	                                                                             
-
-	                   
-	 
-		                    
-			                                           
-			     
-
-		                   
-			                                          
-			     
-
-		                     
-			                                            
-			     
-
-		        
-			           
-	 
+	                                          
  
 #endif
 

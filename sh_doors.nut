@@ -26,7 +26,8 @@ global function IsDoorLocked
                                             
                           
                             
-
+                                 
+                                         
 #endif
 #if SERVER
                                        
@@ -1195,7 +1196,7 @@ const table<int, vector> BLOCKABLE_DOOR_NOTCH_ROTATIONS = {
 	                        
 		                                                                 
 		                                                                               
-		                                                                                                                       
+		                                                                                                                         
 	      
 
 	                        
@@ -1281,6 +1282,10 @@ const table<int, vector> BLOCKABLE_DOOR_NOTCH_ROTATIONS = {
 	                                     
 	                                    
 	                                   
+                 
+                                        
+                                       
+       
 	                                                               
 	                                    
 	                                       
@@ -1524,8 +1529,8 @@ bool function BlockableDoorCanUseCheck( entity player, entity door, int useFlags
 	doorUseRange += GraphCapped( fabs( DotProduct( AnglesToRight( door.GetAngles() ), -playerToDoor ) ), 0.0, 1.0, 0.0, BLOCKABLE_DOOR_TEMP_HARDCODED_DOOR_LENGTH / 2.0 )
 
 	#if BLOCKABLE_DOOR_DEBUG
-		                                                                            
-		                                                                     
+		                                                                              
+		                                                                       
 	#endif
 
 	if ( LengthSqr( playerToDoor ) > doorUseRange * doorUseRange )
@@ -1542,7 +1547,7 @@ bool function BlockableDoorCanUseCheck( entity player, entity door, int useFlags
 			if ( moveIntersectOrNull != null )
 			{
 				#if BLOCKABLE_DOOR_DEBUG
-					                                                                                        
+					                                                                                          
 					                                                                                 
 				#endif
 
@@ -1680,12 +1685,12 @@ string function BlockableDoorUseTextOverride( entity door )
 					                                                                                                               
 				 
 				                        
-					                                                                                                                                                                                                  
 					                                                                                                                                                                                                    
-					                                                                                       
-					                                                                                                               
+					                                                                                                                                                                                                      
 					                                                                                         
 					                                                                                                                 
+					                                                                                           
+					                                                                                                                   
 				      
 
 				                                                                                           
@@ -1751,7 +1756,7 @@ vector circleCenterIn, float circleRadius,
 vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 {
 	#if BLOCKABLE_DOOR_DEBUG
-		                                                                                    
+		                                                                                  
 	#endif
 	bool intersect = true
 
@@ -1774,14 +1779,14 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	if ( DotProduct( startAngPlaneInnerDir, startAngPlaneCircleCenterDir ) < 0.0 && startAngPlaceCircleCenterDist > circleRadius )
 	{
 		#if BLOCKABLE_DOOR_DEBUG
-			                                                                                                       
+			                                                                                                         
 		#endif
 		intersect = false
 	}
 	else
 	{
 		#if BLOCKABLE_DOOR_DEBUG
-			                                                                                                       
+			                                                                                                         
 		#endif
 	}
 
@@ -1793,14 +1798,14 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	if ( DotProduct( endAngPlaneInnerDir, endAngPlaneCircleCenterDir ) < 0.0 && endAngPlaceCircleCenterDist > circleRadius )
 	{
 		#if BLOCKABLE_DOOR_DEBUG
-			                                                                                                    
+			                                                                                                      
 		#endif
 		intersect = false
 	}
 	else
 	{
 		#if BLOCKABLE_DOOR_DEBUG
-			                                                                                                    
+			                                                                                                      
 		#endif
 	}
 
@@ -1808,14 +1813,14 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	if ( arcCornerCircleCenterDist > arcRadius + circleRadius )
 	{
 		#if BLOCKABLE_DOOR_DEBUG
-			                                                                            
+			                                                                              
 		#endif
 		intersect = false
 	}
 	else
 	{
 		#if BLOCKABLE_DOOR_DEBUG
-			                                                                            
+			                                                                              
 		#endif
 	}
 
@@ -1869,7 +1874,7 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	                                
 	                                
 
-	                                                           
+	                                                         
 
 	                    
 
@@ -1934,7 +1939,7 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	 
 		                                                                                                    
                   
-                                                                                                            
+                                                     
     
                                                                  
     
@@ -2066,7 +2071,7 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	                                      
 	                                                                       
 	                        
-		                                                                                   
+		                                                                                     
 	      
 	                                                                   
 	                                                        
@@ -2518,7 +2523,7 @@ void function SurvivalDoorSliding_Init()
 			                    
 		 
 
-		                                                                                                                                                            
+		                                                                                                                                                              
 		                                                                                                                                            
 	 
  
@@ -2553,8 +2558,8 @@ bool function Survival_DoorSliding_CanUseFunction( entity playerUser, entity doo
 
 	if ( SURVIVAL_SLIDING_DOOR_DEBUG_DRAW )
 	{
-		DebugDrawLine( playerPos, doorModelPos, 200, 200, 50, true, 1.0 )
-		DebugDrawTrigger( doorModelPos, doorUseRange, 200, 200, 50, 1.0, true )
+		DebugDrawLine( playerPos, doorModelPos, <200, 200, 50>, true, 1.0 )
+		DebugDrawTrigger( doorModelPos, doorUseRange, <200, 200, 50>, 1.0, true )
 	}
 
 	float diffLengthSquared = LengthSqr( doorToPlayer )
@@ -2727,8 +2732,6 @@ bool function IsDoorLocked( entity door )
 	                         
 	 
 		                          
-		                                   
-		                            
 		      
 	 
 
@@ -2741,7 +2744,6 @@ bool function IsDoorLocked( entity door )
 	                         
 	 
 		                                    
-		                           
 		                           
 		      
 	 

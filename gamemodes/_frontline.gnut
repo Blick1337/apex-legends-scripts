@@ -80,9 +80,9 @@ void function CalculateFrontline( int team )
 		#if DEV
 			if ( DEBUG_FRONTLINE )
 			{
-				DrawBox( militiaCenter, <-8,-8,-8>, <8,8,8>, 255, 102, 0, true, debugTime )
-				DrawBox( imcCenter, <-8,-8,-8>, <8,8,8>, 0, 0, 255, true, debugTime )
-				DebugDrawLine( militiaCenter, imcCenter, 0, 255, 0, true, debugTime )
+				DebugDrawBox( militiaCenter, <-8,-8,-8>, <8,8,8>, <255, 102, 0>, 1, debugTime )
+				DebugDrawBox( imcCenter, <-8,-8,-8>, <8,8,8>, COLOR_BLUE, 1, debugTime )
+				DebugDrawLine( militiaCenter, imcCenter, COLOR_GREEN, true, debugTime )
 			}
 		#endif
 	}
@@ -90,8 +90,8 @@ void function CalculateFrontline( int team )
 	#if DEV
 		if ( DEBUG_FRONTLINE )
 		{
-			DrawBox( file.frontline.origin, <-32,-32,-32>, <32,32,32>, 255, 0, 0, true, debugTime )
-			DebugDrawLine( file.frontline.origin - file.frontline.line * 500.0, file.frontline.origin + file.frontline.line * 500.0, 255, 0, 0, true, debugTime )
+			DebugDrawBox( file.frontline.origin, <-32,-32,-32>, <32,32,32>, COLOR_RED, 1, debugTime )
+			DebugDrawLine( file.frontline.origin - file.frontline.line * 500.0, file.frontline.origin + file.frontline.line * 500.0, COLOR_RED, true, debugTime )
 		}
 	#endif
 }

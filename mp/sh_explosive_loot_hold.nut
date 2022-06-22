@@ -44,6 +44,12 @@ const int EXPLOSIVE_HOLD_CRATE_WEAPON_LOOT_TIER = 5
 
                                                   
                                                 
+
+       
+                                
+                                 
+      
+
 #endif
 
 const asset EXPLOSIVE_HOLD_ARC_GRENADE_MODEL = $"mdl/weapons_r5/loot/w_loot_wep_iso_shuriken.rmdl"
@@ -335,8 +341,12 @@ string function GetExplosiveHoldUseTextOverride( entity panel )
 
 void function ExplosiveHoldDoor_OnUse( entity panel, entity player, int useInputFlags )
 {
+	if( player.IsInventoryOpen() )
+		return
+
 	if ( ExplosiveHold_IsAnimatedInteraction( player, panel ) )
 	{
+
 		if ( !ExplosiveHold_IsOpen( panel ) )
 		{
 			if ( useInputFlags & USE_INPUT_LONG )
@@ -354,7 +364,9 @@ void function ExplosiveHoldDoor_OnUse( entity panel, entity player, int useInput
 		}
 		#if SERVER
 		    
+		 
 			                                                               
+		 
 		#endif          
 	}
 	#if SERVER
@@ -365,11 +377,17 @@ void function ExplosiveHoldDoor_OnUse( entity panel, entity player, int useInput
 
 void function ExplosiveHoldDoor_UseThink_Thread( entity ent, entity playerUser )
 {
+	if( playerUser.IsInventoryOpen() )
+		return
+
 	ExtendedUseSettings settings
 	settings.duration = 0.3
 
 	#if SERVER
+		                              
+		                                   
 		                                                                
+		                                                    
 	#endif          
 
 	#if CLIENT || UI
@@ -382,6 +400,17 @@ void function ExplosiveHoldDoor_UseThink_Thread( entity ent, entity playerUser )
 	#endif                
 
 	waitthread ExtendedUse( ent, playerUser, settings )
+}
+
+void function ExplosiveHoldDoor_Use_Failure( entity ent, entity playerUser, ExtendedUseSettings settings )
+{
+	#if SERVER
+	                           
+	 
+		                                  
+		                             
+	 
+	#endif
 }
 
 void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, ExtendedUseSettings settings )
@@ -492,11 +521,8 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 					                                                     
 				 
 			 
-
 		 
 	 
-
-	                               
 
 	            
 		                       
@@ -554,32 +580,37 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 	                   
  
 
-                                                                  
+                                                                                                                                   
  
 	                        
 	 
-		                       
-		                  
+		                                                    
+		 
+			                       
+			                  
+
+			                    
+		 
 		                                                            
 		                                                         
 
-		                                                   
+		                                                        
+		 
+			                                                      
+			                                                 
+		 
+		    
+		 
 			                              
+			                         
+		 
 
-		                                                                  
-		                                                      
-		 
-			                    
-		 
 	 
  
 
                                                                       
  
-	                                                      
-	 
-		                                             
-	 
+	                                                   
  
 
                                                                                                                         
@@ -678,7 +709,7 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 		                           
 		                                      
 		                                                                  
-		                                                                             
+		                                                                           
 
 		                        
 		                                                      
@@ -836,6 +867,54 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 		 
 	 
  
+
+       
+                                                                                             
+ 
+	                                           
+	                                           
+	                                           
+	                                      
+	                                       
+	                                       
+	                                     
+	                                         
+	                                         
+
+	                                                                          
+	                                                               
+	 
+		                                            
+			        
+
+		                                               
+			        
+		                                           
+			                                                       
+	 
+
+	                                                                     
+	 
+		                                              
+	 
+
+	                                          
+	 
+		                                                                        
+		                                                
+		                                                                 
+		                                   
+	 
+ 
+
+                                 
+ 
+	                                                                                        
+	 
+		                                                                       
+	 
+ 
+             
 #endif         
 
 bool function ExplosiveHold_PlayerHasGrenadeInInventory( entity player )

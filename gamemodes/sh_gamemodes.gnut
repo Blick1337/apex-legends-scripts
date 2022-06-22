@@ -218,6 +218,9 @@ void function GameModes_Init()
 	GameMode_AddScoreboardColumnData( gameMode, "#SCOREBOARD_PILOT_KILLS", PGS_PILOT_KILLS, 2 )
 	GameMode_SetColor( gameMode, [147, 204, 57, 255] )
 	GameMode_SetTimedEventsEnabled( gameMode, true )
+	#if UI
+		AddCallback_UI_GameModeRulesDialog_PopulateTabsForMode( Control_PopulateAboutText, GAMEMODE_CONTROL )
+	#endif      
       
 
 	gameMode = GAMEMODE_FREELANCE

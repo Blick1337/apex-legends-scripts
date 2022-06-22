@@ -117,11 +117,46 @@ void function ShDrones_Init()
 		                                                                                                                           
 		                                                                                                                          
 		                                                         
+		                                                       
+		                                                                             
 	#endif
 	#if CLIENT
 		AddCreateCallback( "prop_dynamic", ShDrones_DroneSpawned )
 	#endif
 }
+
+#if SERVER
+                                        
+ 
+	                       
+
+	                                                                                             
+ 
+#endif          
+
+#if SERVER
+                                           
+ 
+	                                                                                           
+	                                                                                         
+ 
+#endif          
+
+
+
+#if SERVER
+                                             
+ 
+	                                                             
+ 
+#endif          
+
+#if SERVER
+                                               
+ 
+	                                                               
+ 
+#endif          
 
 void function ShDrones_DroneSpawned( entity droneEnt )
 {

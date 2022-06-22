@@ -269,7 +269,7 @@ bool function AnyNearbyFriendlyIsCombatTriggered_( entity player, bool requireHi
 	if ( !IsPVEMode() )
 		return false
 
-	array<entity> teamPlayers = GetPlayerArrayEx( "any", player.GetTeam(), TEAM_ANY, player.GetOrigin(), NEARBY_FRIENDLY_RANGE )
+	array<entity> teamPlayers = GetPlayerArrayEx( player.GetTeam(), TEAM_ANY, player.GetOrigin(), NEARBY_FRIENDLY_RANGE )
 	foreach ( teamPlayer in teamPlayers )
 	{
 		if ( CombatTriggeredCheck( teamPlayer, requireHighIntensity ) )
@@ -289,7 +289,7 @@ bool function AnyNearbyFriendlyIsCombatTriggered_LowIntensity( entity player )
 
 bool function AnyNearbyFriendlyIsBleedingOut( entity player )
 {
-	array<entity> teamPlayers = GetPlayerArrayEx( "any", player.GetTeam(), TEAM_ANY, player.GetOrigin(), NEARBY_FRIENDLY_RANGE )
+	array<entity> teamPlayers = GetPlayerArrayEx( player.GetTeam(), TEAM_ANY, player.GetOrigin(), NEARBY_FRIENDLY_RANGE )
 	foreach ( teamPlayer in teamPlayers )
 	{
 		if ( Bleedout_IsBleedingOut( teamPlayer ) )

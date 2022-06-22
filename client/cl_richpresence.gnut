@@ -112,8 +112,8 @@ PresenceState function ClientCodeCallback_GetPresenceState( string mapName )
 		if ( Control_IsModeEnabled() )
 		{
 			int playerTeam = GetLocalClientPlayer().GetTeam()
-			int playerAlliance = Control_GetAllianceFromTeam( playerTeam )
-			int enemyAlliance = Control_GetAllianceFromTeam( playerTeam + 1 )
+			int playerAlliance = AllianceProximity_GetAllianceFromTeam( playerTeam )
+			int enemyAlliance = AllianceProximity_GetOtherAlliance( playerAlliance )
 			int maxScore = Control_GetScoreLimit()
 
 			if ( maxScore > 0 )

@@ -200,7 +200,7 @@ void function ShowBlackHoleRadius( entity weapon )
 	while( IsValid( fxHandle ) )
 	{
 		vector dropPosition = weapon.GetMostRecentGrenadeImpactPos()
-		                                                                                
+		                                                                                  
 		EffectSetControlPointVector( fxHandle, 0, dropPosition )
 		WaitFrame()
 	}
@@ -375,7 +375,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 					       
 				 
 
-				                                                
+				                                                  
 			 
 		      
 		                                   
@@ -434,6 +434,10 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                                          
 	                              
 
+                    
+                                           
+       
+
 	                                          
 	                                           
 	                                           
@@ -489,7 +493,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 
 	                                                          
 	                                                                                                                                             
-	                                                                                   
+	                                                                                      
 
 
 	                             
@@ -666,7 +670,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 		       
 			                      
 			 
-				                                                            
+				                                                          
 			 
 		            
 
@@ -675,8 +679,8 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 		                                                                                              
 		                                                                                                                                                                                                                     
 
-		                                                           
-		                                                                                            
+		                                                            
+		                                                                                              
 	 
  
 
@@ -766,7 +770,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 
 		                                               
 		                                     
-		                                                                      
+		                                                                        
 
 		                              
 		 
@@ -874,7 +878,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 			                             
 		 
 
-		                                                                                                    
+		                                                                                                      
 
 		                   
 		         
@@ -1206,9 +1210,9 @@ void function BLACKHOLE_InTriggerThread( entity trigger, entity player )
 
 				                      
 				 
-					                                                               
-					                                                                     
-					                                                                      
+					                                                                
+					                                                                       
+					                                                                        
 
 					                                                                                                   
 					                                                                                                                                 
@@ -1255,7 +1259,7 @@ void function BLACKHOLE_InTriggerThread( entity trigger, entity player )
 	 
 		                             
 		 
-			                                                               
+			                                                                 
 		 
 
 		                                                  
@@ -1279,9 +1283,9 @@ void function BLACKHOLE_InTriggerThread( entity trigger, entity player )
 
 		                               
 		   
-		  	                                                                                                            
-		  	                                                                                                                      
-		  	                                                                                                          
+		  	                                                                                                              
+		  	                                                                                                                        
+		  	                                                                                                           
 		   
 
 		           

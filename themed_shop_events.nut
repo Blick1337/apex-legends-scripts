@@ -29,7 +29,7 @@ global function ThemedShopEvent_GetItemGroupHeaderImage
 global function ThemedShopEvent_GetItemGroupHeaderText
 global function ThemedShopEvent_GetItemGroupHeaderTextColor
 global function ThemedShopEvent_GetItemGroupBackgroundImage
-global function ThemedShopEvent_GetHeaderTextColor
+global function ThemedShopEvent_GetSubtitleTextColor
 global function ThemedShopEvent_GetLobbyButtonImage
 global function ThemedShopEvent_GetTitleTextColor
 global function ThemedShopEvent_HasLobbyTheme
@@ -318,10 +318,10 @@ vector function ThemedShopEvent_GetTitleTextColor( ItemFlavor event )
 
 
 #if UI
-vector function ThemedShopEvent_GetHeaderTextColor( ItemFlavor event )
+vector function ThemedShopEvent_GetSubtitleTextColor( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
-	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "seasonHeaderColor" )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "seasonSubtitleColor" )
 }
 #endif
 
@@ -360,6 +360,7 @@ GRXScriptOffer ornull function ThemedShopEvent_GetPackOffer( ItemFlavor event )
 	return null
 }
 #endif
+
 
                        
                        

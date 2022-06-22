@@ -149,6 +149,10 @@ global struct ClientPlayerStruct
 
 	int smartCoreKills = 0
 
+                    
+                                     
+       
+
 	entity previousWeapon
 
 	entity knife = null
