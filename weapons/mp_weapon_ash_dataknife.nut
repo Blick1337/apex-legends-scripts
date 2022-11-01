@@ -394,7 +394,7 @@ void function OnCharacterButtonPressed( entity player )
 
 	                                         
 
-	                                                                                                                                                                                                  
+	                                                                                                                                                                                                                    
 	                                                                                                                                                      
  
 
@@ -437,6 +437,11 @@ void function OnCharacterButtonPressed( entity player )
 		 
 			                                           
 				        
+
+                        
+                                                   
+             
+         
 
 			                                                                                                                               
 			                                                                             
@@ -668,8 +673,8 @@ bool function UseAlternatePassiveActivation()
        
 
                         
-                                  
-              
+		if ( FreeDM_IsActiveGameMode() )
+			return true
        
 
 	return false

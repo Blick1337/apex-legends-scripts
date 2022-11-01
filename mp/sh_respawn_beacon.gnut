@@ -5,6 +5,7 @@ global function RespawnBeacons_RegisterNetworking
 global function GetRespawnStyle
 global function IsRespawnBeacon
 global function RespawnChamberOnUse
+global function RespawnBeacon_ShouldUseBlockReload
 
 #if SERVER
                                             
@@ -32,6 +33,10 @@ global function RespawnChamberOnUse
                                       
                                        
                               
+                                                                
+                   
+                                        
+      
        
                                                                   
       
@@ -47,9 +52,6 @@ global function ServerCallback_RespawnBeaconStop
 
 global function TryPingRespawnItem
 
-                 
-                                                  
-      
 #endif
 
 #if CLIENT
@@ -59,6 +61,7 @@ global function ServerToClient_RespawnChamberOnUse
 global function GetRespawnStatus
 
 global function CountTeammatesWaitingToBeRespawned
+global function HasTeammatesToRespawn
 #if SERVER
                                   
 #endif
@@ -74,15 +77,22 @@ global function UpdateRespawnChamberRuis
                                
 
 global const string RESPAWN_CHAMBER_TARGETNAME = "respawn_chamber"
+                   
+                                                                  
+      
 
 global const string RESPAWN_DNA_TARGETNAME = "respawn_dna"
 global const string RESPAWN_DROPSHIP_TARGETNAME = "respawn_dropship"
+global const string PICKING_UP_RESPAWN_BANNER_ANIM = "ptpov_burn_card_activate_seq_gladcard"
+
+const string RESPAWN_BEACON_ALTMOVENODE_MOVER_SCRIPTNAME = "respawn_beacon_altmovenode_mover"
 
 const float RESPAWN_BEACON_HOLO_EFFECT_HEIGHT = 75.0
 
 global const float RESPAWN_DNA_LIFETIME = 90.0
 const float RESPAWN_DROP_TIME = 10.0
 global const float RESPAWN_BEACON_RESPAWN_TIME = 5.0
+global const int RESPAWN_BEACON_MAX_NUM_POSITIONS_ON_DROPSHIP = 4
 
 global const string RESPAWN_BEACON_SUCCESS_SOUND = "Survival_RespawnChamber_Activate"
 global const string RESPAWN_BEACON_LOOP_SOUND = "Survival_RespawnBeacon_Linking_loop"
@@ -99,11 +109,16 @@ const string SOUND_HOLOGRAM_LOOP = "Survival_Emit_RespawnChamber"
 const float RESPAWN_CHAMBER_ICON_FADE_DIST_NEAR = 300.0
 const float RESPAWN_CHAMBER_ICON_FADE_DIST_FAR = 1000.0
 
+const int RESPAWN_THANKS_DELAY = 4
+
 const string ANIM_FLYIN_IDLE = "dropship_classic_mp_flyin_idle"
 const string ANIM_FLYIN_MOVE = "dropship_classic_mp_flyin"
 
 const float MOBILE_RESPAWN_BEACON_ICON_FADE_DIST_ZERO = 0.0
 global const string MOBILE_RESPAWN_BEACON_TARGETNAME = "respawn_chamber_mobile"
+                   
+                                                                               
+      
 
                          
                                                                              
@@ -146,13 +161,15 @@ struct
 	#if SERVER
 		                                                                          
 		                                                                         
-		                                                                              
+		                                                                                     
 		                                                                    
-		                                                                 
+		                                                                         
 		                                                                
 		                      	             
 		                       	                     
 		                                    
+		                                                        
+		                                   
 	#endif
 }
 file
@@ -174,9 +191,6 @@ void function Sh_RespawnBeacon_Init()
 
 	#if SERVER || CLIENT
 		Remote_RegisterServerFunction( "ClientCallback_PingNearestRespawn", "vector", -FLT_MAX, FLT_MAX, 32 )
-                  
-                                                                                 
-       
 	#endif
 
 	#if CLIENT
@@ -208,6 +222,8 @@ void function Sh_RespawnBeacon_Init()
 		                                                             
 		                             
 		                                                
+
+		                                          
 
 		            
 		                               
@@ -294,6 +310,9 @@ void function RegisterMinimapPackages()
 
 void function RespawnStatusChanged( entity player, int new )
 {
+	if ( !GetCurrentPlaylistVarBool( "mrb_show_ingame_ui", true ) )
+		return
+
 	if ( player == GetLocalClientPlayer() )
 		UpdateRespawnStatus( new )
 
@@ -308,7 +327,7 @@ void function RespawnStatusChanged( entity player, int new )
 	if ( !IsValid( viewPlayer ) )
 		return
 
-	bool waitingToBeRespawned = CountTeammatesWaitingToBeRespawned( viewPlayer.GetTeam() ) > 0
+	bool waitingToBeRespawned = HasTeammatesToRespawn( viewPlayer.GetTeam() )
 
 	foreach ( rui in file.respawnChamberRuis )
 	{
@@ -388,6 +407,11 @@ bool function IsRespawnBeacon( entity ent )
 	return false
 }
 
+bool function ShouldFastBannerPickup()
+{
+	return GetCurrentPlaylistVarBool( "fast_banner_pickup", true )
+}
+
 void function RespawnEntitySpawned( entity ent )
 {
 	if ( !IsRespawnStationEnt( ent ) )
@@ -406,21 +430,29 @@ void function RespawnEntitySpawned( entity ent )
 	}
 
 	#if CLIENT
-		AddEntityCallback_GetUseEntOverrideText( ent, RespawnChamber_TextOverride )
-		var rui
-		if ( ent.GetTargetName() == MOBILE_RESPAWN_BEACON_TARGETNAME )
-			rui = AddOverheadIcon( ent, RESPAWN_BEACON_ICON, false, $"ui/overhead_icon_mobile_respawn_beacon.rpak" )
-		else
-			rui = AddOverheadIcon( ent, RESPAWN_BEACON_ICON, false, $"ui/overhead_icon_respawn_beacon.rpak" )
-		RuiSetFloat2( rui, "iconSize", <80, 80, 0> )
-		RuiSetFloat( rui, "distanceFade", RESPAWN_CHAMBER_ICON_FADE_DIST_NEAR )
-		RuiSetBool( rui, "adsFade", true )
-		RuiSetString( rui, "hint", "#RESPAWN_ALLCAPS" )
+		if ( GetCurrentPlaylistVarBool( "mrb_show_ingame_ui", true ) )
+		{
+			AddEntityCallback_GetUseEntOverrideText( ent, RespawnChamber_TextOverride )
+			var rui
+			if ( ent.GetTargetName() == MOBILE_RESPAWN_BEACON_TARGETNAME )
+				rui = AddOverheadIcon( ent, RESPAWN_BEACON_ICON, false, $"ui/overhead_icon_mobile_respawn_beacon.rpak" )
+			else
+				rui = AddOverheadIcon( ent, RESPAWN_BEACON_ICON, false, $"ui/overhead_icon_respawn_beacon.rpak" )
+			RuiSetFloat2( rui, "iconSize", <80, 80, 0> )
+			RuiSetFloat( rui, "distanceFade", RESPAWN_CHAMBER_ICON_FADE_DIST_NEAR )
+			RuiSetBool( rui, "adsFade", true )
+			RuiSetString( rui, "hint", "#RESPAWN_ALLCAPS" )
 
-		thread ManageRespawnChamberData( ent, rui )
+			thread ManageRespawnChamberData( ent, rui )
 
-		if ( ent.GetTargetName() == RESPAWN_CHAMBER_TARGETNAME )                                                                               
-			thread AddRadarToRespawnStation( ent )
+			if ( ent.GetTargetName() == RESPAWN_CHAMBER_TARGETNAME )                                                                               
+				thread AddRadarToRespawnStation( ent )
+		}
+		else if ( IsValid( ent ) && ent in file.chamberToBeamFX )
+		{
+			if ( EffectDoesExist( file.chamberToBeamFX[ ent ] ) )
+				EffectStop( file.chamberToBeamFX[ ent ], true, true )
+		}
 	#elseif SERVER
 		                        
 		                 
@@ -438,6 +470,7 @@ void function RespawnEntitySpawned( entity ent )
 	file.allStations.append( ent )
 
 	SetCallback_CanUseEntityCallback( ent, IsNotBusy )
+	SetCallback_ShouldUseBlockReloadCallback( ent, RespawnBeacon_ShouldUseBlockReload )
 
 	AddCallback_OnUseEntity_ClientServer( ent, RespawnChamberOnUse )
 
@@ -497,6 +530,9 @@ void function RespawnEntitySpawned( entity ent )
 	                                              
 	                                                                                    
 	                                                           
+                    
+                                                           
+       
 	                                      
 
 	                               
@@ -545,21 +581,28 @@ void function RespawnEntitySpawned( entity ent )
 	                                                                                
 	                                                                              
 	                                   
-	                                                                                                                                                                                                                                          
-	                   
-	                                                   
+	                                                                                                                                                                                                                                         
+
+	                                                                                                                                                                   
 	 
 		                     
 		 
 			                                                       
 			 
-				             
+				                                                                                                                                                                                           
+				 
+					                                    
+				 
+				    
+				 
+					                                  
+				 
 				      
 			 
 		 
 	 
 
-	                                                                            
+	                                                                                                 
 
 	                                                                                                        
  
@@ -623,8 +666,6 @@ void function RespawnEntitySpawned( entity ent )
 	             
 		                                                               
 
-	                                
-
 	                                               
 	 
 		                        
@@ -654,7 +695,7 @@ void function RespawnEntitySpawned( entity ent )
 	                  
 	             
 	 
-		                                                                             
+		                                                                                                                          
 		                                        
 	 
 	    
@@ -699,6 +740,17 @@ void function RespawnEntitySpawned( entity ent )
 	                  
  
 
+                                                                                
+ 
+	                          
+	                                                           
+	 
+		                                                                         
+	 
+
+	                                                                        
+ 
+
                                                           
  
 	                                             
@@ -720,9 +772,19 @@ void function RespawnEntitySpawned( entity ent )
  
 	                            
 
+	                              
+                    
+                                                                                                                      
+
+              
+                       
+    
+                         
+                  
+     
+       
 	             
 
-	                              
 	                        
 	 
 		                                                                          
@@ -751,7 +813,7 @@ void function RespawnEntitySpawned( entity ent )
 	                                                    
  
 
-                                                                                                
+                                                                                                        
  
 	                                                  
  
@@ -788,7 +850,7 @@ void function ManageRespawnChamberData( entity ent, var rui )
 	file.respawnChamberRuis.append( rui )
 	ent.EndSignal( "OnDestroy" )
 
-	UpdateRespawnChamberRuis( rui, CountTeammatesWaitingToBeRespawned( GetLocalViewPlayer().GetTeam() ) > 0 )
+	UpdateRespawnChamberRuis( rui, HasTeammatesToRespawn( GetLocalViewPlayer().GetTeam() ) )
 
 	OnThreadEnd(
 		function() : ( ent, rui )
@@ -824,7 +886,7 @@ void function AddRadarToRespawnStation( entity ent )
 	entity fxHolder = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", ent.GetOrigin() + up * height, <-90, 0, 0> )
 
 	array<int> fx
-	fx.append( StartParticleEffectOnEntity( fxHolder, GetParticleSystemIndex( RESPAWN_BEACON_EMITTER_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 ) )
+	fx.append( StartParticleEffectOnEntity( fxHolder, GetParticleSystemIndex( RESPAWN_BEACON_EMITTER_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID ) )
 	EmitSoundOnEntity( fxHolder, SOUND_HOLOGRAM_LOOP )
 
 	OnThreadEnd(
@@ -885,7 +947,7 @@ void function MinimapPackage_RespawnChamber( entity ent, var rui )
 
 string function RespawnChamber_TextOverride( entity ent )
 {
-                  
+                    
                                      
                                    
        
@@ -898,14 +960,18 @@ string function RespawnChamber_TextOverride( entity ent )
 	entity player = GetLocalViewPlayer()
 	int team      = player.GetTeam()
 	if ( GetPlayerArrayOfTeam( team ).len() == GetPlayerArrayOfTeam_Alive( team ).len() ||
-			CountTeammatesWaitingToBeRespawned( team ) == 0 )
+			!HasTeammatesToRespawn( team ) )
 	{
-                   
-                                                                                                        
+                     
+                                                    
                                 
       
         
 			return "#HINT_RESPAWN_NEED"
+
+		if ( GetCurrentPlaylistVarBool( "is_gamemode2", false ) )
+			return "#HINT_RESPAWN_CASH"
+
 	}
 
 		return "#HINT_RESPAWN_USE"
@@ -919,21 +985,6 @@ string function RespawnDNA_TextOverride( entity ent )
 	return "#HINT_DESTROY_DNA_USE"
 }
 
-                 
-                                                              
- 
-                                     
-
-                          
-        
-
-                       
-        
-
-                                  
- 
-      
-
 #endif          
 
 float function GetRespawnStationUseTime( entity ent )
@@ -943,16 +994,21 @@ float function GetRespawnStationUseTime( entity ent )
 
 void function RespawnChamberOnUse( entity pickup, entity player, int pickupFlags )
 {
+                                               
+                                                            
+  
+                        
+        
+  
+      
+
 	if ( !(pickupFlags & USE_INPUT_LONG) )
 		return
-                 
-                                                                                                            
-        
-
-                                                                                                                                
+                   
+                                                                                                                                                                
         
      
-	if ( CountTeammatesWaitingToBeRespawned( player.GetTeam() ) == 0 )
+	if ( !HasTeammatesToRespawn( player.GetTeam() ) )
 		return
       
 
@@ -990,6 +1046,11 @@ void function ServerToClient_RespawnChamberOnUse( entity pickup, entity player )
 }
 #endif
 
+bool function RespawnBeacon_ShouldUseBlockReload( entity player, entity ent )
+{
+	return false;
+}
+
 void function RespawnChamberOnUse_Common( entity pickup, entity player, float startTime )
 {
 	#if CLIENT
@@ -1005,8 +1066,8 @@ void function RespawnChamberOnUse_Common( entity pickup, entity player, float st
 		settings.displayRuiFunc = DisplayRuiForRespawnChamber
 		settings.icon = $""
 
-                   
-                                                                                                                                                                          
+                     
+                                                                                                                      
                                         
       
         
@@ -1040,6 +1101,7 @@ void function RespawnChamberOnUse_Common( entity pickup, entity player, float st
 		                            
 		                               
 		                             
+		                                    
 	#endif
 
 	if ( pickup.GetTargetName() == MOBILE_RESPAWN_BEACON_TARGETNAME )
@@ -1101,61 +1163,20 @@ void function DisplayRuiForRespawnChamber_Internal( var rui, asset icon, float s
 	                                                              
  
 
-                                                                                                   
+                                                                                                           
  
 	                                                                                                                                                                        
 	                                                           
  
-                 
-                                                                    
- 
-           
-                                                                  
-                                                                  
-
-                         
-                        
-                       
-
-                                    
-
-                                                                                     
-                      
-
-                                                                                    
-                    
-
-                           
-
-                                                                                      
-                        
-
-                                     
-                                                         
-                           
-                                                                  
-
-                                                                                                 
-
-                             
-
-                                   
-      
-
-                                
-
-       
- 
-      
 
                                                                      
  
-                  
-                                                                                                           
-                                               
+                    
+                                                        
+                                         
        
 
-	                                                                      
+	                                                     
 		            
 
 	                                                                                            
@@ -1180,6 +1201,14 @@ void function DisplayRuiForRespawnChamber_Internal( var rui, asset icon, float s
 	                                            
 	                                         
 
+	                                 		                   
+
+	                                             
+	 
+		                        
+			                          
+	 
+
 	             
  
 
@@ -1197,7 +1226,7 @@ void function DisplayRuiForRespawnChamber_Internal( var rui, asset icon, float s
 
 	                                                       
 	 
-		                                     
+		                                          
 	 
 
 	                                                         
@@ -1221,6 +1250,12 @@ int function CountTeammatesWaitingToBeRespawned( int team )
 	}
 	return count
 }
+
+bool function HasTeammatesToRespawn( int team )
+{
+	return CountTeammatesWaitingToBeRespawned( team ) > 0
+}
+
 
 #if CLIENT
 string function RespawnBeacon_TextOverride( entity ent )
@@ -1397,8 +1432,8 @@ void function ServerCallback_RespawnDNAHint()
 	   
 
                           
-	                                                                                                                  
-		      
+                                                                                                                   
+        
       
 
 	                                                                       
@@ -1461,24 +1496,44 @@ void function ServerCallback_RespawnDNAHint()
 
                                                                           
  
-	                             
-	                      
-		      
+                    
+                                                                                  
+       
 
 	                             
+	                      
+                     
+                                  
+        
+		      
+
+	            
+	           
+
+	                    
+	 
+		                      
+		                       
+	 
+
+                   
+                        
+                          
+      
+
 	                        
 		      
 
-	                                            
+	                                      
 	 
 		                                                                            
 		 
 			                                                     
 			                                              
                               
-					                             
+                                  
           
-					                                                                               
+					                                                     
 		 
 
 		                                                                             
@@ -1491,10 +1546,40 @@ void function ServerCallback_RespawnDNAHint()
 
 		                                                                           
 
-		             
+		                  
+			             
 
 		                     
 		                                                                                    
+	 
+ 
+
+                                                                   
+ 
+	                                
+	 
+		                                                                      
+	 
+	    
+	 
+		                                  
+		                                              
+		                                                 
+
+		            
+			                           
+			 
+				                            
+				 
+					                                                 
+						                                  
+				 
+			 
+		 
+
+		                                                                      
+
+		                              
 	 
  
 
@@ -1538,7 +1623,17 @@ void function ServerCallback_RespawnDNAHint()
 	                             
 	                             
 
-	                                     
+	                                                                                                                        
+	                                                       
+	 
+		                                                                         
+		                                                                         
+	 
+	    
+	 
+		                                                     
+	 
+
 	                                                                    
 
 	                                            
@@ -1626,7 +1721,7 @@ void function ServerCallback_RespawnDNAHint()
 	 
 
 	                                                       
-		              
+		                    
 
 	                                    
 
@@ -1655,6 +1750,25 @@ void function ServerCallback_RespawnDNAHint()
 				                                                                                  
 			 
         
+
+		                                    
+	 
+ 
+
+                                                  
+ 
+	                                           
+
+	              
+	 
+		                         
+		 
+			                         
+
+			                                                                             
+			      
+		 
+		           
 	 
  
 
@@ -2325,8 +2439,8 @@ void function ServerCallback_RespawnBeaconStop()
 		clGlobal.levelEnt.Signal( "SpectatorShowRespawnRui" )
 
 	entity player = GetLocalViewPlayer()
-                 
-                                                                
+                   
+                                    
                                    
       
 }
@@ -2361,7 +2475,7 @@ void function RespawnSuccessClient_Mobile( entity ent, entity playerUser, Extend
 	if ( !IsValid( viewPlayer ) )
 		return
 
-	bool waitingToBeRespawned = CountTeammatesWaitingToBeRespawned( viewPlayer.GetTeam() ) > 0
+	bool waitingToBeRespawned = HasTeammatesToRespawn( viewPlayer.GetTeam() )
 	foreach ( rui in file.respawnChamberRuis )
 	{
 		UpdateRespawnChamberRuis( rui, waitingToBeRespawned )

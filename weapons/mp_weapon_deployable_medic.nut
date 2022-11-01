@@ -1554,7 +1554,7 @@ void function DeployableMedic_HealVisualsEnabled( entity ent, int statusEffect, 
 	Assert( !EffectDoesExist( file.healFxHandle ), "tried to start a second screen fx" )
 
 	int fxID = GetParticleSystemIndex( FX_DRONE_MEDIC_HEAL_COCKPIT_FX )
-	file.healFxHandle = StartParticleEffectOnEntity( cockpit, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	file.healFxHandle = StartParticleEffectOnEntity( cockpit, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetIsWithCockpit( file.healFxHandle, true )
 
 	Chroma_StartHealingDroneEffect()

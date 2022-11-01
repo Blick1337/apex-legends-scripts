@@ -32,9 +32,8 @@ global enum eLootAction
 	IGNORE
 
                   
-                                  
                 
-                  
+               
        
 
 	_count
@@ -114,16 +113,13 @@ void function SURVIVAL_LootActions_InitShared()
 	action.title = "#LOOT_ACTION_WEAPON_TRANSFER"
 
                   
-                                                                             
-                                     
-                            
-
                                                            
                                  
-                               
+                                    
 
-                                                             
-                                   
+                                                          
+                                
+                                    
        
 
 	action = RegisterLootAction( eLootAction.IGNORE )
@@ -320,27 +316,6 @@ bool function TryEquipItem( int action, entity pickup, entity player, int pickup
 	switch ( data.lootType )
 	{
 		case eLootType.MAINWEAPON:
-                    
-                                                                 
-     
-               
-                                                                                 
-                                                  
-       
-                                                                                
-
-                                      
-        
-                                           
-                                                          
-
-                                                      
-        
-       
-           
-     
-         
-
 			pickedUp = PickupMainWeapon( pickup, player, pickupFlags, deathBox )
 			break
 
@@ -364,32 +339,24 @@ bool function TryEquipItem( int action, entity pickup, entity player, int pickup
 
 
                  
-                                                                                                                                                      
+                                                                                                                                                           
  
-                                                          
+                                                        
 
-                                                                            
-
-                      
-                                             
-  
-                                                                         
-                                                                             
-                                              
-   
-                                                                    
-    
+                                                                                            
               
-                                                     
-                                                    
-                                                                                                                                      
-          
-               
-    
-   
-  
 
-             
+           
+                                                                             
+                                          
+                          
+      
+                                                      
+                                     
+                                                            
+       
+
+            
  
       
 
@@ -761,7 +728,7 @@ bool function SwapMainWeapon( entity pickup, entity player, int pickupFlags = 0,
 }
 
 
-bool function GiveMainWeapon_Internal( entity pickup, entity player, bool dropCurrentWeapon, bool doPickupPrint, entity deathBox, bool dontSwitchWeapon )
+bool function GiveMainWeapon_Internal( entity pickup, entity player, bool dropCurrentWeapon, bool doPickupPrint, entity deathBox, bool dontSwitchWeapon, bool isSlingWeapon = false )
 {
 	entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 
@@ -778,9 +745,19 @@ bool function GiveMainWeapon_Internal( entity pickup, entity player, bool dropCu
 		}
 	}
 
-	array<entity> primaryWeapons = SURVIVAL_GetPrimaryWeapons( player )
-	if ( !dropCurrentWeapon && primaryWeapons.len() > 1 )
-		return false
+                  
+                     
+   
+                                                                   
+                
+   
+      
+       
+		{
+			array<entity> primaryWeapons = SURVIVAL_GetPrimaryWeapons( player )
+			if ( !dropCurrentWeapon && primaryWeapons.len() > 1 )
+				return false
+		}
 
 	                                       
 	if ( dropCurrentWeapon && !IsValid( activeWeapon ) )
@@ -797,13 +774,7 @@ bool function GiveMainWeapon_Internal( entity pickup, entity player, bool dropCu
 
 		                                            
 
-		                                                                                                                               
-	#else
-                   
-                                                       
-                                      
-                                                             
-        
+		                                                                                                                                                        
 	#endif
 
 	return true
@@ -846,6 +817,7 @@ bool function EquipEquipment( entity pickup, entity player, string equipSlot, en
 
 			                                                          
 			                                                            
+			                                                   
 
 			                                               
 			 

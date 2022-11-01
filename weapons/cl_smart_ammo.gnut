@@ -178,22 +178,12 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 				RuiSetFloat3( file.lockon_hud, "borderColor", < 0.21, 0.79, 0.34> )                    
 			}
 		}
-		                                                                                                                                                                                                  
-		   
-		  	                                                                       
-		  	                                                                 
-		  	                                                
-		  	                                                 
-		  	                                                 
-		  	                                                
-		  	                                                
-		   
 		else if ( (StatusEffect_GetSeverity( player, eStatusEffect.camera_detected )
 			|| StatusEffect_GetSeverity( player, eStatusEffect.maphack_detected )
 			|| StatusEffect_GetSeverity( player, eStatusEffect.sonar_detected )
-               
-                                                                            
-                    
+                 
+  			                                                                         
+                      
                         
 			|| StatusEffect_GetSeverity( player, eStatusEffect.mortar_ring_reveal ))
                              
@@ -201,7 +191,12 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                                                                              
                                                                                                           
                                  
+                       
+                                                                                                                             
+                                                                  
+       
 			&& !player.IsCloaked( true ) )
+        
 		{
 			RuiSetFloat3( file.lockon_hud, "borderColor", <1, .36, .31> )                       
 			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
@@ -232,13 +227,13 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 				vector scaledColor = <color.x/255.0, color.y/255.0, color.z/255.0>
 				RuiSetFloat3( file.lockon_hud, "borderColor", scaledColor )
 			}
-                  
-                                                                                     
-    
-                                                                                 
-                                                                                         
-    
-                       
+			                 
+			                                                                                    
+			   
+			  	                                                                             
+			  	                                                                                     
+			   
+			                      
                            
 			else if ( StatusEffect_GetSeverity( player, eStatusEffect.mortar_ring_reveal ) )
 			{
@@ -474,6 +469,19 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                   
    
                             
+                        
+                                                 
+   
+                                                                                
+                                                   
+                                                    
+                                                    
+                                                   
+                                                   
+                                                                                           
+                                                                  
+   
+      
 		else if ( StatusEffect_GetSeverity( player, eStatusEffect.revealed_by_ash ) )
 		{
 			RuiSetString( file.lockon_hud, "lockMessage", "#PAS_ASH_REVEALED" )
@@ -519,33 +527,9 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                 
    
       
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.heartbeat_sensor_heartbeat_revealed ) )
-		{
-			RuiSetString( file.lockon_hud, "lockMessage", "#HEARTBEAT_REVEALED" )
 
-			RuiSetBool( file.lockon_hud, "isVisible", true )
-			RuiSetBool( file.lockon_hud, "northLock", false )
-			RuiSetBool( file.lockon_hud, "southLock", false )
-			RuiSetBool( file.lockon_hud, "westLock", false )
-			RuiSetBool( file.lockon_hud, "eastLock", false )
-			RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_seer" )
-			RuiSetFloat3( file.lockon_hud, "borderColor", <.8, 0, 0> )            
-		}
-
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.echo_locator_scanned ) )
-		{
-			RuiSetString( file.lockon_hud, "lockMessage", "#ECHO_LOCATOR_DETECTED" )
-
-			RuiSetBool( file.lockon_hud, "isVisible", true )
-			RuiSetBool( file.lockon_hud, "northLock", false )
-			RuiSetBool( file.lockon_hud, "southLock", false )
-			RuiSetBool( file.lockon_hud, "westLock", false )
-			RuiSetBool( file.lockon_hud, "eastLock", false )
-			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
-			RuiSetFloat3( file.lockon_hud, "borderColor", PARIAH_PURPLE )
-		}
                  
-                                                                               
+                                                    
     
                                                                          
                                                                                                                                      
@@ -558,9 +542,10 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                                                       
                                                                      
     
-                                                                                     
+                                                           
     
                                                                          
+                                                                                                                                          
 
                                                     
                                                      
@@ -572,6 +557,87 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                         
     
       
+                       
+                                                                                    
+     
+                                                                                 
+                                                     
+                                                      
+                                                      
+                                                     
+                                                     
+                                                                                                        
+                                                                      
+     
+                                                                                   
+     
+                                                                                
+                                                     
+                                                      
+                                                      
+                                                     
+                                                     
+                                                                                                        
+                                                                      
+     
+                                                                                 
+     
+                                                                              
+                                                     
+                                                      
+                                                      
+                                                     
+                                                     
+                                                                                                        
+                                                                      
+     
+                                                                                
+     
+                                                           
+                                                                           
+                                                         
+    
+                             
+      
+                                                                          
+       
+                               
+                                                                                                       
+           
+                                                                                  
+    
+                                                                                                         
+    
+                                                       
+                                                        
+                                                        
+                                                       
+                                                       
+                                                                                                          
+                                                                        
+       
+          
+       
+                                                        
+       
+      
+     
+      
+                         
+		 else if ( StatusEffect_GetSeverity( player, eStatusEffect.mrb_carrier ) )
+		 {
+			 RuiSetString( file.lockon_hud, "lockMessage", "#CONTROL_MRB_HELD_WARNING" )
+
+			 RuiSetBool( file.lockon_hud, "isVisible", true )
+			 RuiSetBool( file.lockon_hud, "northLock", false )
+			 RuiSetBool( file.lockon_hud, "southLock", false )
+			 RuiSetBool( file.lockon_hud, "westLock", false )
+			 RuiSetBool( file.lockon_hud, "eastLock", false )
+			 RuiSetImage( file.lockon_hud, "characterIcon", CONTROL_MRB_INWORLD_ICON )
+			 RuiSetFloat( file.lockon_hud, "characterIconScale", 0.8 )
+			 RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
+		 }
+       
 		else
 		{
 			RuiSetBool( file.lockon_hud, "isVisible", false )

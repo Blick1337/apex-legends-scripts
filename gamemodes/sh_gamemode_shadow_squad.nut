@@ -1895,7 +1895,7 @@ void function ServerCallback_ModeShadowSquad_RestorePlayerHealthFx( bool useShie
 	}
 
 	EmitSoundOnEntity( player, healSound )
-	int fxHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( healFxAsset ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int fxHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( healFxAsset ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetControlPointVector( fxHandle, 1, fxColor )
 	thread DelayedDestroyFx( fxHandle, 1.0 )
 

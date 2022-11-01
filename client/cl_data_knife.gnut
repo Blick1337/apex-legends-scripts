@@ -585,7 +585,7 @@ void function DataKnife_TopoPositionThink( entity knife, DataKnifeTopoInfo topoI
 		                      
 		if ( topoInfo.rui != null )
 		{
-			RuiSetVisible( topoInfo.rui, !IsCloaked( player ) )
+			RuiSetVisible( topoInfo.rui, !player.IsCloaked( true ) )
 		}
 
 		if ( firstRun )

@@ -18,7 +18,7 @@ global function OnWeaponZoomFOVToggle_weapon_mounted_turret_weapon
 global function OnClientAnimEvent_weapon_mounted_turret_weapon
 #endif
 
-global string MOUNTED_TURRET_WEAPON_NAME = "mp_weapon_mounted_turret_weapon"
+global const string MOUNTED_TURRET_WEAPON_NAME = "mp_weapon_mounted_turret_weapon"
 
         
 const string TURRET_BUTTON_PRESS_SOUND_1P = "weapon_sheilaturret_triggerpull"

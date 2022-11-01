@@ -47,9 +47,9 @@ const MOBILE_SHIELD_DRONE_ENGINE_FX					= $"P_NC_shield_drone_engine"
 const MOBILE_SHIELD_DRONE_WARNING_FX				= $"P_nc_drone_warning"
 
 const MOBILE_SHIELD_DRONE_HEALTH					= 150	                      
-const MOBILE_SHIELD_WALL_HEALTH 					= 350	     
+const MOBILE_SHIELD_WALL_HEALTH 					= 500	     	     
 
-const float MOBILE_SHIELD_SPEED						= 80
+const float MOBILE_SHIELD_SPEED						= 160	    
 
 const vector MOBILE_SHIELD_FX_COLOR 				= < 40, 210, 255 >
 const vector MOBILE_SHIELD_ENEMY_FX_COLOR 			= < 255, 100, 12 >
@@ -812,7 +812,7 @@ void function OnDeployableShieldPlanted( entity projectile )
 
 	                                                               
 
-	                                                                                                                                                         
+	                                                                                                                                                                           
 
 	            
 		                          
@@ -908,7 +908,7 @@ void function OnDeployableShieldPlanted( entity projectile )
 	                        
 
 	                                                                      
-	                                                                                                                                                                         
+	                                                                                                                                                                                           
 	                                                                                                                                                                  
 	                                     
 	                                    
@@ -998,98 +998,102 @@ void function OnDeployableShieldPlanted( entity projectile )
 		 
 
 		                                                             
-		                                   
+		                        
 		 
-			                                       
-
-			                      			                                                                                   
-			                            	                                                                            
-			                   				                                                                         
-
-			                				                                                            
-			                   				                                                    
-			             					                                                               
-
-			                                                                       
+			                                   
 			 
-				                                                                                                 
+				                                       
+
+				                      			                                                                                   
+				                            	                                                                            
+				                   				                                                                         
+
+				                				                                                            
+				                   				                                                    
+				             					                                                               
+
+				                                                                       
 				 
-					                                                                                                                   
-					                      
+					                                                                                                 
 					 
-						                 
-						                                                                 
-						                        
+						                                                                                                                   
+						                      
+						 
+							                 
+							                                                                 
+							                        
+						 
+						                                                                                                          
+						 
+							                 
+							                                                            
+						 
+						    
+							                  
 					 
-					                                                                                                          
+					    
 					 
 						                 
 						                                                            
 					 
-					    
-						                  
+				 
+				    
+					                  	                                                 
+
+				                                         
+				 
+					                             
+					                                                                                          
+					                                                              
+
+				 
+
+				                                  
+			 
+
+			                     
+			 
+				                               
+				 
+					                                                                                                                                                                              
+					                                                                                                                                                                          
+
+					                                                               
+						                                         
+
+					                                                                      
+					                       
+				 
+
+				                 
+				 
+					                        
+					 
+						       
+							                                        
+								                                             
+						            
+
+						                                                                         
+						                       
+					 
 				 
 				    
 				 
-					                 
-					                                                            
-				 
-			 
-			    
-				                  	                                                 
-
-			                                         
-			 
-				                             
-				                                                                                          
-				                                                              
-
-			 
-
-			                                  
-		 
-
-		                     
-		 
-			                               
-			 
-				                                                                                                                                                                              
-				                                                                                                                                                                          	
-				
-				                                                               
-					                                         
-
-				                                                                      
-				                       
-			 
-
-			                 
-			 
-				                        
-				 
-					       
-						                                        
-							                                             
-					            
-
-					                                                                         
 					                       
-				 
-			 
-			    
-			 
-				                       
-				 
-					       
-						                                        
-							                                           
-					            
+					 
+						       
+							                                        
+								                                           
+						            
 
-					                              
-					                        
+						                              
+						                        
+					 
 				 
 			 
 		 
+
 
 		       
 		                                        
@@ -1201,7 +1205,7 @@ void function CodeCallback_ScriptMoverTraversalStopped( entity ent, bool isBlock
 
 	                                             
 
-	                                                                                                                                                                                   
+	                                                                                                                                                                                                     
 	                                      
 	                                     
 	                                                                                              
@@ -1214,7 +1218,7 @@ void function CodeCallback_ScriptMoverTraversalStopped( entity ent, bool isBlock
 		                                                            
 	 
 
-	                                                                                                                                                                                
+	                                                                                                                                                                                                  
 	                                   
 	                                  
 	                                                              
@@ -1242,7 +1246,7 @@ void function CodeCallback_ScriptMoverTraversalStopped( entity ent, bool isBlock
 	                               
 
                     
-                                            
+	                                           
        
 
 	                                                                            
@@ -1712,7 +1716,7 @@ void function ShieldThrow_CreateDestinationMarker( entity player, vector endPos,
 	{
 		mover  = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", endPos, normal )
 		mover.SetParent( groundMoverEnt, "", true )
-		fxHandle = StartParticleEffectOnEntity( mover, arID, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+		fxHandle = StartParticleEffectOnEntity( mover, arID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	}
 	else
 	{
@@ -1857,7 +1861,7 @@ bool function MobileShield_IsAllowedStickyEnt( entity mobileShield, entity stick
 	if ( stickyEntWeaponClassName == "mp_weapon_arc_bolt" )
 		allowStick = true
 
-	if ( stickyEntWeaponClassName == "mp_weapon_grenade_emp" )
+	if ( stickyEntWeaponClassName == GRENADE_EMP_WEAPON_NAME )
 		allowStick = true
 
 	if( allowStick )

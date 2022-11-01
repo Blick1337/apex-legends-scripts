@@ -24,6 +24,9 @@ global function LiveAPI_GetWeaponNameFromDamageSourceID
 global function LiveAPI_OnPlayerDowned
 global function LiveAPI_OnLocalPlayerSpawned
 
+                   
+global function ClientCodeCallback_SpectatorInsertAnnotation
+
 struct
 {
 	bool isEnabled = false
@@ -87,9 +90,10 @@ var function GetDatacenterInfo( string datacenterName )
 void function ServerCallback_LiveAPI_LogNetwork_MatchSetup( string playlistName, string playlistDesc, string datacenterName )
 {
 	bool aimAssist = GetConVarBool( CUSTOM_AIM_ASSIST_CONVAR_NAME )
+	bool anonymousMode = GetConVarBool( CUSTOM_ANONYMOUS_MODE_CONVAR_NAME )
 	LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.matchSetup,
-		[ GetMapName(), Localize( playlistName ), Localize( playlistDesc ), GetDatacenterInfo( datacenterName ), aimAssist, GetServerDebugId() ],
-		[ "map", 		"playlistName", 		  "playlistDesc", 			"datacenter", 						"aimAssistOn", "serverId" ]
+		[ GetMapName(),	Localize( playlistName ),	Localize( playlistDesc ),	GetDatacenterInfo( datacenterName ), 	aimAssist, 		GetServerDebugId(),	anonymousMode  ],
+		[ "map", 		"playlistName",				"playlistDesc", 			"datacenter", 							"aimAssistOn", 	"serverId", 		"anonymousMode" ]
 	)
 }
 
@@ -241,7 +245,7 @@ void function ServerCallback_LiveAPI_LogNetwork_InventoryActionWithMods( int eve
     if ( extraData.len() > 0 )
     {
                                                                                                                                           
-        array<string> extraDataAsArray = split( extraData, " " )
+        array<string> extraDataAsArray = split( extraData, WHITESPACE_CHARACTERS )
 
         int curIndex = 0
         foreach ( mod in extraDataAsArray )
@@ -456,8 +460,8 @@ void function LiveAPI_OnGameStateChanged( int newVal )
 		}
 
 		LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.matchStateEnd,
-			[ GetEnumString( "eGameState", GetGameState() ), winners ],
-			[ "state", 													"winners" ]
+			[ GetEnumString( "eGameState", GetGameState() ),	winners ],
+			[ "state", 											"winners" ]
 		)
 
 		return
@@ -474,13 +478,20 @@ void function LiveAPI_OnLocalPlayerSpawned( entity localPlayer )
 		return
 	}
 
+	                                                                                                                                             
 	if ( LiveAPI_IsLogging() )
-		LiveAPI_FinishLogging()                                                                                                                                              
+		LiveAPI_FinishLogging()
+
 	LiveAPI_StartCallbacks()
 
 	                                 
 	Remote_ServerCallFunction( "ClientCallback_LiveAPI_JoinObservers" )
 	printf( "[LiveAPI] Local player spawned " + string( localPlayer ) )
+}
+
+void function ClientCodeCallback_SpectatorInsertAnnotation( int annotationSerial )
+{
+	LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.observerAnnotation, [ annotationSerial ], [ "serialNum" ] )
 }
 
 void function ClLiveAPI_Init()
@@ -491,7 +502,7 @@ void function ClLiveAPI_Init()
 	LiveAPI_StartCallbacks()
 
 	                                                 
-	RegisterNetVarBoolChangeCallback( "hasLockedInCharacter", LiveAPI_OnPlayerLockedInCharacter )
+	RegisterNetVarBoolChangeCallback( CHARACTER_SELECT_NETVAR_HAS_LOCKED_IN_CHARACTER, LiveAPI_OnPlayerLockedInCharacter )
 
 	                                       
 	AddCallback_OnClientScriptInit( LiveAPI_OnLocalPlayerSpawned )
@@ -513,7 +524,7 @@ void function LiveAPI_StartCallbacks()
 
 	printf( "[LiveAPI] Started callbacks" )
 
-	                       
+	                                            
 	LiveAPI_StartLogging()
 
 	                                                                   

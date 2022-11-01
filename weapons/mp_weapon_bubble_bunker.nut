@@ -3,6 +3,11 @@ global function MpWeaponBubbleBunker_Init
 global function OnWeaponTossReleaseAnimEvent_WeaponBubbleBunker
 global function OnWeaponTossPrep_WeaponBubbleBunker
 
+                        
+                                    
+                                        
+      
+
             
                                                                                    
         
@@ -10,6 +15,8 @@ global function GibraltarIsInDome
 global function InDomeShield
 
 global const string GIBRALTAR_DOME_SCRIPTNAME = "gibraltar_dome_shield"
+global const string BUBBLE_BUNKER_MOVER_SCRIPTNAME = "Gibraltar_BubbleShield_mover"
+global const string BUBBLE_BUNKER_WEAPON_NAME = "mp_weapon_bubble_bunker"
 
 const float BUBBLE_BUNKER_DEPLOY_DELAY = 1.0
 const float BUBBLE_BUNKER_DURATION_WARNING = 5.0
@@ -18,11 +25,21 @@ const bool BUBBLE_BUNKER_DAMAGE_ENEMIES = false
 
 const float BUBBLE_BUNKER_ANGLE_LIMIT = 0.55
 
+                        
+                                           
+                                               
+      
+
 const asset BUBBLE_BUNKER_BEAM_FX = $"P_wpn_BBunker_beam"
 const asset BUBBLE_BUNKER_BEAM_END_FX = $"P_wpn_BBunker_beam_end"
 const asset BUBBLE_BUNKER_SHIELD_FX = $"P_wpn_BBunker_shield"
 const asset BUBBLE_BUNKER_SHIELD_COLLISION_MODEL = $"mdl/fx/bb_shield.rmdl"
 const asset BUBBLE_BUNKER_SHIELD_PROJECTILE = $"mdl/props/gibraltar_bubbleshield/gibraltar_bubbleshield.rmdl"
+                        
+                                                                                   
+                                                                 
+                                                                   
+      
 
 const string BUBBLE_BUNKER_SOUND_ENDING = "Gibraltar_BubbleShield_Ending"
 const string BUBBLE_BUNKER_SOUND_FINISH = "Gibraltar_BubbleShield_Deactivate"
@@ -37,6 +54,22 @@ const BUBBLE_BUNKER_RADIUS = 240
 	      
         
 
+                        
+      
+ 
+           
+                                                                                                                     
+                                              
+                                              
+                                                                                                                                      
+                                                                                                                                                            
+                                                                           
+                                                 
+       
+
+      
+      
+
 
 void function MpWeaponBubbleBunker_Init()
 {
@@ -45,16 +78,54 @@ void function MpWeaponBubbleBunker_Init()
 	PrecacheParticleSystem( BUBBLE_BUNKER_SHIELD_FX )
 	PrecacheModel( BUBBLE_BUNKER_SHIELD_COLLISION_MODEL )
 	PrecacheModel( BUBBLE_BUNKER_SHIELD_PROJECTILE )
+	
+                         
+                                                       
+                                                          
+       
 
 	#if SERVER
 	                                     
 	                                      
 	                                     
+                         
+                                        
+       
 	#else
 	                                                                                                                                              
 	                                                                                             
 	#endif
+                         
+           
+                                                                                                          
+       
+       
 }
+
+                        
+                                                
+ 
+                      
+              
+
+                                                       
+ 
+
+                                                    
+ 
+                      
+              
+
+                                                        
+ 
+
+          
+                                                                                                 
+ 
+                                          
+ 
+      
+      
 
 var function OnWeaponTossReleaseAnimEvent_WeaponBubbleBunker( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
@@ -128,11 +199,22 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 		                                                                         
 		                                                                                       
 
-		                                                                        
+		                          
+
+                          
+                             
+        
+
+		                                                                                   
 		                                   
 		                                                   
 		                                   
 		                                                        
+
+                          
+                                                                       
+        
+
 		                    
 
 		                               
@@ -155,6 +237,65 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 }
 
 #if SERVER
+                        
+                                                              
+ 
+                                                                          
+                                           
+                              
+  
+                                                                          
+                                  
+   
+                                                                                                                                                              
+                                                
+   
+  
+ 
+
+                                                                                 
+ 
+                                                                                                                                     
+                                                                                            
+
+                                                
+  
+                                                          
+   
+                                                   
+   
+
+                                               
+  
+
+                                          
+ 
+
+                                                                               
+ 
+                                                  
+  
+                                                              
+                        
+
+                                                      
+   
+                                                        
+   
+
+                                                 
+
+                              
+   
+                                            
+                                             
+  
+                                          
+   
+  
+ 
+      
+
                                                                      
  
 	                                   
@@ -222,10 +363,151 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 	                                                           
  
 
+                        
+                                                        
+ 
+                                                           
+                                                        
+                                           
+                                          
+                                          
+                                   
+                                             
+                                              
+                                              
+                                             
+
+                                                                  
+                                                                          
+                                                                         
+ 
+                                                    
+ 
+                                                          
+                                                  
+                                               
+                                             
+                                            
+                                            
+                                     
+                                          
+                                                
+                                           
+                              
+
+                                                                    
+                                                                            
+                                                                       
+ 
+
+                                                                           
+ 
+                                                        
+                                                         
+
+                                
+        
+
+                            
+        
+
+                             
+        
+
+                                              
+                                          
+
+                                                                                                    
+        
+
+                                                                                
+
+                                                                                 
+  
+                                                             
+   
+                                        
+         
+   
+
+                                
+                                                             
+                                                                                 
+    
+                                         
+          
+    
+        
+  
+
+               
+                        
+                                                  
+
+                   
+        
+
+                                           
+                                                                      
+    
+                                                                          
+                       
+    
+
+                                                                                  
+                                                     
+
+                         
+                                                           
+
+                                                         
+ 
+
+                                                                               
+ 
+                               
+        
+
+                                                       
+                                                   
+                                       
+
+                        
+                                                              
+
+                            
+        
+
+                                                                                                    
+
+                           
+  
+                                                             
+
+                                                                                                                            
+                                                                 
+   
+                                                                             
+   
+
+                              
+                                                            
+
+                                                                                                                                      
+                                                                                               
+                                                                                                                               
+
+  
+ 
+      
+
                                                                                                                                   
  
 	                                   
 	                                     
+                         
+                                              
+       
 
 	                                    
 
@@ -233,8 +515,35 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 		      
 
 	                                            
+	                          
 
-	                                                                                                                                                                                                                      
+
+                         
+                         
+                                                                                                   
+                                                                                       
+                                                                                                                                                                                                                                   
+                                                                                                                                                                                                                                      
+                                                             
+                                                               
+                                        
+                                                        
+                                                    
+                                           
+
+                                    
+                                
+
+                                                                 
+
+                                                       
+                                                       
+      
+	                                                                                                                                                                                                                 
+       
+
+
+
 	                                  
 	                                                  
 
@@ -246,16 +555,18 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 	                                 
 
                     
-                                              
+	                                             
        
 
 	                                                             
 	                                                      
 
+                          
 	                                                                                                                 
 		                       
 			                                                            
 	  
+       
 
 	            
 		                                         
@@ -269,6 +580,16 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 				                                   
 		 
 	 
+
+                         
+              
+                                     
+    
+                                       
+                                             
+    
+   
+       
 
 	                                                      
 	                                              
@@ -305,7 +626,7 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 
                                                      
  
-	                                                                                  
+	                                                                                                                  
 
 	                                         
 

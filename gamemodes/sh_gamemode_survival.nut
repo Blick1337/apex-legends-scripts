@@ -15,7 +15,9 @@ global function CharSelect_GetPickingSingleDurationMin
 global function CharSelect_GetPickingDelayAfterEachLock
 global function CharSelect_GetPickingDelayAfterAll
 global function CharSelect_GetOutroSceneChangeDuration
+global function CharSelect_GetOutroAllSquadsPresentDuration
 global function CharSelect_GetOutroSquadPresentDuration
+global function CharSelect_GetOutroMVPPresentDuration
 global function CharSelect_GetOutroChampionPresentDuration
 global function CharSelect_GetOutroTransitionDuration
 
@@ -174,27 +176,29 @@ bool function HasFastIntro()
 }
 
   
-bool function PreGame_GetWaitingForPlayersHasBlackScreen()	{ return GetCurrentPlaylistVarBool( "waiting_for_players_has_black_screen", false ) }
-bool function PreGame_GetWaitingForPlayersSpawningEnabled()	{ return GetCurrentPlaylistVarBool( "waiting_for_players_spawning_enabled", false ) }
-float function PreGame_GetWaitingForPlayersDelayMin()		{ return GetCurrentPlaylistVarFloat( "waiting_for_players_min_wait", 0.0 ) }
-float function PreGame_GetWaitingForPlayersDelayMax()		{ return GetCurrentPlaylistVarFloat( "waiting_for_players_timeout_seconds", 20.0 ) }
-float function PreGame_GetWaitingForPlayersCountdown()		{ return (HasFastIntro() ? 0.0 : GetCurrentPlaylistVarFloat( "waiting_for_players_countdown_seconds", 8.0 ) ) }
+bool function PreGame_GetWaitingForPlayersHasBlackScreen()		{ return GetCurrentPlaylistVarBool( "waiting_for_players_has_black_screen", false ) }
+bool function PreGame_GetWaitingForPlayersSpawningEnabled()		{ return GetCurrentPlaylistVarBool( "waiting_for_players_spawning_enabled", false ) }
+float function PreGame_GetWaitingForPlayersDelayMin()			{ return GetCurrentPlaylistVarFloat( "waiting_for_players_min_wait", 0.0 ) }
+float function PreGame_GetWaitingForPlayersDelayMax()			{ return GetCurrentPlaylistVarFloat( "waiting_for_players_timeout_seconds", 20.0 ) }
+float function PreGame_GetWaitingForPlayersCountdown()			{ return (HasFastIntro() ? 0.0 : GetCurrentPlaylistVarFloat( "waiting_for_players_countdown_seconds", 8.0 ) ) }
   
-float function CharSelect_GetIntroMusicStartTime()		 	{ return GetCurrentPlaylistVarFloat( "charselect_intro_music_start_time", -0.8 ) }
-float function CharSelect_GetIntroTransitionDuration()		{ return GetCurrentPlaylistVarFloat( "charselect_intro_transition_duration", 3.0 ) }
-float function CharSelect_GetIntroCountdownDuration()		{ return GetCurrentPlaylistVarFloat( "charselect_intro_countdown_duration", 0.0 ) }
+float function CharSelect_GetIntroMusicStartTime()		 		{ return GetCurrentPlaylistVarFloat( "charselect_intro_music_start_time", -0.8 ) }
+float function CharSelect_GetIntroTransitionDuration()			{ return GetCurrentPlaylistVarFloat( "charselect_intro_transition_duration", 3.0 ) }
+float function CharSelect_GetIntroCountdownDuration()			{ return GetCurrentPlaylistVarFloat( "charselect_intro_countdown_duration", 0.0 ) }
   
-float function CharSelect_GetPickingDelayBeforeAll()		{ return GetCurrentPlaylistVarFloat( "charselect_picking_delay_before_all", 0.0 ) }
-float function CharSelect_GetPickingDelayOnFirst()			{ return GetCurrentPlaylistVarFloat( "charselect_picking_delay_on_first", 1.5 ) }
-float function CharSelect_GetPickingSingleDurationMax()		{ return (HasFastIntro() ? 0.0 : GetCurrentPlaylistVarFloat( "character_select_time_max", 8.0 ) ) }
-float function CharSelect_GetPickingSingleDurationMin()		{ return (HasFastIntro() ? 0.0 : GetCurrentPlaylistVarFloat( "character_select_time_min", 6.0 ) ) }
-float function CharSelect_GetPickingDelayAfterEachLock()	{ return GetCurrentPlaylistVarFloat( "charselect_picking_delay_after_each_lock", 0.5 ) }
-float function CharSelect_GetPickingDelayAfterAll()			{ return GetCurrentPlaylistVarFloat( "charselect_picking_delay_after_all", 1.5 ) }
+float function CharSelect_GetPickingDelayBeforeAll()			{ return GetCurrentPlaylistVarFloat( "charselect_picking_delay_before_all", 0.0 ) }
+float function CharSelect_GetPickingDelayOnFirst()				{ return GetCurrentPlaylistVarFloat( "charselect_picking_delay_on_first", 1.5 ) }
+float function CharSelect_GetPickingSingleDurationMax()			{ return (HasFastIntro() ? 0.0 : GetCurrentPlaylistVarFloat( "character_select_time_max", 8.0 ) ) }
+float function CharSelect_GetPickingSingleDurationMin()			{ return (HasFastIntro() ? 0.0 : GetCurrentPlaylistVarFloat( "character_select_time_min", 6.0 ) ) }
+float function CharSelect_GetPickingDelayAfterEachLock()		{ return GetCurrentPlaylistVarFloat( "charselect_picking_delay_after_each_lock", 0.5 ) }
+float function CharSelect_GetPickingDelayAfterAll()				{ return GetCurrentPlaylistVarFloat( "charselect_picking_delay_after_all", 1.5 ) }
   
-float function CharSelect_GetOutroSceneChangeDuration()		{ return GetCurrentPlaylistVarFloat( "charselect_outro_scene_change_duration", 4.0 ) }
-float function CharSelect_GetOutroSquadPresentDuration()	{ return GetCurrentPlaylistVarFloat( "charselect_outro_squad_present_duration", 6.0  ) }
-float function CharSelect_GetOutroChampionPresentDuration()	{ return GetCurrentPlaylistVarFloat( "charselect_outro_champion_present_duration", 8.0 ) }
-float function CharSelect_GetOutroTransitionDuration()		{ return GetCurrentPlaylistVarFloat( "charselect_outro_transition_duration", 3.0 ) }
+float function CharSelect_GetOutroSceneChangeDuration()			{ return GetCurrentPlaylistVarFloat( "charselect_outro_scene_change_duration", 4.0 ) }
+float function CharSelect_GetOutroAllSquadsPresentDuration()	{ return GetCurrentPlaylistVarFloat( "charselect_outro_all_squads_present_duration", 0.0 ) }
+float function CharSelect_GetOutroSquadPresentDuration()		{ return GetCurrentPlaylistVarFloat( "charselect_outro_squad_present_duration", 6.0  ) }
+float function CharSelect_GetOutroMVPPresentDuration()			{ return GetCurrentPlaylistVarFloat( "charselect_outro_mvp_present_duration", 0.0 ) }
+float function CharSelect_GetOutroChampionPresentDuration()		{ return GetCurrentPlaylistVarFloat( "charselect_outro_champion_present_duration", 8.0 ) }
+float function CharSelect_GetOutroTransitionDuration()			{ return GetCurrentPlaylistVarFloat( "charselect_outro_transition_duration", 3.0 ) }
 
 
 #if SERVER || CLIENT
@@ -204,6 +208,11 @@ void function GamemodeSurvivalShared_Init()
 		BleedoutShared_Init()
 		ShApexScreens_Init()
 		Sh_RespawnBeacon_Init()
+
+                     
+                               
+        
+
 		MobileRespawnBeacon_Init()
 		Sh_Airdrops_Init()
 
@@ -225,21 +234,24 @@ void function GamemodeSurvivalShared_Init()
 		Remote_RegisterServerFunction( "ClientCallback_Sur_UpdateCharacterLock", "bool")
 
 		                        
-		Remote_RegisterServerFunction( "ClientCallback_Sur_UseHealthPack", "string" )
-		Remote_RegisterServerFunction( "ClientCallback_Sur_DropBackpackItem", "string", "int", 0, INT_MAX, "entity" )
-		Remote_RegisterServerFunction( "ClientCallback_Sur_DropBackpackItem_UI", "string", "int", 0, INT_MAX, "int",INT_MIN, INT_MAX )
-		Remote_RegisterServerFunction( "ClientCallback_Sur_DropEquipment", "string" )
-		Remote_RegisterServerFunction( "ClientCallback_Sur_EquipOrdnance", "string" )
-		Remote_RegisterServerFunction( "ClientCallback_Sur_EquipGadget", "string" )
-		Remote_RegisterServerFunction( "ClientCallback_Sur_EquipAttachment", "string", "int", -1, INT_MAX )
-		Remote_RegisterServerFunction( "ClientCallback_Sur_UnequipAttachment", "string", "int", -1, INT_MAX, "bool" )
-		Remote_RegisterServerFunction( "ClientCallback_Sur_TransferAttachment", "string", "int", -1, INT_MAX )
+		var dt = GetDataTable( LOOT_DATATABLE )
+		int numRows = GetDataTableRowCount( dt )
+		Remote_RegisterServerFunction( "ClientCallback_Sur_UseHealthPack", "int", -1, numRows )
+		Remote_RegisterServerFunction( "ClientCallback_Sur_DropBackpackItem", "int", -1, numRows, "int", 0, INT_MAX, "entity" )
+		Remote_RegisterServerFunction( "ClientCallback_Sur_DropBackpackItem_UI", "int", -1, numRows, "int", 0, INT_MAX, "int",INT_MIN, INT_MAX )
+		Remote_RegisterServerFunction( "ClientCallback_Sur_DropEquipment", "int", 0, eEquipmentSlotType.COUNT )
+		Remote_RegisterServerFunction( "ClientCallback_Sur_EquipOrdnance", "int", -1, numRows )
+		Remote_RegisterServerFunction( "ClientCallback_Sur_EquipGadget", "int", -1, numRows )
+		Remote_RegisterServerFunction( "ClientCallback_Sur_EquipAttachment", "int", -1, numRows, "int", -1, INT_MAX )
+		Remote_RegisterServerFunction( "ClientCallback_Sur_UnequipAttachment", "int", -1, numRows, "int", -1, INT_MAX, "bool" )
+		Remote_RegisterServerFunction( "ClientCallback_Sur_TransferAttachment", "int", -1, numRows, "int", -1, INT_MAX )
 
 		Remote_RegisterServerFunction( "ClientCallback_Sur_CancelHeal" )
 
 		Remote_RegisterServerFunction( "ClientCallback_TPPromptGoToMapPoint", "float", -FLT_MAX, FLT_MAX, 32, "float", -FLT_MAX, FLT_MAX, 32 )
 		Remote_RegisterServerFunction( "ClientCallback_Sur_HoldForUltimate" )
 		Remote_RegisterServerFunction( "ClientCallback_ReportPlayer", "int", -1, INT_MAX, "string", "string", "string" )
+		RegisterNetworkedVariable( "numberOfAirdropRoundsLeft", SNDC_GLOBAL, SNVT_INT, 0 )
 	#endif
 
 	#if SERVER
@@ -282,8 +294,7 @@ void function GamemodeSurvivalShared_UI_Init()
 
 void function UIInputChanged( bool controllerModeActive )
 {
-	if ( CanRunClientScript() )
-		RunClientScript( "InputModeChanged_SetCharacterInfoOverlayPrompt", controllerModeActive )
+
 }
 #endif
 
@@ -325,6 +336,11 @@ bool function Survival_PlayerCanDrop( entity player )
                             
 	if ( ExplosiveHold_IsPlayerPlantingGrenade( player ) )
 		return false
+      
+
+                 
+                                                                                   
+              
       
 
 	return true
@@ -371,7 +387,7 @@ bool function Survival_CanUseHealthPack( entity player, int itemType, bool check
 				case eUseHealthKitResult.DENY_NO_HEALTH_KIT:
 				case eUseHealthKitResult.DENY_NO_KITS:
 				case eUseHealthKitResult.DENY_NO_SHIELD_KIT:
-					Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.INVENTORY_NEED_HEALTH, eCommsFlags.NONE, null, "" )
+					Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.INVENTORY_NEED_HEALTH, eCommsFlags.NONE )
 					                                
 				default:
 					AnnouncementMessageRight( player, healthKitResultStrings[canUseResult] )
@@ -661,12 +677,13 @@ entity function Sur_GetPlaneEnt()
 TargetKitHealthAmounts function PredictHealthPackUse( entity player, HealthPickup itemData )
 {
 	int currentHealth   = player.GetHealth()
+	int maxHealth   = player.GetMaxHealth()
 	int currentShields  = player.GetShieldHealth()
 	int shieldHealthMax = player.GetShieldHealthMax()
 
 	int resourceHealthRemaining = 0
-	int virtualHealth           = minint( currentHealth + resourceHealthRemaining, 100 )
-	int missingHealth           = 100 - virtualHealth
+	int virtualHealth           = minint( currentHealth + resourceHealthRemaining, maxHealth )
+	int missingHealth           = maxHealth - virtualHealth
 	int missingShields          = shieldHealthMax - currentShields
 
 	TargetKitHealthAmounts targetValues
@@ -679,7 +696,7 @@ TargetKitHealthAmounts function PredictHealthPackUse( entity player, HealthPicku
 		int remainingHealth = int( itemData.healAmount - healthToApply )
 
 		int shieldsToApply = 0
-		if ( itemData.healCap > 100 && remainingHealth > 0 )
+		if ( itemData.healCap > maxHealth && remainingHealth > 0 )
 		{
 			shieldsToApply = minint( remainingHealth, missingShields )
 		}
@@ -687,14 +704,14 @@ TargetKitHealthAmounts function PredictHealthPackUse( entity player, HealthPicku
 		Assert( currentShields + shieldsToApply <= shieldHealthMax, "Bad math: " + currentShields + " + " + shieldsToApply + " > " + shieldHealthMax )
 
 		if ( healthToApply || itemData.healTime > 0 )                                     
-			targetValues.targetHealth = (currentHealth + healthToApply + resourceHealthRemaining) / 100.0
+			targetValues.targetHealth = (healthToApply + resourceHealthRemaining) / float( maxHealth )
 
 		if ( shieldsToApply && shieldHealthMax > 0 )
-			targetValues.targetShields = (currentShields + shieldsToApply) / float( shieldHealthMax )
+			targetValues.targetShields = shieldsToApply / float( shieldHealthMax )
 	}
 
 	if ( itemData.shieldAmount > 0 && shieldHealthMax > 0 )
-		targetValues.targetShields = minint( player.GetShieldHealth() + int( itemData.shieldAmount ), shieldHealthMax ) / float( shieldHealthMax )
+		targetValues.targetShields = itemData.shieldAmount / float( shieldHealthMax )
 
 	return targetValues
 }
@@ -721,8 +738,8 @@ bool function CanWeaponInspect( entity player, int activity )
        
 
                        
-                                      
-                                                
+		                                    
+			                                             
        
 
                          
@@ -733,6 +750,11 @@ bool function CanWeaponInspect( entity player, int activity )
                            
                                
                                             
+       
+
+                        
+		                               
+			                                      
        
 
 	                                            
@@ -798,7 +820,7 @@ string function GetMusicForJump( entity player )
 
 bool function PositionIsInMapBounds( vector pos )
 {
-	return (fabs( pos.x ) < MAX_MAP_BOUNDS && fabs( pos.y ) < MAX_MAP_BOUNDS && fabs( pos.z ) < MAX_MAP_BOUNDS)
+	return VectorWithinBounds( pos, MAX_MAP_BOUNDS )
 }
 
 bool function Survival_IsPlayerHealing( entity player )

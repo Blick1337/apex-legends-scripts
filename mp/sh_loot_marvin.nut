@@ -568,7 +568,7 @@ string function LootMarvinHintTextFunc( entity marvin )
 bool function IsPlayerPathfinder( entity player )
 {
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
-	string characterRef  = ItemFlavor_GetHumanReadableRef( character ).tolower()
+	string characterRef  = ItemFlavor_GetCharacterRef( character ).tolower()
 
 	if ( characterRef != "character_pathfinder" )
 		return false

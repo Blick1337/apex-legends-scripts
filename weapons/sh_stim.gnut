@@ -213,7 +213,7 @@ void function RemovePlayerClassModAfterDuration( entity player, string mod, floa
 	                                                     
 
 	                               
-	                                                                                                                                   
+	                                                                                                                                                      
 	                                 
 
 	                 
@@ -296,7 +296,7 @@ void function StimVisualsEnabled( entity ent, int statusEffect, bool actuallyCha
 
 	Chroma_StartStimEffect()
 
-	int fxHandle = StartParticleEffectOnEntity( cockpit, s_cockpitFx, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int fxHandle = StartParticleEffectOnEntity( cockpit, s_cockpitFx, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	thread StimScreenFXThink( player, fxHandle, cockpit )
 }
 

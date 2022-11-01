@@ -22,6 +22,7 @@ global function OnClientAnimEvent_weapon_riot_drill
 
 global const string RIOT_DRILL_SCRIPT_NAME = "riot_drill_spike"
 global const string RIOT_DRILL_DANGERZONE_TARGETNAME = "riot_drill_dangerzone_threat"
+const string RIOT_DRILL_MOVER_SCRIPTNAME = "riot_drill_mover"
 
                          
 const float WALL_THICKNESS_MAX 			= 512.0			                        
@@ -134,8 +135,8 @@ struct
 		var depthRui
 	#endif
 
-	table riotDrillDamageParams 		= { damageSourceId = eDamageSourceId.mp_weapon_concussive_breach, damageType = DMG_BURN, scriptType = DF_BULLET }             
-	table riotDrillImpactDamageParams 	= { damageSourceId = eDamageSourceId.mp_weapon_concussive_breach, scriptType = DF_BULLET }             
+	table riotDrillDamageParams 		= { damageSourceId = eDamageSourceId.mp_weapon_concussive_breach, damageType = DMG_BURN }
+	table riotDrillImpactDamageParams 	= { damageSourceId = eDamageSourceId.mp_weapon_concussive_breach }
 
 	                    
 	bool fxOption_hideModels
@@ -262,7 +263,7 @@ void function RestoreRiotDrillAmmo( entity owner )
 
 	                                                                            
 	                                                                                                                                   
-	                                                                                        
+	                                                                                                                     
 	                                                                                                 
 	 
 		                                                                                                                                                    
@@ -307,7 +308,9 @@ void function RestoreRiotDrillAmmo( entity owner )
 			                                 
 			      
 		 
-		                                
+
+		                                                           
+			                                
 
 		                          
 			                              
@@ -392,7 +395,7 @@ void function RestoreRiotDrillAmmo( entity owner )
 	                                                                                       
 	                                                   
 
-	                             
+	                                                                                          
 		                                     
 
 	            
@@ -468,7 +471,7 @@ void function RestoreRiotDrillAmmo( entity owner )
 	                                                     
 	                                                               
 
-	                                          
+	                                                                                                                    
 	 
 		                                                             
 		                                                 
@@ -743,7 +746,7 @@ void function RestoreRiotDrillAmmo( entity owner )
 
 	                                                                                                  
 	                              
-		                                                                                                                                   
+		                                                                                                                                                     
 
 	        
 

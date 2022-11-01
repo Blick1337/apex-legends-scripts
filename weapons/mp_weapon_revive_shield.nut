@@ -40,8 +40,11 @@ const REVIVE_SHIELD_FX_ARM_BEAM							= $"P_NC_down_shield_arm_glow"
 
 const string REVIVE_SHIELD_IMPACT_FX_TABLE 				= "newcastle_revive_jetwash"
 
-const float REVIVE_SHIELD_MOVE_SLOW_SEVERITY 			= 0.05
-const float REVIVE_SHIELD_TURN_SLOW_SEVERITY 			= 0.6
+const bool REVIVE_SHIELD_IS_FASTER_THAN_CROUCH			= true
+const float REVIVE_SHIELD_MOVE_SLOW_SEVERITY 			= 0.05	                                                                                        
+const float REVIVE_SHIELD_TURN_SLOW_SEVERITY 			= 0.3 	     
+const float REVIVE_SHIELD_SPEED_BOOST_SEVERITY			= 0.25	  
+const float REVIVE_SHIELD_MAX_SPEED 					= 200
 const float REVIVE_TARGET_USE_DEBOUNCE 					= 0.3
 const float AUTO_REVIVE_MAX_ALLOWED_DIST_FROM_GROUND 	= 200.0
 
@@ -49,8 +52,8 @@ const string KNOCKDOWN_SHIELD_BASIC 					= "incapshield_pickup_lv0"
 const int BLEEDOUT_DISABLED_WEAPON_TYPES 				= WPT_ALL_EXCEPT_VIEWHANDS & ~WPT_INCAP_SHIELD
 
                
-const int REVIVE_SHIELD_MAX_SHIELD_HEALTH_TIER_1 		= 150      
-const int REVIVE_SHIELD_MAX_SHIELD_HEALTH_TIER_2 		= 250      
+const int REVIVE_SHIELD_MAX_SHIELD_HEALTH_TIER_1 		= 200            
+const int REVIVE_SHIELD_MAX_SHIELD_HEALTH_TIER_2 		= 300            
 const int REVIVE_SHIELD_MAX_SHIELD_HEALTH_TIER_3 		= 500      
 
 const string NEWCASTLE_REVIVE_SHIELD_HEALTH_NETVAR 		= "newcastleReviveShieldHP"
@@ -90,6 +93,9 @@ struct
 	float reviveShield_RegenRate	= SHIELD_REGEN_RATE_PER_SECOND
 	float reviveShield_MoveSlow		= REVIVE_SHIELD_MOVE_SLOW_SEVERITY
 	float reviveShield_TurnSlow		= REVIVE_SHIELD_TURN_SLOW_SEVERITY
+	float reviveShield_SpeedBoost	= REVIVE_SHIELD_SPEED_BOOST_SEVERITY
+
+	bool isFasterThanCrouchSpeed	= REVIVE_SHIELD_IS_FASTER_THAN_CROUCH
 
 	array<entity> reviveShieldEnts
 	table<entity, bool> hasReviveShield = {}
@@ -119,6 +125,8 @@ void function MpWeaponReviveShield_Init()
 	file.reviveShield_RegenRate			= GetCurrentPlaylistVarFloat( "newcastle_revive_shield_regen_rate", SHIELD_REGEN_RATE_PER_SECOND )
 	file.reviveShield_MoveSlow			= GetCurrentPlaylistVarFloat( "newcastle_revive_shield_move_slow_severity", REVIVE_SHIELD_MOVE_SLOW_SEVERITY )
 	file.reviveShield_TurnSlow			= GetCurrentPlaylistVarFloat( "newcastle_revive_shield_turn_slow_severity", REVIVE_SHIELD_TURN_SLOW_SEVERITY )
+	file.reviveShield_SpeedBoost		= GetCurrentPlaylistVarFloat( "newcastle_revive_shield_speed_boost_severity", REVIVE_SHIELD_SPEED_BOOST_SEVERITY )
+	file.isFasterThanCrouchSpeed		= GetCurrentPlaylistVarBool( "newcastle_revive_shield_isFasterThanCrouchSpeed", REVIVE_SHIELD_IS_FASTER_THAN_CROUCH )
 
 	PrecacheModel( REVIVE_SHIELD_FX_COL )
 
@@ -157,6 +165,10 @@ void function MpWeaponReviveShield_Init()
 	#if CLIENT
 		RegisterConCommandTriggeredCallback( "+toggle_duck", AttemptCancel_NewcastleRevive_Console )                                                
 		RegisterConCommandTriggeredCallback( "+use", AttemptCancel_NewcastleRevive_PC )                
+	#endif
+
+	#if CLIENT || UI
+		AddCallback_EditLootDesc( Axiom_EditKnockdownLootDesc )
 	#endif
 
 }
@@ -206,6 +218,49 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 		if( didHave )
 			Signal( player, REVIVE_SHIELD_SIGNAL_END_HUD_METER )
 	#endif
+}
+#endif
+
+
+
+#if CLIENT || UI
+string function Axiom_EditKnockdownLootDesc( string lootRef, entity player, string originalDesc )
+{
+	string finalDesc = originalDesc
+	#if CLIENT
+		                                                                          
+		if (Crafting_IsPlayerAtWorkbench(player))
+			return finalDesc
+	#endif
+
+	if ( SURVIVAL_Loot_GetLootDataByRef( lootRef ).lootType == eLootType.INCAPSHIELD
+			&& IsValid( player )
+			&& LoadoutSlot_IsReady( ToEHI( player ), Loadout_Character() )
+			&& ItemFlavor_GetAsset( LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() ) ) == $"settings/itemflav/character/newcastle.rpak" )
+	{
+
+		string desc = ""
+		switch( lootRef )
+		{
+			case "incapshield_pickup_lv1":
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV1_HINT_NEWCASTLE" )
+				break
+			case "incapshield_pickup_lv2":
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV2_HINT_NEWCASTLE" )
+				break
+			case "incapshield_pickup_lv3":
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV3_HINT_NEWCASTLE" )
+				break
+			case "incapshield_pickup_lv4_selfrevive":
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV4_HINT_NEWCASTLE" )
+				break
+			default:
+				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV1_HINT_NEWCASTLE" )
+				break
+		}
+		return desc
+	}
+	return finalDesc
 }
 #endif
 
@@ -343,8 +398,21 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 	                                 
 	                                             
 	                                                          
+	                                
+	                                                    
 	                              
 	                                
+
+	            
+		                                
+		 
+			                        
+			                                                     
+		 
+	 
+
+	                          
+	                                                     
 
 	             
 	 
@@ -360,6 +428,15 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 				                                             
 				                                                       
 			 
+		 
+		    
+		 
+			                                                                                                
+			                                                                                                                                  
+			                                                                                                                                  
+			                                          
+			                                                       
+				                                        
 		 
 
 		           
@@ -726,12 +803,9 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 	                                                                                                                                                  
 	                                                                                                                  
 
-	                
-	                                                                                                               
-	                     	                                                                                      
 
 	            
-		                                                                                         
+		                                                      
 		 
 			                          
 				                                                         
@@ -751,8 +825,6 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 				                                                   
 				                                                   
 
-				                                               
-				                                           
 			 
 
 			                         
@@ -775,6 +847,8 @@ void function OnWeaponDeactivate_revive_shield( entity weapon )
 
 	              
 	 
+		                                            
+		                                             
 		                                  
 			                                                                    
 				                                   
@@ -1274,6 +1348,19 @@ void function CL_PassiveAxiom_KDShieldReviveChargeRUI_Thread( entity player, ent
 	                                                                                       
 	                                   
 
+	                       
+	                                                           
+	                 	                         
+	              		                            
+	                             
+	 
+		             	                            
+		        		                              
+	 
+
+	                  	 		                                                                                         
+	                        	                                                             
+
 	                                                    
 	                                                                               
 	                                                                        
@@ -1329,10 +1416,13 @@ void function CL_PassiveAxiom_KDShieldReviveChargeRUI_Thread( entity player, ent
 
 
 	            
-		                                                                      
+		                                                                                                           
 		 
 			                         
 			 
+				                                                 
+				                                            
+
 				                         
 				                                               
 				                                    
@@ -1569,6 +1659,7 @@ bool function IsEntNewcastleReviveTarget( entity ent )
 	                                
 	                              
 	                                                     
+	                                        
 
 	            
 		                    

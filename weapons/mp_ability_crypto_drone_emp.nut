@@ -3,7 +3,8 @@ global function OnWeaponAttemptOffhandSwitch_ability_crypto_drone_emp
 global function OnWeaponPrimaryAttack_ability_crypto_drone_emp
 #if SERVER
                         
-                            
+                           
+                              
 #endif
 
 const asset EMP_CHARGE_UP_FX = $"P_emp_chargeup"
@@ -273,57 +274,69 @@ var function OnWeaponPrimaryAttack_ability_crypto_drone_emp( entity weapon, Weap
 	    
 		                                             
 
-	 
-		                                                                       
-		                                    
-		 
-			                                                     
-				        
 
-			                              
-			                                        
-		 
-
-		                                                                     
-		                                   
-		 
-			                                                     
-				        
-
-			                                                                                                              
-			                                        
-		 
-
-		                                                                       
-		                                    
-		 
-			                                                                
-
-			                         
-			 
-				                                     
-				 
-					                                                                       
-				 
-				    
-				 
-					                  
-				 
-			 
-
-
-			                
-				        
-
-			                                  
-			                                        
-		 
-	 
+	                                                                                            
 
 	        
 
 	                           
 		                   
+ 
+
+                                                                                               
+ 
+	                     
+	                                    
+
+	                                                                                 
+	                                    
+	 
+		                                                     
+			        
+
+		                                                                     
+		                                        
+		               
+	 
+
+	                                                                               
+	                                   
+	 
+		                                                     
+			        
+
+		                                                                               
+		                                        
+		               
+	 
+
+	                                                                                 
+	                                    
+	 
+		                                                                
+
+		                         
+		 
+			                                     
+			 
+				                                                                       
+			 
+			    
+			 
+				                  
+			 
+		 
+
+
+		                
+			        
+
+		                                  
+		                                        
+		               
+	 
+
+	                    
  
 
                        
@@ -491,50 +504,7 @@ var function OnWeaponPrimaryAttack_ability_crypto_drone_emp( entity weapon, Weap
 	                               
 		                                                                                       
 
-	                                                                       
-	                                    
-	 
-		                                                     
-			        
-
-		                              
-		                                         
-	 
-
-	                                                                     
-	                                   
-	 
-		                                                     
-			        
-
-		                                                                                                              
-		                                         
-	 
-
-	                                                                       
-	                                    
-	 
-		                                                                
-
-		                         
-		 
-			                                     
-			 
-				                                                                       
-			 
-			    
-			 
-				                  
-			 
-		 
-
-
-		                
-			        
-
-		                                  
-		                                        
-	 
+	                                                                                            
 
 	        
 
@@ -677,14 +647,14 @@ void function EMPWarningFXThink( entity player, entity cockpit )
 	player.EndSignal( "OnDeath" )
 	cockpit.EndSignal( "OnDestroy" )
 
-	int fxHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( EMP_WARNING_FX_SCREEN ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int fxHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( EMP_WARNING_FX_SCREEN ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetIsWithCockpit( fxHandle, true )
 	EmitSoundOnEntity( player, "Wattson_Ultimate_G" )
 	vector controlPoint = <1, 1, 1>
 	EffectSetControlPointVector( fxHandle, 1, controlPoint )
 
 	                                                                                                                                         
-	int fxHandleGround = StartParticleEffectOnEntity( player, GetParticleSystemIndex( EMP_WARNING_FX_GROUND ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int fxHandleGround = StartParticleEffectOnEntity( player, GetParticleSystemIndex( EMP_WARNING_FX_GROUND ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 
 	player.WaitSignal( "EndEMPWarningFX" )
 
@@ -698,14 +668,25 @@ void function EMPWarningFXThink( entity player, entity cockpit )
 
 
 #if SERVER
-                                           
+                                                                                                  
  
 	                               
 
-	                                  
+	                                                  
 
-	                                                                                             
-	                    
-	                                       
+	                     
+	 
+		                                        
+			                                             
+			                                               
+			                                                                                                                              
+			     
+		                                          
+		        
+			                                                                                             
+			                    
+			                                       
+			     
+	 
  
 #endif

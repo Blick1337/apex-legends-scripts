@@ -1,3 +1,5 @@
+                                                                                           
+
 global function TimedEvents_Init
 
 #if SERVER || CLIENT
@@ -6,6 +8,7 @@ global function TimedEvents_Init
 
 #if SERVER
 	                                                    
+	                                                 
 #endif
 
 #if DEV && SERVER
@@ -15,15 +18,19 @@ global function TimedEvents_Init
 
 
 
-const float TIMED_EVENT_DISPLAY_BUFFER = 10.0
+global const float TIMED_EVENT_DISPLAY_BUFFER = 10.0
 const string WAYPOINTTYPE_TIMEDEVENTTRACKER = "timed_event_tracker"
 
 const INT_EVENTINDEX =			4
-const GAMETIME_START_TIME = 	0
-const GAMETIME_END_TIME = 		1
+global const TIMEDEVENT_WAYPOINT_INT_EVENT_PHASE = 		5	                                                                                   
+global const TIMEDEVENT_WAYPOINT_EVENT_START_TIME = 	0
+global const TIMEDEVENT_WAYPOINT_EVENT_END_TIME = 		1
 global const WAYPOINT_EVENT_STRING_AWARD = 			0
 
-
+#if SERVER
+                                                                  
+                                                                   
+#endif
 
 
 
@@ -36,6 +43,8 @@ global struct TimedEventLocalClientData
 	vector colorOverride
 	bool shouldShowPreamble
 	bool shouldHideUntilPrembleDone
+	bool shouldHideTimer
+	bool shouldAutoShowSuddenDeathText
 	float eventEndTime                     
 }
 #endif
@@ -46,6 +55,7 @@ global struct TimedEventData
 	#if SERVER
 		                     
 		                                     
+		                                    			                                                                                                                                          
 		                                           		                        
 		      											               	                                                                                     
 		      											               	                                                              
@@ -66,6 +76,8 @@ global struct TimedEventData
 
 	bool 	shouldHideUntilPrembleDone = false				                                               
 	bool   	shouldShowPreamble = true				                                                  
+	bool 	shouldHideTimer = false                                                                                                
+	bool 	shouldAutoShowSuddenDeathText = true                                                                                                    
 }
 
 
@@ -76,6 +88,14 @@ struct
 	array<TimedEventData>		timedEvents
 	table<int, TimedEventData>	indexToTimedEvent
 	table<TimedEventData, int>	timedEventToIndex
+
+	#if SERVER
+		                                     
+		                                                      
+		                                                 
+		                                                                                
+		                                                                                       
+	#endif          
 
 	#if CLIENT
 		var 										timedEventRui
@@ -142,11 +162,27 @@ void function TimedEvents_RegisterTimedEvent( TimedEventData data )
 #endif
 
 
+#if SERVER
+                                                                         
+                                                                                                                                                                                                                   
+ 
+	                                                                 
+		      
 
+	                                                                                                                                                                                                                                 
+	                                                                                                                                                                                                                                               
 
+	                                                                                          
+	                                                                                
+	                                                        
+	                                                                      
+	                                    
 
-
-
+	       
+		                                                  
+	             
+ 
+#endif          
 
 #if SERVER
                                               
@@ -159,92 +195,237 @@ void function TimedEvents_RegisterTimedEvent( TimedEventData data )
 	                                                         
  
 
-
                                                           
  
 	                                                 
 	                        
 
+	                                            
+
 	                                                                                                                             
 	                                                      
+	                                      
+
 	                                    
 	 
 		                                                                                                  
-			                                      
-	 
-
-	                                     
-	 
-		                          
-
-		                                                                                           
-		                                                        
 		 
-			                                                      
+			                                                                                                                  
+			                                    
 			 
-				                                                                                                       
-					        
-			 
-
-			                                   
-			                                          
-
-			                       
-			                          
-			                        
-			 
-				                                                           
-				                        
-				                                      
+				                                    
 			 
 			    
 			 
-				                             
-				                              
-					        
+				                                      
+				                                
+			 
+		 
+	 
 
+	                                                                                      
+
+	                                                                                                                                              
+	 
+		                                     
+		 
+			                          
+
+			                                                                                           
+			                                                        
+			 
+				                                                      
+				 
+					                                                                                                       
+						        
+				 
+
+				                                   
+				                                          
+
+				                       
 				                          
-				                                      
-			 
+				                        
+				 
+					                                                           
+					                        
+					                                      
+				 
+				    
+				 
+					                             
+					                              
+						        
 
-			                              			                              
-			                                		                     
-			                               
-				                                                     
+					                          
+					                                      
+				 
 
-			                                            
-			                                             
-				                                    
-
-			                                                    
-			                                    
-			 
-				                                      
-				                                        
-
+				                              			                              
+				                                		                     
 				                               
-				 
-					                                                                      
-				 
+					                                                     
 
-				                                                               
+				                                            
+				                                             
+					                                    
 
-				                                                                                                    
-				                                                           
+				                                                    
+				                                    
+				 
+					       
+						                                                                
+					             
+
+					                                      
+					                                        
+
+					                               
+						                                                                      
+
+					                                                               
+
+					                                                                                                    
+					                                                           
+				 
+			 
+
+			                                                      
+
+			           
+		 
+	 
+	                                                                                                         
+	 
+		       
+			                                                                                                      
+		             
+
+		                                          
+	 
+
+	       
+		                                                                       
+	             
+
+	                                                              
+ 
+
+                                                                                                                                                                    
+                                                                                                           
+ 
+	                                                     
+	                        
+		      
+
+	                                                 
+	                                                                  
+
+	                                                                                                                                                                                   
+
+	                              
+	                                                               
+
+	                                                
+
+	                                          
+	                                                
+		                     
+
+	                 
+	                                                                                           
+
+	                                                                                                                            
+
+	                                            
+	                             
+	 
+		       
+			                                                                               
+		             
+
+		                    
+
+		                                
+		                           
+		                              
+		                                              
+
+		                             
+		 
+			                                                                                                                                             
+			                                                                                                                                         
+			                                      
+			                                                                                                                                                                         
+			 
+				                    
+				                        
+				     
+			 
+			                                                           
+			 
+				     
 			 
 		 
 
-		                                                      
+		                                          
+		 
+			                                
+			                             
+				                             
+		 
 
-		           
+		                           
+		 
+			                               
+
+			                                          
+			                                                
+				                     
+
+			                     
+		 
+
+		                        
+		 
+			       
+				                                                                  
+			             
+
+			                                      
+			                                        
+
+			                                      
+				                                                
+
+			                                                                      
+
+			                                                                                                           
+		 
+		    
+		 
+			       
+				                                                                                    
+			             
+		 
+		       
+			                                                                                                                 
+		             
+
+		                      
 	 
-
-	                                                              
  
 
 
                                                                                                                                      
  
+	                                                                      
+	                                                      
+	 
+		                                                                    
+			      
+	 
+
 	                                         
 		                                      
 
@@ -254,17 +435,22 @@ void function TimedEvents_RegisterTimedEvent( TimedEventData data )
 
 	                                                                   
 	                                                                    
-	                                                             
-	                                                         
+	                                                                              
+	                                                                          
 	                                                    
 
 	                                 
 		           
 
+	                                                                           
 	                                                      
 	 
-		                                                                                                            
+		                                        
+		                                                                    
+		 
+			                        
 			      
+		 
 	 
 
 	                                                  
@@ -326,6 +512,8 @@ void function InstanceWPTimedEventTracker( entity wp )
 	localData.colorOverride = event.colorOverride
 	localData.shouldShowPreamble = event.shouldShowPreamble
 	localData.shouldHideUntilPrembleDone = event.shouldHideUntilPrembleDone
+	localData.shouldHideTimer = event.shouldHideTimer
+	localData.shouldAutoShowSuddenDeathText = event.shouldAutoShowSuddenDeathText
 	localData.eventEndTime = 0
 
 	file.waypointToLocalData[ wp ] <- localData
@@ -351,7 +539,9 @@ void function OnGamestateEpilogue_TimedEvents_Client()
 
 void function ManageTimedEventTracker( var gameStateRui, int gamestate )
 {
-	printf( "Timed Events: starting management thread on client for gamestate " + gamestate )
+	#if DEV
+		printf( "Timed Events: starting management thread on client for gamestate " + gamestate )
+	#endif       
 
 	if ( file.timedEventRui != null )
 		return
@@ -407,7 +597,7 @@ void function ManageTimedEventTracker( var gameStateRui, int gamestate )
 
 			if ( IsValid( wp ) )
 			{
-				if ( !localData.shouldShowPreamble && Time() < wp.GetWaypointGametime( GAMETIME_START_TIME ) )
+				if ( !localData.shouldShowPreamble && Time() < wp.GetWaypointGametime( TIMEDEVENT_WAYPOINT_EVENT_START_TIME ) )
 					continue
 			}
 
@@ -416,14 +606,16 @@ void function ManageTimedEventTracker( var gameStateRui, int gamestate )
 			RuiSetString( rui, "eventDesc", localData.eventDesc )
 			RuiSetBool( rui, "shouldShowPreamble", localData.shouldShowPreamble )
 			RuiSetBool( rui, "shouldHideUntilPrembleDone", localData.shouldHideUntilPrembleDone )
+			RuiSetBool( rui, "shouldHideTimer", localData.shouldHideTimer )
+			RuiSetBool( rui, "shouldAutoShowSuddenDeathText", localData.shouldAutoShowSuddenDeathText )
 			RuiSetFloat3( rui, "colorOverride", SrgbToLinear( localData.colorOverride / 255.0 ) )
 			RuiSetFloat( rui, "animateOutEndTime", localData.eventEndTime )
 
 			if ( IsValid( wp ) )
 			{
 				RuiSetString( rui, "award", wp.GetWaypointString( WAYPOINT_EVENT_STRING_AWARD ))
-				RuiSetGameTime( rui, "startTime", wp.GetWaypointGametime( GAMETIME_START_TIME ) )
-				RuiSetGameTime( rui, "endTime", wp.GetWaypointGametime( GAMETIME_END_TIME ) )
+				RuiSetGameTime( rui, "startTime", wp.GetWaypointGametime( TIMEDEVENT_WAYPOINT_EVENT_START_TIME ) )
+				RuiSetGameTime( rui, "endTime", wp.GetWaypointGametime( TIMEDEVENT_WAYPOINT_EVENT_END_TIME ) )
 			}
 
 			i++
@@ -463,13 +655,10 @@ void function ManageTimedEventTracker( var gameStateRui, int gamestate )
                                       
                            
  
+	        
+	        
+	    
 	       
-	        
-	        
-                     
-     
-                           
-
 	      
  
 
@@ -477,7 +666,7 @@ void function ManageTimedEventTracker( var gameStateRui, int gamestate )
  
 	                                                                  
 	 
-		                                                                                                                                            
+		                                                                                                                                                   
 	 
 
 	                                                                                                                      
@@ -489,11 +678,15 @@ void function ManageTimedEventTracker( var gameStateRui, int gamestate )
 
 	                                          
 	 
-		                                                                                                              
+		                                                                                                                     
 		      
 	 
 
 	                                                    
-	                                                                                                                 
+	                            
+	                               
+		                                           
+
+	                                                                                                  
  
 #endif                     

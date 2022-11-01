@@ -1,6 +1,7 @@
 global function MpWeaponEchoLocator_Init
 global function OnWeaponTossReleaseAnimEvent_WeaponEchoLocator
 global function OnWeaponTossPrep_WeaponEchoLocator
+global function OnWeaponDeactivate_WeaponEchoLocator
                             
           
                                                    
@@ -30,6 +31,9 @@ const float MINIMAP_MARKER_DEBOUNCE_TIME = 0.75
 const float LOCK_FX_LIFETIME = 1.25
 const float TOTAL_FIRE_TIME_BUFFER = 1.75
 const float ECHO_LOCATOR_TUNING_DEATHFIELD_DAMAGE_SCALAR = 1.0
+                               
+                                                                                                     
+                                    
 
 const asset ECHO_LOCATOR_HEART_MODEL = $"mdl/props/pariah_heart/pariah_heart.rmdl"
 const asset DRONE_CLUSTER_MODEL = $"mdl/props/pariah_drone_cluster/pariah_drone_cluster.rmdl"
@@ -58,6 +62,7 @@ const string ECHO_LOCATOR_TARGET_ACQUIRED_SOUND = "Seer_AcquireTarget_1P"
 
 global const string ECHO_LOCATOR_SCRIPT_NAME = "echo_locator_script"
 global const string ECHO_LOCATOR_TARGET_NAME = "echo_locator_target"
+global const string ECHO_LOCATOR_WEAPON_NAME = "mp_ability_echo_locator"
 const string ECHO_LOCATOR_DESTRUCTION_SOUND = "Seer_Ultimate_Dome_Destroy"
 const string ECHO_LOCATOR_PLAYER_HAS_MOVEMENT_INPUT_NETVAR = "echoLocatorPlayerHasMovementInput"
 
@@ -111,6 +116,9 @@ struct
 	int echoLocatorRadiusSqr
 	int echoLocatorHP
 	float echoLocatorSphereModelScale
+                               
+                                  
+                                    
 	#if CLIENT
 	array<entity> playersInsideEchoLocators
 	table<entity, int> enemiesInsideEchoLocator
@@ -155,16 +163,17 @@ void function MpWeaponEchoLocator_Init()
 	file.echoLocatorRadiusSqr        = int( pow( file.echoLocatorRadius, 2 ) )
 	file.echoLocatorSphereModelScale = file.echoLocatorRadius / 1050.0                                                                          
 	file.echoLocatorHP 		 = GetEchoLocatorHP()
+                                
+                                                                 
+                                     
 
 	#if CLIENT
 		StatusEffect_RegisterEnabledCallback( eStatusEffect.inside_echo_locator, EchoLocator_StartVisualEffect )
 		StatusEffect_RegisterDisabledCallback( eStatusEffect.inside_echo_locator, EchoLocator_StopVisualEffect )
-		StatusEffect_RegisterEnabledCallback( eStatusEffect.echo_locator_scanned, EntityMovementRevealedEnabled )
-		StatusEffect_RegisterDisabledCallback( eStatusEffect.echo_locator_scanned, EntityMovementRevealedDisabled )
 		AddCreateCallback( "script_mover", OnClientEchoLocationChamberCreated )
 		AddCreateCallback( PLAYER_WAYPOINT_CLASSNAME, OnWaypointCreated )
 
-		file.echoLocatorDuration = GetWeaponInfoFileKeyField_GlobalFloat( "mp_ability_echo_locator", "fire_duration" )
+		file.echoLocatorDuration = GetWeaponInfoFileKeyField_GlobalFloat( ECHO_LOCATOR_WEAPON_NAME, "fire_duration" )
 	#endif         
 
 	#if SERVER
@@ -212,6 +221,11 @@ void function OnWeaponTossPrep_WeaponEchoLocator( entity weapon, WeaponTossPrepP
 	weapon.PlayWeaponEffect( ECHO_LOCATOR_HEART_1P_FX, ECHO_LOCATOR_HEART_3P_FX, "muzzle_flash" )
 
 	weapon.EmitWeaponSound_1p3p( GetGrenadeDeploySound_1p( weapon ), GetGrenadeDeploySound_3p( weapon ) )
+}
+
+void function OnWeaponDeactivate_WeaponEchoLocator( entity weapon )
+{
+	weapon.StopWeaponEffect( ECHO_LOCATOR_HEART_1P_FX, ECHO_LOCATOR_HEART_3P_FX )
 }
 
                                                                                                                        
@@ -331,7 +345,7 @@ void function OnEchoLocatorPlanted( entity projectile, DeployableCollisionParams
 		                                 
 
                      
-                                               
+		                                             
         
 
 		                                             
@@ -1313,6 +1327,11 @@ bool function IsPlayerInsideAlliedEchoLocator( entity localViewPlayer, entity pl
 
 bool function IsPlayerInsideEchoLocator( entity player, entity echoLocator )
 {
+                      
+                                     
+               
+       
+
 	float distance = Distance( player.EyePosition(), echoLocator.GetOrigin() )
 
 	return distance <= file.echoLocatorRadius
@@ -1323,6 +1342,9 @@ float function GetPlayerSpeedForEchoLocator( entity player )
 {
 	float playerSpeed = 0.0
 
+	                             
+	if ( player.IsCloakedIgnoreFlicker( true ) )
+		return 0.0
 
 	vector playerVelocity = GetIsolatedPlayerVelocityFromGround( player )
 
@@ -1413,26 +1435,57 @@ bool function DoesPlayerPassEchoLocatorMovementCheck( entity player, float playe
 	             
 	if ( playerSpeed > 0 )
 	{
-		if ( player.IsPlayerDecoy() )
-		{
-			if ( !player.DecoyIsCrouched() || player.DecoyIsSliding() )
+                                 
+                                          
+   
+                     
+   
+                           
+                                          
+                                     
+    
+                                                               
+     
+                                     
+
+                            
+      
+                                    
+      
+     
+    
+   
+                                                                    
+    
+               
+    
+   
+      
+   
+                                      
+			if ( player.IsPlayerDecoy() )
+			{
+				if ( !player.DecoyIsCrouched() || player.DecoyIsSliding() )
+				{
+					return true
+				}
+			}
+			else if ( IsTrainingDummie( player ) || player.IsNPC() )
 			{
 				return true
 			}
-		}
-		else if ( IsTrainingDummie( player ) || player.IsNPC() )
-		{
-			return true
-		}
-		else
-		{
-			                     
-			                                                                               
-			if ( !player.IsCrouched() || player.IsSliding() )
+			else
 			{
-				return true
+				                     
+				                                                                               
+				if ( !player.IsCrouched() || player.IsSliding() )
+				{
+					return true
+				}
 			}
-		}
+                                 
+   
+                                      
 	}
 
 	return false
@@ -1513,7 +1566,7 @@ void function EchoLocator_StartVisualEffect( entity ent, int statusEffect, bool 
 
 	entity viewPlayer = GetLocalViewPlayer()
 
-	int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, COCKPIT_ECHO_LOCATOR_SCREEN_FX, FX_PATTACH_ABSORIGIN_FOLLOW, -1, viewPlayer.EyePosition(), <0,0,0> )
+	int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, COCKPIT_ECHO_LOCATOR_SCREEN_FX, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, viewPlayer.EyePosition(), <0,0,0> )
 	EffectSetIsWithCockpit( fxHandle, true )
 
 	thread EchoLocator_UpdateIntensity_Thread( viewPlayer, fxHandle )
@@ -1672,7 +1725,7 @@ void function EchoLocatorFootstepVFX_Thread( entity echoLocator )
 				continue
 			}
 
-			if ( IsCloaked( ent ) )
+			if ( ent.IsCloakedIgnoreFlicker( true ) )
 			{
 				continue
 			}
@@ -1712,6 +1765,7 @@ void function EchoLocatorFootstepVFX_Thread( entity echoLocator )
 			}
 		}
 
+                                  
 		                                                 
 		if ( firstLoopIteration )
 		{
@@ -1719,8 +1773,9 @@ void function EchoLocatorFootstepVFX_Thread( entity echoLocator )
 			{
 				bool isCombatDummie = IsCombatNPC( potentialVictim ) && IsTrainingDummie( potentialVictim )
 
-				if ( potentialVictim.IsPlayer() || isCombatDummie )
+				if ( potentialVictim.IsPlayer() || isCombatDummie || potentialVictim.IsPlayerDecoy() )
 				{
+					printt("INITIAL LOCK VFX SPAWN")
 					lockFXID[potentialVictim].fxHandle = StartParticleEffectOnEntity( potentialVictim, GetParticleSystemIndex( ECHO_LOCATOR_TARGET_ANIMATED ), FX_PATTACH_POINT_FOLLOW, potentialVictim.LookupAttachment( "CHESTFOCUS" ) )
 					lockFXID[potentialVictim].initialLock = true
 					lastPingTimeForLoco[potentialVictim]  = Time()
@@ -1731,6 +1786,7 @@ void function EchoLocatorFootstepVFX_Thread( entity echoLocator )
 				EmitSoundOnEntity( GetLocalViewPlayer(), ECHO_LOCATOR_TARGET_ACQUIRED_SOUND )
 			}
 		}
+                                      
 
 		file.enemiesInsideEchoLocator[echoLocator] = validTouchingEnts.len()
 		
@@ -1744,7 +1800,7 @@ void function EchoLocatorFootstepVFX_Thread( entity echoLocator )
 		foreach ( entity potentialVictim in validTouchingEnts )
 		{
 			#if DEV
-			string playerName = potentialVictim.IsPlayer() ? potentialVictim.GetPlayerName() : "DECOY"
+			string playerName = potentialVictim.IsPlayer() ? potentialVictim.GetPlayerName() : "DECOY" + potentialVictim.GetEntIndex()
 			#endif      
 			
 			bool onGround = GetIsPlayerOnGroundForEchoLocator( potentialVictim )
@@ -1766,7 +1822,7 @@ void function EchoLocatorFootstepVFX_Thread( entity echoLocator )
 
 					if ( !EffectDoesExist( lockFXID[potentialVictim].fxHandle ) )
 					{
-						if ( potentialVictim.IsPlayer() || isCombatDummie )
+						if ( potentialVictim.IsPlayer() || isCombatDummie || potentialVictim.IsPlayerDecoy() )
 						{
 							                                                                    
 							if ( footstepFxDelta > LOCK_FX_RESET_TIME )
@@ -1908,6 +1964,10 @@ void function EchoLocatorFootstepVFX_Thread( entity echoLocator )
 				{
 					EffectStop( data.fxHandle, false, true )
 				}
+				else if ( potentialVictim.IsCloakedIgnoreFlicker( true ) )
+				{
+					EffectStop( data.fxHandle, false, true )
+				}
 				else
 				{
 					float deltaLastPingTime = Time() - lastPingTimeForLoco[potentialVictim]
@@ -1968,7 +2028,7 @@ int function SortPlayersByDistFromLocalViewPlayer( entity a, entity b )
 
 void function EchoLocatorFootstepVFXClient( entity victim, int team )
 {
-	int particleSystemID = victim.IsPlayer() ? GetParticleSystemIndex( ECHO_LOCATOR_VISUAL_FOOT_PING ) : GetParticleSystemIndex( ECHO_LOCATOR_VISUAL_FOOT_PING_AI )
+	int particleSystemID = ( victim.IsPlayer() || victim.IsPlayerDecoy() ) ? GetParticleSystemIndex( ECHO_LOCATOR_VISUAL_FOOT_PING ) : GetParticleSystemIndex( ECHO_LOCATOR_VISUAL_FOOT_PING_AI )
 
 	TraceResults traceResult = TraceLine( victim.GetOrigin() + ( victim.GetUpVector() * 20 ), victim.GetOrigin() - ( victim.GetUpVector() * 200 ), [ victim ], TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_BLOCK_WEAPONS_AND_PHYSICS )
 
@@ -1980,7 +2040,7 @@ void function EchoLocatorFootstepVFXClient( entity victim, int team )
 		                                                                                                                                                                                                      
 		entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", traceResult.endPos, angles )
 		mover.SetParent( traceResult.hitEnt )
-		handle = StartParticleEffectOnEntity( mover, particleSystemID, FX_PATTACH_CUSTOMORIGIN_FOLLOW, -1 )
+		handle = StartParticleEffectOnEntity( mover, particleSystemID, FX_PATTACH_CUSTOMORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		thread DelayDestroy( mover )
 	}
 	else
@@ -1991,7 +2051,7 @@ void function EchoLocatorFootstepVFXClient( entity victim, int team )
 	                                                                                                                                        
 	bool isCombatDummie = IsCombatNPC( victim ) && IsTrainingDummie( victim )
 
-	vector color = ( victim.IsPlayer() || isCombatDummie ) ? ENEMY_COLOR_FX : NEUTRAL_COLOR_FX
+	vector color = ( victim.IsPlayer() || isCombatDummie || victim.IsPlayerDecoy() ) ? ENEMY_COLOR_FX : NEUTRAL_COLOR_FX
 	EffectSetControlPointVector( handle, 1, color )
 }
 
@@ -2129,86 +2189,6 @@ void function EchoLocatorScreenFXThink( entity player, int fxHandle )
 	}
 }
 
-void function EntityMovementRevealedEnabled( entity ent, int statusEffect, bool actuallyChanged )
-{
-	if ( ent == GetLocalViewPlayer() )
-	{
-		entity viewModelArm              = ent.GetViewModelArmsAttachment()
-		entity viewModelEntity           = ent.GetViewModelEntity()
-		entity firstPersonProxy          = ent.GetFirstPersonProxy()
-		entity predictedFirstPersonProxy = ent.GetPredictedFirstPersonProxy()
-
-		vector highlightColor = HIGHLIGHT_COLOR_MOVEMENT_REVEALED
-
-		if ( IsValid( viewModelArm ) )
-			EchoLocator_ViewModelHighlight( viewModelArm, highlightColor )
-
-		if ( IsValid( viewModelEntity ) )
-			EchoLocator_ViewModelHighlight( viewModelEntity, highlightColor )
-
-		if ( IsValid( firstPersonProxy ) )
-			EchoLocator_ViewModelHighlight( firstPersonProxy, highlightColor )
-
-		if ( IsValid( predictedFirstPersonProxy ) )
-			EchoLocator_ViewModelHighlight( predictedFirstPersonProxy, highlightColor )
-	}
-
-	foreach ( player in GetPlayerArray_AliveConnected() )
-	{
-		ManageHighlightEntity( player )
-	}
-}
-
-void function EntityMovementRevealedDisabled( entity ent, int statusEffect, bool actuallyChanged )
-{
-	if ( ent == GetLocalViewPlayer() )
-	{
-		                                  
-		if ( StatusEffect_GetTimeRemaining( ent, eStatusEffect.sonar_detected ) > 0 )
-		{
-			return
-		}
-
-		entity viewModelArm              = ent.GetViewModelArmsAttachment()
-		entity viewModelEntity           = ent.GetViewModelEntity()
-		entity firstPersonProxy          = ent.GetFirstPersonProxy()
-		entity predictedFirstPersonProxy = ent.GetPredictedFirstPersonProxy()
-
-		if ( IsValid( viewModelArm ) )
-			EchoLocator_ViewModelClearHighlight( viewModelArm )
-
-		if ( IsValid( viewModelEntity ) )
-			EchoLocator_ViewModelClearHighlight( viewModelEntity )
-
-		if ( IsValid( firstPersonProxy ) )
-			EchoLocator_ViewModelClearHighlight( firstPersonProxy )
-
-		if ( IsValid( predictedFirstPersonProxy ) )
-			EchoLocator_ViewModelClearHighlight( predictedFirstPersonProxy )
-	}
-
-	ManageHighlightEntity( ent )
-}
-
-void function EchoLocator_ViewModelHighlight( entity viewModelEntity, vector highlightColor = HIGHLIGHT_COLOR_ENEMY )
-{
-	viewModelEntity.Highlight_SetVisibilityType( HIGHLIGHT_VIS_ALWAYS )
-	viewModelEntity.Highlight_SetCurrentContext( HIGHLIGHT_CONTEXT_NEUTRAL )
-	int highlightId = viewModelEntity.Highlight_GetState( HIGHLIGHT_CONTEXT_NEUTRAL )
-	viewModelEntity.Highlight_SetFunctions( HIGHLIGHT_CONTEXT_NEUTRAL, 114                                  , true, 114                                     , 8.0, highlightId, false )
-	viewModelEntity.Highlight_SetParam( HIGHLIGHT_CONTEXT_NEUTRAL, 0, highlightColor )
-	viewModelEntity.Highlight_SetFadeInTime( 0.25 )
-	viewModelEntity.Highlight_SetFadeOutTime( 0.25 )
-	viewModelEntity.Highlight_SetFlag( HIGHLIGHT_FLAG_CHECK_OFTEN, true )
-	viewModelEntity.Highlight_StartOn()
-}
-
-void function EchoLocator_ViewModelClearHighlight( entity viewModelEntity )
-{
-	int highlightId = viewModelEntity.Highlight_GetState( HIGHLIGHT_CONTEXT_NEUTRAL )
-	viewModelEntity.Highlight_SetFunctions( HIGHLIGHT_CONTEXT_NEUTRAL, 0                       , true, HIGHLIGHT_OUTLINE_NONE, 1.0, highlightId, false )
-	viewModelEntity.Highlight_SetLifeTime( 0.0 )
-}
 #endif         
 
 int function GetEchoLocatorRadius()
@@ -2220,3 +2200,10 @@ int function GetEchoLocatorHP()
 {
 	return GetCurrentPlaylistVarInt( "seer_ult_hp", ECHO_LOCATOR_HP )
 }
+
+                               
+                                          
+ 
+                                                                     
+ 
+                                    

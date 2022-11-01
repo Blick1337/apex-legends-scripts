@@ -99,7 +99,11 @@ global array<string> WORKAROUND_UI_MUSIC_SOUND_LIST = [
 	"SQ_S13_LoreText_Ch04_Music_06", "SQ_S13_LoreText_Ch04_Music_07", "SQ_S13_LoreText_Ch04_Music_08", "SQ_S13_LoreText_Ch05_Music_01", "SQ_S13_LoreText_Ch05_Music_02", "SQ_S13_LoreText_Ch05_Music_03",
 	"SQ_S13_LoreText_Ch05_Music_04", "SQ_S13_LoreText_Ch05_Music_05", "SQ_S13_LoreText_Ch05_Music_06", "SQ_S13_LoreText_Ch05_Music_07", "SQ_S13_LoreText_Ch06_Music_01", "SQ_S13_LoreText_Ch06_Music_02",
 	"SQ_S13_LoreText_Ch06_Music_03", "SQ_S13_LoreText_Ch06_Music_04", "SQ_S13_LoreText_Ch06_Music_05", "SQ_S13_LoreText_Ch06_Music_06", "SQ_S13_LoreText_Ch06_Music_07", "SQ_S13_LoreText_Ch07_Music_01",
-	"SQ_S13_LoreText_Ch07_Music_02", "SQ_S13_LoreText_Ch07_Music_03", "SQ_S13_LoreText_Ch08_Music_01", "SQ_S13_LoreText_Ch08_Music_02"
+	"SQ_S13_LoreText_Ch07_Music_02", "SQ_S13_LoreText_Ch07_Music_03", "SQ_S13_LoreText_Ch08_Music_01", "SQ_S13_LoreText_Ch08_Music_02", "SQ_S14_LoreText_Ch01_Music_01", "SQ_S14_LoreText_Ch02_Music_01",
+	"SQ_S14_LoreText_Ch02_Music_02", "SQ_S14_LoreText_Ch02_Music_03", "SQ_S14_LoreText_Ch02_Music_04", "SQ_S14_LoreText_Ch03_Music_01", "SQ_S14_LoreText_Ch03_Music_02", "SQ_S14_LoreText_Ch03_Music_03",
+	"SQ_S14_LoreText_Ch04_Music_01", "SQ_S14_LoreText_Ch04_Music_02", "SQ_S14_LoreText_Ch04_Music_03", "SQ_S14_LoreText_Ch01_Music_02", "SQ_S14_LoreText_Ch01_Music_03", "SQ_S14_LoreText_Ch05_Music_01", 
+	"SQ_S14_LoreText_Ch05_Music_02", "SQ_S14_LoreText_Ch05_Music_03", "SQ_S14_LoreText_Ch05_Music_04", "SQ_S14_LoreText_Ch06_Music_01", "SQ_S14_LoreText_Ch06_Music_02", "SQ_S14_LoreText_Ch06_Music_03", 
+	"SQ_S14_LoreText_Ch07_Music_01", "SQ_S14_LoreText_Ch07_Music_02", "SQ_S14_LoreText_Ch07_Music_03", "SQ_S14_LoreText_Ch08_Music_01", "SQ_S14_LoreText_Ch08_Music_02", 
 	LOOT_CEREMONY_MUSIC_P1,
 	LOOT_CEREMONY_MUSIC_P2
 ]
@@ -172,7 +176,7 @@ void function OnRegisterRootItemFlavors()
 			{
 				string alias = GetGlobalSettingsString( musicPackAsset, field )
 				if ( !DoesAliasExist( alias ) )
-					Warning( "Music Pack Asset '%s' has invalid '%s' miles event '%s'", ItemFlavor_GetHumanReadableRef( musicPack ), field, alias )
+					Warning( "Music Pack Asset '%s' has invalid '%s' miles event '%s'", string(ItemFlavor_GetAsset( musicPack )), field, alias )
 			}
 		#endif
 	}
@@ -190,10 +194,11 @@ void function OnRegisterRootItemFlavors()
 
 	MakeItemFlavorSet( musicPackList, fileLevel.musicPackFlavorSortOrdinalMap )
 
-	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "music_pack_selection" )
+	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "music_pack_selection", eLoadoutEntryClass.ACCOUNT )
 	entry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
-	                                             
-	entry.DEV_name = "Music Pack"
+	#if DEV
+		entry.DEV_name       = "Music Pack"
+	#endif
 	fileLevel.musicPackSelectionSlot = entry
 	entry.validItemFlavorList = musicPackList
 	entry.defaultItemFlavor = musicPackList[1]
@@ -227,10 +232,7 @@ ItemFlavor function GetMusicPackForPlayer( entity player )
 		{
 			int guid = player.GetNonRewindMusicPack()
 			if ( guid != 0 )
-			{
 				flav = GetItemFlavorByGUID( guid )
-				                                                              
-			}
 		}
 
 		asset customPack = GetCurrentPlaylistVarAsset( "force_custom_musicpack" )
@@ -541,7 +543,6 @@ void function ServerCallback_PlayMatchEndMusic()
 
 	                                                                  
 
-	                                                               
 	                                                           
  
 #endif

@@ -41,6 +41,7 @@ void function ShAbilityShadowZombie_Init()
 		                                                                             
 		                                                                                
 		                                                    
+		                                            
 	#endif
 	
 	PrecacheWeapon( "melee_shadowsquad_hands" )
@@ -92,6 +93,8 @@ void function OnServerVarChanged_IsPlayerShadowZombie( entity player, bool new )
 	                                                                                                    
 	                                                                 
 	entity localViewPlayer = GetLocalViewPlayer()
+	
+	player.Anim_SetSuppressDialogSounds( new )
 
 	if ( player == localViewPlayer )
 	{
@@ -146,7 +149,7 @@ void function ShadowAbilitiesClientEffectsEnable( entity player, bool enableFx, 
 			if ( !IsValid( cockpit ) )
 				return
 
-			int fxHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( SHADOW_SCREEN_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+			int fxHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( SHADOW_SCREEN_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 			EffectSetIsWithCockpit( fxHandle, true )
 			vector controlPoint = <1,1,1>
 			EffectSetControlPointVector( fxHandle, 1, controlPoint )
@@ -371,6 +374,16 @@ void function ShadowAbilitiesClientEffectsEnable( entity player, bool enableFx, 
 	                        
 	                                            
 	                                            
+
+	                                                       
+	 
+		                                                 
+	 
+	                                                             
+	 
+		                                         
+	 
+
 	                         
 	                                                   
 	                                      
@@ -463,6 +476,15 @@ void function ShadowAbilitiesClientEffectsEnable( entity player, bool enableFx, 
 		                                                                                   
 		                            
 		                                  
+	 
+
+	                                                       
+	 
+		                                                
+	 
+	                                                             
+	 
+		                                        
 	 
 
 	                                                        
@@ -653,6 +675,17 @@ void function ShadowAbilitiesClientEffectsEnable( entity player, bool enableFx, 
  
 #endif         
 
+#if SERVER
+                                                                              
+ 
+	                                                           
+	 
+		      
+	 
+
+	                                                    
+ 
+#endif         
 
 
 #if CLIENT || SERVER

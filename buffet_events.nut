@@ -140,7 +140,7 @@ void function BuffetEvents_Init()
 		{
 			RegisterChallengeSource( expect ItemFlavor( bemacd.mainChallengeFlav ), ev, 0 )
 		}
-		else Warning( "Buffet event '%s' refers to bad challenge asset: %s", ItemFlavor_GetHumanReadableRef( ev ), string( GetGlobalSettingsAsset( ItemFlavor_GetAsset( ev ), "mainChallengeFlav" ) ) )
+		else Warning( "Buffet event '%s' refers to bad challenge asset: %s", string(ItemFlavor_GetAsset( ev )), string( GetGlobalSettingsAsset( ItemFlavor_GetAsset( ev ), "mainChallengeFlav" ) ) )
 
 		if ( expired == false )
 		{
@@ -159,7 +159,7 @@ void function BuffetEvents_Init()
 						RegisterChallengeSource( expect ItemFlavor( challengeFlav ), ev, challengeSortOrdinal )
 						challengeSortOrdinal++
 					}
-					else Warning( "Buffet event '%s' refers to bad challenge asset for mode '%s': %s", ItemFlavor_GetHumanReadableRef( ev ), string( GetGlobalSettingsAsset( ItemFlavor_GetAsset( ev ), "mainChallengeFlav" ) ), modePlaylistName )
+					else Warning( "Buffet event '%s' refers to bad challenge asset for mode '%s': %s", string(ItemFlavor_GetAsset( ev )), string( GetGlobalSettingsAsset( ItemFlavor_GetAsset( ev ), "mainChallengeFlav" ) ), modePlaylistName )
 				}
 
 				bemacd.modes.append( modePlaylistName )
@@ -181,7 +181,7 @@ void function BuffetEvents_Init()
 						finishTime = DateTimeStringToUnixTimestamp( GetSettingsBlockString( bonusChallengeBlock, "bonusChallengeEndTime" ) )
 						if ( startTime == null || finishTime == null )
 						{
-							Warning( format( "Buffet event bonus challenge %s has invalid start and/or end time settings in buffet event", ItemFlavor_GetHumanReadableRef( expect ItemFlavor( challengeFlavOrNull ) ) ) )
+							Warning( format( "Buffet event bonus challenge %s has invalid start and/or end time settings in buffet event", string(ItemFlavor_GetAsset( expect ItemFlavor( challengeFlavOrNull ) )) ) )
 							continue
 						}
 					}

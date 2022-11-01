@@ -4,7 +4,9 @@ global function Sh_SkydiveLaunchers_Init
 	                                     
 	                                           
 	                                                                   
-
+                 
+	                                                   
+       
 	                                       
 #endif         
 
@@ -19,6 +21,9 @@ global enum eSkydiveLauncherType
 		GRAVITY_MINI,
                        
 		IMC_ARMORY,
+       
+                 
+		ZIPRAIL,
        
 	                             
 }
@@ -52,6 +57,8 @@ enum eSkydiveLauncherVelocityType
 	                                               
 	                         
 	                                    
+
+	                  
  
 
 #endif         
@@ -60,6 +67,7 @@ struct
 	#if SERVER
 		                                                           
 		                               
+		                                                                    
                         
 		                                                     
 		                               
@@ -80,9 +88,8 @@ global asset FX_SKYDIVE_LAUNCHER_GRAVITY_MINI_IDLE = $""
 	                                             
 	                                                      
 	                                                          
+	                                                             
 #endif         
-
-
 
 void function Sh_SkydiveLaunchers_Init()
 {
@@ -100,6 +107,9 @@ void function Sh_SkydiveLaunchers_Init()
 
 		                                                            
 			                                                                                               
+
+
+		                                        
 	#endif
 
 	file.holsterWeaponsOnAscent = GetCurrentPlaylistVarBool( "skydive_launchers_holster_weapons", true )
@@ -152,9 +162,65 @@ void function Sh_SkydiveLaunchers_Init()
 	                                               
 		                                                                        
 
-	                                                                                                                           
+                 
+	                                                   
+	 
+		                                                                                                                
+	 
+	    
+       
+	 
+		                                                                                                                           
+	 
 	                                                              
  
+                
+                                                                                                                               
+ 
+	                                       
+	             
+	                                                                                               
+	                                                     
+	                                                         
+	                                                                                                         
+
+	                                                                                     
+	                                                                         
+	            
+
+	                             
+	 
+		                                                                                                                
+		                                                                   
+	 
+	    
+	 
+		                                                                                        
+		                                                                     
+		                                                
+	 
+
+	                                                                                           
+
+	                                                                                                                                              
+	                                                                                                                                                       
+	                                                                               
+		                                                                       
+	    
+		                                                                               
+ 
+
+                                                                     
+ 
+	                                                                 
+	 
+		                                                              
+			               
+	 
+	           
+ 
+
+      
 
                       
                                                              
@@ -215,7 +281,7 @@ void function Sh_SkydiveLaunchers_Init()
 
 
 #if SERVER
-                                                                                                                                                                                                                         
+                                                                                                                                                                                                                                                       
  
 	                                                                      
 	 
@@ -227,46 +293,38 @@ void function Sh_SkydiveLaunchers_Init()
 	            
 	                            
 	                                   
-	                           
+                 
+		                                                                                              
+      
+                                    
+       
 	                        
 	                        
-	                           
-	                           
-	                           
+	                                   
+	                                  
+	                                 
 	                   
 
 	                                                   
 	                                                        
 	                             
 
+	                         
+
 	                                               
 	                                   
 	                                    
-
 
 	                              
 	 
 		                             
 
 		                                  
-			                                           
-			                                         
-			                            
-			                                          
-			                                             
-			                             
-			                            
-			                           
-			     
 		                                       
 			                                           
 			                                         
-			                            
 			                                          
 			                                             
-			                             
-			                            
-			                           
 			     
                         
 		                                         
@@ -275,9 +333,6 @@ void function Sh_SkydiveLaunchers_Init()
 			                         
 			                                                            
 			                                             
-			                             
-			                            
-			                           
 
 			                                                 
 			                                                    
@@ -297,10 +352,15 @@ void function Sh_SkydiveLaunchers_Init()
 			                            
 			                                              
 			                                                           
-			                             
-			                            
-			                           
 			     
+                  
+		                                  
+			                                        
+			                                                   
+			                                                  
+			                                                      
+			     
+        
 		        
 			                                                                     
 	 
@@ -335,9 +395,14 @@ void function Sh_SkydiveLaunchers_Init()
 
 	                    
 	 
-		                                                                                                                                                                             
+		                                                                                                                                                                                               
 		                                         
-		                                                              
+                  
+		                                                                                   
+			                                                          
+		    
+        
+			                                                              
 	 
 
                        
@@ -455,6 +520,7 @@ void function Sh_SkydiveLaunchers_Init()
 	   
 
 	                                             
+	                                                            
 
 	                    
  
@@ -519,6 +585,9 @@ void function Sh_SkydiveLaunchers_Init()
                           
 				                                     
           
+                    
+				                                  
+          
 					                                                                        
 					                           
 					     
@@ -528,7 +597,8 @@ void function Sh_SkydiveLaunchers_Init()
 			 
 			               
 			 
-				                                                                                                     
+				                                                                                                                    
+				                                      
 			 
 		 
 		                                                     
@@ -553,15 +623,23 @@ void function Sh_SkydiveLaunchers_Init()
  
 	                         
 		      
-
+  
 	                          
 		      
-
+  
 	                             
 	                               
 	                               
 	                                  
+                 
+	                                   
+       
 	                     
+
+                 
+	                                                        
+		                                   
+       
 
 	                                  
 		                                  
@@ -613,6 +691,19 @@ void function Sh_SkydiveLaunchers_Init()
 	           
 
 	        
+
+                 
+	                                                        
+	 
+		                                                 
+		            
+			              
+			 
+				                                                    
+			 
+		 
+	 
+       
 
 	                           
 		                                                              
@@ -671,7 +762,11 @@ void function Sh_SkydiveLaunchers_Init()
 	                                                  
 		      
 
-	                           
+                 
+	                                                                                
+      
+                            
+       
 		                     
 
 	                                              
@@ -683,8 +778,16 @@ void function Sh_SkydiveLaunchers_Init()
 		                                          
 	 
  
-#endif         
 
+                
+                                                                 
+ 
+	                                                            
+		                              
+ 
+      
+
+#endif         
 
 #if SERVER
                                                                
@@ -790,11 +893,16 @@ void function OnSkydiveLauncherCreated( entity trigger )
 		case eSkydiveLauncherType.GRAVITY_MINI:
 			ambientFxName = "GravityMini_LaunchPad_Idle_Loop"
 			break
-                      
+                        
 		case eSkydiveLauncherType.IMC_ARMORY:
 			ambientFxName = "GravityMini_LaunchPad_SpectreShack_Idle_Loop"
 			break
-      
+        
+                  
+		case eSkydiveLauncherType.ZIPRAIL:
+			ambientFxName = "ZipRail_Launcher_Idle_Loop"
+			break
+        
 		default:
 			ambientFxName = "WXpress_Emit_LaunchPad_Loop"
 			break
@@ -839,6 +947,12 @@ void function OnSkydiveLauncherCreated( entity trigger )
 			case eSkydiveLauncherType.GRAVITY_CANNON:
 				                                                                        
 				launcherSounds = false
+				break
+         
+                   
+			case eSkydiveLauncherType.ZIPRAIL:
+				sfxLaunchPlayer1p = "ZipRail_Launcher_Activate_1p"
+				sfxAirborneMvmt1p = "ZipRail_Launcher_AirborneMvmt_1p"
 				break
          
 			default:

@@ -174,7 +174,7 @@ void function Entitlements_LevelInit()
 
 			                                                           
 			 
-				                                                                                                                                                                                        
+				                                                                                                                                                                                     
 
 				                                         
 				 
@@ -199,14 +199,13 @@ void function Entitlements_LevelInit()
 					                                                                  
 				  
 				                                                                              
-					                                                                                                                  
 					                                                                             
 					                           
 						      
 
 					                                            
 				  
-				                                                                 
+				                                                         
 				                                             
 			 
 
@@ -251,7 +250,7 @@ void function Entitlements_LevelInit()
 				                                                                                         
 				                                                      
 			  
-			                                                                 
+			                                                         
 			                                             
 		 
 	 
@@ -310,7 +309,7 @@ void function Entitlements_LevelInit()
 							                                                                    
 							                                            
 						  
-						                                                                 
+						                                                         
 						                                             
 					 
 				 
@@ -319,7 +318,7 @@ void function Entitlements_LevelInit()
 					                         
 					 
 						                              
-						                                                             
+						                                                                        
 						                                                
 						                                             
 					 
@@ -336,13 +335,13 @@ void function Entitlements_LevelInit()
 				                                                                       
 			  
 
-			                                                                    
+			                                                                                   
 			 
 				                                                       
 					      
 
 				                        
-					                                  
+					                                                                      
 			  
 
 			                                             
@@ -431,7 +430,7 @@ void function Entitlements_LevelInit()
 
 				                                             
 			  
-			                                                                 
+			                                                         
 			                                             
 		 
 	 
@@ -518,13 +517,14 @@ void function Entitlements_LevelInit()
 			                                                                       
 		  
 
-		                                                                    
+		                                                                                   
 		 
 			                                                       
 				      
 
 			                        
-				                                  
+				                                                                      
+
 		  
 
 		                                             
@@ -568,7 +568,7 @@ int function Entitlement_GetEntitlementType( ItemFlavor flavor )
 			return eEntitlementType.TWITCH_DROPS
 	}
 
-	Assert( false, "Unhandled entitlement type '" + typeString + "' for " + ItemFlavor_GetHumanReadableRef( flavor ) )
+	Assert( false, "Unhandled entitlement type '" + typeString + "' for " + string(ItemFlavor_GetAsset( flavor )) )
 	return -1
 }
 #endif
@@ -650,7 +650,7 @@ string function Entitlement_GetMenuPersistenceVarName( ItemFlavor flavor )
 				break
 
 			default:
-				Assert( false, "Unhandled entitlement type for " + ItemFlavor_GetHumanReadableRef( flavor ) )
+				Assert( false, "Unhandled entitlement type for " + string(ItemFlavor_GetAsset( flavor )) )
 		}
 
 		persistenceVarName += "Acknowledged"
@@ -754,12 +754,19 @@ asset function Entitlement_GetSKUStoreApexCoinCardBaseImage( ItemFlavor flavor )
 void function UICodeCallback_ActivateRootPanel()
 {
 	printt( "ActivateRootPanel: " + GetActiveMenuName())
+	
+	bool showLobbyTab = false
+	if ( GetActiveMenu() != null && GetActiveMenuName() != "VCPopUp" )
+		showLobbyTab = true
 
 	if ( GetActiveMenu() != null && GetActiveMenuName() != "LobbyMenu" )
 		CloseActiveMenu()
 
-	TabData lobbyTabData = GetTabDataForPanel( GetMenu( "LobbyMenu" ) )
-	ActivateTab( lobbyTabData, Tab_GetTabIndexByBodyName( lobbyTabData, "PlayPanel" ) )
+	if( showLobbyTab )
+	{
+		TabData lobbyTabData = GetTabDataForPanel( GetMenu( "LobbyMenu" ) )
+		ActivateTab( lobbyTabData, Tab_GetTabIndexByBodyName( lobbyTabData, "PlayPanel" ) )	
+	}	
 }
 
 void function UICodeCallback_GRXFirstPartyBundlePurchased( string bundleEnum )
@@ -994,7 +1001,7 @@ void function QueueEntitlementMenu( asset entitlementAsset, string persistenceVa
 			        
 
 		                                                                                    
-		                                                                                                                                                                                                                                 
+		                                                                                                                                                                                                                              
 
 		                                               
 	 

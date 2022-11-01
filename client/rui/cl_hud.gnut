@@ -15,7 +15,7 @@ global function ServerCallback_ControlScoreEvent
                               
 
                        
-                                               
+global function ServerCallback_FreeDMScoreEvent
                              
 
                          
@@ -339,11 +339,19 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 		}
       
                 
-                                    
+		else if ( IsResinShard( victim ) )
+		{
+			shieldIcon = $""
+			shieldLevel = 1
+			shieldFrac = isKillShot ? 0.0 : max( 0, ( victim.GetHealth() - damageAmount ) / victim.GetMaxHealth() )
+		}
+      
+                        
+                                            
    
                    
                   
-                                                                                                          
+                                                                                                         
    
       
 		else
@@ -771,31 +779,35 @@ void function ServerCallback_ControlScoreEvent( int scoreEventId, bool isExpEven
 	}
 	else
 	{
-		Obituary_Print_Localized( messageText,CONTROL_OBJECTIVE_GREEN, CONTROL_OBJECTIVE_GREEN )
+		vector friendlyObjectiveCol = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
+		Obituary_Print_Localized( messageText,friendlyObjectiveCol, friendlyObjectiveCol )
 	}
 }
                               
 
                        
                                                 
-                                                                 
- 
-                                
-        
+void function ServerCallback_FreeDMScoreEvent( int scoreEventId )
+{
+	if ( !file.scoreEventsEnabled )
+		return
 
-                                       
+	entity player = GetLocalClientPlayer()
 
-                          
-        
+	if ( !IsValid( player ) )
+		return
 
-                                                        
-                                                                
- 
+	ScoreEvent scoreEvent = ScoreEvent_FromId(scoreEventId)
+	Obituary_Print_Localized( ScoreEvent_GetMedalText(scoreEvent) )
+}
       
 
                          
                                                        
  
                                                        
+
+                                                                       
+                                       
  
       

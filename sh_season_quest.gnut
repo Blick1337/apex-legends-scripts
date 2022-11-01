@@ -222,7 +222,7 @@ int function SeasonQuest_GetStatusForComicPageIndex( entity player, ItemFlavor q
 
                                            
   
-                                                                                                                    
+                                                                                                                 
                                    
   
 
@@ -319,6 +319,9 @@ void function FillTooltipDataForMissionButton( entity player, ItemFlavor quest, 
 
 		                                                                          
 		 
+			                                        
+				        
+
 			                                                                    
 			                                                                
 				                                                 
@@ -352,8 +355,13 @@ void function FillTooltipDataForMissionButton( entity player, ItemFlavor quest, 
 
 	                                                                         
 	                                                                       
-	                           
+	                                                                              
+	 
+		       
+			                                                                                                                           
 		      
+		      
+	 
 
                           
 	                                            
@@ -401,14 +409,24 @@ void function FillTooltipDataForMissionButton( entity player, ItemFlavor quest, 
                                                                          
  
  
+	                
+
 	                                                                       
+	                                                      
+	 
+		       
+			                                                                                 
+		      
+		          
+	 
+
 	                                                
 
 	                          
 	                                       
 	                                                                                        
 	 
-		                                                       
+		                                 
 		                                                            
 		                                                 
 
@@ -433,7 +451,7 @@ void function FillTooltipDataForMissionButton( entity player, ItemFlavor quest, 
 	                                                                             
 	 
 		                                
-		                                                                                  
+		                                           
 		                                                                                                                                      
 		 
 			                                                                                                                            
@@ -457,7 +475,6 @@ void function FillTooltipDataForMissionButton( entity player, ItemFlavor quest, 
 			                                                   
 	 
 
-	                
 	                 
 	                               
 	          
@@ -492,7 +509,6 @@ int function GetPersistentQuestVarInt( entity player, ItemFlavor quest, string v
 }
 
 #if SERVER
-
                                              
                                                                      
  
@@ -512,7 +528,12 @@ int function GetPersistentQuestVarInt( entity player, ItemFlavor quest, string v
 			           
 
 		                                                                          
+		 
+			                                        
+				        
+
 			                                                     
+		 
 	   
  
 
@@ -636,6 +657,12 @@ bool function DisplayTreasureBoxRewards()
 	array<ItemFlavor> quests = GetAllItemFlavorsOfType( eItemType.quest )
 	foreach ( ItemFlavor quest in quests )
 	{
+		if ( IsConnected() )
+		{
+			if ( HasQuestStarted( quest ) == false )
+				continue
+		}
+
 		Newness_IfNecessaryMarkItemFlavorAsNoLongerNewAndInformServer( quest )
 
 		int count = expect int( GetDialogFlowTablesValueOrPersistence( BuildPersistentVarName( quest, VARNAME_TB_displayCount ) ) )                                                                                                                                  
@@ -738,6 +765,12 @@ bool function DisplayQuestFinalRewards()
 
 	foreach ( ItemFlavor quest in GetAllItemFlavorsOfType( eItemType.quest ) )
 	{
+		if ( IsConnected() )
+		{
+			if ( HasQuestStarted( quest ) == false )
+				continue
+		}
+
 		if ( GetPersistentVar( BuildPersistentVarName( quest, VARNAME_CP_displayFinalRewards ) ) )
 		{
 			ItemFlavorBag rewardBag = SeasonQuest_GetCompletionRewards( quest )
@@ -949,7 +982,7 @@ int function SeasonQuest_GetMissionsCompletedForPlayer( entity player, ItemFlavo
 	                                                                                
 	                                               
 	 
-		                                                                                                                                                                                                                                
+		                                                                                                                                                                                                                             
 		            
 	 
 
@@ -1181,7 +1214,7 @@ ItemFlavorBag function SeasonQuest_GetTreasurePackRewardsForIndex( ItemFlavor fl
 
 		if ( !IsValidItemFlavorSettingsAsset( flavorAsset ) )
 		{
-			Warning( "Skipping item reward #%d of quest '%s' because the asset is not a valid item flavor: '%s'", rewardIndex, ItemFlavor_GetHumanReadableRef( flav ), string(flavorAsset) )
+			Warning( "Skipping item reward #%d of quest '%s' because the asset is not a valid item flavor: '%s'", rewardIndex, string(ItemFlavor_GetAsset( flav )), string(flavorAsset) )
 			continue
 		}
 
@@ -1469,7 +1502,7 @@ ItemFlavorBag function SeasonQuest_GetCompletionRewards( ItemFlavor quest )
 		asset rewardAsset = GetSettingsBlockAsset( rewardData, "flavor" )
 		if ( !IsValidItemFlavorSettingsAsset( rewardAsset ) )
 		{
-			Warning( "Skipping completion reward #%d of quest '%s' because the asset is not a valid item flavor: '%s'", rewardIdx, ItemFlavor_GetHumanReadableRef( quest ), string(rewardAsset) )
+			Warning( "Skipping completion reward #%d of quest '%s' because the asset is not a valid item flavor: '%s'", rewardIdx, string(ItemFlavor_GetAsset( quest )), string(rewardAsset) )
 			continue
 		}
 
@@ -1491,7 +1524,7 @@ ItemFlavorBag function SeasonQuestMission_GetRewards( ItemFlavor mission )
 		asset rewardAsset = GetSettingsBlockAsset( rewardData, "flavor" )
 		if ( !IsValidItemFlavorSettingsAsset( rewardAsset ) )
 		{
-			Warning( "Skipping item reward #%d of quest mission '%s' because the asset is not a valid item flavor: '%s'", rewardIdx, ItemFlavor_GetHumanReadableRef( mission ), string(rewardAsset) )
+			Warning( "Skipping item reward #%d of quest mission '%s' because the asset is not a valid item flavor: '%s'", rewardIdx, string(ItemFlavor_GetAsset( mission )), string(rewardAsset) )
 			continue
 		}
 
@@ -1634,7 +1667,7 @@ void function SetupDevMenu_SeasonQuests()
 		                                                                              
 		 
 			                                                         
-			                                                                   
+			                                                                
 		 
 		                                                                                     
 	 
@@ -1794,3 +1827,19 @@ bool function IsSelectedPlaylistQuestMission()
 	return GetPlaylistVarBool( playlist, "freelance_mode", false )
 }
 #endif      
+
+bool function HasQuestStarted( ItemFlavor quest )
+{
+	ItemFlavor ornull season = SeasonQuest_GetSeasonForQuest( quest )
+	if ( season == null )
+	{
+		Assert( false, "No season is associated with this quest." )
+		return false
+	}
+	else if ( CalEvent_HasStarted( expect ItemFlavor( season ), GetUnixTimestamp() ) == false )
+	{
+		return false
+	}
+
+	return true
+}

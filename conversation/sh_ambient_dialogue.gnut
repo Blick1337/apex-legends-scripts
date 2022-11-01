@@ -2,6 +2,7 @@ global function ShAmbientDialogue_Init
 global function GetAllAmbientDialogue
 
 #if SERVER
+                                                    
                                           
                                                            
                                                                 
@@ -36,6 +37,7 @@ global struct AmbientDialogueData
 global struct AmbientConversationData
 {
 	string							convoName
+	string							triggerScriptName
 	array<AmbientDialogueData> 		convoSequence
 	array<int> 						spokenBySquads			                                         
 	table<int, int>					numDiceRollAttemptsMadeByTeam	                                                                                                        
@@ -74,6 +76,10 @@ void function ShAmbientDialogue_Init()
 
 	                                                         
 	RegisterAmbientDialogueConversations( $"datatable/ambient_dialogue.rpak" )
+
+	#if SERVER
+		                                              
+	#endif
 }
 
 void function RegisterAmbientDialogueConversations( asset dt )
@@ -81,6 +87,8 @@ void function RegisterAmbientDialogueConversations( asset dt )
 	var dataTable = GetDataTable( dt )
 
 	int columnName              = GetDataTableColumnByName( dataTable, "name" )
+	int columnMapName           = GetDataTableColumnByName( dataTable, "map" )
+	int columnTriggerScriptName = GetDataTableColumnByName( dataTable, "trigger" )
 	int columnConversationName  = GetDataTableColumnByName( dataTable, "conversation" )
 	int columnSpeakingLegend    = GetDataTableColumnByName( dataTable, "speakLegend" )
 	int columnRequiredLegend    = GetDataTableColumnByName( dataTable, "reqLegends" )
@@ -104,6 +112,40 @@ void function RegisterAmbientDialogueConversations( asset dt )
 			AmbientConversationData newConversation
 
 			newConversation.convoName = GetDataTableString( dataTable, idx_row, columnConversationName )
+			string mapName =   GetDataTableString( dataTable, idx_row, columnMapName )
+			if ( mapName == "" )
+			{
+				#if SERVER && DEV
+					                                                                                     
+				#endif
+				continue
+			}
+
+			#if UI
+			if ( GetActiveLevel() != mapName )
+			#else
+			if ( GetMapName() != mapName )
+			#endif
+			{
+				#if DEV
+					if ( VERBOSE_PRINT_DEBUG )
+					#if UI
+						printt( "Skipping register ambient dialogue conversation " + GetDataTableString( dataTable, idx_row, columnName ) + " required map( " + mapName + ") != current map(" +  GetActiveLevel() + ")")
+					#else
+						printt( "Skipping register ambient dialogue conversation " + GetDataTableString( dataTable, idx_row, columnName ) + " required map( " + mapName + ") != current map(" +  GetMapName() + ")")
+					#endif
+				#endif
+				continue
+			}
+
+			newConversation.triggerScriptName =   GetDataTableString( dataTable, idx_row, columnTriggerScriptName )
+			                                                
+			   
+			  	                 
+			  		                                                                                                
+			  	      
+			  	        
+			   
 
 			array<string> requiredLegendRefs = split( GetDataTableString( dataTable, idx_row, columnRequiredLegend ), ";" )
 			array<string> forbiddenLegendRefs = split( GetDataTableString( dataTable, idx_row, columnForbiddenLegend ), ";" )
@@ -190,6 +232,17 @@ void function RegisterAmbientDialogueConversations( asset dt )
 	}
 }
 
+#if SERVER
+                               
+ 
+	                                                              
+	 
+		                                           
+			                                                                                                                   
+	 
+ 
+#endif
+
 bool function AmbientDialogue_ProcessRefArray( array<ItemFlavor> arrayToPopulate, array<string> refArray, array<string> mutuallyExclusiveRefArray, string convoNameForDebug )
 {
 	bool didErrorOccur = false
@@ -264,11 +317,54 @@ bool function AmbientDialogue_ProcessRefArray( array<ItemFlavor> arrayToPopulate
 	                             
 	                                                             
 	 
-		                                                                  
+		                                                              
 	 
 
 	                                                                                                                                                   
  
+
+                                                         
+                                                                                                            
+ 
+	                                                 
+	 
+		                                                                                    
+		            
+	 
+
+	                                                                         
+	                                                                            
+		            
+
+	                          
+	                                                   
+	                                      
+	 
+		                                                               
+		                                                                                         
+		                                                                                                             
+
+		             
+			                                    
+	 
+
+	                                                 
+		                                                                                     
+	    
+		                                                                              
+
+	                                       
+
+	                             
+	                                                             
+	 
+		                                                              
+	 
+
+	                                                                                                                                                   
+	           
+ 
+
 
                                                                                                                                      
  
@@ -355,7 +451,7 @@ bool function AmbientDialogue_ProcessRefArray( array<ItemFlavor> arrayToPopulate
 
 ItemFlavor function GetCharacterFlavorFromTableName( string dtName )
 {
-	return GetItemFlavorByHumanReadableRef( "character_" + dtName )
+	return GetItemFlavorByCharacterRef( "character_" + dtName )
 }
 
 entity function GetSpeakingPlayerInSquadForAmbientDialogue( AmbientDialogueData data, array<entity> squad )
@@ -464,6 +560,76 @@ bool function AmbientConversation_CanSquadPlay( AmbientConversationData convoDat
 
 	return true
 }
+
+                                                                                                
+bool function NonTriggerAmbientConversation_CanSquadPlay( AmbientConversationData convoData, array<entity> squad, int team )
+{
+	                                                     
+	if ( convoData.repeatType == 0 && convoData.spokenBySquads.contains( team ) && ( GetBugReproNum() != 16661 ) )
+		return false
+
+	if ( ( team in file.excludedConversationsForSquad ) && ( file.excludedConversationsForSquad[ team ].contains( convoData.convoName ) ) )
+		return false
+
+	bool squadOutOfRetries = team in convoData.numDiceRollAttemptsMadeByTeam && convoData.numDiceRollAttemptsMadeByTeam[ team ] >= AMBIENT_DIALOGUE_FAIL_RANDOM_RETRY_ATTEMPTS
+	if ( convoData.repeatType == 0 && squadOutOfRetries )
+		return false
+
+	int numLegendReqs                 = convoData.requiredLegendFlavs.len()
+	int numAliveConnectedSquadMembers = squad.len()
+	if ( numLegendReqs > numAliveConnectedSquadMembers )
+		return false
+
+	array<entity> squadMembersWithRequiredLegendFlav
+	array<ItemFlavor> requiredFlavsRemaining = clone convoData.requiredLegendFlavs
+	for( int i; i < numAliveConnectedSquadMembers; i++ )
+	{
+		ItemFlavor squadMemberFlav = LoadoutSlot_GetItemFlavor( ToEHI( squad[ i ] ), Loadout_Character() )
+
+		if ( requiredFlavsRemaining.contains( squadMemberFlav ) )
+		{
+			squadMembersWithRequiredLegendFlav.append( squad[ i ] )
+			requiredFlavsRemaining.fastremovebyvalue( squadMemberFlav )
+		}
+
+		if ( convoData.forbiddenLegendFlavs.contains( squadMemberFlav ) )
+			return false
+	}
+
+	                                       
+	if ( requiredFlavsRemaining.len() > 0 )
+	{
+		return false
+	}
+
+	ItemFlavor firstSpeakerFlav = convoData.convoSequence[ 0 ].speakingLegendFlav
+
+	if ( GetBugReproNum() == 16661 )
+		return true
+
+	                   
+	if ( GetBugReproNum() == 16662 )
+		return true
+
+	                                                                                                                                                  
+                  
+                                                                                                                     
+      
+	if ( RandomFloat( 1.0 ) > convoData.rarity )
+       
+	{
+
+	if ( team in convoData.numDiceRollAttemptsMadeByTeam )
+		convoData.numDiceRollAttemptsMadeByTeam[ team ]++
+	else
+		convoData.numDiceRollAttemptsMadeByTeam[ team ] <- 1
+
+	return false
+	}
+
+	return true
+}
+
 #endif
 
 array<AmbientConversationData> function GetAllAmbientDialogue()
@@ -505,11 +671,11 @@ array<AmbientConversationData> function GetAllAmbientDialogue()
 						                                                                                           
 						                                                    
 						 
-							                                                                                                                                                     
+							                                                                                                                                                 
 						 
 					 
 					    
-						                                                                                                                                                  
+						                                                                                                                                              
 				 
 
 				                                                                
@@ -612,7 +778,7 @@ void function DEV_SetCharacterForAmbientDialogue (string characterName, bool spa
                               
                                                               
   
-                                                                    
+                                                                
   
 
                                               

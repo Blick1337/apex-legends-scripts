@@ -3,6 +3,18 @@ global function OnWeaponChargeBegin_ability_mirage_ultimate
 global function OnWeaponChargeEnd_ability_mirage_ultimate
 global function OnWeaponAttemptOffhandSwitch_ability_mirage_ultimate
 
+                     
+            
+                                                          
+
+                
+                                                                   
+                                                                          
+                                    
+
+                                   
+                           
+
 struct
 {
 	#if CLIENT
@@ -91,7 +103,7 @@ void function OnWeaponChargeEnd_ability_mirage_ultimate( entity weapon )
 	{
 		#if SERVER
 			                                
-		#endif
+		#endif          
 	}
 	else
 	{
@@ -151,8 +163,11 @@ void function OnWeaponChargeEnd_ability_mirage_ultimate( entity weapon )
 		 
 			                             
 			 
-				                               
-					                                
+                         
+         
+					                                    
+						                                
+                               
 				                                          
 			 
 		 
@@ -194,10 +209,11 @@ bool function ShouldDoKaleidoscopeUltimate()
 	 
 		                                                                                                  
 		                                                          
+		                                                                             
+
 		                                                                                                                          
 		                                                                                                                          
 
-		                                                                             
 		                                                                     
 
 		                                                                       
@@ -219,3 +235,221 @@ bool function ShouldDoKaleidoscopeUltimate()
 	 
  
 #endif              
+
+                     
+
+                                        
+ 
+                                                                 
+ 
+
+          
+                                                                      
+
+                                          
+ 
+                                       
+
+                                                                                           
+                                                                                                   
+                                                           
+  
+                                                                                       
+                                              
+                              
+                              
+
+                                                                                       
+                                                         
+                                                                                                
+                                                           
+                                            
+                                                                                                                                                        
+
+                                                                                                         
+                                    
+
+                                                                                                                            
+                                                                                                                            
+
+                                                                       
+
+                                                                         
+
+                                   
+                                
+                                                                                                            
+                              
+                              
+                                 
+                         
+                                         
+                                                    
+                                              
+                                                                                                     
+                          
+                                                         
+     
+  
+ 
+
+                                                
+ 
+                      
+        
+
+                            
+
+                                                                                                                                                
+                        
+                             
+                                         
+                                                  
+                            
+
+                                          
+ 
+
+                                                               
+ 
+                               
+
+                                       
+                    
+
+                                                                                                             
+                              
+                                          
+                                   
+                                             
+                                     
+
+                                  
+
+             
+                                   
+   
+                            
+                               
+                     
+                           
+                      
+   
+  
+
+                            
+ 
+
+                                                            
+ 
+                                          
+        
+
+                      
+                                                  
+ 
+
+                                                                        
+ 
+                                 
+                               
+                                  
+
+                                              
+                                                                                                                                                                                    
+
+             
+                                         
+   
+                           
+    
+                                                                                                                                     
+
+                                                                                
+                                                
+                                          
+    
+   
+  
+
+                                      
+  
+             
+  
+ 
+
+                                                                                      
+ 
+           
+
+                     
+                  
+ 
+
+                           
+
+                                                 
+ 
+                      
+        
+
+                                       
+                    
+
+                  
+                                                                                                             
+                           
+                              
+                                          
+                                   
+                                                         
+                                     
+                  
+ 
+
+                                                                        
+ 
+                                              
+        
+
+                                                                            
+  
+                                          
+  
+ 
+
+                                                                       
+ 
+                                                                                           
+                                                                                                   
+                                                           
+  
+                                                                                                    
+                                                            
+                                                                                 
+
+                                                                                                                            
+                                                                                                                            
+
+                                                                       
+
+                                                                          
+
+                                   
+                                
+                                                                                           
+                              
+                              
+                                 
+                          
+                                          
+                                                    
+                                               
+                                                                                                       
+                           
+                                                          
+     
+  
+ 
+                
+                           

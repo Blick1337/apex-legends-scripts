@@ -159,13 +159,16 @@ bool function PassiveWarlordsIre_EntityShouldBeHighlighted( entity target )
 void function OnPlayerClassChanged( entity player )
 {
 	                                 
-	if( player == GetLocalClientPlayer())
+	if( player == GetLocalClientPlayer()  )
 		OnPrimaryWeaponStatusUpdate( player.GetActiveWeapon( eActiveInventorySlot.mainHand ), ClWeaponStatus_GetWeaponHudRui( player ) )
 }
 
 void function OnPrimaryWeaponStatusUpdate( entity selectedWeapon, var weaponRui )
 {
 	if ( !IsValid( selectedWeapon ) )
+		return
+
+	if ( !PlayerHasPassive( GetLocalViewPlayer(), ePassives.PAS_WARLORDS_IRE ) )
 		return
 
 	entity lastSelectedWeapon = GetLastSelectedPrimaryWeapon()

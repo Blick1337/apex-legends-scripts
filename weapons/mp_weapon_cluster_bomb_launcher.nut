@@ -100,7 +100,7 @@ void function OnProjectileCollision_weapon_cluster_bomb_launcher( entity project
 
 	DeployableCollisionParams collisionParams
 	collisionParams.pos = pos
-	collisionParams.normal = normal
+	collisionParams.normal = ( LengthSqr( normal ) > FLT_EPSILON) ? normal : UP_VECTOR
 	collisionParams.hitEnt = hitEnt
 	collisionParams.hitBox = hitbox
 	collisionParams.isCritical = isCritical
@@ -142,9 +142,9 @@ void function OnProjectileCollision_weapon_cluster_bomb_launcher( entity project
 	                              
 
 	                                                          
-	                                                                                                                                                                                                                                      
+	                                                                                                                                                                                                                                                        
 	                                                                                                   
-	                                                                                                                                                                                                                                    
+	                                                                                                                                                                                                                                                      
 	                                                                     
 
 	            

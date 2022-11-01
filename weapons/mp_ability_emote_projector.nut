@@ -271,7 +271,7 @@ void function OnEmoteProjectorPlanted( entity projectile, DeployableCollisionPar
 	                      
 	 
 		                                                                   
-		                                                                                                                      
+		                                                                                                                                 
 		                        
 		 
 			                                                             
@@ -286,9 +286,9 @@ void function OnEmoteProjectorPlanted( entity projectile, DeployableCollisionPar
 
        
        
-                                                       
+                                                    
  
-                                                                   
+                                                                                         
                                                                                                                       
  
 
@@ -350,7 +350,7 @@ void function OnEmoteProjectorPlanted( entity projectile, DeployableCollisionPar
                                                                
                                                                 
    
-                                                                                                                 
+                                                                                                              
            
    
 
@@ -660,7 +660,7 @@ void function CreateClientSideEmoteIcon( entity wp, int guid, float startTime, b
 	vector color2 = useColor2 ? CharacterQuip_GetEffectColor2( item ) : color1
 
 	array<int> fx
-	int efx = StartParticleEffectOnEntity( mover, GetParticleSystemIndex( HOLO_EMOTE_EMITTER_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int efx = StartParticleEffectOnEntity( mover, GetParticleSystemIndex( HOLO_EMOTE_EMITTER_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 
 	EffectSetControlPointVector( efx, 3, color1 )
 	EffectSetControlPointVector( efx, 4, color2 )

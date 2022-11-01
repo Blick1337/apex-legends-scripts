@@ -27,6 +27,8 @@ global function ServerCallback_CL_UpdateOpenMenuButtonCallbacks_Gameplay
 global function ServerCallback_CL_DeregisterModeButtonPressedCallbacks
 global function ServerCallback_CL_UpdateCurrentLoadoutHUD
 
+global function WinterExpress_GetTeamScore
+global function WinterExpress_IsTeamWinning
 
 #endif
 
@@ -61,9 +63,6 @@ global function UI_UpdateOpenMenuButtonCallbacks_Spectate
 #endif
 
 #if CLIENT && DEV
-global function InitRespawnRui
-global function UpdateRespawnRui
-
 global function PickCommentaryLineFromBucket_WinterExpressCustom
 #endif
 
@@ -108,6 +107,8 @@ const CHARACTER_SELECT_MIN_TIME = 5.0
 
 const float WINTER_EXPRESS_TRAIN_MAX_SPEED = 500
 const float WINTER_EXPRESS_TRAIN_ACCELERATION = 50
+const float WINTER_EXPRESS_LEAVE_BUFFER = 12
+const float WINTER_EXPRESS_FIRST_STATION_UNLOCK_DELAY = 10
 
              
 const float CONTESTED_LINE_DEBOUNCE = 10.0
@@ -254,6 +255,8 @@ struct {
 		                                                        
 		                                                      
 
+		                           
+
 		                                
 		                                                                 
 			                                  
@@ -269,11 +272,7 @@ struct {
 
 		bool gameStartRuiCreated = false
 
-		int localObjectiveState = -1
-		int localObjectiveOwner = -1
-
 		int    bestSquadIndex = -1
-		var    respawnRui = null
 		entity trainWaypoint
 
 		var gameStartRui = null
@@ -281,10 +280,6 @@ struct {
 		bool OpenMenuGameplayButtonCallbackRegistered = false
 		var legendSelectMenuPromptRui = null
 
-	#endif
-
-	#if UI
-		bool OpenMenuSpectateButtonCallbackRegistered = false
 	#endif
 } file
 
@@ -302,6 +297,8 @@ void function WinterExpress_Init()
 	Remote_RegisterServerFunction( "ClientCallback_WinterExpress_TryRespawnPlayer" )
 
 	#if SERVER
+		                                                                
+
 		                                                        
 		                                                                                            
 		                      
@@ -329,14 +326,12 @@ void function WinterExpress_Init()
 		                                                  
 		                                                      
 
-                                  
-			                                      
-			 
-				                                                                               
-				                                                                                 
-				                                                                  
-			 
-                                        
+		                                      
+		 
+			                                                                               
+			                                                                                 
+			                                                                  
+		 
 
 		                                                                   
 
@@ -393,15 +388,14 @@ void function WinterExpress_Init()
 
 		AddCallback_OnPlayerLifeStateChanged( WinterExpress_OnPlayerLifeStateChanged )
 
-		InitRespawnRui()
-		AddCreateCallback( "player", UpdateRespawnRui )
-
 		SetHeaderBannerOverrideFunc( WinterExpress_DeathScreenHeaderOverride )
 
 		AddCreateCallback( PLAYER_WAYPOINT_CLASSNAME, OnWaypointCreated )
 		AddCallback_GameStateEnter( eGameState.WaitingForPlayers, OnWaitingForPlayers_Client )
 		AddCallback_GameStateEnter( eGameState.PickLoadout, OnPickLoadout )
 		AddCallback_GameStateEnter( eGameState.Resolution, WinterExpress_OnResolution )
+		AddCallback_GameStateEnter( eGameState.WinnerDetermined, Client_OnWinnerDetermined )
+		AddCallback_OnPlayerChangedTeam( Client_OnTeamChanged )
 
 		AddCallback_OnScoreboardCreated( FinishGamestateRui )
 		AddCallback_EntitiesDidLoad( OnEntitiesDidLoad_Client )
@@ -460,13 +454,13 @@ void function WinterExpress_RegisterNetworking()
 	RegisterNetworkedVariable( "WinterExpress_IsPlayerAllowedLegendChange", SNDC_PLAYER_EXCLUSIVE, SNVT_BOOL, true )
 
 	#if CLIENT
-		RegisterNetworkedVariableChangeCallback_int( "WinterExpress_RoundState", OnServerVarChanged_RoundState )
-		RegisterNetworkedVariableChangeCallback_int( "WinterExpress_ObjectiveState", OnServerVarChanged_ObjectiveState )
-		RegisterNetworkedVariableChangeCallback_int( "WinterExpress_ObjectiveOwner", OnServerVarChanged_ObjectiveOwner )
-		RegisterNetworkedVariableChangeCallback_int( "connectedPlayerCount", OnServerVarChanged_ConnectedPlayers )
-		RegisterNetworkedVariableChangeCallback_time( "WinterExpress_TrainArrivalTime", OnServerVarChanged_TrainArrival )
-		RegisterNetworkedVariableChangeCallback_time( "WinterExpress_TrainTravelTime", OnServerVarChanged_TrainTravelTime )
-		RegisterNetworkedVariableChangeCallback_bool( "WinterExpress_IsOvertime", OnServerVarChanged_OvertimeChanged )
+		RegisterNetVarIntChangeCallback( "WinterExpress_RoundState", OnServerVarChanged_RoundState )
+		RegisterNetVarIntChangeCallback( "WinterExpress_ObjectiveState", OnServerVarChanged_ObjectiveState )
+		RegisterNetVarIntChangeCallback( "WinterExpress_ObjectiveOwner", OnServerVarChanged_ObjectiveOwner )
+		RegisterNetVarIntChangeCallback( "connectedPlayerCount", OnServerVarChanged_ConnectedPlayers )
+		RegisterNetVarTimeChangeCallback( "WinterExpress_TrainArrivalTime", OnServerVarChanged_TrainArrival )
+		RegisterNetVarTimeChangeCallback( "WinterExpress_TrainTravelTime", OnServerVarChanged_TrainTravelTime )
+		RegisterNetVarBoolChangeCallback( "WinterExpress_IsOvertime", OnServerVarChanged_OvertimeChanged )
 	#endif
 }
 
@@ -502,7 +496,7 @@ bool function WinterExpress_IsNarrowWin()
 	                                                                     
 	                                                                                                                                                                       
 	                                           
-	                                               
+	                                                                        
 
 	                                                        
 
@@ -535,17 +529,46 @@ bool function WinterExpress_IsNarrowWin()
 #endif
 
 #if CLIENT
+void function Client_OnTeamChanged( entity player, int oldTeam, int newTeam )
+{
+	                               
+	foreach ( entity p in GetPlayerArray() )
+	{
+		if ( !IsValid( p ) )
+			continue
+
+		SetCustomPlayerInfo( p )
+	}
+}
+#endif
+
+#if CLIENT
 void function OnEntitiesDidLoad_Client()
 {
-	file.scoreElements[GetLocalClientPlayer().GetTeam()] <- RuiCreateNested( ClGameState_GetRui(), "squadScore", $"ui/winter_express_squad_score_element.rpak" )
-	file.scoreElementsFullmap[GetLocalClientPlayer().GetTeam()] <- RuiCreateNested( GetFullmapGamestateRui(), "squadScore", $"ui/winter_express_squad_score_element.rpak" )
-	file.squadOnObjectiveElements[GetLocalClientPlayer().GetTeam()] <- RuiCreateNested( ClGameState_GetRui(), "squadOnObjective", $"ui/winter_express_squad_on_objective.rpak" )
-	RuiSetBool( file.squadOnObjectiveElements[GetLocalClientPlayer().GetTeam()], "isMySquad", true )
-	RuiSetBool( file.squadOnObjectiveElements[GetLocalClientPlayer().GetTeam()], "teamValid", true )
+	                    
+	int uiTeam = TEAM_IMC
+	file.scoreElements[uiTeam] <- RuiCreateNested( ClGameState_GetRui(), "squadScore", $"ui/winter_express_squad_score_element.rpak" )
+	file.scoreElementsFullmap[uiTeam] <- RuiCreateNested( GetFullmapGamestateRui(), "squadScore", $"ui/winter_express_squad_score_element.rpak" )
+	file.squadOnObjectiveElements[uiTeam] <- RuiCreateNested( ClGameState_GetRui(), "squadOnObjective", $"ui/winter_express_squad_on_objective.rpak" )
+	RuiSetBool( file.squadOnObjectiveElements[uiTeam], "isMySquad", true )
+	RuiSetBool( file.squadOnObjectiveElements[uiTeam], "teamValid", true )
 
-	int i = 0
-	foreach ( team in GetAllEnemyTeams( GetLocalClientPlayer().GetTeam() ) )
+	int mySquadIndex      = Squads_GetArrayIndexForTeam( uiTeam )
+	asset squadIcon  = Squads_GetSquadIcon( mySquadIndex )
+
+	RuiSetAsset( file.squadOnObjectiveElements[uiTeam], "squadImage",  squadIcon)
+	RuiSetAsset( file.scoreElements[uiTeam], "squadImage", squadIcon )
+	RuiSetColorAlpha( file.scoreElements[uiTeam], "teamColor", Squads_GetSquadColor( mySquadIndex ) , 1.0 )
+
+	RuiSetAsset( file.scoreElementsFullmap[uiTeam], "squadImage", squadIcon )
+	RuiSetColorAlpha( file.scoreElementsFullmap[uiTeam], "teamColor", Squads_GetSquadColor( mySquadIndex ) , 1.0 )
+
+
+	             
+	foreach ( int i, int team in GetAllEnemyTeams( uiTeam ) )
 	{
+		int squadIndex = Squads_GetArrayIndexForTeam( team )
+
 		file.scoreElements[team] <- RuiCreateNested( ClGameState_GetRui(), "enemyScore" + i, $"ui/winter_express_enemy_score_element.rpak" )
 		file.scoreElementsFullmap[team] <- RuiCreateNested( GetFullmapGamestateRui(), "enemyScore" + i, $"ui/winter_express_enemy_score_element.rpak" )
 		RuiSetInt( file.scoreElements[team], "teamOrderIndex", i )
@@ -567,7 +590,13 @@ void function OnEntitiesDidLoad_Client()
 			RuiSetBool( file.squadOnObjectiveElements[team], "teamValid", true )
 		}
 
-		i++
+		squadIcon = Squads_GetSquadIcon(squadIndex)
+		RuiSetAsset( file.squadOnObjectiveElements[team], "squadImage",  squadIcon)
+		RuiSetAsset( file.scoreElements[team], "squadImage", squadIcon )
+		RuiSetColorAlpha( file.scoreElements[team], "teamColor", Squads_GetSquadColor( squadIndex ), 1.0 )
+
+		RuiSetAsset( file.scoreElementsFullmap[team], "squadImage", squadIcon )
+		RuiSetColorAlpha( file.scoreElementsFullmap[team], "teamColor", Squads_GetSquadColor( squadIndex ), 1.0 )
 	}
 
 	SurvivalCommentary_SetHost( eSurvivalHostType.MIRAGE )
@@ -585,28 +614,51 @@ void function FinishGamestateRui()
 	RuiSetInt( ClGameState_GetRui(), "roundLimit", file.roundLimit )
 }
 
-void function OnServerVarChanged_ConnectedPlayers( entity player, int old, int new )
+void function OnServerVarChanged_ConnectedPlayers( entity player, int new )
 {
-	if ( new != old )
+	foreach ( team in GetAllTeams() )
 	{
-		foreach ( team in GetAllTeams() )
-		{
-			if ( !(team in file.scoreElements) )
-				continue
+		if ( !(team in file.scoreElements) )
+			continue
 
-			if ( GetPlayerArrayOfTeam( team ).len() == 0 )
-			{
-				RuiSetBool( file.scoreElements[team], "teamValid", false )
-				RuiSetBool( file.scoreElementsFullmap[team], "teamValid", false )
-				RuiSetBool( file.squadOnObjectiveElements[team], "teamValid", false )
-			}
-			else
-			{
-				RuiSetBool( file.scoreElements[team], "teamValid", true )
-				RuiSetBool( file.scoreElementsFullmap[team], "teamValid", true )
-				RuiSetBool( file.squadOnObjectiveElements[team], "teamValid", true )
-			}
+		int uiTeam = Squads_GetTeamsUIId( team )
+		if ( GetPlayerArrayOfTeam( team ).len() == 0 )
+		{
+			RuiSetBool( file.scoreElements[uiTeam], "teamValid", false )
+			RuiSetBool( file.scoreElementsFullmap[uiTeam], "teamValid", false )
+			RuiSetBool( file.squadOnObjectiveElements[uiTeam], "teamValid", false )
 		}
+		else
+		{
+			RuiSetBool( file.scoreElements[uiTeam], "teamValid", true )
+			RuiSetBool( file.scoreElementsFullmap[uiTeam], "teamValid", true )
+			RuiSetBool( file.squadOnObjectiveElements[uiTeam], "teamValid", true )
+		}
+	}
+
+	foreach ( entity p in GetPlayerArray() )
+	{
+		if ( !IsValid( p ) )
+			continue
+
+		SetCustomPlayerInfo( p )
+	}
+
+	entity localPlayer = GetLocalViewPlayer()
+	if ( !IsValid( localPlayer ))
+		return
+
+	int myTeam = localPlayer.GetTeam()
+	if ( myTeam == TEAM_SPECTATOR )
+		return
+
+	if ( ClGameState_GetRui() != null )
+	{
+		int squadIndex = Squads_GetSquadUIIndex( myTeam )
+		RuiSetInt( ClGameState_GetRui(), "squadSize", GetPlayerArrayOfTeam( myTeam ).len())
+		RuiSetImage( ClGameState_GetRui(), "squadIcon",  Squads_GetSquadIcon(squadIndex))
+		RuiSetColorAlpha( ClGameState_GetRui(), "squadColor", Squads_GetSquadColor( squadIndex ) , 1.0 )
+		RuiSetString( ClGameState_GetRui(), "squadString", Squads_GetSquadName(squadIndex) )
 	}
 }
 
@@ -641,7 +693,14 @@ void function WinterExpress_OnResolution()
 }
 #endif
 
-
+#if CLIENT
+void function Client_OnWinnerDetermined( )
+{
+	int winningTeam = GetWinningTeam()
+	int squadIndex = Squads_GetSquadUIIndex( GetWinningTeam() )
+	SetVictoryScreenTeamName( Localize( Squads_GetSquadNameLong( squadIndex ) ) )
+}
+#endif
 
                                                   
                                                   
@@ -704,7 +763,7 @@ void function WinterExpress_OnResolution()
                          
                                                                                   
  
-	                                                                                                                                                         
+	                                                                                                                                                                           
 	                                                        
 	                                                           
 	                      
@@ -1001,7 +1060,8 @@ void function WinterExpress_OnResolution()
 
                                   
  
-	                                                                
+	                                
+		                                                                                     
 
 	                                       
 
@@ -1069,18 +1129,40 @@ void function WinterExpress_OnResolution()
 		 
 			                                                                                                                 
 		 
+
 	 
 
-	                                                
+
 
 	                                 
 
-                                 
-		                                                           
-		                                      
-			                                                    
+	                                                           
+	                                      
+		                                                    
+ 
 
-                                       
+                                                         
+ 
+	                                           
+	 
+		                                                          
+		 
+			                                                   
+			                                                
+		 
+	 
+	    
+	 
+		                                                                         
+		                            
+		 
+			                                                                                 
+			                                                                          
+
+			                                         
+			                                                  
+		 
+	 
  
 
                                                               
@@ -1168,6 +1250,12 @@ void function WinterExpress_OnResolution()
 		                                                                                                                                                
 
 	                                                                                      
+	                                
+	 
+		                                  
+		                                                        
+	 
+
 	                                                                            
 	                                                                                               
 	                
@@ -1605,7 +1693,7 @@ void function WinterExpress_OnResolution()
 
                                                 
  
-	                                                                                                                       
+	                                                                                                                                          
 	                                              
  
 #endif
@@ -1653,18 +1741,16 @@ void function WinterExpress_OnResolution()
 	                                                    
    
 
-                                
                                                                                                                                                                            
-                                                                                    
+                                                                      
  
-	                                                                                                                                                                                                                              
+	                                                                                                                                                                             
 	 
 		                                                                                                                                                                                                                  
 		                                                                             
 		                                                                            
 	 
  
-                                      
 
                                                            
  
@@ -1679,21 +1765,20 @@ void function WinterExpress_OnResolution()
 		      
 
 	                                                                                           
-                                 
-		                                                                     
-		                                                         
-		 
-			                                 
-				         
 
-			                        
-			 
-				                                                    
-				                                                                               
-				                                                               
-			 
+	                                                                     
+	                                                         
+	 
+		                                 
+			         
+
+		                        
 		 
-                                       
+			                                                    
+			                                                                               
+			                                                               
+		 
+	 
 
 	                        
 	 
@@ -1706,7 +1791,7 @@ void function WinterExpress_OnResolution()
 		 
 		
 		                                                                                                                                                                                                    
-		                                                                             
+		                                                 
 	 
 
 	        
@@ -1720,29 +1805,31 @@ void function WinterExpress_OnResolution()
 
                                                                                                                    
  
-	                         
+	                                            
 		      
 
 	                              
 
-                                 
-		                                                                             
-		                                      
-		 
-			                                                                                                      
-		 
-		    
-                                       
-		 
-			                                                                     
-		 
+	                                         
+	 
+		                                                            
 
-	                                              
+		                                    
+	 
+	                                                                             
+	                                      
+	 
+		                                                                                                      
+	 
+	    
+	 
+		                                                                     
+	 
+
 	                                                                
 		                                                  
  
 
-                                
                                                                                                          
                                                              
  
@@ -1756,7 +1843,6 @@ void function WinterExpress_OnResolution()
 	                                           
 		                                                                                    
  
-                                      
 
                                                                   
                                                    
@@ -1784,6 +1870,7 @@ void function WinterExpress_OnResolution()
 
 	                                                                            
 	                                                   
+	                                   
  
 
                                                                                                  
@@ -1880,6 +1967,7 @@ void function WinterExpress_OnResolution()
 	                                  
 	                                
 
+
 	                                            
 		      
 
@@ -1887,6 +1975,27 @@ void function WinterExpress_OnResolution()
 
 	                                                                 
 		                       
+ 
+
+
+                                                 
+ 
+	                                  
+	                                
+
+	                                  
+	                        
+
+	                                                                    
+	 
+		                                                                             
+		                                                  
+		 
+			                                                                                             
+			                                           
+		 
+		           
+	 
  
 
 
@@ -2045,7 +2154,8 @@ void function WinterExpress_OnResolution()
 	                                                                         
 
 	                    
-
+	                                                                                                    
+	                                                                      
 	                                        
 	 
 		                                    
@@ -2135,12 +2245,12 @@ void function WinterExpress_OnResolution()
 
 					                
 					 
-						                                                                                                       
+						                                                                                                         
 						                              
 					 
 					      
 					   
-					  	                                                                                                       
+					  	                                                                                                         
 					   
 				 
 
@@ -2175,7 +2285,7 @@ void function WinterExpress_OnResolution()
 			   
 		 
 	 
-
+                                                                              
 	            
  
 
@@ -2296,7 +2406,7 @@ void function WinterExpress_OnResolution()
 
 	                                                                       
 	                                                                                                                                                                                                                       
-	                                                       
+	                                                 
  
 
                                                                                                                
@@ -2338,7 +2448,7 @@ void function WinterExpress_OnResolution()
 	                                     
 
 	                                                        
-	                                                       
+	                                                 
 	                                                                            
 	                                                                 
 
@@ -2479,7 +2589,7 @@ void function WinterExpress_OnResolution()
 	                                                                             
 
 	       
-		                                                                 
+		                                                                   
 	      
 
 	                 
@@ -2558,7 +2668,7 @@ void function WinterExpress_OnResolution()
 			                                         
 			                                                                                                              
 			                                                                  
-			                                                                                              
+			                                                                                               
 			                                                                                 
 
 			                                                                                                
@@ -2696,7 +2806,7 @@ void function WinterExpress_OnResolution()
 			                              
 			 
 				                                                                                    
-				                                                                                              
+				                                                                                                 
 			 
 		 
 	      
@@ -2747,8 +2857,8 @@ void function WinterExpress_OnResolution()
 
 		                 
 		 
-			                                                      
-			                                                       
+			                                                         
+			                                                         
 			                                                                     
 		 
 	 
@@ -2776,7 +2886,7 @@ void function WinterExpress_OnResolution()
 
                                                                                     
  
-	                                                                                                          
+	                                                                                                                        
 
 	                                
 	 
@@ -2796,7 +2906,7 @@ void function WinterExpress_OnResolution()
 			                 
 			 
 				                                                                  
-				                                                            
+				                                                              
 				                                        
 			 
 		      
@@ -2808,7 +2918,7 @@ void function WinterExpress_OnResolution()
 		 
 			                   
 			 
-				                                                          
+				                                                            
 				                                                                  
 			 
 			    
@@ -2848,7 +2958,7 @@ void function WinterExpress_OnResolution()
 	            
 	                                              
 	 
-		                                                                    
+		                                                                      
 
 		                   
 	 
@@ -2868,14 +2978,14 @@ void function WinterExpress_OnResolution()
 	                  
  
 
-                                                                        
+                                                                      
  
 	                  
 		      
 
 	                                      
 	 
-		                                                                                                  
+		                                                         
 	 
  
 
@@ -2990,50 +3100,19 @@ string function PickCommentaryLineFromBucket_WinterExpressCustom( int commentary
                                  
 
 #if UI
-                                                          
-   
-  	                                       
-  		                                                          
-   
-
 void function UI_UpdateOpenMenuButtonCallbacks_Spectate( int newLifeState, bool shouldCloseMenu )
 {
-	if ( newLifeState == LIFE_ALIVE && file.OpenMenuSpectateButtonCallbackRegistered )
+	if ( newLifeState == LIFE_ALIVE )
 	{
-		DeregisterButtonPressedCallback( KEY_Q, WinterExpress_UI_OpenCharacterSelect )
-		DeregisterButtonPressedCallback( BUTTON_TRIGGER_LEFT_FULL, WinterExpress_UI_OpenCharacterSelect )
-
-		file.OpenMenuSpectateButtonCallbackRegistered = false
-
 		if ( shouldCloseMenu )
 			RunClientScript( "CloseCharacterSelectNewMenu" )
 
-                                  
-			if ( IsUsingLoadoutSelectionSystem() )
-			{
-				DeregisterButtonPressedCallback( KEY_E, WinterExpress_UI_OpenLoadoutSelect )
-				DeregisterButtonPressedCallback( BUTTON_TRIGGER_RIGHT_FULL, WinterExpress_UI_OpenLoadoutSelect )
 
-				if ( shouldCloseMenu )
-					LoadoutSelectionMenu_CloseLoadoutMenu()
-			}
-                                        
-	}
-
-	if ( newLifeState == LIFE_DEAD && !file.OpenMenuSpectateButtonCallbackRegistered )
-	{
-		RegisterButtonPressedCallback( KEY_Q, WinterExpress_UI_OpenCharacterSelect )
-		RegisterButtonPressedCallback( BUTTON_TRIGGER_LEFT_FULL, WinterExpress_UI_OpenCharacterSelect )
-
-		file.OpenMenuSpectateButtonCallbackRegistered = true
-
-                                  
-			if ( IsUsingLoadoutSelectionSystem() )
-			{
-				RegisterButtonPressedCallback( KEY_E, WinterExpress_UI_OpenLoadoutSelect )
-				RegisterButtonPressedCallback( BUTTON_TRIGGER_RIGHT_FULL, WinterExpress_UI_OpenLoadoutSelect )
-			}
-                                        
+		if ( IsUsingLoadoutSelectionSystem() )
+		{
+			if ( shouldCloseMenu )
+				LoadoutSelectionMenu_CloseLoadoutMenu()
+		}
 	}
 }
 
@@ -3058,7 +3137,6 @@ void function WinterExpress_TryRespawn( var button )
 	Remote_ServerCallFunction( "ClientCallback_WinterExpress_TryRespawnPlayer" )
 }
 
-                                
                                   
 void function WinterExpress_UI_OpenLoadoutSelect( var button )
 {
@@ -3071,7 +3149,6 @@ void function WinterExpress_UI_OpenLoadoutSelect( var button )
 
 	LoadoutSelectionMenu_OpenLoadoutMenu( true )
 }
-                                      
 
 #endif
 
@@ -3091,6 +3168,7 @@ void function ServerCallback_CL_UpdateOpenMenuButtonCallbacks_Gameplay( bool isL
 	WinterExpress_UpdateOpenMenuButtonCallbacks_Gameplay( isLegendSelectAvailable )
 }
 
+
                                                                                                                                     
 void function WinterExpress_UpdateOpenMenuButtonCallbacks_Gameplay( bool isLegendSelectAvailable )
 {
@@ -3100,9 +3178,10 @@ void function WinterExpress_UpdateOpenMenuButtonCallbacks_Gameplay( bool isLegen
 
 	if ( !isLegendSelectAvailable && file.OpenMenuGameplayButtonCallbackRegistered )
 	{
-		DeregisterButtonPressedCallback( KEY_Q, WinterExpress_CL_OpenCharacterSelect )
-		DeregisterButtonPressedCallback( BUTTON_TRIGGER_LEFT_FULL, WinterExpress_CL_OpenCharacterSelect )
-		CloseCharacterSelectNewMenu()
+		DeregisterConCommandTriggeredCallback( "+offhand1", WinterExpress_CL_TryOpenCharacterSelect )
+
+		if( CharacterSelect_MenuIsOpen() )
+			CloseCharacterSelectNewMenu()
 
 		if ( file.legendSelectMenuPromptRui != null )
 		{
@@ -3110,34 +3189,27 @@ void function WinterExpress_UpdateOpenMenuButtonCallbacks_Gameplay( bool isLegen
 			file.legendSelectMenuPromptRui = null
 		}
 
+		if ( IsUsingLoadoutSelectionSystem() )
+		{
+			DeregisterConCommandTriggeredCallback( "+offhand4", WinterExpress_CL_TryOpenLoadoutSelect )
+			RunUIScript( "LoadoutSelectionMenu_CloseLoadoutMenu" )
 
-                                  
-			if ( IsUsingLoadoutSelectionSystem() )
-			{
-				DeregisterButtonPressedCallback( KEY_E, WinterExpress_CL_OpenLoadoutSelect )
-				DeregisterButtonPressedCallback( BUTTON_TRIGGER_RIGHT_FULL, WinterExpress_CL_OpenLoadoutSelect )
-				RunUIScript( "LoadoutSelectionMenu_CloseLoadoutMenu" )
+		}
 
-			}
-                                        
 		file.OpenMenuGameplayButtonCallbackRegistered = false
 	}
 
 	if ( isLegendSelectAvailable && !file.OpenMenuGameplayButtonCallbackRegistered && player.GetPlayerNetBool( "WinterExpress_IsPlayerAllowedLegendChange" ) )
 	{
-		RegisterButtonPressedCallback( KEY_Q, WinterExpress_CL_OpenCharacterSelect )
-		RegisterButtonPressedCallback( BUTTON_TRIGGER_LEFT_FULL, WinterExpress_CL_OpenCharacterSelect )
+		RegisterConCommandTriggeredCallback( "+offhand1", WinterExpress_CL_TryOpenCharacterSelect )
 
 		var rui = CreateFullscreenRui( $"ui/winter_express_change_prompt_screen.rpak", 100 )
 		file.legendSelectMenuPromptRui = rui
 
-                                  
-			if ( IsUsingLoadoutSelectionSystem() )
-			{
-				RegisterButtonPressedCallback( KEY_E, WinterExpress_CL_OpenLoadoutSelect )
-				RegisterButtonPressedCallback( BUTTON_TRIGGER_RIGHT_FULL, WinterExpress_CL_OpenLoadoutSelect )
-			}
-                                        
+		if ( IsUsingLoadoutSelectionSystem() )
+		{
+			RegisterConCommandTriggeredCallback( "+offhand4", WinterExpress_CL_TryOpenLoadoutSelect )
+		}
 
 		WinterExpress_UpdateCurrentLoadoutHUD()
 		file.OpenMenuGameplayButtonCallbackRegistered = true
@@ -3147,7 +3219,7 @@ void function WinterExpress_UpdateOpenMenuButtonCallbacks_Gameplay( bool isLegen
 
 
                                                      
-void function WinterExpress_CL_OpenCharacterSelect( var button )
+void function WinterExpress_CL_TryOpenCharacterSelect( var button )
 {
 	entity player = GetLocalClientPlayer()
 
@@ -3196,42 +3268,30 @@ void function WinterExpress_UpdateCurrentLoadoutHUD()
 	if ( !IsValid( player ) )
 		return
 
-	var respawnRui = file.respawnRui
 	var legendSelectPromptRui = file.legendSelectMenuPromptRui
 
-                                 
-		                        
-		if ( IsUsingLoadoutSelectionSystem() )
+	                        
+	if ( IsUsingLoadoutSelectionSystem() )
+	{
+		int currentLoadout = LoadoutSelection_GetSelectedLoadoutSlotIndex_CL_UI()
+
+		if ( legendSelectPromptRui != null )
 		{
-			int currentLoadout = LoadoutSelection_GetSelectedLoadoutSlotIndex_CL_UI()
-
-			if ( legendSelectPromptRui != null )
-			{
-				RuiSetBool( legendSelectPromptRui, "hasLoadoutSelect", true )
-				RuiSetString( legendSelectPromptRui, "currentLoadoutHeaderText", LoadoutSelection_GetLocalizedLoadoutHeader( currentLoadout ) )
-				RuiSetImage( legendSelectPromptRui, "weapon0Icon", LoadoutSelection_GetItemIcon( currentLoadout, 0, -1 ) )
-				RuiSetInt( legendSelectPromptRui, "weapon0LootTier", LoadoutSelection_GetWeaponLootTeir( currentLoadout, 0) )
-				RuiSetImage( legendSelectPromptRui, "weapon1Icon", LoadoutSelection_GetItemIcon( currentLoadout, 1, -1 ) )
-				RuiSetInt( legendSelectPromptRui, "weapon1LootTier", LoadoutSelection_GetWeaponLootTeir( currentLoadout, 1) )
-				RuiSetImage( legendSelectPromptRui, "consumable0Icon", LoadoutSelection_GetItemIcon( currentLoadout, -1, 0 ) )
-				RuiSetImage( legendSelectPromptRui, "consumable1Icon", LoadoutSelection_GetItemIcon( currentLoadout, -1, 1 ) )
-				RuiSetImage( legendSelectPromptRui, "consumable2Icon", LoadoutSelection_GetItemIcon( currentLoadout, -1, 2 ) )
-				RuiSetBool( GetCompassRui(), "isVisible", false )
-				file.legendSelectMenuPromptRui = legendSelectPromptRui
-			}
-			else
-				RuiSetBool( GetCompassRui(), "isVisible", true )
-
-			if ( respawnRui != null )
-			{
-				RuiSetString( respawnRui, "selectedLoadoutName", LoadoutSelection_GetLocalizedLoadoutHeader( currentLoadout ) )
-				RuiSetImage( respawnRui, "weapon0Icon", LoadoutSelection_GetItemIcon( currentLoadout, 0, -1 ) )
-				RuiSetInt( respawnRui, "weapon0LootTier", LoadoutSelection_GetWeaponLootTeir( currentLoadout, 0 ) )
-				RuiSetImage( respawnRui, "weapon1Icon", LoadoutSelection_GetItemIcon( currentLoadout, 1, -1 ) )
-				RuiSetInt( respawnRui, "weapon1LootTier", LoadoutSelection_GetWeaponLootTeir( currentLoadout, 1 ) )
-			}
+			RuiSetBool( legendSelectPromptRui, "hasLoadoutSelect", true )
+			RuiSetString( legendSelectPromptRui, "currentLoadoutHeaderText", LoadoutSelection_GetLocalizedLoadoutHeader( currentLoadout ) )
+			RuiSetImage( legendSelectPromptRui, "weapon0Icon", LoadoutSelection_GetItemIcon( currentLoadout, 0, -1 ) )
+			RuiSetInt( legendSelectPromptRui, "weapon0LootTier", LoadoutSelection_GetWeaponLootTeir( currentLoadout, 0) )
+			RuiSetImage( legendSelectPromptRui, "weapon1Icon", LoadoutSelection_GetItemIcon( currentLoadout, 1, -1 ) )
+			RuiSetInt( legendSelectPromptRui, "weapon1LootTier", LoadoutSelection_GetWeaponLootTeir( currentLoadout, 1) )
+			RuiSetImage( legendSelectPromptRui, "consumable0Icon", LoadoutSelection_GetItemIcon( currentLoadout, -1, 0 ) )
+			RuiSetImage( legendSelectPromptRui, "consumable1Icon", LoadoutSelection_GetItemIcon( currentLoadout, -1, 1 ) )
+			RuiSetImage( legendSelectPromptRui, "consumable2Icon", LoadoutSelection_GetItemIcon( currentLoadout, -1, 2 ) )
+			RuiSetBool( GetCompassRui(), "isVisible", false )
+			file.legendSelectMenuPromptRui = legendSelectPromptRui
 		}
-                                       
+		else
+			RuiSetBool( GetCompassRui(), "isVisible", true )
+	}
 
 	                          
 	if ( legendSelectPromptRui != null && LoadoutSlot_IsReady( ToEHI( player ), Loadout_Character() ) )
@@ -3242,17 +3302,10 @@ void function WinterExpress_UpdateCurrentLoadoutHUD()
 
 		file.legendSelectMenuPromptRui = legendSelectPromptRui
 	}
-
-	if ( respawnRui != null )
-	{
-		ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
-		RuiSetImage( respawnRui, "legendIcon", CharacterClass_GetGalleryPortrait( character ) )
-	}
 }
 
-                                
                                   
-void function WinterExpress_CL_OpenLoadoutSelect( var button )
+void function WinterExpress_CL_TryOpenLoadoutSelect( var button )
 {
 	if ( !IsUsingLoadoutSelectionSystem() )
 		return
@@ -3267,7 +3320,6 @@ void function WinterExpress_CL_OpenLoadoutSelect( var button )
 
 	RunUIScript( "LoadoutSelectionMenu_OpenLoadoutMenu", false )
 }
-                                      
 
 
 void function OnWaitingForPlayers_Client()
@@ -3279,6 +3331,9 @@ void function OnWaitingForPlayers_Client()
 	SurvivalCommentary_SetHost( eSurvivalHostType.MIRAGE )
 
 	file.gameStartRui = RuiCreate( $"ui/winter_express_game_start.rpak", clGlobal.topoFullScreen, RUI_DRAW_POSTEFFECTS, 1 )
+	RuiSetString( file.gameStartRui, "gameModeString", GetCurrentPlaylistVarString( "name", "#PLAYLIST_UNAVAILABLE" ) )
+	RuiSetString( file.gameStartRui, "mapNameString", GetCurrentPlaylistVarString( "map_name", "#PLAYLIST_UNAVAILABLE" ) )
+	RuiSetImage( file.gameStartRui , "gameModeIcon", GetGamemodeLogoFromImageMap( GetCurrentPlaylistVarString( "gamemode_logo", "BATTLE_ROYALE" )) )
 
 	EmitSoundOnEntity( GetLocalClientPlayer(), GetAnyDialogueAliasFromName( PickCommentaryLineFromBucket_WinterExpressCustom( eSurvivalCommentaryBucket.MATCH_INTRO ) ) )
 
@@ -3317,48 +3372,6 @@ void function SetupObjectiveWaypoint( entity wp )
 }
 
 
-void function InitRespawnRui()
-{
-	if ( IsWaveRespawn() )
-	{
-		if ( file.respawnRui == null )
-			file.respawnRui = RuiCreate( $"ui/winter_express_wave_respawn_overlay.rpak", clGlobal.topoFullScreen, RUI_DRAW_HUD, 1 )
-
-		RuiTrackFloat( file.respawnRui, "waveRespawnTime", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL, GetNetworkedVariableIndex( "WinterExpress_WaveRespawnTime" ) )
-		RuiTrackFloat( file.respawnRui, "roundEndTime", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL, GetNetworkedVariableIndex( "WinterExpress_RoundEnd" ) )
-	}
-	else if ( IsRoundBasedRespawn() )
-	{
-		if ( file.respawnRui == null )
-			file.respawnRui = RuiCreate( $"ui/winter_express_round_based_respawn_overlay.rpak", clGlobal.topoFullScreen, RUI_DRAW_POSTEFFECTS, 1 )
-
-		RuiTrackFloat( file.respawnRui, "roundEndTime", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL, GetNetworkedVariableIndex( "WinterExpress_RoundEnd" ) )
-		RuiTrackFloat( file.respawnRui, "roundRespawnTime", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL, GetNetworkedVariableIndex( "WinterExpress_RoundRespawnTime" ) )
-		RuiTrackInt( file.respawnRui, "gameState", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL_INT, GetNetworkedVariableIndex( "gameState" ) )
-	}
-	else
-	{
-		if ( file.respawnRui == null )
-			file.respawnRui = RuiCreate( $"ui/winter_express_manual_respawn_overlay.rpak", clGlobal.topoFullScreen, RUI_DRAW_HUD, 1 )
-	}
-}
-
-
-void function UpdateRespawnRui( entity player )
-{
-	if ( player != GetLocalClientPlayer() )
-		return
-
-	if ( IsRoundBasedRespawn() && file.respawnRui != null )
-	{
-		RuiTrackBool( file.respawnRui, "hasGracePeriodPermit", player, RUI_TRACK_SCRIPT_NETWORK_VAR_BOOL, GetNetworkedVariableIndex( "WinterExpress_HasGracePeriodPermit" ) )
-		RuiTrackFloat( file.respawnRui, "roundEndTime", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL, GetNetworkedVariableIndex( "WinterExpress_RoundEnd" ) )
-		RuiTrackFloat( file.respawnRui, "roundRespawnTime", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL, GetNetworkedVariableIndex( "WinterExpress_RoundRespawnTime" ) )
-		RuiTrackFloat( file.respawnRui, "trainArrivalTime", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL, GetNetworkedVariableIndex( "WinterExpress_TrainArrivalTime" ) )
-	}
-}
-
-
 void function WinterExpress_OnPlayerLifeStateChanged( entity player, int oldState, int newState )
 {
 	entity clientPlayer = GetLocalClientPlayer()
@@ -3389,16 +3402,6 @@ void function WinterExpress_ManageCharacterSelectAvailability_Thread()
 	OnThreadEnd(
 		function() : ( clientPlayer )
 		{
-			if ( file.respawnRui != null )
-			{
-				RuiSetFloat( file.respawnRui, "changeLegendAlpha", 0.0 )
-
-                                    
-					if ( IsUsingLoadoutSelectionSystem() )
-						RuiSetFloat( file.respawnRui, "changeLoadoutAlpha", 0.0 )
-                                          
-			}
-
 			if ( IsValid( clientPlayer ) )
 			{
 				RunUIScript( "UI_UpdateOpenMenuButtonCallbacks_Spectate", LIFE_ALIVE, true )
@@ -3425,23 +3428,6 @@ void function WinterExpress_ManageCharacterSelectAvailability_Thread()
 	timeUntilSpawn = WinterExpress_GetTimeUntilSpawn()
 	if ( timeUntilSpawn > 0 && timeUntilSpawn < CHARACTER_SELECT_MIN_TIME )
 		return
-
-	                                                                                                   
-	if ( file.respawnRui != null )
-	{
-		RuiSetFloat( file.respawnRui, "changeLegendAlpha", 1.0 )
-                                  
-			if ( IsUsingLoadoutSelectionSystem() )
-			{
-				RuiSetBool( file.respawnRui, "hasLoadoutSelect", true )
-				RuiSetFloat( file.respawnRui, "changeLoadoutAlpha", 1.0 )
-				int currentLoadout = LoadoutSelection_GetSelectedLoadoutSlotIndex_CL_UI()
-				RuiSetString( file.respawnRui, "selectedLoadoutName", LoadoutSelection_GetLocalizedLoadoutHeader( currentLoadout ) )
-				RuiSetImage( file.respawnRui, "weapon0Icon", LoadoutSelection_GetItemIcon( currentLoadout, 0, -1 ) )
-				RuiSetImage( file.respawnRui, "weapon1Icon", LoadoutSelection_GetItemIcon( currentLoadout, 1, -1 ) )
-			}
-                                        
-	}
 
 	RunUIScript( "UI_UpdateOpenMenuButtonCallbacks_Spectate", LIFE_DEAD, false )
 
@@ -3494,11 +3480,12 @@ bool function WinterExpress_ShouldShowDeathScreen()
 
 int function GetTeamRemappedForRui( int rawIndex )
 {
-	if( rawIndex == GetLocalClientPlayer().GetTeam() )
+	int myTeam = GetLocalViewPlayer().GetTeam()
+	if( rawIndex == myTeam )
 		return 0
 
 	int i = 1
-	foreach ( team in GetAllEnemyTeams( GetLocalClientPlayer().GetTeam() ) )
+	foreach ( team in GetAllEnemyTeams( myTeam ) )
 	{
 		if ( team == rawIndex )
 			return i
@@ -3518,31 +3505,38 @@ void function ServerCallback_CL_GameStartAnnouncement()
 void function ServerCallback_CL_RoundEnded( int endCondition, int winningTeam, int newScore )
 {
 	string winningSquad      = ""
-	vector announcementColor = <0, 0, 0>
+	vector announcementColor = <1, 1, 1>
+
+	int uiWinningTeam     = Squads_GetTeamsUIId( winningTeam )
+	int squadWinningIndex = -1
+	if	(winningTeam >= TEAM_IMC)
+	{
+		squadWinningIndex  = Squads_GetSquadUIIndex( winningTeam )
+	}
+
+
 	asset borderIcon         = $""
 	string soundAlias        = "WXpress_Train_Update"
 
-	if ( winningTeam == GetLocalClientPlayer().GetTeam() )
+	if ( squadWinningIndex < 0)
+	{
+		borderIcon = $"rui/hud/gametype_icons/winter_express/icon_announcement_fail"
+	}
+	else if ( uiWinningTeam == TEAM_IMC )                  
 	{
 		winningSquad = Localize( "#PL_YOUR_SQUAD" )
-		announcementColor = OBJECTIVE_GREEN
+		announcementColor = Squads_GetNonLinearSquadColor( squadWinningIndex )
 		borderIcon = $"rui/hud/gametype_icons/winter_express/legend_icon_round_won"
 		soundAlias = "WXpress_Train_Capture"
 	}
-	else if ( winningTeam != -1 )
+	else                     
 	{
 		int winningSquadRuiIndex = GetTeamRemappedForRui( winningTeam )
-		winningSquad = winningSquadRuiIndex == 1 ? Localize( "#PL_ENEMY_SQUAD_1" ) : Localize( "#PL_ENEMY_SQUAD_2" )
-		announcementColor = winningSquadRuiIndex == 1 ? OBJECTIVE_RED : OBJECTIVE_ORANGE
+		winningSquad = Localize( Squads_GetSquadNameLong( squadWinningIndex ) )
+		announcementColor = Squads_GetNonLinearSquadColor( squadWinningIndex )
 		borderIcon = winningSquadRuiIndex == 1 ? $"rui/hud/gametype_icons/winter_express/icon_announcement_fail" : $"rui/hud/gametype_icons/winter_express/icon_announcement_fail_alt"
 		soundAlias = "WXpress_Train_Capture_Enemy"
 	}
-	else
-	{
-		winningSquad = Localize( "#PL_NO_SQUAD" )
-		announcementColor = OBJECTIVE_YELLOW
-	}
-
 
 	if ( endCondition == eWinterExpressRoundEndCondition.OBJECTIVE_CAPTURED )
 	{
@@ -3575,44 +3569,63 @@ void function ServerCallback_CL_RoundEnded( int endCondition, int winningTeam, i
 
 void function CL_ScoreUpdate( int team, int score )
 {
-	if ( team in file.objectiveScore )
-	{
-		file.objectiveScore[team] = score
-	}
-	else
-	{
-		file.objectiveScore[team] <- score
-	}
+	int uiTeam     = Squads_GetTeamsUIId( team )
+	file.objectiveScore[uiTeam] <- score
 
 	                          
-	if ( team in file.objectiveScore && file.objectiveScore[team] == file.scoreLimit - 1 )
-		file.isTeamOnMatchPoint[team] <- true
+	if ( file.objectiveScore[uiTeam] == file.scoreLimit - 1 )
+		file.isTeamOnMatchPoint[uiTeam] <- true
 
-	if ( !(team in file.scoreElements) )
+	if ( !(uiTeam in file.scoreElements) )
 		return
 
-	RuiSetInt( file.scoreElements[team], "score", score )
-	RuiSetInt( file.scoreElementsFullmap[team], "score", score )
+	RuiSetInt( file.scoreElements[uiTeam], "score", score )
+	RuiSetInt( file.scoreElementsFullmap[uiTeam], "score", score )
 }
 
-void function OnServerVarChanged_RoundState( entity player, int old, int new )
+int function WinterExpress_GetTeamScore( int team )
+{
+	if ( !( team in file.objectiveScore ) )
+		return 0
+
+	return  file.objectiveScore[ team ]
+}
+
+bool function WinterExpress_IsTeamWinning( int teamToCheck )
+{
+	if ( !( teamToCheck in file.objectiveScore ) )
+		return false
+
+	int teamToCheckScore = file.objectiveScore[ teamToCheck ]
+	bool isWinning = true
+
+	foreach ( team, score in file.objectiveScore)
+	{
+		if ( teamToCheckScore < score )
+		{
+			isWinning = false
+			break
+		}
+	}
+
+	return isWinning
+}
+
+void function OnServerVarChanged_RoundState( entity player, int new )
 {
 	if ( GetGameState() != eGameState.Playing )
 		return
 
-	printf( "WINTER EXPRESS: server var changed: " + old + " " + new )
+	printf( "WINTER EXPRESS: server var changed: " + new )
 
-	if ( old != new )
-	{
-		if ( new == eWinterExpressRoundState.OBJECTIVE_ACTIVE && (old == eWinterExpressRoundState.ABOUT_TO_UNLOCK_STATION || old == -1) )
-			thread DisplayRoundStart()
-		else if ( new == eWinterExpressRoundState.CHANGING_STATIONS && (old == eWinterExpressRoundState.ABOUT_TO_CHANGE_STATIONS || old == -1) )
-			thread DisplayRoundChanging()
-		else if ( new == eWinterExpressRoundState.ABOUT_TO_CHANGE_STATIONS && (old == eWinterExpressRoundState.OBJECTIVE_ACTIVE || old == -1 || old == eWinterExpressRoundState.ABOUT_TO_UNLOCK_STATION) )
-			thread DisplayRoundFinished()
-		else if ( new == eWinterExpressRoundState.ABOUT_TO_UNLOCK_STATION && (old == eWinterExpressRoundState.CHANGING_STATIONS || old == -1) )
-			thread DisplayUnlockDelay()
-	}
+	if ( new == eWinterExpressRoundState.OBJECTIVE_ACTIVE )
+		thread DisplayRoundStart()
+	else if ( new == eWinterExpressRoundState.CHANGING_STATIONS )
+		thread DisplayRoundChanging()
+	else if ( new == eWinterExpressRoundState.ABOUT_TO_CHANGE_STATIONS )
+		thread DisplayRoundFinished()
+	else if ( new == eWinterExpressRoundState.ABOUT_TO_UNLOCK_STATION )
+		thread DisplayUnlockDelay()
 }
 
 void function DisplayRoundStart()
@@ -3677,23 +3690,23 @@ void function DisplayUnlockDelay()
 			shouldShowMatchPoint = true
 			file.hasTeamGottenMatchPointAnnounce[team] <- true
 			matchTeam = team
+			break
 		}
-
 	}
 
-	if ( shouldShowMatchPoint && matchTeam != -1)
+	if ( shouldShowMatchPoint )
 	{
-		int remappedTeam = GetTeamRemappedForRui( matchTeam )
-		string matchSquad = remappedTeam == 0 ? "#PL_YOUR_SQUAD" : ( remappedTeam == 1 ? "#PL_ENEMY_SQUAD_1" : "#PL_ENEMY_SQUAD_2")
+		int squadIndex = Squads_GetSquadUIIndex( matchTeam )
+		string matchSquad = squadIndex == 0 ? "#PL_YOUR_SQUAD" : Localize( Squads_GetSquadNameLong( squadIndex ) )
 		matchSquad = "`3" + Localize( matchSquad ) + "`0"
-		vector announcementColor = remappedTeam == 0 ? OBJECTIVE_GREEN : ( remappedTeam == 1 ? OBJECTIVE_RED : OBJECTIVE_ORANGE )
-		AnnouncementMessageRight( GetLocalClientPlayer(), Localize( "#PL_MATCH_POINT", matchSquad ), "", SrgbToLinear( announcementColor / 255 ) * 2.0, $"", 4, "WXpress_Train_Update_Small", SrgbToLinear( announcementColor / 255 ) * 2.0 )
+
+		vector announcementColor = Squads_GetSquadColor( squadIndex )
+		AnnouncementMessageRight( GetLocalClientPlayer(), Localize( "#PL_MATCH_POINT", matchSquad ), "", announcementColor, $"", 4, "WXpress_Train_Update_Small", announcementColor )
 	}
 }
 
-void function OnServerVarChanged_ObjectiveState( entity player, int old, int new )
+void function OnServerVarChanged_ObjectiveState( entity player, int new )
 {
-	file.localObjectiveState = new
 	FlagSet( "WinterExpress_ObjectiveStateUpdated" )
 
 	printf( "WINTER EXPRESS: Setting your train status to: " + new )
@@ -3725,29 +3738,34 @@ void function OnServerVarChanged_ObjectiveState( entity player, int old, int new
 	}
 }
 
-void function OnServerVarChanged_ObjectiveOwner( entity player, int old, int new )
+void function OnServerVarChanged_ObjectiveOwner( entity player, int new )
 {
-	file.localObjectiveOwner = new
 	FlagSet( "WinterExpress_ObjectiveOwnerUpdated" )
 
-	entity clientPlayer = GetLocalClientPlayer()
-	if ( !IsValid( clientPlayer ) )
+	entity viewPlayer = GetLocalViewPlayer()
+	if ( !IsValid( viewPlayer ) )
 		return
+
+	int localTeam  = viewPlayer.GetTeam()
+	int squadIndex = new >=0 ? Squads_GetSquadUIIndex( new ) : 0
 
 	var gamestateRui = ClGameState_GetRui()
 	if ( gamestateRui == null )
 		return
 
-	RuiSetInt( gamestateRui, "yourTeamIndex", GetTeamRemappedForRui( clientPlayer.GetTeam() ) )
+	RuiSetInt( gamestateRui, "yourTeamIndex", GetTeamRemappedForRui( localTeam ) )
 	RuiSetInt( gamestateRui, "currentControllingTeam", GetTeamRemappedForRui( new ) )
 
-	printf( "WINTER EXPRESS: Setting your team index to: " + GetLocalClientPlayer().GetTeam() )
+	RuiSetString( gamestateRui, "currentControllingTeamName", Squads_GetSquadNameLong( squadIndex ) )
+	RuiSetColorAlpha( gamestateRui, "currentControllingTeamColor", Squads_GetSquadColor( squadIndex ) , 1.0 )
+
 	printf( "WINTER EXPRESS: Setting current controlling team to: " + new )
 
 	if ( file.trainWaypoint != null && file.trainWaypoint.wp.ruiHud != null )
 	{
-		RuiSetInt( file.trainWaypoint.wp.ruiHud, "yourTeamIndex", GetTeamRemappedForRui( GetLocalClientPlayer().GetTeam() ) )
+		RuiSetInt( file.trainWaypoint.wp.ruiHud, "yourTeamIndex", GetTeamRemappedForRui( localTeam ) )
 		RuiSetInt( file.trainWaypoint.wp.ruiHud, "currentControllingTeam", GetTeamRemappedForRui( new ) )
+		RuiSetColorAlpha( file.trainWaypoint.wp.ruiHud, "currentControllingTeamColor", Squads_GetSquadColor( squadIndex ) , 1.0 )
 	}
 }
 
@@ -3757,17 +3775,17 @@ void function ClearObjectiveUpdate()
 	FlagClear( "WinterExpress_ObjectiveOwnerUpdated" )
 }
 
-void function OnServerVarChanged_TrainArrival( entity player, float old, float new )
+void function OnServerVarChanged_TrainArrival( entity player, float new )
 {
 	RuiSetGameTime( ClGameState_GetRui(), "trainArrivalTime", new )
 }
 
-void function OnServerVarChanged_TrainTravelTime( entity player, float old, float new )
+void function OnServerVarChanged_TrainTravelTime( entity player, float new )
 {
 	RuiSetFloat( ClGameState_GetRui(), "trainTravelTime", new )
 }
 
-void function OnServerVarChanged_OvertimeChanged( entity player, bool old, bool new )
+void function OnServerVarChanged_OvertimeChanged( entity player, bool new )
 {
 	if ( new == true )
 	{
@@ -3779,14 +3797,15 @@ void function OnServerVarChanged_OvertimeChanged( entity player, bool old, bool 
 
 void function ServerCallback_CL_SquadOnObjectiveStateChanged( int team, bool isOnObjective )
 {
-	RuiSetBool( file.squadOnObjectiveElements[team], "isSquadOnObjective", isOnObjective )
+	int uiTeam = Squads_GetTeamsUIId( team )
+	RuiSetBool( file.squadOnObjectiveElements[uiTeam], "isSquadOnObjective", isOnObjective )
 }
 
 void function ServerCallback_CL_SquadEliminationStateChanged( int team, bool eliminationState )
 {
-	RuiSetBool( file.squadOnObjectiveElements[team], "isEliminated", eliminationState )
+	int uiTeam = Squads_GetTeamsUIId( team )
+	RuiSetBool( file.squadOnObjectiveElements[uiTeam], "isEliminated", eliminationState )
 }
-
 
 void function ServerCallback_CL_ObjectiveStateChanged( int newState, int team )
 {
@@ -3814,11 +3833,12 @@ void function ServerCallback_CL_ObjectiveStateChanged( int newState, int team )
 	}
 }
 
-
 void function ServerCallback_CL_WinnerDetermined( int team )
 {
 	RunUIScript( "UI_UpdateOpenMenuButtonCallbacks_Spectate", LIFE_ALIVE, true )
 	StopSoundOnEntity( GetLocalClientPlayer(), "Music_LTM32_SpectateCam" )
+	SetSummaryDataDisplayStringsCallback( WinterExpress_PopulateSummaryDataStrings )
+	CL_ScoreUpdate( team, 3 )
 }
 
 
@@ -4073,9 +4093,10 @@ VictorySoundPackage function GetVictorySoundPackage()
 
 	                                      
 
-	                                              
 	                                                                
 		                                                  
+
+	                                                     
 
 	                                                    
 		                                            
@@ -4288,7 +4309,10 @@ VictorySoundPackage function GetVictorySoundPackage()
 		                                                                 
 		                                                                      
 		                                                                      
+		 
+			                                                                            
 			                                                                                                         
+		 
 	 
  
 
@@ -4318,6 +4342,9 @@ VictorySoundPackage function GetVictorySoundPackage()
 				                                                                                              
 				                       
 				                                                                 
+
+				                                                                
+					                                                  
 
 				                                                                                        
 				                                                                                                          
@@ -4356,10 +4383,20 @@ VictorySoundPackage function GetVictorySoundPackage()
 #endif
 
 
+#if CLIENT
 
+void function WinterExpress_PopulateSummaryDataStrings( SquadSummaryPlayerData data )
+{
+	data.modeSpecificSummaryData[0].displayString = "#DEATH_SCREEN_SUMMARY_KILLS"
+	data.modeSpecificSummaryData[1].displayString = "#DEATH_SCREEN_SUMMARY_ASSISTS"
+	data.modeSpecificSummaryData[2].displayString = ""
+	data.modeSpecificSummaryData[3].displayString = "#DEATH_SCREEN_SUMMARY_DAMAGE_DEALT"
+	data.modeSpecificSummaryData[4].displayString = ""
+	data.modeSpecificSummaryData[5].displayString = ""
+	data.modeSpecificSummaryData[6].displayString = ""
+}
 
-
-
+#endif
 
 #if CLIENT
 void function ServerCallback_CL_CameraLerpFromStationToHoverTank( entity player, entity stationNode, entity hoverTankMover, entity trainMover, bool isGameStartLerp )

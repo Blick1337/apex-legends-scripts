@@ -9,6 +9,7 @@ global function RegisterNetVarTimeChangeCallback
 global function RegisterNetVarEntityChangeCallback
 
 global function ExecuteNetBufferedCallbacks
+global function ClientCodeCallback_IsNetworkReady
 #endif
 
 struct BufferedCallback
@@ -40,6 +41,11 @@ function GetNetworkVar( obj, varName )
 
 
 #if CLIENT
+bool function ClientCodeCallback_IsNetworkReady()
+{
+	return IsNetVarCallbackAvailable()
+}
+
 bool function IsNetVarCallbackAvailable()
 {
 	if( !level.clientScriptInitialized )                                                               

@@ -127,6 +127,7 @@ global struct ABBind
 	string holdBind
 }
 
+                                                                                                                                                                   
 global const int PRESETS_COUNT = 6
 #if CLIENT || UI
 global const array<string> PRESET_PILOT_BINDS =
@@ -581,7 +582,7 @@ array<string> function GetABBindsForBaseBind( string baseBind )
 		return [ "", "" ]
 	}
 
-	array<string> splitCommands = split( baseBind, " " )
+	array<string> splitCommands = split( baseBind, WHITESPACE_CHARACTERS )
 	string plusBind             = ""
 	string minusBind            = ""
 

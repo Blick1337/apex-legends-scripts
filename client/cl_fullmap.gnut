@@ -13,6 +13,7 @@ global function FullMap_UpdateTopologies
 global function FullMap_UpdateAimPos
 global function FullMap_AddEnemyLocation
 global function FullMap_AddIconAtPos
+global function FullMap_AddRuiAtPos
 global function FullMap_PlayCryptoPulseSequence
 
 global function Fullmap_ClearInWorldMinimaps
@@ -41,6 +42,11 @@ global const FULLMAP_OBJECTIVE_AREA_RUI = $"ui/in_world_minimap_objective_area.r
 
 const FULLMAP_ZOOM_SPEED_MOUSE = 0.5
 const FULLMAP_ZOOM_SPEED_CONTROLLER = 0.1
+const float FULLMAP_MIN_ZOOM_SCALE = 1.0
+const float FULLMAP_MAX_ZOOM_SCALE_LOW_1 = 0.0
+const float FULLMAP_MAX_ZOOM_SCALE_HIGH_1 = 50.0
+const float FULLMAP_MAX_ZOOM_SCALE_LOW_2 = 24.0
+const float FULLMAP_MAX_ZOOM_SCALE_HIGH_2 = 12.0
 
 const FULLMAP_SELECT_RANGE = 750
 const float FULLMAP_ENTITY_SELECT_RANGE_NORMALIZED = 0.02
@@ -148,7 +154,7 @@ ScoreboardData function Survival_GetScoreboardData()
 {
 	bool isWinterExpress = false
                        
-                                                 
+		isWinterExpress = WinterExpress_IsModeEnabled()
        
 
 	ScoreboardData data
@@ -173,24 +179,24 @@ ScoreboardData function Survival_GetScoreboardData()
 #endif          
 
 #if CLIENT
-array< int > function Survival_GetPlayerScores( entity player )
+array< string > function Survival_GetPlayerScores( entity player )
 {
 	bool isWinterExpress = false
                        
-                                                 
+		isWinterExpress = WinterExpress_IsModeEnabled()
        
 
-	array< int > scores
+	array< string > scores
 
 	if( isWinterExpress )
 	{
-		int eliminations = player.GetPlayerNetInt( "kills" )                                       
+		string eliminations = string( player.GetPlayerNetInt( "kills" ) )
 		scores.append( eliminations )
 
-		int assists = player.GetPlayerNetInt( "assists" )                                                         
+		string assists = string( player.GetPlayerNetInt( "assists" ) )
 		scores.append( assists )
 
-		int damage = player.GetPlayerNetInt( "damageDealt" )
+		string damage = string( player.GetPlayerNetInt( "damageDealt" ) )
 		scores.append( damage )
 	}
 
@@ -223,19 +229,33 @@ array< entity > function Survival_SortPlayersByScore( array< entity > teamPlayer
 #if CLIENT
 void function Survival_ScoreboardUpdateHeader( var headerRui, var frameRui, int team )
 {
-	int myTeam = GetLocalClientPlayer().GetTeam()
-	int squadIndex = team
-
 	bool isWinterExpress = false
                        
-                                                 
+		isWinterExpress = WinterExpress_IsModeEnabled()
        
-
-	bool isFriendly = team == myTeam
 
 	if( headerRui != null )
 	{
+                      
+                         
+			if( isWinterExpress )
+			{
+				int squadIndex = Squads_GetSquadUIIndex( team )
+				int uiTeam = Squads_GetTeamsUIId( team )
+				int score = WinterExpress_GetTeamScore( uiTeam  )
 
+				RuiSetString( headerRui, "headerText", Localize( Squads_GetSquadName( squadIndex ) ) )
+				RuiSetColorAlpha( headerRui, "teamColor", Squads_GetSquadColor( squadIndex ), 1.0 )
+				RuiSetImage( headerRui, "teamIcon", Squads_GetSquadIcon(squadIndex))
+				RuiSetInt( headerRui, "score", score )
+				RuiSetBool( headerRui, "isWinning", WinterExpress_IsTeamWinning(uiTeam ) )
+
+				if( frameRui != null )
+					RuiSetColorAlpha( frameRui, "teamColor", Squads_GetSquadColor( squadIndex ), 1.0 )
+
+			}
+         
+        
 	}
 }
 #endif          
@@ -502,6 +522,20 @@ var function FullMap_AddIconAtPos( vector position, vector angles, asset icon, f
 	RuiSetFloat( rui, "objectSize", scale )
 	RuiSetBool( rui, "doAnnounceEffect", true )
 	RuiSetImage( rui, "iconImage", icon )
+
+	Fullmap_AddRui( rui )
+	return rui
+}
+
+var function FullMap_AddRuiAtPos( vector position, vector angles, asset ruiAsset, float scale, vector iconColor )
+{
+	var rui = FullMap_CommonAdd( ruiAsset )
+
+	RuiSetFloat3( rui, "objectPos", position )
+	RuiSetFloat3( rui, "objectAngles", angles )
+	RuiSetFloat3( rui, "objColor", iconColor )
+	RuiSetFloat( rui, "objectSize", scale )
+	RuiSetBool( rui, "doAnnounceEffect", true )
 
 	Fullmap_AddRui( rui )
 	return rui
@@ -788,7 +822,7 @@ void function AddInWorldMinimapObjectInternal( entity ent, var screen, asset rui
 
 		vector smokeColor = SrgbToLinear(GetSkydiveSmokeColorForTeam( ent.GetTeam() ) / 255.0)
 		RuiSetFloat3( rui, "smokeColor", smokeColor )
-
+		RuiTrackFloat3( rui, "objectAngles", ent, RUI_TRACK_CAMANGLES_FOLLOW )
 
 		RuiSetString( rui, "playerName", viewerIsSpectator ? ent.GetPlayerNameWithClanTag() : "" )
 		if ( isFriendlyAlly )
@@ -808,6 +842,10 @@ void function AddInWorldMinimapObjectInternal( entity ent, var screen, asset rui
 
 		file.fullmapPlayerItems[ehi] <- rui
 	}
+	      
+	   
+	  	                                                                      
+	   
 
 	Fullmap_AddRui( rui )
 
@@ -1076,8 +1114,8 @@ void function ChangeFullMapZoomFactor( float delta )
 	if ( IsViewingDeathScreen() )
 	{
 		                                           
-		file.fullmapZoomFactor = 1.0
-		SetBigMapZoomScale( 1.0 )
+		file.fullmapZoomFactor = FULLMAP_MIN_ZOOM_SCALE
+		SetBigMapZoomScale( FULLMAP_MIN_ZOOM_SCALE )
 		return
 	}
 
@@ -1085,11 +1123,13 @@ void function ChangeFullMapZoomFactor( float delta )
 
 	file.fullmapZoomFactor *= pow( 1.5, delta )
 
-	if ( file.fullmapZoomFactor > 6.0 )
-		file.fullmapZoomFactor = 6.0
+	                                                                                                    
+	                                                                                                 
+	float zoomFactorMaxZoomScale = FULLMAP_MAX_ZOOM_SCALE_LOW_2 + (FULLMAP_MAX_ZOOM_SCALE_HIGH_2 - FULLMAP_MAX_ZOOM_SCALE_LOW_2) * ((file.mapScale - FULLMAP_MAX_ZOOM_SCALE_LOW_1) / (FULLMAP_MAX_ZOOM_SCALE_HIGH_1 - FULLMAP_MAX_ZOOM_SCALE_LOW_1))
 
-	if ( file.fullmapZoomFactor < 1 )
-		file.fullmapZoomFactor = 1
+	                                                                                                                                 
+	file.fullmapZoomFactor = clamp( file.fullmapZoomFactor, FULLMAP_MIN_ZOOM_SCALE, zoomFactorMaxZoomScale )
+
 
 	SetBigMapZoomScale( file.fullmapZoomFactor )
 
@@ -1120,6 +1160,7 @@ void function ShowFullmap()
 	if ( RadialMenu_IsShowing() )
 		RadialMenu_Destroy()
 
+	EmitUISound( "UI_Menu_Accept" )
 	Scoreboard_SetVisible( true )
 	ShowMapRui()
 	UpdateFullmapRuiTracks()
@@ -1166,6 +1207,8 @@ void function HideFullmap()
 
 	if ( Freelance_IsHubLevel() )
 		return
+
+	EmitUISound( "ui_menu_back" )
 
 	Scoreboard_SetVisible( false )
 	HideMapRui()

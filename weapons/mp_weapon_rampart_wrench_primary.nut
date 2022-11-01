@@ -34,7 +34,7 @@ void function OnWeaponActivate_weapon_rampart_wrench_primary( entity weapon )
 	weapon.PlayWeaponEffect( WRENCH_FX_TASER_FP, WRENCH_FX_TASER_3P, "energy_arc_bottom", true )
 	weapon.PlayWeaponEffect( WRENCH_FX_MDL_FP, WRENCH_FX_MDL_3P, "BASE", true )
 	                                                                                        
-	                                                                                                                                                   
+	                                                                                                                                                                     
 	                                                     
 }
 

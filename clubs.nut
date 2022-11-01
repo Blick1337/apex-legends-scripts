@@ -254,7 +254,7 @@ global struct ClubLogo
 	bool isInvite = false
 }
 
-struct HSV
+struct ClubHSV
 {
 	float hue
 	float saturation
@@ -1409,20 +1409,20 @@ array<vector> function ClubLogo_GetRandomDoubleSplitComplementaryColorSet( var s
 	vector startingColor = ClubLogo_GetRandomLogoColor( seed )
 	bool isShadeOfGray = ( startingColor.x == startingColor.y && startingColor.x == startingColor.z )
 
-	HSV startingHSV       = RGBToHSV( startingColor )
+	ClubHSV startingHSV       = RGBToHSV( startingColor )
 
-	HSV splitComplement01 = clone( startingHSV )
+	ClubHSV splitComplement01 = clone( startingHSV )
 	splitComplement01.hue = HSVHueShift( splitComplement01.hue, 180.0 - RANDOMLOGO_HUE_SHIFT_DEGREES )
 	splitComplement01.value = isShadeOfGray ? HSVSaturationOrValueShift( 1-splitComplement01.value, RANDOMLOGO_VALUE_SHIFT_PERCENT ) : splitComplement01.value
 
-	HSV splitComplement02 = clone( startingHSV )
+	ClubHSV splitComplement02 = clone( startingHSV )
 	splitComplement02.hue = HSVHueShift( splitComplement02.hue, 180.0 + RANDOMLOGO_HUE_SHIFT_DEGREES )
 	splitComplement02.value = isShadeOfGray ? HSVSaturationOrValueShift( 1-splitComplement02.value, -RANDOMLOGO_VALUE_SHIFT_PERCENT ) : splitComplement02.value
 
-	HSV dblComplement01 = clone( splitComplement01 )
+	ClubHSV dblComplement01 = clone( splitComplement01 )
 	dblComplement01.hue = HSVHueShift( dblComplement01.hue, 180.0 )
 	dblComplement01.value = isShadeOfGray ? HSVSaturationOrValueShift( dblComplement01.value, RANDOMLOGO_VALUE_SHIFT_PERCENT/2 ) : dblComplement01.value
-	HSV dblComplement02 = clone( splitComplement02 )
+	ClubHSV dblComplement02 = clone( splitComplement02 )
 	dblComplement02.hue = HSVHueShift( dblComplement02.hue, 180.0 )
 	dblComplement02.value = isShadeOfGray ? HSVSaturationOrValueShift( dblComplement02.value, -RANDOMLOGO_VALUE_SHIFT_PERCENT/2 ) : dblComplement02.value
 
@@ -1459,9 +1459,9 @@ vector function FindNearestColorOnColorTable( vector color )
 	return closestColor
 }
 
-HSV function RGBToHSV( vector rgb )
+ClubHSV function RGBToHSV( vector rgb )
 {
-	HSV hsv
+	ClubHSV hsv
 	float maxChannel = max( rgb.x, rgb.y )
 	maxChannel = max( maxChannel, rgb.z )
 	float minChannel = min( rgb.x, rgb.y )
@@ -1514,10 +1514,10 @@ float function HSVSaturationOrValueShift( float value, float shiftPercent )
 	return newValue
 }
 
-vector function HSVToRGB( HSV hsv )
+vector function HSVToRGB( ClubHSV hsv )
 {
 	vector rgb
-	HSV adjustedHSV = hsv
+	ClubHSV adjustedHSV = hsv
 
 	if ( hsv.saturation == 0.0 )
 	{
@@ -2010,6 +2010,8 @@ bool function Clubs_IsValidClubTag( string clubTag )
 const int MAX_PLACEMENT_FOR_CLUB_EVENT = 5
 const int MAX_PLACEMENT_FOR_ARENAS_CLUB_EVENT = 1
 const int MAX_PLACEMENT_FOR_WINTER_EXPRESS_CLUB_EVENT = 1
+const int MAX_PLACEMENT_FOR_CONTROL_CLUB_EVENT = 1
+const int MAX_PLACEMENT_FOR_FREEDM_CLUB_EVENT = 1
 
 #if SERVER
                                                                                      
@@ -2025,8 +2027,18 @@ const int MAX_PLACEMENT_FOR_WINTER_EXPRESS_CLUB_EVENT = 1
        
 
                        
-                                                                                                 
-         
+		                                                                                               
+			      
+       
+
+                         
+		                                                                                  
+			      
+       
+
+                        
+		                                                                                   
+			      
        
 
 	                                                                               
@@ -2174,7 +2186,7 @@ void function Clubs_ReportMatchPlacementToClub( array<ClubSquadSummaryPlayerData
 		}
 	#endif
 
-	compiledPlayerNames = RegexpReplace( compiledPlayerNames, "%", "□" )
+	compiledPlayerNames = replace( compiledPlayerNames, "%", "□" )
 
 	string eventText = compiledPlayerNames + CLUB_EVENT_DELIMITER + playlistName
 
@@ -2278,7 +2290,7 @@ void function DEV_ReportFakePlacementEvent( int forceSquadSize = -1, bool testDu
 	}
 	string squadNames = CompilePlacementNamesIntoOneString( playerIDs )
 
-	squadNames = RegexpReplace( squadNames, "%", "□" )
+	squadNames = replace( squadNames, "%", "□" )
 
 	                                                                                                                  
 	ClubPublishEvent( CLUB_EVENT_PROGRESS, RandomIntRange( 1, 5 ), (squadNames+CLUB_EVENT_DELIMITER+"Pretend Playlist") )

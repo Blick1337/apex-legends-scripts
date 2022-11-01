@@ -1131,7 +1131,7 @@ void function ServerToClient_MedBayHealVisualsEnabled( entity player )
 	Assert( !EffectDoesExist( file.healFxHandle ), "tried to start a second screen fx" )
 
 	int fxID = GetParticleSystemIndex( VFX_MEDBAY_HEAL_COCKPIT_1P )
-	file.healFxHandle = StartParticleEffectOnEntity( cockpit, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	file.healFxHandle = StartParticleEffectOnEntity( cockpit, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetIsWithCockpit( file.healFxHandle, true )
 
 	Chroma_StartHealingDroneEffect()

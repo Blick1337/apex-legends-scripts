@@ -36,6 +36,8 @@ const asset DRONE_MODEL = $"mdl/props/lifeline_drone/lifeline_drone.rmdl"
 const vector DRONE_MINS = <-9, -9, -10>
 const vector DRONE_MAXS = <9, 9, 10>
 
+const string PASSIV_MEDIC_SHIELD_MOVER_SCRIPTNAME = "passive_medic_shield_mover"
+
 struct
 {
 #if SERVER
@@ -97,9 +99,6 @@ void function PassiveMedic_Init()
 	                                     
 		            
 
-	                                                                             
-		            
-
 	           
  
 
@@ -113,7 +112,7 @@ void function PassiveMedic_Init()
 	                                    
 	                                                    
 
-	                                                                              
+	                                                                                                                    
 
 	                                       
 	                                               
@@ -155,7 +154,7 @@ void function PassiveMedic_Init()
 		                        
 			                                
 
-		                                                                                                                                                                                    
+		                                                                                                                                                                                                      
 		                              
 		 
 			                                  
@@ -168,13 +167,14 @@ void function PassiveMedic_Init()
 		                                                         
 	 
 
-	                                                                                                         
-	                                                        
+	                                                                                                     
 	                    
 	                                    
 	                                                        
 	                             
 	                                                            
+
+	                                           
 
 	                                       
 	                              
@@ -192,15 +192,10 @@ void function PassiveMedic_Init()
 	            
 		                                                  
 		 
-			                                                 
-			 
-				                                                               
-				                                                          
-					                                                                                            
-			 
 			                               
 			 
 				                                           
+				                                                                                            
 			 
 		 
 	 
@@ -242,7 +237,6 @@ void function PassiveMedic_Init()
 	                                                            
 		      
 
-	                                                                    
 	               
  
 
@@ -292,8 +286,14 @@ void function PassiveMedic_Init()
 	                                  
 
 	                                       
-	                                                                            
-	                                                                            
+
+                             
+                                                                          
+       
+		 
+			                                                                            
+			                                                                            
+		 
 
 	            
 		                             
@@ -552,11 +552,7 @@ void function PassiveMedic_Init()
 	 
 		                                                       
 		 
-			                                                        
-			                                  
-			 
-				                                                                      
-			 
+			                                                  
 		 
 	 
  

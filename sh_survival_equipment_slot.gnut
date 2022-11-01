@@ -1,6 +1,7 @@
 global function SURVIVAL_EquipmentSlot_InitShared
 
 global function Survival_GetEquipmentSlotDataByRef
+global function Survival_GetEquipmentSlotDataByType
 global function Survival_GetCommsActionForEquipmentSlot
 global function GetEmptyEquipmentImage
 
@@ -17,6 +18,7 @@ global function EquipmentSlot_GetWeaponSlotForEquipmentSlot
 global function EquipmentSlot_GetLootRefForSlot
 global function EquipmentSlot_IsValidEquipmentSlot
 global function EquipmentSlot_IsValidForPlayer
+global function EquipmentSlot_IsValidEquipmentSlotType
 
 global function GetAllAttachmentPoints
 global function RegisterAttachmentPoint
@@ -45,7 +47,7 @@ global const table<string, asset> emptyAttachmentSlotImages = {
 	barrel = $"rui/pilot_loadout/mods/empty_barrel"
 	barrel_stabilizer = $"rui/pilot_loadout/mods/empty_barrel_stabilizer"
                          
-                                                          
+	laser_sight = $"rui/pilot_loadout/mods/empty_laser_sight"
       
 	grip = $"rui/pilot_loadout/mods/empty_stock_tactical"
 	stock = $"rui/pilot_loadout/mods/empty_stock_tactical"
@@ -91,9 +93,40 @@ global const table<string, asset> emptyAttachmentSlotImages = {
 global function AddCallback_OnEquipSlotTrackingIntChanged
 #endif
 
+global enum eEquipmentSlotType
+{
+	BACKPACK,
+	BANDOLIER,
+	SHIELDCAPACITOR,
+	HELMET,
+	ARMOR,
+	INCAPSHIELD,
+	GADGETSLOT,
+	MAIN_WEAPON0,
+	MAIN_WEAPON0_SIGHT,
+	MAIN_WEAPON0_MAG,
+	MAIN_WEAPON0_GRIP,
+	MAIN_WEAPON0_BARREL,
+	MAIN_WEAPON0_HOPUP,
+	MAIN_WEAPON0_HOPUPMULTI_A,
+	MAIN_WEAPON0_HOPUPMULTI_B,
+	MAIN_WEAPON1,
+	MAIN_WEAPON1_SIGHT,
+	MAIN_WEAPON1_MAG,
+	MAIN_WEAPON1_GRIP,
+	MAIN_WEAPON1_BARREL,
+	MAIN_WEAPON1_HOPUP,
+	MAIN_WEAPON1_HOPUPMULTI_A,
+	MAIN_WEAPON1_HOPUPMULTI_B,
+	SLING_WEAPON,
+
+	COUNT,
+}
+
 global struct EquipmentSlot
 {
 	string ref
+	int type
 	asset  emptyImage = $""
 	string title = ""
 
@@ -132,6 +165,7 @@ struct
 {
 	array<string>                allAttachmentPoints
 	table<string, EquipmentSlot> equipSlotData
+	table<int, EquipmentSlot>    equipSlotDataByType
 	var shieldRegenRUI
 } file
 
@@ -140,7 +174,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 {
 	EquipmentSlot e
 
-	e = RegisterEquipslot( "backpack" )
+	e = RegisterEquipslot( "backpack", eEquipmentSlotType.BACKPACK )
 	e.title = "#SURVIVAL_BACKPACK"
 	e.emptyCommsAction = eCommsAction.INVENTORY_NEED_BACKPACK
                                       
@@ -161,7 +195,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 	#endif
 
                    
-                                      
+                                                                    
                                  
                                                             
                                                     
@@ -180,7 +214,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
        
 
                              
-                                            
+                                                                                
                                     
                                                         
                                                            
@@ -198,7 +232,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
         
        
 
-	e = RegisterEquipslot( "helmet" )
+	e = RegisterEquipslot( "helmet", eEquipmentSlotType.HELMET )
 	e.title = "#SURVIVAL_HELMET"
 	e.emptyCommsAction = eCommsAction.INVENTORY_NEED_HELMET
                                       
@@ -218,7 +252,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		                                                 
 	#endif
 
-	e = RegisterEquipslot( "armor" )
+	e = RegisterEquipslot( "armor", eEquipmentSlotType.ARMOR )
 	e.title = "#SURVIVAL_ARMOR"
 	e.emptyCommsAction = eCommsAction.INVENTORY_NEED_ARMOR
                                       
@@ -238,7 +272,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		                                                
 	#endif
 
-	e = RegisterEquipslot( "incapshield" )
+	e = RegisterEquipslot( "incapshield", eEquipmentSlotType.INCAPSHIELD )
 	e.title = "#SURVIVAL_INCAPSHIELD"
 	e.emptyCommsAction = eCommsAction.INVENTORY_NEED_INCAPSHIELD
                                       
@@ -255,7 +289,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedRefBasedOnTrackingNetInt
 	#endif
 
-	e = RegisterEquipslot( "gadgetslot" )
+	e = RegisterEquipslot( "gadgetslot", eEquipmentSlotType.GADGETSLOT )
 	e.title = "#GADGET_SLOT"
 	e.emptyCommsAction = !GetCurrentPlaylistVarBool( "disable_empty_slot_ping", false ) ?
 								eCommsAction.INVENTORY_NEED_GADGET :
@@ -271,7 +305,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedRefBasedOnTrackingNetInt
 	#endif
 
-	e = RegisterEquipslot( "main_weapon0" )
+	e = RegisterEquipslot( "main_weapon0", eEquipmentSlotType.MAIN_WEAPON0 )
 	e.title = "#SURVIVAL_WEAPON"
 	e.emptyCommsAction = !GetCurrentPlaylistVarBool( "disable_empty_slot_ping", false ) ?
 							eCommsAction.INVENTORY_NEED_FIRST_WEAPON :
@@ -290,7 +324,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		                                               
 	#endif
 
-	e = RegisterEquipslot( "main_weapon0_sight" )
+	e = RegisterEquipslot( "main_weapon0_sight", eEquipmentSlotType.MAIN_WEAPON0_SIGHT )
 	e.title = "#INVENTORY_SLOT_SIGHT"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_sight"
@@ -300,7 +334,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon0_mag" )
+	e = RegisterEquipslot( "main_weapon0_mag", eEquipmentSlotType.MAIN_WEAPON0_MAG )
 	e.title = "#INVENTORY_SLOT_MAG"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_mag"
@@ -313,7 +347,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon0_grip" )
+	e = RegisterEquipslot( "main_weapon0_grip", eEquipmentSlotType.MAIN_WEAPON0_GRIP )
 	e.title = "#INVENTORY_SLOT_GRIP"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_stock_tactical"
@@ -326,7 +360,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon0_barrel" )
+	e = RegisterEquipslot( "main_weapon0_barrel", eEquipmentSlotType.MAIN_WEAPON0_BARREL )
 	e.title = "#INVENTORY_SLOT_BARREL"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_barrel"
@@ -339,7 +373,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon0_hopup" )
+	e = RegisterEquipslot( "main_weapon0_hopup", eEquipmentSlotType.MAIN_WEAPON0_HOPUP )
 	e.title = "#INVENTORY_SLOT_HOPUP"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_hopup"
@@ -349,7 +383,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon0_hopupMulti_a" )
+	e = RegisterEquipslot( "main_weapon0_hopupMulti_a", eEquipmentSlotType.MAIN_WEAPON0_HOPUPMULTI_A )
 	e.title = "#INVENTORY_SLOT_HOPUP"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_hopup"
@@ -359,7 +393,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon0_hopupMulti_b" )
+	e = RegisterEquipslot( "main_weapon0_hopupMulti_b", eEquipmentSlotType.MAIN_WEAPON0_HOPUPMULTI_B )
 	e.title = "#INVENTORY_SLOT_HOPUP"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_hopup"
@@ -369,7 +403,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon1" )
+	e = RegisterEquipslot( "main_weapon1", eEquipmentSlotType.MAIN_WEAPON1 )
 	e.title = "#SURVIVAL_WEAPON"
 	e.emptyCommsAction = !GetCurrentPlaylistVarBool( "disable_empty_slot_ping", false ) ?
 							eCommsAction.INVENTORY_NEED_ANOTHER_WEAPON :
@@ -388,7 +422,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		                                               
 	#endif
 
-	e = RegisterEquipslot( "main_weapon1_sight" )
+	e = RegisterEquipslot( "main_weapon1_sight", eEquipmentSlotType.MAIN_WEAPON1_SIGHT )
 	e.title = "#INVENTORY_SLOT_SIGHT"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_sight"
@@ -398,7 +432,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon1_mag" )
+	e = RegisterEquipslot( "main_weapon1_mag", eEquipmentSlotType.MAIN_WEAPON1_MAG )
 	e.title = "#INVENTORY_SLOT_MAG"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_mag"
@@ -411,7 +445,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon1_grip" )
+	e = RegisterEquipslot( "main_weapon1_grip", eEquipmentSlotType.MAIN_WEAPON1_GRIP )
 	e.title = "#INVENTORY_SLOT_GRIP"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_stock_tactical"
@@ -424,7 +458,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon1_barrel" )
+	e = RegisterEquipslot( "main_weapon1_barrel", eEquipmentSlotType.MAIN_WEAPON1_BARREL )
 	e.title = "#INVENTORY_SLOT_BARREL"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_barrel"
@@ -437,7 +471,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon1_hopup" )
+	e = RegisterEquipslot( "main_weapon1_hopup", eEquipmentSlotType.MAIN_WEAPON1_HOPUP )
 	e.title = "#INVENTORY_SLOT_HOPUP"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_hopup"
@@ -447,7 +481,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon1_hopupMulti_a" )
+	e = RegisterEquipslot( "main_weapon1_hopupMulti_a", eEquipmentSlotType.MAIN_WEAPON1_HOPUPMULTI_A )
 	e.title = "#INVENTORY_SLOT_HOPUP"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_hopup"
@@ -457,7 +491,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 		e.getEquippedRefFunc = GetEquippedAttachmentOnWeaponForPlayer
 	#endif
 
-	e = RegisterEquipslot( "main_weapon1_hopupMulti_b" )
+	e = RegisterEquipslot( "main_weapon1_hopupMulti_b", eEquipmentSlotType.MAIN_WEAPON1_HOPUPMULTI_B )
 	e.title = "#INVENTORY_SLOT_HOPUP"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_hopup"
@@ -469,7 +503,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 
 
                   
-                                         
+                                                                                     
                                
                                                  
                                                  
@@ -480,7 +514,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
                                                              
         
             
-                                                   
+                                          
         
                                                 
        
@@ -518,7 +552,7 @@ void function EquipmentSlots_RegisterNetworkTrackingInts()
 			RegisterNetworkedVariable( slotData.trackingNetInt, SNDC_PLAYER_GLOBAL, SNVT_INT, -1 )
 
 			#if CLIENT
-				RegisterNetworkedVariableChangeCallback_int( slotData.trackingNetInt, CreateTrackingNetVarFunction( slot ) )
+				RegisterNetVarIntChangeCallback( slotData.trackingNetInt, CreateTrackingNetVarFunction( slot ) )
 			#endif
 		}
 	}
@@ -527,16 +561,25 @@ void function EquipmentSlots_RegisterNetworkTrackingInts()
 
 EquipmentSlot function Survival_GetEquipmentSlotDataByRef( string ref )
 {
+	Assert ( ref in file.equipSlotData )
 	return file.equipSlotData[ref]
 }
 
+EquipmentSlot function Survival_GetEquipmentSlotDataByType( int type )
+{
+	Assert ( type in file.equipSlotDataByType )
+	return file.equipSlotDataByType[type]
+}
 
-EquipmentSlot function RegisterEquipslot( string ref )
+
+EquipmentSlot function RegisterEquipslot( string ref, int type )
 {
 	EquipmentSlot e
 	e.ref = ref
+	e.type = type
 
 	file.equipSlotData[ref] <- e
+	file.equipSlotDataByType[type] <- e
 
 	return e
 }
@@ -638,10 +681,17 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 
 			case "barrel":
 			{
+                            
 				if ( weaponData.lootTags.contains( "pistol" ) )
-					return eCommsAction.INVENTORY_NEED_ATTACHMENT_BARREL_PISTOL
+					return eCommsAction.INVENTORY_NEED_ATTACHMENT_LASERSIGHT_PISTOL
 				else if ( weaponData.lootTags.contains( "smg" ) )
-					return eCommsAction.INVENTORY_NEED_ATTACHMENT_BARREL_SMG
+					return eCommsAction.INVENTORY_NEED_ATTACHMENT_LASERSIGHT_SMG
+        
+                                                   
+                                                                
+                                                     
+                                                             
+         
 				else if ( weaponData.lootTags.contains( "assault" ) )
 					return eCommsAction.INVENTORY_NEED_ATTACHMENT_BARREL_ASSAULT
 				else if ( weaponData.lootTags.contains( "lmg" ) )
@@ -752,6 +802,23 @@ int function FilledCommsAction_Gadget( string equipmentSlotRef, string itemRef )
 			case "mp_ability_void_ring":
 				commsAction = eCommsAction.INVENTORY_HAS_VOID_RING
 				break
+                        
+                               
+                                                      
+         
+      
+
+                           
+                                  
+                                                      
+         
+      
+
+                     
+                            
+                                                      
+         
+      
 		}
 	}
 
@@ -799,6 +866,9 @@ int function FilledCommsAction_Equipment( string equipmentSlotRef, string itemRe
 			case "barrel_stabilizer":
 				commsAction = eCommsAction.INVENTORY_NEED_BETTER_ATTACHMENT_BARREL
 				break
+			case "laser_sight":
+				commsAction = eCommsAction.INVENTORY_NEED_BETTER_ATTACHMENT_LASERSIGHT
+				break
 		}
 
 	}
@@ -832,14 +902,19 @@ int function FilledCommsAction_Equipment( string equipmentSlotRef, string itemRe
 int function FilledCommsAction_Weapon( string equipmentSlotRef, string itemRef )
 {
 	#if CLIENT
-
 	LootData lootData = SURVIVAL_Loot_GetLootDataByRef( itemRef )
 	string ammotype = lootData.ammoType
 	                                                                              
-	array<entity> weapons = GetLocalClientPlayer().GetMainWeapons()
-	foreach ( entity weapon in weapons )
+	entity weapon      = GetLocalClientPlayer().GetNormalWeapon( Survival_GetEquipmentSlotDataByRef( equipmentSlotRef ).weaponSlot )
+	string weaponClassName = weapon.GetWeaponClassName()
+	if ( weaponClassName == itemRef )
 	{
-		if ( weapon.GetWeaponClassName() == "mp_weapon_car" && itemRef == "mp_weapon_car")
+		                                                                      
+		if ( GetInfiniteAmmo( weapon ) )
+		{
+			ammotype = ""
+		}
+		else if ( weaponClassName == "mp_weapon_car" )
 		{
 			ammotype = AmmoType_GetRefFromIndex( weapon.GetWeaponAmmoPoolType() )
 		}
@@ -967,6 +1042,11 @@ bool function EquipmentSlot_IsValidForPlayer( string equipmentSlot, entity playe
 		return PlayerHasPassive( player, es.passiveRequired )
 
 	return true
+}
+
+bool function EquipmentSlot_IsValidEquipmentSlotType( int equipmentSlotType )
+{
+	return equipmentSlotType >= 0 && equipmentSlotType < eEquipmentSlotType.COUNT && (equipmentSlotType in file.equipSlotDataByType)
 }
 
 bool function EquipmentSlot_IsAttachmentSlot( string equipmentSlot )

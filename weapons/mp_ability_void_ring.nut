@@ -19,7 +19,8 @@ global function ServerToClient_VoidRingStateToClient
                       
                            
 global const string VOID_RING_PROP_SCRIPTNAME = "void_ring"
-const string VOID_RING_WEAPON_REF = "mp_ability_void_ring"
+global const string VOID_RING_WEAPON_REF = "mp_ability_void_ring"
+const string VOID_RING_MOVER_SCRIPTNAME = "void_ring_mover"
 
 const bool DEBUG_ACTIVE_RING_TEST = false 			                                                             
 const int DEBUG_RING_STAGE = 3
@@ -409,7 +410,7 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 
 	                                                                                                                                                 
 
-	                                                                                  
+	                                                                                                                                
 	                                         
 
 	                           
@@ -515,7 +516,7 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 
                                                      
  
-	                                                                                  
+	                                                                                                                                       
 
 	                                         
 

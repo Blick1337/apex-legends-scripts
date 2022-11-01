@@ -3,6 +3,8 @@ global function ShWeaponCosmetics_LevelInit
 global function Loadout_WeaponSkin
 global function WeaponSkin_GetWorldModel
 global function WeaponSkin_GetViewModel
+global function WeaponSkin_HasStoryBlurb
+global function WeaponSkin_GetStoryBlurbBodyText
 global function WeaponSkin_GetSkinName
 global function WeaponSkin_GetCamoIndex
 global function WeaponSkin_GetHackyRUISchemeIdentifier
@@ -17,6 +19,8 @@ global function WeaponSkin_GetVideo
 global function Loadout_WeaponCharm
 global function WeaponCharm_IsTheEmpty
 global function WeaponCharm_GetCharmModel
+global function WeaponCharm_HasStoryBlurb
+global function WeaponCharm_GetStoryBlurbBodyText
 global function WeaponCharm_GetAttachmentName
 global function WeaponCharm_GetSortOrdinal
 global function GetWeaponThatCharmIsCurrentlyEquippedToForPlayer
@@ -133,18 +137,20 @@ void function OnItemFlavorRegistered_LootMainWeapon( ItemFlavor weaponFlavor )
 			SetupWeaponSkin( skin )
 		}
 
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "weapon_skin_for_" + ItemFlavor_GetGUIDString( weaponFlavor ) )
-		entry.pdefSectionKey = "weapon " + ItemFlavor_GetGUIDString( weaponFlavor )
-		entry.DEV_category = "weapon_skins"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( weaponFlavor ) + " Skin"
-		entry.defaultItemFlavor = skinList[1]
-		entry.favoriteItemFlavor = skinList[0]
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "weapon_skin_for_" + ItemFlavor_GetGUIDString( weaponFlavor ), eLoadoutEntryClass.WEAPON )
+		entry.category     = eLoadoutCategory.WEAPON_SKINS
+		#if DEV
+			entry.pdefSectionKey = "weapon " + ItemFlavor_GetGUIDString( weaponFlavor )
+			entry.DEV_name       = DEV_ItemFlavor_GetCleanedAssetPath( weaponFlavor ) + " Skin"
+		#endif
+		entry.defaultItemFlavor   = skinList[1]
+		entry.favoriteItemFlavor  = skinList[0]
 		entry.validItemFlavorList = skinList
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.isSlotLocked        = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
-		entry.maxFavoriteCount = 8
+		entry.networkTo           = eLoadoutNetworking.PLAYER_EXCLUSIVE
+		entry.maxFavoriteCount    = 8
 		#if SERVER && DEV
 			                                                                               
 				                                             
@@ -178,18 +184,20 @@ void function OnItemFlavorRegistered_LootMainWeapon( ItemFlavor weaponFlavor )
 			SetupWeaponCharm( charm )
 		}
 
-		LoadoutEntry charmEntry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "weapon_charm_for_" + ItemFlavor_GetGUIDString( weaponFlavor ) )
-		charmEntry.pdefSectionKey = "weapon " + ItemFlavor_GetGUIDString( weaponFlavor )
-		charmEntry.DEV_category = "weapon_charms"
-		charmEntry.DEV_name = ItemFlavor_GetHumanReadableRef( weaponFlavor ) + " Charm"
-		charmEntry.defaultItemFlavor = charmList[0]
-		charmEntry.validItemFlavorList = charmList
-		charmEntry.isSlotLocked = bool function( EHI playerEHI ) {
+		LoadoutEntry charmEntry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "weapon_charm_for_" + ItemFlavor_GetGUIDString( weaponFlavor ), eLoadoutEntryClass.WEAPON )
+		charmEntry.category     = eLoadoutCategory.WEAPON_CHARMS
+		#if DEV
+			charmEntry.pdefSectionKey = "weapon " + ItemFlavor_GetGUIDString( weaponFlavor )
+			charmEntry.DEV_name       = DEV_ItemFlavor_GetCleanedAssetPath( weaponFlavor ) + " Charm"
+		#endif
+		charmEntry.defaultItemFlavor    = charmList[0]
+		charmEntry.validItemFlavorList  = charmList
+		charmEntry.isSlotLocked         = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		charmEntry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
+		charmEntry.networkTo            = eLoadoutNetworking.PLAYER_EXCLUSIVE
 		charmEntry.isItemFlavorUnlocked = bool function( EHI playerEHI, ItemFlavor flavor, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false ) : ( weaponFlavor ) {
-			if ( !shouldIgnoreOtherSlots )
+			if ( !shouldIgnoreOtherSlots )                                                                              
 			{
 				ItemFlavor ornull flavorCurrentWeaponEquippedTo = GetWeaponThatCharmIsCurrentlyEquippedToForPlayer( playerEHI, flavor )
 				if ( flavorCurrentWeaponEquippedTo != null && flavorCurrentWeaponEquippedTo != weaponFlavor )
@@ -324,6 +332,20 @@ string function WeaponCharm_GetCharmModel( ItemFlavor flavor )
 	if ( charmName == $"" )
 		return charmName;
 	return charmName + ".rmdl"
+}
+
+bool function WeaponCharm_HasStoryBlurb( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.weapon_charm )
+
+	return ( WeaponCharm_GetStoryBlurbBodyText( flavor ) != "" )
+}
+
+string function WeaponCharm_GetStoryBlurbBodyText( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.weapon_charm )
+
+	return GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "customSkinMenuBlurb" )
 }
 
 string function WeaponCharm_GetAttachmentName( ItemFlavor flavor )
@@ -482,7 +504,7 @@ ItemFlavor function WeaponSkin_GetWeaponFlavor( ItemFlavor skin )
 {
 	Assert( ItemFlavor_GetType( skin ) == eItemType.weapon_skin )
 
-	Assert( GetGlobalSettingsAsset( ItemFlavor_GetAsset( skin ), "parentItemFlavor" ) != "", "No parentItemFlavor for skin "+ ItemFlavor_GetHumanReadableRef( skin ) )
+	Assert( GetGlobalSettingsAsset( ItemFlavor_GetAsset( skin ), "parentItemFlavor" ) != "", "No parentItemFlavor for skin "+ string(ItemFlavor_GetAsset( skin )) )
 
 	return GetItemFlavorByAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( skin ), "parentItemFlavor" ) )
 }
@@ -511,6 +533,19 @@ string function WeaponSkin_GetSkinName( ItemFlavor flavor )
 	return GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "skinName" )
 }
 
+bool function WeaponSkin_HasStoryBlurb( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.weapon_skin )
+
+	return ( WeaponSkin_GetStoryBlurbBodyText( flavor ) != "" )
+}
+
+string function WeaponSkin_GetStoryBlurbBodyText( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.weapon_skin )
+
+	return GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "customSkinMenuBlurb" )
+}
 
 int function WeaponSkin_GetCamoIndex( ItemFlavor flavor )
 {
@@ -643,7 +678,7 @@ void function WeaponCosmetics_Apply( entity ent, ItemFlavor ornull skinOrNull, I
 		Assert( ItemFlavor_GetType( skin ) == eItemType.weapon_skin )
 
 		#if SERVER
-			                                               
+			                                                                                                  
 				                                              
 		#endif
 
@@ -713,7 +748,7 @@ void function WeaponCosmetics_Apply( entity ent, ItemFlavor ornull skinOrNull, I
 			                                               
 			 
 				                  
-					                                                                                                                                                                                                      
+					                                                                                                                                                                                                   
 
 				                                                         
 				                       
@@ -730,7 +765,7 @@ void function WeaponCosmetics_Apply( entity ent, ItemFlavor ornull skinOrNull, I
 			Assert( ent.GetCodeClassName() == "dynamicprop", ent + " has classname \"" + ent.GetCodeClassName() + "\" instead of \"dynamicprop\"" )
 
 			if ( CHARM_DEBUG )
-				printt( "CHARM_DEBUG: Setting weapon charm " + ItemFlavor_GetHumanReadableRef( charm ) + " for weapon " + ent + " ( " + ent.GetModelName() + " ) (client)" )
+				printt( "CHARM_DEBUG: Setting weapon charm " + string(ItemFlavor_GetAsset( charm )) + " for weapon " + ent + " ( " + ent.GetModelName() + " ) (client)" )
 
 			DestroyCharmForWeaponEntity( ent )
 			if ( charmModel != "" )
@@ -778,7 +813,7 @@ int function CodeCallback_GetWeaponSkin( entity weapon )
 	int flavorType = ItemFlavor_GetType( weaponSkin )
 
 	Assert( flavorType == eItemType.weapon_skin, "Debugging CodeCallback_GetWeaponSkin: For weapon " + weapon.GetWeaponClassName() +
-		": Itemflavor " + ItemFlavor_GetHumanReadableRef( weaponSkin ) + " is not a valid skin asset. GUID: " +  ItemFlavor_GetGUIDString( weaponSkin ) +  " Type: " + flavorType + " NetworkIndex: " + ItemFlavor_GetNetworkIndex( weaponSkin ) )
+		": Itemflavor " + string(ItemFlavor_GetAsset( weaponSkin )) + " is not a valid skin asset. GUID: " +  ItemFlavor_GetGUIDString( weaponSkin ) +  " Type: " + flavorType + " NetworkIndex: " + ItemFlavor_GetNetworkIndex( weaponSkin ) )
 
 	if ( !GetGlobalSettingsBool( ItemFlavor_GetAsset( weaponSkin ), "featureReactsToKills" ) )
 		return 0
@@ -862,7 +897,7 @@ void function DEV_TestWeaponSkinData()
 
 		foreach ( skin in weaponSkins )
 		{
-			printt( ItemFlavor_GetHumanReadableRef( skin ), "skinName:", WeaponSkin_GetSkinName( skin ) )
+			printt( string(ItemFlavor_GetAsset( skin )), "skinName:", WeaponSkin_GetSkinName( skin ) )
 			WeaponCosmetics_Apply( model, skin, null )
 		}
 	}

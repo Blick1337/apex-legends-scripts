@@ -9,7 +9,7 @@ global function ClientCodeCallback_MapSpawn
 global function ClientCodeCallback_RunClientConnectScripts
 global function ClientCodeCallback_FullUpdate
 global function Init_PlayerScripts
-global function ServerCallback_ClientInitComplete
+global function ClientCodeCallback_ClientInitComplete
 global function ClientCodeCallback_ClientInit
 global function ClientCodeCallback_ClientShutdown
 global function ClientCodeCallback_OnDropShipCinematicEventStateChanged
@@ -363,8 +363,8 @@ void function Init_PlayerScripts( entity player )
 	player.p.playerScriptsInitialized = true
 }
 
-                                                                      
-void function ServerCallback_ClientInitComplete()
+                                               
+void function ClientCodeCallback_ClientInitComplete()
 {
 	FlagSet( "ClientInitComplete" )
 }

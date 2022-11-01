@@ -5,19 +5,27 @@ global function ExplosiveHold_PlayerHasGrenadeInInventory
 
 #if SERVER || CLIENT
 global function ExplosiveHold_IsPlayerPlantingGrenade
+global function GetExplosiveHoldProxyForLoot
+#endif
+
+#if SERVER
+                                                        
 #endif
 
 global const asset EXPLOSIVE_HOLD_PROXY = $"mdl/props/explosivehold_container_01/explosivehold_container_01_proxy.rmdl"
 global const string EXPLOSIVE_HOLD_PANEL_SCRIPTNAME = "explosive_hold_panel"
 
 const string EXPLOSIVE_HOLD_SCRIPTNAME = "explosive_hold"
+const string EXPLOSIVE_HOLD_MOVER_SCRIPTNAME = "explosive_hold_door_mover"
 const string EXPLOSIVE_HOLD_GUN_RACK_SCRIPTNAME = "explosive_hold_gun_rack"
 const string EXPLOSIVE_HOLD_PANEL_HOUSING = "explosive_hold_panel_housing"
 const string EXPLOSIVE_HOLD_DOOR_RIGHT = "explosive_hold_door_right"
 const string EXPLOSIVE_HOLD_DOOR_LEFT = "explosive_hold_door_left"
 const string EXPLOSIVE_HOLD_VENT_SMOKE_SCRIPTNAME = "explosive_hold_vent_fx_helper"
+const string EXPLOSIVE_HOLD_ATTACHMENTS_PARENT_SCRIPTNAME = "explosive_hold_attachments_parent"
 
 const string EXPLOSIVE_HOLD_WEAPON_LOOT_GROUP = "Weapon_Medium"
+const string EXPLOSIVE_HOLD_ATTACHMENTS_LOOT_GROUP = "Explosive_Hold_Attachments"
 
 const string DOOR_DENY_SOUND = "menu_deny"
 const string GRENADE_DETONATE_SOUND = "Loot_ExplosiveHold_Explosion_3p"
@@ -25,12 +33,14 @@ const string ARC_PLACEMENT_SOUND = "weapon_arcstar_explosivewarningbeep"
 const string PANEL_ALARM_SOUND = "Loot_ExplosiveHold_PanelAlarm_3p"
 const string OPEN_DOOR_DAMAGED_SOUND = "Loot_ExplosiveHold_Door_Damaged_Open_3p"
 const string OPEN_DOOR_SOUND = "Loot_ExplosiveHold_Door_Back_Open_3p"
+const string LOBA_BLACK_MARKET_ALARM_SOUND = "Loba_Ultimate_Staff_VaultAlarm"
 
 const float GRENADE_FUSE = 2.0
 const float PANEL_UPWARD_OFFSET = 69.0
 const float PANEL_USABLE_DISTANCE_OVERRIDE = 20.0
 const float PANEL_USABLE_HEIGHT = 80.0
 const float DOOR_TOTAL_TRAVEL_DIST = 50.0
+const float EXPLOSIVE_HOLD_MAX_LOOT_DISTANCE = 130
 
 const asset EXPLOSIVE_HOLD_PANEL_ANIM_IDLE = $"animseq/props/explosivehold_panel_animated/explosivehold_panel_idle.rseq"
 const asset EXPLOSIVE_HOLD_EXPLOSION_FX = $"P_exp_hold_exp_emp_med"
@@ -95,7 +105,7 @@ const ExplosiveHoldGrenadeData arcGrenadeData = {
 	thirdPersonAnim = "pilot_explosive_hold_start_shuriken",
 	firstPersonAnim = "ptpov_explosive_hold_start_shuriken",
 	modelName = EXPLOSIVE_HOLD_ARC_GRENADE_MODEL,
-	weaponName = "mp_weapon_grenade_emp",
+	weaponName = GRENADE_EMP_WEAPON_NAME,
 	targetName = "explosive_hold_arc_grenade",
 
 	panelOpenAnim_Fuse = $"animseq/props/explosivehold_panel_animated/explosivehold_panel_open_shuriken_fuse.rseq",
@@ -106,6 +116,7 @@ struct ExplosiveHoldData
 {
 	array<entity> panels
 	array<entity> panelHousings
+	array<entity> lootEnts
 	entity rightDoor
 	entity leftDoor
 	array<entity> ventFXHelpers
@@ -139,7 +150,6 @@ void function ShExplosiveHold_Init()
 
 	#if SERVER
 		                                     
-
 		                                              
 		                                                                                                                                                           
 	#endif
@@ -147,12 +157,19 @@ void function ShExplosiveHold_Init()
 	#if CLIENT
 		AddCreateCallback( "prop_dynamic", OnPanelCreated )
 	#endif          
+
+	RegisterSignal( "LootHoldUseDone" )
+	RegisterSignal( "LootHoldUseFail" )
+	RegisterSignal( "LootHoldConnectionChanged" )
+	RegisterSignal( "MaybeActivateExplosiveHoldDefense_Thread" )
 }
 
 #if SERVER
                                
  
 	                       
+
+	                                                            
 
 	                                                                                        
 	 
@@ -205,7 +222,7 @@ void function ShExplosiveHold_Init()
 					 
 				 
 
-				                                   
+				                             
 				 
 					                            
 					                                                                                                                    
@@ -237,8 +254,11 @@ void function ShExplosiveHold_Init()
 							                                                                                                         
 							          
 						                                                               
+
 						                                
-						                                          
+						                                                                   
+						                                              
+						                               
 					 
 					    
 					 
@@ -246,11 +266,32 @@ void function ShExplosiveHold_Init()
 					 
 				 
 			 
+			                                                                      
+			 
+				                                    
+				 
+					                                                                                                                 
+					                  
+
+					                                               
+					 
+						                                                                                  
+						                                  
+						            
+					 
+				 
+			 
 		 
 
-		                                   
+		                             
+		 
 			                                                                         
-
+			                                                        
+		 
+		    
+		 
+			                                                      
+		 
 		                                                              
 	 
  
@@ -288,6 +329,7 @@ void function OnPanelCreated( entity panel )
 	                                  
 	                                    
 	                        
+	                                            
 	                                            
 
 	                        
@@ -358,7 +400,6 @@ void function ExplosiveHoldDoor_OnUse( entity panel, entity player, int useInput
 					#endif          
 					return
 				}
-
 				thread ExplosiveHoldDoor_UseThink_Thread( panel, player )
 			}
 		}
@@ -384,8 +425,7 @@ void function ExplosiveHoldDoor_UseThink_Thread( entity ent, entity playerUser )
 	settings.duration = 0.3
 
 	#if SERVER
-		                              
-		                                   
+		                                                               
 		                                                                
 		                                                    
 	#endif          
@@ -402,13 +442,51 @@ void function ExplosiveHoldDoor_UseThink_Thread( entity ent, entity playerUser )
 	waitthread ExtendedUse( ent, playerUser, settings )
 }
 
+#if SERVER
+                                                                        
+ 
+	                                                
+
+	                         
+		      
+
+	                                                
+	                             
+	                                           
+	                                 
+	                                               
+	                                     
+	                                     
+	                                           
+	                               
+
+
+	                               
+	                          
+
+	            
+		                       
+		 
+			                                                   
+			                                                                                                        
+			                              
+			                         
+		 
+	 
+
+	              
+	 
+		           
+	 
+ 
+#endif          
+
 void function ExplosiveHoldDoor_Use_Failure( entity ent, entity playerUser, ExtendedUseSettings settings )
 {
 	#if SERVER
 	                           
 	 
-		                                  
-		                             
+		                                      
 	 
 	#endif
 }
@@ -521,6 +599,7 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 					                                                     
 				 
 			 
+			                                  
 		 
 	 
 
@@ -552,6 +631,7 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 	                        
 	                                                                                      
 	                                     
+	                              
 
 	                                                           
 
@@ -580,7 +660,7 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 	                   
  
 
-                                                                                                                                   
+                                                                  
  
 	                        
 	 
@@ -593,24 +673,13 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 		 
 		                                                            
 		                                                         
-
-		                                                        
-		 
-			                                                      
-			                                                 
-		 
-		    
-		 
-			                              
-			                         
-		 
-
 	 
  
 
                                                                       
  
-	                                                   
+	                                            
+	                                             
  
 
                                                                                                                         
@@ -683,7 +752,7 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 			                          
 			                
 			                                                                           
-			                                                                       
+			                                                                                                        
 			                  
 			                            
 			          
@@ -697,6 +766,8 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 			 
 		 
 	 
+
+	                                                        
 
 	                                        
 	                                                                          
@@ -833,7 +904,7 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
  
 	                                                                                                                  
 	                                          
-	                                                                    
+	                                                                                      
 
 	                                                                                                                                
 	                                                                                          
@@ -931,6 +1002,10 @@ bool function ExplosiveHold_PlayerHasGrenadeInInventory( entity player )
 
 bool function ExplosiveHold_IsOpen( entity explosiveHoldEnt )
 {
+	                                                              
+	if ( !IsValid( explosiveHoldEnt ) )
+		return true
+
 	entity explosiveHold = explosiveHoldEnt.GetParent()
 	bool isOpen = false
 
@@ -957,6 +1032,112 @@ bool function ExplosiveHold_GetStartEmpty()
 {
 	return GetCurrentPlaylistVarBool( "explosivehold_start_open_and_empty", false )
 }
+
+#if SERVER || CLIENT
+entity function GetExplosiveHoldProxyForLoot( entity lootEnt )
+{
+	foreach ( entity explosiveHold in GetEntArrayByScriptName( EXPLOSIVE_HOLD_SCRIPTNAME ) )
+	{
+		if ( !IsValid( explosiveHold ) )
+			continue
+
+		foreach ( entity child in explosiveHold.GetLinkEntArray() )
+		{
+			if ( child.GetModelName() == EXPLOSIVE_HOLD_PROXY &&
+				 sqrt( DistanceSqr( child.GetOrigin(), lootEnt.GetOrigin() ) ) < 2 * EXPLOSIVE_HOLD_MAX_LOOT_DISTANCE )
+			{
+				return child
+			}
+		}
+	}
+
+	return null
+}
+#endif                   
+
+#if SERVER
+                                                                                                      
+ 
+	                         
+		      
+
+	                                                                
+	                            
+		      
+
+	                              
+	                                                         
+		      
+
+	                                                                                   
+
+	                                              
+	                                        
+		      
+
+	                                   
+
+	                                                               
+	                                                                  
+
+	                        
+		                                            
+
+	           
+
+	                      
+	                        
+	 
+		                                         
+
+		                                                     
+		                                    
+		                                         
+		                                      
+		                                      
+		                                               
+		                                                  
+		                                      
+		                                                        
+		                                                                
+		                                                                   
+		                                                                                                                                                                                                                    
+	 
+
+	                                                      
+
+	        
+	                        
+	                                   
+	 
+		                                                                                            
+		      
+	 
+ 
+
+                                                                
+ 
+	                                                                                                      
+		                                
+			        
+
+		                                                                                                              
+		 
+			                                                        
+			 
+				                          
+					        
+
+				                                                
+					                    
+			 
+			           
+		 
+	 
+
+	           
+ 
+#endif         
 
                                  
 

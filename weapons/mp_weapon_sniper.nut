@@ -1,6 +1,8 @@
 
 global function MpWeaponSniper_Init
 
+global const string KRABER_WEAPON_NAME = "mp_weapon_sniper"
+
 #if SERVER
                                                 
 #endif         

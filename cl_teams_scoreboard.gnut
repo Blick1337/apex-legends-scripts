@@ -24,7 +24,7 @@ global struct ScoreboardData
                                    
 global struct TeamsScoreboardPlayerStats
 {
-	int score
+	string score
 	int numDigits
 }
 
@@ -42,7 +42,11 @@ global struct TeamsScoreboardPlayer
 	bool isKillLeader
 	bool isFriendly
 	bool isLocalPlayer
-	bool isAlive
+
+	int respawnStatus
+	bool isDisconnected
+	int bleedoutEndTime
+
 	bool isValid = false
 
 	vector customCharacterColor
@@ -61,7 +65,7 @@ struct
 
 struct {
 	ScoreboardData functionref( ) Callback_ScoreboardData
-	array< int > functionref( entity ) Callback_PlayerScores
+	array< string > functionref( entity ) Callback_PlayerScores
 	array< entity > functionref( array< entity >, ScoreboardData ) Callback_SortScoreboardPlayers
 	void functionref( var, var, int ) Callback_Header
 } file
@@ -69,10 +73,17 @@ struct {
 void function Teams_RegisterSignals()
 {
 	RegisterSignal( "Teams_HideScoreboard" )
+	RegisterSignal( "Teams_OnResolutionChanged" )
+
+	AddClientCallback_OnResolutionChanged( Teams_OnResolutionChanged )
 
 	AddCallback_GameStateEnter( eGameState.WinnerDetermined, Teams_OnWinnerDetermined )
 }
 
+void function Teams_OnResolutionChanged()
+{
+	Signal( clGlobal.levelEnt, "Teams_OnResolutionChanged" )
+}
 
            
 void function Teams_AddCallback_ScoreboardData( ScoreboardData functionref(  ) callbackFunc )
@@ -81,7 +92,7 @@ void function Teams_AddCallback_ScoreboardData( ScoreboardData functionref(  ) c
 	file.Callback_ScoreboardData = callbackFunc
 }
 
-void function Teams_AddCallback_PlayerScores( array< int > functionref( entity ) callbackFunc )
+void function Teams_AddCallback_PlayerScores( array< string > functionref( entity ) callbackFunc )
 {
 	Assert( !IsValid( file.Callback_PlayerScores ), "PlayerScores already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
 	file.Callback_PlayerScores = callbackFunc
@@ -116,14 +127,14 @@ ScoreboardData function GetScoreboardData(){
 	unreachable
 }
 
-array<int> function GetPlayerScores( entity player ){
+array<string> function GetPlayerScores( entity player ){
 	if( IsValid(file.Callback_PlayerScores) )
 	{
 		return file.Callback_PlayerScores( player )
 	}
 	else
 	{
-		array<int> empty = []
+		array<string> empty = []
 
 		return empty
 	}
@@ -229,12 +240,12 @@ void function ClientCallback_Teams_SetScoreboardData( var panel )
 	else if( Control_IsModeEnabled() )
 		mode = 2
                          
-                             
-          
+	else if( IsGunGameActive() )
+		mode = 3
        
                        
-                                         
-          
+	else if( WinterExpress_IsModeEnabled() )
+		mode = 4
        
 	RunUIScript( "UI_SetScoreboardTeamData", panel, GetTeamCount(), GetMaxTeamSize(), localPlayerTeamIndex, mode )
 
@@ -287,10 +298,12 @@ void function Teams_OnWinnerDetermined()
 		teamsScoreboardCachedData.teamsOfPlayers[i] <- players
 	}
 }
+
         
 void function Thread_Teams_PopulateHeaderRui(var header, var frame, int teamIndex, float rowWidth )
 {
 	EndSignal( clGlobal.levelEnt, "Teams_HideScoreboard" )
+	EndSignal( clGlobal.levelEnt, "Teams_OnResolutionChanged" )
 
 	var headerRui = Hud_GetRui( header )
 	var frameRui = Hud_GetRui( frame )
@@ -332,9 +345,9 @@ void function Teams_PopulateHeaderRui( var scoreHeaderRui, int teamIndex, Scoreb
 		RuiSetInt( scoreHeaderRui, "playerScore" + ( i + 1 ) + "NumDigits", data.columnNumDigits[i] )
 	}
 
-	RuiSetBool( scoreHeaderRui, "winningTeamIsFriendly", true )                                                        
 	RuiSetString( scoreHeaderRui, "headerText", Localize( "#TEAM_NUMBERED", (teamIndex + 1) ) )
 	RuiSetFloat( scoreHeaderRui, "rowWidth", rowWidth )
+	RuiSetInt( scoreHeaderRui, "gameState", GetGameState() )
 
 	vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
 	RuiSetColorAlpha( scoreHeaderRui, "teamColor", smokeColor, 1 )
@@ -355,7 +368,9 @@ TeamsScoreboardPlayer function GetTeamsScoreboardPlayer( entity player )
 	TeamsScoreboardPlayer data
 
 	EHI playerEHI = ToEHI( player )
-	entity localPlayer = GetLocalClientPlayer()
+	entity localPlayer = GetLocalViewPlayer()
+	int localTeam = localPlayer.GetTeam()
+
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
 
 	data.playerEHI = playerEHI
@@ -365,34 +380,46 @@ TeamsScoreboardPlayer function GetTeamsScoreboardPlayer( entity player )
 	data.isRatingLeader = GradeFlagsHas( player, eTargetGrade.EXP_LEADER )
 	data.isKillLeader = GradeFlagsHas( player, eTargetGrade.CHAMP_KILLLEADER )
 	data.isLocalPlayer = player == localPlayer
-	data.isAlive = IsAlive( player )
+
+	data.respawnStatus = (GetGameState() >= eGameState.WinnerDetermined)? 0 : player.GetPlayerNetInt( "respawnStatus" )
+	data.isDisconnected = (GetGameState() >= eGameState.WinnerDetermined)? false : !player.IsConnectionActive()
+	data.bleedoutEndTime = (GetGameState() >= eGameState.WinnerDetermined)? 0 : int( player.GetPlayerNetTime( "bleedoutEndTime" ) )
 
 	data.customCharacterColor = SrgbToLinear( GetPlayerInfoColor( player ) / 255.0 )
-	data.useCustomCharacterColor = localPlayer.GetTeam() == player.GetTeam()
+	data.useCustomCharacterColor = localTeam == player.GetTeam()
 	data.enemyBackgroundColor =  SrgbToLinear( GetKeyColor( COLORID_ENEMY ) / 255.0 )
 
                          
-                                                                                  
+		data.useCustomCharacterColor = data.useCustomCharacterColor || IsGunGameActive()
        
 
 	if( AllianceProximity_IsUsingAlliances() )
 	{
 		data.team = AllianceProximity_GetAllianceFromTeam( player.GetTeam() )
-		data.isFriendly = AllianceProximity_GetAllianceFromTeam( player.GetTeam() ) == AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() )
-		if ( (GetGameState() >= eGameState.WinnerDetermined) )
+
+		if( localTeam == TEAM_SPECTATOR )
 		{
-			data.useCustomCharacterColor = AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( ToEHI( localPlayer ) ) == AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI )
+			data.isFriendly = false
+			data.useCustomCharacterColor = false
+		}
+		else
+		{
+			data.isFriendly = AllianceProximity_GetAllianceFromTeam( player.GetTeam() ) == AllianceProximity_GetAllianceFromTeam( localTeam )
+			if ( (GetGameState() >= eGameState.WinnerDetermined) )
+			{
+				data.useCustomCharacterColor = AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( ToEHI( localPlayer ) ) == AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI )
+			}
 		}
 	}
 	else
 	{
 		data.team = player.GetTeam()
-		data.isFriendly = player.GetTeam() == localPlayer.GetTeam()
+		data.isFriendly = player.GetTeam() == localTeam
 	}
 
 	data.isValid = true
 
-	array< int > scores = GetPlayerScores( player )
+	array< string > scores = GetPlayerScores( player )
 	ScoreboardData gameData = GetScoreboardData()
 
 	for( int j = 0; j < gameData.numScoreColumns; j++ )
@@ -411,6 +438,7 @@ void function Threaded_PopulateRowForPlayer( var panel, var button, int teamInde
 {
 	var rui = Hud_GetRui( button )
 	EndSignal( clGlobal.levelEnt, "Teams_HideScoreboard" )
+	EndSignal( clGlobal.levelEnt, "Teams_OnResolutionChanged" )
 
 	while( true )
 	{
@@ -452,11 +480,13 @@ void function Threaded_PopulateRowForPlayer( var panel, var button, int teamInde
 void function Teams_PopulatePlayerRow( var rui, TeamsScoreboardPlayer data, float rowWidth )
 {
 	RuiSetFloat( rui, "rowWidth", rowWidth )
+	RuiSetInt( rui, "screenHeight", GetScreenSize().height )
+	RuiSetInt( rui, "screenWidth", GetScreenSize().width )
 	RuiSetInt( rui, "numScoreColumns", data.stats.len() )
 
 	for( int j = 0; j < data.stats.len(); j++ )
 	{
-		RuiSetInt( rui, "playerScore" + ( j + 1 ) , data.stats[j].score )
+		RuiSetString( rui, "playerScore" + ( j + 1 ) , data.stats[j].score )
 		RuiSetInt( rui, "playerScore" + ( j + 1 ) + "NumDigits" , data.stats[j].numDigits )
 	}
 
@@ -470,7 +500,8 @@ void function Teams_PopulatePlayerRow( var rui, TeamsScoreboardPlayer data, floa
 	RuiSetBool( rui, "isRatingLeader", data.isRatingLeader )
 	RuiSetBool( rui, "isKillLeader", data.isKillLeader )
 	RuiSetBool( rui, "isLocalPlayer", data.isLocalPlayer )
-	RuiSetBool( rui, "isAlive", data.isAlive )
+	RuiSetInt( rui, "respawnStatus", data.respawnStatus )
+	RuiSetInt( rui, "bleedoutEndTime", data.bleedoutEndTime )
 	RuiSetColorAlpha( rui, "customCharacterColor", data.customCharacterColor, 1.0 )
 	RuiSetBool( rui, "useCustomCharacterColor", data.useCustomCharacterColor )
 

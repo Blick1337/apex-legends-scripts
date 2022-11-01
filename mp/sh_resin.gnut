@@ -1,0 +1,486 @@
+global function ShResin_Init
+#if SERVER
+                                
+                                
+                                    
+                                     
+       
+                                    
+      
+#endif
+global function GetResinStructureFromRoot
+global function GetResinStructureLeaf
+global function GetResinShotCount
+
+global function GetAllResinShards
+global function IsResinShard
+
+const asset RESIN_DOOR_SHARD_MODEL = $"mdl/fx/ferrofluid_slab_charged.rmdl"
+
+global const string RESIN_HARDEN_1P_SOUND = "CryoGrenade_Freeze_1p"
+global const string RESIN_HARDEN_3P_SOUND = "Catalyst_Tactical_Activate_FerroFluid_3p"
+const string RESIN_BREAK_3P_SOUND = "CryoGrenade_Ice_Block_Break"
+global const string RESIN_CRUMBLE_3P_SOUND = "CryoGrenade_Ice_Block_Dissolve"
+global const string RESIN_IMPACT_3P_SOUND = "CryoGrenade_Ice_Block_Impact"
+global const asset RESIN_REINFORCE_DOOR_FX = $"P_ferro_pas_prop"
+global const asset RESIN_REINFORCE_PROP_FX = $"P_ferro_tac_idle"
+
+const float RESIN_HEALTH_MAX = 100
+const bool RESIN_HIGHLIGHT_ENABLED = false
+global const float RESIN_DOOR_Z_OFFSET = -8
+global const float RESIN_DOOR_HALF_WIDTH = 30
+const float RESIN_DOOR_DURATION = 60
+const float RESIN_BUFF_DAMAGE_SCALE = 0.15
+const bool RESIN_HEALTH_RUI_ENABLED = false
+const float RESIN_HEALTH_RUI_HEIGHT = 60
+const float RESIN_HEALTH_RUI_SIZE_MIN = 35
+const float RESIN_HEALTH_RUI_SIZE_MAX = 45
+
+global const string RESIN_SHARD_SCRIPT_NAME = "resin_shard"
+
+struct
+{
+#if SERVER
+	                           
+	                                            
+#endif
+}file
+
+
+void function ShResin_Init()
+{
+	PrecacheModel( RESIN_DOOR_SHARD_MODEL )
+	PrecacheParticleSystem( RESIN_REINFORCE_DOOR_FX )
+	PrecacheParticleSystem( RESIN_REINFORCE_PROP_FX )
+#if SERVER
+	                                                            
+#endif
+
+#if CLIENT
+	                                                                            
+	AddCallback_ModifyDamageFlyoutForScriptName( RESIN_SHARD_SCRIPT_NAME, ResinShard_OffsetDamageNumbersLower )
+#endif
+}
+
+#if SERVER
+                                                                            
+ 
+	                                
+		      
+
+	                                               
+
+	                                            
+	                               
+	 
+		                                                                                               
+		 
+			                                                       
+		 
+	 
+ 
+
+                                                                      
+ 
+	                                                
+
+	                             
+
+	                                
+	                          
+	                      
+	                                                                                                                      
+
+	                                                                                     
+	                       
+	                
+	                             
+	                                  
+
+	                                                 
+
+	                                                                                                                                        
+	                     
+
+	                              
+
+	            
+		                                        
+		 
+			                       
+			 
+				               
+			 
+
+			                      
+			 
+				                 
+				 
+					                                                 
+				 
+				                       
+			 
+		 
+	 
+
+	                  
+		             
+	    
+		             
+
+	                
+	                                      
+	                                                 
+ 
+
+                                                                       
+ 
+	                                                
+
+	                             
+
+	                                                                                                                                                                                                        
+
+	                                                
+
+	                     
+	                     
+
+	                             
+
+	            
+		                            
+		 
+			                       
+			 
+				                   
+			 
+
+			                      
+			 
+				                       
+			 
+		 
+	 
+
+	                  
+		             
+	    
+		             
+
+	                                                 
+ 
+
+                                                                                                                                                                                                                                                                       
+ 
+	                                                                                 
+	                                             
+	                            
+	                                   
+	                                       
+	                      
+	                              
+	                            
+	                         
+	                                 
+	                                              
+	                                    
+	                            
+	                                                                 
+	             
+	                   
+	                                         
+	                         
+	 
+		                      
+		                                 
+		 
+			                                           
+		 
+		    
+		 
+			                                        
+		 
+	 
+
+	                
+	  	                                               
+
+	                                                                                                         
+
+	                                                          
+	                                                   
+
+	                                       
+
+	                                                                  
+		                                                    
+
+	            
+ 
+
+                                                                                                                                                                           
+ 
+	                                                      
+	                                        
+	                                  
+	                              
+	                                          
+	                                                                                                           
+	             
+	 
+		                                                                                                                        
+		                                                
+		             
+			                                                
+	 
+
+	                    
+		                            
+
+	             
+	 
+		                                                                                                                               
+		                                                
+		             
+			                                                
+	 
+
+	                                       
+
+	                  
+ 
+
+
+                                                       
+ 
+	                              
+ 
+
+                                                         
+ 
+	                                 
+	 
+		                                        
+	 
+	          
+ 
+
+                                                            
+ 
+	                                                 
+	                                                      
+	                              
+
+	                 
+	 
+		                                                                        
+		 
+			                                                              
+			                             
+			 
+				                                                           
+				 
+					                                                        
+				 
+				                                                         
+			 
+			                               
+			 
+				                                                             
+			 
+
+			                                                                          
+			                                                                                                                             
+				                                                                                            
+				                                                                                                                            
+		 
+		                                                                         
+	 
+
+	                                           
+
+	                                 
+	 
+		                                                                                                                
+		                                                  
+	 
+ 
+                                                                 
+ 
+	                               
+
+	                            
+	             
+	 
+		                                                                 
+		                                             
+			      
+
+		                       
+			     
+		           
+	 
+
+	                                                                                        
+	                                                                                                                              
+	               
+ 
+       
+                                    
+ 
+	                                               
+	                                      
+	 
+		                      
+			               
+	 
+ 
+      
+#endif
+
+#if CLIENT
+vector function ResinShard_OffsetDamageNumbersLower( entity shard, vector damageFlyoutPosition )
+{
+	return ( damageFlyoutPosition - < 0, 0, shard.GetBoundingMaxs().z/2.0 > )
+}
+
+void function ResinCreatedClient( entity resin )
+{
+	if( RESIN_HEALTH_RUI_ENABLED )
+		thread ResinUIThread( resin )
+}
+
+void function ResinUIThread( entity resin )
+{
+	entity localClientPlayer = GetLocalClientPlayer()
+	resin.EndSignal( "OnDestroy" )
+
+	if( GetLocalViewPlayer().GetTeam() != resin.GetTeam() )
+		return
+
+	vector pos = resin.GetOrigin() + ( resin.GetUpVector() * RESIN_HEALTH_RUI_HEIGHT )
+	var rui = CreateCockpitRui( $"ui/cover_wall_marker_icons.rpak", RuiCalculateDistanceSortKey( localClientPlayer.EyePosition(), pos ) )
+	RuiTrackFloat( rui, "healthFrac", resin, RUI_TRACK_HEALTH )
+	                                                                
+	RuiSetFloat( rui, "sizeMin", RESIN_HEALTH_RUI_SIZE_MIN )
+	RuiSetFloat( rui, "sizeMax", RESIN_HEALTH_RUI_SIZE_MAX )
+	RuiKeepSortKeyUpdated( rui, true, "pos" )
+
+	OnThreadEnd(
+		function() : ( rui )
+		{
+			RuiDestroy( rui )
+		}
+	)
+
+	while( true )
+	{
+		RuiSetFloat3( rui, "pos", resin.GetOrigin() + ( resin.GetUpVector() * RESIN_HEALTH_RUI_HEIGHT ) )
+		WaitFrame()
+	}
+
+	WaitForever()
+}
+#endif
+
+array<entity> function GetAllResinShards()
+{
+	#if SERVER
+		                                                               
+	#elseif CLIENT
+		return GetEntArrayByScriptName( RESIN_SHARD_SCRIPT_NAME )
+	#endif
+}
+bool function IsResinShard( entity ent )
+{
+	if( !IsValid( ent ) )
+		return false
+
+	return ent.GetScriptName() == RESIN_SHARD_SCRIPT_NAME
+}
+
+entity function GetResinStructureRoot( entity ent )
+{
+	if( !IsResinShard( ent ) )
+		return ent
+
+	entity root = ent
+	while( IsResinShard( root.GetParent() ) )
+		root = root.GetParent()
+
+	return root
+}
+
+entity function GetResinShotRoot( entity ent )
+{
+	if( !IsResinShard( ent ) )
+		return null
+
+	entity root = ent
+	while( IsResinShotModel( root.GetParent() ) )
+		root = root.GetParent()
+
+	return root
+}
+
+int function GetResinShotCount( entity ent )
+{
+	int count = 0
+	if( !IsResinShard( ent ) )
+		return 0
+
+	entity leaf = GetResinShotRoot( ent )
+	count = 1
+	while( ( leaf ) )
+	{
+		bool childFound = false
+		array< entity > children = leaf.GetChildren()
+		foreach ( child in children )
+		{
+			if ( IsResinShotModel( child ) )
+			{
+				childFound = true
+				leaf = child
+				count += 1
+				break
+			}
+		}
+
+		if( !childFound )
+			break
+	}
+
+	return count
+}
+
+entity function GetResinStructureLeaf( entity ent )
+{
+	entity leaf = ent
+	array< entity > children = ent.GetChildren()
+	foreach ( child in children )
+	{
+		if ( IsResinShard( child ) )
+		{
+			leaf = GetResinStructureLeaf( child )
+			break
+		}
+	}
+
+	return IsResinShard( leaf )  ? leaf : null
+}
+
+void function GetResinStructureFromRoot( entity root, array< entity > shards )
+{
+	if( IsValid( root ) && IsResinShard( root ) )
+		shards.append( root )
+
+	array< entity > children = root.GetChildren()
+	foreach( child in children )
+	{
+		if( IsValid( child ) && IsResinShard( child ) )
+		{
+			GetResinStructureFromRoot( child, shards )
+		}
+	}
+}

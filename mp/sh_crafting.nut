@@ -27,19 +27,35 @@ global function Crafting_DoesPlayerOwnItem
                                                             
                                                          
                                                    
-                                     
+
+                                                                      
+
+                                                 
+
+                            
+                                                                
+      
+
        
                                               
                                                       
-                                     
-      
+                                            
+             
 
                                             
                                         
-#endif
+
+                           
+                                           
+      
+
+                                       
+
+#endif          
 
 #if DEV
 global function DEV_PrintUsedHarvesters
+global function DEV_Crafting_PrintsOn
 #endif
 
 #if CLIENT
@@ -53,6 +69,11 @@ global function ServerCallback_PromptNextHarvester
 global function ServerCallback_PromptWorkbench
 global function ServerCallback_PromptAllWorkbenches
 global function ServerCallback_UpdateWorkbenchVars
+
+                            
+global function ServerCallback_Crafting_Notify_Player_On_Obit
+      
+
 global function Crafting_OnMenuItemSelected
 global function Crafting_OnWorkbenchMenuClosed
 global function TryCloseCraftingMenuFromDamage
@@ -66,12 +87,27 @@ global function Crafting_GetWorkbenchDescString
 
 global function ServerCallback_CL_UpdateAndAnimateHarvesterUsed
 global function ServerCallback_CL_RebuildUsedHarvestersInfo
+global function ServerCallback_RefreshLocalHarvesters
 
 global function Crafting_IsPlayerAtWorkbench
+
+
 #if DEV
 global function DEV_Crafting_TogglePreMatchRotation
+global function DEV_Crafting_PrintUsedHarvesterEHIs
 #endif       
 #endif          
+
+                
+           
+                                                     
+                 
+                                          
+                                            
+           
+                                      
+                 
+                      
 
       
 const asset CRAFTING_DATATABLE = $"datatable/crafting_workbench.rpak"
@@ -105,11 +141,17 @@ const string WORKBENCH_IDLE_ANIM = "crafting_replicator_ready_idle"
 const string WORKBENCH_IDLE_GROUND_ANIM = "crafting_replicator_ready_groundidle"
 
 const asset WORKBENCH_HOLO_FX = $"P_workbench_holo"
+                           
+                                                               
+      
 const asset WORKBENCH_START_FX = $"P_workbench_start"
 const asset WORKBENCH_BEAM_FX = $"P_workbench_stock_beam_LT"
 const asset WORKBENCH_ENGINE_SMOKE_FX = $"P_lootpod_vent_top"
 const asset WORKBENCH_DOOR_OPEN_FX = $"P_lootpod_door_open"
 const asset WORKBENCH_PRINTING_FX = $"P_replipod_printing_CP"
+
+                  
+const float WORKBENCH_CLOSEDOOR_DURATION = 0.8
 
                                                                                                         
 const array<string> CRAFTED_ITEM_CATEGORIES_FOR_ITEM_NAMES = [ "weapon_one", "weapon_two" ]
@@ -134,6 +176,7 @@ const string HARVESTER_AMBIENT_LOOP = "Crafting_Extractor_AmbientLoop"
 const string WORKBENCH_AMBIENT_LOOP = "Crafting_Replicator_AmbientLoop"
 const string HARVESTER_COLLECT_1P = "Crafting_Extractor_Collect_1P"
 const string HARVESTER_COLLECT_3P = "Crafting_Extractor_Collect_3P"
+const string HARVESTER_COLLECT_TEAM = "UI_InGame_Crafting_Extractor_Collect_Squad"
 const string WORKBENCH_MENU_OPEN_START = "Crafting_ReplicateMenu_OpenStart"
 const string WORKBENCH_MENU_OPEN_FAIL = "Crafting_ReplicateMenu_OpenFail"
 const string WORKBENCH_MENU_OPEN_SUCCESS = "Crafting_ReplicateMenu_OpenSuccess"
@@ -157,10 +200,27 @@ global const string HOLDER_ENT_NAME = "holder_ent"
 
             
 global const int CRAFTING_EVO_GRANT = 150
+const int MAX_ARMOR_EVO_TIER = 5
 
                        
 global const int CRAFTING_AMMO_MULTIPLIER = 3
 global const int CRAFTING_AMMO_MULTIPLIER_SMALL = 2
+
+                            
+                   
+global const float CRAFTING_OBIT_DEBOUNCE_PERIOD = 1.0
+      
+
+                
+                                            
+                      
+
+global enum eHarvesterState
+{
+	EMPTY,
+	FULL,
+	COUNT_
+}
 
 global enum eCraftingExclusivityStyle
 {
@@ -180,6 +240,9 @@ global enum eCraftingRotationStyle
                     
        
        
+	                   
+	                
+	        
 	COUNT_
 }
 
@@ -192,6 +255,16 @@ global enum eCraftingRandomization
 	RANDOM_COMBINATION_DISTRIBUTION,                                                          
 	COUNT_
 }
+
+                            
+enum eCrafting_Obit_NotifyType
+{
+	IS_CRAFTING_ITEM,
+	SUBSEQUENT_ITEM,
+	IS_REQUESTING_MATERIALS,
+	COUNT_
+}
+      
 
 global struct CraftingBundle
 {
@@ -232,6 +305,26 @@ struct WorkbenchData
 	bool isCrafting = false
 }
 
+                            
+struct CraftingItemInfo
+{
+	int index
+	var rui
+	int cost
+	bool canBuy
+	bool canAfford
+}
+      
+
+                
+      
+ 
+           
+                        
+       
+                         
+                      
+
 struct {
 	bool                           isEnabled = false
 	bool						   isNetworkingRegistered = false
@@ -264,6 +357,16 @@ struct {
 
 	array< table<var, var> >	   nearbyLiveWorkbenchRui
 
+                           
+	array< CraftingItemInfo >	   craftingItems_ClientList
+       
+
+	                                                                           
+	table< EHI, array< EHI > >		usedHarvesterEHIs
+
+	                                                                    
+	table< EHI, entity >			harvesterTableLocal
+
 	#if DEV
 	bool 							DEV_testingRotationRui
 	#endif
@@ -282,6 +385,10 @@ struct {
 
 	     							                         
 
+                             
+	                                            
+       
+
                            
 	               					                      
       
@@ -295,9 +402,19 @@ struct {
 	                                        
 	table< EHI, array<entity > >   usedHarvesters
 
+	                                             
+	  		                                                                                        
+	  		                                                                                                     
+	bool spectatorModeHarvesters
+
                            
-                               
+		bool harvestersTeamUse = true
        
+
+                             
+		bool crafting_obit_notify = true
+       
+
 	bool harvestersUseLinkEnts = false
 
 	#if DEV
@@ -310,9 +427,15 @@ void function Crafting_Init()
 	RegisterCraftingData()
 	RegisterCraftingDistribution()
 
+	file.spectatorModeHarvesters = GetCurrentPlaylistVarBool( "spectatormodeharvesters", false )
+
                            
-                                                                                          
-                                                                                   
+		                                                                                        
+		file.harvestersTeamUse 	= GetCurrentPlaylistVarBool( "harvesters_teamuse", true )
+       
+
+                             
+		file.crafting_obit_notify = GetCurrentPlaylistVarBool( "crafting_obit_notify", true )
        
 
 	                                                                                           
@@ -365,6 +488,12 @@ void function Crafting_Init()
 	RegisterSignal( "CraftingPlayerDetached" )
 	RegisterSignal( "OnPinged_Crafting" )
 	RegisterSignal( "CraftingOnConnectionChanged" )
+	RegisterSignal( "PlayerCloseCraftingMenu" )
+                 
+            
+                                                   
+        
+                       
 
 	if ( !GetCurrentPlaylistVarBool( "crafting_enabled", true ) )
 		return
@@ -401,7 +530,6 @@ void function Crafting_Init()
 		AddLocalPlayerTookDamageCallback( TryCloseCraftingMenuFromDamage )
 		RegisterMinimapPackages()
 		AddCallback_OnPlayerMatchStateChanged( OnPlayerMatchStateChanged )
-		AddCallback_ClientOnPlayerConnectionStateChanged( OnClientConnectionChanged )
 
 		AddCallback_UseEntGainFocus( Crafting_OnGainFocus )
 		AddCallback_UseEntLoseFocus( Crafting_OnLoseFocus )
@@ -422,6 +550,9 @@ void function Crafting_Init()
 	PrecacheParticleSystem( HARVESTER_IDLE_FX )
 
 	PrecacheParticleSystem( WORKBENCH_HOLO_FX )
+                            
+                                                  
+       
 	PrecacheParticleSystem( WORKBENCH_START_FX )
 	PrecacheParticleSystem( WORKBENCH_BEAM_FX )
 	PrecacheParticleSystem( WORKBENCH_ENGINE_SMOKE_FX )
@@ -442,27 +573,41 @@ void function Crafting_RegisterNetworking()
 	RegisterNetworkedVariable( "Crafting_NumWorkbenches", SNDC_GLOBAL, SNVT_INT, 0 )
 	RegisterNetworkedVariable( "Crafting_StartTime", SNDC_GLOBAL, SNVT_TIME, -1 )
 
-	Remote_RegisterClientFunction( "ServerCallback_CL_MaterialsChanged", "int", -1, INT_MAX, "int", -1, INT_MAX, "string", "entity" )
+	Remote_RegisterClientFunction( "ServerCallback_CL_MaterialsChanged", "int", -1, INT_MAX, "int", -1, INT_MAX, "string", "entity", "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_CL_HarvesterUsed", "entity", "entity" )
 	Remote_RegisterClientFunction( "ServerCallback_CL_ArmorDeposited" )
 	Remote_RegisterClientFunction( "ServerCallback_PromptNextHarvester", "entity", "entity" )
 	Remote_RegisterClientFunction( "ServerCallback_PromptWorkbench", "entity", "entity" )
 	Remote_RegisterClientFunction( "ServerCallback_PromptAllWorkbenches", "entity" )
 	Remote_RegisterClientFunction( "ServerCallback_UpdateWorkbenchVars" )
+
 	Remote_RegisterClientFunction( "Crafting_Workbench_OpenCraftingMenu", "entity" )
 	Remote_RegisterClientFunction( "TryCloseCraftingMenu" )
 	Remote_RegisterClientFunction( "MarkAllWorkbenches" )
 	Remote_RegisterClientFunction( "MarkNextStepForPlayer", "entity" )
 
-	Remote_RegisterClientFunction( "ServerCallback_CL_UpdateAndAnimateHarvesterUsed", "entity" )
+	Remote_RegisterClientFunction( "ServerCallback_CL_UpdateAndAnimateHarvesterUsed", "entity", "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_CL_RebuildUsedHarvestersInfo", "entity" )
+	Remote_RegisterClientFunction( "ServerCallback_RefreshLocalHarvesters" )
+
+	Remote_RegisterServerFunction( "ClientCallback_RefreshUsedHarvestersForSpectatedPlayer", "entity", "entity" )
+
+	Remote_RegisterServerFunction( "ClientCallback_EmptyUsedHarvester", "entity" )
+
+                            
+	Remote_RegisterClientFunction( "ServerCallback_Crafting_Notify_Player_On_Obit", "entity", "int", 0, eCrafting_Obit_NotifyType.COUNT_, "int", 0, 256, "int", 0, 128, "int", -1, MAX_ARMOR_EVO_TIER + 1 )
+	Remote_RegisterServerFunction( "ClientCallback_Crafting_Notify_Teammates_On_Obit", 		  "int", 0, eCrafting_Obit_NotifyType.COUNT_, "int", 0, 256, "int", 0, 128, "int", -1, MAX_ARMOR_EVO_TIER + 1 )
+      
 
 	Remote_RegisterServerFunction( "ClientCallback_PlayerStartedPlaying" )
-	Remote_RegisterServerFunction( "DisableUsedHarvesters", "entity", "bool" )
+
+	#if SERVER
+	                                                  
+	#endif
 
 	#if CLIENT
-	AddCallback_OnYouRespawned( OnPlayerRespawned )
-	AddFirstPersonSpectateStartedCallback( OnDeadPlayerSpectating )
+	AddFirstPersonSpectateStartedCallback( Crafting_OnDeadPlayerSpectating )
+	AddOnSpectatorTargetChangedCallback( Crafting_OnSpectateTargetChanged )
 	#endif
 
 	file.isNetworkingRegistered = true
@@ -492,6 +637,18 @@ void function RegisterCraftingData()
 		item.index = i
 
 		item.category = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "category" ) )
+
+                     
+                                 
+                                                          
+    
+            
+    
+                                                                
+    
+            
+    
+        
 
 		string rotationStyle = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "rotationStyle" ) )
 		item.rotationStyle = GetRotationStyleEnumFromString( rotationStyle )
@@ -671,6 +828,12 @@ int function GetExclusivityStyleEnumFromString( string input )
 
 void function Crafting_OnGameStatePlaying()
 {
+	thread Crafting_OnGameStatePlaying_Thread()
+}
+
+
+void function Crafting_OnGameStatePlaying_Thread()
+{
 	#if SERVER
 		                                                        
 		                                                                                 
@@ -679,15 +842,15 @@ void function Crafting_OnGameStatePlaying()
 		 
 		                                                                                    
 		 
-			                                  
+			                                                    
 		 
 		                                                                                           
 		 
-			                                 
+			                                                   
 		 
 		                                                                                        
 		 
-			                                  
+			                                                    
 			                             
 		 
 
@@ -818,7 +981,7 @@ void function Crafting_OnGameStatePlaying()
  
 
 
-                                                                    
+                                                                           
  
 	                                            
 		      
@@ -884,7 +1047,7 @@ void function Crafting_OnGameStatePlaying()
 		                                                                                                                     
 		   
 	 
-
+	                                                                                                                  
 	                                                        
 	 
 		                                                                 
@@ -1046,7 +1209,7 @@ void function Crafting_OnGameStatePlaying()
  
 	                                              
 	                                                      
-	                                                                                                                                   
+	                                                                                                                                                     
 
 	                                        
 	                                                                   
@@ -1056,6 +1219,7 @@ void function Crafting_OnGameStatePlaying()
 		                                                                             
  
 
+       
                                                                         
  
 	                                      
@@ -1089,31 +1253,30 @@ void function Crafting_OnGameStatePlaying()
 	                                          
 		                                                                             
  
+      
 
                                                        
  
 	                              
  
 
-                                                                                     
- 
-	                          
+#endif          
 
-	                                                                                                                              
+array<string> function GetItemNamesFromCraftingBundle( CraftingBundle craftedBundle )
+{
+	array<string> arrayResults
 
-	                                                             
-	 
-	       
-		                      
-			                                                              
-	      
-		                                   
-	 
-	                   
- 
+	Assert( craftedBundle.itemsInBundle.len() > 0, "WARNING: GetItemNamesFromCraftingBundle called with no items in the bundle." )
 
-#endif
-
+	foreach( string bundleString in craftedBundle.itemsInBundle )
+	{
+		#if DEV
+		DEV_Crafting_Print( format( "  ** crafting item bundlestring = %s", bundleString  ))
+		#endif       
+		arrayResults.append( bundleString )
+	}
+	return arrayResults
+}
 
 int function GetLimitedStockFromWorkbench( entity workbench )
 {
@@ -1196,7 +1359,7 @@ string function Crafting_GetWorkbenchDescString()
 
 entity function GetLocalClientPlayerWorkbench()
 {
-	entity player = GetLocalClientPlayer()
+	entity player = GetLocalViewPlayer()
 	entity workbench
 	array<entity> possibleWorkbenches = player.GetLinkParentArray()
 	foreach( ent in possibleWorkbenches )
@@ -1258,6 +1421,7 @@ void function MapPackage_Crafting_Workbench( entity ent, var rui )
 	bool isAirdrop = ent.GetTargetName() == "craftingWorkbenchAirdropIcon"
 
 	RuiSetImage( rui, "defaultIcon", isAirdrop ? WORKBENCH_ICON_AIRDROP_ASSET : WORKBENCH_ICON_ASSET )
+
 	RuiSetImage( rui, "clampedDefaultIcon", $"" )
 	RuiSetBool( rui, "useTeamColor", false )
 
@@ -1280,7 +1444,8 @@ void function TryCloseCraftingMenuFromDamage( float damage, vector damageOrigin,
 	if ( GetConVarBool( "player_setting_damage_closes_deathbox_menu" ) )
 		TryCloseCraftingMenu()
 }
-#endif
+#endif          
+
 
                            
 #if SERVER
@@ -1365,9 +1530,12 @@ void function OnHarvesterCreated( entity target )
 	if ( target.GetScriptName() != "crafting_harvester" )
 		return
 
-	AddCallback_OnUseEntity_ClientServer( target, HarvestCraftingMaterials )
-	SetCallback_CanUseEntityCallback( target, Crafting_Harvester_IsNotBusy )
-	AddEntityCallback_GetUseEntOverrideText( target, Crafting_Harvester_UseTextOverride )
+	#if DEV
+	DEV_Crafting_Print( format( "OnHarvesterCreated():  %s", string( target ) ))
+	#endif
+
+	EHI harvesterEHI = ToEHI( target )
+	file.harvesterTableLocal[ harvesterEHI ] <- target
 
 	                                   
 	vector origin = target.GetOrigin()
@@ -1375,20 +1543,63 @@ void function OnHarvesterCreated( entity target )
 	entity fakeHarvester = CreatePropDynamic( HARVESTER_MODEL, origin, angles)
 	fakeHarvester.SetFadeDistance( 15000 )
 	fakeHarvester.SetForceVisibleInPhaseShift( true )
-
 	file.harvesterToClientProxy[target] <- fakeHarvester
-	fakeHarvester.Anim_Play( HARVESTER_FULL_IDLE_ANIM )
 
-	thread PlayHarvesterIdleFX( fakeHarvester )
+	entity ambGen = CreateClientSideAmbientGeneric( target.GetOrigin(), HARVESTER_AMBIENT_LOOP, 3000 )
+	ambGen.SetParent( target )
+	ambGen.SetLocalOrigin( <0, 0, 60> )
+	file.ambGenericTable[target] <- ambGen
 
 	CreateHarvesterWorldIcon( target )
 
-	entity ambGen = CreateClientSideAmbientGeneric( target.GetOrigin(), HARVESTER_AMBIENT_LOOP, 3000 )
-	ambGen.SetEnabled( true )
-	ambGen.SetParent( target )
-	ambGen.SetLocalOrigin( <0, 0, 60> )
+	if( !PlayerHasUsedHarvester_CheckEHI( GetLocalViewPlayer(), target ) )
+	{
+		thread CL_SetHarvesterState_Thread( target, eHarvesterState.FULL )
 
-	file.ambGenericTable[target] <- ambGen
+		AddCallback_OnUseEntity_ClientServer( target, HarvestCraftingMaterials )
+		SetCallback_CanUseEntityCallback( target, Crafting_Harvester_IsNotBusy )
+		AddEntityCallback_GetUseEntOverrideText( target, Crafting_Harvester_UseTextOverride )
+	}
+	else
+	{
+		thread CL_SetHarvesterState_Thread( target, eHarvesterState.EMPTY )
+	}
+}
+
+void function CL_SetHarvesterState_Thread( entity harvester, int harvesterState )
+{
+	if( !IsValid( harvester ) )
+		return
+
+	entity fakeHarvester = file.harvesterToClientProxy[ harvester ]
+	entity ambGen = file.ambGenericTable[ harvester ]
+
+	if( !IsValid( fakeHarvester ) )
+		return
+
+	switch( harvesterState )
+	{
+		case eHarvesterState.EMPTY:
+			fakeHarvester.Anim_Stop()
+			fakeHarvester.Anim_Play( HARVESTER_EMPTY_IDLE_ANIM )
+			if( IsValid( ambGen ) )
+			{
+				ambGen.SetEnabled( false )
+			}
+			Remote_ServerCallFunction( "ClientCallback_EmptyUsedHarvester", harvester )
+			break
+		case eHarvesterState.FULL:
+			thread PlayHarvesterIdleFX( fakeHarvester )
+			fakeHarvester.Anim_Stop()
+			fakeHarvester.Anim_Play( HARVESTER_FULL_IDLE_ANIM )
+			if( IsValid( ambGen ) )
+			{
+				ambGen.SetEnabled( true )
+			}
+			break
+		default:
+			break
+	}
 }
 
 void function OnHarvesterDestroyed( entity target )
@@ -1415,12 +1626,14 @@ void function OnHarvesterDestroyed( entity target )
 
 void function PlayHarvesterIdleFX( entity harvester )
 {
+	if( !IsValid( harvester ) )
+		return
+
 	harvester.EndSignal( "OnDestroy" )
 	harvester.EndSignal( "HarvesterDisabled" )
 
 	#if DEV
-	if( file.devPrintsOn )
-		printt( "FX: harvester idle FX START")
+	DEV_Crafting_Print( "FX: harvester idle FX START")
 	#endif
 
 	int attachId = harvester.LookupAttachment( "FX_INSIDE" )
@@ -1432,8 +1645,7 @@ void function PlayHarvesterIdleFX( entity harvester )
 			if ( IsValid( idleFx ) )
 			{
 				#if DEV
-				if( file.devPrintsOn )
-					printt( "FX: harvester idle FX END")
+				DEV_Crafting_Print( "FX: harvester idle FX END")
 				#endif
 				EffectStop( idleFx, false, true )
 			}
@@ -1450,7 +1662,7 @@ string function Crafting_Harvester_UseTextOverride( entity ent )
 	CustomUsePrompt_Show( ent )
 	CustomUsePrompt_SetSourcePos( ent.GetOrigin() + < 0, 0, 30 > )
 
-	CustomUsePrompt_SetAdditionalText( "%ping% " + Localize( "#COMMS_PING" ) )
+	                                                                                                                                                                                        
 	CustomUsePrompt_SetText( Localize("#CRAFTING_HARVESTER_USE_PROMPT") )
 	CustomUsePrompt_SetLineColor( GetCraftingColor() )
 	CustomUsePrompt_SetHintImage( CRAFTING_CURRENCY_ASSET )
@@ -1475,18 +1687,63 @@ bool function UsedHarvestersTableContainsPlayer( entity player )
 
 bool function PlayerHasUsedHarvester( entity player, entity harvester )
 {
+	if( !IsValid( harvester ) )
+		return false
+
+	if( !IsValid( player ) )
+		return false
+
 	array< entity > usedHarvesters = GetUsedHarvesters( player )
 	return( usedHarvesters.contains( harvester ) )
 }
 
+#if CLIENT
+bool function PlayerHasUsedHarvester_CheckEHI( entity player, entity harvester )
+{
+	if( !IsValid( harvester ) )
+		return false
+
+	if( !IsValid( player ) )
+		return false
+
+	EHI playerEHI = ToEHI( player )
+	EHI harvesterEHI = ToEHI( harvester )
+
+	if(!( playerEHI in file.usedHarvesterEHIs  ))
+		return false
+
+	array< int > usedHarvesterEHIs = file.usedHarvesterEHIs[ playerEHI ]
+	return( usedHarvesterEHIs.contains( harvesterEHI ) )
+}
+#endif
+
 void function UsedHarvestersTable_AddHarvester( entity player, entity harvester )
 {
+	if( !IsValid( harvester ) )
+		return
+
+	if( !IsValid( player ) )
+		return
+
 	EHI playerEHI = ToEHI( player )
 	if( !UsedHarvestersTableContainsPlayer( player ) )
 		file.usedHarvesters[ playerEHI ] <- []
 
 	if( !file.usedHarvesters[ playerEHI ].contains( harvester ) )
 		file.usedHarvesters[ playerEHI ].append( harvester )
+
+	#if CLIENT
+	EHI harvesterEHI = ToEHI( harvester )
+	if(!( playerEHI in file.usedHarvesterEHIs  ))
+	{
+		file.usedHarvesterEHIs[ playerEHI ] <- []
+	}
+
+	if( !file.usedHarvesterEHIs[ playerEHI ].contains( harvesterEHI ) )
+	{
+		file.usedHarvesterEHIs[ playerEHI ].append( harvesterEHI )
+	}
+	#endif
 
 	                              
 	foreach( usedHarvester in file.usedHarvesters[ playerEHI ] )
@@ -1500,11 +1757,16 @@ void function UsedHarvestersTable_AddHarvester( entity player, entity harvester 
 
 void function UpdateHarvesterUsed( entity player, entity harvester )
 {
+	if( !IsValid( harvester ) )
+		return
+
+	if( !IsValid( player ) )
+		return
+
 	if( !file.harvestersUseLinkEnts )
 	{
 		                                                                                                 
-		if( !PlayerHasUsedHarvester( player, harvester ) )
-			UsedHarvestersTable_AddHarvester( player, harvester )
+		UsedHarvestersTable_AddHarvester( player, harvester )
 	}
 #if SERVER
 	    
@@ -1553,98 +1815,207 @@ array< entity > function GetUsedHarvesters( entity player )
                                    
 void function HarvestCraftingMaterials( entity harvester, entity player, int pickupFlags )
 {
+	if( !IsValid( harvester ) )
+		return
+
+	if( !IsValid( player ) )
+		return
+
 	#if DEV
-		if( file.devPrintsOn )
-			printt( format( "%s(): Harvester Using Links? %s", FUNC_NAME(), string( file.harvestersUseLinkEnts )) )
+	DEV_Crafting_Print( format( "%s(): Harvester Using Links? %s", FUNC_NAME(), string( file.harvestersUseLinkEnts )) )
 	#endif
 
                            
-                              
-   
-                                                                     
-    
-                                                                                         
-    
-   
-      
-   
-                                                                                   
-   
-      
+	if( file.harvestersTeamUse )
+	{
+		#if SERVER
+			                                        
+			                                                                                                                             
+		#endif
+		foreach( squadMember in GetPlayerArrayOfTeam( player.GetTeam() ) )
+		{
+			thread HarvestCraftingMaterials_Single( harvester, squadMember, player, pickupFlags )
+		}
+	}
+	else
+	{
 		thread HarvestCraftingMaterials_Single( harvester, player, player, pickupFlags )
+	}
+      
+                                                                                 
        
 }
 
 void function HarvestCraftingMaterials_Single( entity harvester, entity player, entity playerInteractor, int pickupFlags )
 {
+	if( !IsValid( harvester ) )
+		return
+
+	if( !IsValid( player ) )
+		return
+
 	UpdateHarvesterUsed( player, harvester )
 
 #if SERVER
-	                                                       
+	                                                
 	                                                                                     
+	                                                                                                                              
+	 
+		                                      
+	 
 
                            
-                                   
-   
-                                                                                                                                    
-                                                                           
-                                                                             
-                                                      
-   
+		                                 
+		 
+			                                                                                                                                 
+			                                                                        
+			                                                                          
+			                                                   
+		 
+		    
+		 
+			                                                                                                                       
+			                                                                       
+		 
       
-   
-                                                                                                                          
-                                                                                                         
-                                        
-                                                                           
-                                                            
-    
-                                                                                 
-                                                                   
-                                                                                                   
-    
-   
-      
-		                                                                                                                                 
-		                                                                        
-		                                                                          
-		                                                   
+                                                                                                                                   
+                                                                          
+                                                                            
+                                                     
        
 
 	                                                                        
+
+
 #endif
 }
 
-#if CLIENT
-void function OnPlayerRespawned()
-{
+#if SERVER
+                                                
+ 
 	                                                                   
-	printt( format( "*** Playerflow: %s", FUNC_NAME()) )
-	Remote_ServerCallFunction( "DisableUsedHarvesters", GetLocalClientPlayer(), false )
+	                                                    
+	                                                                   
+ 
+#endif
+
+#if CLIENT
+void function Crafting_OnDeadPlayerSpectating( entity player, entity currentTarget )
+{
+		                                                   
+		#if DEV
+			DEV_Crafting_Print( format( "*** SPECTATOR: %s", FUNC_NAME()) )
+			DEV_Crafting_Print( format( "*** SPECTATOR: Spectate Player %s team == %s", player.GetPlayerName(), string( player.GetTeam() ) ))
+			if( IsValid( currentTarget ) )
+				DEV_Crafting_Print( format( "*** SPECTATOR: Spectate Target %s team == %s", currentTarget.GetPlayerName(), string( currentTarget.GetTeam() ) ))
+			DEV_PrintUsedHarvesters()
+		#endif
 }
 
-void function OnDeadPlayerSpectating( entity player, entity currentTarget )
+void function Crafting_OnSpectateTargetChanged( entity spectatingPlayer, entity oldSpectatorTarget, entity newSpectatorTarget )
 {
-	                                                                                       
-	printt( format( "*** Playerflow: %s", FUNC_NAME()) )
-	Remote_ServerCallFunction( "DisableUsedHarvesters", currentTarget, false )
+	if ( file.spectatorModeHarvesters )
+	{
+		#if DEV
+			DEV_Crafting_Print( format( "*** SPECTATOR: %s", FUNC_NAME()) )
+			DEV_Crafting_Print( format( "*** SPECTATOR: Spectate Player %s team == %s", spectatingPlayer.GetPlayerName(), string( spectatingPlayer.GetTeam() ) ))
+			if( IsValid( oldSpectatorTarget ) )
+				DEV_Crafting_Print( format( "*** SPECTATOR: Spectate OLD Target %s team == %s", oldSpectatorTarget.GetPlayerName(), string( oldSpectatorTarget.GetTeam() ) ))
+			if( IsValid( newSpectatorTarget ) )
+				DEV_Crafting_Print( format( "*** SPECTATOR: Spectate NEW Target %s team == %s", newSpectatorTarget.GetPlayerName(), string( newSpectatorTarget.GetTeam() ) ))
+
+			EHI playerEHI = ToEHI( spectatingPlayer )
+			if( playerEHI in file.usedHarvesterEHIs )
+			{
+				DEV_Crafting_Print( format( "*** SPECTATOR: spectatingPlayer file.usedHarvesterEHIs.len() == %s", string( file.usedHarvesterEHIs[ playerEHI ].len()) ))
+			}
+		#endif
+
+		                                                     
+		if( IsValid( oldSpectatorTarget ) )
+		{
+			Remote_ServerCallFunction( "ClientCallback_RefreshUsedHarvestersForSpectatedPlayer", oldSpectatorTarget, newSpectatorTarget )
+		}
+		else
+		{
+			Remote_ServerCallFunction( "ClientCallback_RefreshUsedHarvestersForSpectatedPlayer", newSpectatorTarget, newSpectatorTarget )
+		}
+	}
 }
 
-void function ServerCallback_CL_UpdateAndAnimateHarvesterUsed( entity harvester )
+void function ServerCallback_RefreshLocalHarvesters()
 {
+	#if DEV
+		DEV_Crafting_Print( format( " ********** Refreshing Local Harvesters"))
+	#endif
+
+	entity player = GetLocalViewPlayer()
+
+	#if DEV
+		DEV_Crafting_Print( format( "*** SPECTATOR: ServerCallback_RefreshLocalHarvesters: "))
+		DEV_Crafting_Print( format( "*** SPECTATOR: Player == %s", string( player ) ))
+		EHI playerEHI = ToEHI( player )
+		if( playerEHI in file.usedHarvesterEHIs )
+		{
+			DEV_Crafting_Print( format( "*** SPECTATOR: Local file.usedHarvesterEHIs.len() == %s", string( file.usedHarvesterEHIs[ playerEHI ].len()) ))
+		}
+	#endif
+
+	foreach( harvesterEHI, harvester in file.harvesterTableLocal )
+	{
+		if( IsValid( harvester ) )
+		{
+			entity fakeHarvester = file.harvesterToClientProxy[ harvester ]
+
+			if( IsValid( fakeHarvester ) )
+			{
+				if( PlayerHasUsedHarvester_CheckEHI( player, harvester )  )
+				{
+					                               
+					thread CL_SetHarvesterState_Thread( harvester, eHarvesterState.EMPTY )
+				}
+				else
+				{
+					                   
+					thread CL_SetHarvesterState_Thread( harvester, eHarvesterState.FULL )
+				}
+			}
+		}
+	}
+}
+
+void function ServerCallback_CL_UpdateAndAnimateHarvesterUsed( entity harvester, bool doEmptyingAnim )
+{
+	if( !IsValid( harvester ) )
+		return
+
 	file.ambGenericTable[harvester].SetEnabled( false )
-	thread HarvesterAnimThread( file.harvesterToClientProxy[harvester] )
+	thread HarvesterAnimThread( file.harvesterToClientProxy[harvester], doEmptyingAnim )
 	thread PROTO_FadeModelIntensityOverTime( file.harvesterToClientProxy[harvester], 1, 1, 0.1 )
+
 	Signal( file.harvesterToClientProxy[harvester], "HarvesterDisabled" )
 	Signal( harvester, "HarvesterDisabled" )
 }
 
-void function HarvesterAnimThread( entity harvesterProxy )
+void function HarvesterAnimThread( entity harvesterProxy, bool doEmptyingAnim = true )
 {
-	harvesterProxy.Anim_Stop()
-	harvesterProxy.Anim_Play( HARVESTER_FULL_TO_EMPTY_ANIM )
+	if( !IsValid( harvesterProxy ) )
+		return
 
-	wait 2
+	harvesterProxy.Anim_Stop()
+
+	string animName = HARVESTER_FULL_TO_EMPTY_ANIM
+	float waitTime = 2
+
+	if( !doEmptyingAnim )
+	{
+		animName = HARVESTER_EMPTY_IDLE_ANIM
+		waitTime = 0.1
+	}
+
+	harvesterProxy.Anim_Play( animName )
+
+	wait waitTime
 
 	if ( IsValid( harvesterProxy ) )
 	{
@@ -1653,64 +2024,88 @@ void function HarvesterAnimThread( entity harvesterProxy )
 }
 #endif
 
-void function OnClientConnectionChanged( entity player )
-{
-	#if CLIENT
-		if ( player != GetLocalClientPlayer() )
-			return
-
-		if ( !IsConnected() )
-			return
-
-		if ( IsSpectating() && GetCurrentPlaylistVarBool( "crafting_spectator_fix_enabled", true ) )
-			return
-
-	#endif          
-
-	#if SERVER
-		                                                    
-	#endif          
-}
-
-void function OnClientConnectionRestored( entity player )
-{
-	#if SERVER
-		                                                      
-		                                                 
-	#endif
-}
-
 #if SERVER
-                                                                                                          
+                                                        
  
-		                                                                                                                 
-		                      
-			                                                           
-
-		                                                                          
-		       
-			                      
-				                                                                                                                                             
-		      
-		                                            
-		 
-			                                                             
-		 
+	                                                                  
  
 
-                                                                            
+                                                         
  
+	                                                                  
+ 
+
+                                                                                                                                                                                                                
+ 
+	                                                                                                                 
+	                                               
+		                                                           
+
+	                             
+	                                 
+	 
+		           
+	 
+
+	                                                                          
 	       
-		                      
-			                 	                                                                                           
+	                                                                                                                                                         
 	      
 
-	                                                                                                  
-	                                                                                                                   
+	                                            
+	 
+		                                                                      
+	 
+ 
+
+                                                                                                        
+ 
+	                           
+		      
+
+	                        
+		      
+
+	       
+	                             	                                                                                           
+	      
+
+	                                  
+	 
+		                                                                                                                  
+		                                                                                                                   
+	 
+	    
+	 
+		                                                                                
+		                                                                                                                     
+		                                                                                                                      
+	 
+
+ 
+
+                                                                                  
+ 
+	                           
+		      
+
+	                                            
+		      
+
+	                                                                                             
+	 
+		                                                       
+	 
  
 
                                                                                
  
+	                           
+		      
+
+	                        
+		      
+
 	                       
 	                                            
 	                        
@@ -1795,6 +2190,9 @@ void function OnClientConnectionRestored( entity player )
 
                                                            
  
+	                           
+		      
+
 	                                                    
 		                                    
  
@@ -1819,6 +2217,11 @@ void function OnClientConnectionRestored( entity player )
 
 bool function Crafting_Harvester_IsNotBusy( entity player, entity ent, int useFlags )
 {
+	#if CLIENT
+	if( IsSpectating() )
+		return false
+	#endif          
+
 	if ( Bleedout_IsBleedingOut( player ) )
 		return false
 
@@ -1838,6 +2241,9 @@ bool function Crafting_Harvester_IsNotBusy( entity player, entity ent, int useFl
 #if CLIENT
 void function ServerCallback_CL_HarvesterUsed( entity harvester, entity minimapObj )
 {
+	if( !IsValid( harvester ) )
+		return
+
 #if DEV
 	                                                                                                
 	                                                                 
@@ -1857,10 +2263,10 @@ void function ServerCallback_CL_HarvesterUsed( entity harvester, entity minimapO
 	RuiSetFloat3( file.harvesterMinimapRuiTable[minimapObj], "iconColor", <0,0,0> )
 
 	                                                                                                                                    
-	UpdateHarvesterUsed( GetLocalClientPlayer(), harvester )
+	UpdateHarvesterUsed( GetLocalViewPlayer(), harvester )
 }
 
-void function ServerCallback_CL_MaterialsChanged( int amount, int difference, string headerText, entity giver )
+void function ServerCallback_CL_MaterialsChanged( int amount, int difference, string headerText, entity giver, bool selfOnly )
 {
 	if ( file.fullmapRui.len() != 0 && file.fullmapRui[0] != null )
 		RuiSetInt( file.fullmapRui[0], "craftingMaterials", amount )
@@ -1876,16 +2282,45 @@ void function ServerCallback_CL_MaterialsChanged( int amount, int difference, st
 	if ( difference > 0 )
 	{
                             
-                                        
-                                                                                                                                                           
+			if( GetLocalViewPlayer() == giver )
+			{
+				if ( selfOnly )
+				{
+					AnnouncementMessageRight( GetLocalViewPlayer(), header + Localize( "#CRAFTING_HARVESTER_AWARD", difference ), "", <214, 214, 214>, $"", 2, milesAlias )
+				}
+				else
+				{
+					AnnouncementMessageRight( GetLocalViewPlayer(), header + Localize( "#CRAFTING_HARVESTER_AWARD_TEAMUSE", difference ), "", <214, 214, 214>, $"", 2, milesAlias )
+				}
+			}
+			else
+			{
+				AnnouncementMessageRight( GetLocalViewPlayer(), header + Localize( "#CRAFTING_HARVESTER_AWARD_TEAMMATES", giver.GetPlayerName(), difference ), "", <214, 214, 214>, $"", 2, milesAlias )
+			}
        
-                                                                                                                                                                                           
-       
-			AnnouncementMessageRight( GetLocalClientPlayer(), header + Localize( "#CRAFTING_HARVESTER_AWARD", difference ), "", <214,214,214>, $"", 2, milesAlias )
+                                                                                                                                                        
         
 	}
 	else
-		AnnouncementMessageRight( GetLocalClientPlayer(), header + Localize( "#CRAFTING_HARVESTER_BALANCE_UPDATE", amount ), "", <214,214,214>, $"", 2, milesAlias )
+	{
+		AnnouncementMessageRight( GetLocalViewPlayer(), header + Localize( "#CRAFTING_HARVESTER_BALANCE_UPDATE", amount ), "", <214, 214, 214>, $"", 2, milesAlias )
+	}
+
+	                                                                            
+	RefreshCraftingMenu()
+}
+
+                                                                  
+void function RefreshCraftingMenu()
+{
+	if ( !Crafting_IsPlayerAtWorkbench( GetLocalViewPlayer() ) )
+		return
+
+	CommsMenu_RefreshData()
+
+                           
+	Update_CraftingItems_Availabilities()
+       
 }
 
 void function ServerCallback_CL_ArmorDeposited()
@@ -1895,15 +2330,18 @@ void function ServerCallback_CL_ArmorDeposited()
 
 void function CLArmorDepositThread()
 {
-	GetLocalClientPlayer().EndSignal( "OnDeath" )
-	GetLocalClientPlayer().EndSignal( "OnDestroy" )
+	GetLocalViewPlayer().EndSignal( "OnDeath" )
+	GetLocalViewPlayer().EndSignal( "OnDestroy" )
 
 	wait 3.0
-	AnnouncementMessageRight( GetLocalClientPlayer(), Localize( "#CRAFTING_WORKBENCH_ARMOR_DEPOSIT" ), "", <214,214,214>, $"", 3, "Crafting_MaterialsGathered_1P" )
+	AnnouncementMessageRight( GetLocalViewPlayer(), Localize( "#CRAFTING_WORKBENCH_ARMOR_DEPOSIT" ), "", <214,214,214>, $"", 3, "Crafting_MaterialsGathered_1P" )
 }
 
 void function CreateHarvesterWorldIcon( entity harvester )
 {
+	if( !IsValid( harvester ) )
+		return
+
 	entity localViewPlayer = GetLocalViewPlayer()
 	vector pos             = harvester.GetOrigin() + (harvester.GetUpVector() * 50)
 	var rui                = CreateCockpitRui( $"ui/survey_beacon_marker_icon.rpak", RuiCalculateDistanceSortKey( localViewPlayer.EyePosition(), pos ) )
@@ -1918,18 +2356,139 @@ void function CreateHarvesterWorldIcon( entity harvester )
 	RuiKeepSortKeyUpdated( rui, true, "pos" )
 	file.harvesterRuiTable[harvester] <- rui
 }
-#endif
 
+                            
+void function ServerCallback_Crafting_Notify_Player_On_Obit( entity notifyingPlayer, int notifyType, int cost, int itemIndex, int evoTier )
+{
+	if( !file.crafting_obit_notify )
+		return
 
+	if( !IsValid( notifyingPlayer ) || !notifyingPlayer.IsPlayer())
+		return
 
+	if(( notifyType < 0 ) || ( notifyType >= eCrafting_Obit_NotifyType.COUNT_ ))
+		return
+
+	                                                   
+	CraftingCategory ornull item = GetCategoryForIndex( itemIndex )
+	if ( item == null )
+		return
+	expect CraftingCategory( item )
+
+	string itemCategory = item.category
+	array<string> validItems = Crafting_GetLootDataFromIndex( itemIndex, notifyingPlayer )
+
+	                     
+	array< string > obit_SpecialCategories = [
+		"evo",
+                     
+           
+                 
+        
+	]
+
+	if( obit_SpecialCategories.contains( itemCategory ) )
+	{
+		Crafting_Obit_Notify_Single( notifyingPlayer, notifyType, cost, itemCategory, evoTier )
+	}
+	else
+	{
+		int numValidItems = validItems.len()
+		if( numValidItems > 0 )
+		{
+			                                                                 
+			array< string > prevItems = []
+			for ( int i = numValidItems - 1; i >= 0; i-- )
+			{
+				                         
+				if( !( prevItems.contains( validItems[i] )))
+				{
+					Crafting_Obit_Notify_Single( notifyingPlayer, notifyType, cost, validItems[i] )
+					prevItems.append( validItems[i] )
+				}
+			}
+		}
+	}
+}
+
+void function Crafting_Obit_Notify_Single( entity notifyingPlayer, int notifyType, int mats, string itemRef, int evoTier = -1 )
+{
+	if( !IsValid( notifyingPlayer ) || !notifyingPlayer.IsPlayer())
+		return
+
+	string notifierName = notifyingPlayer.GetPlayerName()
+	if( notifierName == "" )
+		return
+
+	if(( notifyType < 0 ) || ( notifyType > eCrafting_Obit_NotifyType.COUNT_ ))
+		return
+
+	string itemName = ""
+	vector itemColor = < 255, 255, 255 >
+
+	if ( itemRef == "evo" )
+	{
+		itemName = Localize( "#CRAFTING_ITEM_EVO" )
+		LootData existingArmorData = EquipmentSlot_GetEquippedLootDataForSlot( notifyingPlayer, "armor" )
+
+		if( evoTier >= 0 )
+		{
+			itemColor = GetKeyColor( COLORID_TEXT_LOOT_TIER0, evoTier )
+		}
+	}
+
+                    
+                               
+  
+                                                
+  
+                                     
+  
+                                
+  
+       
+	else if ( SURVIVAL_Loot_IsRefValid( itemRef ) )
+	{
+		LootData lootData = SURVIVAL_Loot_GetLootDataByRef( itemRef )
+		itemName = Localize( lootData.pickupString )
+		itemColor = GetKeyColor( COLORID_TEXT_LOOT_TIER0, SURVIVAL_Loot_GetLootDataByRef( itemRef ).tier )
+	}
+
+	vector playerColor = GetKeyColor( COLORID_MEMBER_COLOR0, notifyingPlayer.GetTeamMemberIndex())
+
+	if( itemName != "" )
+	{
+		switch( notifyType )
+		{
+                             
+			case eCrafting_Obit_NotifyType.IS_REQUESTING_MATERIALS:
+				Obituary_Print_Localized( Localize( "#CRAFTING_REQUEST_MATS_TO_CRAFT_ITEM", notifierName, mats, itemName ), playerColor, itemColor )
+				break
+         
+			case eCrafting_Obit_NotifyType.IS_CRAFTING_ITEM:
+				Obituary_Print_Localized( Localize( "#CRAFTING_PLAYER_IS_CRAFTING_ITEM", notifierName, itemName ), playerColor, itemColor )
+				break
+			case eCrafting_Obit_NotifyType.SUBSEQUENT_ITEM:
+				Obituary_Print_Localized( Localize( "#CRAFTING_SUBSEQUENT_ITEM", itemName ))
+				break
+			default:
+				break
+		}
+	}
+}
+      
+
+#endif          
 
 
                                
 #if SERVER
                                                                                                                                                                                        
  
-	                              
-		                                                                        
+	                                                          
+	 
+		                                                                                  
+	 
  
 
                            
@@ -1940,7 +2499,9 @@ void function CreateHarvesterWorldIcon( entity harvester )
 	                                           
 	 
 		                                                                         
-			                                                                                     
+		 
+			                                                                                               
+		 
 	 
  
 
@@ -1962,34 +2523,43 @@ void function CreateHarvesterWorldIcon( entity harvester )
 	                                                                  
 	                                                 
 	 
-		                                                                                         
+		                                                                                               
 	 
  
       
 
-                                                                                                              
+                                                                                                                                     
  
 	                                                                
+                 
+                                                                     
+                                                  
+                       
+
 	                                                                    
 
                            
-                       
-   
-                                                                                                                                  
+		                      
+		 
+			                                                                                                                                      
 
-                                                                                                                                  
-                                          
-   
+			                                                                                                                               
+			                       
+				                                       
+		 
+		    
+			                                                                                                                                          
       
-                                                                                                                                   
-      
-		                                                                                                                                
+                                                                                                                                        
        
 
-	                                                                                             
-		      
+	                     
+	 
+		                                                                                            
+			      
 
-	                                                      
+		                                                      
+	 
  
 
                                                                                        
@@ -2010,13 +2580,16 @@ void function CreateHarvesterWorldIcon( entity harvester )
 
 	                                                           
 
-	                                                                                                           
+	                                                                                                                 
  
 
 #endif
 
 int function Crafting_GetPlayerCraftingMaterials( entity player )
 {
+	if( !IsValid( player ) )
+		return 0
+
 	int playerMaterials = GetCurrentPlaylistVarBool( "crafting_enabled", true ) ? player.GetPlayerNetInt( "craftingMaterials" ) : 0
 	return playerMaterials
 }
@@ -2034,9 +2607,6 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 }
 
 #endif
-
-
-
 
 
                                 
@@ -2336,7 +2906,8 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 				                                                
 				                                                     
 
-				                                                                                                                                       
+				                  
+				                                                                                                                                                  
 				                                                                               
 					                                                       
 
@@ -2382,6 +2953,7 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 	                          
 
 	                                                                                                                   
+
 	                                        
 	                                                                                           
 
@@ -2495,7 +3067,7 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 	 
  
 
-
+       
                                                          
                                                                    
  
@@ -2504,15 +3076,15 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 	                                               
 	                                             
 	                      
- 	                                                          
- 	                                                         
+ 	                                                                                            
+	                                                                                           
 
 	                                          
 	 
 		                                    
 		                                                            
 		                                                                           
-	 	                                                
+		                                                                                  
 
 	 
 	                                         
@@ -2520,12 +3092,12 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 		                                    
 		                                                          
 		                                                                         
-	 	                                               
+		                                                                                 
 	 
-
  
+             
 
-#endif
+#endif          
 
 #if CLIENT
 void function OnWorkbenchClusterCreated( entity target )
@@ -2645,6 +3217,12 @@ string function Crafting_Workbench_UseTextOverride( entity ent )
 	CustomUsePrompt_SetSourcePos( ent.GetOrigin() + ( ent.GetScriptName() == HARVESTER_SCRIPTNAME ? < 0, 0, 30 > : <0,0,-20> ) )
 
 	CustomUsePrompt_SetText( Localize("#CRAFTING_WORKBENCH_USE_PROMPT") )
+
+                            
+                               
+                                                                      
+       
+
 	CustomUsePrompt_SetLineColor( GetCraftingColor() )
 
 	if ( PlayerIsInADS( player ) )
@@ -2665,6 +3243,12 @@ void function UseCraftingWorkbench( entity bench, entity player, int pickupFlags
 	#endif
 
 	if ( player.IsInventoryOpen() )
+		return
+
+	if( player.Player_IsSkywardLaunching() )
+		return
+
+	if( player.Player_IsSkywardFollowing() )
 		return
 
 	if ( pickupFlags & USE_INPUT_LONG )
@@ -2691,29 +3275,53 @@ void function UseCraftingWorkbench( entity bench, entity player, int pickupFlags
 	}
 }
 
+#if SERVER
+                                                                  
+ 
+	                                                
+
+	                         
+		      
+
+	                                                 
+	                                                
+	                             
+	                                           
+	                                 
+	                                            
+	                                             
+	                               
+
+	                               
+	                          
+
+	            
+		                       
+		 
+			                                                   
+			                                                                                 
+			                                                                                                                  
+			                              
+			                         
+ 		 
+	 
+
+	              
+	 
+		                                              
+			     
+
+		           
+	 
+ 
+#endif         
+
 void function WorkbenchThink( entity ent, entity playerUser )
 {
-#if SERVER
-	                                                   
-	                                   
-	                              
-#endif
-
 	ExtendedUseSettings settings = WorkbenchExtendedUseSettings( ent, playerUser )
 
 	ent.EndSignal( "OnDestroy" )
 	playerUser.EndSignal( "StartPhaseShift" )
-
-	OnThreadEnd(
-		function() : ( playerUser )
-		{
-			#if SERVER
-			                                                                                                             
-			                                  
-			                             
-			#endif
-		}
-	)
 
 	waitthread ExtendedUse( ent, playerUser, settings )
 }
@@ -2756,9 +3364,12 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	                               
 		      
 
-	                               
-	                               
-	                          
+	                                         
+		      
+
+	                                         
+		      
+
 	                         
 
 	              
@@ -2798,6 +3409,10 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
                                                     
                                                                                                    
  
+                            
+                                  
+       
+
 	                                                 
 	                                                
 	                             
@@ -2832,6 +3447,7 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 				                                                                                    
 				                    
 
+				                              
 				                                                                       
 
 				          
@@ -2875,6 +3491,8 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 		                                                                                                   
 		      
 	 
+
+	                                                    
 
 	                                                                                                                                        
 	                                                                        
@@ -2946,6 +3564,10 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 		 
 	 
 
+                            
+                                  
+       
+
 	                                                               
 
 	                   
@@ -2983,19 +3605,21 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 		                      
 		                                                                          
 		                                                                                    
+		                                           
+
 		       
-			                      
-				                                                            
+		                                                                             
 		      
-		                                                                                                  
+
+		                                                                                             
 	 
 	    
 	 
 		                                                                                            
 	 
 
-
 	                    
+	                
  	                          
 	                             
 	 
@@ -3045,16 +3669,17 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 				                
 					               
 
-				                
+				                                 
 					     
 
 				                                                                                       
 				                                         
 			 
 			                            
+			                                    
 		 
                      
-                                       
+                                                                          
    
                             
    
@@ -3072,6 +3697,12 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	                                                             
 
 	                                                                                                                                                                                           
+
+                             
+	                                                
+		                               
+			                                                                                                                    
+       
 
 	                                              
 	                        
@@ -3111,11 +3742,54 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
                                  
   
                                        
-        
+  
+                                       
+  
+                                                                
   
        
 
 	                                                           
+
+                                         
+                           
+                                 
+  
+                      
+  
+                                       
+  
+                      
+  
+
+                    
+  
+                                         
+                                                             
+
+        
+
+                         
+                                                
+
+
+                     
+                                                             
+   
+                                                             
+    
+                      
+         
+    
+   
+
+                                                       
+                              
+                                                           
+
+        
+  
+       
 
 	                                             
 	                          
@@ -3169,8 +3843,34 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	                                                           
  
 
+                                                                
+ 
+	                          
+	                                                                                          
+	                                                                   
+
+	                                      
+	                                                                                                 
+	                                                  
+
+	                       
+	 
+		           
+		                    
+			                            
+		    
+			                   
+	 
+
+	                
+ 
+
                                                                         
  
+                            
+                                    
+       
+
 	                                                                                 
 	                                                                                                                             
 
@@ -3182,6 +3882,11 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
  
 
                                                                                                                                                         
+ 
+	                                               
+ 
+
+                                                                        
  
 	                            
 	                  
@@ -3235,12 +3940,16 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 
                                                                          
  
+                            
+                                    
+       
+
 	        
 	                          
 		      
 
 	                                                                                 
-	                                                         
+	                                                                                  
 
 	                                                                                 
 	                                                                   
@@ -3266,7 +3975,12 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	                                                       
 
 	                                                                                   
-	                                                        
+
+	                      
+	 
+		                                                        
+	 
+
 	                                       
 	                        
 	                         
@@ -3274,11 +3988,22 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	            
 		                                                             
 		 
-			                      
-				                                                      
+			                  
+			 
+				                       
+				 
+					                                                      
+				 
+				    
+				 
+					                  
+				 
+			 
 
-			                        
+			                       
+			 
 				                
+			 
 		 
 	 
 
@@ -3299,7 +4024,23 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	                                                     
 		                                      
  
-#endif
+#endif          
+
+int function EnsureValidEvoTier( int evoTier )
+{
+
+	if( evoTier > MAX_ARMOR_EVO_TIER )
+		return MAX_ARMOR_EVO_TIER
+
+	                     
+	if( evoTier == 4  )
+		return MAX_ARMOR_EVO_TIER
+
+	if( evoTier < -1 )
+		return -1
+
+	return evoTier
+}
 
 bool function Crafting_IsItemCurrentlyOwnedByAnyPlayer( entity itemEnt )
 {
@@ -3346,7 +4087,12 @@ array< string > function GenerateCraftingItemsInCategory( entity player, Craftin
                     
                                                        
   
-                                                                      
+                                                                                                                                                         
+   
+                                                                  
+                              
+   
+                                                                                                                               
    
                                                                   
                               
@@ -3387,17 +4133,29 @@ array< string > function GenerateCraftingItemsInCategory( entity player, Craftin
 	return listToCheck
 }
 
+                            
+void function Crafting_Obit_Items_Notify_Teammates( entity notifyingplayer, int notifyType, int cost, int itemIndex, int evoTier = -1 )
+{
+	if( file.crafting_obit_notify )
+	{
+		int evoTierToUse = EnsureValidEvoTier( evoTier )
+
+		#if SERVER
+			                                                                                                              
+		#elseif CLIENT
+			Remote_ServerCallFunction( "ClientCallback_Crafting_Notify_Teammates_On_Obit", notifyType, cost, itemIndex, evoTierToUse )
+		#endif
+	}
+}
+      
 
 CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 {
 	int craftingRotation = categoryToCheck.rotationStyle
 
 	                                                                   
-                   
-                                                                                                                                                                                                                                  
-     
-	if ( craftingRotation == eCraftingRotationStyle.PERMANENT || craftingRotation == eCraftingRotationStyle.SEASONAL || craftingRotation == eCraftingRotationStyle.LOADOUT_BASED )
-      
+
+	if ( CheckCraftingRotation( craftingRotation ) )
 	{
 		Assert( categoryToCheck.bundlesInCategory.len() != 0, "CRAFTING: Bundle list in category " + categoryToCheck.category + " is empty" )
 		return categoryToCheck.bundlesInCategory[categoryToCheck.bundleStrings.top()]
@@ -3444,6 +4202,30 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 	return categoryToCheck.bundlesInCategory[ categoryToCheck.bundleStrings[rotationIndex] ]
 }
 
+bool function CheckCraftingRotation( int craftingRotation )
+{
+	if ( craftingRotation == eCraftingRotationStyle.PERMANENT )
+		return true
+
+	if ( craftingRotation == eCraftingRotationStyle.SEASONAL )
+		return true
+
+	if ( craftingRotation == eCraftingRotationStyle.LOADOUT_BASED )
+		return true
+
+                    
+                                                       
+             
+       
+
+	                   
+	                                                                
+		           
+	        
+
+	return false
+}
+
 #if SERVER
                                                                                
  
@@ -3477,9 +4259,10 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 
                                                         
  
-	                  
-	                              
-	                         
+	                        
+	 
+		                                          
+	 
 
 	                       
 	                                             
@@ -3511,6 +4294,10 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 
                                                                                    
  
+                            
+                                    
+       
+
 	                                                
 	                             
 	                                           
@@ -3539,11 +4326,19 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 				                                                                                                         
 				                    
 
-				                                                                       
+				                              
+				                                                                                                   
+				                                      
+
+				                                                                                               
+				                                                                                                                                
+				                             
+
+				                                                                  
 			 
 
 			                                         
-			                                                                                              
+			                                                                                               
 		 
 	 
 
@@ -3586,6 +4381,103 @@ CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 	
 	                                                 
  
+       
+                                                            
+ 
+	                                                 
+	 
+		                          
+		 
+			                                                                                         
+			 
+				                                     
+				     
+			 
+		 
+	 
+ 
+      
+
+
+                                                                                                                                         
+ 
+	                              
+		      
+
+	                              
+		      
+
+	                                               
+	                                                                                              
+		      
+
+	                                                         
+	 
+		              
+		                                                                                   
+	 
+	    
+	 
+		                                                                                     
+	 
+
+	                                                                             
+ 
+
+                            
+                                                                                                                                         
+ 
+	                                
+		      
+
+	                                    
+		      
+
+	                                                                           
+		      
+
+	               
+		      
+
+	                                                                                                              
+	                         
+	                                                               
+	                   
+		      
+
+	                               
+	                                                                                                     
+	 
+		                                                      
+	 
+
+	                                                                      
+	                             
+	 
+		                                                 
+			                                                                                                                                                             
+	 
+ 
+
+                                                  
+ 
+	                                             
+		            
+
+	                          
+
+	                                                  
+	 
+		                                                      
+		           
+	 
+
+	                                                                        
+	                                                     
+	                                                    
+ 
+      
+
 #endif          
 
 #if DEV
@@ -3593,21 +4485,21 @@ void function DEV_PrintUsedHarvesters()
 {
 	if( !file.harvestersUseLinkEnts )
 	{
-		printt( "----- Used Harvesters Table:"  )
+		DEV_Crafting_Print( "----- Used Harvesters Table:"  )
 		foreach( player, usedHarvestersArray in file.usedHarvesters )
 		{
-			printt( "	- Player: " + player )
+			DEV_Crafting_Print( format( "	- Player: %s", string( player )))
 			foreach( usedHarvester in usedHarvestersArray )
 			{
-				printt( "	--- used Harvester: " + usedHarvester )
+				DEV_Crafting_Print( format( "	--- used Harvester: %s ", string( usedHarvester )))
 			}
 		}
 
 	}
 	else
 	{
-		printt( "----- file.harvestersUseLinkEnts == true."  )
-		printt( "----- usedHarvesters Table not used."  )
+		DEV_Crafting_Print( "----- file.harvestersUseLinkEnts == true."  )
+		DEV_Crafting_Print( "----- usedHarvesters Table not used."  )
 	}
 }
 
@@ -3615,7 +4507,17 @@ void function DEV_Crafting_PrintsOn( bool isOn = true )
 {
 	file.devPrintsOn = isOn
 }
+
+void function DEV_Crafting_Print( string printThis )
+{
+		if( file.devPrintsOn )
+		{
+			printt( format( "CRAFTING: %s ", printThis ))
+		}
+}
+
 #endif       
+
 
 
 bool function Crafting_Workbench_IsNotBusy( entity player, entity ent, int useFlags )
@@ -3675,7 +4577,7 @@ array<string> function Crafting_GetLootDataFromIndex( int index, entity player )
 	}
 
                     
-                                                                                       
+                                                                                                                          
       
 		if ( item.category == "ammo" || item.category == "evo" )
        
@@ -3709,7 +4611,10 @@ CraftingCategory ornull function GetCategoryForIndex( int index )
 #if CLIENT
 void function ServerCallback_CL_RebuildUsedHarvestersInfo( entity harvester )
 {
-	entity player = GetLocalClientPlayer()
+	if( !IsValid( harvester ) )
+		return
+
+	entity player = GetLocalViewPlayer()
 	UsedHarvestersTable_AddHarvester( player, harvester )
 }
 
@@ -3840,6 +4745,27 @@ void function DEV_Crafting_TogglePreMatchRotation()
 		OnWaitingForPlayers_Client()
 	}
 }
+
+void function DEV_Crafting_PrintUsedHarvesterEHIs()
+{
+	entity player = GetLocalViewPlayer()
+	EHI playerEHI = ToEHI( player )
+
+	if( playerEHI in file.usedHarvesterEHIs )
+	{
+		printt( format( "Used Harvester EHIs for %s", string( player ) ) )
+		array< EHI > usedHarvesterEHIs = file.usedHarvesterEHIs[ playerEHI ]
+		foreach( harvesterEHI in usedHarvesterEHIs )
+		{
+			printt( "Used Harvester EHI == " + harvesterEHI )
+		}
+	}
+	else
+	{
+		printt( format( "%s has no used EHIs", string( player ) ) )
+	}
+}
+
 #endif      
 
 void function OnWaitingForPlayers_Client()
@@ -3855,12 +4781,13 @@ void function OnWaitingForPlayers_Client()
 
 	file.gameStartRuiCreated = true
 	file.gameStartRui.append( RuiCreate( $"ui/crafting_game_start.rpak", clGlobal.topoFullScreen, RUI_DRAW_POSTEFFECTS, 1 ) )
+
 	for ( int i = 0; i < 6; i++ )
 	{
 		var rui = SetupWorkbenchPreview( file.gameStartRui[0], i , "rotation" + i, false )
 		file.gameStartRui.append( rui )
 		                                  
-			                                                  
+		                                                  
 	}
 
 	thread GameStart_CleanupThread()
@@ -3900,13 +4827,12 @@ void function UICallback_PopulateCraftingPanel( var button )
 	var rui = Hud_GetRui( button )
 	if ( rui == null )
 		return
-
 	                               
 	for ( int i = 0; i < 6; i++ )
 	{
 		var nestedRui = SetupWorkbenchPreview( rui, i , "rotation" + i, false )
 		RuiSetBool( nestedRui, "shouldDisplayCost", false )
-		if ( i == 1 || i == 3 )
+		if ( i == 1 || i == 3 || i == 5 )
 			RuiSetBool( nestedRui, "shouldDisplayRotation", true )
 	}
 }
@@ -3927,7 +4853,7 @@ var function SetupWorkbenchPreview( var baseRui, int index, string uiHandle, boo
 	array< string > validItemList
 	if ( itemRefOverride == "" )
 	{
-		validItemList = Crafting_GetLootDataFromIndex( index, GetLocalClientPlayer() )
+		validItemList = Crafting_GetLootDataFromIndex( index, GetLocalViewPlayer() )
 	} else {
 		validItemList.append( itemRefOverride )
 	}
@@ -3947,7 +4873,8 @@ var function SetupWorkbenchPreview( var baseRui, int index, string uiHandle, boo
 		int cost = item.itemToCostTable[refString]
 
 		LootData lootRef = SURVIVAL_Loot_GetLootDataByRef( refString )
-		RuiSetImage( rui, "iconImage", lootRef.hudIcon )
+		asset hudIcon = lootRef.craftingIcon != $"" ? lootRef.craftingIcon : lootRef.hudIcon
+		RuiSetImage( rui, "iconImage", hudIcon )
 		RuiSetInt( rui, "lootTier", lootRef.tier )
 
 		if ( lootRef.lootType == eLootType.MAINWEAPON )
@@ -3981,7 +4908,8 @@ void function OnGameStartedPlaying_Client()
 	}
 
 	file.fullmapRui.append( RuiCreate( $"ui/crafting_fullmap.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, 20 ) )
-	RuiTrackInt( file.fullmapRui[0], "craftingMaterials", GetLocalClientPlayer(), RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "craftingMaterials" ) )
+	RuiTrackInt( file.fullmapRui[0], "craftingMaterials", GetLocalViewPlayer(), RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "craftingMaterials" ) )
+
 	for ( int i = 0; i < 6; i++ )
 	{
 		var rui = SetupWorkbenchPreview( file.fullmapRui[0], i, "rotation" + i, false )
@@ -3995,10 +4923,9 @@ void function OnGameStartedPlaying_Client()
 	file.fullmapInitialized = true
 
 	#if DEV
-	if( file.devPrintsOn )
-		printt( "CLIENT: Player Started Playing: " + GetLocalClientPlayer() )
-	#endif
-	
+	DEV_Crafting_Print( format( "CLIENT: Player Started Playing: %s", string( GetLocalViewPlayer() ) ) )
+	#endif       
+
 	Remote_ServerCallFunction( "ClientCallback_PlayerStartedPlaying" )
 
 	                             
@@ -4046,7 +4973,7 @@ void function OnGameStartedPlaying_Client()
 
 void function OnPlayerMatchStateChanged( entity player, int newState )
 {
-	if ( player != GetLocalClientPlayer() )
+	if ( player != GetLocalViewPlayer() )
 		return
 
 	if ( newState == ePlayerMatchState.NORMAL )
@@ -4086,14 +5013,18 @@ void function Crafting_Workbench_OpenCraftingMenu( entity workbench )
 	CommsMenu_Shutdown( false )
 	HideScoreboard()
 
-	if ( !CommsMenu_CanUseMenu( GetLocalClientPlayer(), eChatPage.CRAFTING ) )
+	if ( !CommsMenu_CanUseMenu( GetLocalViewPlayer(), eChatPage.CRAFTING ) )
 		return
 
-	if ( Bleedout_IsBleedingOut( GetLocalClientPlayer() ) )
+	if ( Bleedout_IsBleedingOut( GetLocalViewPlayer() ) )
 		return
+
+                           
+	file.craftingItems_ClientList.clear()
+       
 
 	PushLockFOV(0.2)
-	CommsMenu_OpenMenuTo( GetLocalClientPlayer(), eChatPage.CRAFTING, eCommsMenuStyle.CRAFTING, false )
+	CommsMenu_OpenMenuTo( GetLocalViewPlayer(), eChatPage.CRAFTING, eCommsMenuStyle.CRAFTING, false )
 }
 
 
@@ -4112,7 +5043,9 @@ bool function Crafting_OnMenuItemSelected( int index, var menuRui )
 	}
 
 	expect CraftingCategory( item )
-	validItemList = Crafting_GetLootDataFromIndex( index, GetLocalClientPlayer() )
+	entity player = GetLocalViewPlayer()
+
+	validItemList = Crafting_GetLootDataFromIndex( index, player )
 
 	int cost
 	bool canBuy = true
@@ -4123,21 +5056,29 @@ bool function Crafting_OnMenuItemSelected( int index, var menuRui )
 
 		if ( item.category == "evo" )
 		{
-			LootData existingArmorData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalClientPlayer(), "armor" )
+			LootData existingArmorData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalViewPlayer(), "armor" )
 			if ( existingArmorData.ref.find( "evolving" ) == -1 )
 			{
 				canBuy = false
 			}
-			else
+			else if ( existingArmorData.tier >= 5 )
 			{
-				if ( existingArmorData.tier >= 5 )
-					canBuy = false
+
+				canBuy = false
 			}
+			                                                         
 		}
                      
                                         
    
-                                                             
+                                             
+                 
+       
+                  
+   
+                                              
+   
+                                                                           
                  
        
                   
@@ -4149,7 +5090,7 @@ bool function Crafting_OnMenuItemSelected( int index, var menuRui )
 		canBuy = false
 	}
 
-	bool canAfford = Crafting_GetPlayerCraftingMaterials( GetLocalClientPlayer() ) >= cost
+	bool canAfford = Crafting_GetPlayerCraftingMaterials( player ) >= cost
 
 	                                       
 	if (canBuy && canAfford)
@@ -4157,10 +5098,25 @@ bool function Crafting_OnMenuItemSelected( int index, var menuRui )
 		Remote_ServerCallFunction( "ClientCallback_InitializeCraftingAtWorkbench", index )
 		Crafting_Workbench_CloseCraftingMenu()
 		return true
-	} else {
+	}
+	else
+	{
 		CraftingBundle bundle = GetBundleForCategory( item )
 		RuiSetGameTime( bundle.attachedRui[index], "invalidSelectionTime", Time() )
 		RuiSetGameTime( menuRui, "invalidSelectionTime", Time() )
+
+                                                        
+		                                                                        
+		if( file.crafting_obit_notify )
+		{
+			int materialsNeeded = cost - Crafting_GetPlayerCraftingMaterials( player )
+			if(( canBuy ) && ( materialsNeeded > 0 ))
+			{
+				Crafting_Obit_Items_Notify_Teammates( player, eCrafting_Obit_NotifyType.IS_REQUESTING_MATERIALS, materialsNeeded, index )
+			}
+		}
+        
+
 		return false
 	}
 
@@ -4197,8 +5153,11 @@ void function Crafting_OnWorkbenchMenuClosed( bool instant )
 
 	Remote_ServerCallFunction( "ClientCallback_RegisterClosedCraftingMenu" )
 	PopLockFOV( instant ? 0.0 : 0.1 )
-}
 
+                           
+	file.craftingItems_ClientList.clear()
+                                
+}
 
 void function CreateWorkbenchWorldIcon( entity workbench, bool isLimitedStock = false )
 {
@@ -4311,6 +5270,12 @@ void function ServerCallback_UpdateWorkbenchVars()
 
 void function ServerCallback_PromptNextHarvester( entity playerBeingAddressed, entity harvester )
 {
+	if( !IsValid( harvester ) )
+		return
+
+	if( !IsValid( playerBeingAddressed ) )
+		return
+
 	if ( ShouldMuteCommsActionForCooldown( GetLocalViewPlayer(), eCommsAction.REPLY_CRAFTING_NEXT_HARVESTER_OR_WORKBENCH, null) )
 		return
 
@@ -4367,12 +5332,12 @@ void function Crafting_PopulateItemRuiAtIndex( var rui, int index )
 		return
 
 	expect CraftingCategory( item )
-	validItemList = Crafting_GetLootDataFromIndex( index, GetLocalClientPlayer() )
+	validItemList = Crafting_GetLootDataFromIndex( index, GetLocalViewPlayer() )
 
 	int cost
 	bool canBuy = true
                     
-                                                                                        
+                                                                                                                                                                
       
 		if ( validItemList.len() != 0 && item.category != "evo" )
        
@@ -4382,7 +5347,9 @@ void function Crafting_PopulateItemRuiAtIndex( var rui, int index )
 
 
 		LootData lootRef = SURVIVAL_Loot_GetLootDataByRef( validItemList[0] )
-		RuiSetImage( rui, "icon", lootRef.hudIcon )
+		asset hudIcon = lootRef.craftingIcon != $"" ? lootRef.craftingIcon : lootRef.hudIcon
+		RuiSetImage( rui, "icon", hudIcon )
+		printt("CRAFTING LOOT ICON : " + lootRef.hudIcon)
 		RuiSetInt( rui, "tier", lootRef.tier )
 		if ( lootRef.lootType == eLootType.MAINWEAPON )
 			RuiSetBool( rui, "isWeapon", true )
@@ -4432,7 +5399,7 @@ void function Crafting_PopulateItemRuiAtIndex( var rui, int index )
 		RuiSetImage( rui, "icon", $"rui/hud/gametype_icons/survival/crafting_evo_points" )
 		RuiSetBool( rui, "isWeapon", true )
 
-		LootData existingArmorData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalClientPlayer(), "armor" )
+		LootData existingArmorData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalViewPlayer(), "armor" )
 		if ( existingArmorData.ref.find( "evolving" ) == -1 )
 		{
 			canBuy = false
@@ -4450,7 +5417,22 @@ void function Crafting_PopulateItemRuiAtIndex( var rui, int index )
                                                                              
                                        
 
-                                                             
+                                                           
+    
+                 
+    
+       
+    
+                  
+    
+   
+                                                                         
+   
+                                                
+                                                                                    
+                                       
+
+                                                                                         
     
                  
     
@@ -4468,13 +5450,444 @@ void function Crafting_PopulateItemRuiAtIndex( var rui, int index )
 	RuiSetInt( rui, "cost", cost )
 	RuiSetString( rui, "rotationStyle", GetEnumString( "eCraftingRotationStyle", item.rotationStyle ) )
 
-	bool canAfford = Crafting_GetPlayerCraftingMaterials( GetLocalClientPlayer() ) >= cost
+	bool canAfford = Crafting_GetPlayerCraftingMaterials( GetLocalViewPlayer() ) >= cost
 	RuiSetBool( rui, "isEnabled", canBuy && canAfford )
 
 	CraftingBundle bundle = GetBundleForCategory( item )
 	bundle.attachedRui[index] <- rui
+
+                           
+	Add_CraftingItem_To_ClientList( index, rui, cost, canBuy, canAfford )
+       
 }
-#endif
 
+                          
+                                                                                             
+void function Add_CraftingItem_To_ClientList( int index, var rui, int cost, bool canBuy, bool canAfford )
+{
+	int playerMaterials = Crafting_GetPlayerCraftingMaterials( GetLocalViewPlayer() )
 
+	                                                           
+	foreach( itemInfo in file.craftingItems_ClientList )
+	{
+		if( itemInfo.index == index )
+		{
+			itemInfo.rui = rui
+			itemInfo.cost = cost
+			itemInfo.canBuy = canBuy
+			itemInfo.canAfford = playerMaterials >= cost
+			return
+		}
+	}
+
+	CraftingItemInfo newItem
+	newItem.index = index
+	newItem.rui = rui
+	newItem.cost = cost
+	newItem.canBuy = canBuy
+	newItem.canAfford = playerMaterials >= cost
+
+	file.craftingItems_ClientList.append( newItem )
+}
+
+                                                                                     
+void function Update_CraftingItems_Availabilities()
+{
+	int playerMaterials = Crafting_GetPlayerCraftingMaterials( GetLocalViewPlayer() )
+
+	foreach( item in file.craftingItems_ClientList )
+	{
+		if( IsValid( item.rui ) )
+		{
+			bool newCanAfford = playerMaterials >= item.cost
+			                                                                                                                  
+
+			item.canAfford = newCanAfford
+			RuiSetBool( item.rui, "isEnabled", item.canBuy && item.canAfford )
+		}
+	}
+}
+                                
+
+#endif          
+
+                           
+          
+                                                                                                                                     
+ 
+                                                                                                                    
+                                                                
+                                                                   
+
+                                                                                                 
+
+                          
+                                   
+                               
+  
+                                                                                                                                                       
+                                                 
+                                                                 
+
+                                   
+                                                          
+                                        
+
+                                    
+                                 
+
+                         
+                                 
+                                         
+              
+   
+          
+                                 
+                                       
+         
+
+          
+                                 
+                                       
+         
+
+          
+                                 
+                                       
+         
+   
+
+                                                     
+                            
+
+                                                 
+                                   
+  
+
+                                                                     
+
+                                     
+                                          
+
+                            
+                                       
+
+                                                      
+                           
+  
+                                         
+                                  
+                              
+  
+
+                                   
+
+                                                                                                  
+                                                             
+
+                               
+                                         
+
+                                                                                             
+                                                                                            
+                                                                                                                 
+                                  
+
+         
+                                       
+                                 
+
+                                            
+                                           
+                                                
+
+                                    
+                                             
+                                            
+                                               
+                                               
+                                               
+                                              
+
+                    
+                                                
+       
+
+             
+                                
+                                                                                            
+                                                                                               
+
+                                                               
+                                                   
+                                               
+
+                                         
+                               
+                               
+
+                                           
+                                      
+
+                                                  
+                                                  
+
+                                                   
+                                                  
+
+                                      
+                         
+                                 
+  
+                                                                                                   
+                                                                                                                     
+                                                                                                                  
+                                                                                                                          
+                                                                                  
+                                                                                    
+                                         
+
+                    
+  
+
+                                                          
+
+                                                                              
+                                                                      
+                                                                   
+
+                    
+ 
+
+                                                             
+ 
+                                                                                      
+        
+
+                                 
+                                   
+
+                                         
+
+                                                        
+
+                                                                                                                                                                                                    
+                                                         
+
+             
+                         
+   
+                           
+    
+                        
+    
+   
+  
+
+              
+ 
+
+                                                         
+ 
+                                                                  
+ 
+
+                                                                     
+ 
+                                                         
+                                  
+  
+                                                    
+   
+                               
+                                                                                       
+    
+                                           
+                                        
+    
+
+                                                   
+                                        
+    
+                          
+     
+                                          
+     
+        
+     
+                                               
+                                                                 
+                                                     
+     
+    
+                                      
+                
+   
+  
+                                                 
+                  
+ 
+
+                                                                                
+ 
+                                                        
+
+                                                             
+                                                          
+
+                               
+  
+                                                   
+   
+                                            
+                                          
+                                          
+   
+
+                                          
+                                        
+                                                                                        
+                                                                                        
+                                       
+                         
+                                                      
+
+                                                                                                                                           
+                                
+                                                                                   
+                                   
+                                                                                                                                                                     
+                                                                                      
+                      
+
+                                                                 
+                                            
+                                           
+  
+ 
       
+                                
+
+                      
+
+                
+                       
+
+                                                         
+ 
+                                              
+                                  
+           
+                               
+                                                     
+         
+
+                                             
+                 
+ 
+
+                                                           
+ 
+                                              
+                                  
+           
+                                       
+                                                     
+         
+                 
+ 
+
+          
+                                                                                
+ 
+                                          
+ 
+               
+
+          
+                                                                   
+ 
+                                      
+        
+
+                                                                                       
+ 
+
+                                                    
+ 
+                                      
+        
+
+                                                
+ 
+
+                                                                                                
+ 
+                                                   
+
+                                                        
+                               
+                 
+                                    
+
+             
+                            
+   
+                              
+                                             
+
+                                                    
+   
+  
+
+            
+  
+                                                                                
+
+                                             
+                                             
+
+                              
+                                        
+      
+                                               
+
+                           
+                   
+      
+                   
+
+             
+  
+ 
+
+                                                          
+ 
+                                                                                     
+                             
+                            
+                                             
+
+                             
+                 
+
+                 
+ 
+
+                                                 
+ 
+                                                
+                             
+
+                                                 
+            
+
+              
+ 
+
+                                                
+ 
+                                                  
+ 
+                
+                     

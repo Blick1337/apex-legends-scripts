@@ -30,8 +30,10 @@ const asset SKYWARD_JUMPJETS_FRIENDLY = $"P_valk_jet_fly_ON"
 const asset SKYWARD_JUMPJETS_ENEMY = $"P_valk_jet_fly_ON"
 const asset SKYWARD_AFTERBURNER_FX = $"P_valk_launch_eng"
 const asset SKYWARD_RADIUS_FX = $"P_radius_marker"
-const float SKYWARD_LAUNCH_TIME = 5.5
+const float SKYWARD_LAUNCH_TIME = 5.0
 const float SKYWARD_LAUNCH_TIME_ARENAS = 2.0
+const float SKYWARD_LAUNCH_SLOW_TIME = 1.83
+const float SKYWARD_LAUNCH_SLOW_TIME_ARENAS = 0.67
 const float SKYWARD_TEAMMATE_ALIGN_TIME = 1
 
 
@@ -39,7 +41,7 @@ const float SKYWARD_ALLY_USE_DEBOUNCE_TIME = 1
 const float SKYWARD_VALK_USE_DEBOUNCE_TIME = 0.5
 
 const float SKYWARD_RADIUS = 300.0
-const float SKYWARD_MAX_HEIGHT = 6000
+const float SKYWARD_MAX_HEIGHT = 4500
 const float SKYWARD_MAX_HEIGHT_ARENAS = 1800
 
 const float SKYWARD_WAIT_TIME_BEFORE_LAUNCH = 2.0
@@ -110,6 +112,7 @@ void function MpAbilityValkSkyward_Init()
 		                                                             
 		                                                        
 		                                                        
+		                                            
 	#else
 		StatusEffect_RegisterEnabledCallback( eStatusEffect.skyward_embark, ValkUlt_ShowEmbarkUI )
 		StatusEffect_RegisterDisabledCallback( eStatusEffect.skyward_embark, ValkUlt_DestroyEmbarkUI )
@@ -189,6 +192,7 @@ void function OnPostTakeDamage( entity owner, var damageInfo )
 bool function OnWeaponAttemptOffhandSwitch_ability_valk_skyward( entity weapon )
 {
 	entity owner = weapon.GetWeaponOwner()
+	entity tactical = owner.GetOffhandWeapon( OFFHAND_TACTICAL )
 
 	#if CLIENT
 		if ( !PlayerHasPassive( owner, ePassives.PAS_VALK ) )
@@ -203,8 +207,14 @@ bool function OnWeaponAttemptOffhandSwitch_ability_valk_skyward( entity weapon )
 	float traceDist      = GetValkUltMaxHeight() + 40 + transitionDist                                            
 
 	TraceResults results = TraceHull( owner.GetOrigin(), owner.GetOrigin() + <0, 0, traceDist>, owner.GetPlayerMins(), owner.GetPlayerMaxs(), [ owner ], TRACE_MASK_PLAYERSOLID_BRUSHONLY , TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
-	if ( results.fraction < 1.0 )
+	if ( results.fraction < 1.0 )	
 	{
+
+		if( IsValid( tactical ) && !tactical.IsBurstFireInProgress() )
+		{
+			owner.CancelOffhandWeapon( OFFHAND_TACTICAL )
+		}
+
 		#if CLIENT
 			ValkUlt_ClearanceFailed( owner )
 		#endif
@@ -214,6 +224,11 @@ bool function OnWeaponAttemptOffhandSwitch_ability_valk_skyward( entity weapon )
                  
 		if ( GondolasAreActive() && IsPlayerInsideGondola( owner ) )
 		{
+			if( IsValid( tactical ) && !tactical.IsBurstFireInProgress() )
+			{
+				owner.CancelOffhandWeapon( OFFHAND_TACTICAL )
+			}
+
 			#if CLIENT
 				ValkUlt_ClearanceFailed( owner )
 			#endif
@@ -241,7 +256,6 @@ bool function OnWeaponAttemptOffhandSwitch_ability_valk_skyward( entity weapon )
 	}
 
 	                                            
-	entity tactical = owner.GetOffhandWeapon( OFFHAND_TACTICAL )
 	if ( tactical.IsBurstFireInProgress() )
 		return false
 
@@ -671,7 +685,7 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
                                                                                          
  
 	                         
-	                                                                      
+	                                                                                                                      
 	                                      
 
 	                                                                                
@@ -699,6 +713,10 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 	                                                     
 	 
 		                                               
+	 
+	                                                           
+	 
+		                                       
 	 
 
 	                                          
@@ -775,10 +793,14 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 			 
 				                                                                           
 
-				                                                              
-				                                                              
+				                     
+				 
+					                                                              
+					                                                              
 
-				                                                                                              
+					                                                                                              
+				 
+
 				                                                             
 
 				                                     
@@ -809,21 +831,31 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 				                                                                                                      
 				                                                                                                
 				                                                                                  
-				                                     
-					                                           
+				                     
+				 
+					                                     
+						                                           
 
-				                                                        
-				                               
+					                                                        
+					                               
 
-				                                    
-				                                                                                       
+					                                    
+					                                                                                       
+				 
 			 
 
 			                                                                                             
 			                                
-			                                                     
+			                      
 			 
-				                                              
+				                                                     
+				 
+					                                              
+				 
+				                                                          
+				 
+					                                      
+				 
 			 
 		 
 	 
@@ -1238,6 +1270,9 @@ void function ValkUlt_AllyUse( entity proxy, entity ally, int useInputFlags )
                                                                              
 void function ValkUlt_AllyCancel( entity ally )
 {
+	if( !IsValid( ally ) )
+		return
+
 	if ( ally.p.nextAllowUseValkUltTime > Time() )
 		return
 
@@ -1248,6 +1283,7 @@ void function ValkUlt_AllyCancel( entity ally )
 
 	#if SERVER
 		                                     
+
 		                                                                              
 		                                                                                
 	#endif
@@ -1562,8 +1598,8 @@ void function UpdateValkFlightRui( entity player, bool isInAir )
 		RuiSetBool( GetUltimateRui(), "isValkAirborn", showValkRui )
 		RuiSetBool( GetMinimapFrameRui(), "isValkAirborn", showValkRui )
 		RuiSetBool( GetMinimapYouRui(), "isValkAirborn", showValkRui )
-		if ( GetValkJetPackRui() != null )
-			RuiSetBool( GetValkJetPackRui(), "isValkAirborn", showValkRui )
+		if ( Valk_GetJetPackRui() != null )
+			RuiSetBool( Valk_GetJetPackRui(), "isValkAirborn", showValkRui )
 
 		if ( showValkRui )
 			thread Valk_EnableHudColorCorrection()
@@ -1605,8 +1641,8 @@ void function DestroyAllValkRui()
 		RuiSetBool( GetTacticalRui(), "isValkAirborn", false )
 	if ( GetUltimateRui() != null )
 		RuiSetBool( GetUltimateRui(), "isValkAirborn", false )
-	if ( GetValkJetPackRui() != null )
-		RuiSetBool( GetValkJetPackRui(), "isValkAirborn", false )
+	if ( Valk_GetJetPackRui() != null )
+		RuiSetBool( Valk_GetJetPackRui(), "isValkAirborn", false )
 	if ( GetMinimapFrameRui() != null )
 		RuiSetBool( GetMinimapFrameRui(), "isValkAirborn", false )
 	if ( file.countdownRui != null )
@@ -1630,6 +1666,24 @@ void function DestroyAllValkRui()
 #if SERVER
                                                    
  
+	                          
+ 
+#endif
+
+#if SERVER
+                                                                              
+ 
+	                          
+ 
+#endif
+
+                                                                                 
+                                                                                 
+                                                                                 
+
+#if SERVER
+                                               
+ 
 	                         
 		      
 
@@ -1645,28 +1699,30 @@ void function DestroyAllValkRui()
  
 #endif
 
-                                                                                 
-                                                                                 
-                                                                                 
-
-float function GetValkLaunchTime()
+array<float> function GetValkLaunchTimes()
 {
-	float launchTime
+	array<float> launchTimes
 
 	if ( !IsArenaMode() )
-		launchTime = GetCurrentPlaylistVarFloat( "valk_ult_launch_time", SKYWARD_LAUNCH_TIME )
+	{
+		launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_launch_time", SKYWARD_LAUNCH_TIME ) )
+		launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_slow_up_time", SKYWARD_LAUNCH_SLOW_TIME ) )
+	}
 	else
-		launchTime = GetCurrentPlaylistVarFloat( "valk_ult_launch_time_arenas", SKYWARD_LAUNCH_TIME_ARENAS )
+	{
+		launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_launch_time", SKYWARD_LAUNCH_TIME_ARENAS ) )
+		launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_slow_up_time", SKYWARD_LAUNCH_SLOW_TIME_ARENAS ) )
+	}
 
-	return launchTime
+	return launchTimes
 }
 
 
 table<string, float> function Helper_GetLaunchParams()
 {
 	table<string, float> res
-	float totalUpTime     = GetValkLaunchTime()
-	float slowUpTime      = GetCurrentPlaylistVarFloat( "valk_ult_slow_up_time", 1.0 / 3.0 * totalUpTime )
+	float totalUpTime     = GetValkLaunchTimes()[0]
+	float slowUpTime      = GetValkLaunchTimes()[1]
 	float fastUpTime      = totalUpTime - slowUpTime
 	float totalUpDistance = GetValkUltMaxHeight()
 	float slowUpDistance  = (1.0 / 20.0) * totalUpDistance

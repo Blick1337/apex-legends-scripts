@@ -202,14 +202,14 @@ void function StoryChallengeEvents_Init()
 						data.challengeFlavors.append( challengeFlav )
 						fileLevel.challengeToEventDataMap[ challengeFlav ] <- data
 					}
-					else Warning( "StoryChallenge event '%s' refers to bad challenge asset: %s", ItemFlavor_GetHumanReadableRef( ev ), string( GetSettingsBlockAsset( challengeBlock, "flavor" ) ) )
+					else Warning( "StoryChallenge event '%s' refers to bad challenge asset: %s", string(ItemFlavor_GetAsset( ev )), string( GetSettingsBlockAsset( challengeBlock, "flavor" ) ) )
 				}
 
 				if ( data.challengeFlavors.len() > 0 )
 				{
 					challengeGroupDatas.append( data )
 				}
-				else Warning( "StoryChallenge event '%s' has a group with no valid challenges", ItemFlavor_GetHumanReadableRef( ev ) )
+				else Warning( "StoryChallenge event '%s' has a group with no valid challenges", string(ItemFlavor_GetAsset( ev )) )
 			}
 		}
 
@@ -316,12 +316,12 @@ array<ItemFlavor> function GetActiveStoryChallengeEvents( int t )
 	return events
 }
 
-ItemFlavor ornull function GetStoryChallengeEventIfActive( int t, string challenge_name )
+ItemFlavor ornull function GetStoryChallengeEventIfActive( int t, string challengeGUIDString )
 {
 	Assert( IsItemFlavorRegistrationFinished() )
 	foreach ( ItemFlavor ev in GetAllItemFlavorsOfType( eItemType.calevent_story_challenges ) )
 	{
-		if ( ItemFlavor_GetHumanReadableRef( ev ) == challenge_name )
+		if ( ItemFlavor_GetGUIDString( ev ) == challengeGUIDString )
 		{
 			if ( CalEvent_IsActive( ev, t ) )
 			{
@@ -400,12 +400,17 @@ bool function StoryChallengeEvent_IsChallengeAvailableForPlayer( ItemFlavor even
 void function StoryEvent_PlayRadioVignetteForChapter( int chapter )
 {
 	                                                                                   
-	ItemFlavor event = GetItemFlavorByHumanReadableRef( "calevent_s12e04_s12e04_story_challenges" )
+	ItemFlavor event = GetItemFlavorByGUID( GetUniqueIdForSettingsAsset( $"settings/itemflav/calevent/s12e04/s12e04_story_challenges.rpak" ) )
 	var challengeGroupBlock  = StoryEvent_GetChapters( event )[chapter]
 	string radioVignetteBink = StoryEvent_GetRadioVignetteBink ( challengeGroupBlock )
 	string radioVignetteMiles = StoryEvent_GetRadioVignetteMilesEvent ( challengeGroupBlock )
 
-	thread PlayVideoMenu( false, radioVignetteBink, radioVignetteMiles, eVideoSkipRule.INSTANT, StoryEvent_OnRadioVignetteFinished )
+	VideoPlaySettings videoSettings
+	videoSettings.video = radioVignetteBink
+	videoSettings.milesAudio = radioVignetteMiles
+	videoSettings.videoCompleteFunc = StoryEvent_OnRadioVignetteFinished
+
+	thread PlayVideoMenu( false, videoSettings )
 }
 
 void function StoryEvent_OnRadioVignetteFinished()
@@ -430,15 +435,15 @@ void function StoryEvent_OnRadioVignetteFinished()
 #endif
 
 #if SERVER
-                                                                                               
+                                                                                                     
  
 	                          
 		      
 
-	                                                                                                               
+	                                                                                                                     
 	                                     
 	 
-		                                                                                                                     
+		                                                                                                                           
 		      
 	 
 
@@ -459,7 +464,7 @@ void function StoryEvent_OnRadioVignetteFinished()
 
 		                                                         
 		 
-			                                                                                                                         
+			                                                                                                                               
 			     
 		 
 
@@ -627,7 +632,7 @@ int function StoryEvent_GetChaptersProgress( entity player, ItemFlavor event )
 								completedChallenges++
 						}
 					}
-					else Warning( "StoryChallenge event '%s' refers to bad challenge asset: %s", ItemFlavor_GetHumanReadableRef( event ), string( GetSettingsBlockAsset( challengeBlock, "flavor" ) ) )
+					else Warning( "StoryChallenge event '%s' refers to bad challenge asset: %s", string(ItemFlavor_GetAsset( event )), string( GetSettingsBlockAsset( challengeBlock, "flavor" ) ) )
 
 					if(completedChallenges >= challenges.len())
 						chapter++
@@ -685,7 +690,7 @@ int function StoryEvent_GetActiveChapter( entity player, ItemFlavor event )
 						}
 					}
 					else
-						Warning( "StoryChallenge event '%s' refers to bad challenge asset: %s", ItemFlavor_GetHumanReadableRef( event ), string( GetSettingsBlockAsset( challengeBlock, "flavor" ) ) )
+						Warning( "StoryChallenge event '%s' refers to bad challenge asset: %s", string(ItemFlavor_GetAsset( event )), string( GetSettingsBlockAsset( challengeBlock, "flavor" ) ) )
 
 					if ( completedChallenges >= challenges.len() )
 					{

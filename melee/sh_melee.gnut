@@ -117,17 +117,19 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 
 	MakeItemFlavorSet( meleeSkinList, fileLevel.cosmeticFlavorSortOrdinalMap )
 
-	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_meleeskin_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-	entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-	entry.DEV_category = "character_meleeskins"
-	entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " Melee Skin"
-	entry.defaultItemFlavor = meleeSkinList[0]
+	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_meleeskin_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+	entry.category     = eLoadoutCategory.CHARACTER_MELEESKINS
+	#if DEV
+		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+		entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " Melee Skin"
+	#endif
+	entry.defaultItemFlavor   = meleeSkinList[0]
 	entry.validItemFlavorList = meleeSkinList
-	entry.isSlotLocked = bool function( EHI playerEHI ) {
+	entry.isSlotLocked        = bool function( EHI playerEHI ) {
 		return !IsLobby()
 	}
-	entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-	entry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
+	entry.isActiveConditions  = { [Loadout_Character()] = { [characterClass] = true, }, }
+	entry.networkTo           = eLoadoutNetworking.PLAYER_EXCLUSIVE
 	fileLevel.characterMeleeSkinLoadoutEntryMap[characterClass] <- entry
 
 	#if SERVER && DEV
@@ -449,8 +451,12 @@ void function CodeCallback_OnMeleePressed( entity attacker, entity meleeInputWea
 	if ( !AttackerCanStartMelee( attacker, meleeInputWeapon, meleeAttackWeapon ) )
 		return
 
+	entity currentWeapon = attacker.GetActiveWeapon( eActiveInventorySlot.mainHand )
+	bool restoreMainOffhandAfterMelee = ( IsValid( currentWeapon ) && currentWeapon.IsWeaponOffhand() && currentWeapon.GetWeaponSettingBool( eWeaponVar.offhand_restore_after_melee ) )
+	entity offhandToRestore = restoreMainOffhandAfterMelee ? currentWeapon : null
+
 	attacker.ClearOffhand( eActiveInventorySlot.mainHand )
-	attacker.PlayerMelee_StartAttack( PLAYER_MELEE_STATE_HUMAN_KICK_ATTACK )
+	attacker.PlayerMelee_StartAttack( PLAYER_MELEE_STATE_HUMAN_KICK_ATTACK, offhandToRestore )
 
 	                         
 	                                            
@@ -471,27 +477,27 @@ void function CodeCallback_OnMeleePressed( entity attacker, entity meleeInputWea
 			eyeTraceHitPos = eyeTrace.endPos
 
                 
-                                
-    
-                         
-                                                                                       
-                                                              
-     
-                                 
-                                    
-    
+			if( !IsValid( lungeTarget ) )
+			{
+				eyeTrace = TraceLine(
+					attacker.EyePosition(), attacker.EyePosition() + 150.0 * attacker.GetViewVector(),
+					[ attacker ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE
+				)
+				lungeTarget = eyeTrace.hitEnt
+				eyeTraceHitPos = eyeTrace.endPos
+			}
       
 		}
 
                   
-                                                                                                                                                             
+		if ( doorLungeEnabled && IsValid( lungeTarget ) && ( IsDoor( lungeTarget ) || lungeTarget.GetTargetName() == PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME ) )
        
-		if ( doorLungeEnabled && IsValid( lungeTarget ) && IsDoor( lungeTarget ) )
+                                                                            
         
 		{
 			meleeAttackWeapon.AddMod( "proto_door_kick" )
 
-			if ( !meleeAttackWeapon.HasMod( "melee_crypto_drone" ) )
+			if ( !meleeAttackWeapon.HasMod( "melee_crypto_drone" ) && !meleeAttackWeapon.HasMod( "melee_valk_helmet" ) && !meleeAttackWeapon.HasMod( "melee_loba_blunt" ))
 			{
 				meleeAttackWeapon.AddMod( "proto_door_kick_impact_table" )
 			}
@@ -541,6 +547,13 @@ void function CodeCallback_OnMeleeStartActivity( entity attacker, entity meleeAt
 				attacker.Lunge_LockPitch( true )
 		}
 	}
+
+	                                         
+                           
+            
+                               
+        
+       
 }
 #endif
 
@@ -658,14 +671,6 @@ void function CodeCallback_OnMeleeAttackAnimEvent( entity attacker, entity melee
 					                    
 					                          
 				 
-
-				                                         
-                              
-                                                                                                  
-      
-                                  
-      
-          
 
 				                                                                  
 			#endif

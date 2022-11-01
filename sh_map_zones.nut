@@ -16,6 +16,7 @@ global function MapZones_GetChromaBackgroundForZoneId
 #if SERVER
                                          
                                                      
+                                                    
                                              
                                           
                                               
@@ -42,6 +43,10 @@ global function MapZones_GetChromaBackgroundForZoneId
 
                                                      
                                                     
+
+               
+                                              
+                     
 #endif          
 
 #if (SERVER && DEV)
@@ -72,9 +77,13 @@ global enum eZonePop
 
 struct
 {
-	bool mapZonesInitialized = false
-	var mapZonesDataTable
+	bool            mapZonesInitialized = false
+	var             mapZonesDataTable
 	table<int, int> calculatedZoneTiers
+
+	#if SERVER
+		                                            
+	#endif
 } file
 
 const int INVALID_ZONE_ID = -1
@@ -87,16 +96,16 @@ string function GetDevNameForZoneId( int zoneId )
 const string EDITOR_CLASSNAME_ZONE_TRIGGER = "trigger_pve_zone"
 void function MapZones_SharedInit()
 {
-#if SERVER
-	                                                                                                 
+	#if SERVER
+		                                                                                                 
 
-	                                              
+		                                              
 
-	                                                        
-	                                                 
+		                                                        
+		                                                 
 
-	                                             
-#endif          
+		                                             
+	#endif          
 }
 
 const string FUNCNAME_OnPlayerEntersZone = "SCB_OnPlayerEntersMapZone"
@@ -105,11 +114,13 @@ void function MapZones_RegisterNetworking()
 	Remote_RegisterClientFunction( FUNCNAME_OnPlayerEntersZone, "int", 0, 128, "int", 0, 4 )
 }
 
+
 void function MapZones_RegisterDataTable( asset dataTableAsset )
 {
-	file.mapZonesDataTable = GetDataTable( dataTableAsset )
+	file.mapZonesDataTable   = GetDataTable( dataTableAsset )
 	file.mapZonesInitialized = true
 }
+
 
 string function GetZoneMiniMapNameForZoneId( int zoneId )
 {
@@ -118,12 +129,14 @@ string function GetZoneMiniMapNameForZoneId( int zoneId )
 	return zoneName
 }
 
+
 string function GetZoneNameForZoneId( int zoneId )
 {
 	Assert( zoneId < GetDataTableRowCount( file.mapZonesDataTable ) )
 	string zoneName = GetDataTableString( file.mapZonesDataTable, zoneId, GetDataTableColumnByName( file.mapZonesDataTable, "zoneName" ) )
 	return zoneName
 }
+
 
 string function MapZones_GetChromaBackgroundForZoneId( int zoneId )
 {
@@ -135,18 +148,20 @@ string function MapZones_GetChromaBackgroundForZoneId( int zoneId )
 	return chroma
 }
 
+
 int function MapZones_GetZoneIdForTriggerName( string triggerName )
 {
 	int zoneId = GetDataTableRowMatchingStringValue( file.mapZonesDataTable, GetDataTableColumnByName( file.mapZonesDataTable, "triggerName" ), triggerName )
 	return zoneId
 }
 
+
 string function GetZoneGroupForZoneId( int zoneId )
 {
 	Assert( zoneId < GetDataTableRowCount( file.mapZonesDataTable ) )
 
 	string name = ""
-	int column = GetDataTableColumnByName( file.mapZonesDataTable, "zoneGroup" )
+	int column  = GetDataTableColumnByName( file.mapZonesDataTable, "zoneGroup" )
 	if ( column >= 0 )
 		name = GetDataTableString( file.mapZonesDataTable, zoneId, column )
 
@@ -154,6 +169,7 @@ string function GetZoneGroupForZoneId( int zoneId )
 		return GetZoneNameForZoneId( zoneId )
 	return name
 }
+
 
 string function MapZones_GetZoneStatsRef( int zoneId )
 {
@@ -165,7 +181,7 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 		return ""
 
 	string statsRef = ""
-	int column = GetDataTableColumnByName( file.mapZonesDataTable, "statsRef" )
+	int column      = GetDataTableColumnByName( file.mapZonesDataTable, "statsRef" )
 	if ( column >= 0 )
 		statsRef = GetDataTableString( file.mapZonesDataTable, zoneId, column )
 
@@ -177,7 +193,7 @@ string function MapZones_GetZoneStatsRef( int zoneId )
                
  
 	                      
-	   		           
+	                   
 	                          
 
 	                  
@@ -187,13 +203,28 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 
 	                                   
 
-	          
+	             
 	               
 	                
 
 	               
  
                                 
+
+               
+                                                         
+ 
+	                   
+
+	                                 
+	 
+		                          
+			                                            
+	 
+
+	          
+ 
+                     
 
 
                                                                   
@@ -212,9 +243,9 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 
                                
  
-       
-	                         
-             
+	       
+		                         
+	             
 
 	                                
 		      
@@ -230,7 +261,6 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 	 
 		                                 
 		 
-
 			                                                                
 				        
 
@@ -272,7 +302,7 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 
                                                           
  
-	                 
+	                   
 	                          
 	                                      
 	 
@@ -294,6 +324,26 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 		             
 
 	                                             
+ 
+
+                                                                    
+ 
+	                    
+	                           
+	                                      
+	 
+		                                                          
+		                      
+			        
+
+		                             
+			        
+
+		                      
+		               
+	 
+
+	               
  
 
                                                             
@@ -325,7 +375,7 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 
                                                                               
  
-	                                                
+	                                                 
 	 
 		                     
 	 
@@ -379,10 +429,10 @@ string function MapZones_GetZoneStatsRef( int zoneId )
                                                                            
  
 	                       
-	                            
+	                             
 	 
 		                                 
-		                                           
+		                                            
 		 
 			                                     
 				        
@@ -407,7 +457,7 @@ string function MapZones_GetZoneStatsRef( int zoneId )
  
 	                                        
 	                                                    
-	                                  
+	                                   
 	 
 		                           
 			                   
@@ -443,33 +493,33 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 	                         
 	                                
 
-	                                  
-	                                      
-	                                          
-	                                    
 	                                        
-	                                       
-	                                   
-	                                       
-	                                     
-	                                     
+	                                            
+	                                            
+	                                             
+	                                        
+	                                        
+	                                        
+	                                        
+	                                        
+	                                        
 	                                                                 
 
 	                        
-	                  
-	                                            
-	                                              
+	                       
+	                                               
 	                                                
+	                                                   
 
 	                                                
 
-	                                                          
+	                                                           
 	 
 		                                                                     
 			        
 
 		                                                                   
-		                                                                         
+		                                                                              
 		                                           
 	 
  
@@ -520,7 +570,7 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 		      
 
 	                                                 
-	                                               
+	                                                
 	 
 		                                           
 		                           
@@ -537,7 +587,7 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 	                                                   
 
 	                                 
-	                                               
+	                                                
 	 
 		                                           
 		                           
@@ -553,13 +603,13 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 
                                                 
  
-	                                             
+	                                              
 	 
 		                                    
 			        
 
 		                                                       
-		                                      
+		                                       
 			                                
 	 
 
@@ -579,7 +629,7 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 
                                                                      
  
-	                                           
+	                                            
 		                                                           
 	                          
  
@@ -619,6 +669,38 @@ string function MapZones_GetZoneStatsRef( int zoneId )
 		                                     
 		                                     
 		                                  
+		                                       
+	 
+ 
+
+                                                     
+ 
+	                         
+		      
+
+	                               
+
+	                                               
+		                                               
+
+	                                                     
+		      
+
+	                                                
+	 
+		                                             
+		                            
+		         
+	 
+
+	            
+		                       
+		 
+			                         
+				      
+
+			                                              
+		 
 	 
  
 
@@ -635,7 +717,7 @@ string function MapZones_GetZoneStatsRef( int zoneId )
                                                               
  
 	                                        
-	                            
+	                             
 	 
 		                                                  
 		                        
@@ -647,10 +729,10 @@ string function MapZones_GetZoneStatsRef( int zoneId )
                                                                         
  
 	                         
-		              
+		                
 
-	                      
-	                                
+	                        
+	                                 
 	 
 		                                                     
 		                            
@@ -736,7 +818,7 @@ void function SCB_OnPlayerEntersMapZone( int zoneId, int zoneTier )
 		ClientMusic_RequestStingerForNewZone( zoneId )
 
 	MapZones_ZoneIntroText( player, zoneDisplayName, zoneTier )
-	s_lastZoneDisplayNameIndex = ((s_lastZoneDisplayNameIndex + 1) % s_lastZoneDisplayNames.len())
+	s_lastZoneDisplayNameIndex                         = ((s_lastZoneDisplayNameIndex + 1) % s_lastZoneDisplayNames.len())
 	s_lastZoneDisplayNames[s_lastZoneDisplayNameIndex] = zoneDisplayName
 }
 #endif          
@@ -758,10 +840,10 @@ void function SCB_OnPlayerEntersMapZone( int zoneId, int zoneTier )
 	                     
 	 
 		                
-		                                   
+		                                    
 		 
-			                                                            
-			                                                   
+			                                                                  
+			                                                     
 			                                                         
 
 			                                             
@@ -796,9 +878,9 @@ void function SCB_OnPlayerEntersMapZone( int zoneId, int zoneTier )
 
 			                                              
 			                                              
-			                                               
-			                                               
-			                                               
+			                                                   
+			                                                   
+			                                                   
 			                                                                               
 		 
 		                                   
@@ -818,7 +900,7 @@ void function SCB_OnPlayerEntersMapZone( int zoneId, int zoneTier )
 		                                                                                                                                                                                                                                           
 
 		                         
-		                                                  
+		                                                   
 			                                                                                                                
 		                                          
 		            
@@ -833,7 +915,7 @@ void function SCB_OnPlayerEntersMapZone( int zoneId, int zoneTier )
 
                                                 
  
-	                                                            
+	                                                             
 	                                 
 	                                                           
  

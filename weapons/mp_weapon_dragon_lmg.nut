@@ -29,6 +29,7 @@ const asset ENERGIZED_CROSSHAIR_RUI = $"ui/crosshair_energize_status_sentinel.rp
 const asset AMMO_ENERGIZED_ICON = $"rui/hud/gametype_icons/survival/sur_ammo_heavy_charged"
 const asset ENERGIZE_UI_CONSUMABLE_ICON = $"rui/ordnance_icons/grenade_incendiary"
 
+const string ENERGIZED_STATE_END = "energized_state_end"
 
                                                                                                                        
               
@@ -43,6 +44,7 @@ void function MpWeaponDragon_LMG_Init()
 	PrecacheParticleSystem( EFFECT_CHAMBER_OPENING_FP )
 
 	RegisterSignal( ENERGIZE_STATUS_RUI_ABORT_SIGNAL )
+	RegisterSignal( ENERGIZED_STATE_END )
 }
 
                                                                                                                        
@@ -53,11 +55,27 @@ void function OnWeaponActivate_weapon_dragon_lmg( entity weapon )
 	entity player = weapon.GetWeaponOwner()
 
 	#if SERVER
+		                                                                                                                      
+		                                                               
+		 
+			                                 
+			                                                                                                          
+			                                               
+			                                                          
+
+			                                         
+			                                      
+		 
+	#endif
+
+	#if SERVER
 		                                                                        
 			                                                              
 
 		                         
 			                                                                                                          
+
+		                                        
 	#endif
 
 	#if CLIENT
@@ -81,7 +99,12 @@ void function OnWeaponActivate_weapon_dragon_lmg( entity weapon )
 
 void function OnWeaponDeactivate_weapon_dragon_lmg( entity weapon )
 {
+	#if SERVER
+		                                     
+	#endif
 
+	weapon.StopWeaponEffect( EFFECT_ENHANCED_MODE_FP, EFFECT_ENHANCED_MODE_3P )
+	weapon.StopWeaponSound( EQUIPPED_WHILE_CHARGED )
 }
 
 var function OnWeaponPrimaryAttack_weapon_dragon_lmg( entity weapon, WeaponPrimaryAttackParams attackParams )
@@ -98,9 +121,9 @@ void function OnWeaponStartEnergizing_weapon_dragon_lmg( entity weapon, entity p
 	weapon.EmitWeaponSound_1p3p( $"", CHARGING_SOUND_3P )
 }
 
-void function OnWeaponEnergizedStart_weapon_dragon_lmg( entity weapon, entity player )
+void function OnWeaponEnergizedStart_weapon_dragon_lmg( entity weapon, entity player, bool costConsumable )
 {
-	OnWeaponEnergizedStart( weapon, player )
+	OnWeaponEnergizedStart( weapon, player, costConsumable )
 	weapon.AddMod ( "has_been_energized" )
 #if CLIENT
 	SetEnableEmission( weapon, true )
@@ -127,6 +150,29 @@ void function OnWeaponEnergizedEnd_weapon_dragon_lmg( entity weapon, entity play
 	SetEnableEmission( weapon, false )
 #endif
 }
+
+#if SERVER
+                                                
+                                                      
+ 
+	                   
+	                                        
+
+	            
+		                       
+		 
+			                           
+		 
+	 
+
+	             
+	 
+		                                                                                                     
+		                                 
+		           
+	 
+ 
+#endif
 
                                                                                                                        
                 

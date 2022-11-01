@@ -46,7 +46,7 @@ global function ItemFlavor_CanEquipToWheel
 global const int MAX_QUIPS_EQUIPPED = 8
 global const int MAX_FAVORED_QUIPS = 4
 
-const string  QUIP_LOADOUT_CATEGORY_NAME = "character_quips"
+global const string CAUSTIC_SPECIAL_CASE_EMOTE_ASSET_PATH = "settings/itemflav/character_emote/caustic/epic_rakestep.rpak"
 
 struct FileStruct_LifetimeLevel
 {
@@ -85,13 +85,15 @@ void function RegisterEquippableQuipsForCharacter( ItemFlavor characterClass, ar
 
 	for ( int quipIndex = 0; quipIndex < MAX_QUIPS_EQUIPPED; quipIndex++ )
 	{
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "quips_" + quipIndex + "_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = QUIP_LOADOUT_CATEGORY_NAME
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " Quip " + quipIndex
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "quips_" + quipIndex + "_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.CHARACTER_QUIPS
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " Quip " + quipIndex
+		#endif      
 		entry.validItemFlavorList = quipList
-		entry.defaultItemFlavor = (quipIndex == 0 && characterEmotesList.len() > 0) ? characterEmotesList[0] : entry.validItemFlavorList[0]
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.defaultItemFlavor   = (quipIndex == 0 && characterEmotesList.len() > 0) ? characterEmotesList[0] : entry.validItemFlavorList[0]
+		entry.isSlotLocked        = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
 
@@ -139,15 +141,18 @@ void function RegisterEquippableQuipsForCharacter( ItemFlavor characterClass, ar
 
 	fileLevel.loadoutCharacterFavoredQuipMap[characterClass] <- []
 
+	                                                                                  
 	for ( int favQuipIndex = 0; favQuipIndex < MAX_FAVORED_QUIPS; favQuipIndex++ )
 	{
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "favoredQuip_" + favQuipIndex + "_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "character_favored_quips"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " Favored Quip " + favQuipIndex
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "favoredQuip_" + favQuipIndex + "_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.CHARACTER_FAVORED_QUIPS
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " Favored Quip " + favQuipIndex
+		#endif
 		entry.validItemFlavorList = quipList
-		entry.defaultItemFlavor = entry.validItemFlavorList[0]
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.defaultItemFlavor   = entry.validItemFlavorList[0]
+		entry.isSlotLocked        = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
 
@@ -209,7 +214,7 @@ array<LoadoutEntry> function Loadout_FavoredQuipArrayForCharacter( ItemFlavor ch
 
 bool function Loadout_IsCharacterQuipLoadoutEntry( LoadoutEntry entry )
 {
-	return entry.DEV_category == QUIP_LOADOUT_CATEGORY_NAME
+	return entry.category == eLoadoutCategory.CHARACTER_QUIPS
 }
 
 string function CharacterQuip_GetAliasSubName( ItemFlavor flavor )

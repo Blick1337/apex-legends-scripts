@@ -448,7 +448,7 @@ void function ShGamemodeArenas_Init()
 	                                                                          
 
 	                                                                                     
-	                                                            
+	                                                                              
 
 	                                       
 
@@ -501,7 +501,7 @@ void function ShGamemodeArenas_Init()
 #elseif CLIENT
 	RegisterSignal( "Arenas_WaitFullyConnected" )
 
-	PakHandle pakHandle = RequestPakFile( "ui_arenas" )
+	PakHandle pakHandle = RequestPakFile( "ui_arenas", TRACK_FEATURE_UI )
 
 	SetCustomScreenFadeAsset( $"ui/screen_fade_arenas.rpak" )
 	ClApexScreens_SetCustomApexScreenBGAsset( $"rui/rui_screens/banner_c_arenas" )
@@ -598,7 +598,7 @@ void function EntitiesDidLoad()
 	#if SERVER
 
 	                                                                            
-	                                                              
+	                                                                                
 
 	                                                    
 	 
@@ -722,7 +722,7 @@ float function GetMinJIPTime()
 	                                               
 	 
 		                                                                                                                                         
-		                                                
+		                                                                  
 		                          
 			                                                   
 	 
@@ -737,7 +737,7 @@ float function GetMinJIPTime()
 	                                          
 	 
 		                                                                                                                               
-		                                               
+		                                                                 
 		                      
 		 
 			                                               
@@ -1033,7 +1033,7 @@ float function GetMinJIPTime()
 	                                                                                   
 	                                                                                                               
 
-	                                                            
+	                                                                              
 
 	                                                                                          
 	                                                                                          
@@ -1095,7 +1095,7 @@ float function GetMinJIPTime()
 	                                                                                                                                                                     
 	                                                                                                                        
 
-	                                                                      
+	                                                                                        
 	                                          
 	 
 		                                                      
@@ -1111,7 +1111,7 @@ float function GetMinJIPTime()
 	                                                                                                                                           
 	                                                                                                                  
 
-	                                                                
+	                                                                                  
 	                                     
 	 
 		                                           
@@ -1731,7 +1731,7 @@ float function GetMinJIPTime()
 	                            
 
 	                                                                                                                                              
-	                                                           
+	                                                                             
 	                                      
 
 	                                                                                                                                           
@@ -2536,6 +2536,9 @@ void function Arenas_PopulateSquadmateWeapons( var rui, entity player )
 void function Arenas_PopulatePlayerLoadouts( var playerRui, array<var> squadmateRuis )
 {
 	entity player = GetLocalClientPlayer()
+	if( !IsValid( player ) || player == null )
+		return
+
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
 
 	RuiSetBool( playerRui, "show", true )
@@ -2570,6 +2573,7 @@ void function Arenas_PopulatePlayerLoadouts( var playerRui, array<var> squadmate
 		RuiSetString( squadmateRuis[i], "playerName", squadmateArray[i].GetPlayerName() )
 
 		Arenas_PopulateSquadmateWeapons( squadmateRuis[i], squadmateArray[i] )
+
 	}
 }
 
@@ -2765,7 +2769,7 @@ void function Arenas_OnBuyMenuClose( )
 	if( file.inAshRoom )
 	{
 		file.inAshRoom = false
-		CharacterSelect_RestorePlayerView()
+		CharacterSelect_ClearMenuAndRestoreView()
 	}
 }
 
@@ -3458,10 +3462,10 @@ void function OnCharacterSelectUpdateLights( entity lightRig, entity key, entity
 		                      
 	 
 
-	                                                                                                                                                                        
+	                                                                                                                                                                                           
 	                       
 
-	                                                                                                                                                                            
+	                                                                                                                                                                                               
 	                         
 
 	                                                                 
@@ -3625,9 +3629,7 @@ void function OnCharacterSelectMenuClosed()
 	if ( GetGameState() == eGameState.Prematch )
 	{
 		TryToCollectClubNames()
-
-		if( !file.inAshRoom )
-			SetupAshRoom()
+		SetupAshRoom()
 	}
 }
 

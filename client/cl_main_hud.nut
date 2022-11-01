@@ -213,7 +213,7 @@ void function UpdatePilotDamageAmpFX( entity player )
 
 	if ( StatusEffect_GetSeverity( player, eStatusEffect.damageAmpFXOnly ) > 0 )
 	{
-		cockpit.s.pilotDamageAmpFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( $"P_core_DMG_boost_screen" ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+		cockpit.s.pilotDamageAmpFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( $"P_core_DMG_boost_screen" ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	}
 }
 
@@ -241,7 +241,7 @@ void function UpdateTitanDamageAmpFX( entity player )
 	entity soul = player.GetTitanSoul()
 	if ( IsValid( soul ) && (StatusEffect_GetSeverity( soul, eStatusEffect.damageAmpFXOnly ) + StatusEffect_GetSeverity( soul, eStatusEffect.titan_damage_amp )) > 0 )
 	{
-		cockpit.s.titanDamageAmpFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( $"P_core_DMG_boost_screen" ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+		cockpit.s.titanDamageAmpFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( $"P_core_DMG_boost_screen" ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	}
 }
 
@@ -808,7 +808,7 @@ void function TrackDoF( entity player )
 
 	while ( 1 )
 	{
-		float playerDist    = Distance2D( player.CameraPosition(), player.GetOrigin() )
+		float playerDist    = Distance( player.CameraPosition(), player.GetOrigin() )
 		float distToCamNear = playerDist
 		float distToCamFar  = distToCamNear
 
@@ -819,14 +819,21 @@ void function TrackDoF( entity player )
 			target = player.GetObserverTarget()
 		}
 
-		if ( !IsValid( target ) && player.ContextAction_IsMeleeExecutionTarget() )
+		if ( !IsValid( target ) && player.ContextAction_IsMeleeExecution() )
 		{
-			entity targetParent = player.GetParent()
-			if ( IsValid( targetParent ) )
-				target = targetParent
+			if( player.ContextAction_IsMeleeExecutionAttacker() )
+			{
+				target = player
+			}
+			else
+			{
+				entity targetParent = player.GetParent()
+				if ( IsValid( targetParent ) )
+					target = targetParent
+			}
 		}
 
-		if ( IsValid( target ) && target != player )
+		if ( IsValid( target ) && ( target != player || player.ContextAction_IsMeleeExecution() ) )
 		{
 			float targetDist = Distance( player.CameraPosition(), target.EyePosition() )
 			distToCamFar  = max( playerDist, targetDist )

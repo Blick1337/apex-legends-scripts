@@ -35,6 +35,8 @@ global function RollingRespawn_RegisterNetworking
                                                                   
 
                                               
+
+                                                                       
 #endif
 
 #if CLIENT
@@ -303,7 +305,7 @@ void function RollingRespawn_RegisterNetworking()
 	                                                                    
 	                                                                            
 
-	                                                                                           
+	                                                                                                                             
 	                              
 
 	                                                                  

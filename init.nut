@@ -101,22 +101,6 @@ global struct CommunityFriends
 	array<string> names
 }
 
-global struct CommunityFriendsData
-{
-	string id
-	string hardware
-	string name
-	string presence
-	bool online
-	bool ingame
-	bool away
-}
-
-global struct CommunityFriendsWithPresence
-{
-	bool isValid
-	array<CommunityFriendsData> friends
-}
 
 global struct CommunityUserInfo
 {
@@ -246,7 +230,25 @@ global struct GRXStoreOffer
 	table< string, string > attrs
 	int offerType
 	string offerAlias
+	bool isSparkable
 }
+
+global struct GRXGetOfferInfo
+{
+	bool isEligible
+	array< array< int > > prices
+}
+
+               
+global struct GRXGiftingInboxInfo
+{
+	int itemIndex
+	int itemCount
+	bool isNew
+	int timestamp
+	string senderNucleusPid
+}
+      
 #endif                          
 
 #if UI || CLIENT
@@ -270,6 +272,9 @@ global struct GRXUserInfo
 	array< int > balances
 	int nextCurrencyExpirationAmt
 	int nextCurrencyExpirationTime
+
+	int sparkleLimitCounter
+	int sparkleLimitResetDate
 
 	int marketplaceEdition
 
@@ -621,7 +626,9 @@ global struct NavMesh_FindMeshPath_Result
 	bool startPolyOK
 	bool goalPolyOK
 	bool pathFound
+	bool pathIsPartialPath
 	array<vector> points
+	float pathLength
 }
 
 global struct PrivateMatchStatsStruct
@@ -708,7 +715,6 @@ global struct CustomMatch_LobbyState
 {
 	                
 	int maxTeams = 20
-	int minPlayers = 24
 	int maxPlayers = 60
 	int maxSpectators = 20
 	int matchState = 0
@@ -733,6 +739,8 @@ global struct CustomMatch_MatchPlayer
 	string clubTag
 	string character
 	int status
+	int kills
+	int damageDealt
 }
 
 global struct CustomMatch_MatchTeam
@@ -790,6 +798,12 @@ global struct EadpPeopleData
 	string name
 	string platformName
 	string platformHardware
+	string ea_pid
+	string psn_pid
+	string xbox_pid
+	string steam_pid
+	string switch_pid
+	int friendCreationTime
 	array< EadpPresenceData > presences
 }
 
@@ -862,6 +876,7 @@ global struct Friend
 	bool   inparty = false
 	bool   away = false
 
+	EadpPresenceData ornull eadpPresenceData
 	EadpPeopleData ornull eadpData
 }
 
@@ -877,6 +892,25 @@ global struct CodeRedemptionGrant
 	int qty
 	int type
 }
+
+global struct CommunityFriendsData
+{
+	string id
+	string hardware
+	string name
+	string presence
+	bool online
+	bool ingame
+	bool away
+	EadpPresenceData ornull eadpPresenceData
+}
+
+global struct CommunityFriendsWithPresence
+{
+	bool isValid
+	array<CommunityFriendsData> friends
+}
+
 
 global struct UMAttribute
 {

@@ -26,17 +26,18 @@ global const int RUMBLE_FLAG_ONLYONE			= 0x0010
 global const int RUMBLE_FLAG_RANDOM_AMPLITUDE	= 0x0020                                                                 
 global const int RUMBLE_FLAG_INITIAL_SCALE		= 0x0040                                                            
 
-                   
-                                      
-                                                      
-                                                       
-      
-
 global struct RUIWorldCoordinates                                                                                     
 {
 	vector org
 	vector right
 	vector down
+}
+
+global struct ScreenSpaceData
+{
+	int   deltaCenterX
+	int   deltaCenterY
+	float degsFromCenter
 }
 
 struct
@@ -45,7 +46,12 @@ struct
 	int showButtonHintsInt = 1
 
 	table< entity, int > playerHide3pWeaponCount
+	int gfxDesaturateCount = 0
 } file
+
+#if DEV
+const bool SCREEN_SPACE_DATA_DEBUG = false
+#endif
 
                                                     
                                             
@@ -143,8 +149,17 @@ string function ReloadScripts()
 
 void function AddLocalPlayerTookDamageCallback( void functionref( float, vector, int, int, entity ) callbackFunc )
 {
-	Assert( !( clGlobal.onLocalPlayerTookDamageCallback.contains( callbackFunc ) ) )
+	int index = clGlobal.onLocalPlayerTookDamageCallback.find( callbackFunc )
+	Assert( index == -1, "Requested DamageCallback " + string( callbackFunc ) + " to be added already exists at index " + index + "!" )
 	clGlobal.onLocalPlayerTookDamageCallback.append( callbackFunc )
+}
+
+void function RemoveLocalPlayerTookDamageCallback( void functionref( float, vector, int, int, entity ) callbackFunc )
+{
+	int index = clGlobal.onLocalPlayerTookDamageCallback.find( callbackFunc )
+
+	Assert( index != -1, "Requested DamageCallback " + string( callbackFunc ) + " to be removed not found! " )
+	clGlobal.onLocalPlayerTookDamageCallback.fastremove( index )
 }
 
 void function AddLocalPlayerTookDamageTypeCallback( int damageSourceId, void functionref( float, vector, int, int, entity ) callbackFunc )
@@ -202,6 +217,12 @@ void function AddCallback_MinimapEntShouldCreateCheck_Scriptname( string scriptn
 {
 	Assert( !( scriptname in clGlobal.onMinimapEntShouldCreateCallbacks_scriptname ), "Already added " + string( callbackFunc ) + " with AddCallback_MinimapEntShouldCreateCheck_Scriptname" )
 	clGlobal.onMinimapEntShouldCreateCallbacks_scriptname[scriptname] <- callbackFunc
+}
+
+void function AddCallback_MinimapEntShouldCreateCheck_Targetname( string targetname, bool functionref( entity ) callbackFunc )
+{
+	Assert( !( targetname in clGlobal.onMinimapEntShouldCreateCallbacks_targetname ), "Already added " + string( callbackFunc ) + " with AddCallback_MinimapEntShouldCreateCheck_Targetname" )
+	clGlobal.onMinimapEntShouldCreateCallbacks_targetname[targetname] <- callbackFunc
 }
 
 void function AddCallback_MinimapEntShouldCreateCheck( bool functionref( entity ) callbackFunc )
@@ -457,7 +478,7 @@ entity function CreateScriptRef( vector origin = <0,0,0>, vector angles = <0,0,0
 string function GetComputerName( entity player )
 {
 	string name = player.GetPlayerName()
-	array<string> msg = split( name, " " )
+	array<string> msg = split( name, WHITESPACE_CHARACTERS )
 	if ( msg.len() < 2 )
 		return ""
 
@@ -908,14 +929,6 @@ bool function IsLocalPlayerOnTeamSpectator()
 	return GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR
 }
 
-bool function IsSpectator( entity player )
-{
-	if ( !IsValid( player ) )
-		return false
-
-	return player.GetTeam() == TEAM_SPECTATOR
-}
-
 bool function IsSpectatorSpectatingPlayer( entity player )
 {
 	return IsSpectator( GetLocalClientPlayer() ) && GetLocalViewPlayer() == player
@@ -1114,7 +1127,7 @@ bool function ShouldShowWeakpoints( entity ent )
 	if ( ent.GetTeam() == player.GetTeam() )
 		return false
 
-	if ( IsCloaked( ent ) )
+	if ( ent.IsCloaked( true ) )
 		return false
 
 	entity soul = ent.GetTitanSoul()
@@ -1204,7 +1217,7 @@ void function AddOverheadIconThread( entity prop, var rui )
 	{
 		while ( 1 )
 		{
-			bool showIcon = !IsCloaked( prop )
+			bool showIcon = !prop.IsCloaked( true )
 
 			if ( prop.IsTitan() && IsValid( prop.GetTitanSoul() ) )
 				showIcon = showIcon && prop.GetTitanSoul().GetTitanSoulNetBool( "showOverheadIcon" )
@@ -1676,153 +1689,107 @@ bool function ShouldShowButtonHints()
 
 float function GetFovScalar( entity player )
 {
-	float fov     = DEFAULT_FOV
-	float adsFrac = player.GetAdsFraction()
-	if ( adsFrac == 1.0 )
-	{
-		entity weapon = player.GetLatestPrimaryWeapon( eActiveInventorySlot.mainHand )
-		if ( IsValid( weapon ) )
-			fov = weapon.GetWeaponZoomFOV()
-	}
+	float fov = DEFAULT_FOV
+
+	entity weapon = player.GetLatestPrimaryWeapon( eActiveInventorySlot.mainHand )
+	if ( IsValid( weapon ) )
+		fov = weapon.GetWeaponZoomFOV()
 
 	return DEFAULT_FOV / fov
 }
 
-                   
-                                                                                         
- 
-                                                     
-                                                                 
- 
+string function GetConsoleName()
+{
+	if( PS4_PROG )
+		return "PS4"
 
-                                
- 
-               
-              
+	else if ( PS5_PROG )
+		return "PS5"
 
-                     
-              
+	else if( DURANGO_PROG )
+		return "XB1"
 
-                        
-              
+	else if( XB5_PROG )
+		return "XB5"
 
-                    
-              
+	else if( NX_PROG )
+		return "NX"
 
-                   
-             
+	else
+		return "PC"
+}
 
-     
-             
- 
 
-                                                   
- 
-                                                                     
-                                                                                    
- 
+ScreenSpaceData function GetScreenSpaceData( entity player, vector position )
+{
+	ScreenSpaceData data
+	int screenWidth          = GetScreenSize().width
+	int screenHeight         = GetScreenSize().height
 
-                                                                                                                                    
- 
-                
-                                                                                                                                                      
-                                                                                 
+	bool posOnScreen = false
+	int screenPosX   = -1
+	int screenPosY   = -1
 
-                                                          
-                                     
-                                             
-                                                       
-                                  
-                             
- 
+	array<int> results = player.GetPositionInScreenSpace( position )
 
-                                             
- 
-                                    
-                                              
-                                                      
-                                  
-                              
- 
+	#if DEV
+		if ( SCREEN_SPACE_DATA_DEBUG )
+		{
+			DebugDrawMark( position, 5, COLOR_RED, true, 1.5 )
+		}
+	#endif      
 
-                                                                                                                                                     
- 
-                                                                                                                  
- 
+	posOnScreen = bool( results[0] )
+	screenPosX = results[1]
+	screenPosY = results[2]
 
-                                                                                                                                                            
- 
-                             
-                                                  
-  
-                                       
-             
-  
+	screenPosX = ClampInt( screenPosX, 0, screenWidth )
+	screenPosY = ClampInt( screenPosY, 0, screenHeight )
 
-                         
-                       
-                      
+	int centerX = screenWidth / 2
+	int centerY = screenHeight / 2
 
-                                                           
-  
-                                                                                         
-                                                               
+	int deltaX = screenPosX - centerX
+	int deltaY = centerY - screenPosY                                                            
 
-                              
-                         
+	float angleRad = atan2( deltaX, deltaY )
 
-                                                
-   
-                   
-        
-   
+	float degs = RadToDeg( angleRad )
+	if ( degs < 0 )
+	{
+		degs += 360
+	}
 
-                                 
-                                       
+	#if DEV
+		if ( SCREEN_SPACE_DATA_DEBUG )
+		{
+			printt( "posOnScreen: " + posOnScreen + " screenX: " + screenPosX + " screenY: " + screenPosY + " degrees: " + degs)
+		}
+	#endif      
 
-             
-  
+	data.deltaCenterX   = deltaX
+	data.deltaCenterY   = deltaY
+	data.degsFromCenter = degs
 
-                                   
+	return data
+}
 
-                                      
-                   
-                                           
+void function GfxDesaturateOn()
+{
+	file.gfxDesaturateCount += 1
 
-                                
+	if ( file.gfxDesaturateCount == 1 )
+	{
+		GfxDesaturate( true )
+	}
+}
 
-                                                 
-                                                         
-                                                                                            
-                                                                                      
-                                              
-                 
-                                                                                                                      
+void function GfxDesaturateOff()
+{
+	file.gfxDesaturateCount -= 1
 
-                         
-  
-                                                                         
-
-                                                     
-                                                                                                                                                      
-                                                                          
-
-                                               
-
-                                                                        
-  
-     
-  
-                                                                        
-  
-
-                                                                                                                          
- 
-
-                                                                                               
- 
-                                                           
-
-                                                                         
- 
-                        
+	if ( file.gfxDesaturateCount == 0 )
+	{
+		GfxDesaturate( false )
+	}
+}

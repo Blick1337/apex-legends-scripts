@@ -31,6 +31,7 @@ global function HoverVehicle_GetExtendedPlayerArray
                                           
 
                                                                  
+                                                 
 
                                                            
 
@@ -511,7 +512,7 @@ bool function EntIsHoverVehicle( entity ent )
 			                                                
 			 
 				              
-				                                                                                                                                                                                 
+				                                                                                                                                                                                                   
 
 				     
 			 
@@ -693,6 +694,8 @@ bool function VehicleCanUseEntityCallback( entity player, entity vehicle, int us
 		return false
 	if ( player.Player_IsSkywardLaunching() || player.Player_IsSkywardFollowing() )
 		return false
+	if ( player.IsJetDriveActive() )
+		return false
 	if ( !PlayerCommonItemPickupCheck( player ) )
 		return false
 	if ( !VehicleHasRoomForNormalOccupants( vehicle ) )
@@ -753,9 +756,13 @@ array<entity> function HoverVehicle_GetExtendedPlayerArray( entity vehicle )
 	 
 
 	                                          
-	                                                                                
+	                                        
 	 
-		                                                                                                 
+		                                           
+			                                                                                                 
+		    
+			                                                                                                                  
+
 		                                                            
 	 
 	    
@@ -768,7 +775,7 @@ array<entity> function HoverVehicle_GetExtendedPlayerArray( entity vehicle )
 	                                                           
  
 
-                                                                                          
+                                                                                                             
  
 	                                                         
 	 
@@ -783,7 +790,11 @@ array<entity> function HoverVehicle_GetExtendedPlayerArray( entity vehicle )
 
 	                                                                                                   
 	 
-		                                                               
+		           
+			                                                       
+		    
+			                                                               
+
 		                                                            
 	 
  
@@ -1054,6 +1065,18 @@ array<entity> function HoverVehicle_GetExtendedPlayerArray( entity vehicle )
 	                                                             
 	                  
 		           
+
+	            
+ 
+
+                                                                 
+ 
+	                                        
+	                            
+	 
+		                                         
+			           
+	 
 
 	            
  
@@ -1712,7 +1735,7 @@ void function CodeCallback_OnVehicleJumpPadLaunch( entity vehicle, entity trigge
 	entity jumpPad = trigger.GetOwner()
 	if ( IsValid( jumpPad ) )
 	{
-		StartParticleEffectOnEntity( jumpPad, GetParticleSystemIndex( FX_VEHICLE_LAUNCHPAD_LAUNCH ), FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
+		StartParticleEffectOnEntity( jumpPad, GetParticleSystemIndex( FX_VEHICLE_LAUNCHPAD_LAUNCH ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		EmitSoundOnEntity_Predicted( jumpPad, "JumpPad_LaunchVehicle_3p" )
 	}
 

@@ -19,11 +19,17 @@ global function StatsCard_GetNameOfGameMode
 global function StatsCard_GetApprovedModesCount
 global function StatsCard_IsSeasonOrRankedRefValidForMode
                        
-	global function StatsCard_OnArenasRankedPeriodRegistered
+global function StatsCard_OnArenasRankedPeriodRegistered
       
-#endif     
+#endif      
+               
+             
+                            
+                   
+                     
 
 global function StatCard_GetAvailableSeasons
+global function StatCard_GetAvailableRankedPeriods
 global function StatCard_GetAvailableSeasonsAndRankedPeriods
 
 global enum eStatCardGameMode
@@ -1018,10 +1024,8 @@ int function AggregateStat( entity player, StatTemplate stat, int calcMethod, st
 
 	if ( calcMethod == eStatCalcMethod.CHARACTER_HIGHEST || calcMethod == eStatCalcMethod.CHARACTER_AGGREGATE )
 	{
-		foreach( ItemFlavor character in GetAllCharacters() )
+		foreach( characterRef in GetAllCharacterGUIDStringsForStats() )
 		{
-			string characterRef = ItemFlavor_GetGUIDString( character )
-
 			                                                                                                                
 
 			int statValue
@@ -1150,6 +1154,52 @@ array< ItemFlavor > function StatCard_GetAvailableSeasons( int gameMode )
 	}
 
 	return seasons
+}
+
+array<ItemFlavor> function StatCard_GetAvailableRankedPeriods( int gameMode )
+{
+                        
+		ItemFlavor season09CalEvent = GetItemFlavorByAsset( $"settings/itemflav/calevent/season09.rpak" )
+       
+
+	array<ItemFlavor> brRankedPeriods = GetAllRankedPeriodFlavorsByType( eItemType.calevent_rankedperiod )
+                        
+		array<ItemFlavor> arenaRankedPeriods = GetAllRankedPeriodFlavorsByType( eItemType.calevent_arenas_ranked_period )
+       
+
+	foreach ( ItemFlavor period in brRankedPeriods )
+	{
+		if ( !CalEvent_IsRevealed( period, GetUnixTimestamp() ) )
+			brRankedPeriods.removebyvalue( period )
+	}
+
+	array<ItemFlavor> rankedPeriods = []
+                        
+		if ( gameMode == eStatCardGameMode.ARENAS )
+		{
+			rankedPeriods.extend( arenaRankedPeriods )
+		}
+		else
+		{
+			rankedPeriods.extend( brRankedPeriods )
+		}
+      
+                                         
+       
+
+	rankedPeriods.sort( SortSeasonAndRankedStats )
+
+                        
+		if ( gameMode == eStatCardGameMode.ARENAS )
+		{
+			int season09Idx = rankedPeriods.find( season09CalEvent )
+			for ( int i = 0; i < season09Idx; i++ )
+			{
+				rankedPeriods.remove( 0 )
+			}
+		}
+       
+	return rankedPeriods
 }
 
 array< ItemFlavor > function StatCard_GetAvailableSeasonsAndRankedPeriods( int gameMode )
@@ -1614,3 +1664,181 @@ bool function StatsCard_IsSeasonOrRankedRefValidForMode( int gameMode, string ra
 	return isMatch
 }
 #endif      
+
+               
+             
+                                                                                         
+ 
+                                       
+                                                        
+                             
+                                 
+
+                                      
+  
+                                                                                          
+  
+     
+  
+                                                                                                                        
+                                               
+                                                                                           
+      
+                                                                                                 
+  
+
+                                              
+  
+                                                                                                                                                                                
+
+                                                                                                                         
+                                          
+                                   
+                                            
+  
+
+                                      
+  
+                                                                                   
+  
+     
+  
+                                                                                                                        
+                                               
+                                                                                    
+      
+                                                                                          
+  
+
+                                          
+  
+                                           
+                                                                                                                                                                         
+                                                                                     
+
+                         
+                                 
+   
+                      
+                      
+                                                                                               
+   
+      
+   
+                            
+   
+
+                         
+                          
+                          
+                                      
+
+                                                                                                         
+                                          
+                                   
+                                            
+  
+
+                    
+                                      
+  
+                                                                                 
+  
+     
+  
+                                                                                                                        
+                                               
+                                                                                  
+      
+                                                                                        
+  
+
+                                    
+                                                        
+
+                                                     
+  
+                         
+
+                        
+   
+                                          
+                                                                                                                                                                        
+                                                                                    
+
+                          
+                                
+    
+                       
+                       
+                                                                                              
+    
+       
+    
+                             
+    
+
+                         
+                           
+
+                                                                                                      
+               
+    
+                                                
+                                     
+                                                  
+    
+                    
+    
+                                                 
+                                     
+                                                   
+    
+                    
+    
+                                                
+                                     
+                                                  
+    
+       
+    
+                                                 
+                                     
+                                                   
+    
+   
+      
+   
+                  
+                  
+   
+
+              
+                                           
+                   
+                                            
+      
+                                       
+  
+
+                 
+ 
+
+                                                                                 
+ 
+                                                                   
+
+                                                  
+                                                   
+
+                             
+                                              
+                             
+                                          
+                             
+
+                     
+ 
+                   
+                     
+

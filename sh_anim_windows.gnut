@@ -497,9 +497,9 @@ void function AnimWindow_PlayFX_Start( ScriptAnimWindow window, var settingsBloc
 		else
 		{
 			#if SERVER
-				                                                                                                                                                             
+				                                                                                                                                                                               
 			#elseif CLIENT
-				fxHandleOrNull = StartParticleEffectOnEntityWithPos( window.ent, particleSystemIndex, FX_PATTACH_CUSTOMORIGIN_FOLLOW, -1, <0, 0, 0>, <0, 0, 0> )
+				fxHandleOrNull = StartParticleEffectOnEntityWithPos( window.ent, particleSystemIndex, FX_PATTACH_CUSTOMORIGIN_FOLLOW, ATTACHMENTID_INVALID, <0, 0, 0>, <0, 0, 0> )
 			#endif
 		}
 	}

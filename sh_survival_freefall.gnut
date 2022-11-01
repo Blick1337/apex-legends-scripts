@@ -21,43 +21,11 @@ const asset PLAYER_WIND_FX 	= $"P_wind_cruising"
 
 global const string JUMPTOWER_PING_NAME = "jump_tower"
 
-const array<vector> skydiveSmokeColors = [
-	<110, 49, 1>,               
-	<10, 88, 106>,          
-	<6, 131, 149>,           
-	                           
-	<27, 71, 105>,          
-	<31, 84, 205>,          
-	                          
-	<68, 42, 96>,          
-	<110, 44, 111>,            
-	                           
-	<173, 45, 119>,            
-	                         
-	<176, 28, 81>,          
-	                          
-	<195, 0, 11>,          
-	<197, 67, 32>,       
-	<120, 30, 19>,            
-	<159, 59, 13>,           
-	<119, 75, 0>,           
-	<204, 121, 19>,            
-	<150, 125, 0>,           
-	                         
-	<133, 147, 10>,           
-	<73, 88, 3>,           
-	<112, 151, 67>,           
-	<57, 137, 52>,           
-	<47, 90, 26>,           
-	                          
-	<0, 116, 88>           
-]
-global function GetSkydiveSmokeColorForTeam
-
 
 #if SERVER
 	                                                        
 	                                                      
+	                                                         
 	                                 
 	                             
 	                                
@@ -71,6 +39,7 @@ global function GetSkydiveSmokeColorForTeam
 
 	                                                      
 	                                                       
+	                                          
 
 
                                                                                                                               
@@ -220,6 +189,7 @@ global function GetSkydiveSmokeColorForTeam
                                           
 		                                 
         
+		                                   
 	      
 #endif         
 
@@ -292,9 +262,11 @@ void function SurvivalFreefall_Init()
 		                                                       
 		                                                    
 		                                         
-		                            
 		                                    
 		                                                 
+
+		                                   
+			                            
 
 		                                 
 		                                    
@@ -307,6 +279,9 @@ void function SurvivalFreefall_Init()
       
 
 		                                                                           
+                               
+                                                                                                         
+        
 		                                                                           
 		                                                                                               
 		                                                                         
@@ -316,7 +291,7 @@ void function SurvivalFreefall_Init()
                                           
 			                                                                                                                 
                          
-                                         
+				                                     
          
 				 
 					                                        
@@ -342,6 +317,7 @@ void function SurvivalFreefall_Init()
 
 		PrecacheParticleSystem( CONTRAIL_FX )
 		AddCreateCallback( "player", Freefall_OnPlayerCreated  )
+		AddCallback_LocalClientPlayerSpawned( Client_OnPlayerSpawned )
 
                                          
 		file.nearbySquadsMinimapEnabled = GetCurrentPlaylistVarBool( "freefall_nearby_squads_minimap_enabled", true )
@@ -351,11 +327,13 @@ void function SurvivalFreefall_Init()
 	                                
 }
 
-vector function GetSkydiveSmokeColorForTeam( int team )
-{
-	vector teamSkyDiveColor = skydiveSmokeColors[ team % skydiveSmokeColors.len() ]
-	return teamSkyDiveColor
-}
+#if SERVER
+                                                    
+ 
+	                                  
+ 
+#endif          
+
 
 SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entity player )                               
 {
@@ -387,6 +365,12 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
  
 	                                                                                                                                                                    
 	                                                         
+ 
+
+                                                                                                
+ 
+	                                                                                                                                
+	                                                                    
  
 
                                                                                               
@@ -480,78 +464,6 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 		                                                   
 	 
 
-	                                                                                                 
-	 
-                          
-			                                                                      
-			 
-				                                                                                                                         
-				                                                
-
-				                        
-				 
-					                           
-						                                                    
-						     
-
-					                            
-						                                             
-						     
-
-					                         
-						                                                    
-						     
-
-					                           
-						                                             
-						     
-
-					                          
-						                                                    
-						     
-
-					                        
-						                                             
-						     
-
-					                        
-						                                                    
-						     
-
-					                            
-						                                             
-						     
-
-					                        
-						                                                    
-						     
-
-					                         
-						                                             
-						     
-
-					                        
-						                                                    
-						     
-
-					                          
-						                                             
-						     
-
-					        
-						                                             
-						     
-				 
-
-				                                                                                                                                                  
-
-			 
-
-                           
-
-	   
-
-
  
 
                                                                                                    
@@ -569,7 +481,11 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 		      
 	 
 
+                              
+                                                                                                                 
+      
 	                                      
+       
 		                                                                                                    
 
 	                                                                                                     
@@ -961,8 +877,15 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 	                              
 	                                    
 
-	                          
-	                                                       
+	                                      
+
+	                        
+		      
+
+	                              
+
+	                                                                                
+	                                                                            
 		                                                                                                  
 
 	                   
@@ -1300,6 +1223,8 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 
 			                                
 
+			                                              
+
 			                                
 			      
 		 
@@ -1391,6 +1316,9 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
                                  
  
 	                  
+		      
+
+	                                    
 		      
 
 	                       
@@ -1633,7 +1561,7 @@ SkyDiveTrailPackage function GetSkyDiveTrailPackageForPlayerWithOverrides( entit
 		                        
 		 
 			                                                                     
-			                                                                 
+			                                                                                                                                                            
 				                                                         
 		 
 	   
@@ -1786,7 +1714,7 @@ void function UpdateSkydiveRui_Emotes( var rui, entity player )
 		return
 
 	table<int, ItemFlavor> emotes = GetValidPlayerSkydiveEmotes( player )
-	bool emoteAreAvailable = ((emotes.len() > 0) && !player.Player_IsSkydiveAnticipating())
+	bool emoteAreAvailable = ((emotes.len() > 0) && !player.Player_IsSkydiveAnticipating() && player.GetPlayerNetBool( "freefallEmoteAvailable" ))                                                                                    
 	if ( !emoteAreAvailable )
 		return
 
@@ -2283,7 +2211,8 @@ void function CodeCallback_PlayerSkydiveBegin( entity player )
 		                                               
 	 
 	                                                                       
-	                                      
+	                                                                                                                                                                                      
+
 	                                                                   
 #else
 	                                                       
@@ -2493,7 +2422,7 @@ void function CodeCallback_PlayerSkydiveAnticipateEnd( entity player )
 
 	                                                                       
 
-	                                                                 
+	                                                                                                   
 		                                                         
 
 	                                    
@@ -2543,6 +2472,16 @@ void function Freefall_OnPlayerCreated( entity skyDivingPlayer )
 	thread Freefall_OnPlayerCreated_threaded( skyDivingPlayer  )
 }
 
+                                                                                                      
+void function Client_OnPlayerSpawned( entity localPlayer )
+{
+	if( file.skydiveRui != null )
+	{
+		RuiDestroyIfAlive( file.skydiveRui )
+		file.skydiveRui = null
+	}
+}
+
 void function Freefall_OnPlayerCreated_threaded( entity skyDivingPlayer )
 {
 	WaitFrame()                                                                
@@ -2571,7 +2510,7 @@ bool function IsCaptureCameraEnabled()
                                        
                                           
                                              
-                                                                        
+                                                                                                                        
                           
                       
 

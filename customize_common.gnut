@@ -166,6 +166,38 @@ table< int, table< int, string > > equipSoundMap = {
 }
 #endif
 
+const array<vector> skydiveSmokeColors = [
+	<110, 49, 1>,               
+	<10, 88, 106>,          
+	<6, 131, 149>,           
+	                           
+	<27, 71, 105>,          
+	<31, 84, 205>,          
+	                          
+	<68, 42, 96>,          
+	<110, 44, 111>,            
+	                           
+	<173, 45, 119>,            
+	                         
+	<176, 28, 81>,          
+	                          
+	<195, 0, 11>,          
+	<197, 67, 32>,       
+	<120, 30, 19>,            
+	<159, 59, 13>,           
+	<119, 75, 0>,           
+	<204, 121, 19>,            
+	<150, 125, 0>,           
+	                         
+	<133, 147, 10>,           
+	<73, 88, 3>,           
+	<112, 151, 67>,           
+	<57, 137, 52>,           
+	<47, 90, 26>,           
+	                          
+	<0, 116, 88>           
+]
+global function GetSkydiveSmokeColorForTeam
 
 
                          
@@ -204,6 +236,11 @@ void function OnInputModeChanged( bool controllerModeActive )
                           
                           
 
+vector function GetSkydiveSmokeColorForTeam( int team )
+{
+	vector teamSkyDiveColor = skydiveSmokeColors[ team % skydiveSmokeColors.len() ]
+	return teamSkyDiveColor
+}
 
 #if UI
 void function CustomizeButton_UpdateAndMarkForUpdating( var button,
@@ -647,9 +684,9 @@ void function CustomizeButton_OnRightClick( var button )
 	CustomizeButtonContext cbc = fileLevel.activeCustomizeButtons[button]
 
                  
-                                                                                                 
+	if ( cbc.loadoutEntries.len() > 1 || ItemFlavor_GetType( cbc.itemFlavor ) == eItemType.sticker )
       
-	if ( cbc.loadoutEntries.len() > 1 )
+                                    
        
 	{
 		                                   
@@ -665,14 +702,15 @@ void function CustomizeButton_OnRightClick( var button )
 				{
 					if ( GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "isTheEmpty" ) )
 					{
+						PlayPreviewSound( cbc.itemFlavor )
 						RequestSetItemFlavorLoadoutSlot( LocalClientEHI(), loadoutEntry, flavor )
 
                       
-                                                                                                   
-       
-                                  
-                            
-       
+						if ( ItemFlavor_GetType( cbc.itemFlavor ) == eItemType.sticker && cbc.previewItemCb != null )
+						{
+							cbc.previewItemCb( flavor )
+							UpdateFooterOptions()
+						}
                             
 
 						break
@@ -1059,6 +1097,7 @@ void function PlayEquipSound( ItemFlavor item )
 #if UI
 void function UpdateCustomizeItemButton( CustomizeButtonContext cbc, bool justAdded )
 {
+	SeasonStyleData seasonStyle = GetSeasonStyle()
 	var rui = Hud_GetRui( cbc.button )
 
 	                         
@@ -1104,7 +1143,7 @@ void function UpdateCustomizeItemButton( CustomizeButtonContext cbc, bool justAd
 	                                                   
 	bool isNew = Newness_IsItemFlavorNew( cbc.itemFlavor )
 	Hud_SetNew( cbc.button, isNew )
-
+	RuiSetColorAlpha( rui, "seasonColor", SrgbToLinear( seasonStyle.seasonNewColor ), 1.0 )
 	                      
 	bool isEquipped = IsItemInCBCEquipped( cbc )
 
@@ -1147,7 +1186,6 @@ void function UpdateCustomizeItemButton( CustomizeButtonContext cbc, bool justAd
 		                 
 		Hud_SetEnabled( cbc.button, true )
 		RuiSetBool( rui, "isLoading", false )
-
 		                
 		isOwned = GRX_IsItemOwnedByPlayer( cbc.itemFlavor )
 
@@ -1236,7 +1274,6 @@ void function CustomizeMenus_UpdateActionContext( var button )
 		}
 	}
 
-	                                                                                                                                 
 	UpdateActionButton()
 }
 #endif
@@ -1639,9 +1676,9 @@ asset function CustomizeMenu_GetRewardButtonImage( ItemFlavor flavor )
 			break
 
                 
-                         
-                                                       
-        
+		case eItemType.sticker:
+			buttonImage = $"rui/menu/buttons/battlepass/sticker"
+			break
                       
 
 		default:
@@ -1650,7 +1687,7 @@ asset function CustomizeMenu_GetRewardButtonImage( ItemFlavor flavor )
 	}
 
 	if ( buttonImage == $"" )
-		Warning( "CustomizeMenu_GetRewardButtonImage() returning empty image for %s", ItemFlavor_GetHumanReadableRef( flavor ) )
+		Warning( "CustomizeMenu_GetRewardButtonImage() returning empty image for %s", string(ItemFlavor_GetAsset( flavor )) )
 
 	return buttonImage
 }
@@ -1749,9 +1786,9 @@ asset function CustomizeMenu_GetGenericRewardButtonImage( ItemFlavor flavor )
 			break
 
                 
-                         
-                                                       
-        
+		case eItemType.sticker:
+			buttonImage = $"rui/menu/buttons/battlepass/sticker"
+			break
                       
 
 		default:
@@ -1760,7 +1797,7 @@ asset function CustomizeMenu_GetGenericRewardButtonImage( ItemFlavor flavor )
 	}
 
 	if ( buttonImage == $"" )
-		Warning( "CustomizeMenu_GetRewardButtonImage() returning empty image for %s", ItemFlavor_GetHumanReadableRef( flavor ) )
+		Warning( "CustomizeMenu_GetRewardButtonImage() returning empty image for %s", string(ItemFlavor_GetAsset( flavor )) )
 
 	return buttonImage
 }

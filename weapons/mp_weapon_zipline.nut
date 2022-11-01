@@ -4,12 +4,18 @@
        
 
                                                        
+                    
+                                               
+      
 #endif              
 
 global function MpWeaponZipline_Init
 global function OnWeaponPrimaryAttack_weapon_zipline
 global function OnProjectileCollision_weapon_zipline
 global function OnWeaponRaise_weapon_zipline
+                    
+                                                     
+      
 
 #if CLIENT
 global function OnCreateClientOnlyModel_weapon_zipline
@@ -19,7 +25,11 @@ const ZIPLINE_STATION_MODEL_VERTICAL = $"mdl/IMC_base/scaffold_tech_horz_rail_c.
 const ZIPLINE_STATION_MODEL_HORIZONTAL = $"mdl/industrial/zipline_arm.rmdl"
 const ZIPLINE_TEMP_ZIPLINE_GUN_STATION_MODEL = $"mdl/props/pathfinder_zipline/pathfinder_zipline.rmdl"
 const ZIPLINE_TEMP_ZIPLINE_GUN_STATION_WALL_MODEL = $"mdl/props/pathfinder_zipline/pathfinder_zipline.rmdl"
-const float ZIPLINE_DIST_MIN = 350.0
+                    
+                                        
+     
+    const float ZIPLINE_DIST_MIN = 350.0
+      
 const float ZIPLINE_DIST_MAX = 10000.0
 const ZIPLINE_STATION_EXPLOSION = $"p_impact_exp_small_full"
 const float ZIPLINE_REFUND_TIME = 3
@@ -27,18 +37,27 @@ const float ZIPLINE_AUTO_DETACH_DISTANCE = 100.0
 
 struct
 {
-	table<int, entity> activeWeaponBolts
+    table<int, entity> activeWeaponBolts
+                        
+                                             
+          
 } file
 
 void function MpWeaponZipline_Init()
 {
-	PrecacheModel( ZIPLINE_STATION_MODEL_VERTICAL )
-	PrecacheModel( ZIPLINE_STATION_MODEL_HORIZONTAL )
-	PrecacheModel( ZIPLINE_TEMP_ZIPLINE_GUN_STATION_MODEL )
-	PrecacheModel( ZIPLINE_TEMP_ZIPLINE_GUN_STATION_WALL_MODEL )
-	PrecacheParticleSystem( ZIPLINE_STATION_EXPLOSION )
+    PrecacheModel( ZIPLINE_STATION_MODEL_VERTICAL )
+    PrecacheModel( ZIPLINE_STATION_MODEL_HORIZONTAL )
+    PrecacheModel( ZIPLINE_TEMP_ZIPLINE_GUN_STATION_MODEL )
+    PrecacheModel( ZIPLINE_TEMP_ZIPLINE_GUN_STATION_WALL_MODEL )
+    PrecacheParticleSystem( ZIPLINE_STATION_EXPLOSION )
 
-	PrecacheMaterial( $"cable/zipline" )
+    PrecacheMaterial( $"cable/zipline" )
+
+                        
+                  
+                                          
+              
+          
 }
 
 #if SERVER
@@ -134,7 +153,11 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 		#else
 			PlayerUsedOffhand( weaponOwner, weapon )
 		#endif          
-
+                     
+            
+                                   
+        
+       
 	}
 
 	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_min_to_fire )
@@ -227,6 +250,9 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 	                                                 
 
 	                                                
+                     
+                                                    
+       
 	                                   
 	                                               
 	                                           
@@ -259,11 +285,18 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 
 	                                                                                                    
 	 
-		                                        
+		                                                           
 	 
 
 	                                                                                     
  
+
+                    
+                                                               
+     
+                                                       
+     
+      
 
 #endif
 
@@ -365,6 +398,46 @@ void function OnCreateClientOnlyModel_weapon_zipline( entity weapon, entity mode
 	{
 		DeployableModelInvalidHighlight( model )
 	}
+                    
+                                                               
+     
+
+                                                                                 
+     
+                                     
+                                   
+                                    
+                                         
+
+                                                                                        
+                                       
+                                                                
+                                                                
+                                                               
+                                                                                                                                          
+
+                 
+                                         
+       
+                              
+
+                                      
+       
+      
+
+                  
+      
+                                       
+
+                                                                                                                                                                                            
+                                                                       
+
+                                                                                                                           
+                                                       
+
+                 
+      
+      
 }
 #endif
 
@@ -445,3 +518,12 @@ void function OnWeaponRaise_weapon_zipline( entity weapon )
 {
 	weapon.EmitWeaponSound_1p3p( "pathfinder_zipline_predeploy", "pathfinder_zipline_predeploy" )
 }
+
+                    
+                                                                    
+     
+               
+                                      
+           
+     
+      

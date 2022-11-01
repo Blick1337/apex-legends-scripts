@@ -12,6 +12,7 @@ global struct ClGlobals
 	array<void functionref( entity )> onMinimapEntSpawnedCallbacks
 	array<bool functionref( entity )> onMinimapEntShouldCreateCallbacks
 	table<string,bool functionref( entity )> onMinimapEntShouldCreateCallbacks_scriptname
+	table<string,bool functionref( entity )> onMinimapEntShouldCreateCallbacks_targetname
 	array<void functionref( entity )> onUseEntGainFocusCallbacks
 	array<void functionref( entity )> onUseEntLoseFocusCallbacks
 	array<void functionref( entity )> addLocalPlayerFuncs
@@ -81,6 +82,7 @@ global struct ClGlobals
 
 	array<void functionref( entity )> onPlayerDisconnectedFuncs
 	array<void functionref( entity )> onWeaponChangedCallbacks
+	array<void functionref( entity player, entity weapon, string weaponName, int ammoUsed, vector attackOrigin, vector attackDir )> onWeaponAttackCallbacks
 
 	void functionref() scoreEventOverrideFunc
 

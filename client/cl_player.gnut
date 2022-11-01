@@ -735,7 +735,7 @@ void function KillShotBloodSpray( entity player, entity victim, vector damagePos
 
 		vector victimVelocity = victim.GetVelocity()
 		damagePosition += (Length( victimVelocity ) * 0.15) * Normalize( victimVelocity )
-		StartParticleEffectOnEntityWithPos( victim, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, -1, damagePosition - victim.GetOrigin(), <0, 0, 0> )
+		StartParticleEffectOnEntityWithPos( victim, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, damagePosition - victim.GetOrigin(), <0, 0, 0> )
 
 		return
 	}
@@ -753,7 +753,7 @@ void function KillShotBloodSpray( entity player, entity victim, vector damagePos
 
 	vector victimVelocity = victim.GetVelocity()
 	damagePosition += (Length( victimVelocity ) * 0.15) * Normalize( victimVelocity )
-	StartParticleEffectOnEntityWithPos( victim, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, -1, damagePosition - victim.GetOrigin(), <0, 0, 0> )
+	StartParticleEffectOnEntityWithPos( victim, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, damagePosition - victim.GetOrigin(), <0, 0, 0> )
 }
 
 
@@ -1400,22 +1400,22 @@ bool function SpawnFleshGibs( entity victim, vector attackDir )
 	{
 		if ( victim.GetModelName() == FLYER_MODEL )
 		{
-			fxID = StartParticleEffectOnEntity( victim, GetParticleSystemIndex( $"death_pinkmist_LG_nochunk" ), FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
+			fxID = StartParticleEffectOnEntity( victim, GetParticleSystemIndex( $"death_pinkmist_LG_nochunk" ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		}
 		else
 		{
-			fxID = StartParticleEffectOnEntity( victim, GetParticleSystemIndex( $"death_pinkmist_nochunk" ), FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
+			fxID = StartParticleEffectOnEntity( victim, GetParticleSystemIndex( $"death_pinkmist_nochunk" ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		}
 	}
 	else
 	{
 		if ( victim.GetModelName() == FLYER_MODEL )
 		{
-			fxID = StartParticleEffectOnEntity( victim, GetParticleSystemIndex( $"death_pinkmist_LG" ), FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
+			fxID = StartParticleEffectOnEntity( victim, GetParticleSystemIndex( $"death_pinkmist_LG" ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		}
 		else
 		{
-			fxID = StartParticleEffectOnEntity( victim, GetParticleSystemIndex( $"death_pinkmist" ), FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
+			fxID = StartParticleEffectOnEntity( victim, GetParticleSystemIndex( $"death_pinkmist" ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		}
 	}
 
@@ -1698,7 +1698,7 @@ string function GetPlayerDeathSound1P()
 	if ( IsFiringRangeGameMode() )
 		return "player_death_begin_survival_firingrange"
 
-	return "player_death_begin_survival"
+	return GetCurrentPlaylistVarString( "player_death_sound", "player_death_begin_survival" )
 }
 
 
@@ -1797,7 +1797,7 @@ void function PlayerFieryDeath( entity player )
 	entity scriptRef = CreatePropDynamic( $"mdl/dev/empty_model.rmdl", player.GetOrigin() + offset, player.GetAngles() )
 	scriptRef.SetParent( player )
 
-	int fxHandle = StartParticleEffectOnEntity( scriptRef, GetParticleSystemIndex( $"P_burn_player" ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int fxHandle = StartParticleEffectOnEntity( scriptRef, GetParticleSystemIndex( $"P_burn_player" ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 
 	OnThreadEnd(
 		function () : ( fxHandle, scriptRef )

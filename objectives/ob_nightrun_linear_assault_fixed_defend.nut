@@ -4,6 +4,7 @@ global function IsHardMode
 const string GENERIC_PANEL_SCRIPTNAME = "genericPanel"
 const float GENERIC_PANEL_USE_TIME = 1.0
 
+const NIGHTRUN_MOVER_SCRIPTNAME = "nightrun_mover"
 
 #if SERVER
                                                                 
@@ -3561,7 +3562,7 @@ bool function IsHardMode()
 
 	                                        
 	                                                                                  
-	                                                                   
+	                                                                                                              
 	                       
 	                                    
 	                         
@@ -5100,7 +5101,7 @@ void function GenericPanelUseThink( entity ent, entity playerUser )
 		                                                                                                                             
 		                                                                                                   
 
-		                                                               
+		                                                                                                         
 		                                
 
 		                                                

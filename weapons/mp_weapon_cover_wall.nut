@@ -3,6 +3,7 @@ global function MpWeaponCoverWall_Init
 global function OnWeaponPrimaryAttack_weapon_cover_wall
 global function OnWeaponActivate_weapon_cover_wall
 global function OnWeaponDeactivate_weapon_cover_wall
+global function OnWeaponAttemptOffhandSwitch_weapon_cover_wall
 #if CLIENT
 global function OnCreateClientOnlyModel_weapon_cover_wall
 #endif
@@ -29,6 +30,7 @@ const int COVER_WALL_MAX_HEALTH = 400
 const int COVER_WALL_STARTING_HEALTH = 45
 global const string BASE_WALL_SCRIPT_NAME = "cover_wall"
 const float AMPED_WALL_HEIGHT_OFFSET = 39.0
+const float TIME_BEFORE_SWITCHING_FROM_MOBILE_HMG = 0.6
 
             
 const float TIME_ELAPSED_BEFORE_ARM_EXTEND_BEGIN = 0.25
@@ -58,6 +60,7 @@ const bool DEBUG_REPAIR_IS_ENABLED = false
 
                 
 global const string AMPED_WALL_SCRIPT_NAME = "amped_wall"
+global const string AMPED_WALL_MOVER_SCRIPTNAME = "amped_wall_mover"
 const string HEALTH_TICKS_SCRIPT_NAME = "health_ticks"
 
 const float AMPED_WALL_BUILD_DELAY = 3.0
@@ -257,6 +260,27 @@ void function OnWeaponDeactivate_weapon_cover_wall( entity weapon )
 	#endif
 }
 
+bool function OnWeaponAttemptOffhandSwitch_weapon_cover_wall( entity weapon )
+{
+	entity player = weapon.GetWeaponOwner()
+	if ( player.IsZiplining() )
+		return false
+
+	entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
+	entity ultWeapon = player.GetOffhandWeapon( OFFHAND_ULTIMATE )
+	entity placementWeapon = player.GetOffhandWeapon( OFFHAND_ORDNANCE )
+
+	if( IsValid( ultWeapon ) && ultWeapon.GetWeaponClassName() == MOBILE_HMG_WEAPON_NAME && IsValid( placementWeapon ) && placementWeapon.GetWeaponClassName() == MOUNTED_TURRET_PLACEABLE_WEAPON_NAME
+			&& ( activeWeapon == ultWeapon || activeWeapon == placementWeapon ) )
+	{
+		float timeSinceStart = Time() - ultWeapon.w.startChargeTime
+		if( timeSinceStart < GetCurrentPlaylistVarFloat( "cover_wall_switch_from_ult_delay", TIME_BEFORE_SWITCHING_FROM_MOBILE_HMG ) )
+			return false
+	}
+
+	return true
+}
+
 #if CLIENT
 void function OnCreateClientOnlyModel_weapon_cover_wall( entity weapon, entity model, bool validHighlight )
 {
@@ -337,7 +361,7 @@ void function PlaceWallWithoutHolstering( entity player )
 	                        
 		      
 
-	                                                  
+	                                                                               
 
 	                          
 		                           
@@ -418,7 +442,7 @@ void function PlaceWallWithoutHolstering( entity player )
 	                                                                     
 
                     
-                                            
+	                                           
        
 
 	                     
@@ -703,7 +727,7 @@ void function PlaceWallWithoutHolstering( entity player )
 	                               
 
                      
-                                            
+	                                           
        
 
 	                                                           
@@ -734,7 +758,7 @@ void function PlaceWallWithoutHolstering( entity player )
 	                                                            
 
 	                                                                                               
-	                                                                                                                                                                    
+	                                                                                                                                                                                      
 
 	                              
 	                                            
@@ -788,9 +812,10 @@ void function PlaceWallWithoutHolstering( entity player )
 	             
  
 
-                                                        
+                                                                                        
  
-	                                                 
+	                                                                                 
+		                                                 
  
 
                                                                
@@ -990,8 +1015,8 @@ void function PlaceWallWithoutHolstering( entity player )
 	 
 
                  
-                                 
-                                                                               
+		                               
+			                                                                            
        
  
 
@@ -1067,14 +1092,13 @@ void function PlaceWallWithoutHolstering( entity player )
 			                                                                                          
 
 		                                                
-		                                                   
-		                                                                                                    
 		                             
 		 
 			                     
 				        
 
-			                                      
+			                                                                         
+			                           
 			 
 				                   
 				                                               
@@ -1252,8 +1276,8 @@ bool function CoverWall_CanUse( entity player, entity ent, int useFlags )
 		return false
 
                 
-                                                         
-             
+	if( PlayerHasPassive( player, ePassives.PAS_LOCKDOWN ) )
+		return true
       
 
 	entity weapon = player.GetOffhandWeapon( OFFHAND_TACTICAL )

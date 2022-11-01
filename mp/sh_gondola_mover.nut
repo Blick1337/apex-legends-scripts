@@ -6,6 +6,7 @@ global function IsGondolaAtStation
               
 global const string GONDOLA_SCRIPTNAME = "gondola_func_brush"
 const string GONDOLA_INTERIOR_TRIGGER = "gondola_interior_trigger"
+const string GONDOLA_MOVER_SCRIPTNAME = "gondola_mover"
 
 #if SERVER
                                                              
@@ -181,7 +182,7 @@ void function Cl_OnGondolaFuncBrushDestroyed( entity ent )
 #if SERVER
                                                                  
  
-	                                                  
+	                                                                            
 	                       
 	                                          
 

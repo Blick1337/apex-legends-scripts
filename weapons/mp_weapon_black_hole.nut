@@ -8,6 +8,7 @@ global function OnWeaponDeactivate_weapon_black_hole
 #endif
 
 global const string BLACKHOLE_PROP_SCRIPTNAME = "newt_blackhole"
+const string BLACKHOLE_MOVER_SCRIPTNAME = "newt_blackhole_mover"
 global const string BLACKHOLE_THREAT_TARGETNAME = "newt_blackhole_threat"
 global const string BLACKHOLE_WEAPON_CLASS_NAME = "mp_weapon_black_hole"
 
@@ -87,6 +88,7 @@ const float BLACKHOLE_TUNING_CODE_MOVE_OUTER_SPEED = 85
 const float BLACKHOLE_TUNING_CODE_MOVE_INNER_SPEED = 135
 
 const float BLACKHOLE_TUNING_DEATHFIELD_DAMAGE_SCALAR = 1.0
+const float BLACKHOLE_TUNING_TAKE_EXPLOSIVE_DAMAGE_MULTIPLIER = 1.5
 
 const float BLACKHOLE_TUNING_ACTIVATION_TIME = 1.75
 const float BLACKHOLE_TUNING_PULL_ACTIVATION_FX_LEAD_TIME = 1.0
@@ -141,6 +143,7 @@ void function MpWeaponBlackHole_Init()
 		StatusEffect_RegisterDisabledCallback( eStatusEffect.in_black_hole_field, Blackhole_Stop1PFX )
 
 		AddTargetNameCreateCallback( BLACKHOLE_THREAT_TARGETNAME, AddBlackholeThreatIndicator )
+		AddCallback_ModifyDamageFlyoutForScriptName( BLACKHOLE_PROP_SCRIPTNAME, BlackHole_OffsetDamageNumbersLower )
 
 	#endif         
 
@@ -204,6 +207,11 @@ void function ShowBlackHoleRadius( entity weapon )
 		EffectSetControlPointVector( fxHandle, 0, dropPosition )
 		WaitFrame()
 	}
+}
+
+vector function BlackHole_OffsetDamageNumbersLower( entity newt, vector damageFlyoutPosition )
+{
+	return ( damageFlyoutPosition - < 0, 0, newt.GetBoundingMaxs().z/2.0 > )
 }
 #endif
 
@@ -435,11 +443,11 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                              
 
                     
-                                           
+	                                          
        
 
 	                                          
-	                                           
+	                                          
 	                                           
 	                                          
 	                                          
@@ -462,7 +470,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	            
 	                       
 	 
-		                                           
+		                                                                       
 		                           
 		                                         
 		                           
@@ -969,11 +977,14 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                            
 		      
 
-	                                     
-	                                     
+	                                           
+	 
+                                             
+                                             
 
-	                                                   
-		      
+                                                           
+                  
+	 
 
 	                                                                               
 
@@ -998,6 +1009,8 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                                                              
 	                                                    
 
+	                                 
+		                                                                                       
 	                                                                                 
 	 
 		                                                    
@@ -1020,11 +1033,14 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                            
 		      
 
-	                                     
-	                                     
+	                                           
+	 
+                                             
+                                             
 
-	                                                   
-		      
+                                                           
+                  
+	 
 
 	                                                              
 	                                                    
@@ -1036,13 +1052,14 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 
 	                          
 	 
-		                    
-			                                                         
+                            
+                                                                     
+            
+                                                                 
 
-
-		                                                                                                                                
-			                                                                                            
-			                                                                                                                            
+                                                                                                                                        
+                                                                                                        
+                                                                                                                                        
 	 
 
 	                                       
@@ -1304,14 +1321,14 @@ void function BLACKHOLE_InTriggerThread( entity trigger, entity player )
 	              
 	               
 	                                                             
-	                                                                                                                                            
+	                                                                                                                                                               
 
 	                                                                           
 	                           
 	                                                                                                               
 	                                   
 
-	                                                                                                                                                                                             
+	                                                                                                                                                                                                                
 	                             
 	                                                                                                               
 	                                     
@@ -1349,7 +1366,7 @@ void function Blackhole_Start1PFX( entity ent, int statusEffect, bool actuallyCh
 	entity viewPlayer = GetLocalViewPlayer()
 
 	int fxHandle
-	fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, BLACKHOLE_1P_SCREEN_OTHER_FX_ID, FX_PATTACH_ABSORIGIN_FOLLOW, -1, viewPlayer.EyePosition(), <0, 0, 0> )
+	fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, BLACKHOLE_1P_SCREEN_OTHER_FX_ID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, viewPlayer.EyePosition(), <0, 0, 0> )
 
 	EffectSetIsWithCockpit( fxHandle, true )
 

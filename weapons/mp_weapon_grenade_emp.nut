@@ -1,4 +1,5 @@
 global function OnProjectileCollision_weapon_grenade_emp
+global const string GRENADE_EMP_WEAPON_NAME = "mp_weapon_grenade_emp"
 
 void function OnProjectileCollision_weapon_grenade_emp( entity projectile, vector pos, vector normal, entity hitEnt, int hitBox, bool isCritical, bool isPassthrough )
 {

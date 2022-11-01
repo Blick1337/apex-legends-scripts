@@ -9,12 +9,14 @@ global function OnWeaponDeactivate_mobile_respawn
 global function OnWeaponPrimaryAttack_mobile_respawn
 global function OnWeaponPrimaryAttackAnimEvent_mobile_respawn
 global function GetRespawnStationUseTime_Mobile
+global function MobileRespawn_SetDeployPositionValidationFunc
 
 #if SERVER
                                             
                                            
                                       
                                                
+                                                                              
 #endif
 
                          
@@ -44,6 +46,8 @@ const int MOBILE_RESPAWN_BEACON_BAD_AIRSPACE_RADIUS = 150
 const string MOBILE_RESPAWN_BEACON_IMPACT_TABLE = "mobile_respawn_beacon"
 const float MOBILE_RESPAWN_BEACON_SLOPED_LANDING_LIMIT = 0.3 	                                               
 
+const string MOBILE_RESPAWN_BEACON_MOVER_SCRIPTNAME = "mobile_respawn_beacon_mover"
+
                          
                                                                                                     
                                                       
@@ -64,11 +68,14 @@ struct
 	table< entity, vector > savedSlopeNormal
 	#if SERVER
 		                                      
+		                                                                                
 	#endif
 
                           
                                                   
        
+
+	CarePackagePlacementInfo functionref( entity ) deployPositionValidationFunc
 } file
 
                                                                                
@@ -87,6 +94,7 @@ void function MobileRespawnBeacon_Init()
 	PrecacheImpactEffectTable( MOBILE_RESPAWN_BEACON_IMPACT_TABLE )
 	PrecacheImpactEffectTable( "mobile_respawn_dust" )
 	RegisterSignal( "MobileBeaconLanded" )
+	MobileRespawn_SetDeployPositionValidationFunc( GetCarePackagePlacementInfo )
 
                           
                                                                                                           
@@ -98,6 +106,11 @@ void function MobileRespawnBeacon_Init()
 	#if CLIENT
 		RegisterSignal( "MobileRespawnPlacement" )
 	#endif
+}
+
+void function MobileRespawn_SetDeployPositionValidationFunc( CarePackagePlacementInfo functionref( entity ) validationFunc )
+{
+	file.deployPositionValidationFunc = validationFunc
 }
 
 void function OnWeaponActivate_mobile_respawn( entity weapon )
@@ -201,7 +214,7 @@ var function OnWeaponPrimaryAttack_mobile_respawn( entity weapon, WeaponPrimaryA
 	entity ownerPlayer = weapon.GetWeaponOwner()
 	Assert( ownerPlayer.IsPlayer() )
 
-	CarePackagePlacementInfo placementInfo = GetCarePackagePlacementInfo( ownerPlayer )
+	CarePackagePlacementInfo placementInfo = file.deployPositionValidationFunc( ownerPlayer )
 
 	if ( placementInfo.failed )
 		return 0
@@ -229,6 +242,8 @@ var function OnWeaponPrimaryAttack_mobile_respawn( entity weapon, WeaponPrimaryA
 
 			                                                                                                  
 		 
+		                                                                               
+			                           
 
 		                                                                     
 	#else
@@ -252,6 +267,14 @@ var function OnWeaponPrimaryAttack_mobile_respawn( entity weapon, WeaponPrimaryA
 	int ammoReq = weapon.GetAmmoPerShot()
 	return ammoReq
 }
+
+#if SERVER
+                                                                                                                     
+ 
+	                                                                                                                                                                                                           
+	                                                                          
+ 
+#endif          
 
 var function OnWeaponPrimaryAttackAnimEvent_mobile_respawn(entity ent, WeaponPrimaryAttackParams params)
 {
@@ -288,6 +311,9 @@ var function OnWeaponPrimaryAttackAnimEvent_mobile_respawn(entity ent, WeaponPri
  
 	                                                                                         
 	                                           
+                    
+                                                                                                                            
+       
 	                                      
 	                               
 
@@ -381,7 +407,7 @@ bool function MobileRespawn_ConditionalCheck( string ref, entity player )
 
 	                                       
 	                                                                                                          
-	                                                                                              
+	                                                                                                                                      
 	                                      
 	                                                                                                    
 	                                                                                       
@@ -698,7 +724,11 @@ bool function MobileRespawn_ConditionalCheck( string ref, entity player )
 	                                                                                                                        
 	                                                               
 	                         
-	                                                                                                                                                                                                                                                            
+
+	                                                                                                            
+	                                                                                                                        
+	                                                                                                 
+	                                                                                                                  
 	                               
 
 	                
@@ -711,10 +741,34 @@ bool function MobileRespawn_ConditionalCheck( string ref, entity player )
 		                                                        
 		                                                                                                                                              
 
-		                                                                                 
+		                                                                                                                         
 		                                          
 		                  
 		                                                                 
+	 
+
+	                                                     
+	                              
+
+	                                             
+	 
+		                        
+		 
+			                                                                              
+			                          
+			 
+				                   
+				                                  
+				        
+			 
+
+			                                                                         
+			                           
+			 
+				                   
+				                                 
+			 
+		 
 	 
 
 	             
@@ -730,6 +784,17 @@ bool function MobileRespawn_ConditionalCheck( string ref, entity player )
 
 	                          
 		                     
+
+	                                                                          
+		           
+
+	                                   
+	 
+		                       
+			                                                             
+	 
+
+
  
 #endif          
 
@@ -759,7 +824,7 @@ void function MobileRespawnPlacement( entity weapon, entity player, asset modelN
 
 	while ( true )
 	{
-		CarePackagePlacementInfo placementInfo = GetCarePackagePlacementInfo( player )
+		CarePackagePlacementInfo placementInfo = file.deployPositionValidationFunc( player )
 
 		beacon.SetOrigin( placementInfo.origin )
 		beacon.SetAngles( placementInfo.angles )
@@ -1002,7 +1067,7 @@ void function OnBeginPlacingMobileRespawn( entity weapon, entity player )
                                               
 
                                                                                  
-                                                               
+                                                                                                                         
 
              
                                                    
@@ -1176,7 +1241,7 @@ void function OnBeginPlacingMobileRespawn( entity weapon, entity player )
 
                
   
-                                                                                
+                                                                                      
 
                                              
                                              

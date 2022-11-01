@@ -14,6 +14,7 @@ global function PrivateMatch_SpectCharSelect_ConfigurePlayerButton
 
 struct TeamRosterStruct
 {
+	var 		  framePanel
 	var           headerPanel
 	var           listPanel
 	int           teamIndex
@@ -139,6 +140,7 @@ TeamRosterStruct function CreateTeamPlacement( int teamIndex, var panel )
 	teamPlacement.teamIndex = teamIndex
 	teamPlacement.teamDisplayNumber = teamIndex - 1
 
+	teamPlacement.framePanel = Hud_GetChild( panel, PRIVATE_MATCH_TEAM_FRAME_PANEL )
 	teamPlacement.headerPanel = Hud_GetChild( panel, PRIVATE_MATCH_TEAM_HEADER_PANEL )
 	teamPlacement.listPanel = Hud_GetChild( panel, PRIVATE_MATCH_TEAM_BUTTON_PANEL )
 
@@ -156,8 +158,16 @@ void function PrivateMatch_SpectCharSelect_TeamRoster_Configure( TeamRosterStruc
 {
 	var buttonPanel = teamRoster.listPanel
 
-	HudElem_SetRuiArg( teamRoster.headerPanel, "teamName", teamName )
-	HudElem_SetRuiArg( teamRoster.headerPanel, "teamNumber", teamRoster.teamDisplayNumber )
+
+	var headerRui = Hud_GetRui( teamRoster.headerPanel )
+	var frameRui = Hud_GetRui( teamRoster.framePanel )
+	vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamRoster.teamDisplayNumber + 1 ) / 255.0 )
+
+	RuiSetColorAlpha( frameRui, "teamColor", smokeColor, 1.0 )
+	RuiSetColorAlpha( headerRui, "teamColor", smokeColor, 1.0 )
+	RuiSetString( headerRui, "headerText", "["+ teamRoster.teamDisplayNumber  + "] " + teamName )
+	RuiSetInt( headerRui, "numScoreColumns", 0 )
+	RuiSetFloat( headerRui, "rowWidth", float( Hud_GetWidth( teamRoster.headerPanel ) ) )
 
 	Hud_InitGridButtons( buttonPanel, MAX_TEAM_PLAYERS )
 	var scrollPanel = Hud_GetChild( buttonPanel, "ScrollPanel" )
@@ -172,8 +182,8 @@ void function PrivateMatch_SpectCharSelect_TeamRoster_Configure( TeamRosterStruc
 
 int function SortPlayers( entity a, entity b )
 {
-	int aStepIndex = a.GetPlayerNetInt( "characterSelectLockstepPlayerIndex" )
-	int bStepIndex = b.GetPlayerNetInt( "characterSelectLockstepPlayerIndex" )
+	int aStepIndex = a.GetPlayerNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_PLAYER_INDEX )
+	int bStepIndex = b.GetPlayerNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_PLAYER_INDEX )
 
 	if ( aStepIndex > bStepIndex )
 		return 1
@@ -225,8 +235,16 @@ void function PrivateMatch_SpectCharSelect_TeamRoster_Update()
 
 		PrivateMatch_SpectCharSelect_TeamRoster_Configure( teamRoster, teamName )
 
-		HudElem_SetRuiArg( teamRoster.headerPanel, "teamName", teamName )
-		HudElem_SetRuiArg( teamRoster.headerPanel, "teamNumber", teamRoster.teamDisplayNumber )
+
+		var headerRui = Hud_GetRui( teamRoster.headerPanel )
+		var frameRui = Hud_GetRui( teamRoster.framePanel )
+		vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamRoster.teamDisplayNumber + 1 ) / 255.0 )
+
+		RuiSetColorAlpha( frameRui, "teamColor", smokeColor, 1.0 )
+		RuiSetColorAlpha( headerRui, "teamColor", smokeColor, 1.0 )
+		RuiSetString( headerRui, "headerText", "["+ teamRoster.teamDisplayNumber  + "] " + teamName )
+		RuiSetInt( headerRui, "numScoreColumns", 0 )
+		RuiSetFloat( headerRui, "rowWidth", float( Hud_GetWidth( teamRoster.headerPanel ) ) )
 
 		var scrollPanel = Hud_GetChild( teamRoster.listPanel, "ScrollPanel" )
 		Assert( players.len() <= MAX_TEAM_PLAYERS )
@@ -262,7 +280,7 @@ void function PrivateMatch_SpectCharSelect_ConfigurePlayerButton( var button, en
 
 	asset characterPortrait = $"white"
 	bool loadoutReady = LoadoutSlot_IsReady( ToEHI( player ), Loadout_Character() )
-	if ( loadoutReady && player.GetPlayerNetBool( "hasLockedInCharacter" ) )
+	if ( loadoutReady && player.GetPlayerNetBool( CHARACTER_SELECT_NETVAR_HAS_LOCKED_IN_CHARACTER ) )
 	{
 		ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
 		characterPortrait = CharacterClass_GetCharacterLockedPortrait( character )
@@ -273,8 +291,8 @@ void function PrivateMatch_SpectCharSelect_ConfigurePlayerButton( var button, en
 		return
 	}
 
-	int lockStepIndex = GetGlobalNetInt( "characterSelectLockstepIndex" )
-	int playerLockStepIndex = player.GetPlayerNetInt( "characterSelectLockstepPlayerIndex" )
+	int lockStepIndex = GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX )
+	int playerLockStepIndex = player.GetPlayerNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_PLAYER_INDEX )
 
 	if ( lockStepIndex > -1 )
 	{
@@ -373,7 +391,7 @@ void function TryEnablePrivateMatchSpectCharSelectMenu( entity player )
 	DisablePrivateMatchSpectCharSelectMenu()
 
 	if ( GetCurrentPlaylistVarInt( "survival_enable_gladiator_intros", 1 ) == 1 )
-		thread DoChampionSquadCardsPresentation()
+		thread DoChampionSquadCardsPresentation("pickLoadoutGamestateEndTime")
 }
 
 void function FlashScreenWhite( float holdTime = 0.5, float fadeOutDuration = 1.5 )
@@ -417,11 +435,11 @@ void function CloseCharacterSelectMenuAtTime( float closeTimeStamp )
 
 void function OnPrivateMatchSpectCharSelectMenuThink()
 {
-	file.lockStepIndex = GetGlobalNetInt( "characterSelectLockstepIndex" )
+	file.lockStepIndex = GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX )
 
 	while ( true )
 	{
-		if ( GetGlobalNetInt( "characterSelectLockstepIndex" ) != file.lockStepIndex )
+		if ( GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX ) != file.lockStepIndex )
 		{
 			if( file.isButtonMappped == false )
 			{
@@ -429,7 +447,7 @@ void function OnPrivateMatchSpectCharSelectMenuThink()
 				PrivateMatch_SpectCharSelect_TeamRoster_Update()
 			}
 
-			file.lockStepIndex = GetGlobalNetInt( "characterSelectLockstepIndex" )
+			file.lockStepIndex = GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX )
 			SpecOnLockStepPickIndexChanged()
 		}
 
@@ -451,8 +469,8 @@ void function UpdateFooterRui()
 
 		if ( i == file.lockStepIndex )
 		{
-			RuiSetGameTime( rui, "selectingStartTime", GetGlobalNetTime( "characterSelectLockstepStartTime" ) )
-			RuiSetGameTime( rui, "selectingEndTime", GetGlobalNetTime( "characterSelectLockstepEndTime" ) )
+			RuiSetGameTime( rui, "selectingStartTime" , GetGlobalNetTime( CHARACTER_SELECT_NETVAR_LOCK_STEP_START_TIME ) )
+			RuiSetGameTime( rui, "selectingEndTime", GetGlobalNetTime( CHARACTER_SELECT_NETVAR_LOCK_STEP_END_TIME ) )
 		}
 		else if ( i < file.lockStepIndex )
 		{

@@ -19,6 +19,9 @@ const int AREA_SCAN_SKIN_INDEX = 9
 
 const float AREA_SONAR_SCAN_RADIUS = 3000.0
 const float AREA_SONAR_SCAN_HUD_FEEDBACK_DURATION = 3.0
+                    
+                                                           
+      
 const float AREA_SONAR_SCAN_CONE_FOV = 125.0
 
 const bool AREA_SONAR_PERF_TESTING = false
@@ -443,7 +446,11 @@ float function AreaSonarScan_GetConeFOV()
 
                                                                                
  
+
 	                                                     
+                                               
+                                                     
+       
 		      
 
 	                                    
@@ -469,6 +476,23 @@ float function AreaSonarScan_GetConeFOV()
 	                                                                                                         
 	                         
 		      
+
+                                               
+                                                    
+   
+                                                   
+   
+       
+
+                      
+                                                                          
+         
+       
+
+                 
+		                                                                
+			      
+       
 
 	                                       
 	 
@@ -514,6 +538,16 @@ float function AreaSonarScan_GetConeFOV()
 	                                                                                                             
 	                         
 		      
+
+                      
+                                                                          
+         
+       
+
+                 
+		                                                                  
+			      
+       
 
 	                                         
 	 
@@ -641,7 +675,7 @@ void function AreaSonarScan_StartScreenEffect( entity player, int statusEffect, 
 		return
 
 	int indexD        = GetParticleSystemIndex( AREA_SCAN_ACTIVATION_SCREEN_FX )
-	file.screeFxHandle = StartParticleEffectOnEntity( cockpit,indexD, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	file.screeFxHandle = StartParticleEffectOnEntity( cockpit,indexD, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetIsWithCockpit( file.screeFxHandle, true )
 
 	thread ColorCorrection_LerpWeight( file.colorCorrection, 0, 1, 0.5 )

@@ -78,6 +78,7 @@ struct
 #if UI
 FriendsData function GetFriendsData( bool groupByStatus = false )
 {
+        
 	CommunityFriendsWithPresence friendInfo = GetFriendInfoAndPresence()
 
 	FriendsData returnData
@@ -116,12 +117,26 @@ FriendsData function GetFriendsData( bool groupByStatus = false )
 		friend.id = entry.id
 		friend.hardware = entry.hardware
 		friend.name = entry.name
-		friend.presence = StringReplace( entry.presence, "%", "%%" )
+		friend.presence = replace( entry.presence, "%", "%%" )
 		friend.ingame = entry.ingame
 		friend.inparty = IsInParty( entry.id )
 		friend.away = entry.away
-
+		
 		string tempName = friend.name;
+
+		EadpPresenceData ornull userPresenceOrNull = entry.eadpPresenceData
+		if( userPresenceOrNull != null)
+		{
+			expect EadpPresenceData( userPresenceOrNull )			
+			friend.eadpPresenceData = userPresenceOrNull
+			
+			if ( userPresenceOrNull.presence != null)
+			{
+					PresenceState pstate = expect PresenceState( userPresenceOrNull.presence )
+					friend.presence = replace( LocalizePresenceState( pstate ), "%", "%%" )
+			}
+		
+		}
 
 #if (NX_PROG)
 		tempName = friend.name + friend.id
@@ -377,7 +392,7 @@ void function Dev_SetFillerFriends( int count )
 	                                                                                                            
 
 	           
-	                                                                                                                                                                       
+	                                                                               
 	 
 		                  
 
@@ -438,9 +453,9 @@ void function Dev_SetFillerFriends( int count )
 
 			                                             
 				                                                                                  
-					                                                                                                                                                                                
+					                                                                                                                                                                          
 
-				                                                                                                                                                                         
+				                                                                                                                                                                   
 			      
 		 
 	 
@@ -461,7 +476,7 @@ void function Dev_SetFillerFriends( int count )
 	 
 		                                                  
 		                                             
-			                                                                                                                                                
+			                                                                                                                                          
 			                                                                                                                                                                                               
 		      
 		                                                         
@@ -628,9 +643,6 @@ int function SortFriendGroupStatus( Friend a, Friend b )
 bool function EADP_SocialEnabled()
 {
 	if ( EADP_SocialCanRun() == 0 )
-		return false
-
-	if ( !CrossplayUserOptIn() )
 		return false
 
 	if ( GetConVarInt( "crossPlay_enabled" ) != 0 )

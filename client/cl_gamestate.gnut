@@ -153,8 +153,9 @@ void function CreateScoreRUI()
 	}
 
 	RuiSetInt( rui, "maxPlayerCount", GetCurrentPlaylistVarInt( "max_players", 12 ) )
-	RuiSetString( rui, "gameModeString", GetCurrentPlaylistVarString( "gameModeString", "" ) )
-	RuiSetString( rui, "mapName", Localize(GetMapDisplayName( GetMapName() ) ) )
+	RuiSetString( rui, "gameModeString", GetCurrentPlaylistVarString( "name", "#PLAYLIST_UNAVAILABLE" ) )
+	RuiSetString( rui, "mapName", GetCurrentPlaylistVarString( "map_name", "#PLAYLIST_UNAVAILABLE" ) )
+	RuiSetImage( rui , "gameModeIcon", GetGamemodeLogoFromImageMap( GetCurrentPlaylistVarString( "gamemode_logo", "BATTLE_ROYALE" )) )
 	file.gamestateRui        = rui
 	file.gameStateRuiCreated = true
 
@@ -979,6 +980,7 @@ var function CreateNestedNetGraph( var rui )
 	#endif
 
 	RuiSetString( nestedGraphRui, "netGraphServerID", GetServerDebugId() )
+	RuiSetBool( nestedGraphRui, "isUsingAntiDDoS", IsUsingRelayTransport() )
 
 	                                                                                      
 	                                                                                             

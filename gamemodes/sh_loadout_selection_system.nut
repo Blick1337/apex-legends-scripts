@@ -25,9 +25,9 @@
                                                                                                                                                                              
                                                                                                                                                           
 
+global function LoadoutSelection_Init
 
 #if CLIENT || SERVER
-global function LoadoutSelection_Init
 global function LoadoutSelection_RegisterNetworking
 #endif                    
 
@@ -42,6 +42,7 @@ global function LoadoutSelection_RegisterNetworking
                                                               
                                                           
                                                                       
+                                                       
 #endif          
 
 #if CLIENT
@@ -52,6 +53,8 @@ global function ServerCallback_LoadoutSelection_FinishedProcessingClickEvent
 global function ServerCallback_LoadoutSelection_SetActiveLoadoutNameForSlot
 global function ServerCallback_LoadoutSelection_UpdateLoadoutInfo
 global function ServerCallback_LoadoutSelection_UpdateSelectedLoadoutInfo
+global function ServerCallback_LoadoutSelection_RefreshUILoadoutInfo
+global function ServerCallback_LoadoutSelection_RepopulateLoadouts
 global function UICallback_LoadoutSelection_OnOpticSlotButtonClick
 global function UICallback_LoadoutSelection_OpticSelectDialogueClose
 global function UICallback_LoadoutSelection_BindWeaponRui
@@ -67,6 +70,8 @@ const string SOUND_SELECT_OPTIC = "ui_arenas_ingame_inventory_Select_Optic"
 global function LoadoutSelection_UpdateLoadoutInfo_UI
 global function LoadoutSelection_SetSelectedLoadoutSlotIndex_UI
 global function LoadoutSelection_GetSelectedLoadoutSlotIndex_UI
+global function LoadoutSelection_SetLoadoutCounts_UI
+global function LoadoutSelection_GetLoadoutCounts_UI
 #endif      
 
 global function IsUsingLoadoutSelectionSystem
@@ -99,18 +104,32 @@ global function LoadoutSelection_GetSelectedLoadoutSlotIndex_CL_UI
 global function LoadoutSelection_GetWeaponSetStringForTier
 global function LoadoutSelection_GetLoadoutContentsByLoadoutSlotIndex
 global function LoadoutSelection_GetAvailableWeaponUpgradesForWeaponRef
+global function LoadoutSelection_GetAvailableLoadoutCount
+global function LoadoutSelection_RepopulateLoadouts
 
 const string LOADOUTSELECTION_ROTATION_OVERRIDE_KEY = "rotation"
 const string LOADOUTSELECTION_LOADOUT_OVERRIDE_KEY = "loadout"
 const string LOADOUTSELECTION_WEAPONDATA_OVERRIDE_KEY = "weapondata"
 const asset LOADOUTSELECTION_ROTATIONS_DATATABLE = $"datatable/loadoutselection_loadout_rotations.rpak"
 const asset LOADOUTSELECTION_LOADOUTS_DATATABLE = $"datatable/loadoutselection_selectable_loadouts.rpak"
+#endif                    
+
 const asset LOADOUTSELECTION_WEAPON_DATA_DATATABLE = $"datatable/loadoutselection_weapon_data.rpak"
+
+#if CLIENT || SERVER
                       
-                                                                                                          
-                                                                                                           
+const asset WINTEREXPRESS_ROTATIONS_DATATABLE = $"datatable/gamemode_winterexpress_loadout_rotations.rpak"
+const asset WINTEREXPRESS_LOADOUTS_DATATABLE = $"datatable/gamemode_winterexpress_selectable_loadouts.rpak"
+      
+                    
+                                                                                      
+                                                                                       
+
+                                                                                                
+                                                                                                 
       
 
+global const string NETVAR_LOADOUT_CURRENT_ROTATION_INDEX_NAME = "loadoutCurrentRotationIndex"
 
 const array<string> LOADOUTSELECTION_WEAPON_SET_STRINGS_FOR_TIER = [ WEAPON_LOCKEDSET_SUFFIX_WHITESET, WEAPON_LOCKEDSET_SUFFIX_WHITESET, WEAPON_LOCKEDSET_SUFFIX_BLUESET, WEAPON_LOCKEDSET_SUFFIX_PURPLESET, WEAPON_LOCKEDSET_SUFFIX_GOLD ]
 
@@ -139,6 +158,7 @@ global enum eLoadoutSelectionRotationStyle
 	DAILY,
 	WEEKLY,
 	PERMANENT,
+	MANUAL,
 	_count
 }
 #endif                    
@@ -218,7 +238,6 @@ struct {
 	#if CLIENT || SERVER
 		asset rotationsDatatable = LOADOUTSELECTION_ROTATIONS_DATATABLE
 		asset loadoutsDatatable = LOADOUTSELECTION_LOADOUTS_DATATABLE
-		asset weaponDataDatatable = LOADOUTSELECTION_WEAPON_DATA_DATATABLE
 		table<int, LoadoutSelectionCategory > loadoutSlotIndexToCategoryDataTable
 		array<LoadoutSelectionCategory> loadoutCategories
 		bool areLoadoutsPopulated = false
@@ -227,6 +246,7 @@ struct {
 		table<string, array<string> > weaponOptics
 	#endif                    
 
+	asset weaponDataDatatable = LOADOUTSELECTION_WEAPON_DATA_DATATABLE
 	                                                  
 	table < int, int > loadoutSlotIndexToWeaponCountTable
 	table < int, string > loadoutSlotIndexToHeaderTable
@@ -234,6 +254,12 @@ struct {
 
 	#if CLIENT || UI
 		int playerSelectedLoadout = 0
+		                                                                                               
+		int maxLoadoutCountRegular = -1
+                            
+                                   
+                                    
+                                  
 	#endif                
 
 	#if CLIENT
@@ -242,32 +268,37 @@ struct {
 	#endif          
 } file
 
-#if CLIENT || SERVER
 void function LoadoutSelection_Init()
 {
 	if ( !IsUsingLoadoutSelectionSystem() )
 		return
 
-	LoadoutSelection_SetDatatableAssets()
+	#if CLIENT || SERVER
+		LoadoutSelection_SetDatatableAssets()
+	#endif                    
+
 	LoadoutSelection_InitWeaponData()
-	LoadoutSelection_RegisterLoadoutData()
-	LoadoutSelection_RegisterLoadoutDistribution()
 
-	#if SERVER
-		                                        
-	#endif          
-	LoadoutSelection_PopulateLoadouts()
-	#if SERVER
-		                                                                                                                                                                          
-		                                                            
-		                                                  
-		                                                           
-	#endif          
+	#if CLIENT || SERVER
+		LoadoutSelection_RegisterLoadoutData()
+		LoadoutSelection_RegisterLoadoutDistribution()
+		#if SERVER
+			                                                            
+			                                                                           
+			                                        
+		#endif          
+		LoadoutSelection_PopulateLoadouts()
+		#if SERVER
+			                                                                                                                                                                          
+			                                                            
+			                                                  
+			                                                           
+		#endif          
 
-	Remote_RegisterUIFunction( "LoadoutSelectionMenu_OpenLoadoutMenu", "bool" )
-	Remote_RegisterUIFunction( "LoadoutSelectionMenu_CloseLoadoutMenu" )
+		Remote_RegisterUIFunction( "LoadoutSelectionMenu_OpenLoadoutMenu", "bool" )
+		Remote_RegisterUIFunction( "LoadoutSelectionMenu_CloseLoadoutMenu" )
+	#endif                    
 }
-#endif                    
 
 bool function IsUsingLoadoutSelectionSystem()
 {
@@ -301,15 +332,32 @@ void function LoadoutSelection_SetDatatableAssets()
 	                                                                                                                 
 
                        
-                                      
-   
-                                                              
-                                                            
-   
+		if ( WinterExpress_IsModeEnabled() )
+		{
+			file.rotationsDatatable = WINTEREXPRESS_ROTATIONS_DATATABLE
+			file.loadoutsDatatable = WINTEREXPRESS_LOADOUTS_DATATABLE
+		}
        
 
+                     
+                       
+  
+                            
+   
+                                                         
+                                                        
+   
+      
+   
+                                                    
+                                                   
+   
+  
+       
 }
+#endif                    
 
+#if CLIENT || SERVER
 void function LoadoutSelection_RegisterNetworking()
 {
 	if ( !IsUsingLoadoutSelectionSystem() )
@@ -318,12 +366,16 @@ void function LoadoutSelection_RegisterNetworking()
 	Remote_RegisterClientFunction( "ServerCallback_LoadoutSelection_FinishedProcessingClickEvent" )
 	Remote_RegisterClientFunction( "ServerCallback_LoadoutSelection_SetActiveLoadoutNameForSlot", "string", "int", 0, LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS + 1 )
 	Remote_RegisterClientFunction( "ServerCallback_LoadoutSelection_UpdateLoadoutInfo", "int", 0, LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS + 1, "string", "int", 0, LOADOUTSELECTION_MAX_WEAPONS_PER_LOADOUT + 1, "int", 0, eLoadoutSelectionSlotType._count, "int", -1, LOADOUTSELECTION_MAX_SCOPE_INDEX + 1, "int", -1, LOADOUTSELECTION_MAX_SCOPE_INDEX + 1 )
+	Remote_RegisterClientFunction( "ServerCallback_LoadoutSelection_RefreshUILoadoutInfo" )
 	Remote_RegisterClientFunction( "ServerCallback_LoadoutSelection_UpdateSelectedLoadoutInfo", "int", 0, LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS + 1 )
+	Remote_RegisterClientFunction( "ServerCallback_LoadoutSelection_RepopulateLoadouts")
 	Remote_RegisterServerFunction( "ClientCallback_LoadoutSelection_OnLoadoutSelectMenuClose" )
 	Remote_RegisterServerFunction( "ClientCallback_LoadoutSelection_OnLoadoutSelectMenuLoadoutSelected", "int", 0, LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS + 1 )
 	Remote_RegisterServerFunction( "ClientCallback_LoadoutSelection_SetOpticPreference", "int", 0, LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS + 1, "int", 0, 2, "int", 0, LOADOUTSELECTION_MAX_SCOPE_INDEX + 1 )
-	Remote_RegisterUIFunction( "LoadoutSelectionMenu_RefreshLoadouts", "int", 0, LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS + 1, "int", 0, eLoadoutSelectionSlotType._count )
+
+	RegisterNetworkedVariable( NETVAR_LOADOUT_CURRENT_ROTATION_INDEX_NAME, SNDC_GLOBAL, SNVT_INT, 0)
 }
+#endif                    
 
   
                                                                                                                             
@@ -335,6 +387,7 @@ void function LoadoutSelection_RegisterNetworking()
                       
   
 
+#if CLIENT || SERVER
                                                                                           
 void function LoadoutSelection_RegisterLoadoutData()
 {
@@ -353,7 +406,10 @@ void function LoadoutSelection_RegisterLoadoutData()
 		bool isSlotDisabled = GetCurrentPlaylistVarBool( "loadoutselection_dt_override_" + item.loadoutSlot + "_disable", false )
 		if ( isSlotDisabled )
 		{
-			printf( "LOADOUT SELECTION: RegisterLoadoutData skipping " + item.loadoutSlot + " because it is disabled through playlist vars" )
+			#if DEV
+				printf( "LOADOUT SELECTION: RegisterLoadoutData skipping " + item.loadoutSlot + " because it is disabled through playlist vars" )
+			#endif       
+
 			continue
 		}
 
@@ -361,7 +417,10 @@ void function LoadoutSelection_RegisterLoadoutData()
 		string loadoutSlotToUseAsOverride = GetCurrentPlaylistVarString( "loadoutselection_dt_override_" + item.loadoutSlot + "_loadouts", "" )
 		if ( loadoutSlotToUseAsOverride != "" )
 		{
-			printf( "LOADOUT SELECTION: Overriding Loadout Slot: " + item.loadoutSlot + " with " + loadoutSlotToUseAsOverride )
+			#if DEV
+				printf( "LOADOUT SELECTION: Overriding Loadout Slot: " + item.loadoutSlot + " with " + loadoutSlotToUseAsOverride )
+			#endif       
+
 			row = GetDataTableRowMatchingStringValue( dataTable, GetDataTableColumnByName( dataTable, "loadoutSlot" ), loadoutSlotToUseAsOverride )
 			Assert( row > -1, "Attempted to override a Loadout Slot through playlist vars using an invalid Loadout Slot or a Slot that is not in the Rotations Datatable" )
 			item.loadoutSlot = GetDataTableString( dataTable, row, GetDataTableColumnByName( dataTable, "loadoutSlot" ) )
@@ -382,7 +441,10 @@ void function LoadoutSelection_RegisterLoadoutData()
 			string loadoutToUseAsOverride = GetCurrentPlaylistVarString( "loadoutselection_dt_override_loadout_" + loadout, "" )
 			if ( loadoutToUseAsOverride != "" )
 			{
-				printf( "LOADOUT SELECTION: Overriding Loadout: " + loadout + " with " + loadoutToUseAsOverride )
+				#if DEV
+					printf( "LOADOUT SELECTION: Overriding Loadout: " + loadout + " with " + loadoutToUseAsOverride )
+				#endif       
+
 				loadout = loadoutToUseAsOverride
 			}
 
@@ -396,9 +458,13 @@ void function LoadoutSelection_RegisterLoadoutData()
 		index++
 	}
 
-	printf( "LOADOUT SELECTION: RegisterLoadoutData Completed" )
+	#if DEV
+		printf( "LOADOUT SELECTION: RegisterLoadoutData Completed" )
+	#endif       
 }
+#endif                    
 
+#if CLIENT || SERVER
                                                                                                                                  
 void function LoadoutSelection_RegisterLoadoutDistribution()
 {
@@ -409,7 +475,10 @@ void function LoadoutSelection_RegisterLoadoutDistribution()
 
 	foreach ( item in file.loadoutCategories )
 	{
-		printf( "LOADOUT SELECTION: Getting datatable for loadout " + item.loadoutSlot )
+		#if DEV
+			printf( "LOADOUT SELECTION: Getting datatable for loadout " + item.loadoutSlot )
+		#endif       
+
 		foreach ( name, loadout in item.loadoutContentsByNameTable )
 		{
 			int startingRow = GetDataTableRowMatchingStringValue( distributionTable, GetDataTableColumnByName( distributionTable, "loadout" ), name )
@@ -579,7 +648,9 @@ void function LoadoutSelection_RegisterLoadoutDistribution()
 	                                                                                               
 	LoadoutSelection_RemoveLoadoutsWithDisabledWeaponsFromCategory( loadoutsToDisable )
 }
+#endif                    
 
+#if CLIENT || SERVER
                                                                                                                              
 void function LoadoutSelection_RemoveLoadoutsWithDisabledWeaponsFromCategory( array<string> loadoutsToDisable )
 {
@@ -628,56 +699,98 @@ void function LoadoutSelection_RemoveLoadoutsWithDisabledWeaponsFromCategory( ar
 		}
 	}
 }
+#endif                    
 
                                                                                                                    
 void function LoadoutSelection_InitWeaponData()
 {
 	var dataTable    	= GetDataTable( file.weaponDataDatatable )
 	int numRows      	= GetDataTableRowCount( dataTable )
-
+	int col_supportedAttachmentOverride = GetDataTableColumnByName( dataTable, "supportedAttachmentOverride" )
 	int col_weaponRef   = GetDataTableColumnByName( dataTable, "weaponRef" )
-	int col_attachments = GetDataTableColumnByName( dataTable, "attachmentOverride" )
-	int col_optics      = GetDataTableColumnByName( dataTable, "availableOptics" )
-	int col_defaultOptic= GetDataTableColumnByName( dataTable, "defaultOptic" )
 
-	for( int i = 0; i < numRows; ++i )
+	#if CLIENT || SERVER
+		int col_attachments = GetDataTableColumnByName( dataTable, "attachmentOverride" )
+		int col_optics      = GetDataTableColumnByName( dataTable, "availableOptics" )
+		int col_defaultOptic= GetDataTableColumnByName( dataTable, "defaultOptic" )
+	#endif                    
+
+		for( int i = 0; i < numRows; ++i )
+		{
+			string weaponRef = strip( GetDataTableString( dataTable, i, col_weaponRef ) ).tolower()
+
+			if ( weaponRef != "" )
+			{
+				#if CLIENT || SERVER
+					if ( !( weaponRef in file.weaponUpgrades ) )
+					{
+						string upgrades = GetDataTableString( dataTable, i, col_attachments )
+						upgrades = GetCurrentPlaylistVarString( "loadoutselection_" + weaponRef + "_attachment_override", upgrades )
+						file.weaponUpgrades[ weaponRef ] <- split( upgrades, WHITESPACE_CHARACTERS )
+						if( file.weaponUpgrades[ weaponRef ].len() == 0 )
+							file.weaponUpgrades[ weaponRef ] = SURVIVAL_Weapon_GetBaseMods( weaponRef )
+
+						string defaultOptic = GetDataTableString( dataTable, i, col_defaultOptic )
+						if( defaultOptic != "" )
+							ReplaceOpticInMods( file.weaponUpgrades[ weaponRef ], defaultOptic )
+					}
+					else
+					{
+						Warning( "LoadoutSelection_InitWeaponData - weapon upgrades for %s already exists!", weaponRef )
+					}
+
+					if ( !( weaponRef in file.weaponOptics ) )
+					{
+						string optics = GetDataTableString( dataTable, i, col_optics )
+						optics = GetCurrentPlaylistVarString( "loadoutselection_" + weaponRef + "_optic_override", optics )
+						file.weaponOptics[ weaponRef ] <- split( optics, WHITESPACE_CHARACTERS )
+					}
+					else
+					{
+						Warning( "LoadoutSelection_InitWeaponData - available optics for %s already exists!", weaponRef )
+					}
+				#endif                    
+
+				                                            
+				string supportedAttachmentOverrides = GetDataTableString( dataTable, i, col_supportedAttachmentOverride )
+				supportedAttachmentOverrides = GetCurrentPlaylistVarString( "loadoutselection_" + weaponRef + "_supported_attachment_override", supportedAttachmentOverrides )
+				if ( supportedAttachmentOverrides != "" )
+				{
+					#if DEV
+						printf( "LOADOUT SELECTION: Overriding supported attachments for " + weaponRef )
+					#endif       
+					LoadoutSelection_OverrideSupportedWeaponAttachmentsForWeaponRef( weaponRef, supportedAttachmentOverrides )
+				}
+
+			}
+			else
+			{
+				Warning( "LoadoutSelection_InitWeaponData - Error reading LoadoutSelection_weapon_upgrades datatable. Expected weaponRef!" )
+			}
+		}
+}
+
+                                                   
+                                                                                                                                                                         
+                                                                                                     
+                                                                                                                                                                                        
+                                                                                        
+void function LoadoutSelection_OverrideSupportedWeaponAttachmentsForWeaponRef( string weaponRef, string supportedAttachmentsString )
+{
+	table< string, LootData > data = SURVIVAL_Loot_GetLootDataTable()
+
+	if ( weaponRef in data )
 	{
-		string weaponRef = strip( GetDataTableString( dataTable, i, col_weaponRef ) ).tolower()
-
-		if ( weaponRef != "" )
-		{
-			if ( !( weaponRef in file.weaponUpgrades ) )
-			{
-				string upgrades = GetDataTableString( dataTable, i, col_attachments )
-				upgrades = GetCurrentPlaylistVarString( "loadoutselection_" + weaponRef + "_attachment_override", upgrades )
-				file.weaponUpgrades[ weaponRef ] <- split( upgrades, " " )
-				if( file.weaponUpgrades[ weaponRef ].len() == 0 )
-					file.weaponUpgrades[ weaponRef ] = SURVIVAL_Weapon_GetBaseMods( weaponRef )
-
-				string defaultOptic = GetDataTableString( dataTable, i, col_defaultOptic )
-				if( defaultOptic != "" )
-					ReplaceOpticInMods( file.weaponUpgrades[ weaponRef ], defaultOptic )
-			}
-			else
-				Warning( "LoadoutSelection_InitWeaponData - weapon upgrades for %s already exists!", weaponRef )
-
-			if ( !( weaponRef in file.weaponOptics ) )
-			{
-				string optics = GetDataTableString( dataTable, i, col_optics )
-				optics = GetCurrentPlaylistVarString( "loadoutselection_" + weaponRef + "_optic_override", optics )
-				file.weaponOptics[ weaponRef ] <- split( optics, " " )
-			}
-			else
-				Warning( "LoadoutSelection_InitWeaponData - available optics for %s already exists!", weaponRef )
-
-		}
-		else
-		{
-			Warning( "LoadoutSelection_InitWeaponData - Error reading LoadoutSelection_weapon_upgrades datatable. Expected weaponRef!" )
-		}
+		array<string> supportedAttachments = SURVIVAL_Loot_GetSortedStringArrayFromSupportedAttachmentsString( supportedAttachmentsString )
+		data[ weaponRef ].supportedAttachments = supportedAttachments
+	}
+	else
+	{
+		Warning( "LoadoutSelection_OverrideSupportedWeaponAttachmentsForWeaponRef - weaponRef %s not found in the LootData table, failed to override supported attachments", weaponRef )
 	}
 }
 
+#if CLIENT || SERVER
                                                                     
 LoadoutSelectionItem function LoadoutSelection_GetLoadoutSelectionItemDataFromRef( string ref )
 {
@@ -702,7 +815,9 @@ LoadoutSelectionItem function LoadoutSelection_GetLoadoutSelectionItemDataFromRe
 	item.icon = data.hudIcon
 	return item
 }
+#endif                    
 
+#if CLIENT || SERVER
                                                                  
 int function LoadoutSelection_GetExclusivityStyleEnumFromString( string input )
 {
@@ -724,7 +839,9 @@ int function LoadoutSelection_GetExclusivityStyleEnumFromString( string input )
 
 	return exclusivityStyle
 }
+#endif                    
 
+#if CLIENT || SERVER
                                                                 
 int function LoadoutSelection_GetRotationStyleEnumFromString( string input )
 {
@@ -745,7 +862,9 @@ int function LoadoutSelection_GetRotationStyleEnumFromString( string input )
 
 	return rotationStyle
 }
+#endif                    
 
+#if CLIENT || SERVER
                                                                    
 int function LoadoutSelection_GetLoadoutSlotTypeEnumFromString( string input )
 {
@@ -766,7 +885,9 @@ int function LoadoutSelection_GetLoadoutSlotTypeEnumFromString( string input )
 
 	return slotType
 }
+#endif                    
 
+#if CLIENT || SERVER
                                                                             
 array<string> function LoadoutSelection_GetAvailableWeaponUpgradesForWeaponRef( string weaponRef )
 {
@@ -791,7 +912,7 @@ array<string> function LoadoutSelection_GetAvailableWeaponUpgradesForWeaponRef( 
 	                                                                                                         
 	                                                                                                   
 	 
-		                                                                                                                  
+		                                                                                                                                    
 
 		                                      
 		 
@@ -807,7 +928,10 @@ array<string> function LoadoutSelection_GetAvailableWeaponUpgradesForWeaponRef( 
 	                        
 	                                          
 	 
-		                                                                                
+		       
+			                                                                                
+		             
+
 		                                                       
 		                                          
 		                                                                
@@ -911,12 +1035,15 @@ LoadoutSelectionLoadoutContents function LoadoutSelection_GenerateLoadoutByLoado
 	#endif          
 	#if CLIENT
 		if ( loadoutCategory.activeLoadoutName == "" )
+		{
 			return loadout
-
+		}
 		activeLoadoutName = loadoutCategory.activeLoadoutName
 	#endif          
 
 	loadout = loadoutCategory.loadoutContentsByNameTable[ activeLoadoutName ]
+	loadout.weaponLoadoutSelectionItemsInLoadout.clear()
+	loadout.consumableLoadoutSelectionItemsInLoadout.clear()
 
 	foreach( weapon in loadout.weaponsInLoadout )
 	{
@@ -947,12 +1074,26 @@ void function LoadoutSelection_PopulateLoadouts()
 		return
 
 	#if CLIENT
-	if ( !IsValid( GetLocalClientPlayer() ) )
-		return
+		                                                                   
+		file.maxLoadoutCountRegular = 0
+                            
+                                   
+                                    
+                                  
 	#endif          
 
 	int loadoutIndex = 0
 	bool didLoadoutCategoryFailToPopulate = false
+
+	file.loadoutSlotIndexToWeaponLoadoutTable.clear()
+#if SERVER
+	                                                     
+	                                                    
+#endif          
+	file.loadoutSlotIndexToHeaderTable.clear()
+	file.loadoutSlotIndexToLoadoutTypeTable.clear()
+	file.loadoutSlotIndexToWeaponCountTable.clear()
+
 	foreach ( loadoutCategory in file.loadoutCategories )
 	{
 		loadoutIndex = loadoutCategory.index
@@ -979,20 +1120,33 @@ void function LoadoutSelection_PopulateLoadouts()
 			didLoadoutCategoryFailToPopulate = true
 
 		file.loadoutSlotIndexToWeaponCountTable[ loadoutIndex ] <- loadout.weaponLoadoutSelectionItemsInLoadout.len()
+
+		#if CLIENT
+			                                                          
+			switch( loadoutCategory.loadoutSlotType )
+			{
+				case  eLoadoutSelectionSlotType.REGULAR:
+						file.maxLoadoutCountRegular++
+					break
+                              
+                                            
+                                    
+          
+                                             
+                                     
+          
+                                    
+				default:
+					break
+			}
+		#endif          
 	}
 	
 	if ( !didLoadoutCategoryFailToPopulate )
 		file.areLoadoutsPopulated = true
-
-	#if SERVER
-		                                              
-		                                     
-		 
-			                        
-			 
-				                                                    
-			 
-		 
+	#if CLIENT
+		                                    
+		LoadoutSelection_RefreshAllUILoadoutInfo()
 	#endif          
 }
 
@@ -1085,6 +1239,46 @@ int function LoadoutSelection_GetSelectedLoadoutSlotIndex_CL_UI()
  
 #endif          
 
+#if SERVER
+                                                       
+ 
+	                                        
+		      
+
+	                         
+	                                                       
+	 
+		                        
+	 
+	                                                                                    
+	                                                     
+	                                                                                   
+	                                     
+	                                     
+	 
+		                        
+		 
+			                                                                                             
+		 
+	 
+ 
+#endif          
+
+#if SERVER || CLIENT
+void function LoadoutSelection_RepopulateLoadouts()
+{
+	file.areLoadoutsPopulated = false
+	LoadoutSelection_PopulateLoadouts()
+}
+#endif                    
+
+#if CLIENT
+void function ServerCallback_LoadoutSelection_RepopulateLoadouts()
+{
+	LoadoutSelection_RepopulateLoadouts()
+}
+#endif          
+
 #if CLIENT
                                                                           
 void function ServerCallback_LoadoutSelection_SetActiveLoadoutNameForSlot( string activeLoadoutName, int loadoutCategoryIndex )
@@ -1145,6 +1339,10 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
  
 	                                                   
 	                 
+
+	                                                               
+		                                                                                                           
+
 	                                                                   
 	                                                                  
 	 
@@ -1469,13 +1667,6 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
 		      
 
 	                    
-	                                               
-
-                           
-                                                            
-                              
-                               
-                                 
 
 	                                                     
 	 
@@ -1492,33 +1683,10 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
 			                                                                                
 
 		                                                                                                                                                                                                                                                              
-
-                            
-                                                                               
-    
-                  
-                          
-    
-
-                                                                                
-    
-                  
-                           
-    
-                                  
 	 
 
-	                                                                                                                         
-
-                           
-                                                      
-                                                                                                                                     
-
-                                                       
-                                                                                                                                       
-                                 
-
 	                                                                                                                                                                   
+	                                                                                               
 
 	                                                                                       
 	                                                                    
@@ -1528,6 +1696,7 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
  
 #endif          
 
+
 #if UI
                                                                                                                                                        
 void function LoadoutSelection_UpdateLoadoutInfo_UI( int loadoutIndex, string loadoutHeaderText, int weaponCount, int loadoutType )
@@ -1536,7 +1705,9 @@ void function LoadoutSelection_UpdateLoadoutInfo_UI( int loadoutIndex, string lo
 	file.loadoutSlotIndexToWeaponCountTable[ loadoutIndex ] <- weaponCount
 	file.loadoutSlotIndexToLoadoutTypeTable[ loadoutIndex ] <- loadoutType
 }
+#endif      
 
+#if UI
                                                         
 void function LoadoutSelection_SetSelectedLoadoutSlotIndex_UI( int loadoutIndex )
 {
@@ -1545,10 +1716,63 @@ void function LoadoutSelection_SetSelectedLoadoutSlotIndex_UI( int loadoutIndex 
 
 	file.playerSelectedLoadout = loadoutIndex
 }
+#endif      
 
+#if UI
 int function LoadoutSelection_GetSelectedLoadoutSlotIndex_UI()
 {
 	return file.playerSelectedLoadout
+}
+#endif      
+
+#if UI
+                              
+void function LoadoutSelection_SetLoadoutCounts_UI( int loadoutType, int loadoutCount )
+{
+	switch( loadoutType )
+	{
+		case  eLoadoutSelectionSlotType.REGULAR:
+			if ( loadoutCount >= 0 && loadoutCount <= LOADOUTSELECTION_MAX_LOADOUT_COUNT_REGULAR )
+				file.maxLoadoutCountRegular = loadoutCount
+			break
+                            
+                                          
+                                                                                          
+                                               
+        
+                                           
+                                                                                           
+                                                
+        
+                                  
+		default:
+			break
+	}
+}
+#endif      
+
+#if UI
+                              
+int function LoadoutSelection_GetLoadoutCounts_UI( int loadoutType )
+{
+	int loadoutCount = -1
+	switch( loadoutType )
+	{
+		case  eLoadoutSelectionSlotType.REGULAR:
+			loadoutCount = file.maxLoadoutCountRegular
+			break
+                            
+                                          
+                                              
+        
+                                           
+                                               
+        
+                                  
+		default:
+			break
+	}
+	return loadoutCount
 }
 #endif      
 
@@ -1593,7 +1817,17 @@ void function ServerCallback_LoadoutSelection_UpdateLoadoutInfo( int loadoutInde
 
 	RunUIScript( "LoadoutSelection_UpdateLoadoutInfo_UI", loadoutIndex, loadoutHeaderText, weaponCount, loadoutType )
 }
+#endif          
 
+#if CLIENT
+                                                                      
+void function ServerCallback_LoadoutSelection_RefreshUILoadoutInfo()
+{
+	LoadoutSelection_RefreshAllUILoadoutInfo()
+}
+#endif          
+
+#if CLIENT
                                                                                                                                  
                                                                                                                                                             
 void function LoadoutSelection_RefreshAllUILoadoutInfo()
@@ -1602,6 +1836,13 @@ void function LoadoutSelection_RefreshAllUILoadoutInfo()
 	int weaponCount
 	int loadoutType
 	int loadoutIndex
+
+	                                  
+	RunUIScript( "LoadoutSelection_SetLoadoutCounts_UI", eLoadoutSelectionSlotType.REGULAR, file.maxLoadoutCountRegular )
+                           
+                                                                                                                         
+                                                                                                                           
+                                 
 
 	foreach ( loadoutCategory in file.loadoutCategories )
 	{
@@ -1631,7 +1872,9 @@ void function LoadoutSelection_RefreshAllUILoadoutInfo()
 
 	RunUIScript( "LoadoutSelectionMenu_ResetLoadoutButtons" )
 }
+#endif          
 
+#if CLIENT
                                                                                                                                  
 void function ServerCallback_LoadoutSelection_UpdateSelectedLoadoutInfo( int selectedLoadout )
 {
@@ -1641,7 +1884,9 @@ void function ServerCallback_LoadoutSelection_UpdateSelectedLoadoutInfo( int sel
 	file.playerSelectedLoadout = selectedLoadout
 	RunUIScript( "LoadoutSelection_SetSelectedLoadoutSlotIndex_UI", selectedLoadout )
 }
+#endif          
 
+#if CLIENT
                                                                                                           
 void function UICallback_LoadoutSelection_BindWeaponRui( var element, int loadoutIndex, int weaponIndex )
 {
@@ -1670,160 +1915,278 @@ void function UICallback_LoadoutSelection_BindWeaponRui( var element, int loadou
 
 	thread LoadoutSelection_BindWeaponButton_Thread( player, element, rui, loadoutIndex, weaponIndex, entVar, opticsIndex )
 }
+#endif          
 
+#if CLIENT
                                                                                                  
 void function LoadoutSelection_BindWeaponButton_Thread( entity player, var element, var rui, int loadoutIndex, int weaponIndex, string entVar, int opticsIndex )
 {
 	Assert( IsNewThread(), "Must be threaded off" )
 	player.EndSignal( "OnDestroy" )
 
-	RuiSetString( rui, "weaponName", "" )
-	RuiSetImage( rui, "iconImage", $"" )
-	RuiSetImage( rui, "ammoTypeImage", $"" )
-	RuiSetInt( rui, "lootTier", 0 )
-	RuiSetBool( rui, "barrelAllowed", false )
-	RuiSetBool( rui, "magAllowed", false )
-	RuiSetBool( rui, "sightAllowed", false )
-	RuiSetBool( rui, "gripAllowed", false )
-	RuiSetBool( rui, "hopupMultiAAllowed", false )
-	RuiSetBool( rui, "hopupMultiBAllowed", false )
-
-	if ( weaponIndex == -1 || loadoutIndex == -1 )
-		return
-
-	while ( !file.areLoadoutsPopulated )
+	                                                                        
+	string weaponName = ""
+	table < string, asset > ruiImageNameToImageTable =
 	{
-		LoadoutSelection_PopulateLoadouts()
-		wait 1.0
+		iconImage = $"",
+		ammoTypeImage = $"",
+		barrelIcon = $"",
+		magIcon = $"",
+		sightIcon = $"rui/pilot_loadout/mods/empty_sight",
+		gripIcon = $"",
+		hopupIcon = $"",
+		hopupMultiAIcon = $"",
+		hopupMultiBIcon = $"",
 	}
 
-	if ( !IsValid( rui ) )
-		return
-
-	LoadoutSelectionLoadoutContents loadoutContents = LoadoutSelection_GetLoadoutContentsByLoadoutSlotIndex( loadoutIndex )
-
-	if ( LoadoutSelection_GetWeaponCountByLoadoutIndex( loadoutIndex ) == 0 )
-		return
-
-	LoadoutSelectionItem item
-	if ( LoadoutSelection_GetWeaponCountByLoadoutIndex( loadoutIndex ) > weaponIndex )
+	table < string, int > ruiIntNameToIntTable =
 	{
-		item = loadoutContents.weaponLoadoutSelectionItemsInLoadout[ weaponIndex ]
-	}
-	else
-	{
-		return
-	}
-
-	RuiSetImage( rui, "iconImage", item.icon )
-	if ( element != null )
-	{
-		Hud_SetWidth( element, Hud_GetBaseWidth( element ) )
-		Hud_SetVisible( element, true )
+		lootTier = 0,
+		barrelSlot = 0,
+		magSlot = 0,
+		sightSlot = 0,
+		gripSlot = 0,
+		hopupSlot = 0,
+		hopupMultiASlot = 0,
+		hopupMultiBSlot = 0,
+		barrelTier = 0,
+		magTier = 0,
+		sightTier = 0,
+		gripTier = 0,
+		hopupTier = 0,
+		hopupMultiATier = 0,
+		hopupMultiBTier = 0,
 	}
 
-	if ( SURVIVAL_Loot_IsRefValid( item.ref ) )
+	table < string, bool > ruiBoolNameToBoolTable =
 	{
-		LootData data = SURVIVAL_Loot_GetLootDataByRef( item.ref )
-		bool isLockedSet = WeaponLootRefIsLockedSet( item.ref )
-		int lootTier = isLockedSet ? data.tier : 0
-		RuiSetInt( rui, "lootTier", lootTier )
+		barrelAllowed = false,
+		magAllowed = false,
+		sightAllowed = false,
+		gripAllowed = false,
+		hopupAllowed = false,
+		hopupMultiAAllowed = false,
+		hopupMultiBAllowed = false,
+	}
 
-		if ( data.lootType == eLootType.MAINWEAPON )
+	string attachmentIconName = ""
+	string attachmentSlotName = ""
+	string attachmentTierName = ""
+	string attachmentAllowedName = ""
+
+	                                                                                                                                    
+	if ( weaponIndex >= 0 && weaponIndex < LOADOUTSELECTION_MAX_WEAPONS_PER_LOADOUT && loadoutIndex >= 0 && loadoutIndex < LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS )
+	{
+		while ( !file.areLoadoutsPopulated )
 		{
-			LootData baseWeaponData = SURVIVAL_Loot_GetLootDataByRef( data.baseWeapon )
-			string ammoType = GetWeaponAmmoType( data.baseWeapon )
-			if ( GetWeaponInfoFileKeyField_GlobalBool( data.baseWeapon, "uses_ammo_pool" ) )
-			{
-				LootData ammoData = SURVIVAL_Loot_GetLootDataByRef( ammoType )
-				RuiSetImage( rui, "ammoTypeImage", ammoData.hudIcon )
-			}
+			LoadoutSelection_PopulateLoadouts()
+			wait 1.0
+		}
 
-			RuiSetString( rui, "weaponName", data.pickupString )
-
-			if ( lootTier == 0 )
+		if ( IsValid( rui ) )
+		{
+			LoadoutSelectionLoadoutContents loadoutContents = LoadoutSelection_GetLoadoutContentsByLoadoutSlotIndex( loadoutIndex )
+			if ( LoadoutSelection_GetWeaponCountByLoadoutIndex( loadoutIndex ) > 0 )
 			{
-				int attachIndex = 0
-				for( int i = 0; i < baseWeaponData.supportedAttachments.len(); ++i )
+				LoadoutSelectionItem item
+				if ( LoadoutSelection_GetWeaponCountByLoadoutIndex( loadoutIndex ) > weaponIndex )
 				{
-					string attachment = baseWeaponData.supportedAttachments[i]
-					if( attachment == "hopupMulti_a" )
-						attachment = "hopupMultiA"
-					else if( attachment == "hopupMulti_b" )
-						attachment = "hopupMultiB"
+					item = loadoutContents.weaponLoadoutSelectionItemsInLoadout[ weaponIndex ]
+					LoadoutSelection_AttemptToSetValueInRuiImageTable( "iconImage", ruiImageNameToImageTable, item.icon )
 
-					RuiSetBool( rui, attachment + "Allowed", true )
-					RuiSetInt( rui, attachment + "Slot", i )
-
-
-					string attachStyle = GetAttachmentPointStyle( baseWeaponData.supportedAttachments[i], baseWeaponData.ref )
-
-					                                                                    
-					                                                                                            
-					if( attachStyle == "grip" && ( baseWeaponData.lootTags.contains( "sniper" ) || baseWeaponData.lootTags.contains( "marksman" ) ) )
-						attachStyle = "stock_sniper"
-
-					RuiSetImage( rui, attachment + "Icon", emptyAttachmentSlotImages[attachStyle] )
-
-					if ( attachStyle != "sight" )                                                    
-						attachIndex++
-				}
-			}
-			else if ( item.ref in file.weaponUpgrades )
-			{
-				array<string> upgrades = file.weaponUpgrades[ item.ref ]
-				int attachIndex = 0
-				for( int i = 0; i < upgrades.len(); ++i )
-				{
-					if( !SURVIVAL_Loot_IsRefValid( upgrades[i] ) )
-						continue
-
-					LootData lootData  = SURVIVAL_Loot_GetLootDataByRef( upgrades[i] )
-					string attachStyle = GetAttachPointForAttachmentOnWeapon( item.ref, upgrades[i] )
-
-					if( attachStyle == "hopupMulti_a" )
-						attachStyle = "hopupMultiA"
-					else if( attachStyle == "hopupMulti_b" )
-						attachStyle = "hopupMultiB"
-
-					if( attachStyle == "" )
-						continue
-
-					if ( attachStyle == "sight" )
+					if ( element != null )
 					{
-						if ( opticsIndex > -1 && opticsIndex <= LOADOUTSELECTION_MAX_SCOPE_INDEX )
+						Hud_SetWidth( element, Hud_GetBaseWidth( element ) )
+						Hud_SetVisible( element, true )
+					}
+
+					if ( SURVIVAL_Loot_IsRefValid( item.ref ) )
+					{
+						LootData data = SURVIVAL_Loot_GetLootDataByRef( item.ref )
+						bool isLockedSet = WeaponLootRefIsLockedSet( item.ref )
+						int lootTier = isLockedSet ? data.tier : 0
+
+						LoadoutSelection_AttemptToSetValueInRuiIntTable( "lootTier", ruiIntNameToIntTable, lootTier )
+
+						if ( data.lootType == eLootType.MAINWEAPON )
 						{
-							array<string> optics = LoadoutSelection_GetAvailableOptics( loadoutIndex, weaponIndex, true )
-							if ( opticsIndex < optics.len() )
+							LootData baseWeaponData = SURVIVAL_Loot_GetLootDataByRef( data.baseWeapon )
+							string ammoType = GetWeaponAmmoType( data.baseWeapon )
+							if ( GetWeaponInfoFileKeyField_GlobalBool( data.baseWeapon, "uses_ammo_pool" ) )
 							{
-								if ( SURVIVAL_Loot_IsRefValid( optics[ opticsIndex ] ) )
+								LootData ammoData = SURVIVAL_Loot_GetLootDataByRef( ammoType )
+								LoadoutSelection_AttemptToSetValueInRuiImageTable( "ammoTypeImage", ruiImageNameToImageTable, ammoData.hudIcon )
+							}
+
+							weaponName = data.pickupString
+
+							if ( lootTier == 0 )
+							{
+								for ( int i = 0; i < baseWeaponData.supportedAttachments.len(); ++i )
 								{
-									lootData = SURVIVAL_Loot_GetLootDataByRef( optics[ opticsIndex ] )
+									string attachment = baseWeaponData.supportedAttachments[i]
+									if ( attachment == "hopupMulti_a" )
+									{
+										attachment = "hopupMultiA"
+									}
+									else if ( attachment == "hopupMulti_b" )
+									{
+										attachment = "hopupMultiB"
+									}
+
+									attachmentAllowedName = attachment + "Allowed"
+									LoadoutSelection_AttemptToSetValueInRuiBoolTable( attachmentAllowedName, ruiBoolNameToBoolTable, true )
+
+									attachmentSlotName = attachment + "Slot"
+									LoadoutSelection_AttemptToSetValueInRuiIntTable( attachmentSlotName, ruiIntNameToIntTable, i )
+
+									string attachStyle = GetAttachmentPointStyle( baseWeaponData.supportedAttachments[i], baseWeaponData.ref )
+
+									                                                                    
+									                                                                                            
+									if ( attachStyle == "grip" && ( baseWeaponData.lootTags.contains( "sniper" ) || baseWeaponData.lootTags.contains( "marksman" ) ) )
+										attachStyle = "stock_sniper"
+
+									attachmentIconName =  attachment + "Icon"
+									LoadoutSelection_AttemptToSetValueInRuiImageTable( attachmentIconName, ruiImageNameToImageTable, emptyAttachmentSlotImages[attachStyle] )
 								}
-								else if ( optics[ opticsIndex ] == "" )
+							}
+							else if ( item.ref in file.weaponUpgrades )
+							{
+								array<string> upgrades = file.weaponUpgrades[ item.ref ]
+								int attachIndex = 0
+								for ( int i = 0; i < upgrades.len(); ++i )
 								{
-									RuiSetImage( rui, attachStyle + "Icon", $"rui/pilot_loadout/mods/empty_sight" )
-									RuiSetBool( rui, attachStyle + "Allowed", true )
-									RuiSetInt( rui, attachStyle + "Slot", attachIndex )
-									RuiSetInt( rui, attachStyle + "Tier", 0 )
-									continue
+									if ( !SURVIVAL_Loot_IsRefValid( upgrades[i] ) )
+										continue
+
+									LootData lootData  = SURVIVAL_Loot_GetLootDataByRef( upgrades[i] )
+									string attachStyle = GetAttachPointForAttachmentOnWeapon( item.ref, upgrades[i] )
+
+									if ( attachStyle == "hopupMulti_a" )
+									{
+										attachStyle = "hopupMultiA"
+									}
+									else if ( attachStyle == "hopupMulti_b" )
+									{
+										attachStyle = "hopupMultiB"
+									}
+
+									if ( attachStyle == "" )
+										continue
+
+									if ( attachStyle == "sight" )
+									{
+										if ( opticsIndex > -1 && opticsIndex <= LOADOUTSELECTION_MAX_SCOPE_INDEX )
+										{
+											array<string> optics = LoadoutSelection_GetAvailableOptics( loadoutIndex, weaponIndex, true )
+											if ( opticsIndex < optics.len() )
+											{
+												if ( SURVIVAL_Loot_IsRefValid( optics[ opticsIndex ] ) )
+												{
+													lootData = SURVIVAL_Loot_GetLootDataByRef( optics[ opticsIndex ] )
+												}
+												else if ( optics[ opticsIndex ] == "" )
+												{
+													attachmentAllowedName = attachStyle + "Allowed"
+													LoadoutSelection_AttemptToSetValueInRuiBoolTable( attachmentAllowedName, ruiBoolNameToBoolTable, true )
+
+													attachmentSlotName = attachStyle + "Slot"
+													LoadoutSelection_AttemptToSetValueInRuiIntTable( attachmentSlotName, ruiIntNameToIntTable, attachIndex )
+													continue
+												}
+											}
+										}
+									}
+
+									attachmentIconName = attachStyle + "Icon"
+									LoadoutSelection_AttemptToSetValueInRuiImageTable( attachmentIconName, ruiImageNameToImageTable, lootData.hudIcon )
+
+									attachmentAllowedName = attachStyle + "Allowed"
+									LoadoutSelection_AttemptToSetValueInRuiBoolTable( attachmentAllowedName, ruiBoolNameToBoolTable, true )
+
+									attachmentSlotName = attachStyle + "Slot"
+									LoadoutSelection_AttemptToSetValueInRuiIntTable( attachmentSlotName, ruiIntNameToIntTable, attachIndex )
+
+									attachmentTierName = attachStyle + "Tier"
+									LoadoutSelection_AttemptToSetValueInRuiIntTable( attachmentTierName, ruiIntNameToIntTable, lootData.tier )
+
+									if ( attachStyle != "sight" )                                                    
+										attachIndex++
 								}
 							}
 						}
 					}
-
-					RuiSetImage( rui, attachStyle + "Icon", lootData.hudIcon )
-					RuiSetBool( rui, attachStyle + "Allowed", true )
-					RuiSetInt( rui, attachStyle + "Slot", attachIndex )
-					RuiSetInt( rui, attachStyle + "Tier", lootData.tier )
-					if ( attachStyle != "sight" )                                                    
-						attachIndex++
 				}
 			}
 		}
 	}
-}
 
+	                            
+	RuiSetString( rui, "weaponName", weaponName )
+	foreach ( key, value in ruiImageNameToImageTable )
+	{
+		RuiSetImage( rui, key, value )
+	}
+
+	foreach ( key, value in ruiIntNameToIntTable )
+	{
+		RuiSetInt( rui, key, value )
+	}
+
+	foreach ( key, value in ruiBoolNameToBoolTable )
+	{
+		RuiSetBool( rui, key, value )
+	}
+}
+#endif          
+
+#if CLIENT
+                                                                                                                                                   
+void function LoadoutSelection_AttemptToSetValueInRuiImageTable( string key, table< string, asset > imageTable, asset image )
+{
+	if ( key in imageTable )
+	{
+		imageTable[ key ] = image
+	}
+	else
+	{
+		Warning( "LoadoutSelection_AttemptToSetValueInRuiImageTable tried to set %s in imageTable but it is not defined as a key in the Table", key )
+	}
+}
+#endif          
+
+#if CLIENT
+                                                                                                                                                 
+void function LoadoutSelection_AttemptToSetValueInRuiIntTable( string key, table< string, int > intTable, int intVal )
+{
+	if ( key in intTable )
+	{
+		intTable[ key ] = intVal
+	}
+	else
+	{
+		Warning( "LoadoutSelection_AttemptToSetValueInRuiIntTable tried to set %s in intTable but it is not defined as a key in the Table", key )
+	}
+}
+#endif          
+
+#if CLIENT
+                                                                                                                                                  
+void function LoadoutSelection_AttemptToSetValueInRuiBoolTable( string key, table< string, bool > boolTable, bool boolVal )
+{
+	if ( key in boolTable )
+	{
+		boolTable[ key ] = boolVal
+	}
+	else
+	{
+		Warning( "LoadoutSelection_AttemptToSetValueInRuiBoolTable tried to set %s in boolTable but it is not defined as a key in the Table", key )
+	}
+}
+#endif          
+
+#if CLIENT
                                                 
 void function UICallback_LoadoutSelection_SetConsumablesCountRui( var element, int loadoutIndex )
 {
@@ -1837,7 +2200,9 @@ void function UICallback_LoadoutSelection_SetConsumablesCountRui( var element, i
 
 	RuiSetInt( rui, "consumablesCount", ConsumablesInLoadout.len() )
 }
+#endif          
 
+#if CLIENT
                                                          
 void function UICallback_LoadoutSelection_BindItemIcon( var icon, int loadoutIndex, int weaponIndex, int consumableIndex )
 {
@@ -1857,7 +2222,9 @@ void function UICallback_LoadoutSelection_BindItemIcon( var icon, int loadoutInd
 
 	thread LoadoutSelection_BindItemIcon_Thread( player, icon, rui, loadoutIndex, weaponIndex, consumableIndex )
 }
+#endif          
 
+#if CLIENT
                                                                                       
 void function LoadoutSelection_BindItemIcon_Thread( entity player, var icon, var rui, int loadoutIndex, int weaponIndex, int consumableIndex )
 {
@@ -1910,7 +2277,9 @@ void function LoadoutSelection_BindItemIcon_Thread( entity player, var icon, var
 		}
 	}
 }
+#endif          
 
+#if CLIENT
                                                                                                                                                 
 asset function LoadoutSelection_GetItemIcon( int loadoutIndex, int weaponIndex, int consumableIndex )
 {
@@ -1931,7 +2300,7 @@ asset function LoadoutSelection_GetItemIcon( int loadoutIndex, int weaponIndex, 
 			loadoutContents = LoadoutSelection_GetLoadoutContentsByLoadoutSlotIndex( loadoutIndex )
 		}
 
-		if ( LoadoutSelection_GetWeaponCountByLoadoutIndex( loadoutIndex ) > weaponIndex )
+		if ( LoadoutSelection_GetWeaponCountByLoadoutIndex( loadoutIndex ) > weaponIndex && weaponIndex < loadoutContents.weaponLoadoutSelectionItemsInLoadout.len())
 			item = loadoutContents.weaponLoadoutSelectionItemsInLoadout[ weaponIndex ]
 	}
 	else if ( consumableIndex >= 0 )                         
@@ -1945,21 +2314,23 @@ asset function LoadoutSelection_GetItemIcon( int loadoutIndex, int weaponIndex, 
 			ConsumablesInLoadout = loadoutContents.consumableLoadoutSelectionItemsInLoadout
 		}
 
-		if ( ConsumablesInLoadout.len() > 0 )
+		if ( ConsumablesInLoadout.len() > 0 && consumableIndex < ConsumablesInLoadout.len())
 			item = ConsumablesInLoadout[ consumableIndex ]
 	}
 
 	image = item.icon
 	return image
 }
+#endif          
 
+#if CLIENT
                                                                                                                                                 
 int function LoadoutSelection_GetWeaponLootTeir( int loadoutIndex, int weaponIndex )
 {
 	int lootTier = 0
 
 	                                  
-	if ( loadoutIndex < 0 || loadoutIndex >= LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS )
+	if ( loadoutIndex < 0 || loadoutIndex >= LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS || !file.areLoadoutsPopulated )
 		return lootTier
 
 	LoadoutSelectionLoadoutContents loadoutContents = LoadoutSelection_GetLoadoutContentsByLoadoutSlotIndex( loadoutIndex )
@@ -1973,7 +2344,7 @@ int function LoadoutSelection_GetWeaponLootTeir( int loadoutIndex, int weaponInd
 			loadoutContents = LoadoutSelection_GetLoadoutContentsByLoadoutSlotIndex( loadoutIndex )
 		}
 
-		if ( LoadoutSelection_GetWeaponCountByLoadoutIndex( loadoutIndex ) > weaponIndex )
+		if ( LoadoutSelection_GetWeaponCountByLoadoutIndex( loadoutIndex ) > weaponIndex  && loadoutContents.weaponLoadoutSelectionItemsInLoadout.len() > 0)
 			item = loadoutContents.weaponLoadoutSelectionItemsInLoadout[ weaponIndex ]
 	}
 
@@ -2065,6 +2436,7 @@ void function UICallback_LoadoutSelection_BindOpticSlotButton( var button, int s
 	if ( opticIndex >= optics.len() )
 	{
 		RuiSetFloat( rui, "baseAlpha", 0.0 )
+		RuiSetBool( rui, "isActive", false )
 		return
 	}
 
@@ -2072,9 +2444,9 @@ void function UICallback_LoadoutSelection_BindOpticSlotButton( var button, int s
 
 	bool hasPreReq = opticIndex < unlockedOptics.len()
 	Hud_SetLocked( button, !hasPreReq )
+	bool isOpticRefValid = SURVIVAL_Loot_IsRefValid( optics[opticIndex] )
 
-
-	if( SURVIVAL_Loot_IsRefValid( optics[opticIndex] ) )
+	if ( isOpticRefValid )
 	{
 		LootData data = SURVIVAL_Loot_GetLootDataByRef( optics[opticIndex] )
 		RuiSetImage( rui, "iconImage", data.hudIcon )
@@ -2086,13 +2458,15 @@ void function UICallback_LoadoutSelection_BindOpticSlotButton( var button, int s
 		RuiSetInt( rui, "tier", 0 )
 	}
 
-
-
 	RuiSetFloat( rui, "baseAlpha", 1.0 )
 	RuiSetBool( rui, "hasPreReq", hasPreReq )
 
-	                                                     
+	if ( !isOpticRefValid )
+		return
 
+
+
+	                                                         
 	int equippedOptic = -1
 	bool isActive = false
 
@@ -2101,8 +2475,10 @@ void function UICallback_LoadoutSelection_BindOpticSlotButton( var button, int s
 	if ( selectedWeapon in loadoutContentsData.weaponIndexToScopePreferenceTable  )
 		equippedOptic = loadoutContentsData.weaponIndexToScopePreferenceTable[ selectedWeapon ]
 
-	if(equippedOptic > -1)
+	if ( equippedOptic > -1 )
+	{
 		isActive = equippedOptic == opticIndex
+	}
 	else
 	{
 		string weaponRef = LoadoutSelection_GetWeaponRefByIndex( file.selectedLoadoutForOptic, selectedWeapon )
@@ -2119,6 +2495,7 @@ void function UICallback_LoadoutSelection_BindOpticSlotButton( var button, int s
 				break
 			}
 		}
+
 		if ( SURVIVAL_Loot_IsRefValid( optics[opticIndex] ) )
 		{
 			LootData data = SURVIVAL_Loot_GetLootDataByRef( optics[opticIndex] )
@@ -2380,24 +2757,18 @@ void function UICallback_LoadoutSelection_OpticSelectDialogueClose()
 	                                                                                        
 	 
 		                                                                         
-		                                                    
-		 
-			                                                                                                                    
-		 
+		                                                 
 	 
 	    
 	 
 		                                
 		 
 			                                                                         
-			                                                    
-			 
-				                                                                                                                    
-			 
 		 
+		                                                 
 
 		                                               
-		                                                                                            
+		                                                                        
 		 
 			                                                   
 			                                                             
@@ -2460,6 +2831,13 @@ array<string> function LoadoutSelection_GetAvailableOptics( int loadoutIndex, in
 	}
 
 	return availableOptics
+}
+#endif                    
+
+#if CLIENT || SERVER
+int function LoadoutSelection_GetAvailableLoadoutCount()
+{
+	return file.loadoutCategories.len()
 }
 #endif                    
 

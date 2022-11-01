@@ -57,8 +57,9 @@ struct
 	#if CLIENT
 		array<var>         respawnChamberRuis
 		table<entity, int> chamberToBeamFX
-		var useProgressRui
+		var                useProgressRui
 		table<entity, var> worldIcons
+		array<EHI>         consumedStations
 	#endif
 }
 file
@@ -103,7 +104,7 @@ void function UpdateCashStationRuis( var rui )
 }
 #endif          
 
-bool function AreCashStartionsEnabled()
+bool function AreCashStationsEnabled()
 {
 	return IsArenaMode()
 }
@@ -124,7 +125,7 @@ void function CashStationEntitySpawned( entity ent )
 	if ( !IsCashStationEnt( ent ) )
 		return
 
-	if ( !AreCashStartionsEnabled() && IsValid( ent ) )
+	if ( !AreCashStationsEnabled() && IsValid( ent ) )
 	{
 		ent.Destroy()
 		return
@@ -337,14 +338,30 @@ bool function IsCashStationSmallEnt( entity ent )
 	return false
 }
 
+bool function CashStationWasUsed( entity ent )
+{
+	EHI entKey = ToEHI(ent)
+	foreach ( EHI entry in file.consumedStations )
+	{
+		if ( entry == entKey )
+			return true
+	}
+
+	return false
+}
+
 void function CashStationSmallEntitySpawned( entity ent )
 {
 	if ( !IsCashStationSmallEnt( ent ) )
 		return
 
-	if ( !AreCashStartionsEnabled() && IsValid( ent ) )
+	if ( !AreCashStationsEnabled() && IsValid( ent ) )
 	{
 		ent.Destroy()
+		return
+	}
+
+	if ( CashStationWasUsed( ent ) ){
 		return
 	}
 
@@ -430,7 +447,7 @@ void function AddRadarToCashStation( entity ent )
 	entity fxHolder = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", ent.GetOrigin() + up * height, <-90, 0, 0> )
 
 	array<int> fx
-	fx.append( StartParticleEffectOnEntity( fxHolder, GetParticleSystemIndex( CASH_STATION_EMITTER_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 ) )
+	fx.append( StartParticleEffectOnEntity( fxHolder, GetParticleSystemIndex( CASH_STATION_EMITTER_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID ) )
 	EmitSoundOnEntity( fxHolder, SOUND_HOLOGRAM_LOOP )
 
 	OnThreadEnd(
@@ -471,6 +488,8 @@ void function ServerToClient_OnUseCashStationSmall( entity station, int amount )
 		RuiDestroy( file.worldIcons[ station ] )
 		delete file.worldIcons[ station ]
 	}
+
+	file.consumedStations.append( ToEHI( station ) )
 
 	if( amount <= 0 )
 		return

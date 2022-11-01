@@ -154,7 +154,7 @@ void function FriendIconAddEntity_Thread( entity ent )
 		if ( IsFragDrone( ent ) )
 			offset = <0, 0, 48>
 
-		ent.s.fxHandle = StartParticleEffectOnEntityWithPos( ent, GetParticleSystemIndex( OVERHEAD_ICON_AI_FRIENDLY ), FX_PATTACH_ABSORIGIN_FOLLOW, -1, offset, <0,0,0> )
+		ent.s.fxHandle = StartParticleEffectOnEntityWithPos( ent, GetParticleSystemIndex( OVERHEAD_ICON_AI_FRIENDLY ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, offset, <0,0,0> )
 	}
 
 	OnThreadEnd(
@@ -178,7 +178,7 @@ void function FriendIconAddEntity_Thread( entity ent )
 				EffectStop( ent.s.fxHandle, false, true )
 
 			if ( attachIdx == 0 )
-				ent.s.fxHandle = StartParticleEffectOnEntity( ent, GetParticleSystemIndex( OVERHEAD_ICON_AI_FRIENDLY ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+				ent.s.fxHandle = StartParticleEffectOnEntity( ent, GetParticleSystemIndex( OVERHEAD_ICON_AI_FRIENDLY ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 			else
 				ent.s.fxHandle = StartParticleEffectOnEntity( ent, GetParticleSystemIndex( OVERHEAD_ICON_AI_FRIENDLY ), FX_PATTACH_POINT_FOLLOW, attachIdx )
 		}

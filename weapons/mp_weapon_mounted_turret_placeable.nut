@@ -235,7 +235,7 @@ void function ShowPlacementFX( entity weapon, entity model )
 
 	file.isShowingPlacementFX = true
 
-	                                                                                                                                                
+	                                                                                                                                                                  
 	                                                             
 
 	OnThreadEnd(

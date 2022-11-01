@@ -63,6 +63,7 @@ global struct ClientEntityStruct
 	string functionref( entity ent ) entTextOverrideCallback
 
 	bool functionref( entity player, entity ent, int useFlags ) canUseEntityCallback = null
+	bool functionref( entity player, entity ent ) shouldUseBlockReloadCallback = null
 
 	array<void functionref( entity ent, entity player, int useInputType )> onUseEntityCallbacks
 	array<void functionref( entity vehicle )>                              onVehicleLaunchCallbacks
@@ -264,11 +265,6 @@ global struct ClientWeaponStruct
 	array<WeaponMissileMultipleTargetData>   valkTac_targetData
 	float                      valkUltStartTime
 	array<entity>			   valkAlliesWaitingForLaunch
-
-	bool isWhiteset = false
-	bool isBlueset = false
-	bool isPurpleset = false
-	bool isGoldset = false
 }
 
 

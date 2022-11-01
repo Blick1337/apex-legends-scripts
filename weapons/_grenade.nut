@@ -36,12 +36,12 @@ global function Grenade_OnProjectileCollision
 global function Grenade_Init
 global function Grenade_Launch
 
-                      
+                                          
           
                                       
                                          
       
-      
+                                                
 
 const EMP_MAGNETIC_FORCE = 1600
 const MAG_FLIGHT_SFX_LOOP = "Explo_MGL_MagneticAttract"
@@ -246,7 +246,16 @@ int function Grenade_OnWeaponToss( entity weapon, WeaponPrimaryAttackParams atta
 	#endif
 
 	#if SERVER
-		                                               
+                                            
+                                                  
+                                                  
+
+                        
+		                                                                                        
+		 
+			                                                                                      
+		 
+        
 		                                                                                                
 	#endif
 
@@ -272,53 +281,60 @@ var function Grenade_OnWeaponTossReleaseAnimEvent( entity weapon, WeaponPrimaryA
 	var result = Grenade_OnWeaponToss( weapon, attackParams, 1.0 )
 	return result
 }
-#if SERVER
+
+                                          
+          
                                                                                
  
-	                                                                                 
-	   
-	  	                                             
-	  	 
-			                                              
-			      
-		   
-	   
+                                                                                  
+    
+                                                 
+     
+                                                 
+         
+     
+    
 
-	                                  
-	                                       
-	                                        
-	                                                 
+                                   
+                                        
+                                         
+                                                  
  
-#endif          
+                
+                                                
 
-#if SERVER
+                                          
+          
                                                                          
  
-	                                        
+                                         
 
-	                                                   
-	 
-		                                               
-		   
-		  	                                           
-		  	 
-				                          
+                                                    
+  
+                                                 
+     
+                                                
+      
+                              
 
-				                             
-					                                                                                                                                        
-			   
-		   
-	 
+                                 
+                                                                                                                                             
+      
+     
+  
  
-#endif          
+                
+                                                
 
-#if SERVER
+                                          
+          
                                                                                   
  
-	                                                         
-	      
+                                                          
+       
  
-#endif          
+                
+                                                
 
              
                                                                                   
@@ -735,7 +751,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
                                 
                                 
 
-                                                                                                                                                                 
+                                                                                                                                                                                   
                                                                
                            
                                                                                 
@@ -792,7 +808,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
                                                         
 
                                                                                                                                      
-                                                     
+                                                                       
 
                                                                                                                                                                                                              
                                 

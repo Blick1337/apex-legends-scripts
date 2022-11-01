@@ -6,6 +6,8 @@ const asset TARGET_SPINNING_BASE = $"mdl/barriers/shooting_range_target_02_stand
 const asset TARGET_SPINNING_MODEL = $"mdl/barriers/shooting_range_target_02.rmdl"
 const vector STARTING_TARGET_ORIGIN = <32126, -6696, -29018>
 
+const string G7_CHALLENGE_TARGET_MOVER_SCRIPTNAME = "g7_challenge_target_mover"
+
 struct ChallengeData
 {
 	array< entity > activeTargets
@@ -40,7 +42,7 @@ void function ShFRC_G7Scout_Init()
 	data.gunRackScriptName = "gunrack_model1"
 	data.weaponRef = "mp_weapon_g2"
 	data.weaponMods = [ "optic_cq_hcog_bruiser", "bullets_mag_l3", "barrel_stabilizer_l3", "stock_sniper_l3" ]
-	data.weaponMdl = $"mdl/weapons/g2/w_g2a4.rmdl"
+	data.weaponMdl = $"mdl/techart/mshop/weapons/class/assault/g7/g7_base_w.rmdl"
 	data.challengeTime = 60.0
 	data.challengeType = eFiringRangeChallengeType.FR_CHALLENGE_TYPE_TARGETS_HIT
 	data.statTemplate = CAREER_STATS.s12e04_challenge_1
@@ -117,7 +119,7 @@ void function ShFRC_G7Scout_Init()
 
 	                                                                                     
 
-	                                                          
+	                                                                                                
 	                                                
 	                                             
 

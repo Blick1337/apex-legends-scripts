@@ -260,16 +260,18 @@ void function RegisterSkydiveTrails()
 
 	MakeItemFlavorSet( trailFlavs, fileLevel.skyDiveTrailsSortOrdinalMap )
 
-	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "skydive_trail" )
-	entry.DEV_category = "skydive_trail"
-	entry.DEV_name = "Skydive Trail"
-	entry.defaultItemFlavor = trailFlavs[0]
+	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "skydive_trail", eLoadoutEntryClass.ACCOUNT )
+	entry.category     = eLoadoutCategory.SKYDIVE_TRAIL
+	#if DEV
+		entry.DEV_name       = "Skydive Trail"
+	#endif
+	entry.defaultItemFlavor   = trailFlavs[0]
 	entry.validItemFlavorList = trailFlavs
-	entry.isSlotLocked = bool function( EHI playerEHI ) {
+	entry.isSlotLocked        = bool function( EHI playerEHI ) {
 		return !IsLobby()
 	}
-	entry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
-	entry.networkVarName = "SkydiveTrail"
+	entry.networkTo           = eLoadoutNetworking.PLAYER_GLOBAL
+	entry.networkVarName      = "SkydiveTrail"
 
 	fileLevel.loadoutSkydiveTrailSlot = entry
 }

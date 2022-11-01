@@ -48,16 +48,33 @@ global function Season_GetLongName
 global function Season_GetShortName
 global function Season_GetTimeRemainingText
 global function Season_GetSmallLogo
-global function Season_GetLobbyButtonImage
+global function Season_GetSmallLogoBg
+global function Season_GetLobbyBannerLeftImage
+global function Season_GetLobbyBannerRightImage
+
 global function Season_GetTitleTextColor
 global function Season_GetHeaderTextColor
 global function Season_GetTimeRemainingTextColor
-global function Season_GetTabBarDefaultCol
+global function Season_GetNewColor
+global function Season_GetColor
+
 global function Season_GetTabBarFocusedCol
 global function Season_GetTabBarSelectedCol
-global function Season_GetTabBGDefaultCol
 global function Season_GetTabBGFocusedCol
 global function Season_GetTabBGSelectedCol
+global function Season_GetTabTextDefaultCol
+global function Season_GetTabTextFocusedCol
+global function Season_GetTabTextSelectedCol
+global function Season_GetTabGlowFocusedCol
+
+global function Season_GetSubTabBarFocusedCol
+global function Season_GetSubTabBarSelectedCol
+global function Season_GetSubTabBGFocusedCol
+global function Season_GetSubTabBGSelectedCol
+global function Season_GetSubTabTextDefaultCol
+global function Season_GetSubTabTextFocusedCol
+global function Season_GetSubTabTextSelectedCol
+global function Season_GetSubTabGlowFocusedCol
 #endif
 
 
@@ -230,11 +247,6 @@ void function InitPassPanel( var panel )
 
 	file.purchaseButton = Hud_GetChild( panel, "PurchaseButton" )
 	Hud_AddEventHandler( file.purchaseButton, UIE_CLICK, BattlePass_PurchaseButton_OnActivate )
-
-	                                                                       
-	                                                  
-	                                                                             
-	                                                     
 
 	file.rewardBarPanelHeader = Hud_GetChild( panel, "RewardBarPanelHeader" )
 	file.rewardHeaders = GetPanelElementsByClassname( file.rewardBarPanelHeader, "RewardFooter" )
@@ -485,6 +497,9 @@ void function UpdateRewardPanel( array<RewardGroup> rewardGroups )
 		footerIdx++
 	}
 
+	Hud_SetNavRight( file.rewardButtonsFree[buttonIdx - 1], file.invisiblePageRightTriggerButton )
+	Hud_SetNavRight( file.rewardButtonsPremium[buttonIdx - 1], file.invisiblePageRightTriggerButton )
+
 	var buttonToFocus
 
 	if ( GetFocus() == file.invisiblePageLeftTriggerButton || GetFocus() == file.prevPageButton )
@@ -580,12 +595,6 @@ void function BattlePass_PopulateRewardButton( BattlePassReward bpReward, var re
 	if ( itemType == eItemType.account_currency )
 	{
 		RuiSetString( btnRui, "itemCountString", FormatAndLocalizeNumber( "1", float( bpReward.quantity ), true ) )
-	}
-	else if ( itemType == eItemType.voucher )
-	{
-		int points = Voucher_GetEffectBattlepassGrindPoints( bpReward.flav )
-		if ( points )
-			RuiSetString( btnRui, "itemCountString", FormatAndLocalizeNumber( "1", float( points ), false ) )
 	}
 	else if ( itemType == eItemType.account_pack )
 	{
@@ -719,8 +728,7 @@ bool function ShouldDisplayTallButton( ItemFlavor flav )
 		case eItemType.character_execution:
 		case eItemType.gladiator_card_frame:
 		case eItemType.gladiator_card_stance:
-		case eItemType.gladiator_card_kill_quip:
-		case eItemType.gladiator_card_intro_quip:
+		case eItemType.character_emote:
 		case eItemType.skydive_emote:
 		case eItemType.emote_icon:
 			return true
@@ -742,19 +750,17 @@ void function BattlePass_PageForward( var button )
 	int oldPage = file.currentPage
 	BattlePass_SetPage( file.currentPage + 1 )
 
-	var focus = GetFocus()
-
-	if ( focus != file.nextPageButton
-	&& focus != file.prevPageButton
-	&& focus != file.invisiblePageLeftTriggerButton
-	&& focus != file.invisiblePageRightTriggerButton )
-	{
-		file.focusedRewardButton = null
-		ForceVGUIFocusUpdate()
-	}
-
 	if ( oldPage != file.currentPage )
 	{
+		var focus = GetFocus()
+		if ( focus != file.nextPageButton
+				&& focus != file.prevPageButton
+				&& focus != file.invisiblePageLeftTriggerButton
+				&& focus != file.invisiblePageRightTriggerButton )
+		{
+			file.focusedRewardButton = null
+			ForceVGUIFocusUpdate()
+		}
 		EmitUISound( "UI_Menu_BattlePass_LevelTab" )
 	}
 }
@@ -768,19 +774,17 @@ void function BattlePass_PageBackward( var button )
 	int oldPage = file.currentPage
 	BattlePass_SetPage( file.currentPage - 1 )
 
-	var focus = GetFocus()
-
-	if ( focus != file.nextPageButton
-	&& focus != file.prevPageButton
-	&& focus != file.invisiblePageLeftTriggerButton
-	&& focus != file.invisiblePageRightTriggerButton )
-	{
-		file.focusedRewardButton = null
-		ForceVGUIFocusUpdate()
-	}
-
 	if ( oldPage != file.currentPage )
 	{
+		var focus = GetFocus()
+		if ( focus != file.nextPageButton
+				&& focus != file.prevPageButton
+				&& focus != file.invisiblePageLeftTriggerButton
+				&& focus != file.invisiblePageRightTriggerButton )
+		{
+			file.focusedRewardButton = null
+			ForceVGUIFocusUpdate()
+		}
 		EmitUISound( "UI_Menu_BattlePass_LevelTab" )
 	}
 }
@@ -822,7 +826,7 @@ void function BattlePass_Purchase( var button, int startQuantity )
 			Assert( xpPurchaseOffers.len() == 1 )
 			if ( xpPurchaseOffers.len() < 1 )
 			{
-				Warning( "No offer for xp purchase for '%s'", ItemFlavor_GetHumanReadableRef( activeBattlePass ) )
+				Warning( "No offer for xp purchase for '%s'", string(ItemFlavor_GetAsset( activeBattlePass )) )
 				return ""
 			}
 			GRXScriptOffer xpPurchaseOffer = xpPurchaseOffers[0]
@@ -1103,6 +1107,9 @@ void function BattlePass_RewardButton_OnActivate( var button )
 
 void function BattlePass_RewardButton_OnAltActivate( var button )
 {
+	if ( GetActiveBattlePass() == null )
+		return
+
 	RewardButtonData rbd    = file.rewardButtonToDataMap[button]
 	BattlePassReward reward = rbd.rewardGroup.rewards[rbd.rewardSubIdx]
 
@@ -1591,7 +1598,12 @@ void function BattlePass_SetPage( int pageNumber )
 	pageNumber = ClampInt( pageNumber, 0, numPages - 1 )
 
 	if ( file.currentPage == pageNumber )
+	{
+		#if NX_PROG || PC_PROG_NX_UI
+		UpdateRewardPanel( file.currentRewardGroups )
+		#endif
 		return
+	}
 
 	file.previousPage = file.currentPage
 	file.currentPage = pageNumber
@@ -1939,7 +1951,7 @@ int function GetNumPremiumRewardsOfTypeUpToLevel( int endLevel, int tier, array<
 				)
 				)
 				{
-					printt( ItemFlavor_GetHumanReadableRef( reward.flav ) )
+					printt( string(ItemFlavor_GetAsset( reward.flav )) )
 					count += reward.quantity
 				}
 			}
@@ -2081,15 +2093,9 @@ void function InitAboutBattlePass1Dialog( var newMenuArg )
 	AddMenuEventHandler( menu, eUIEvent.MENU_HIDE, AboutBattlePass1Dialog_OnClose )
 	AddMenuFooterOption( menu, LEFT, BUTTON_B, true, "#B_BUTTON_BACK", "#B_BUTTON_BACK" )
 
-	if( GetConVarBool( "battlepass_expansion_enabled" ) )
-	{
-		file.aboutProgressButton = Hud_GetChild( menu, "CurrentProgress" )
-		AddButtonEventHandler( file.aboutProgressButton, UIE_CLICK, AboutProgressButton_OnClick )
-	}
-	else
-	{
-		file.aboutVideoChannel = ReserveVideoChannel()
-	}
+	file.aboutProgressButton = Hud_GetChild( menu, "CurrentProgress" )
+	AddButtonEventHandler( file.aboutProgressButton, UIE_CLICK, AboutProgressButton_OnClick )
+
 
 	file.aboutPurchaseButton = Hud_GetChild( menu, "PurchaseButton" )
 	AddButtonEventHandler( file.aboutPurchaseButton, UIE_CLICK, AboutPurchaseButton_OnClick )
@@ -2125,6 +2131,7 @@ void function AboutBattlePass1Dialog_OnOpen()
 	var rui                 = Hud_GetRui( Hud_GetChild( menu, "InfoPanel" ) )
 	bool showPurchaseButton = true
 
+	RegisterButtonPressedCallback( KEY_SPACE, AboutProgressButton_OnClick )
 
 	ItemFlavor ornull activeBattlePass = GetActiveBattlePass()
 	if ( activeBattlePass == null )
@@ -2136,43 +2143,24 @@ void function AboutBattlePass1Dialog_OnOpen()
 	}
 
 	expect ItemFlavor( activeBattlePass )
-
 	var infoPanel = Hud_GetChild( menu, "InfoPanel" )
 
 	bool passOwned = GRX_IsItemOwnedByPlayer( activeBattlePass )
 	asset battlePassAsset = ItemFlavor_GetAsset( activeBattlePass )
-	if( GetConVarBool( "battlepass_expansion_enabled" ) )
-	{
-		RegisterButtonPressedCallback( KEY_SPACE, AboutProgressButton_OnClick )
-		int buttonWidth = Hud_GetWidth( file.aboutProgressButton )
-		float scaleFactor = buttonWidth/425.0
-		Hud_SetX( file.aboutProgressButton, passOwned ? -172*scaleFactor : 75*scaleFactor )
-		Hud_SetX( file.aboutPurchaseButton, 250*scaleFactor )
-		RuiSetImage( rui, "logo", GetGlobalSettingsAsset( battlePassAsset , "largeLogo" ) )
-		RuiSetString( rui, "battlePassName", GetGlobalSettingsStringAsAsset( battlePassAsset, "aboutPurchaseTitle" ) )
-	}
-	else
-	{
-		StartVideoOnChannel( file.aboutVideoChannel, GetGlobalSettingsStringAsAsset( ItemFlavor_GetAsset( activeBattlePass ), "rewardsVideo" ), true, 0.0 )
-		HudElem_SetRuiArg( infoPanel, "channel", file.aboutVideoChannel )
-		BattlePass_UpdatePurchaseButton( file.aboutPurchaseButton, false )
-		HudElem_SetRuiArg( infoPanel, "battlePassTitle", ItemFlavor_GetShortName( activeBattlePass ) )
-		RuiSetBool( rui, "grxOfferRestricted", GRX_IsOfferRestricted() )
-		HudElem_SetRuiArg( infoPanel, "numCoins", fileLevel.numApexCoinsInBattlePass )
-		HudElem_SetRuiArg( infoPanel, "numCraftingMaterials", fileLevel.numCraftingMetalsInBattlePass )
-		HudElem_SetRuiArg( infoPanel, "passOwned", passOwned )
-		RuiSetString( rui, "battlePassName", ItemFlavor_GetLongName( activeBattlePass ) )
-	}
+
+	int buttonWidth = Hud_GetWidth( file.aboutProgressButton )
+	float scaleFactor = buttonWidth/425.0
+	Hud_SetX( file.aboutProgressButton, passOwned ? -172*scaleFactor : 75*scaleFactor )
+	Hud_SetX( file.aboutPurchaseButton, 250*scaleFactor )
+	RuiSetImage( rui, "logo", GetGlobalSettingsAsset( battlePassAsset , "largeLogo" ) )
+	RuiSetString( rui, "battlePassName", GetGlobalSettingsStringAsAsset( battlePassAsset, "aboutPurchaseTitle" ) )	
 
 	Hud_SetVisible( file.aboutPurchaseButton, !passOwned && showPurchaseButton )
 }
 
 void function AboutBattlePass1Dialog_OnClose()
 {
-	if( GetConVarBool( "battlepass_expansion_enabled" ) )
-		DeregisterButtonPressedCallback( KEY_SPACE, AboutProgressButton_OnClick )
-	else
-		StopVideoOnChannel( file.aboutVideoChannel )
+	DeregisterButtonPressedCallback( KEY_SPACE, AboutProgressButton_OnClick )
 	SocialEventUpdate()
 }
 
@@ -2326,20 +2314,12 @@ void function InitPassPurchaseMenu( var newMenuArg )
 	s_passPurchaseMenu.passPurchaseButton = Hud_GetChild( menu, "PassPurchaseButton" )
 	s_passPurchaseMenu.bundlePurchaseButton = Hud_GetChild( menu, "BundlePurchaseButton" )
 
-	if( GetConVarBool( "battlepass_expansion_enabled" ) )
-	{
-		s_passPurchaseMenu.backgroundsPanel = Hud_GetChild( menu, "Backgrounds" )
-		s_passPurchaseMenu.passBanner = Hud_GetChild( menu, "HeaderBanner" )
-		Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_GET_FOCUS, PassPurchaseButton_OnFocus )
-		Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_LOSE_FOCUS, PassPurchaseButton_OnLoseFocus )
-		Hud_AddEventHandler( s_passPurchaseMenu.bundlePurchaseButton, UIE_GET_FOCUS, BundlePurchaseButton_OnFocus )
-		Hud_AddEventHandler( s_passPurchaseMenu.bundlePurchaseButton, UIE_LOSE_FOCUS, BundlePurchaseButton_OnLoseFocus )
-	}
-	else
-	{
-		s_passPurchaseMenu.seasonLogoBox = Hud_GetChild( menu, "SeasonLogo" )
-		s_passPurchaseMenu.offersBorders = Hud_GetChild( menu, "OffersBorders" )
-	}
+	s_passPurchaseMenu.backgroundsPanel = Hud_GetChild( menu, "Backgrounds" )
+	s_passPurchaseMenu.passBanner = Hud_GetChild( menu, "HeaderBanner" )
+	Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_GET_FOCUS, PassPurchaseButton_OnFocus )
+	Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_LOSE_FOCUS, PassPurchaseButton_OnLoseFocus )
+	Hud_AddEventHandler( s_passPurchaseMenu.bundlePurchaseButton, UIE_GET_FOCUS, BundlePurchaseButton_OnFocus )
+	Hud_AddEventHandler( s_passPurchaseMenu.bundlePurchaseButton, UIE_LOSE_FOCUS, BundlePurchaseButton_OnLoseFocus )
 
 	Hud_AddEventHandler( s_passPurchaseMenu.passPurchaseButton, UIE_CLICK, PassPurchaseButton_OnActivate )
 	Hud_AddEventHandler( s_passPurchaseMenu.bundlePurchaseButton, UIE_CLICK, BundlePurchaseButton_OnActivate )
@@ -2348,18 +2328,12 @@ void function InitPassPurchaseMenu( var newMenuArg )
 }
 void function PassPurchaseButton_OnFocus( var button )
 {
-	if( !GetConVarBool( "battlepass_expansion_enabled" ) )
-		return
-
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isPremiumFocused", true)
 	Hud_SetLocked( s_passPurchaseMenu.bundlePurchaseButton, true )
 }
-
+ 
 void function PassPurchaseButton_OnLoseFocus( var button )
 {
-	if( !GetConVarBool( "battlepass_expansion_enabled" ) )
-		return
-
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isPremiumFocused", false)
 	Hud_SetLocked( s_passPurchaseMenu.bundlePurchaseButton, false )
 }
@@ -2389,16 +2363,12 @@ void function PassPurchaseButton_OnActivate( var button )
 
 void function BundlePurchaseButton_OnFocus( var button )
 {
-	if( !GetConVarBool( "battlepass_expansion_enabled" ) )
-		return
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isBundleFocused", true)
 	Hud_SetLocked( s_passPurchaseMenu.passPurchaseButton, true )
 }
 
 void function BundlePurchaseButton_OnLoseFocus( var button )
 {
-	if( !GetConVarBool( "battlepass_expansion_enabled" ) )
-		return
 	HudElem_SetRuiArg( s_passPurchaseMenu.backgroundsPanel, "isBundleFocused", false)
 	Hud_SetLocked( s_passPurchaseMenu.passPurchaseButton, false )
 }
@@ -2445,39 +2415,10 @@ void function PassPurchaseMenu_OnOpen()
 	asset battlePassAsset = ItemFlavor_GetAsset( activeBattlePass )
 	bool offerRestricted  = GRX_IsOfferRestricted( GetLocalClientPlayer() )
 
-	if( GetConVarBool( "battlepass_expansion_enabled" ) )
-	{
-		var rui = Hud_GetRui( s_passPurchaseMenu.passBanner )
-		RuiSetString( rui, "seasonName", GetGlobalSettingsStringAsAsset( battlePassAsset, "aboutPurchaseTitle" ) )
-		HudElem_SetRuiArg( s_passPurchaseMenu.bundlePurchaseButton, "isBonusFrame", true )
-	}
-	else
-	{
-		          
-		HudElem_SetRuiArg( s_passPurchaseMenu.seasonLogoBox, "seasonName", ItemFlavor_GetLongName( activeBattlePass ) )
-		HudElem_SetRuiArg( s_passPurchaseMenu.seasonLogoBox, "titleText", GetGlobalSettingsString( battlePassAsset, "featureTitle" ) )
-		HudElem_SetRuiArg( s_passPurchaseMenu.seasonLogoBox, "logo", GetGlobalSettingsAsset( battlePassAsset, "largeLogo" ), eRuiArgType.IMAGE )
-
-	HudElem_SetRuiArg( s_passPurchaseMenu.offersBorders, "seasonShortName", ItemFlavor_GetLongName( activeBattlePass ) )
-
-		array<string> bulletText = BattlePass_GetBulletText( activeBattlePass, offerRestricted )
-
-		string localizedNumCraftingMaterials = FormatAndLocalizeNumber( "1", float( fileLevel.numCraftingMetalsInBattlePass ), true )
-		string localizedNumApexCoins = FormatAndLocalizeNumber( "1", float( fileLevel.numApexCoinsInBattlePass ), true )
-
-
-		                                                                                                                  
-		                                                                                                                      
-		                                                                                                                          
-		                                           
-		bulletText[ 0 ] = Localize( "#BP_CURRENCY_REWARDS", localizedNumApexCoins, localizedNumCraftingMaterials )
-
-		for ( int i = 0 ; i < numBattlePassBulletPoints ; i++ )
-		{
-			HudElem_SetRuiArg( s_passPurchaseMenu.seasonLogoBox, "bulletText" + (i + 1), i < bulletText.len() ? bulletText[i] : "" )
-		}
-	}
-
+	var rui = Hud_GetRui( s_passPurchaseMenu.passBanner )
+	RuiSetString( rui, "seasonName", GetGlobalSettingsStringAsAsset( battlePassAsset, "aboutPurchaseTitle" ) )
+	HudElem_SetRuiArg( s_passPurchaseMenu.bundlePurchaseButton, "isBonusFrame", true )
+	
 	UpdatePassPurchaseButtons()
 }
 
@@ -2518,11 +2459,11 @@ void function UpdatePassPurchaseButtons()
 		{
 			RuiSetString( basicButton, "price", GRX_GetFormattedPrice( basicPurchaseOffer.prices[0] ) )
 		}
-		else Warning( "Expected 1 price for basic pack offer of '%s'", ItemFlavor_GetHumanReadableRef( activeBattlePass ) )
+		else Warning( "Expected 1 price for basic pack offer of '%s'", string(ItemFlavor_GetAsset( activeBattlePass )) )
 	}
 	else
 	{
-		Warning( "Expected 1 offer for basic pack of '%s'", ItemFlavor_GetHumanReadableRef( activeBattlePass ) )
+		Warning( "Expected 1 offer for basic pack of '%s'", string(ItemFlavor_GetAsset( activeBattlePass )) )
 
 		foreach ( offer in basicPurchaseOffers )
 			printt("UpdatePassPurchaseButtons - offer in basic battle pass is" + offer.offerAlias)
@@ -2545,12 +2486,10 @@ void function UpdatePassPurchaseButtons()
 		if ( bundlePurchaseOffer.prices.len() == 1 )
 		{
 			RuiSetString( bundleButton, "price", GRX_GetFormattedPrice( bundlePurchaseOffer.prices[0] ) )
-			if( !GetConVarBool( "battlepass_expansion_enabled" ) )
-				RuiSetString( bundleButton, "priceBeforeDiscount", GetFormattedValueForCurrency( 4700, GRX_CURRENCY_PREMIUM ) )
 		}
-		else Warning( "Expected 1 price for bundle pack offer of '%s'", ItemFlavor_GetHumanReadableRef( activeBattlePass ) )
+		else Warning( "Expected 1 price for bundle pack offer of '%s'", string(ItemFlavor_GetAsset( activeBattlePass )) )
 	}
-	else Warning( "Expected 1 offer for bundle pack of '%s'", ItemFlavor_GetHumanReadableRef( activeBattlePass ) )
+	else Warning( "Expected 1 offer for bundle pack of '%s'", string(ItemFlavor_GetAsset( activeBattlePass )) )
 
 	bool canPurchaseBundle = GetPlayerBattlePassPurchasableLevels( ToEHI( GetLocalClientPlayer() ), activeBattlePass ) >= 25
 
@@ -2625,6 +2564,9 @@ bool function TryDisplayBattlePassAwards( bool playSound = false )
 	}
 
 	allAwards.extend( freeAwards )
+
+	if ( hasPremiumPass != hadPremiumPass )
+		lastLevel = 0                                                                                  
 
 	if ( hasPremiumPass )
 	{
@@ -2771,7 +2713,7 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 	
 	if ( sceneRefName == "collection_event_ref" )
 	{
-		if ( isNXHH && itemType == eItemType.emote_icon )
+		if ( itemType == eItemType.emote_icon )
 		{
 			fileLevel.sceneRefOrigin += <15, 0, 30>
 		}
@@ -2916,11 +2858,9 @@ void function ShowBattlepassItem( ItemFlavor item, int level, float scale, var l
 			ShowBattlePassItem_Emote( item, scale, showEmoteBase )
 			break
 
-                       
 		case eItemType.quest_mission:
 			ShowBattlePassItem_QuestMission( item, scale )
 			break
-      
 
                        
 		case eItemType.quest_comic:
@@ -2937,9 +2877,9 @@ void function ShowBattlepassItem( ItemFlavor item, int level, float scale, var l
 			break
 
                 
-                         
-                                     
-        
+		case eItemType.sticker:
+			ShowBattlePassItem_Sticker( item )
+			break
                       
 
 		default:
@@ -3922,28 +3862,29 @@ void function ShowBattlePassItem_Character( ItemFlavor item, float scale )
 
 
                 
-                                                           
- 
-                                                      
-                                         
+void function ShowBattlePassItem_Sticker( ItemFlavor item )
+{
+	vector origin = fileLevel.sceneRefOrigin + <0, 0, 28>
+	vector angles = fileLevel.sceneRefAngles
 
-                                                                                          
-                                
+	entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
+	mover.MakeSafeForUIScriptHack()
 
-                                                                                 
-                                
-                           
-                         
-                               
+	entity model = CreateClientSidePropDynamic( origin, angles, FLAT_STICKER_MODEL )
+	model.MakeSafeForUIScriptHack()
+	model.SetModelScale( 1.5 )
+	model.SetParent( mover )
 
-                                                                
-                             
-                            
-                                                                                                          
+	asset stickerMat = Sticker_GetReplacementMaterialAsset( item )
+	int stickerInstance = Sticker_SetMaterialModForLocalPlayer( model, stickerMat )
 
-                        
-                                 
- 
+	vector flashColor = ItemFlavor_GetQualityColor( item ) / 255
+	Sticker_CreateFlashData( stickerInstance, model, eMenuModelFlashType.BATTLEPASS, flashColor )
+	Sticker_OnPlaced( stickerInstance, Sticker_FlashOnLoadComplete )
+
+	fileLevel.mover = mover
+	fileLevel.models.append( model )
+}
                       
 
 
@@ -4131,7 +4072,8 @@ string function Season_GetTimeRemainingText( ItemFlavor season )
 		return Localize( "#BATTLE_PASS_SEASON_ENDED" )
 
 	DisplayTime dt = SecondsToDHMS( remainingSeasonTime )
-	return Localize( "#DAYS_REMAINING", string( dt.days ), string( dt.hours ) )
+
+	return Localize( "#SEASON_ENDS_IN_DAYS", string( dt.days ) )
 }
 
 
@@ -4142,13 +4084,25 @@ asset function Season_GetSmallLogo( ItemFlavor season )
 }
 
 
-asset function Season_GetLobbyButtonImage( ItemFlavor season )
+asset function Season_GetLobbyBannerLeftImage( ItemFlavor season )
 {
 	ItemFlavor pass = Season_GetBattlePass( season )
 	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( season ), "lobbyButtonImage" )
 }
 
+asset function Season_GetLobbyBannerRightImage( ItemFlavor season )
+{
+	ItemFlavor pass = Season_GetBattlePass( season )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( season ), "lobbyBgRightImage" )
+}
 
+asset function Season_GetSmallLogoBg( ItemFlavor season )
+{
+	ItemFlavor pass = Season_GetBattlePass( season )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( season ), "lobbyDiamondImage" )
+}
+
+         
 vector function Season_GetTitleTextColor( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
@@ -4169,27 +4123,24 @@ vector function Season_GetTimeRemainingTextColor( ItemFlavor event )
 	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "seasonTimeRemainingColor" )
 }
 
-
-vector function Season_GetTabBGDefaultCol( ItemFlavor event )
+vector function Season_GetNewColor( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
-	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabBGDefaultCol" )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "seasonNewColor" )
 }
 
-
-vector function Season_GetTabBarDefaultCol( ItemFlavor event )
+vector function Season_GetColor( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
-	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabBarDefaultCol" )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "seasonCol" )
 }
 
-
+               
 vector function Season_GetTabBGFocusedCol( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
 	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabBGFocusedCol" )
 }
-
 
 vector function Season_GetTabBarFocusedCol( ItemFlavor event )
 {
@@ -4197,17 +4148,88 @@ vector function Season_GetTabBarFocusedCol( ItemFlavor event )
 	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabBarFocusedCol" )
 }
 
-
 vector function Season_GetTabBGSelectedCol( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
 	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabBGSelectedCol" )
 }
 
-
 vector function Season_GetTabBarSelectedCol( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
 	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabBarSelectedCol" )
+}
+
+vector function Season_GetTabTextDefaultCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabTextDefaultCol" )
+}
+
+vector function Season_GetTabTextFocusedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabTextFocusedCol" )
+}
+
+vector function Season_GetTabTextSelectedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabTextSelectedCol" )
+}
+
+vector function Season_GetTabGlowFocusedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabGlowFocusedCol" )
+}
+
+                  
+vector function Season_GetSubTabBGFocusedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "subtabBGFocusedCol" )
+}
+
+vector function Season_GetSubTabBarFocusedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "subtabBarFocusedCol" )
+}
+
+vector function Season_GetSubTabBGSelectedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "subtabBGSelectedCol" )
+}
+
+vector function Season_GetSubTabBarSelectedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "subtabBarSelectedCol" )
+}
+
+vector function Season_GetSubTabTextDefaultCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "subtabTextDefaultCol" )
+}
+
+vector function Season_GetSubTabTextFocusedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "subtabTextFocusedCol" )
+}
+
+vector function Season_GetSubTabTextSelectedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "subtabTextSelectedCol" )
+}
+
+vector function Season_GetSubTabGlowFocusedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_season )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "subtabGlowFocusedCol" )
 }
 #endif

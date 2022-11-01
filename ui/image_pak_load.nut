@@ -430,7 +430,7 @@ void function RequestDownloadedImagePakLoad_Internal( string rpakName, int pakTy
 	Signal( clGlobal.signalDummy, "RequestDownloadedImagePakLoad" )
 	EndSignal( clGlobal.signalDummy, "RequestDownloadedImagePakLoad" )
 
-	PakHandle pakHandle = RequestPakFile( rpakName )
+	PakHandle pakHandle = RequestPakFile( rpakName, TRACK_FEATURE_UI )
 	pakHandle.pakType = pakType
 	file.pakHandles.append( pakHandle )
 	                                                                                                     

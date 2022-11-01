@@ -23,7 +23,7 @@ global function MobileHMG_RegisterNetworkFunctions
 global function OnClientAnimEvent_weapon_mobile_hmg
 #endif
 
-global string MOBILE_HMG_WEAPON_NAME = "mp_weapon_mobile_hmg"
+global const string MOBILE_HMG_WEAPON_NAME = "mp_weapon_mobile_hmg"
 
         
 const string TURRET_BUTTON_PRESS_SOUND_1P = "weapon_sheilaturret_triggerpull"
@@ -100,6 +100,11 @@ void function OnWeaponActivate_weapon_mobile_hmg( entity weapon )
 {
 	OnWeaponActivate_weapon_basic_bolt( weapon )
 	entity weaponOwner = weapon.GetOwner()
+	bool serverOrPredicted = IsServer() || ( InPrediction() && IsFirstTimePredicted() )
+	if( serverOrPredicted && !weapon.HasMod( MOBILE_HMG_FAST_SWITCH_MOD ) )
+	{
+		weapon.w.startChargeTime = Time()
+	}
 #if SERVER
 	                                           
 	                                                
@@ -114,7 +119,7 @@ void function OnWeaponActivate_weapon_mobile_hmg( entity weapon )
 	thread MobileHMG_WeaponActiveThreadClient( weapon )
 #endif
 
-	bool serverOrPredicted = IsServer() || ( InPrediction() && IsFirstTimePredicted() )
+
 	if ( serverOrPredicted )
 	{
 		weapon.SetTargetingLaserEnabled( false )

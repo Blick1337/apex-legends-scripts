@@ -749,8 +749,8 @@ asset function GetIndicatorModel( entity grenade )
 		return GRENADE_INDICATOR_GENERIC
 
                  
-                                                             
-                                  
+	if ( grenade.GetTargetName() == SPIKE_STRIP_CORE_SPIKE_NAME )
+		return GRENADE_INDICATOR_GENERIC
        
 
               
@@ -807,8 +807,8 @@ vector function GetIndicatorTraceOffset( entity grenade )
 		return <0, 0, 16>
 
                  
-                                                             
-                   
+	if ( grenade.GetTargetName() == SPIKE_STRIP_CORE_SPIKE_NAME )
+		return <0, 0, 30>
        
 
 	return <0, 0, 0>

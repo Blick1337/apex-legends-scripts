@@ -4,9 +4,16 @@ global function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem
 global function OnWeaponActivate_ability_revenant_death_totem
 global function OnWeaponDeactivate_ability_revenant_death_totem
                          
-                                                                  
+global function OnWeaponPrimaryAttack_ability_revenant_death_totem
+const string ABILITY_USED_MOD = "ability_used_mod"
+#if CLIENT
+global function OnCreateClientOnlyModel_ability_revenant_death_totem
+#endif
+      
+                       
           
-                                                                    
+                                  
+                                  
       
       
 #if SERVER
@@ -18,6 +25,8 @@ global function OnWeaponDeactivate_ability_revenant_death_totem
                                          
                                       
 #endif         
+
+const string DEATH_TOTEM_MOVER_SCRIPTNAME = "death_totem_mover"
 
        
 const asset DEATH_TOTEM_TOTEM_MDL = $"mdl/props/revenant_totem/revenant_totem.rmdl"                                                    
@@ -47,6 +56,7 @@ const float DEATH_TOTEM_OUT_OF_RANGE_DESYNC_TIME = 5.0
 const float DEATH_TOTEM_TOTEM_HEALTH = 150
 global const string DEATH_TOTEM_TARGETNAME = "death_totem"
 global const string DEATH_TOTEM_RECALL_SIGNAL = "DeathTotem_DeathTotemed"
+global const string DEATH_TOTEM_WEAPON_NAME = "mp_ability_revenant_death_totem"
 
                        
 const float DEATH_TOTEM_DURATION = 30.0                                                                                                 
@@ -146,6 +156,7 @@ void function MpAbilityRevenantDeathTotem_Init()
 	RegisterSignal( "TotemDestroyed" )
 	RegisterSignal( "DeathTotem_PreRecallPlayer" )
 	RegisterSignal( "DeathTotem_Cancel" )
+	RegisterSignal( "DeathTotem_RemoveWallClimbDisables" )
 
 	#if CLIENT
 		PrecacheParticleSystem( DEATH_TOTEM_TELEPORT_SCREEN_FX )
@@ -168,9 +179,6 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 {
 	entity player = weapon.GetWeaponOwner()
 
-	if ( player.IsZiplining() )
-		return false
-
 	if ( player.IsTraversing() )
 		return false
 
@@ -188,44 +196,94 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 		return false
                            
 
-	return player.IsOnGround()
+	return true
 }
 
                          
-          
-                                                                                                                      
- 
-                      
-                                   
-     
-                                          
- 
-      
+#if CLIENT
+void function OnCreateClientOnlyModel_ability_revenant_death_totem( entity weapon, entity model, bool validHighlight )
+{
+	if ( validHighlight )
+		DeployableModelHighlight( model )
+	else
+		DeployableModelInvalidHighlight( model )
+}
+#endif
 
-                                                                                                                        
- 
-                        
-                                             
-  
-                    
-          
-  
+var function OnWeaponPrimaryAttack_ability_revenant_death_totem( entity weapon, WeaponPrimaryAttackParams attackParams )
+{
+	                       
+	if ( !weapon.ObjectPlacementHasValidSpot() )
+	{
+		weapon.DoDryfire()
+		return 0
+	}
 
-                                             
-                                 
-
-           
-                                                   
-                                                   
-                                                     
-                                                                                                                                                                               
+	entity ownerPlayer = weapon.GetWeaponOwner()
+	Assert( ownerPlayer.IsPlayer() )
 
                           
-                                  
-       
-
+	PlayerUsedOffhand( ownerPlayer, weapon )
+	bool serverOrPredicted = IsServer() || (InPrediction() && IsFirstTimePredicted())
+	if ( serverOrPredicted )
+	{
+		weapon.AddMod( ABILITY_USED_MOD )
+		weapon.AddMod( ULTIMATE_ACTIVE_MOD_STRING )
+	}
                                
- 
+
+	thread DeathTotem_DisableWallClimbWhileDeployingTotem( ownerPlayer, weapon )
+
+	#if SERVER
+		                                                                
+
+		                        
+		                                                           
+
+		                                                 
+		                                                 
+		                                                   
+		                                                                                                                                                                             
+
+		                        
+			                               
+	#endif
+
+	return weapon.GetAmmoPerShot()
+}
+
+void function DeathTotem_DisableWallClimbWhileDeployingTotem( entity ownerPlayer, entity weapon )
+{
+	ownerPlayer.EndSignal( "OnDestroy" )
+	ownerPlayer.EndSignal( "OnDeath" )
+	weapon.EndSignal( "DeathTotem_RemoveWallClimbDisables" )
+	weapon.EndSignal( "OnDestroy" )
+
+	int wallClimbID = StatusEffect_AddEndless( ownerPlayer, eStatusEffect.disable_wall_run_and_double_jump, 1.0 )
+	int wallHangID = StatusEffect_AddEndless( ownerPlayer, eStatusEffect.disable_automantle_hang, 1.0 )
+
+	OnThreadEnd(
+		function() : ( ownerPlayer, wallHangID, wallClimbID )
+		{
+			if( !IsValid( ownerPlayer ) )
+				return
+
+			bool serverOrPredicted = IsServer() || ( InPrediction() && IsFirstTimePredicted() )
+
+			if ( serverOrPredicted )
+			{
+				if( StatusEffect_GetSeverity( ownerPlayer, eStatusEffect.disable_wall_run_and_double_jump ) > 0 )
+					StatusEffect_Stop( ownerPlayer, wallClimbID )
+
+				if( StatusEffect_GetSeverity( ownerPlayer, eStatusEffect.disable_automantle_hang ) > 0 )
+					StatusEffect_Stop( ownerPlayer, wallHangID )
+			}
+		}
+	)
+
+	WaitForever()
+}
+
       
 
 #if SERVER
@@ -243,12 +301,12 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                      
 
                           
-                                              
-                                                                                              
-                                                                             
-                                             
+		                                            
+		                                                                                            
+		                                                                           
+			                                          
       
-		                                 
+                                   
        
 	                                         
 	                               
@@ -283,10 +341,10 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                                 	                  
 
                            
-		                                                                               
-		                    
-		                                  
-		                               
+                                                                                 
+                      
+                                    
+                                 
        
 	                                    
 	                            
@@ -299,15 +357,17 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                             
 	                                            
 
-	                                                                 
-	                               
-		                                                  
+                          
+                                                                  
+                                
+                                                    
+      
 
 	            
 
 	                       
 	 
-		                                           
+		                                                                         
 		                           
 		                             
 	 
@@ -318,10 +378,10 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 
 	                                                                                                                                                                                             
                           
-                                                                                                                                                                           
+		                                                                                                                                                                         
       
-		                                                                          
-		                                                                                                                                                                              
+                                                                            
+                                                                                                                                                                                
        
 	                           
 
@@ -404,7 +464,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                    
 	                                                  
 
-	                                                                                                                           
+	                                                                                                                                             
 	                                                             
 	                                                                
 	                      
@@ -420,7 +480,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                                                   
 
                     
-                                             
+	                                            
        
 
 	                                                   
@@ -484,7 +544,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 
 
                                   
-								                                                 
+                                                         
               
 								 
 									                                                                                                                                                                                                           
@@ -710,6 +770,9 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 	                               
 		                      
 
+	                                
+		                         
+
 	                                           
 
 	                                                    
@@ -734,8 +797,13 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 		                                                          
 	 
 
-	                                                                                                                       
+	                                                                                                                                      
 
+	                       
+	 
+		                                                                                                                              
+		                               
+	 
 
 	                                                                            
 	                                        
@@ -797,7 +865,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem( entity 
 
                                                                                                      
  
-	                                                 
+	                                                                                                        
 	                                
 	                           
 	                                       
@@ -1458,6 +1526,22 @@ void function DeathTotem_OnTotemDestroyed( entity totem )
 		UltimateWeaponStateSet( eUltimateState.CHARGING )
 }
 
+                       
+                                              
+ 
+                                                                 
+                                                               
+                                                                                    
+                                                                                                                                             
+                                                                                                                                                     
+ 
+
+                                  
+ 
+                                                                
+ 
+      
+
 void function DeathTotem_StartVisualEffect( entity ent, int statusEffect, bool actuallyChanged )
 {
 	if ( !actuallyChanged )
@@ -1475,9 +1559,28 @@ void function DeathTotem_StartVisualEffect( entity ent, int statusEffect, bool a
 
 	file.hasMark = true
 	file.deathProtectionStatusRui = CreateFullscreenRui( $"ui/death_protection_status.rpak" )
-	RuiSetFloat( file.deathProtectionStatusRui, "maxDuration", file.deathTotemBuffDuration )
-	RuiTrackFloat( file.deathProtectionStatusRui, "timeRemaining", ent, RUI_TRACK_STATUS_EFFECT_TIME_REMAINING, eStatusEffect.death_totem_visual_effect )
-	RuiTrackInt( file.deathProtectionStatusRui, "gameState", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL_INT, GetNetworkedVariableIndex( "gameState" ) )
+
+                        
+                                                                       
+   
+                       
+   
+                                                                               
+   
+                            
+   
+      
+   
+                                                                                           
+                                                                                                                                                        
+                                                                                                                                                     
+   
+      
+		RuiSetFloat( file.deathProtectionStatusRui, "maxDuration", file.deathTotemBuffDuration )
+		RuiTrackFloat( file.deathProtectionStatusRui, "timeRemaining", ent, RUI_TRACK_STATUS_EFFECT_TIME_REMAINING, eStatusEffect.death_totem_visual_effect )
+		RuiTrackInt( file.deathProtectionStatusRui, "gameState", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL_INT, GetNetworkedVariableIndex( "gameState" ) )
+                             
+
 
 	entity cockpit = ent.GetCockpit()
 	if ( !IsValid( cockpit ) )
@@ -1559,7 +1662,7 @@ void function ShadowScreenFXThink( entity player, entity cockpit )
 	player.EndSignal( "OnDeath" )
 	cockpit.EndSignal( "OnDestroy" )
 
-	int fxHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( DEATH_TOTEM_SHADOW_SCREEN_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int fxHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( DEATH_TOTEM_SHADOW_SCREEN_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetIsWithCockpit( fxHandle, true )
 	vector controlPoint = <1, 1, 1>
 	EffectSetControlPointVector( fxHandle, 1, controlPoint )
@@ -1598,7 +1701,7 @@ void function DeathTotem_PlayRecallScreenFX( entity clientPlayer )
 
 	if ( IsValid( player.GetCockpit() ) )
 	{
-		fxID = StartParticleEffectOnEntityWithPos( player, indexD, FX_PATTACH_ABSORIGIN_FOLLOW, -1, player.EyePosition(), <0, 0, 0> )
+		fxID = StartParticleEffectOnEntityWithPos( player, indexD, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, player.EyePosition(), <0, 0, 0> )
 		EffectSetIsWithCockpit( fxID, true )
 		EffectSetControlPointVector( fxID, 1, <1.0, 999, 0> )
 	}
@@ -1623,35 +1726,55 @@ void function DeathTotem_PlayRecallScreenFX( entity clientPlayer )
 void function OnWeaponActivate_ability_revenant_death_totem( entity weapon )
 {
 	entity weaponOwner = weapon.GetWeaponOwner()
+
+                          
+	bool serverOrPredicted = IsServer() || (InPrediction() && IsFirstTimePredicted())
+	if ( serverOrPredicted )
+	{
+		weapon.RemoveMod( ABILITY_USED_MOD )
+	}
+       
+
 	#if SERVER
 		                                                                              
                             
-			                                                    
+                                                       
         
 		                                                     
 		                           
+		                         
 	#endif
 
-#if CLIENT
-	if ( weaponOwner == GetLocalViewPlayer() )
-#endif
-	{
-		PlayerUsedOffhand( weaponOwner, weapon )
-	}
+                          
+          
+                                           
+      
+  
+                                          
+  
+      
 }
 
 
 void function OnWeaponDeactivate_ability_revenant_death_totem( entity weapon )
 {
+	entity ownerPlayer = weapon.GetWeaponOwner()
+	Assert( ownerPlayer.IsPlayer() )
                           
-	#if SERVER
-		                           
-			                                     
-	#else
-		if ( weapon.GetWeaponOwner() == GetLocalViewPlayer() )
-			weapon.SetWeaponPrimaryClipCount( 0 )
-	#endif
+           
+                             
+                                        
       
+                                                        
+                                        
+       
+     
+	weapon.Signal( "DeathTotem_RemoveWallClimbDisables" )
+      
+	#if SERVER
+		                       
+			                                                             
+	#endif
 }
 
 

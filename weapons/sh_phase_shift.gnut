@@ -1,8 +1,4 @@
   
-
-#if CLIENT
-#endif
-
 global function MpAbilityShifter_Init
 global function PhaseShift
 global function CodeCallback_EnterPhaseShift
@@ -28,6 +24,8 @@ const SHIFTER_DISAPPEAR_FX_TITAN = $"P_phase_shift_main_XO"
 const SHIFTER_DASH_APPEAR_FX = $"P_phase_dash_end"
 const SHIFTER_DASH_DISAPPEAR_FX = $"P_phase_dash_start"
 const SHIFTER_DASH_DISAPPEAR_ON_WRAITH_FX = $"P_phase_dash_start_mdl"
+
+const string SHIFTER_MOVER_SCRIPTNAME = "phaseshift_mover"
 
                   
 const SHIFTER_GATE_DISAPPEAR_FX = $"P_wrth_tt_dash_3P"
@@ -161,7 +159,6 @@ void function MpAbilityShifter_Init()
 	RegisterSignal( "EndTrackingPositions" )
 	RegisterSignal( "PhaseRewindCrouchPlayer" )
 	RegisterSignal( "PhaseRewindStop" )
-
 
 	#if SERVER
 		                                                              
@@ -591,7 +588,7 @@ int function PhaseShift( entity ent, float warmupTime, float duration, int shift
 		                            
 		                                     
 		                                                                                                   
-		                                                                                                            
+		                                                                                                                                      
 		                           
 		                                    
 		                      
@@ -722,7 +719,7 @@ void function ClientPhaseShiftFirstPersonFXThread()
 						vector viewAngles    = ourPlayer.EyeAngles()
 						vector viewForward   = AnglesToForward( viewAngles )
 						vector viewForward2d = Normalize( <viewForward.x, viewForward.y, 0> )
-						StartParticleEffectOnEntityWithPos( ourPlayer, fxIndex, FX_PATTACH_ABSORIGIN, -1, (viewForward2d * 30), ZERO_VECTOR )
+						StartParticleEffectOnEntityWithPos( ourPlayer, fxIndex, FX_PATTACH_ABSORIGIN, ATTACHMENTID_INVALID, (viewForward2d * 30), ZERO_VECTOR )
 					}
 
 					if ( ourPlayer.IsTitan() )

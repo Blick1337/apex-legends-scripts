@@ -43,14 +43,14 @@ global struct EHIScriptStruct
 	           
 	#if SERVER
 		                        
-		                                  
-		                                      
+		                                                                                            
 	#endif
 	#if SERVER || CLIENT || UI
 		table<int, array<void functionref( EHI, ItemFlavor )> > itemFlavorLoadoutSlotChangedCallbacksMap
 	#endif
 	#if CLIENT
 		array<int> netVarsLastSeenValuesMap
+		string obfuscatedID = ""
 	#endif
 	#if UI
 		array<int> loadoutSlotsLastSeenContentsMap
@@ -72,6 +72,9 @@ global struct EHIScriptStruct
 	int rankScore = -1                                   
 	int rankedLadderPosition = -1                                         
 
+	int rankScorePrevSeason = -1                                   
+	int rankedLadderPositionPrevSeason = -1                                         
+
                         
 		int arenasRankScore = 0                                
 		int arenasRankedLadderPosition = -1                                         
@@ -81,6 +84,8 @@ global struct EHIScriptStruct
 	string clubName = ""
 	string clubTag = ""
 	string clubLogo = ""
+
+	array< ItemFlavor > legendaryItemsOwnedByPlayer = []
 }
 #endif
 

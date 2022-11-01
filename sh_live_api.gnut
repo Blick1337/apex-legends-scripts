@@ -60,6 +60,7 @@ global enum eLiveAPI_EventTypes
 
 	                   
 	observerSwitched,
+	observerAnnotation,
 
     MAX
 }

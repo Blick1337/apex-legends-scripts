@@ -25,6 +25,7 @@ void function ClAnim_Init()
 	AddGlobalAnimEventTokenize( "playScreenFX_concussion", ClGlobalAnimEvent_playScreenFx_concussion )
 	AddGlobalAnimEventTokenize( "mirage_holo_fx_start", ClGlobalAnimEvent_mirage_holo_fx_start )
 	AddGlobalAnimEventTokenize( "mirage_holo_fx_end", ClGlobalAnimEvent_mirage_holo_fx_end )
+	AddGlobalAnimEventTokenize( "add_player_hint", ClGlobalAnimEvent_add_player_hint )
 
 	PrecacheParticleSystem( $"P_screenfx_concusion" )
 }
@@ -410,4 +411,22 @@ void function ClGlobalAnimEvent_mirage_holo_fx_end( entity model, array<string> 
 
 }
 
+void function ClGlobalAnimEvent_add_player_hint( entity player, array<string> tokens )
+{
+	                                           
+	Assert( tokens.len() == 4 )
+
+	float dispTime = float(tokens[1])
+	float fadeTime = float(tokens[2])
+	string hintLocString = tokens[3]
+
+	if ( !player.IsPlayer() )
+		return
+
+	entity localViewPlayer = GetLocalViewPlayer()
+	if ( player != localViewPlayer )
+		return
+
+	AddPlayerHint( dispTime, fadeTime, $"", hintLocString )
+}
 

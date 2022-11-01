@@ -192,18 +192,18 @@ global enum eSurvivalCommentaryBucket
 	MATCH_INTRO,
 
                       
-                 
-                   
-                   
-              
-              
-            
-                     
-                     
-               
-             
-            
-            
+	ENEMY_CAP_TRAIN,
+	SEASONS_GREETINGS,
+	ROUND_WIN_BY_ELIM,
+	TIME_EXPIRED,
+	TRAIN_MOVING,
+	TRAIN_STOP,
+	WINNER_CLOSE_POINTS,
+	TIME_ALMOST_EXPIRED,
+	NARROW_WINNER,
+	WIDE_WINNER,
+	YOU_WINNER,
+	PHONE_LOST,
                             
 
                 
@@ -283,7 +283,17 @@ global enum eSurvivalCommentaryBucket
 	CONTROL_LOCKOUT_BEGIN,
 	CONTROL_LOCKOUT_COMPLETE,
 	CONTROL_LOCKOUT_BROKEN,
+	CONTROL_MRB_TIMEDEVENT_START,
+	CONTROL_MRB_TIMEDEVENT_MRB_SECURED,
+	CONTROL_MRB_TIMEDEVENT_MRB_CALLED_IN,
+	CONTROL_MRB_TIMEDEVENT_MRB_DEPLOYED,
+	CONTROL_MRB_TIMEDEVENT_MRB_EXPIRED,
        
+
+                       
+	FREEDM_TEAM_HALFWAY,
+	FREEDM_TEAM_NEAR_WINNING,
+      
 
 	_count
 }
@@ -776,7 +786,7 @@ bool function DoesConditionalAltRequireAddressee( string conAltAlias )
 
 ItemFlavor function GetConditionalAltCondPlayerCharacterFromAlias( string conAltAlias )
 {
- 	return GetItemFlavorByHumanReadableRef( "character_" + file.aliasToCondPlayer[ conAltAlias ] )
+ 	return GetItemFlavorByCharacterRef( "character_" + file.aliasToCondPlayer[ conAltAlias ] )
 }
 
                                       
@@ -968,7 +978,7 @@ entity function TryFindSpeakingPlayerOnTeam_OnlyAllowSpecificCharacters( int tea
 		if ( !LoadoutSlot_IsReady( ToEHI( playerOnTeam ), Loadout_Character() ) )
 			continue
 
-		string playerOnTeamCharacterName = ItemFlavor_GetHumanReadableRef( LoadoutSlot_GetItemFlavor( ToEHI( playerOnTeam ), Loadout_Character() ) )
+		string playerOnTeamCharacterName = ItemFlavor_GetCharacterRef( LoadoutSlot_GetItemFlavor( ToEHI( playerOnTeam ), Loadout_Character() ) )
 		if ( !( allowedCharactersStringArray.contains( playerOnTeamCharacterName ) ) )
 			continue
 

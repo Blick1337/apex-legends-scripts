@@ -45,12 +45,13 @@ void function SURVIVAL_LootTypes_InitShared()
 	lt = RegisterLootType( eLootType.MAINWEAPON )
 	lt.equipmentAction = eLootAction.EQUIP
 	lt.equipmentSlot = ""
-                  
-                                                   
-       
 	lt.groundActionFunc = GroundAction_ForWeapons
 	lt.groundUseLongActionFunc = GroundLongAction_ForWeapons
-	lt.groundAltActionFunc = GroundAltAction_None                             
+                  
+                                                     
+      
+		lt.groundAltActionFunc = GroundAltAction_None
+       
 	#if SERVER
 		                                                
 	#endif
@@ -408,7 +409,7 @@ LootActionStruct function GroundAction_ForEquipment( entity player, LootRef loot
 				if ( EvolvingArmor_IsEquipmentEvolvingArmor( equippedData.ref ) )
 				{
 					int currentEvoProgress = EvolvingArmor_GetEvolutionProgress( player )
-					int lootEvoProgress = lootRef.lootExrtaProperty
+					int lootEvoProgress = lootRef.lootExtraProperty
 
 					if ( lootData.tier > equippedData.tier || currentShields < lootShields )
 					{
@@ -490,20 +491,6 @@ LootActionStruct function GroundAction_ForWeapons( entity player, LootRef lootRe
 	int action
 	if ( SURVIVAL_CountPrimaryWeapons( player ) > 1 )
 	{
-                   
-                                                                  
-    
-                                                                           
-                                                                               
-                                                
-     
-                                        
-                       
-              
-     
-    
-        
-
 		action = eLootAction.SWAP
 
 		array<entity> weapons = SURVIVAL_GetPrimaryWeaponsSorted( player )
@@ -544,7 +531,6 @@ LootActionStruct function GroundLongAction_ForWeapons( entity player, LootRef lo
 	as.action = action
 	return as
 }
-
 
 LootActionStruct function GroundAction_ForAttachments( entity player, LootRef lootRef )
 {
@@ -606,21 +592,26 @@ LootActionStruct function GroundAltAction_None( entity player, LootRef lootRef )
 	return as
 }
 
-
 LootActionStruct function GroundAltAction_ForWeapons( entity player, LootRef lootRef )
 {
 	LootActionStruct as
 	as.displayString = ""
 
 	int action
-	if ( SURVIVAL_CountPrimaryWeapons( player ) == 0 )
-	{
-		action = eLootAction.NONE
-	}
-	else
-	{
-		action = eLootAction.DISMANTLE
-	}
+                  
+                                                               
+   
+                                           
+                                       
+       
+                                      
+   
+      
+       
+		{
+			action = eLootAction.NONE
+		}
+
 
 	as.action = action
 	return as

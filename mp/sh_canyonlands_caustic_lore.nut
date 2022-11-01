@@ -69,7 +69,7 @@ void function SetLabAccessPanelUsable ( entity panel )
 void function OnLabAccessPanelUse( entity panel, entity playerUser, int useInputFlags )
 {
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( playerUser ), Loadout_Character() )
-	string characterRef  = ItemFlavor_GetHumanReadableRef( character ).tolower()
+	string characterRef  = ItemFlavor_GetCharacterRef( character ).tolower()
 	if ( characterRef != "character_caustic" && characterRef != "character_wattson" )
 	{
 		#if CLIENT
@@ -107,7 +107,7 @@ string function OnLabAccessTextOverride( entity ent )
 	}
 
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
-	string characterRef  = ItemFlavor_GetHumanReadableRef( character ).tolower()
+	string characterRef  = ItemFlavor_GetCharacterRef( character ).tolower()
 	if ( characterRef != "character_caustic" && characterRef != "character_wattson" )
 	{
 		return "#CAUSTIC_LAB_ACCESS_REQUIREMENT"

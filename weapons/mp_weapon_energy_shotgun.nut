@@ -54,9 +54,6 @@ void function OnWeaponActivate_weapon_energy_shotgun( entity weapon )
 void function OnWeaponDeactivate_weapon_energy_shotgun( entity weapon )
 {
 	OnWeaponDeactivate_ReactiveKillEffects( weapon )
-
-	OnWeaponDeactivate_Kinetic_Loader( weapon )
-
 }
 
 var function OnWeaponPrimaryAttack_weapon_energy_shotgun( entity weapon, WeaponPrimaryAttackParams attackParams)

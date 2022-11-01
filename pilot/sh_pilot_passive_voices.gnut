@@ -128,7 +128,7 @@ void function Sh_PassiveVoices_Init()
 		data.voiceDescriptors.randomize()
 
 	#if SERVER
-	                                                                                    
+		                                                                                    
 	#endif
 }
 
@@ -375,7 +375,7 @@ void function TryWraithWarnTeammates( entity player )
 	string category = passiveEnumToStringMap[ file.warnTeammatesCatId ]
 	VoiceData data = file.voiceData[ category ]
 	int quickChatId = data.responseId
-	Quickchat( player, quickChatId )
+	Quickchat( quickChatId, null )
 	EmitSoundOnEntity( player, AUDIO_WARN_TEAMMATES_BEEP )
 }
 #endif

@@ -33,9 +33,9 @@ global const string WRECKING_BALL_SPEEDTRIGGER_SCRIPT_NAME 	= "wreckingball_spee
 const int WRECKING_BALL_DAMAGE_FINAL				= 20			                                                                            
 const float WRECKING_BALL_FINAL_EXPLOSION_RADIUS	= 300.0			                                                                                           
                    
-                                                                                                      
+const float WRECKING_BALL_BALL_DURATION 			= 10.0			                                                  
      
-const float WRECKING_BALL_BALL_DURATION 			= 5.0			                                                  
+                                                                                                     
       
 const float WRECKING_BALL_WAKE_DURATION 			= 60.0			                                                                
 const float WRECKING_BALL_PROXY_DELAY				= 0.5			                                                      
@@ -55,8 +55,8 @@ const float WRECKING_BALL_FORCE_TO_MOVE				= 600.0
 const float WRECKING_BALL_TRACE_RADIUS				= 40.0			                                                                                                                                                    
 
                    
-                                                      
-                                                     
+const float WRECKING_BALL_DESTORY_DEVICE_RANGE 		= 450
+const float WRECKING_BALL_DAMAGE_DEVICE_RANGE 		= 100
       
 
          
@@ -140,10 +140,10 @@ struct
 	bool pingWreckingBallOnCast
 
                    
-          
-                               
-                              
-      
+#if SERVER
+	                              
+	                             
+#endif
       
 } file
 
@@ -208,8 +208,8 @@ void function MpAbilityWreckingBall_Init()
 		                                                    
 
                      
-                                                                 
-                                                                
+		                                                               
+		                                                              
         
 
 	#endif         
@@ -445,7 +445,7 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 	 
 
 	                        
-		                                                                                       
+		                                                         
 
 	                                    
 		                                                                                                                                         
@@ -583,9 +583,9 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 	                       				       
 	                                   	     		                                             
                     
-                                                                                 
-      
 	                                   	     		                                     
+      
+                                                                                 
        
 	                                	       		                                                                           
 	                                	      		                                                                                         
@@ -599,9 +599,9 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 
 	                                                                      
                     
-                                                                                                                                                                                   
+	                                       			    	                                                                                                                                   
       
-	                                       			     	                                                                                                                                   
+                                                                                                                                                                                    
        
 	                                  				      	                                                                                                                                                            
 	                                    			       	                                                     
@@ -641,7 +641,7 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 
 	                    
 	                                                                                                                                         
-	                                                                                                                                                         
+	                                                                                                                                                                           
 	                                                                                                                                                                  
 	                                                          
 	                                      
@@ -678,33 +678,33 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 	                                                     
 	 
                      
-                                           
-                                                                                
-                                      
-   
-                                                            
-            
+		                                         
+		                                                                              
+		                                    
+		 
+			                                                         
+				        
 
-                                
-                           
-                                                               
+			                             
+			                        
+			                                                            
 
-                                 
-   
+			                                                                
+		 
 
-                                                                               
-                                      
-   
-                                                            
-            
+		                                                                             
+		                                    
+		 
+			                                                         
+				        
 
-                                
-                           
-                                                               
+			                             
+			                        
+			                                                            
 
-                                                                                                      
-   
-                                         
+			                                                                                                   
+		 
+		                                       
         
 
 
@@ -758,22 +758,22 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
                    
                                                                              
  
-                                                                                                                                               
+	                                                                                                                                              
  
 
                                                                             
  
-                                                                                                                                             
+	                                                                                                                                            
  
 
                                                             
  
-                                                                    
+	                                                                   
  
 
                                                              
  
-                                                                     
+	                                                                    
  
       
 
@@ -1135,7 +1135,7 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 	 
 		                                  
 		                       
-		                   
+		                        
 		                                
 		                                                                                                           
 		 
@@ -1377,7 +1377,7 @@ void function ServerCallback_RT_SpeedupHudForPlayer( int statusEffect )
 		return
 
 	int fxHandle   = StartParticleEffectOnEntity( player.GetCockpit(), GetParticleSystemIndex( FX_SPEED_BOOST_HUD ),
-		FX_PATTACH_ABSORIGIN_FOLLOW, -1)
+		FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID)
 	EffectSetIsWithCockpit( fxHandle, true )
 	file.fxHandle_1p = fxHandle
 

@@ -99,20 +99,20 @@ void function GameModes_Init_SV_CL()
 #endif
 
                        
-                           
-           
-                                                               
-               
-                                                               
-                                                                     
-       
-        
-                                                               
+	gameMode = GAMEMODE_FREEDM
+	#if SERVER
+		                                                             
+	#elseif CLIENT
+		GameMode_AddClientInit( gameMode, FreeDM_GamemodeInitClient )
+		GameMode_SetScoreboardSetupFunc( gameMode, FreeDM_ScoreboardSetup )
+	#endif
+	#if !UI
+		GameMode_AddSharedInit( gameMode, FreeDM_GamemodeInitShared )
 
-                   
-                                                         
-        
-       
+		#if R2_SCOREBOARD
+			GameMode_SetScoreCompareFunc( gameMode, CompareKills )
+		#endif
+	#endif
       
 
                    

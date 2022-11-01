@@ -22,6 +22,8 @@ global function DeathScreen_SetDataRuiAssetForGamemode
 
 global function UICallback_ShowScoreboard
 global function UICallback_ShowSquadSummary
+global function UICallback_SetChangeLegendButton
+global function UICallback_SetChangeLoadoutButton
 global function UICallback_HideSquadSummary
 global function UICallback_ShowDeathRecap
 global function UICallback_CloseDeathRecap
@@ -113,6 +115,8 @@ struct
 	var deathScreenHeaderDataRui
 	var deathScreenHeaderDataNestedRui
 	var deathScreenRecapRui
+	var changeLegendButton
+	var changeLoadoutButton
 
 	string functionref() deathScreenBannerOverrideFunc
 	bool deathScreenBannerDisabled
@@ -226,30 +230,29 @@ void function ServerCallback_ShowDeathScreen()
 	entity player = GetLocalClientPlayer()
 
 	int tabIndex = eDeathScreenPanel.SPECTATE
+
 	file.isOpen = true
 
 	if ( ShouldShowDeathScreen() )
 		ShowDeathScreen( tabIndex )
 
-                         
+	int deathDefaultTab = GetCurrentPlaylistVarInt( "death_screen_default_tab", eDeathScreenPanel.SPECTATE )
+	if( GetGameState() < eGameState.WinnerDetermined && deathDefaultTab != eDeathScreenPanel.SPECTATE )
+	{
 		HideScoreboard()
-		if( GetGameState() < eGameState.WinnerDetermined && Control_IsModeEnabled())
-		{
-			float deathCamDuration = GetDeathCamSpectateLength()
-			thread DeathScreenDelayedSwitchToRecap( deathCamDuration )
-		}
-       
+		float deathCamDuration = GetDeathCamSpectateLength()
+		thread DeathScreenDelayedSwitchToTab( deathDefaultTab, deathCamDuration )
+	}
 }
 
 
-void function DeathScreenDelayedSwitchToRecap( float delay ){
-	RunUIScript( "UI_EnableDeathScreenTab", eDeathScreenPanel.DEATH_RECAP, false )
+void function DeathScreenDelayedSwitchToTab( int tab, float delay ){
 	wait( delay )
 	HideScoreboard()
 	if(file.isOpen && file.deathRecapDataUpdated)
 	{
-		RunUIScript( "UI_EnableDeathScreenTab", eDeathScreenPanel.DEATH_RECAP, true )
-		SwitchDeathScreenTab(eDeathScreenPanel.DEATH_RECAP)
+		RunUIScript( "UI_EnableDeathScreenTab", tab, true )
+		SwitchDeathScreenTab( tab )
 	}
 }
 
@@ -495,7 +498,6 @@ void function DeathScreen_RespawnStatusChanged( entity player, int new )
 void function ShowDeathScreen( int tabIndex )
 {
 	                                                                                                                             
-
 	entity player = GetLocalClientPlayer()
 	if ( !IsValid( player ) )                                        
 		return
@@ -530,7 +532,6 @@ void function ShowDeathScreen( int tabIndex )
 void function UpdateEnabledTabs()
 {
 	                                   
-
 	entity clientPlayer = GetLocalClientPlayer()
 
 	                                           
@@ -541,15 +542,15 @@ void function UpdateEnabledTabs()
 	if ( !IsAlive( clientPlayer ) )
 		EnableDeathScreenTab( eDeathScreenPanel.SPECTATE, true )
 
-	if ( GetGameState() < eGameState.WinnerDetermined && GetCurrentPlaylistVarBool( "enable_death_scoreboard", false ) )
-	{
-		EnableDeathScreenTab( eDeathScreenPanel.SCOREBOARD, true )
-	}
-	else if( GetGameState() > eGameState.WinnerDetermined && GetCurrentPlaylistVarBool( "enable_match_end_scoreboard", false ) )
-	{
-		EnableDeathScreenTab( eDeathScreenPanel.SCOREBOARD, true )
-	}
 
+	bool enableMatchEnd =  GetCurrentPlaylistVarBool( "enable_match_end_scoreboard", false )
+	bool enableDeathScreen = GetCurrentPlaylistVarBool( "enable_death_scoreboard", false )
+	bool gameIsOver = GetGameState() >= eGameState.WinnerDetermined
+
+	if ( IsRoundBased() )                                                                                           
+		gameIsOver = GetGlobalNonRewindNetBool("roundScoreLimitComplete")
+
+	EnableDeathScreenTab( eDeathScreenPanel.SCOREBOARD, (enableMatchEnd && gameIsOver) || enableDeathScreen )
 }
 
 
@@ -607,6 +608,52 @@ void function DeathScreenUpdate()
 	UpdateGladCardVisibility()
 }
 
+void function DeathScreenUpdateChangeLegend( entity player )
+{
+	if( file.changeLegendButton == null || !IsValid( file.changeLegendButton ) )
+		return
+
+	var button = Hud_GetRui( file.changeLegendButton )
+	bool validGameState = GetGameState() >= eGameState.Playing && GetGameState() < eGameState.WinnerDetermined
+	bool isControl  = Control_IsModeEnabled()
+
+	if( GetCurrentPlaylistVarBool( "character_reselect_enabled", false ) && validGameState && !isControl )
+	{
+		Hud_Show( file.changeLegendButton )
+		ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
+		RuiSetImage( button, "legendIcon", CharacterClass_GetGalleryPortrait( character ) )
+	}
+	else
+	{
+		Hud_Hide( file.changeLegendButton )
+	}
+}
+
+void function DeathScreenUpdateChangeLoadout( entity player )
+{
+	if( file.changeLoadoutButton == null || !IsValid( file.changeLoadoutButton ) )
+		return
+
+	var button = Hud_GetRui( file.changeLoadoutButton)
+	bool validGameState = GetGameState() >= eGameState.Playing && GetGameState() < eGameState.WinnerDetermined
+	bool isControl  = Control_IsModeEnabled()
+
+	if ( IsUsingLoadoutSelectionSystem() && validGameState && !isControl )
+	{
+		Hud_Show( file.changeLoadoutButton )
+		int currentLoadout = LoadoutSelection_GetSelectedLoadoutSlotIndex_CL_UI()
+		RuiSetString( button, "currentLoadoutHeaderText", LoadoutSelection_GetLocalizedLoadoutHeader( currentLoadout ) )
+		RuiSetImage( button, "weapon0Icon", LoadoutSelection_GetItemIcon( currentLoadout, 0, -1 ) )
+		RuiSetInt( button, "weapon0LootTier", LoadoutSelection_GetWeaponLootTeir( currentLoadout, 0 ) )
+		RuiSetImage( button, "weapon1Icon", LoadoutSelection_GetItemIcon( currentLoadout, 1, -1 ) )
+		RuiSetInt( button, "weapon1LootTier", LoadoutSelection_GetWeaponLootTeir( currentLoadout, 1 ) )
+	}
+	else
+	{
+		Hud_Hide( file.changeLoadoutButton )
+	}
+
+}
 
 void function DeathScreenUpdateHeader( var headerElem )
 {
@@ -616,10 +663,10 @@ void function DeathScreenUpdateHeader( var headerElem )
 
 	int respawnStyle = GetRespawnStyle()
                            
-		if ( IsSecondChanceGameMode() && ShGameMode_SecondChance_CanPlayerStillRespawn( clientPlayer ) )
-		{
-			respawnStyle = eRespawnStyle.SKYDIVE_RESPAWN
-		}
+                                                                                                  
+   
+                                               
+   
                                  
 
 	int respawnStatus  = GetRespawnStatus( clientPlayer )
@@ -666,7 +713,6 @@ void function DeathScreenUpdateHeader( var headerElem )
 			break
 
 		case eDeathScreenPanel.SCOREBOARD:
-			displayBanner = false
 			break
 	}
 
@@ -707,6 +753,7 @@ void function DeathScreenUpdateHeader( var headerElem )
 	RuiSetBool( headerRui, "isWinner", isWinner )
 	RuiSetInt( headerRui, "missionCheckpointsLeft", MissionCheckpoints_GetRespawnsLeftForPlayer( clientPlayer ) )
 	RuiSetBool( headerRui, "isFinalDeathFieldStage", SURVIVAL_IsFinalDeathFieldStage() )
+	RuiSetBool( headerRui, "shadowMode", false )
 
 	RuiSetBool( headerRui, "isSoloMode", IsSoloMode() )
 	RuiSetBool( headerRui, "isArenaMode", IsArenaMode() )
@@ -760,11 +807,6 @@ void function DeathScreenUpdateHeader( var headerElem )
 		}
        
 
-                       
-                                      
-                                                    
-       
-
 	if ( file.deathScreenBannerOverrideFunc != null )
 		RuiSetString( headerRui, "bannerOverride", file.deathScreenBannerOverrideFunc() )
 	else
@@ -773,8 +815,18 @@ void function DeathScreenUpdateHeader( var headerElem )
 	                                                                                      
 	if ( gameState >= eGameState.WinnerDetermined )
 		file.didGameOverAnimation = true
+
+
+	thread DelayedUpdateHeader( clientPlayer )
 }
 
+void function DelayedUpdateHeader( entity clientPlayer )
+{
+	wait 0.2
+
+	DeathScreenUpdateChangeLegend( clientPlayer )
+	DeathScreenUpdateChangeLoadout( clientPlayer )
+}
 
 void function SetHeaderBannerOverrideFunc( string functionref() func )
 {
@@ -791,6 +843,17 @@ void function DeathScreenSetBannerEnabled( bool isEnabled )
 void function ClearHeaderBannerOverrideFunc()
 {
 	file.deathScreenBannerOverrideFunc = null
+}
+
+
+void function UICallback_SetChangeLegendButton( var button )
+{
+	file.changeLegendButton = button
+}
+
+void function UICallback_SetChangeLoadoutButton( var button )
+{
+	file.changeLoadoutButton = button
 }
 
 void function UICallback_ShowSquadSummary( var headerElem, var headerDataElem )
@@ -1160,7 +1223,7 @@ void function UICallback_ShowSpectateTab( var headerElem )
 
 void function UICallback_CloseDeathScreenMenu()
 {
-	                                                 
+	printt( "DS: UICallback_CloseDeathScreenMenu" )
 
 	entity clientPlayer = GetLocalClientPlayer()
 	if ( IsValid ( clientPlayer ) )
@@ -1202,7 +1265,6 @@ void function UICallback_CloseDeathScreenMenu()
 
 	file.isOpen = false
 }
-
 
 void function UICallback_ReportPlayer()
 {
@@ -1309,11 +1371,16 @@ void function UICallback_TryPingRespawn()
 void function UICallback_OnResolutionChange()
 {
 	                                               
+	  
+	                                                                                                                                                                                                                            
+	  
+	if( file.isOpen )
+		UICallback_CloseDeathScreenMenu()
 
 	entity player = GetLocalClientPlayer()
-	if ( !IsValid( player ) )                                        
+	if ( !IsValid( player ) || IsAlive(player) )                                        
 		return
-
+	  
 	int tabIndex = GetCurrentTabIndex()
 	if ( tabIndex == eDeathScreenPanel.NONE )
 		return                                                     
@@ -1341,7 +1408,6 @@ void function UICallback_OnResolutionChange()
 	UpdateMenuBackground()
 	UpdateEnabledTabs()
 	UpdateGladCardVisibility()
-
 	DeathScreen_UpdateRespawnTime( file.bkupRespawnStartTime, file.bkupRespawnEndTime )
 
 	SetCurrentAttackerEHandle( file.currentAttackerEHandle )
@@ -1811,6 +1877,11 @@ bool function IsViewingDeathRecap()
 	return GetCurrentTabIndex() == eDeathScreenPanel.DEATH_RECAP
 }
 
+bool function IsViewingScoreboard()
+{
+	return GetCurrentTabIndex() == eDeathScreenPanel.SCOREBOARD
+}
+
 
 bool function IsViewingSpectateTab()
 {
@@ -1902,9 +1973,11 @@ void function DeathRecapShow( var recapElem )
 	playerCardData.lastShownTime  = Time()
 	file.recapGladCardDataTable[ playerEHandle ] <- playerCardData
 
-	entity killer = GetEntityFromEncodedEHandle( file.deathRecapDamageBlocks[0].attackerEHandle )
-	if ( IsValid( killer ) && killer.IsPlayer() && player != killer )
-		RuiSetString( recapRui, "playerObfuscatedID", Localize( "#DEATH_SCREEN_ID", GetObfuscatedIdFromPlayer( killer ) ) )
+	EHIScriptStruct killerEHISS
+	if ( EEHHasValidScriptStruct( file.deathRecapDamageBlocks[0].attackerEHandle ) )
+		killerEHISS = GetEHIScriptStruct( file.deathRecapDamageBlocks[0].attackerEHandle )
+	if ( file.deathRecapDamageBlocks[0].attackerEHandle != playerEHandle && GetCurrentPlaylistVarBool( "showPlayerObfuscatedID", true ) && killerEHISS.obfuscatedID != "" )
+		RuiSetString( recapRui, "playerObfuscatedID", Localize( "#DEATH_SCREEN_ID", killerEHISS.obfuscatedID ) )
 	else
 		RuiSetString( recapRui, "playerObfuscatedID", "" )
 
@@ -2505,7 +2578,6 @@ void function ClientCodeCallback_OnDeathRecapUpdated( int killerEHandle )
 	                                                                                                                                     
 }
 
-
 void function DeathScreen_UpdateRespawnTime( float startTime, float endTime )
 {
 	                                                       
@@ -2515,6 +2587,7 @@ void function DeathScreen_UpdateRespawnTime( float startTime, float endTime )
 
 	if ( file.deathScreenHeaderRui == null )
 		return
+
 
 	RuiSetGameTime( file.deathScreenHeaderRui, "respawnStartTime", startTime )
 	RuiSetGameTime( file.deathScreenHeaderRui, "respawnEndTime", endTime )

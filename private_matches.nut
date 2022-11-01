@@ -109,6 +109,7 @@ const float PM_OBSERVER_HIGHLIGHT_TOGGLE_DEBOUNCE = 0.5
 global struct RosterStruct
 {
 	var           headerPanel
+	var           framePanel
 	var           listPanel
 	int           teamIndex
 	int           teamSize
@@ -909,7 +910,7 @@ void function PrivateMatch_SetUpTeamRosters( string playlistName )
 		 
 			                                         
 			                                                           
-			                                                                                               
+			                                                                                           
 			                                                 
 			                                                     
 			                                                           
@@ -1515,22 +1516,7 @@ void function ChampionScreenSetWinningTeamName( var rui )
 #if SERVER || CLIENT
 int function PrivateMatch_GetMaxTeamsForSelectedGamemode()
 {
-	int maxTeams
-	switch( GameRules_GetGameMode() )
-	{
-		case GAMEMODE_ARENAS:
-			maxTeams = 2
-			break
-
-		case GAMEMODE_CONTROL:
-			maxTeams = 6
-			break
-
-		default:
-			maxTeams = 20
-			break
-	}
-
-	return maxTeams
+	string playlist = GetCurrentPlaylistName()
+	return GetMaxTeamsForPlaylistName( playlist )
 }
 #endif

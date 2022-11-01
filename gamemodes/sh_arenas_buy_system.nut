@@ -310,7 +310,7 @@ void function ShArenasBuy_RegisterNetworkingV2()
 	#endif
 
 	int startingCash = GetCurrentPlaylistVarInt( "arenas_round_0_currency", ARENAS_STARTING_CASH )
-	RegisterNetworkedVariable( "arenas_current_cash", SNDC_PLAYER_EXCLUSIVE, SNVT_BIG_INT, startingCash )
+	RegisterNetworkedVariable( "arenas_current_cash", SNDC_PLAYER_GLOBAL, SNVT_BIG_INT, startingCash )
 	#if CLIENT
 		RegisterNetworkedVariableChangeCallback_int( "arenas_current_cash",
 			void function( entity player, int newVal ) : ()
@@ -333,7 +333,7 @@ void function Arenas_InitStoreData()
 	var dataTable = GetDataTable( ARENAS_ITEMS_DATATABLE )
 	int numRows = GetDataTableRowCount( dataTable )
 
-	array<string> disabledWeapons = split( GetCurrentPlaylistVarString( "global_disabled_loot", "" ).tolower(), " " )
+	array<string> disabledWeapons = split( GetCurrentPlaylistVarString( "global_disabled_loot", "" ).tolower(), WHITESPACE_CHARACTERS )
 
 	table<string, LootData> allLootData = SURVIVAL_Loot_GetLootDataTable()
 
@@ -499,7 +499,7 @@ void function Arenas_InitWeaponData()
 			{
 				string upgrades = GetDataTableString( dataTable, i, col_attachments )
 				upgrades = GetCurrentPlaylistVarString( "arenas_" + weaponRef + "_attachment_override", upgrades )
-				file.weaponUpgrades[ weaponRef ] <- split( upgrades, " " )
+				file.weaponUpgrades[ weaponRef ] <- split( upgrades, WHITESPACE_CHARACTERS )
 				if( file.weaponUpgrades[ weaponRef ].len() == 0 )
 					file.weaponUpgrades[ weaponRef ] = SURVIVAL_Weapon_GetBaseMods( weaponRef )
 
@@ -514,7 +514,7 @@ void function Arenas_InitWeaponData()
 			{
 				string optics = GetDataTableString( dataTable, i, col_optics )
 				optics = GetCurrentPlaylistVarString( "arenas_" + weaponRef + "_optic_override", optics )
-				file.weaponOptics[ weaponRef ] <- split( optics, " " )
+				file.weaponOptics[ weaponRef ] <- split( optics, WHITESPACE_CHARACTERS )
 			}
 			else
 				Warning( "Arenas_InitWeaponUpgradeData - available optics for %s already exists!", weaponRef )
@@ -619,7 +619,7 @@ void function Arenas_InitWeaponTabs()
 		if( tabOverride == ARENAS_NO_TAB_OVERRIDE )
 			continue
 
-		array<string> weaponRefs = split( tabOverride, " " )
+		array<string> weaponRefs = split( tabOverride, WHITESPACE_CHARACTERS )
 		if( weaponRefs.len() == 0 )
 		{
 			currentTab.name = ""
@@ -1311,6 +1311,9 @@ void function OnCurrentCashChanged( entity player )
 	if( !IsValid( player ) )
 		return
 
+	if( player != GetLocalClientPlayer() )
+		return
+
 	                               
 	if( player.GetPlayerNetInt( "arenas_current_cash" ) <= 0 && SURVIVAL_GetPrimaryWeapons( player ).len() >= 2 )
 		RunUIScript( "ClientToUI_Arenas_CloseBuyMenu" )
@@ -1538,8 +1541,6 @@ void function _Arenas_BindWeaponButton( entity player, var button, var rui, int 
 				if( IsValid( weapon ) )
 				{
 					string weaponRef = GetWeaponClassNameWithLockedSet( weapon )
-					if( weapon.w.isGoldset )
-						weaponRef = GetBaseWeaponRef( weaponRef ) + WEAPON_LOCKEDSET_SUFFIX_PURPLESET
 
 					if( item.ref == weaponRef )
 					{
@@ -2768,7 +2769,7 @@ void function UICallback_Arenas_PingAirdropPreview( var element )
 	if ( IsLobby() )
 		return
 
-	Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.PING_GO_CAREPACKAGE, eCommsFlags.FORCE_FAR, null, "" )
+	Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.PING_GO_CAREPACKAGE, eCommsFlags.FORCE_FAR )
 }
 
 void function _WaitForDeathScreenClosed()

@@ -1,19 +1,19 @@
 global function BirdClusterSharedInit
 
 #if SERVER
-	                                  
-	       
-		                            
-		                                     
-		                              
-	            
+                                  
+       
+                            
+                                     
+                              
+            
 #endif         
 #if CLIENT
-	global function BirdClusterPointSpawned
+global function BirdClusterPointSpawned
 #endif         
 
-const vector TRACKING_ICON_OFFSET = <0,0,16>
-const vector TRACKING_ICON_OFFSET_SHORT = <0,0,8>
+const vector TRACKING_ICON_OFFSET = <0, 0, 16>
+const vector TRACKING_ICON_OFFSET_SHORT = <0, 0, 8>
 
 const CLUSTER_SPAWN_MIN_RADIUS = 32
 const CLUSTER_SPAWN_MAX_RADIUS = 192
@@ -33,6 +33,7 @@ const CLUSTER_SIZE_THRESHOLD = 5
 const CLUSTER_MAX_TAKEOFF_DELAY = 0.3
 const bool CLUSTER_USE_FAKE = false
 const bool CLUSTER_DEBUG_CLUSTER = false
+const string CLUSTER_BIRD_MOVER_SCRIPTNAME = "bird_cluster_mover"
 
 global const asset CLUSTER_BIRD_MODEL = $"mdl/creatures/bird/bird.rmdl"
 global const CLUSTER_BIRD_DISSOLVE_VFX = $"dissolve_bird"
@@ -54,8 +55,8 @@ global const CLUSTER_BIRD_DISSOLVE_VFX = $"dissolve_bird"
 struct BirdClusterInfo
 {
 	array<entity> birdArray
-	entity birdClusterMainEnt
-	entity ownerPlayer
+	entity        birdClusterMainEnt
+	entity        ownerPlayer
 }
 #endif         
 
@@ -86,6 +87,9 @@ void function BirdClusterSharedInit()
 	#endif
 	#if CLIENT
 		AddTargetNameCreateCallback( "bird_cluster_point", BirdClusterPointSpawned )
+                          
+                                                          
+        
 	#endif
 }
 
@@ -118,7 +122,7 @@ void function BirdClusterSharedInit()
 
 
 		                                                           
-		                                        
+		                                         
 		 
 			                           
 
@@ -129,7 +133,7 @@ void function BirdClusterSharedInit()
 			                                                                                                          
 
 			                           
-			                                              
+			                                               
 			 
 				                                                                                       
 				                          
@@ -160,16 +164,16 @@ void function BirdClusterSharedInit()
 
 	                                                                                                                                         
 	       
-	                       
-		                                        
+		                       
+			                                        
 	      
 
-	                                          
+	                                           
 	 
-		                                                                
+		                                                               
 
 		                                          
-		                                                                                               
+		                                                                                             
 			        
 
 		                                     
@@ -178,7 +182,7 @@ void function BirdClusterSharedInit()
 		                                                                               
 			        
 
-		                                                                                                           
+		                                                                                                             
 			        
 
 		                              
@@ -200,8 +204,8 @@ void function BirdClusterSharedInit()
 	 
 		                                                                       
 		                              
-		                           
-		                          
+		                              
+		                            
 		                  
 	 
 
@@ -211,7 +215,7 @@ void function BirdClusterSharedInit()
 	       	                                                               
 	                     
 
-	                                     
+	                                      
 	 
 		                                              
 
@@ -234,11 +238,11 @@ void function BirdClusterSharedInit()
 	                          
 	                                              
 
-	                              
-	                           
-	                          
+	                               
+	                               
+	                               
 	                                   
-	                             
+	                                
 
 	                                                   
 
@@ -255,7 +259,7 @@ void function BirdClusterSharedInit()
 	                            
 		      
 
-	                                                    
+	                                                     
 		                  
 
 	                              
@@ -275,7 +279,7 @@ void function BirdClusterSharedInit()
 	                                                           
 	          
 
-	                                                                      
+	                                                                                                     
 	                              
 
 	            
@@ -296,23 +300,23 @@ void function BirdClusterSharedInit()
 	                                          
 	                                                             
 
-	                     
+	                   
 	                                     
 
 	                                                         
  
 
                          
-	                                   
+                                   
      
-	                                 
+                                 
       
 
                                                                                         
  
 	                            
 
-	                                                                                                      
+	                                                                                                        
 	                            
 		         
 	                              
@@ -320,12 +324,12 @@ void function BirdClusterSharedInit()
 	                                                                                                                                           
 	                       
 
-	                                     
+	                                      
 	 
 		           
 
 		                                                    
-		                                                                                                                                               
+		                                                                                                                                                   
 		                                                  
 
 		                                    
@@ -348,11 +352,11 @@ void function BirdClusterSharedInit()
 			                                                                                                       
 			                                                                    
 
-			                                                       
+			                                                         
 			                                                        
 			 
 				                                                   
-				                                                            
+				                                                              
 				                                                                                  
 				                                                                                 
 
@@ -360,7 +364,6 @@ void function BirdClusterSharedInit()
 				                                                                                  
 				                                                                                                                
 			 
-
 		 
 
 		                                                       
@@ -377,18 +380,18 @@ void function BirdClusterSharedInit()
 	                      
 	                      
 
-	                                                        
-	                                               
-	                 
-	                   
+	                                                          
+	                                                   
+	                      
+	                       
 
-	                        
+	                          
 
-	                                                  
+	                                                   
 	 
-		                                                                             
+		                                                                                
 		                                                                                                                 
-		                            
+		                                     
 
 		       
 			                                              
@@ -406,10 +409,10 @@ void function BirdClusterSharedInit()
 		                           
 		 
 			                 
-			               
+			                
 		 
 
-		                                                  
+		                                                     
 	 
 
 	                                                                    
@@ -417,10 +420,10 @@ void function BirdClusterSharedInit()
 
                                                                                            
  
-	                                               
+	                                                
 	 
 		                             
-		                                                                                
+		                                                                              
 			        
 
 		  		                                                                                     
@@ -436,7 +439,7 @@ void function BirdClusterSharedInit()
 
                                                                 
  
-	                                               
+	                                                
 	 
 		                                     
 			                  
@@ -447,7 +450,7 @@ void function BirdClusterSharedInit()
 
                                          
  
-	                                                     
+	                                                      
 	 
 		                                             
 			                                
@@ -482,7 +485,7 @@ void function BirdClusterSharedInit()
 
 		                             
 		 
-			                                          
+			                                           
 				               
 		 
 	 
@@ -499,7 +502,7 @@ void function BirdClusterSharedInit()
                                                               
  
 	             
-	                                               
+	                                                
 	 
 		                                                            
 			       
@@ -511,7 +514,7 @@ void function BirdClusterSharedInit()
                                            
  
 	             
-	                                               
+	                                                
 	 
 		                                     
 	 
@@ -527,7 +530,7 @@ void function BirdClusterSharedInit()
 	                                       
 	                                                                                 
 
-	                                                                                                                                                                              
+	                                                                                                                                                                             
 	                          
 	 
 		                                            
@@ -537,7 +540,6 @@ void function BirdClusterSharedInit()
 	                                 
 
 	                                           
-
  
 
                             
@@ -553,51 +555,51 @@ void function BirdClusterSharedInit()
 	             
 	 
 		                                           
-		                                                                                                                 
+		                                                                                                                   
 		       
-		                       
-			                                        
+			                       
+				                                        
 		      
 
-		                                          
+		                                           
 		 
 			                                                                                         
 			                  
 			 
-				                                                                          
+				                                                                            
 			 
 			    
 			 
-				                                                                              
+				                                                                                
 			 
-			                                                                                                                                                        
+			                                                                                                                                                             
 		 
 
-		                                               
+		                                                
 		 
 			                                
 			 
-				                                                                                                
+				                                                                                                  
 				        
 			 
 
 			                                
 			 
 				                                                                          
-				                                                                                                                                                   
+				                                                                                                                                                     
 				                            
-					                                                                                                              
+					                                                                                                                  
 				    
-					                                                                                                              
+					                                                                                                                  
 			 
 			    
 			 
 				                                                                          
-				                                                                                                                                                             
+				                                                                                                                                                               
 				                            
-					                                                                                                    
+					                                                                                                      
 				    
-					                                                                                                    
+					                                                                                                      
 			 
 		 
 
@@ -607,17 +609,59 @@ void function BirdClusterSharedInit()
 
                               
  
-	                                     
+	                                           
 	                                                                                                                                                  
-	                             
+	                            
 		      
 
 	                           
-	                                   
+	                                      
 	                         
 	                                   
  
 #endif                
+
+                        
+          
+                                               
+ 
+                                                          
+        
+
+                                
+ 
+
+                                                    
+ 
+                                                  
+                                     
+                                                           
+        
+
+                                                                            
+        
+
+                                         
+                                                                    
+                                                                                                             
+        
+
+                                                  
+
+                                                                                          
+ 
+
+                                                                        
+ 
+                                   
+        
+
+                                                
+
+                  
+ 
+      
+      
 
 #if CLIENT
 void function BirdClusterPointSpawned( entity info_target )
@@ -628,51 +672,56 @@ void function BirdClusterPointSpawned( entity info_target )
 void function __BirdClusterPointSpawned( entity info_target )
 {
 	entity owner = info_target.GetOwner()
+
 	if ( !IsValid( owner ) )
 		return
-
-	const array<string> BIRD_ANIM_ARRAY = ["Bird_eating_idle","Bird_casual_idle","Bird_cleaning_idle" ]
 
 	entity mainEnt
 	entity ownerPlayer
 
-	if( owner.IsPlayer() )
+	if ( owner.IsPlayer() )
 	{
-		mainEnt = info_target
+		mainEnt     = info_target
 		ownerPlayer = owner
 	}
 	else
 	{
-		mainEnt = owner
+		mainEnt     = owner
 		ownerPlayer = mainEnt.GetOwner()
 		if ( !IsValid( ownerPlayer ) )
 			return
 	}
 
+	CreateBirdAndClusterInfo ( mainEnt, ownerPlayer, info_target.GetOrigin(), info_target.GetAngles() )
+}
+
+void function CreateBirdAndClusterInfo( entity mainEnt, entity ownerPlayer, vector origin, vector angles )
+{
 	if ( GetLocalViewPlayer() != ownerPlayer )
 		return
+
+	const array<string> BIRD_ANIM_ARRAY = ["Bird_eating_idle", "Bird_casual_idle", "Bird_cleaning_idle" ]
 
 	BirdClusterInfo clusterInfo
 	clusterInfo = CreateOrReturnExistingBirdClusterInfo( mainEnt, ownerPlayer )
 	  	                                                   
 
-	entity bird = CreateClientSidePropDynamic( info_target.GetOrigin(), info_target.GetAngles(), CLUSTER_BIRD_MODEL )
+	entity bird = CreateClientSidePropDynamic( origin, angles, CLUSTER_BIRD_MODEL )
 	bird.SetFadeDistance( CLUSTER_MAX_DIST )
 
 	int animIndex = clusterInfo.birdArray.len() % BIRD_ANIM_ARRAY.len()
 
-	float duration = bird.GetSequenceDuration( BIRD_ANIM_ARRAY[ animIndex ] )
+	float duration    = bird.GetSequenceDuration( BIRD_ANIM_ARRAY[ animIndex ] )
 	float initialTime = RandomFloatRange( 0, duration )
 	thread PlayAnim( bird, BIRD_ANIM_ARRAY[ animIndex ], null, null, 0.0, initialTime )
 
-	                        
 	clusterInfo.birdArray.append( bird )
 }
 
 array<entity> function GetAllBrids()
 {
 	array<entity> birds
-	foreach( cluster in file.birdClusterInfoArray )
+	foreach ( cluster in file.birdClusterInfoArray )
 		birds.extend( cluster.birdArray )
 
 	return birds
@@ -680,7 +729,7 @@ array<entity> function GetAllBrids()
 
 BirdClusterInfo function CreateOrReturnExistingBirdClusterInfo( entity mainEnt, entity ownerPlayer )
 {
-	foreach( clusterInfo in file.birdClusterInfoArray )
+	foreach ( clusterInfo in file.birdClusterInfoArray )
 	{
 		if ( clusterInfo.birdClusterMainEnt == mainEnt )
 			return clusterInfo
@@ -688,7 +737,7 @@ BirdClusterInfo function CreateOrReturnExistingBirdClusterInfo( entity mainEnt, 
 
 	BirdClusterInfo newClusterInfo
 	newClusterInfo.birdClusterMainEnt = mainEnt
-	newClusterInfo.ownerPlayer = ownerPlayer
+	newClusterInfo.ownerPlayer        = ownerPlayer
 
 	file.birdClusterInfoArray.append( newClusterInfo )
 
@@ -707,7 +756,7 @@ void function BirdClusterInfoOnDestroy( entity info_target )
 void function __BirdClusterInfoOnDestroy( entity info_target )
 {
 	BirdClusterInfo clusterInfo
-	foreach( _clusterInfo in file.birdClusterInfoArray )
+	foreach ( _clusterInfo in file.birdClusterInfoArray )
 	{
 		if ( _clusterInfo.birdClusterMainEnt == info_target )
 			clusterInfo = _clusterInfo
@@ -716,7 +765,7 @@ void function __BirdClusterInfoOnDestroy( entity info_target )
 	if ( !IsValid( clusterInfo.ownerPlayer ) )
 	{
 		DeleteBirdCluster( clusterInfo )
-		return	                                             
+		return                                                 
 	}
 
 	Assert( clusterInfo.birdClusterMainEnt == info_target )
@@ -733,7 +782,7 @@ void function __BirdClusterInfoOnDestroy( entity info_target )
 		return
 	}
 
-	foreach( index, bird in clusterInfo.birdArray )
+	foreach ( index, bird in clusterInfo.birdArray )
 		thread BirdFlightThread( bird, index )
 
 	                                                       
@@ -771,8 +820,8 @@ void function BirdFlightThread( entity bird, int order )
 	thread PlayAnim( bird, "Bird_react_fly_small", refEnt )
 	wait duration - 2.0
 
-	int fxId = GetParticleSystemIndex( CLUSTER_BIRD_DISSOLVE_VFX )
-	int fxHandle = StartParticleEffectOnEntity( bird, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, 0 )
+	int fxId     = GetParticleSystemIndex( CLUSTER_BIRD_DISSOLVE_VFX )
+	int fxHandle = StartParticleEffectOnEntity( bird, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	waitthread fadeModelAlphaOutOverTime( bird, 1 )
 
 	wait 1
@@ -786,9 +835,9 @@ void function fadeModelAlphaOutOverTime( entity model, float duration )
 	EndSignal( model, "OnDestroy" )
 
 	float startTime = Time()
-	float endTime = startTime + duration
-	int startAlpha = 255
-	int endAlpha = 0
+	float endTime   = startTime + duration
+	int startAlpha  = 255
+	int endAlpha    = 0
 
 	model.kv.rendermode = 4                      
 
@@ -803,7 +852,7 @@ void function fadeModelAlphaOutOverTime( entity model, float duration )
 
 void function DeleteBirdCluster( BirdClusterInfo clusterInfo )
 {
-	foreach( bird in clusterInfo.birdArray )
+	foreach ( bird in clusterInfo.birdArray )
 	{
 		if ( IsValid( bird ) )
 			bird.Destroy()

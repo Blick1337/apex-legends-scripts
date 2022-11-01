@@ -1,0 +1,1308 @@
+global function PassiveReinforce_Init
+global function IsReinforced
+#if SERVER
+                             
+                                   
+#endif
+#if CLIENT
+global function PassiveReinforce_BlockControllerHolster
+#endif
+
+
+        
+const asset PASSIVE_REINFORCE_LINK_FX = $"P_ferro_pas_link"
+const asset PASSIVE_REINFORCE_DESTROY_FX = $"P_ferro_pas_destroyed"
+const asset PASSIVE_REINFORCE_REINFORCE_DOOR_FX = $"P_ferro_pas_locked"
+const asset PASSIVE_REINFORCE_REBUILD_DOOR_FX = $"P_ferro_pas_locked"
+const asset PASSIVE_REINFORCE_REBUILT_DOOR_MODEL = $"mdl/door/canyonlands_door_single_02.rmdl"
+const asset PASSIVE_REINFORCE_PREVIEW_FX = $"P_ferro_pas_preview"
+const asset PASSIVE_REINFORCE_TRANSITION_FX = $"P_ferro_pas_charging"
+
+        
+const string PASSIVE_REINFORCE_USE_LOOP_SFX = "Catalyst_Passive_Ticker_1p"
+const string PASSIVE_REINFORCE_REINFORCED_SFX = "Catalyst_Passive_Reinforce_MetalDoor_3p"
+const string PASSIVE_REINFORCE_REBUILT_SFX = "Catalyst_Passive_Reinforce_EmptyDoor_3p"
+const string PASSIVE_REINFORCE_OPEN_REINFORCED_SFX = "Door_Metal_Open_Catalyst_Dissolve_3p"
+const string PASSIVE_REINFORCE_BREAK_REBUILT_SFX = "Door_FerroDoor_Open_Catalyst_Dissolve_3p"
+global const string PASSIVE_REINFORCE_REINFORCED_IMPACT_SFX = "Door_Impact_Breach_Kick_MetalDoor_FerroLayer_Catalyst_3p"
+const string PASSIVE_REINFORCE_REBUILT_IMPACT_SFX = "Door_Impact_Breach_Kick_FerroDoor_Catalyst_3p"
+global const string PASSIVE_REINFORCE_DESTROY_REINFORCEMENT_SFX = "Door_Metal_Impact_FerroFluidReinforce_Break_3p"
+const string PASSIVE_REINFORCE_DESTROY_REBUILT_SFX = "Door_FerroDoor_Impact_Catalyst_FerroFluidReinforce_Break_3p"
+const string PASSIVE_REINFORCE_IDLE_SFX = "Catalyst_Passive_Reinforce_Idle_3p"
+
+
+         
+const string PASSIVE_REINFORCE_REMOVED_SIGNAL = "PassiveReinforceRemoved"
+const string PASSIVE_REINFORCE_KILL_PREVIEW_SIGNAL = "PassiveReinforceKillPreview"
+const string PASSIVE_REINFORCE_RESET_REBUILT_DOOR_SIGNAL = "PassiveReinforceResetRebuiltDoor"
+const string PASSIVE_REINFORCE_KILL_CLIENT_THREAD = "PassiveReinforceKillClientThread"
+const string PASSIVE_REINFORCE_KILL_AMBIENT_GENERIC = "PassiveReinforceKillAmbientGeneric"
+
+               
+const string PASSIVE_REINFORCE_USE_END = "PassiveReinforceUseEnd"
+const string PASSIVE_REINFORCE_USE_FAIL = "PassiveReinforceUseFail"
+global const string PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME = "rebuilt_door"
+global const string  PASSIVE_REINFORCE_WEAPON_NAME = "mp_ability_reinforce"
+
+           
+const float PASSIVE_REINFORCE_USE_DURATION = 0.4
+const float PASSIVE_REINFORCE_ANIM_DURATION = 0.8
+const float PASSIVE_REINFORCE_PREVIEW_RADIUS = 300
+const float PASSIVE_REINFORCE_PREVIEW_RADIUS_SQR = PASSIVE_REINFORCE_PREVIEW_RADIUS * PASSIVE_REINFORCE_PREVIEW_RADIUS
+const bool PASSIVE_REINFORCE_PREVIEW_ENABLED = false
+const vector PASSIVE_REINFORCE_FRIENDLY_DOOR_COLOR = <80, 210, 255>
+const vector PASSIVE_REINFORCE_ENEMY_DOOR_COLOR = <255, 70, 10>
+const float PASSIVE_REINFORCE_DELAY_UNTIL_REINFORCEABLE = 3.0
+const int PASSIVE_REINFORCE_MAX_DOORWAYS = 2
+const bool PASSIVE_REINFORCE_IDLE_USES_AMBIENT_GENERIC = true
+
+struct
+{
+#if SERVER
+	                                 
+	                                                
+#endif
+#if CLIENT
+	entity previewDoor1
+	entity previewDoor2
+#endif
+
+	             
+	float useDuration
+	float animDuration
+	float postDestroyReinforcementDelay
+	bool  idleUsesAmbientGeneric
+	int maxDoorways
+
+}file
+
+void function PassiveReinforce_Init()
+{
+	#if SERVER
+		                                              
+		                      
+	#endif
+	#if CLIENT
+		AddCreateCallback( "prop_door", OnDoorSpawned )
+		AddTargetNameCreateCallback( PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME, OnRebuiltDoorSpawned )
+		AddCallback_PlayerClassChanged( PassiveReinforce_OnPlayerClassChanged )
+		StatusEffect_RegisterEnabledCallback( eStatusEffect.reinforced, Reinforce_StartEffect )
+		StatusEffect_RegisterDisabledCallback( eStatusEffect.reinforced, Reinforce_StopEffect )
+	#endif
+
+	RegisterSignal( PASSIVE_REINFORCE_REMOVED_SIGNAL )
+	RegisterSignal( PASSIVE_REINFORCE_USE_END )
+	RegisterSignal( PASSIVE_REINFORCE_USE_FAIL )
+	RegisterSignal( PASSIVE_REINFORCE_RESET_REBUILT_DOOR_SIGNAL )
+	RegisterSignal( PASSIVE_REINFORCE_KILL_PREVIEW_SIGNAL )
+	RegisterSignal( PASSIVE_REINFORCE_KILL_CLIENT_THREAD )
+	RegisterSignal( PASSIVE_REINFORCE_KILL_AMBIENT_GENERIC )
+	PrecacheParticleSystem( PASSIVE_REINFORCE_LINK_FX )
+	PrecacheParticleSystem( PASSIVE_REINFORCE_DESTROY_FX )
+	PrecacheParticleSystem( PASSIVE_REINFORCE_REINFORCE_DOOR_FX )
+	PrecacheParticleSystem( PASSIVE_REINFORCE_REBUILD_DOOR_FX )
+	PrecacheParticleSystem( PASSIVE_REINFORCE_PREVIEW_FX )
+	PrecacheParticleSystem( PASSIVE_REINFORCE_TRANSITION_FX )
+	PrecacheModel( PASSIVE_REINFORCE_REBUILT_DOOR_MODEL )
+	AddCallback_OnPassiveChanged( ePassives.PAS_LOCKDOWN, PassiveReinforce_Toggle )
+
+	             
+	file.useDuration					= GetCurrentPlaylistVarFloat( "catalyst_barricade_useDuration", PASSIVE_REINFORCE_USE_DURATION )
+	file.animDuration					= GetCurrentPlaylistVarFloat( "catalyst_barricade_animDuration", PASSIVE_REINFORCE_ANIM_DURATION )
+	file.postDestroyReinforcementDelay	= GetCurrentPlaylistVarFloat( "catalyst_barricade_postDestroyReinforcementDelay", PASSIVE_REINFORCE_DELAY_UNTIL_REINFORCEABLE )
+	file.idleUsesAmbientGeneric			= GetCurrentPlaylistVarBool( "catalyst_barricade_idleUsesAmbientGeneric", PASSIVE_REINFORCE_IDLE_USES_AMBIENT_GENERIC )
+	file.maxDoorways					= GetCurrentPlaylistVarInt( "catalyst_barricade_maxDoorways", PASSIVE_REINFORCE_MAX_DOORWAYS )
+}
+
+#if SERVER || CLIENT
+void function PassiveReinforce_Toggle( entity player, int passive, bool didHave, bool nowHas )
+{
+	if ( !IsAlive( player ) )
+		return
+
+
+	if ( didHave )
+	{
+		player.Signal( PASSIVE_REINFORCE_REMOVED_SIGNAL )
+	}
+
+	if ( nowHas )
+	{
+		#if CLIENT
+			file.previewDoor1 = null
+			file.previewDoor2 = null
+		#endif
+	}
+}
+#endif
+
+#if CLIENT
+void function PassiveReinforce_OnPlayerClassChanged( entity player )
+{
+	if ( player != GetLocalViewPlayer()  )
+		return
+
+	player.Signal( PASSIVE_REINFORCE_KILL_CLIENT_THREAD )
+	thread PassiveReinforce_ClientThread( player )
+}
+void function PassiveReinforce_Client( entity player )
+{
+	player.Signal( PASSIVE_REINFORCE_KILL_CLIENT_THREAD )
+	thread PassiveReinforce_ClientThread( player )
+}
+
+bool function PassiveReinforce_BlockControllerHolster( entity player, entity usePromptEnt )
+{
+	if ( CanPlayerReinforce( player ) && ( IsReinforceable( usePromptEnt ) || IsRebuildableDoor( usePromptEnt ) )  )
+	{
+		return true
+	}
+
+	return false
+}
+
+void function PassiveReinforce_ClientThread( entity player )
+{
+	EndSignal( player, "OnDestroy" )
+	EndSignal( player, PASSIVE_REINFORCE_KILL_CLIENT_THREAD )
+
+	var rui = CreateCockpitPostFXRui( $"ui/passive_barricade_hud.rpak" )
+
+	OnThreadEnd( void function() : ( player, rui ) {
+		RuiDestroyIfAlive( rui )
+	} )
+
+	while ( true )
+	{
+		                 
+		string hintText    = ""
+		entity usePromptEnt = player.GetUsePromptEntity()
+		if( IsValid( usePromptEnt ) )
+		{
+			if( IsCodeDoor( usePromptEnt ) )
+			{
+				if ( CanPlayerReinforce( player )  )
+				{
+					if( IsReinforceable( usePromptEnt ) )
+					{
+						hintText = Localize( "#ABL_REINFORCE_USE_TEXT" )
+					}
+					else if( !IsReinforced( usePromptEnt ) )
+					{
+						int tr = int( ceil( StatusEffect_GetTimeRemaining( usePromptEnt, eStatusEffect.reinforced_blocked ) ) )
+						if( tr > 0 )
+						{
+							hintText = Localize( "#ABL_REINFORCE_REINFORCE_DELAY", tr )
+						}
+					}
+				}
+			}
+			else if( usePromptEnt.GetTargetName() == PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME )
+			{
+				if ( CanPlayerReinforce( player ) && IsRebuildableDoor( usePromptEnt ) )
+				{
+					if( IsReinforceable( usePromptEnt ) )
+					{
+						hintText = Localize( "#ABL_REINFORCE_REBUILD" )
+					}
+					else if( !IsReinforced( usePromptEnt ) )
+					{
+						int tr = int( ceil( StatusEffect_GetTimeRemaining( usePromptEnt, eStatusEffect.reinforced_blocked ) ) )
+						if( tr > 0.0 )
+						{
+							hintText = Localize( "#ABL_REINFORCE_REBUILD_DELAY", tr )
+						}
+					}
+				}
+				else if( IsReinforced( usePromptEnt ) && !IsEnemyTeam( usePromptEnt.GetTeam(), player.GetTeam() ) )
+				{
+					hintText = Localize( "#ABL_REINFORCE_BREAK_REBUILT" )
+				}
+			}
+
+		}
+		RuiSetString( rui, "hintText", hintText )
+
+		                      
+		if( PASSIVE_REINFORCE_PREVIEW_ENABLED && CanPlayerReinforce( player ) )
+		{
+			entity bestDoor = GetClosestDoorinLOS( player )
+			if( IsValid( bestDoor ) )
+			{
+				if(  bestDoor != file.previewDoor1 && bestDoor != file.previewDoor2 )
+				{
+					if( IsValid( file.previewDoor1 ) )
+					{
+						file.previewDoor1.Signal( PASSIVE_REINFORCE_KILL_PREVIEW_SIGNAL )
+					}
+					file.previewDoor1 = bestDoor
+					thread PreviewDoorFX( bestDoor )
+
+					if( IsValid( file.previewDoor2 ) )
+					{
+						file.previewDoor2.Signal( PASSIVE_REINFORCE_KILL_PREVIEW_SIGNAL )
+					}
+					file.previewDoor2 = null
+					entity oppDoor = bestDoor.GetOppositeDoor()
+					if( IsValid( oppDoor ) )
+					{
+						file.previewDoor2 = oppDoor
+						thread PreviewDoorFX( oppDoor )
+					}
+				}
+			}
+			else
+			{
+				if( IsValid( file.previewDoor1 ) )
+				{
+					file.previewDoor1.Signal( PASSIVE_REINFORCE_KILL_PREVIEW_SIGNAL )
+				}
+				if( IsValid( file.previewDoor2 ) )
+				{
+					file.previewDoor2.Signal( PASSIVE_REINFORCE_KILL_PREVIEW_SIGNAL )
+				}
+				file.previewDoor1 = null
+				file.previewDoor2 = null
+			}
+		}
+
+		WaitFrame()
+	}
+}
+
+void function PreviewDoorFX( entity door )
+{
+	Assert ( IsNewThread(), "Must be threaded off" )
+	EndSignal( door, "OnDestroy" )
+	EndSignal( door, PASSIVE_REINFORCE_KILL_PREVIEW_SIGNAL )
+
+	bool effectAwake = true
+	int fxHandle = StartParticleEffectOnEntityWithPos( door, GetParticleSystemIndex( PASSIVE_REINFORCE_PREVIEW_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, < 30, 0, 48 >, door.GetAngles() )
+
+	OnThreadEnd(
+		function () : ( fxHandle )
+		{
+			EffectStop( fxHandle, false, true )
+		}
+	)
+	while( true )
+	{
+		bool reinforceAble = IsReinforceable( door )
+		if(  !reinforceAble && effectAwake )
+		{
+			EffectSleep( fxHandle )
+			effectAwake = false
+		}
+		else if( reinforceAble && !effectAwake )
+		{
+			EffectWake( fxHandle )
+			effectAwake = true
+		}
+		WaitFrame()
+	}
+}
+
+entity function GetClosestDoorinLOS( entity player )
+{
+	vector playerOrigin = player.GetOrigin()
+	array< entity > doors = GetEntArrayByClassAndTargetname( "prop_door", "" )
+	entity bestDoor = null
+	float closestDistanceSqr = PASSIVE_REINFORCE_PREVIEW_RADIUS_SQR
+
+	foreach( door in doors )
+	{
+		float distSqr = DistanceSqr( playerOrigin, door.GetOrigin() )
+		if( IsCodeDoor( door )  && distSqr < closestDistanceSqr && PlayerCanSeePos( player, door.GetWorldSpaceCenter(), false, 70 ) )
+		{
+			bestDoor = door
+			closestDistanceSqr = distSqr
+		}
+	}
+
+	return bestDoor
+}
+
+void function Reinforce_StartEffect( entity ent, int statusEffect, bool actuallyChanged )
+{
+	if ( !file.idleUsesAmbientGeneric || !actuallyChanged )
+		return
+
+	if( IsValid( ent ) && ( IsCodeDoor( ent ) || ent.GetTargetName() == PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME ) )
+		thread StartReinforceAbmientGeneric( ent )
+}
+
+void function Reinforce_StopEffect( entity ent, int statusEffect, bool actuallyChanged )
+{
+	if ( !file.idleUsesAmbientGeneric || !actuallyChanged )
+		return
+
+	if( IsValid( ent ) && ( IsCodeDoor( ent ) || ent.GetTargetName() == PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME ) )
+		ent.Signal( PASSIVE_REINFORCE_KILL_AMBIENT_GENERIC )
+}
+
+void function StartReinforceAbmientGeneric( entity ent )
+{
+	EndSignal( ent, "OnDestroy" )
+	EndSignal( ent, PASSIVE_REINFORCE_KILL_AMBIENT_GENERIC )
+
+	entity localPlayer = GetLocalViewPlayer()
+	if( !IsValid( localPlayer ) )
+		return
+	EndSignal( localPlayer, "OnDestroy" )
+
+	entity clientAG = CreateClientSideAmbientGeneric( ent.GetOrigin(), PASSIVE_REINFORCE_IDLE_SFX, 0 )
+	clientAG.RemoveFromAllRealms()
+	clientAG.AddToOtherEntitysRealms( ent )
+	clientAG.SetParent( ent, "", true )
+	SetTeam( clientAG, ent.GetTeam() )
+
+	OnThreadEnd(
+		function() : ( clientAG )
+		{
+			if ( IsValid( clientAG ) )
+			{
+				clientAG.Destroy()
+			}
+		}
+	)
+
+	WaitForever()
+}
+
+
+#endif              
+
+bool function IsReinforceable( entity ent )
+{
+	if( !IsValid( ent ) )
+		return false
+
+	if( !IsBarricadableDoor( ent ) && !IsRebuildableDoor( ent ) )
+		return false
+
+	if( StatusEffect_GetTimeRemaining( ent, eStatusEffect.reinforced_blocked) > 0.0 )
+		return false
+
+	return true
+}
+
+bool function IsBarricadableDoor( entity door )
+{
+	if( IsValid( door ) )
+		return IsCodeDoor( door ) && !door.GetDoorIsReinforced() && ! door.GetDoorIsLocked()
+
+	return false
+}
+
+bool function IsRebuildableDoor( entity door )
+{
+	if( IsValid( door ) )
+		return ( door.GetTargetName() == PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME && !IsReinforced( door ) )
+
+	return false
+}
+
+bool function CanPlayerReinforce( entity player )
+{
+	if( !IsValid( player ) || !player.IsPlayer() || !PlayerHasPassive( player, ePassives.PAS_LOCKDOWN ) || Bleedout_IsBleedingOut( player ) )
+		return false
+
+	return true
+}
+
+void function OnDoorSpawned( entity ent )
+{
+	AddEntityDestroyedCallback( ent, OnDoorDestroyed )
+	AddCallback_OnUseEntity_ClientServer( ent, OnCodeDoorUsed )
+}
+
+void function OnRebuiltDoorSpawned( entity ent )
+{
+	                                                    
+	AddCallback_OnUseEntity_ClientServer( ent, OnRebuiltDoorUsed )
+}
+
+void function OnDoorDestroyed( entity ent )
+{
+#if SERVER
+	                              
+		      
+
+	                                 
+	                            
+
+	                                                                                                        
+	                                 
+	                                                                      
+	                                
+	                                           
+	                              
+	                     
+	                       
+	                                     
+	                                                      
+	                                                                  
+	                                        
+	                                  
+	                                                        
+
+	                                                         
+	                         
+	 
+		                                                   
+		                                                   
+	 
+
+	                             
+#endif
+}
+
+void function OnCodeDoorUsed( entity door, entity player, int useInputFlags )
+{
+	if( player.p.isInExtendedUse )
+		return
+
+	if( ( useInputFlags & USE_INPUT_ALT ) && CanPlayerReinforce( player ) && IsReinforceable( door ) )
+		DoExtendedUseForReinforce( door, player, useInputFlags )
+	                                                                                                                               
+	  	                                                 
+}
+
+void function DoExtendedUseForReinforce( entity door, entity player, int useInputFlags )
+{
+	thread (void function() : ( door, player ) {
+		ExtendedUseSettings settings
+		settings.duration = file.useDuration
+		settings.disableWeaponTypes = WPT_TACTICAL | WPT_ULTIMATE | WPT_CONSUMABLE
+		settings.loopSound = PASSIVE_REINFORCE_USE_LOOP_SFX
+		settings.successSound = ""
+		settings.useInputFlag = IN_USE_ALT
+		#if SERVER
+			                                                                                                
+			 
+				                                                       
+			 
+
+			                                                                                                
+			 
+				                                                        
+				                                                              
+				                                                               
+				 
+					                                                                 
+				 
+				                       
+					                                           
+			 
+
+			                                                                                              
+			 
+				                                                                                            
+				                              
+				                                                         
+				                                                              
+				                                                               
+				 
+					                                                                 
+				 
+				                             
+			 
+
+			                                                                                            
+			 
+				                       
+				 
+					                                          
+				 
+			 
+		#elseif CLIENT
+			settings.displayRui = $"ui/extended_use_hint.rpak"
+			settings.holdHint = "%use_alt%"
+			settings.displayRuiFunc = void function( entity door, entity player, var rui, ExtendedUseSettings settings )
+			{
+				RuiSetString( rui, "holdButtonHint", settings.holdHint )
+				RuiSetString( rui, "hintText", settings.hint )
+				RuiSetGameTime( rui, "startTime", Time() )
+				RuiSetGameTime( rui, "endTime", Time() + settings.duration )
+			}
+			settings.icon = $""
+			settings.hint = GetReinforcementUseText( door )
+		#endif
+
+		#if CLIENT
+			EndSignal( clGlobal.levelEnt, "ClearSwapOnUseThread" )
+		#endif
+		EndSignal( door, "OnDestroy" )
+		EndSignal( player, PASSIVE_REINFORCE_REMOVED_SIGNAL )
+		EndSignal( player, "BleedOut_OnStartDying" )
+		waitthread ExtendedUse( door, player, settings )
+	})()
+}
+
+void function BreakReinforcement( entity door, entity player, int useInputFlags )
+{
+	#if SERVER
+		                       
+		                                                                        
+		 
+			                                                              
+			                                                          
+		 
+	#endif
+}
+
+string function GetReinforcementSound( entity door )
+{
+	if( IsValid( door ) && IsCodeDoor( door ) )
+		return PASSIVE_REINFORCE_REINFORCED_SFX
+
+	return PASSIVE_REINFORCE_REBUILT_SFX
+}
+
+string function GetReinforcementUseText( entity door )
+{
+	if( IsValid( door ) && IsCodeDoor( door ) )
+		return "#ABL_REINFORCE_USE_LONG"
+
+	return "#ABL_REINFORCE_USE_REBUILD"
+}
+
+bool function IsReinforced( entity ent )
+{
+	if( !IsValid( ent ) )
+		return false
+
+	return ( StatusEffect_GetSeverity( ent, eStatusEffect.reinforced ) > 0.0 )
+}
+
+void function OnRebuiltDoorUsed( entity door, entity player, int useInputFlags )
+{
+	if( player.p.isInExtendedUse )
+		return
+
+	if( useInputFlags & USE_INPUT_ALT && CanPlayerReinforce( player ) && IsReinforceable( door ) )
+		DoExtendedUseForReinforce( door, player, useInputFlags )
+	else if( useInputFlags & USE_INPUT_DEFAULT && IsReinforced( door ) &&  !IsEnemyTeam( player.GetTeam(), door.GetTeam() ) )
+	{
+	#if SERVER
+		                                                 
+		                                                              
+		                                                                                                                                             
+		 
+			                                                         
+		 
+	#endif
+	}
+}
+
+#if SERVER
+                                            
+ 
+	                              
+	                                
+	                                            
+	                                               
+
+	                                           
+		                       
+		 
+			                                   
+		 
+	   
+
+	                      
+ 
+
+                                                        
+ 
+	                     
+	 
+		                                                                    
+		                                                                                                             
+
+		                                                              
+		                             
+		 
+			                                                                            
+			                                                                                                                     
+		 
+	 
+ 
+
+                                                                 
+ 
+	                                            
+		      
+
+	                                         
+		                                    
+
+	                                                          
+	                                                     
+		      
+
+	                                             
+
+	                                                                      
+	 
+		                                                     
+		                                                       
+		 
+			                                          
+		 
+	 
+
+	                    
+	                        
+	                                                               
+	 
+		                                                     
+		                                                                  
+		                                                           
+		 
+			              
+			                          
+				                               
+		 
+	 
+
+	                                     
+	 
+		                                                     
+		                                         
+		                                                                  
+		                             
+			                                             
+	 
+ 
+
+                                                               
+ 
+	                                                                   
+		           
+
+	                                                    
+	 
+		                                          
+	 
+	                             
+	 
+		                                        
+		                         
+		 
+			               
+		 
+	 
+
+	           
+ 
+
+                                    
+ 
+	                                                                  
+ 
+
+                                                 
+ 
+	                                                                     
+ 
+
+                                              
+ 
+	                                                                     
+ 
+
+                                                 
+ 
+	                                
+	                             
+	                                                     
+	                                              
+
+	                             
+	                                                       
+	                                                         
+	                                      
+	                                                                                                                                                            
+	                              
+	                     
+	                                  
+	                                   
+	                               
+	                                
+	                          
+	                                                  
+	 
+
+		                                                                                                                                                                                                                       
+		                                            
+		                                                                                             
+		                                                                    
+		                                       
+
+		                                                                                                                                                                                                                    
+		                                         
+		                                                                                       
+		                                                              
+		                                    
+
+
+		                                                      
+		                                                               
+		 
+			                                                                                                                                                      
+			                               
+			                                                                                                                                                                                                                                 
+			                                             
+			                                                                                              
+			                                                                     
+			                                        
+
+			                                                                                                                                                                                                                              
+			                                          
+			                                                                                        
+			                                                               
+			                                     
+		 
+	 
+
+	                                                                                                                                                     
+		                              
+		                                     
+
+		                       
+		 
+			                
+			 
+				                              
+				                                     
+			 
+			    
+			 
+				                    
+			 
+		 
+		                        
+		 
+			                
+			 
+				                               
+				                                      
+			 
+			    
+			 
+				                     
+			 
+		 
+		                                     
+		 
+			                
+			 
+				                                            
+				                                                   
+			 
+			    
+			 
+				                                  
+			 
+		 
+		                                      
+		 
+			                
+			 
+				                                             
+				                                                    
+			 
+			    
+			 
+				                                   
+			 
+		 
+		                                  
+		 
+			                
+			 
+				                                         
+				                                                
+			 
+			    
+			 
+				                               
+			 
+		 
+		                                   
+		 
+			                
+			 
+				                                          
+				                                                 
+			 
+			    
+			 
+				                                
+			 
+		 
+	   
+
+	             
+	 
+		                       
+		 
+			                        
+			 
+				                                                                                                                      
+				                                                                                                                        
+				                                                    
+				 
+					                                                                                                                                                  
+					                                                                                                                                                    
+				 
+			 
+			                                                                            
+			 
+				                                                                                                                      
+				                                                                                                                        
+			 
+			                                                       
+			 
+				                                                                                      
+			 
+			                                                    
+			 
+				                                                                                      
+			 
+			    
+			 
+				                                                                                      
+			 
+		 
+
+		           
+	 
+ 
+                                         
+ 
+	                     
+		      
+
+	                                                             
+ 
+
+                                           
+ 
+	                     
+		      
+
+	                                                           
+ 
+
+                                         
+ 
+	                     
+		      
+
+	                            
+
+	                    
+	             
+	                                                  
+		                     
+	                                                    
+		                     
+	                                                         
+		                     
+
+
+	                                                                                                                                                                                                
+
+	                                                          
+	            
+		                            
+		 
+			                       
+			 
+				                   
+			 
+			                     
+			 
+				                      
+			 
+		 
+	 
+
+	             
+ 
+
+                                                  
+ 
+	                                
+		      
+
+	                                            
+ 
+
+                                                                       
+ 
+	                                                
+
+	                             
+	                             
+	                               
+
+	                                                                                                                                                                                                                       
+	                                                                                   
+	                                             
+	                                                          
+	                           
+
+	                                                                                                                                                                                                                    
+	                                                                             
+	                                          
+	                                                    
+	                        
+
+
+
+	                                                          
+	                     
+	                     
+	                           
+	                                                      
+	            
+	                                            
+	                                                                      
+
+	                              
+	                                                              
+
+	                                  
+		                                                     
+
+	                                     
+
+	            
+		                                                   
+		 
+			                            
+			 
+				                        
+			 
+
+			                         
+			 
+				                     
+			 
+
+			                     
+			 
+				                                  
+					                                                     
+				                                                                                                                                                                                              
+				                        
+				                            
+			 
+
+			                                                                          
+				                                                    
+		 
+	 
+
+	             
+ 
+
+                                                        
+ 
+	                              
+		      
+
+	                                              
+
+	                                            
+	                                                                  
+	 
+		                                                      
+	 
+ 
+
+                                                                           
+ 
+	                              
+		      
+
+	                        
+	 
+		                                                
+	 
+	                                    
+	 
+		                                              
+	 
+
+	                                                              
+	                                                                  
+	 
+		                                
+		 
+			                                                        
+		 
+		                                            
+		 
+			                                                      
+		 
+	 
+
+	                                                                                                                              
+	                             
+	 
+		                                                                                                                       
+	 
+	                                                                                                                               
+ 
+
+                                                                         
+ 
+	                                                
+
+	                               
+	                             
+	                             
+	                               
+
+	                                                                                                                                                                                                                         
+	                                                                                   
+	                                                          
+	                           
+
+	                                                                                                                                                                                                                      
+	                                                                             
+	                                                    
+	                        
+
+	                     
+	                     
+	                     
+
+	                                  
+		                                                     
+
+	                                     
+
+	                                           
+
+	            
+		                                                   
+		 
+			                            
+			 
+				                        
+			 
+
+			                         
+			 
+				                     
+			 
+
+			                      
+			 
+				                                  
+					                                                     
+				                                                                
+				                                
+				                       
+				                       
+				                                   
+			 
+
+			                                                                          
+				                                                    
+		 
+	 
+
+	             
+	 
+		                           
+			     
+		           
+	 
+
+	                                                                                                                                                                                              
+ 
+
+                                                                 
+ 
+	               				                                      
+	                			                                       
+	                     		                                    
+	             				                                    
+	                   			                                                    
+	                  			                                                               
+	                        	       
+	                     		       
+	                    		       
+
+	                                                                                        
+	 
+		                          
+		 
+			                                                  
+			                      
+		 
+	 
+	                                                                                                                                                      
+	 
+		                                                                                                    
+		                                                                                     
+
+
+                           
+                                                                  
+    
+                                                  
+                           
+    
+        
+
+		                  
+		 
+			                               
+			 
+				                                           
+				                                              
+				                       
+			 
+			                                  
+			 
+				                                                                             
+				                                     
+				      
+			 
+		 
+	 
+	                                                                        
+	 
+		                                              
+		                       
+	 
+	                                                                                                      
+	 
+		                                                                                                      
+		                                                                                      
+	 
+	                                                                             
+	 
+		                                                                                                 
+		                          
+
+		                                                                  
+		 
+			                                              
+		 
+	 
+	                                                                    
+	 
+		                          
+	 
+	                                                                                               
+	 
+
+		                        
+		 
+			                                                                        
+			                                           
+			 
+				                                                
+				 
+					                                                  
+					                                                   
+				 
+
+				    
+				 
+					                   
+				 
+			 
+			    
+			 
+				                   
+			 
+		 
+		    
+		 
+			                   
+		 
+	 
+
+	                                                   
+	                           
+		                                           
+
+	                                                                                         
+	 
+		                                               
+		                          
+			                   
+		                                                   
+		                                                                                            
+		                                                    
+	 
+
+	                                                    
+
+	                                          
+	                                           
+	                                      
+	                                                                       
+	                                                                   
+	                                                        
+		                                                                                                                    
+	                                                                                  
+
+	                    
+	 
+		                                                                                                                            
+
+		                                                                   
+		 
+			                                                            
+		 
+		    
+		 
+			                                                               
+		 
+		                           
+
+		                                                           
+		                                              
+		 
+			                                                                                                     
+		 
+	 
+	    
+	 
+		                                                                                                                                
+
+		                                                                                        
+		                                                          
+
+		                                                           
+		                                                                                                 
+		 
+			                                                                                                            
+		 
+		                                                   
+		 
+			                                                                                                     
+		 
+	 
+ 
+                                             
+ 
+	               
+	           
+	                                                                            
+	                                     
+	                                   
+	                       
+	                                   
+ 
+#endif

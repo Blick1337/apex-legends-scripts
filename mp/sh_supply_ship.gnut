@@ -368,6 +368,7 @@ void function ShipPanelUseThink( entity ent, entity playerUser )
 		                                            
 		                             
 		                               
+		                                    
 	#endif
 
 	settings.duration = SUPPLY_SHIP_PANEL_ACTIVATE_TIME

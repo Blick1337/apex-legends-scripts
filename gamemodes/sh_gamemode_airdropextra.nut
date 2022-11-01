@@ -239,7 +239,7 @@ void function AirdropExtravaganza_RegisterNetworking()
 		                         
 			                                 
 			     
-		                        
+		                      
 			                                
 			     
 	 
@@ -531,7 +531,7 @@ void function AirdropExtravaganza_RegisterNetworking()
 	 
  
 
-                                                                                            
+                                                                                                                  
  
 	                                                                                                                                                    
  
@@ -593,8 +593,8 @@ string function GetAirdropTierTextFromTier( int tier )
 			return "EPIC"
 		case eLootTier.LEGENDARY:
 			return "LEGENDARY"
-		case eLootTier.HEIRLOOM:
-			return "HEIRLOOM"
+		case eLootTier.MYTHIC:
+			return "MYTHIC"
 	}
 	return ""
 }

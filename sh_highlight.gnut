@@ -967,26 +967,35 @@ void function Highlight_Init()
 		                                                          
                             
 
-                                             
-                                                                   
-                                                                          
-                                            
-                                                                     
-                                                                      
-                                                 
-                                                                               
-                                                            
-                                                   
+                         
+		highlight = RegisterHighlight( "dropship_friendly_control_mode" )
+		HighlightContext_SetOutline( highlight, HIGHLIGHT_OUTLINE_CUSTOM_COLOR )
+		HighlightContext_SetRadius( highlight, 5 )
+		HighlightContext_SetParam( highlight, 0, HIGHLIGHT_COLOR_FRIENDLY )
+		HighlightContext_SetDrawFunc( highlight, eHighlightDrawFunc.ALWAYS )
+		HighlightContext_SetADSFade( highlight, false )
+		HighlightContext_SetFarFadeDistance( highlight, HIGHLIGHT_LOS_FAR_FADE_DIST )
+		                                                          
+
+		highlight = RegisterHighlight( "dropship_enemy_control_mode" )
+		HighlightContext_SetOutline( highlight, HIGHLIGHT_OUTLINE_CUSTOM_COLOR )
+		HighlightContext_SetRadius( highlight, 5 )
+		HighlightContext_SetParam( highlight, 0, HIGHLIGHT_COLOR_ENEMY )
+		HighlightContext_SetDrawFunc( highlight, eHighlightDrawFunc.ALWAYS )
+		HighlightContext_SetADSFade( highlight, false )
+		HighlightContext_SetFarFadeDistance( highlight, HIGHLIGHT_LOS_FAR_FADE_DIST )
+		                                                          
+                               
 
                         
-                                                 
-                                                                          
-                                                                    
-                                           
-                                                                  
-                                                                   
-                                                 
-                                                                               
+		highlight = RegisterHighlight( "enemy_leader" )
+		HighlightContext_SetOutline( highlight, HIGHLIGHT_OUTLINE_CUSTOM_COLOR )
+		HighlightContext_SetFill( highlight, HIGHLIGHT_FILL_CUSTOM_COLOR )
+		HighlightContext_SetRadius( highlight, 8)
+		HighlightContext_SetParam( highlight, 0, HIGHLIGHT_COLOR_ENEMY )
+		HighlightContext_SetDrawFunc( highlight, eHighlightDrawFunc.LOS )
+		HighlightContext_SetADSFade( highlight, false )
+		HighlightContext_SetFarFadeDistance( highlight, HIGHLIGHT_LOS_FAR_FADE_DIST )
                               
 
 	  
@@ -2292,6 +2301,10 @@ int function GetHighlightContextForEnt( entity viewPlayer, entity ent )
 	bool viewPlayerEmoting = viewPlayer == ent && viewPlayer.ContextAction_IsEmoting()
 	bool wantsFriendlyHighlight = (!viewPlayerEmoting) || viewPlayer.IsDrivingVehicle()
 
+                      
+                                             
+       
+
 	if ( ent.GetBossPlayer() == viewPlayer && UseDefaultOwnedHighlightBehavior( ent ) )
 	{
 		return HIGHLIGHT_CONTEXT_OWNED
@@ -2349,22 +2362,30 @@ int function GetHighlightContextForEnt( entity viewPlayer, entity ent )
 			if ( !ent.IsPlayer() && IsFriendlyTeam( viewTarget.GetTeam(), entTeam) )                                                           
 				return HIGHLIGHT_CONTEXT_FRIENDLY
 
+                        
+                                                                                                                                                                                               
+        
 			if ( StatusEffect_GetSeverity( ent, eStatusEffect.sonar_detected ) && (viewPlayerEmoting || ent.IsHighlightEnabledForTeam( HIGHLIGHT_CONTEXT_SONAR, viewTarget.GetTeam() )) )
+         
 			{
 				return HIGHLIGHT_CONTEXT_SONAR
 			}
                         
+                        
+                                                                                                                                                                                             
+        
 			else if ( StatusEffect_GetSeverity( ent, eStatusEffect.mortar_ring_reveal ) && ent.IsHighlightEnabledForTeam( HIGHLIGHT_CONTEXT_MOVEMENT_REVEALED, viewTarget.GetTeam() ) )
+         
 			{
 				return HIGHLIGHT_CONTEXT_MOVEMENT_REVEALED
 			}
       
-                 
-                                                                                                                                                                                
-    
-                                                
-    
-      
+                   
+			                                                                                                                                                                             
+			 
+				                                            
+			 
+        
 			else if ( ShouldShowNovaBlackholeHighlight( viewTarget, ent ) && ent.IsHighlightEnabledForTeam( HIGHLIGHT_CHARACTER_SPECIAL_HIGHLIGHT_2, viewTarget.GetTeam() ) )
 			{
 				return HIGHLIGHT_CHARACTER_SPECIAL_HIGHLIGHT_2
@@ -2373,10 +2394,20 @@ int function GetHighlightContextForEnt( entity viewPlayer, entity ent )
 			{
 				return HIGHLIGHT_CHARACTER_SPECIAL_HIGHLIGHT
 			}
+                        
+                                                                      
+        
 			else if ( ShouldMaggieHighlight( viewTarget, ent ) )
+         
 			{
 				return HIGHLIGHT_CONTEXT_MOVEMENT_REVEALED
 			}
+                          
+                                                      
+    
+                                              
+    
+         
                  
 			else if ( ShouldArmoredLeapThreatHighlight( viewTarget, ent ) )
 			{
@@ -2606,8 +2637,13 @@ bool function ShouldCausticGasHighlight( entity viewPlayer, entity ent )
 	if ( !viewPlayer.HasPassive( ePassives.PAS_GAS_GEAR ) && !viewPlayer.HasPassive( ePassives.PAS_GAS_PROTECTION ) )
 		return false
 
-	if ( ent.IsPlayer() && ent.HasPassive( ePassives.PAS_GAS_GEAR ) )
+	if ( ent.IsPlayer() && (ent.HasPassive( ePassives.PAS_GAS_GEAR ) ) )
 		return false
+
+                      
+                                  
+               
+       
 
 	if ( !StatusEffect_GetSeverity( ent, eStatusEffect.gas_cloud ) )
 		return false
@@ -2669,6 +2705,22 @@ bool function ShouldMaggieHighlight( entity viewPlayer, entity ent )
 
 	return PassiveWarlordsIre_EntityShouldBeHighlighted( ent )
 }
+
+                       
+                                                                        
+ 
+                                      
+              
+
+                                                                                 
+              
+
+                                                
+             
+
+             
+ 
+      
 
                  
 bool function ShouldCastleWallHighlight( entity viewPlayer, entity ent )

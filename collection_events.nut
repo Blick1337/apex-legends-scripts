@@ -32,12 +32,18 @@ global function CollectionEvent_GetFrontPageTimeRemainingCol
                                                              
 global function CollectionEvent_GetBGPatternImage
 global function CollectionEvent_GetBGTabPatternImage
+global function CollectionEvent_GetTabLeftSideImage                                
+global function CollectionEvent_GetTabRightSideImage                                
+global function CollectionEvent_GetTabCenterRui                                
 global function CollectionEvent_GetTabBGDefaultCol                                 
 global function CollectionEvent_GetTabBarDefaultCol                                
 global function CollectionEvent_GetTabBGFocusedCol                                
+global function CollectionEvent_GetTabTextDefaultCol                                
 global function CollectionEvent_GetTabBarFocusedCol                                
+global function CollectionEvent_GetTabGlowFocusedCol                                
 global function CollectionEvent_GetTabBGSelectedCol                                
 global function CollectionEvent_GetTabBarSelectedCol                                
+global function CollectionEvent_GetTabTextSelectedCol                                
 global function CollectionEvent_GetAboutPageSpecialTextCol                                
 global function CollectionEvent_GetHeaderIcon                                
 #endif
@@ -58,6 +64,7 @@ global function HeirloomEvent_GetHeirloomButtonImage
 global function HeirloomEvent_GetMythicButtonImage
 global function HeirloomEvent_GetHeirloomHeaderText
 global function HeirloomEvent_GetHeirloomUnlockDesc
+global function HeirloomEvent_IsCompletionRewardOwned
 #endif
                       
 
@@ -73,10 +80,8 @@ global function CollectionEvent_GetCurrentMaxEventPackPurchaseCount
 
 #if UI
                                                   
-global function CollectionEvent_GetHeaderTextColor
 global function CollectionEvent_GetPackOffer                                
 global function CollectionEvent_GetLobbyButtonImage                                
-global function CollectionEvent_GetTitleTextColor                                
 global function CollectionEvent_HasLobbyTheme                                
 #endif
 
@@ -179,7 +184,7 @@ ItemFlavor ornull function GetActiveCollectionEvent( int t )
 		if ( !CalEvent_IsActive( ev, t ) )
 			continue
 
-		Assert( event == null, format( "Multiple collection events are active!! (%s, %s)", ItemFlavor_GetHumanReadableRef( expect ItemFlavor(event) ), ItemFlavor_GetHumanReadableRef( ev ) ) )
+		Assert( event == null, format( "Multiple collection events are active!! (%s, %s)", string(ItemFlavor_GetAsset( expect ItemFlavor(event) )), string(ItemFlavor_GetAsset( ev )) ) )
 		event = ev
 	}
 	return event
@@ -480,7 +485,6 @@ vector function CollectionEvent_GetFrontPageTimeRemainingCol( ItemFlavor event )
    
         
 
-
 #if CLIENT || UI
 string function CollectionEvent_GetFrontTabText( ItemFlavor event )
 {
@@ -489,6 +493,29 @@ string function CollectionEvent_GetFrontTabText( ItemFlavor event )
 }
 #endif
 
+#if SERVER || CLIENT || UI
+asset function CollectionEvent_GetTabLeftSideImage( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "leftSideImage" )
+}
+#endif
+
+#if SERVER || CLIENT || UI
+asset function CollectionEvent_GetTabRightSideImage( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "rightSideImage" )
+}
+#endif
+
+#if SERVER || CLIENT || UI
+asset function CollectionEvent_GetTabCenterRui( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	return GetGlobalSettingsStringAsAsset( ItemFlavor_GetAsset( event ), "centerRuiAsset" )
+}
+#endif
 
 #if SERVER || CLIENT || UI
 vector function CollectionEvent_GetTabBGDefaultCol( ItemFlavor event )
@@ -509,6 +536,14 @@ vector function CollectionEvent_GetTabBarDefaultCol( ItemFlavor event )
 
 
 #if SERVER || CLIENT || UI
+vector function CollectionEvent_GetTabTextDefaultCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabTextDefaultCol" )
+}
+#endif
+
+#if SERVER || CLIENT || UI
 vector function CollectionEvent_GetTabBGFocusedCol( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
@@ -522,6 +557,14 @@ vector function CollectionEvent_GetTabBarFocusedCol( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
 	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabBarFocusedCol" )
+}
+#endif
+
+#if SERVER || CLIENT || UI
+vector function CollectionEvent_GetTabGlowFocusedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabGlowFocusedCol" )
 }
 #endif
 
@@ -543,6 +586,13 @@ vector function CollectionEvent_GetTabBarSelectedCol( ItemFlavor event )
 }
 #endif
 
+#if SERVER || CLIENT || UI
+vector function CollectionEvent_GetTabTextSelectedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabTextSelectedCol" )
+}
+#endif
 
 #if SERVER || CLIENT || UI
 vector function CollectionEvent_GetAboutPageSpecialTextCol( ItemFlavor event )
@@ -614,17 +664,54 @@ string function HeirloomEvent_GetHeirloomHeaderText( ItemFlavor event )
 		headerText = "#CURRENCY_HEIRLOOM_NAME_SHORT"
 	else if ( HeirloomEvent_IsRewardMythicSkin( event ) )
 		headerText = "#COLLECTION_EVENT_MYTHIC_BOX_TITLE"
+	else if ( !CollectionEvent_IsRewardHeirloom( event ) )
+		headerText = "#COLLECTION_EVENT_REACTIVE_BOX_TITLE"
 
 	return Localize( headerText ).toupper()
 }
 #endif
 
+#if UI
+bool function CollectionEvent_IsRewardHeirloom( ItemFlavor event )
+{
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
+	ItemFlavor reward = HeirloomEvent_GetPrimaryCompletionRewardItem( event )
+
+	if ( ItemFlavor_GetQuality( reward ) == eRarityTier.MYTHIC )
+		return true
+
+	return false
+}
+#endif
 
 #if UI
 string function HeirloomEvent_GetHeirloomUnlockDesc( ItemFlavor event )
 {
 	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
 	return GetGlobalSettingsString( ItemFlavor_GetAsset( event ), "heirloomUnlockDesc" )
+}
+#endif
+
+#if UI
+bool function HeirloomEvent_IsCompletionRewardOwned( ItemFlavor event, bool isInventoryReady )
+{
+	Assert( HEIRLOOM_EVENTS.contains( ItemFlavor_GetType( event ) ) )
+
+	bool isOwned = false
+	ItemFlavor completionRewardPack = HeirloomEvent_GetCompletionRewardPack( event )
+	array<ItemFlavor> rewardPackContents = GRXPack_GetPackContents( completionRewardPack )
+	foreach ( ItemFlavor flav in rewardPackContents )
+	{
+		isOwned = isInventoryReady && GRX_IsItemOwnedByPlayer( flav )
+
+		if ( HeirloomEvent_IsRewardMythicSkin( event ) && isOwned == true )
+		{
+			                                                                                                  
+			break
+		}
+	}
+
+	return isOwned
 }
 #endif
 
@@ -646,22 +733,6 @@ asset function CollectionEvent_GetLobbyButtonImage( ItemFlavor event )
 #endif
 
 
-#if UI
-vector function CollectionEvent_GetTitleTextColor( ItemFlavor event )
-{
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
-	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "seasonTitleColor" )
-}
-#endif
-
-
-#if UI
-vector function CollectionEvent_GetHeaderTextColor( ItemFlavor event )
-{
-	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_collection )
-	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "seasonHeaderColor" )
-}
-#endif
 
 
 #if SERVER || CLIENT || UI
@@ -838,7 +909,7 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 	                            
 	                                                                     
 
-	                        
+	                                                                        
 		      
 
 	                                                                         
@@ -968,7 +1039,7 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 				        
 
 			                                                               
-			                                                                                                             
+			                                                                                                                        
 			                                                  
 			                                                                               
 				                                                  
@@ -992,8 +1063,11 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 		 
 			                                                                               
 			                                                         
+			       
+				                                                                                            
+			      
 
-			                 
+			                                                          
 			 
 				                                                                               
 				 
@@ -1050,7 +1124,7 @@ int function CollectionEvent_GetCurrentMaxEventPackPurchaseCount( ItemFlavor eve
 	                                           
 	 
 		                                                              
-			                                                                                                 
+			                                                                                                            
 	 
 
 	              

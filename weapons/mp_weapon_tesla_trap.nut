@@ -1791,6 +1791,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 	                
 		                                                     
 
+	                                                                   
 	                             
 	                     
 	                                 
@@ -2191,7 +2192,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 	                                      
 		      
 
-	                                                                                                                                                                                             
+	                                                                                                                                                                                                               
 	                        
 	                                       
 
@@ -3779,16 +3780,16 @@ void function TeslaTrap_CreateClientEffects( entity trigger, entity start, entit
 
 		                                                                                                        
 
-		int fxIdxTeam = StartParticleEffectOnEntityWithPos( start, fxIDTeam, FX_PATTACH_ABSORIGIN_FOLLOW, -1, (startUp * (heightOffset + file.proxyBaseOffset)), <0, 0, 0> )
+		int fxIdxTeam = StartParticleEffectOnEntityWithPos( start, fxIDTeam, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, (startUp * (heightOffset + file.proxyBaseOffset)), <0, 0, 0> )
 		EffectSetPlayFriendlyOnly( fxIdxTeam )
 		EffectSetDontKillForReplay( fxIdxTeam )
-		EffectAddTrackingForControlPoint( fxIdxTeam, 1, end, FX_PATTACH_ABSORIGIN_FOLLOW, -1, (endUp * (heightOffset + file.proxyBaseOffset)) )
+		EffectAddTrackingForControlPoint( fxIdxTeam, 1, end, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, (endUp * (heightOffset + file.proxyBaseOffset)) )
 		EffectSetControlPointVector( fxIdxTeam, 2, colorFriendly )
 
-		int fxIdxEnemy = StartParticleEffectOnEntityWithPos( start, fxIDEnemy, FX_PATTACH_ABSORIGIN_FOLLOW, -1, (startUp * (heightOffset + file.proxyBaseOffset)), <0, 0, 0> )
+		int fxIdxEnemy = StartParticleEffectOnEntityWithPos( start, fxIDEnemy, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, (startUp * (heightOffset + file.proxyBaseOffset)), <0, 0, 0> )
 		EffectSetPlayEnemyOnly( fxIdxEnemy )
 		EffectSetDontKillForReplay( fxIdxEnemy )
-		EffectAddTrackingForControlPoint( fxIdxEnemy, 1, end, FX_PATTACH_ABSORIGIN_FOLLOW, -1, (endUp * (heightOffset + file.proxyBaseOffset)) )
+		EffectAddTrackingForControlPoint( fxIdxEnemy, 1, end, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, (endUp * (heightOffset + file.proxyBaseOffset)) )
 		EffectSetControlPointVector( fxIdxEnemy, 2, colorEnemy )
 
 		file.linkFXs_client[triggerFXID].append( fxIdxTeam )
@@ -4296,10 +4297,10 @@ bool function TeslaTrap_CanLink_ObjectPlacer( vector trapPos, vector trapUp, ent
                         
 	if ( Control_IsModeEnabled() )
 	{
-		if ( IsValid( otherParent ) && otherParent.GetScriptName() == "func_control_geo" )
+		if ( IsValid( otherParent ) && otherParent.GetScriptName() == CONTROL_FUNC_BRUSH_GEO_NAME )
 			otherParent = null
 
-		if ( IsValid( parentOfParent ) && parentOfParent.GetScriptName() == "func_control_geo" )
+		if ( IsValid( parentOfParent ) && parentOfParent.GetScriptName() == CONTROL_FUNC_BRUSH_GEO_NAME )
 			parentOfParent = null
 	}
       

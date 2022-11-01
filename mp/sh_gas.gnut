@@ -476,6 +476,10 @@ void function ShGas_Init()
 			      
 	 
 
+	                                                      
+	                                    
+		                              
+
 	                                                                                        
 	                                                                  
 
@@ -838,7 +842,7 @@ void function ShGas_Init()
 						                                      
 							                                                                                                                                                
 						    
-							                                                                                                                                                                                                                           
+							                                                                                                                                                                                                                                             
 
 						                                     
 							                                            
@@ -880,7 +884,7 @@ void function ShGas_Init()
 					                                      
 						                                                                                                                                                
 					    
-						                                                                                                                                                                                                                           
+						                                                                                                                                                                                                                                             
 
 					                                     
 						                                            
@@ -1094,7 +1098,7 @@ void function GasCloud_StartVisualEffect( entity ent, int statusEffect, bool act
 	{
 		if ( !PlayerHasGasProtection( viewPlayer ) )
 		{
-			int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, COCKPIT_GAS_SCREEN_FX, FX_PATTACH_ABSORIGIN_FOLLOW, -1, viewPlayer.EyePosition(), <0,0,0> )
+			int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, COCKPIT_GAS_SCREEN_FX, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, viewPlayer.EyePosition(), <0,0,0> )
 			EffectSetIsWithCockpit( fxHandle, true )
 
 			thread GasScreenFXThink( viewPlayer, fxHandle )

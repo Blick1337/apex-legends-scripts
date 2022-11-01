@@ -167,7 +167,7 @@ string function GetCharacterLoadoutRef( string characterRef )
 	table<string, int> characterDefaultLoadoutList
 	for( int i = 0; i<characterList.len(); i++ )
 	{
-		characterDefaultLoadoutList[ ItemFlavor_GetHumanReadableRef( characterList[i] ).tolower() ] <- i
+		characterDefaultLoadoutList[ ItemFlavor_GetCharacterRef( characterList[i] ).tolower() ] <- i
 	}
 
 	int characterLoadoutRefInt = 0                                           
@@ -321,7 +321,7 @@ void function PopulateCharacterLoadouts()
 
 	foreach( character in characterList )
 	{
-		string characterRef = ItemFlavor_GetHumanReadableRef( character ).tolower()
+		string characterRef = ItemFlavor_GetCharacterRef( character ).tolower()
 		string characterLoadoutRef = GetCharacterLoadoutRef( characterRef )
 		printf( "CHARACTER LOADOUT: Populating info for characterRef " + characterRef + " with matching loadout ref " + characterLoadoutRef )
 		string weaponLoadoutsPlaylist
@@ -447,7 +447,7 @@ void function Init_CharacterClassToLoadoutNameTable()
 		      
 
 	                                                                                        
-	                                                                            
+	                                                                        
 
 	                                                             
 	 
@@ -525,21 +525,16 @@ void function Init_CharacterClassToLoadoutNameTable()
 		                                                                                        
 		 
 			                                                                         
-			                                                                                                        
-			 
-				                                                                                                                    
-			 
+			                                                 
 		 
 		    
 		 
 			                                
 			 
 				                                                                         
-				                                                                                                        
-				 
-					                                                                                                                    
-				 
 			 
+			                                                 
+
 			                                               
 			                                                   
 			                                                             
@@ -694,7 +689,7 @@ string function GetIdenticalLoadoutCharSelectPrefix()
 
 void function DisplayLoadoutForCharacter( ItemFlavor character )
 {
-	string characterRef = ItemFlavor_GetHumanReadableRef( character ).tolower()
+	string characterRef = ItemFlavor_GetCharacterRef( character ).tolower()
 
 	                     
 	foreach( ruiAsset in file.loadoutRuiElements )
@@ -857,15 +852,15 @@ bool function ShouldShrinkWeaponIcon( string weaponRef )
 
 array<string> function CharacterLoadouts_GetWeaponLoadoutArray( ItemFlavor character )
 {
-	return file.characterFlavorToWeaponLoadout[ItemFlavor_GetHumanReadableRef( character ).tolower()].weaponRefs
+	return file.characterFlavorToWeaponLoadout[ItemFlavor_GetCharacterRef( character ).tolower()].weaponRefs
 }
 
 array<string> function CharacterLoadouts_GetConsumableLoadoutArray( ItemFlavor character )
 {
-	return file.characterFlavorToConsumableLoadout[ItemFlavor_GetHumanReadableRef( character ).tolower()]
+	return file.characterFlavorToConsumableLoadout[ItemFlavor_GetCharacterRef( character ).tolower()]
 }
 
 array<string> function CharacterLoadouts_GetEquipmentLoadoutArray( ItemFlavor character )
 {
-	return file.characterFlavorToEquipmentLoadout[ItemFlavor_GetHumanReadableRef( character ).tolower()]
+	return file.characterFlavorToEquipmentLoadout[ItemFlavor_GetCharacterRef( character ).tolower()]
 }

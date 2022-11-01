@@ -127,11 +127,11 @@ bool function Campfire_IsModeActive()
                                                   
  
                            
-		                            
-		 
-			                                          
-			      
-		 
+                              
+   
+                                             
+         
+   
        
 
 	                                                                            
@@ -192,7 +192,7 @@ bool function Campfire_IsModeActive()
 		              
 			     
 
-		                                      
+		                                                        
 		                       
 			        
 
@@ -217,13 +217,13 @@ bool function Campfire_IsModeActive()
                           
                                                  
  
-	                                      
+                                       
 
-	                                                            
-	                                             
-	 
-		                                                                  
-	 
+                                                             
+                                              
+  
+                                                                    
+  
  
       
 
@@ -235,11 +235,11 @@ bool function Campfire_IsModeActive()
 	                                
 
                            
-		                            
-		 
-			                                     
-			               
-		 
+                              
+   
+                                        
+                  
+   
        
 
 	                                                                                                 
@@ -370,7 +370,7 @@ bool function Campfire_IsModeActive()
 	                                     
 
                            
-		                             
+                               
        
 		 
 			                                                                                                                                                                                      

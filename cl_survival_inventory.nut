@@ -4,6 +4,7 @@ global function Survival_SwapPrimary
 global function Survival_SwapToMelee
 global function Survival_SwapToOrdnance
 
+global function ServerCallback_TryCloseInventory
 global function ServerCallback_RefreshInventory
 global function ResetInventoryMenu
 global function OpenSurvivalInventory
@@ -178,12 +179,12 @@ void function Cl_Survival_InventoryInit()
 	AddLocalPlayerTookDamageCallback( TryCloseSurvivalInventoryFromDamage )
 	AddLocalPlayerTookDamageCallback( ShowHealHint )
 	AddCallback_OnPlayerConsumableInventoryChanged( ResetInventoryMenu )
-
-                 
-                                                                                 
-      
 }
 
+void function ServerCallback_TryCloseInventory( )
+{
+	RunUIScript( "TryCloseSurvivalInventory", null )
+}
 
 void function ServerCallback_RefreshInventory()
 {
@@ -231,15 +232,17 @@ void function ResetInventoryMenuInternal( entity player )
 
                   
                                                       
-                                                                                                  
-                                                             
-
-                                                                                
-                                                          
+                                     
+   
+                                                        
                                                               
-                                                               
-                                                             
 
+                                                                                            
+   
+       
+
+                    
+                                                                  
        
 
 	PerfEnd( PerfIndexClient.InventoryRefreshTotal )
@@ -288,7 +291,8 @@ bool function Survival_DropInventoryItem( string ref, int num )
 		deathbox = file.currentGroundListData.deathBox
 	}
 
-	Remote_ServerCallFunction( "ClientCallback_Sur_DropBackpackItem", ref, num, deathbox )
+	LootData data = SURVIVAL_Loot_GetLootDataByRef( ref )
+	Remote_ServerCallFunction( "ClientCallback_Sur_DropBackpackItem", data.index, num, deathbox )
 	ResetInventoryMenu( player )
 
 	return true
@@ -302,7 +306,8 @@ bool function Survival_DropEquipment( string ref )
 	if ( !Survival_PlayerCanDrop( player ) )
 		return false
 
-	Remote_ServerCallFunction( "ClientCallback_Sur_DropEquipment", ref )
+	EquipmentSlot e = Survival_GetEquipmentSlotDataByRef( ref )
+	Remote_ServerCallFunction( "ClientCallback_Sur_DropEquipment", e.type )
 	ResetInventoryMenu( player )
 
 	return true
@@ -354,7 +359,7 @@ bool function BackpackAction( int lootAction, string slotIndexString )
 			                             
 			  	                                                    
 			       
-			Remote_ServerCallFunction( "ClientCallback_Sur_EquipAttachment", lootData.ref, -1 )
+			Remote_ServerCallFunction( "ClientCallback_Sur_EquipAttachment", lootData.index, -1 )
 			        
 			break
 
@@ -377,16 +382,6 @@ bool function EquipmentAction( int lootAction, string equipmentSlot )
 {
 	switch ( lootAction )
 	{
-
-                 
-                                    
-                                         
-    
-                                          
-                                                                    
-    
-      
-
 		case eLootAction.EQUIP:
 			entity player = GetLocalClientPlayer()
 			if ( player == GetLocalViewPlayer() )
@@ -587,13 +582,13 @@ bool function Survival_UnequipAttachment( string ref, int weaponSlot, bool remov
 	LootData data = SURVIVAL_Loot_GetLootDataByRef( ref )
 
                
-                   
-  
-                        
-  
+	if ( data.noDrop )
+	{
+		removeToGround = false
+	}
       
 
-	Remote_ServerCallFunction( "ClientCallback_Sur_UnequipAttachment", ref, weaponSlot, removeToGround )
+	Remote_ServerCallFunction( "ClientCallback_Sur_UnequipAttachment", data.index, weaponSlot, removeToGround )
 	return true
 }
 
@@ -607,7 +602,7 @@ bool function Survival_TransferAttachment( string ref, int weaponSlot )
 		return false
 
 	LootData data = SURVIVAL_Loot_GetLootDataByRef( ref )
-	Remote_ServerCallFunction( "ClientCallback_Sur_TransferAttachment", ref, weaponSlot )
+	Remote_ServerCallFunction( "ClientCallback_Sur_TransferAttachment", data.index, weaponSlot )
 	return true
 }
 
@@ -772,7 +767,7 @@ void function TrackCloseDeathBoxConditions( entity player, entity deathBox )
 		if ( file.currentGroundListData.behavior != eGroundListBehavior.NEARBY && file.filteredGroundItems.len() == 0 )
 			return
 
-                  
+                                  
                                                                                  
          
         
@@ -876,7 +871,7 @@ void function UICallback_PingInventoryItem( var button, int position )
 	{
 		EmitSoundOnEntity( player, PING_SOUND_DEFAULT )
 		RunUIScript( "ClientToUI_SurvivalQuickInventory_MarkInventoryButtonPinged", button )
-		Remote_ServerCallFunction( "ClientCallback_Quickchat", commsAction, eCommsFlags.NONE, null, "" )
+		Remote_ServerCallFunction( "ClientCallback_Quickchat", commsAction, eCommsFlags.NONE )
 	}
 }
 
@@ -1032,6 +1027,12 @@ void function UICallback_UpdateRequestButton( var button )
 
 	string weaponName = loot.baseWeapon
 
+                     
+	                                                                                                     
+	if (weaponName == "mp_weapon_dragon_lmg")
+		return
+      
+
 	if ( GetWeaponInfoFileKeyField_GlobalInt_WithDefault ( weaponName, "has_energized", 0 ) == 1 )
 	{
 		string energizedConsumableData = GetWeaponInfoFileKeyField_GlobalString ( weaponName, "energized_consumable" )
@@ -1183,7 +1184,7 @@ void function UICallback_UpdateEquipmentButton( var button )
 
 		if ( IsValid( weapon ) )
 		{
-			RuiSetInt( rui, "count", weapon.UsesClipsForAmmo() ? weapon.GetWeaponPrimaryClipCount() : player.AmmoPool_GetCount( weapon.GetWeaponAmmoPoolType() ) )
+			RuiSetInt( rui, "count", weapon.UsesClipsForAmmo() ? weapon.GetWeaponPrimaryClipCount() : weapon.GetWeaponPrimaryAmmoCount( weapon.GetActiveAmmoSource() ) )
 
 			RuiSetString( rui, "weaponName", data.pickupString )
 
@@ -1356,7 +1357,7 @@ void function UICallback_PingIsMyUltimateReady( var button )
 
 	entity ultimate = player.GetOffhandWeapon( OFFHAND_ULTIMATE )
 	PIN_UltimateReadyPing( player, GetEnumString( "eCommsAction", commsAction ).tolower(), ultimate != null )
-	Quickchat( player, commsAction, ultimate )
+	Quickchat( commsAction, ultimate )
 }
                                   
 
@@ -1381,7 +1382,7 @@ void function UICallback_PingRequestButton ( var button )
 		EmitSoundOnEntity( player, PING_SOUND_DEFAULT )
 		string commsData = GetWeaponInfoFileKeyField_GlobalString ( weaponName, "energized_comms" )
 
-		Quickchat( player, eCommsAction [ commsData ] )
+		Quickchat( eCommsAction [ commsData ], null )
 	}
 }
 
@@ -1399,7 +1400,8 @@ void function UICallback_PingEquipmentItem( var button )
 	EmitSoundOnEntity( player, PING_SOUND_DEFAULT )
 	RunUIScript( "ClientToUI_SurvivalQuickInventory_MarkInventoryButtonPinged", button )
 
-	Remote_ServerCallFunction( "ClientCallback_Quickchat_UI", commsAction, eCommsFlags.NONE, equipSlot )
+	EquipmentSlot e = Survival_GetEquipmentSlotDataByRef( equipSlot )
+	Remote_ServerCallFunction( "ClientCallback_Quickchat_UI", commsAction, eCommsFlags.NONE, e.type )
 }
 
 
@@ -2580,7 +2582,8 @@ void function EquipOrdnance( entity player, string ref )
 	if ( Bleedout_IsBleedingOut( player ) )
 		return
 
-	Remote_ServerCallFunction( "ClientCallback_Sur_EquipOrdnance", ref )
+	LootData data = SURVIVAL_Loot_GetLootDataByRef( ref )
+	Remote_ServerCallFunction( "ClientCallback_Sur_EquipOrdnance", data.index )
 
 	ServerCallback_ClearHints()
 }
@@ -2599,7 +2602,8 @@ void function EquipGadget( entity player, string ref )
 	if ( Bleedout_IsBleedingOut( player ) )
 		return
 
-	Remote_ServerCallFunction( "ClientCallback_Sur_EquipGadget", ref )
+	LootData data = SURVIVAL_Loot_GetLootDataByRef( ref )
+	Remote_ServerCallFunction( "ClientCallback_Sur_EquipGadget", data.index )
 
 	ServerCallback_ClearHints()
 }
@@ -2624,7 +2628,8 @@ void function EquipAttachment( entity player, string item, string weaponName )
 	                             
 	  	                                            
 	       
-	Remote_ServerCallFunction( "ClientCallback_Sur_EquipAttachment", item, -1)
+	LootData data = SURVIVAL_Loot_GetLootDataByRef( item )
+	Remote_ServerCallFunction( "ClientCallback_Sur_EquipAttachment", 	data.index, -1)
 	        
 
 	ServerCallback_ClearHints()
@@ -2851,7 +2856,7 @@ void function UICallback_OnInventoryMouseDrop( var dropButton, var sourcePanel, 
 						if ( initOnly )
 							Hud_SetLocked( dropButton, false )
 						else
-							Remote_ServerCallFunction( "ClientCallback_Sur_EquipAttachment", data.ref, es.weaponSlot )
+							Remote_ServerCallFunction( "ClientCallback_Sur_EquipAttachment", data.index, es.weaponSlot )
 					}
 				}
 			}
@@ -2865,7 +2870,7 @@ void function UICallback_OnInventoryMouseDrop( var dropButton, var sourcePanel, 
 						Remote_ServerCallFunction( "ClientCallback_Sur_SwapPrimaryPositions" )
 				}
                      
-                                                     
+                                                                
      
                     
                                         
@@ -2876,7 +2881,7 @@ void function UICallback_OnInventoryMouseDrop( var dropButton, var sourcePanel, 
 			}
 		}
                  
-                                                 
+                                                            
    
                                                                                
 
@@ -3214,8 +3219,8 @@ void function TEMP_UpdatePlayerRui( var rui, entity player )
 
 		RuiSetColorAlpha( rui, "shieldFrac", shieldFrac, float( SURVIVAL_GetArmorShieldCapacity( 3 ) ) )
 
-		RuiSetFloat( rui, "playerTargetShieldFrac", StatusEffect_GetSeverity( player, eStatusEffect.target_shields ) )
-		RuiSetFloat( rui, "playerTargetHealthFrac", StatusEffect_GetSeverity( player, eStatusEffect.target_health ) )
+		RuiSetFloat( rui, "playerTargetShieldFrac", StatusEffect_GetTotalSeverity( player, eStatusEffect.target_shields ) )
+		RuiSetFloat( rui, "playerTargetHealthFrac", StatusEffect_GetTotalSeverity( player, eStatusEffect.target_health ) )
 		RuiSetFloat( rui, "cameraViewFrac", StatusEffect_GetSeverity( player, eStatusEffect.camera_view ) )
 		RuiSetBool( rui, "useShadowFormFrame", player.IsShadowForm() )
 
@@ -3280,8 +3285,8 @@ void function TEMP_UpdateTeammateRui( var rui, entity ent, entity localPlayer )
 		RuiSetString( rui, "name", ent.GetPlayerName() )
 		RuiSetFloat( rui, "healthFrac", GetHealthFrac( ent ) )
 		RuiSetFloat( rui, "shieldFrac", GetShieldHealthFrac( ent ) )
-		RuiSetFloat( rui, "targetHealthFrac", StatusEffect_GetSeverity( ent, eStatusEffect.target_health ) )
-		RuiSetFloat( rui, "targetShieldFrac", StatusEffect_GetSeverity( ent, eStatusEffect.target_shields ) )
+		RuiSetFloat( rui, "targetHealthFrac", StatusEffect_GetTotalSeverity( ent, eStatusEffect.target_health ) )
+		RuiSetFloat( rui, "targetShieldFrac", StatusEffect_GetTotalSeverity( ent, eStatusEffect.target_shields ) )
 		RuiSetFloat( rui, "cameraViewFrac", StatusEffect_GetSeverity( ent, eStatusEffect.camera_view ) )
 		RuiSetInt( rui, "teamMemberIndex", ent.GetTeamMemberIndex() )
 		RuiSetInt( rui, "squadID", ent.GetSquadID() )
@@ -3404,81 +3409,3 @@ int function GetCountForLootType( int lootType )
 
 	return typeCount
 }
-                 
-                                                                     
- 
-                          
-                                                                         
- 
-
-                                                     
- 
-                                                
-                                       
- 
-
-                                                           
- 
-                                                      
-        
-
-                                                     
-
-                                                                
-  
-                                                                                         
-
-                           
-                                         
-   
-                                         
-                                                            
-    
-                                                                                
-                                                
-     
-                                                    
-      
-                                                                      
-                         
-      
-         
-      
-                                                                              
-                         
-                                                                
-      
-     
-    
-   
-
-                     
-         
-
-                                                 
-   
-                                                                   
-
-                                      
-    
-                                                             
-                                                              
-    
-
-   
-      
-   
-                                                                            
-                                             
-                                  
-    
-                                            
-                                           
-                                                              
-    
-                                                                                
-
-   
-  
- 
-      

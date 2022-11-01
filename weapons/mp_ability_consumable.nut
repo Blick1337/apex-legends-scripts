@@ -16,6 +16,8 @@ global function Consumable_GetConsumableInfo
 global function Consumable_CanUseConsumable
 global function Consumable_CreatePotentialHealData
 global function Consumable_CanUseUltAccel
+global function Consumable_CalculateTotalHealFromItem
+global function Consumable_CalculateTotalShieldFromItem
 #if CLIENT
 global function OnCreateChargeEffect_Consumable
 global function OnCreateMuzzleFlashEffect_Consumable
@@ -131,7 +133,7 @@ enum eUseConsumableResult
 	DENY_FULL,
 	DENY_DEATH_TOTEM,
                 
-                        
+	DENY_SHIELD_HEAL_DENIED
        
 	DENY_
 	COUNT,
@@ -148,14 +150,14 @@ enum eConsumableRecoveryType
 struct ConsumablePersistentData
 {
 	bool useFinished = false
-	int healAmount = 0
-	int healAmountRemaining = 0	                             
-	int healthKitResourceId = 0
-	int TEMP_shieldStatusHandle = 0
-	int TEMP_healthStatusHandle = 0
-	int lastMissingHealth = -1
-	int lastMissingShields = -1
-	int lastCurrentHealth = -1
+	int  healAmount = 0
+	int  healAmountRemaining = 0	                             
+	int  healthKitResourceId = 0
+	int  shieldStatusHandle = 0
+	int  healthStatusHandle = 0
+	int  lastMissingHealth = -1
+	int  lastMissingShields = -1
+	int  lastCurrentHealth = -1
 
 	array<int> statusEffectHandles
 }
@@ -498,10 +500,10 @@ bool function OnWeaponAttemptOffhandSwitch_Consumable( entity weapon )
 
 	                                                               
 	 
-		                                                                   
+		                                                                  
 			                                                                                                                  
 	 
-	                                                                                      
+	                                                                                     
  
 #endif
 
@@ -545,6 +547,10 @@ void function OnWeaponActivate_Consumable( entity weapon )
 			Assert( modName != "", "No consumable mod on weapon for pure spectator" )
 		}
 
+		                                                    
+		if ( modName == "" )
+			return
+
 		file.healCompletedSuccessfully = false
 
 		if ( CharacterSelect_MenuIsOpen() )
@@ -568,18 +574,18 @@ void function OnWeaponActivate_Consumable( entity weapon )
 	}
 
                     
-               
-                                                          
-                                    
-       
-                                                
-                                                                         
-                                                                                        
+	    #if SERVER
+			                                                       
+		                                  
+		     
+			                                             
+			                                                                      
+			                                                                                     
 
-                                                
-                                                                       
-       
-           
+			                                             
+				                                                                                                              
+		     
+	    #endif
           
 
 	ConsumablePersistentData useData
@@ -681,6 +687,15 @@ void function OnWeaponActivate_Consumable( entity weapon )
 		printt( format( "[CONSUMABlE-%s] Done activating, setting consumable int to %d", weaponOwner.GetPlayerName(), consumableRecoveryType ) )
 	}
 
+#if SERVER
+	                                                             
+		                                                                                     
+	                                                                                              
+		                                                                                     
+	                                         
+		                                                                               
+#endif
+
 	#if CLIENT
 		thread Consumable_DisplayProgressBar( weaponOwner, weapon, consumableRecoveryType )
 	#endif
@@ -696,6 +711,13 @@ void function OnWeaponDeactivate_Consumable( entity weapon )
 	#if SERVER
 		                                                      
 		                                                         
+		
+		                                                                   
+			                                                          
+		                                                                                                       
+			                                                          
+		                                            
+			                                                    
 
 		                                                                
 		                                                                 
@@ -709,11 +731,18 @@ void function OnWeaponDeactivate_Consumable( entity weapon )
 		 
 			                          
 
-			                                           
-				                                                                 
+			                                      
+				                                                            
 
-			                                           
-				                                                                 
+			                                      
+				                                                            
+
+                                  
+                            
+     
+                                                          
+     
+                                       
 
 			                                          
 				                                                                                                                                                         
@@ -723,7 +752,7 @@ void function OnWeaponDeactivate_Consumable( entity weapon )
 			                                                                   
 
                      
-                             
+		                           
            
 	#endif          
 
@@ -1065,7 +1094,7 @@ var function OnWeaponPrimaryAttack_Consumable( entity weapon, WeaponPrimaryAttac
 
 	#if SERVER
 		                                    
-		                                                             
+		                                                                        
 
 		                                                                                                                                             
 		                                                                                                                    
@@ -1117,7 +1146,7 @@ var function OnWeaponPrimaryAttack_Consumable( entity weapon, WeaponPrimaryAttac
 }
 
 
-float function CalculateTotalHealFromItem( entity player, ConsumableInfo info )
+float function Consumable_CalculateTotalHealFromItem( entity player, ConsumableInfo info )
 {
 	if ( PlayerHasPassive( player, ePassives.PAS_SYRINGE_BONUS ) )
 		return info.healAmount + info.healBonus[ ePassives.PAS_SYRINGE_BONUS ]
@@ -1135,7 +1164,7 @@ float function CalculateTotalHealFromItem( entity player, ConsumableInfo info )
 }
 
 
-float function CalculateTotalShieldFromItem( entity player, ConsumableInfo info )
+float function Consumable_CalculateTotalShieldFromItem( entity player, ConsumableInfo info )
 {
 	if ( PlayerHasPassive( player, ePassives.PAS_BONUS_SMALL_HEAL ) && info.lootData.ref == "health_pickup_combo_small" )
 		return info.shieldAmount + info.shieldBonus[ ePassives.PAS_BONUS_SMALL_HEAL ]
@@ -1412,7 +1441,7 @@ void function DoHealScreenFX( entity player )
 		return
 
 	int fxID = GetParticleSystemIndex( RESTORE_HEALTH_COCKPIT_FX )
-	file.healScreenFxHandle = StartParticleEffectOnEntity( cockpit, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	file.healScreenFxHandle = StartParticleEffectOnEntity( cockpit, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetIsWithCockpit( file.healScreenFxHandle, true )
 
 	OnThreadEnd( function() {
@@ -1496,9 +1525,9 @@ bool function ShouldDisplayConsumableSwitchHint( entity player )
 		return false
 
                 
-                                                                                                                                                                                                                                                           
+	return (PlayerHasHealthKits( player ) && player.GetHealth() < player.GetMaxHealth()) || (PlayerHasShieldKits( player ) && player.GetShieldHealth() < player.GetShieldHealthMax() && StatusEffect_GetSeverity( player, eStatusEffect.healing_denied ) <= 0)
       
-	return (PlayerHasHealthKits( player ) && player.GetHealth() < player.GetMaxHealth()) || (PlayerHasShieldKits( player ) && player.GetShieldHealth() < player.GetShieldHealthMax())
+                                                                                                                                                                                  
        
 }
 
@@ -1510,8 +1539,8 @@ string function GetCanUseResultString( int consumableUseActionResult )
 		case eUseConsumableResult.DENY_NONE:
 			return ""
                
-                                                    
-                                    
+		case eUseConsumableResult.DENY_SHIELD_HEAL_DENIED:
+			return "#DENY_SHIELD_HEAL_DENIED"
       
 		case eUseConsumableResult.DENY_ULT_FULL:
 			return "#DENY_ULT_FULL"
@@ -1587,12 +1616,21 @@ void function Consumable_OnGamestateEnterResolution()
 		                
 	                                                
 
-	                                                                      
+	                                                                          
+	                                                                            
 
 	                        
-		                                                                                  
+		                                                                                             
 
 	                                                                                            
+	                                             
+
+                                
+                          
+   
+                                                                              
+   
+                                     
 
 	                                          	                                                                                     
 	                          
@@ -1601,12 +1639,19 @@ void function Consumable_OnGamestateEnterResolution()
 		           
 	 
 
-	                                           
+	                                     
 	                                                    
 		                                               
 
 	                     
 		                                                                                 
+
+	                                                 
+	                                                             
+		                                                        
+
+	                       
+		                                                                                     
  
 
                                                                                                                           
@@ -1614,7 +1659,6 @@ void function Consumable_OnGamestateEnterResolution()
 	                           
 	                         
 		      
-
 
 	                                        
 	                                           
@@ -1626,14 +1670,14 @@ void function Consumable_OnGamestateEnterResolution()
 	                                                       
 	                                                              
 
-	                    		                                                                                                                             
+	                    		                                                                                                                                    
 
 	                                                                                                                                          
-	                                                               
-	                                                                 
+	                                                                          
+	                                                                            
 
 	                                                                     
-	                                                                                                                
+	                                                                       
 
 	                     
 	 
@@ -1644,11 +1688,13 @@ void function Consumable_OnGamestateEnterResolution()
 		 
 			                          
 			 
-				                                                                 
+				                                                       
 				                         
 				 
 					                 
+					 
 						                                                                                  
+					 
 				 
 				    
 				 
@@ -1672,8 +1718,8 @@ void function Consumable_OnGamestateEnterResolution()
 			 
 			                              
 			 
-				                                                                 
-				                                                                                                                                                                   
+				                                                       
+				                                                                                                                                                         
 			 
 		 
 	 
@@ -1705,13 +1751,54 @@ void function Consumable_OnGamestateEnterResolution()
 
 		                          
 		 
-			                                                                  
+			                                                       
 			                       
 			                          
-				                                                                                                                    
-			                                                                                                                
+				                                                       
+			                                                                                                           
 		 
 	 
+
+                               
+                         
+  
+                                                                
+   
+                                                  
+
+                            
+    
+                                                                                    
+                                                                                        
+
+                                           
+                                                 
+                                                       
+                                                             
+
+                                                                                               
+                                                                                                             
+
+                                                 
+     
+                                                                
+      
+                              
+       
+                                                                                                
+       
+                              
+       
+                                                                                                                    
+       
+
+                                                                                        
+      
+     
+    
+   
+  
+                                    
 
 	                                         
 	                                           
@@ -1748,6 +1835,41 @@ void function Consumable_OnGamestateEnterResolution()
 
 	                                                  
 		                                                 
+
+
+                               
+                         
+  
+                                                 
+
+                           
+   
+                                                                         
+                                                                    
+                                                                       
+                                                                                                                      
+                                                                   
+
+                           
+                                          
+                        
+                                           
+                        
+                                                                                                                   
+                        
+
+                      
+    
+                                                                            
+
+                                                                                  
+                                                              
+
+                                                                                      
+    
+   
+  
+                                    
  
 
                                                                             
@@ -1994,11 +2116,11 @@ bool function Consumable_CanUseConsumable( entity player, int consumableType, bo
 				case eUseConsumableResult.DENY_NO_SHIELDS:
 					if ( player.GetHealth() < player.GetMaxHealth() && !PlayerHasHealthKits( player ) )
 					{
-						Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.INVENTORY_NEED_HEALTH, eCommsFlags.NONE, null, "" )
+						Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.INVENTORY_NEED_HEALTH, eCommsFlags.NONE )
 					}
 					else if ( player.GetShieldHealth() < player.GetShieldHealthMax() && !PlayerHasShieldKits( player ) )
 					{
-						Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.INVENTORY_NEED_SHIELDS, eCommsFlags.NONE, null, "" )
+						Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.INVENTORY_NEED_SHIELDS, eCommsFlags.NONE )
 					}
 					break
 
@@ -2006,13 +2128,13 @@ bool function Consumable_CanUseConsumable( entity player, int consumableType, bo
 				case eUseConsumableResult.DENY_HEALTH_FULL:
 					if ( player.GetShieldHealth() < player.GetShieldHealthMax() && !PlayerHasShieldKits( player ) )
 					{
-						Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.INVENTORY_NEED_SHIELDS, eCommsFlags.NONE, null, "" )
+						Remote_ServerCallFunction( "ClientCallback_Quickchat", eCommsAction.INVENTORY_NEED_SHIELDS, eCommsFlags.NONE )
 					}
 					break
                
-                                                      
-                                                                 
-          
+				case eUseConsumableResult.DENY_SHIELD_HEAL_DENIED:
+					EmitSoundOnEntity( player, "crafting_replicator_menu_deny" )
+					break
       
 
 				default:
@@ -2069,13 +2191,13 @@ int function TryUseConsumable( entity player, int consumableType )
 	if ( StatusEffect_GetSeverity( player, eStatusEffect.placing_phase_tunnel ) )
 		return eUseConsumableResult.DENY_NONE
                
-                                                                        
-  
-                                                                                                         
-   
-                                                      
-   
-  
+	if ( StatusEffect_GetSeverity( player, eStatusEffect.healing_denied ) )
+	{
+		if ( consumableType == eConsumableType.SHIELD_LARGE || consumableType == eConsumableType.SHIELD_SMALL )
+		{
+			return eUseConsumableResult.DENY_SHIELD_HEAL_DENIED
+		}
+	}
       
 
 	if ( player.GetWeaponDisableFlags() == WEAPON_DISABLE_FLAGS_ALL )
@@ -2113,10 +2235,27 @@ int function TryUseConsumable( entity player, int consumableType )
 	{
 		int currentHealth  = player.GetHealth()
 		int currentShields = player.GetShieldHealth()
+		int maxHealth  = player.GetMaxHealth()
+		int maxShields = player.GetShieldHealthMax()
 		bool canHeal       = false
 		bool canShield     = false
-		bool needHeal      = currentHealth < player.GetMaxHealth()
-		bool needShield    = currentShields < player.GetShieldHealthMax()
+		bool needHeal      = currentHealth < maxHealth
+		bool needShield    = currentShields < maxShields
+
+
+                                 
+                           
+    
+                                                   
+                             
+     
+                                                    
+                                                          
+                                                                                
+                                                                                         
+     
+    
+                                      
 
 		ConsumableInfo info = file.consumableTypeToInfo[ consumableType ]
 
@@ -2143,7 +2282,7 @@ int function TryUseConsumable( entity player, int consumableType )
 		else if ( info.shieldAmount && !info.healAmount )
 		{
 			if ( !needShield )
-				return player.GetShieldHealthMax() > 0 ? eUseConsumableResult.DENY_SHIELD_FULL : eUseConsumableResult.DENY_NO_SHIELDS
+				return maxShields > 0 ? eUseConsumableResult.DENY_SHIELD_FULL : eUseConsumableResult.DENY_NO_SHIELDS
 		}
 		else
 		{
@@ -2156,14 +2295,14 @@ int function TryUseConsumable( entity player, int consumableType )
 			if ( info.healAmount > 0 && info.healCap > 100 )
 			{
 				int targetHealth = int( currentHealth + info.healAmount )
-				int overHeal     = targetHealth - player.GetMaxHealth()
-				if ( overHeal && currentShields < player.GetShieldHealthMax() )
+				int overHeal     = targetHealth - maxHealth
+				if ( overHeal && currentShields < maxShields )
 					canShield = true
 			}
 
 			if ( !canHeal && !canShield )
 			{
-				if ( currentHealth == player.GetMaxHealth() && currentShields == player.GetShieldHealthMax() )
+				if ( currentHealth == player.GetMaxHealth() && currentShields == maxShields )
 					return eUseConsumableResult.DENY_FULL
 
 				return eUseConsumableResult.DENY_NO_KITS
@@ -2229,8 +2368,8 @@ TargetKitHealthAmounts function Consumable_PredictConsumableUse( entity player, 
 
 	TargetKitHealthAmounts targetValues
 
-	float healAmount   = CalculateTotalHealFromItem( player, kitInfo )
-	float shieldAmount = CalculateTotalShieldFromItem( player, kitInfo )
+	float healAmount   = Consumable_CalculateTotalHealFromItem( player, kitInfo )
+	float shieldAmount = Consumable_CalculateTotalShieldFromItem( player, kitInfo )
 
 	if ( healAmount > 0 )
 	{
@@ -2238,11 +2377,11 @@ TargetKitHealthAmounts function Consumable_PredictConsumableUse( entity player, 
 		Assert( virtualHealth + healthToApply <= maxHealth, "Bad math: " + virtualHealth + " + " + healthToApply + " > max health of " + maxHealth )
 
 		if ( healthToApply || kitInfo.healTime > 0 )                                     
-			targetValues.targetHealth = (currentHealth + healthToApply + resourceHealthRemaining) / float( maxHealth )
+			targetValues.targetHealth = (healthToApply + resourceHealthRemaining) / float( maxHealth )
 	}
 
 	if ( shieldAmount > 0 && shieldHealthMax > 0 )
-		targetValues.targetShields = minint( currentShields + int( shieldAmount ), shieldHealthMax ) / float( shieldHealthMax )
+		targetValues.targetShields = shieldAmount / float( shieldHealthMax )
 
 	return targetValues
 }
@@ -2250,15 +2389,15 @@ TargetKitHealthAmounts function Consumable_PredictConsumableUse( entity player, 
 
 void function ResetConsumableData( ConsumablePersistentData useData )
 {
-	useData.useFinished = false
-	useData.healAmount = 0
+	useData.useFinished         = false
+	useData.healAmount          = 0
 	useData.healAmountRemaining = 0
 	useData.healthKitResourceId = 0
-	useData.TEMP_shieldStatusHandle = 0
-	useData.TEMP_healthStatusHandle = 0
-	useData.lastMissingHealth = -1
-	useData.lastMissingShields = -1
-	useData.lastCurrentHealth = -1
+	useData.shieldStatusHandle  = 0
+	useData.healthStatusHandle  = 0
+	useData.lastMissingHealth   = -1
+	useData.lastMissingShields  = -1
+	useData.lastCurrentHealth   = -1
 	useData.statusEffectHandles = []
 }
 

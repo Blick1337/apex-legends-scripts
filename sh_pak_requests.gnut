@@ -57,6 +57,7 @@ struct PakRequestState
 	table<PakHandle, bool> handleSet
 	int                    status = ePakRequestStatus.INVALID
 	int                    pakId
+	int					   trackResourceFeature = TRACK_FEATURE_UNKNOWN
 
 	float WORKAROUND_unloadQueueTime = -1.0
 }
@@ -108,7 +109,7 @@ void function ShPakRequests_LevelInit()
                           
                           
 #if CLIENT
-PakHandle function RequestPakFile( string rpakPath, PakRequestCompleteCallbackType requestCompleteCallback = null )
+PakHandle function RequestPakFile( string rpakPath, int trackResourceFeature, PakRequestCompleteCallbackType requestCompleteCallback = null )
 {
 	PakHandle handle
 	handle.rpakPath = rpakPath
@@ -166,6 +167,7 @@ PakHandle function RequestPakFile( string rpakPath, PakRequestCompleteCallbackTy
 	file.rpakPathRequestStateMap[rpakPath] <- prs
 
 	prs.status = ePakRequestStatus.QUEUED_TO_LOAD
+	prs.trackResourceFeature = trackResourceFeature
 	file.requestQueue.append( prs )
 	RunPakRequests()
 
@@ -366,7 +368,7 @@ void function WORKAROUND_ProcessPakQueues()
 
 			PakRequestState prs = file.requestQueue.remove( 0 )
 			printf( "ClientPakFile_RequestAsyncLoad: %s\n", prs.rpakPath + ".rpak" )
-			prs.pakId = ClientPakFile_RequestAsyncLoad( prs.rpakPath + ".rpak" )
+			prs.pakId = ClientPakFile_RequestAsyncLoad( prs.rpakPath + ".rpak", prs.trackResourceFeature )
 			file.activeRequestOrNull = prs
 
 			if ( prs.pakId == -1 )

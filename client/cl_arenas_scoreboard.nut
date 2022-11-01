@@ -111,20 +111,20 @@ ScoreboardData function Arenas_GetScoreboardData()
 	return data
 }
 
-array< int > function Arenas_GetPlayerScores( entity player )
+array< string > function Arenas_GetPlayerScores( entity player )
 {
-	array< int > scores
+	array< string > scores
 
-	int kills = player.GetPlayerNetInt( "kills" )
+	string kills = string( player.GetPlayerNetInt( "kills" ) )
 	scores.append( kills )
 
-	int assists = player.GetPlayerNetInt( "assists" )
+	string assists = string( player.GetPlayerNetInt( "assists" ) )
 	scores.append( assists )
 
-	int damage = player.GetPlayerNetInt( "damageDealt" )
+	string damage = string(player.GetPlayerNetInt( "damageDealt" ) )
 	scores.append( damage )
 
-	int cash = player.GetPlayerNetInt( "arenas_current_cash" )
+	string cash = string(player.GetPlayerNetInt( "arenas_current_cash" ) )
 	scores.append( cash )
 
 	return scores
@@ -146,6 +146,10 @@ void function Arenas_ScoreboardUpdateHeader( var headerRui, var frameRui, int te
 			color  = SrgbToLinear( GetKeyColor( COLORID_ENEMY ) / 255 )
 
 		RuiSetColorAlpha( headerRui, "teamColor", color, 1.0 )
+
+		int myTeamWins = Arenas_GetTeamWins( team )
+		int enemyTeamWins = Arenas_GetTeamWins (Arenas_GetOpposingTeam(team ) )
+		RuiSetBool( headerRui, "isWinning", ( myTeamWins > enemyTeamWins ) )
 
 		if( frameRui != null )
 			RuiSetColorAlpha( frameRui, "teamColor", color, 1.0 )

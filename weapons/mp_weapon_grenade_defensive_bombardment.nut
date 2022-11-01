@@ -10,12 +10,21 @@ const string DEFENSIVE_BOMBARDMENT_MISSILE_WEAPON = "mp_weapon_defensive_bombard
                            
 const asset FX_BOMBARDMENT_MARKER = $"P_ar_artillery_marker"
 
+                        
+                                                                                            
+                                                                                        
+                                                                                                                                 
+                                                           
+     
+const float DEFENSIVE_BOMBARDMENT_DURATION			= 6.0                                          
 const float DEFENSIVE_BOMBARDMENT_RADIUS 		 	= 1024                                      
 const int	DEFENSIVE_BOMBARDMENT_DENSITY			= 6	                                                  
-const float DEFENSIVE_BOMBARDMENT_DURATION			= 6.0                                          
+const float DEFENSIVE_BOMBARDMENT_SHELLSHOCK_DURATION = 4.0
+      
+
 const float DEFENSIVE_BOMBARDMENT_DELAY 			= 2.0                                                                       
 
-const float DEFENSIVE_BOMBARDMENT_SHELLSHOCK_DURATION = 4.0
+
 
 const asset FX_DEFENSIVE_BOMBARDMENT_SCAN = $"P_artillery_marker_scan"
 
@@ -28,6 +37,9 @@ void function MpWeaponGrenadeDefensiveBombardment_Init()
 
 	#if SERVER
 		                                                                                                                
+                          
+                                                                                                                        
+        
 	#endif         
 }
 
@@ -116,7 +128,11 @@ void function OnProjectileCollision_WeaponDefensiveBombardmentExplosion( entity 
 
 		                                            
 
-		                                                                                                      
+                          
+                                                                                                               
+       
+			                                                                                                      
+        
 	#endif
 }
 
@@ -176,7 +192,7 @@ void function OnProjectileCollision_WeaponDefensiveBombardmentExplosion( entity 
 	                                      
 
 	                                            
-	                                                                                                                  
+	                                                                                                                                     
 
 	                                                                                                                                 
 

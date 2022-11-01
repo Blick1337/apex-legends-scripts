@@ -4,6 +4,7 @@
 
 #if CLIENT
 global function ClCommonStoryEvents_Init
+
 #endif
 
 struct
@@ -51,4 +52,5 @@ void function EntitiesDidLoad()
 {
 
 }
-#endif                    
+#endif
+

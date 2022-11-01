@@ -18,6 +18,8 @@ global function ShGameModeExplore_IsActive
 global function ShGameModeExplore_Init
 global function ShGameModeExplore_RegisterNetworking
 
+const string EXPLOREMODE_MOVER_SCRIPTNAME 		= "exploremode_mover"
+
 #if CLIENT
 	global function ShGameModeExplore_ServerCallbackAnnouncementSplash
 	global function ShGameModeExplore_ServerCallbackClearAnnouncement
@@ -464,7 +466,7 @@ void function ShGameModeExplore_RegisterNetworking()
 	                                          
 	                         
 
-	                                                                  
+	                                                                                                
 
 	                                            
 	                                                 

@@ -202,12 +202,16 @@ void function UpdateLoadscreenPreviewMaterial_internal( var loadscreenElem, var 
 		return
 
 	WaitFrame()                                                                 
+	
+#if CONSOLE_PROG
+	wait .15
+#endif
 
 	Hud_SetVisible( loadscreenElem, true )
 
 	                     
 	string rpak         = Loadscreen_GetRPakName( flavor )
-	PakHandle pakHandle = RequestPakFile( rpak )
+	PakHandle pakHandle = RequestPakFile( rpak, TRACK_FEATURE_UI )
 	file.pakHandles.append( pakHandle )
 
 	if ( !pakHandle.isAvailable )

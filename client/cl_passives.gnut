@@ -1,23 +1,14 @@
 global function Cl_Passives_Init
-global function GetValkJetPackRui
 
 struct
 {
-
                 
+                 
                 
-       
-	var jetPackRui
-	var cameraCircleStatusRui
-	var cryptoTacticalRui
-                
-                        
-       
-                  
-                          
        
 } file
 
+               
                
                                                                                                                                                           
       
@@ -39,8 +30,10 @@ void function OnInitWeaponStatusRuis_CLPassives( entity player )
 	if ( player != GetLocalViewPlayer() )
 		return
 
+	DestroyPassiveRuis( player )                              
+
 	if ( PlayerHasPassive( player, ePassives.PAS_VALK ) )
-		DisplayValkJetMeter( player )
+		CreateValkJetPackRui( player )
 
 	if ( PlayerHasPassive( player, ePassives.PAS_CRYPTO ) )
 	{
@@ -50,16 +43,17 @@ void function OnInitWeaponStatusRuis_CLPassives( entity player )
 	}
 
                 
-                                                          
-   
-                                                               
-                                     
-   
+		if ( PlayerHasPassive( player, ePassives.PAS_VANTAGE ) )
+		{
+			                                                            
+			CreateVantageTacticalRui( player )
+		}
        
 
                   
-                                                                 
+                                            
    
+                                       
                                          
    
        
@@ -67,49 +61,10 @@ void function OnInitWeaponStatusRuis_CLPassives( entity player )
 
 void function OnPlayerClassChanged_CLPassives( entity player )
 {
-	printt("OnPlayerClassChanged_CLPassives")
 	if ( player != GetLocalViewPlayer() )
 		return
 
-	if ( !PlayerHasPassive( player, ePassives.PAS_VALK ) && file.jetPackRui != null )
-	{
-		RuiDestroyIfAlive( file.jetPackRui )
-		file.jetPackRui = null
-	}
-
-	if ( !PlayerHasPassive( player, ePassives.PAS_CRYPTO ) )
-	{
-		if ( file.cameraCircleStatusRui != null )
-		{
-			DestroyCameraCircleStatusRui()
-			file.cameraCircleStatusRui = null
-		}
-		if ( file.cryptoTacticalRui != null )
-		{
-			DestroyCryptoAnimatedTacticalRui()
-			file.cryptoTacticalRui = null
-		}
-	}
-                
-                                                           
-   
-                                         
-    
-                               
-                                  
-    
-   
-       
-                  
-                                                                  
-   
-                                           
-    
-                                 
-                                    
-    
-   
-       
+	DestroyPassiveRuis( player )
 }
 
                                                                    
@@ -121,61 +76,42 @@ void function OnSpectatorTargetChanged( entity observer, entity prevTarget, enti
 	if ( observer.GetTeam() != TEAM_SPECTATOR )
 		return
 
-	if ( ( !IsValid(newTarget) || !PlayerHasPassive( newTarget, ePassives.PAS_VALK ) ) && file.jetPackRui != null )
+	DestroyPassiveRuis( newTarget, IsValid(newTarget) )
+}
+
+void function DestroyPassiveRuis( entity player, bool isValidPlayer = true )
+{
+	if ( !isValidPlayer || !PlayerHasPassive( player, ePassives.PAS_VALK ) )
 	{
-		RuiDestroyIfAlive( file.jetPackRui )
-		file.jetPackRui = null
+		Valk_DestroyJetPackRui()
 	}
 
-	if ( !IsValid(newTarget) || !PlayerHasPassive( newTarget, ePassives.PAS_CRYPTO ) )
+	if ( !isValidPlayer || !PlayerHasPassive( player, ePassives.PAS_CRYPTO ) )
 	{
-		if ( file.cameraCircleStatusRui != null )
-		{
-			DestroyCameraCircleStatusRui()
-			file.cameraCircleStatusRui = null
-		}
-		if ( file.cryptoTacticalRui != null )
-		{
-			DestroyCryptoAnimatedTacticalRui()
-			file.cryptoTacticalRui = null
-		}
+		DestroyCameraCircleStatusRui()
+		DestroyCryptoAnimatedTacticalRui()
 	}
                 
-                                                                                     
-   
-                                         
-    
-                               
-                                  
-    
-   
+		if ( !isValidPlayer || !PlayerHasPassive( player, ePassives.PAS_VANTAGE ) )
+		{
+			DestroyVantageTacticalRui()
+		}
        
                   
-                                                                                          
+                                                               
    
-                                           
-    
-                                 
-                                    
-    
+                                
+                                  
    
        
 }
 
-void function DisplayValkJetMeter( entity player )
+void function CreateValkJetPackRui( entity player )
 {
-	if ( file.jetPackRui != null )
+	if ( Valk_GetJetPackRui() != null )
 		return
 
-	file.jetPackRui = CreateCockpitRui( $"ui/valk_jets_meter.rpak" )
-	RuiTrackFloat( file.jetPackRui, "chargeFrac", player, RUI_TRACK_GLIDE_METER_FRACTION )
-	RuiTrackFloat( file.jetPackRui, "bleedoutEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
-	RuiTrackFloat( file.jetPackRui, "reviveEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "reviveEndTime" ) )
-}
-
-var function GetValkJetPackRui()
-{
-	return file.jetPackRui
+	Valk_CreateJetPackRui( player )
 }
 
 void function CreateCryptoCameraCircleRui( entity player )
@@ -183,7 +119,7 @@ void function CreateCryptoCameraCircleRui( entity player )
 	if ( GetCameraCircleStatusRui() != null )
 		return
 
-	file.cameraCircleStatusRui = CreateCameraCircleStatusRui()
+	CreateCameraCircleStatusRui()
 }
 
 void function CreateCryptoTacticalRui( entity player )
@@ -191,16 +127,16 @@ void function CreateCryptoTacticalRui( entity player )
 	if ( GetCryptoAnimatedTacticalRui() != null )
 		return
 
-	file.cryptoTacticalRui = CreateCryptoAnimatedTacticalRui()
+	CreateCryptoAnimatedTacticalRui()
 }
                
-                                                       
- 
-                                       
-        
+void function CreateVantageTacticalRui( entity player )
+{
+	if ( GetVantageTacticalRui() != null )
+		return
 
-                                                              
- 
+	CreateVantageTacticalRui_Internal()
+}
       
 
                  
@@ -209,11 +145,20 @@ void function CreateCryptoTacticalRui( entity player )
                                          
         
 
-                                                                  
+                                      
+ 
+
+                                                           
+ 
+                                           
+        
+
+                                     
  
       
 
                
+                                                                                           
                                                                                                   
  
                                               

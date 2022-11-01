@@ -34,6 +34,7 @@ global function BlackMarket_OnDeathBoxMenuOpened
 
 #if SERVER || CLIENT
 global const string BLACK_MARKET_SCRIPTNAME = "black_market"
+global const string BLACK_MARKET_MOVER_SCRIPTNAME = "black_market_mover"
 global const string BLACK_MARKET_HIGHLIGHT_PROXY_SCRIPTNAME = "black_market_highlight_proxy"
 global const string BLACK_MARKET_CLOSE_CMD = "ClientCallback_CloseBlackMarket"
 const string BLACK_MARKET_OPEN_CMD = "ClientCallback_OpenBlackMarket"
@@ -455,7 +456,7 @@ void function PlacementProxyThread( entity weapon, entity player )
 	proxy.e.clientEntMinimapZOrder = MINIMAP_Z_OBJECT
 	thread MinimapObjectThread( proxy )
 
-	int proxyRadiusFx = StartParticleEffectOnEntity( proxy, GetParticleSystemIndex( BLACK_MARKET_RADIUS_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int proxyRadiusFx = StartParticleEffectOnEntity( proxy, GetParticleSystemIndex( BLACK_MARKET_RADIUS_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetControlPointVector( proxyRadiusFx, 1, <lootGrabDist, 0, 0> )
 
 	string[1] displayedHint = [""]
@@ -588,7 +589,7 @@ void function PlacementProxyThread( entity weapon, entity player )
 		                                             
 
                   
-                                            
+			                                         
         
 
                      
@@ -616,7 +617,7 @@ void function PlacementProxyThread( entity weapon, entity player )
 
 		                                        
 		 
-			                                                  
+			                                                                                 
 			                                         
 			                              
 			                                                                
@@ -639,7 +640,7 @@ void function PlacementProxyThread( entity weapon, entity player )
 		                                            
 
                      
-                                               
+		                                             
         
 
 		                                         
@@ -651,6 +652,7 @@ void function PlacementProxyThread( entity weapon, entity player )
 
 		                                                                  
 		                                                                      
+		                                                                                         
 	 
 
 	                                
@@ -721,7 +723,7 @@ void function PlacementProxyThread( entity weapon, entity player )
 
 	                                                   
 
-	                                                                                                                            
+	                                                                                                                                              
 	                                                                                          
 	                                                                                                
 	                                                                                                
@@ -765,6 +767,7 @@ void function OnPropScriptCreated( entity ent )
 		AddEntityCallback_GetUseEntOverrideText( ent, GetBlackMarketUsePromptText )
 		SetCallback_CanUseEntityCallback( ent, CanUseBlackMarket )
 		AddCallback_OnUseEntity_ClientServer( ent, OnBlackMarketUsed )
+		SetCallback_ShouldUseBlockReloadCallback( ent, BlackMarket_ShouldUseBlockReload )
 
 		thread ManageBlackMarketAmbientGeneric( ent )
 
@@ -802,8 +805,8 @@ void function BlackMarketRumbleOnReadyThread( entity ent )
 		                                                                                                                                              
 
                  
-                              
-                                                                               
+		                            
+			                                                                            
        
 
 	                                                              
@@ -812,10 +815,7 @@ void function BlackMarketRumbleOnReadyThread( entity ent )
 	                                                      
 	                                                 
 	 
-		                                      
-		                                                                                          
-		                          
-			                                             
+		                                                          
 		                         
 			                                           
 			                                                                                         
@@ -1166,7 +1166,7 @@ array<LootRef> function GetBlackMarketUseItemRefs( entity blackMarket, entity us
 #if SERVER
                                                                              
  
-	                          
+	                                                                                                                                
 		      
 
 	                                      
@@ -1178,7 +1178,7 @@ array<LootRef> function GetBlackMarketUseItemRefs( entity blackMarket, entity us
 #if SERVER
                                                                               
  
-	                          
+	                                                                                                                                
 		      
 
 	                                      
@@ -1215,7 +1215,7 @@ void function BlackMarket_OnDeathBoxMenuOpened( entity device )
 		EndSignal( player, "OnDeath" )
 
 		float lootGrabDist = GetBlackMarketNearbyLootRadius()
-		int radiusFx       = StartParticleEffectOnEntity( device, GetParticleSystemIndex( BLACK_MARKET_RADIUS_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+		int radiusFx       = StartParticleEffectOnEntity( device, GetParticleSystemIndex( BLACK_MARKET_RADIUS_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		EffectSetControlPointVector( radiusFx, 1, <lootGrabDist, 0, 0> )
 
 		OnThreadEnd( void function() : ( radiusFx ) {
@@ -1255,6 +1255,13 @@ string function GetBlackMarketUsePromptText( entity device )
 bool function CanUseBlackMarket( entity player, entity ent, int useFlags )
 {
 	return SURVIVAL_PlayerAllowedToPickup( player )
+}
+#endif
+
+#if SERVER || CLIENT
+bool function BlackMarket_ShouldUseBlockReload( entity player, entity ent )
+{
+	return false;
 }
 #endif
 

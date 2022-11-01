@@ -69,6 +69,10 @@ global enum eDamageSourceId
                                      
        
 
+                         
+                                      
+       
+
                  
                         
        
@@ -103,8 +107,11 @@ global enum eDamageSourceId
 	mp_weapon_nuke_satchel
 	mp_weapon_defender
 	mp_weapon_defender_sustained
-                      
-                         
+                               
+                           
+      
+                       
+		mp_weapon_throwingknife
        
 	mp_extreme_environment
 	mp_weapon_shotgun_pistol
@@ -179,14 +186,22 @@ global enum eDamageSourceId
 	melee_crypto_heirloom
 	mp_weapon_crypto_heirloom
 	
-                     
 		melee_valkyrie_spear
 		mp_weapon_valkyrie_spear
+
+                     
+		melee_loba_heirloom
+		mp_weapon_loba_heirloom
        
 
                      
                      
                          
+       
+
+                     
+                    
+                        
        
 
                                                 
@@ -228,6 +243,10 @@ global enum eDamageSourceId
                                     
                   
                       
+                       
+       
+             
+                        
        
                           
                              
@@ -267,6 +286,10 @@ global enum eDamageSourceId
               
                                 
        
+
+                 
+                                
+                       
 
 	mp_ability_sonic_blast
 
@@ -385,6 +408,11 @@ global enum eDamageSourceId
                     
          
        
+
+                          
+         
+       
+
 	                                      
 	          
 	        
@@ -411,6 +439,22 @@ global enum eDamageSourceId
                           
        
 
+                              
+                             
+       
+	
+                         
+                        
+       
+
+                            
+                           
+       
+
+                      
+                     
+       
+
 	mp_weapon_stun_mine
 	mp_weapon_cluster_bomb
 
@@ -433,17 +477,17 @@ global enum eDamageSourceId
 		mp_ability_castle_wall
        
                 
-                              
-                       
+		mp_ability_lockon_sniper_ult
+		mp_ability_sniper_ult
        
                  
-                      
-                        
-                     
-                          
-                              
-                      
-                        
+		mp_weapon_cryo_cloud
+		mp_weapon_grenade_cryo
+		mp_weapon_cryo_wall
+	    	mp_weapon_ferro_wall
+		mp_weapon_ferrofluid_grenade
+		mp_weapon_resin_shot
+		mp_ability_spike_strip
        
                 
                       
@@ -482,13 +526,17 @@ global enum eDamageSourceId
                           
        
 
-                                                                    
+                     
                               
-                                                                          
+                           
 
                     
                                           
                                              
+       
+
+                        
+                         
        
 
 	_count
@@ -623,7 +671,9 @@ void function DamageTypes_Init()
         
 
 		[ eDamageSourceId.mp_ability_valk_cluster_missile ] = "#DEATH_VALK_CLUSTER_MISSILE",
-
+                 
+		[ eDamageSourceId.mp_ability_sniper_ult ] = "#ABL_ULT_SNIPER_SHORT",
+        
 		            
 		[ eDamageSourceId.phase_shift ] = "#WPN_SHIFTER",
 		[ eDamageSourceId.bleedout ] = "#DEATH_BLEEDOUT",
@@ -680,14 +730,22 @@ void function DamageTypes_Init()
 		[ eDamageSourceId.melee_crypto_heirloom ] = "#DEATH_MELEE_CRYPTO_HEIRLOOM",
 		[ eDamageSourceId.mp_weapon_crypto_heirloom ] = "#DEATH_MELEE_CRYPTO_HEIRLOOM",
 		
+		[ eDamageSourceId.melee_valkyrie_spear ] = "#DEATH_MELEE_VALKYRIE_SPEAR",
+		[ eDamageSourceId.mp_weapon_valkyrie_spear] = "#DEATH_MELEE_VALKYRIE_SPEAR",
+
                       
-			[ eDamageSourceId.melee_valkyrie_spear ] = "#DEATH_MELEE_VALKYRIE_SPEAR",
-			[ eDamageSourceId.mp_weapon_valkyrie_spear] = "#DEATH_MELEE_VALKYRIE_SPEAR",
+			[ eDamageSourceId.melee_loba_heirloom ] = "#DEATH_MELEE_LOBA_HEIRLOOM",
+			[ eDamageSourceId.mp_weapon_loba_heirloom] = "#DEATH_MELEE_LOBA_HEIRLOOM",
         
 
                       
                                                                           
                                                                              
+        
+
+                      
+                                                                        
+                                                                           
         
 
 		[ eDamageSourceId.melee_rampart_wrench ] = "#DEATH_MELEE_RAMPART_WRENCH",
@@ -703,10 +761,10 @@ void function DamageTypes_Init()
 			[ eDamageSourceId.mp_ability_shield_throw ] = "#WPN_SHIELD_THROW",
         
                   
-                                                                    
-                                                              
-                                                                
-                                                              
+			[ eDamageSourceId.mp_weapon_grenade_cryo ] = "#WPN_CRYO_GRENADE",
+			[ eDamageSourceId.mp_weapon_cryo_wall ] = "#WPN_CRYO_WALL",
+			[ eDamageSourceId.mp_weapon_ferro_wall ] = "#WPN_FERRO_WALL",
+			[ eDamageSourceId.mp_ability_spike_strip ] = "#WPN_SPIKES",
         
 
                                                  

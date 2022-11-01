@@ -66,6 +66,9 @@ global function GetPingedEntForLocWaypoint
                                        
                                          
                                             
+                   
+                                                 
+      
 
                                                     
                                    
@@ -149,7 +152,7 @@ global enum eWaypoint
        
 
                        
-        
+		TRAIN,
        
 		OBJECTIVE,
 
@@ -192,7 +195,11 @@ global enum eWaypoint
        
 
                     
-		MEDBAY_STATE
+		MEDBAY_STATE,
+       
+
+                              
+                        
        
 
 		ABILITY_ECHO_LOCATOR,
@@ -237,10 +244,12 @@ global const string PLAYER_WAYPOINT_CLASSNAME = "player_waypoint"
 
 const string SIGNAL_WAYPOINT_TIMEOUT_BEGIN = "WaypointTimeoutThreadBegin"
 global const string SIGNAL_WAYPOINT_RUI_SET = "WaypointRuiSet"
+global const string SIGNAL_WAYPOINT_DESTROY = "DestroyPingWaypoints"
 
 void function PlayerWaypoints_Init()
 {
 	RegisterSignal( SIGNAL_WAYPOINT_TIMEOUT_BEGIN )
+	RegisterSignal( SIGNAL_WAYPOINT_DESTROY )
 
 	#if CLIENT
 		file.waypointCreation = {}
@@ -408,9 +417,9 @@ void function PlayerWaypoint_CreateCallback( entity wp )
 
                       
 
-                       
-                                       
-        
+		case eWaypoint.TRAIN:
+			InstanceWP_WinterExpress_Train( wp )
+			break
       
 		case eWaypoint.OBJECTIVE:
 			InstanceObjectivePing( wp )
@@ -595,6 +604,11 @@ bool function ShouldHighlightForPing( entity wp, entity pingedEnt )
 	if ( pingedEnt.IsPlayerDecoy() )
 		return false
 
+                 
+		if( pingedEnt.GetTargetName() == FERRO_WALL_SEGMENT_TARGET_NAME || pingedEnt.GetTargetName() == SPIKE_STRIP_CORE_SPIKE_NAME )
+			return false
+       
+
 	int pingType = Waypoint_GetPingTypeForWaypoint( wp )
 	switch( pingType )
 	{
@@ -604,6 +618,14 @@ bool function ShouldHighlightForPing( entity wp, entity pingedEnt )
                        
                                          
       
+                     
+                              
+      
+                
+		case ePingType.ABILITY_PIERCING_SPIKES:
+		case ePingType.ABILITY_DARK_VEIL:
+      
+
 			return false
 
 	}
@@ -1238,37 +1260,37 @@ void function InstanceWP_Button( entity wp )
       
 
                       
-                                                         
- 
-                              
+void function InstanceWP_WinterExpress_Train( entity wp )
+{
+	entity train = wp.GetParent()
 
-                                                                      
-                               
-                                                 
-                                       
-                                             
-                                               
-                                            
-                                           
-                                          
-                                                                                         
-                                                 
+	var wRui = CreateWaypointRui( $"ui/waypoint_basic_entpos.rpak", 200 )
+	SetWaypointRui_HUD( wp, wRui )
+	RuiKeepSortKeyUpdated( wRui, true, "targetPos" )
+	RuiSetFloat( wRui, "iconSize", 100.0 )
+	RuiSetFloat( wRui, "iconSizePinned", 120.0 )
+	RuiSetBool( wRui, "useInactiveScalar", false )
+	RuiSetBool( wRui, "completeADSFade", true )
+	RuiSetFloat( wRui, "fadeDistNear", 150.0 )
+	RuiSetFloat( wRui, "fadeDistFar", 600.0 )
+	RuiTrackFloat3( wRui, "playerAngles", GetLocalViewPlayer(), RUI_TRACK_CAMANGLES_FOLLOW )
+	RuiSetFloat3( wRui, "targetOffset", <0, 0, 46> )
 
-                                                                          
-                        
-                       
-                                                      
-                                             
+	var fRui = FullMap_CommonAdd( $"ui/in_world_minimap_square_simple.rpak" )
+	wp.wp.ruiFullmap = fRui
+	Fullmap_AddRui( fRui )
+	RuiSetFloat( fRui, "objectSize", FULLMAP_SIZE_SMALL )
+	RuiSetBool( fRui, "doAnnounceEffect", true )
 
-                                                                      
-                                                                      
+	RuiTrackFloat3( wRui, "targetPos", train, RUI_TRACK_OVERHEAD_FOLLOW )
+	RuiTrackFloat3( fRui, "objectPos", train, RUI_TRACK_OVERHEAD_FOLLOW )
 
-                                                                                                                   
-                                                                                                                   
+	RuiSetImage( wRui, "iconImage", $"rui/hud/gametype_icons/survival/sur_hovertank_minimap_destination_desaturated" )
+	RuiSetImage( fRui, "iconImage", $"rui/hud/gametype_icons/survival/sur_hovertank_minimap_destination_desaturated" )
 
-                                                                               
-                                                                               
- 
+	RuiTrackGameTime( wRui, "fadeOutEndTime", wp, RUI_TRACK_WAYPOINT_GAMETIME, 0 )
+	RuiTrackGameTime( fRui, "fadeOutEndTime", wp, RUI_TRACK_WAYPOINT_GAMETIME, 0 )
+}
       
 
 #endif          
@@ -2119,7 +2141,7 @@ void function InstanceLocationPing( entity wp )
 
 	RuiSetBool( rui, "additive", iconIsAdditive )
 	RuiSetFloat( rui, "iconSize", 80.0 )
-	RuiSetFloat2( rui, "iconScale", iconScale )
+	RuiSetFloat2( rui, "iconScale", iconScale  )
 	RuiSetFloat( rui, "iconSizePinned", 100.0 )
 
 	RuiSetFloat3( rui, "lineColor", lineColor )
@@ -2142,7 +2164,7 @@ void function InstanceLocationPing( entity wp )
 			{
 				RuiSetImage( rui, "animImage", $"rui/hud/unitframes/frame_status_fill" )
 				RuiSetString( rui, "topLabelText", Localize( "#REVIVE" ).toupper() )
-                   
+                                    
                                                         
       
                                                                     
@@ -2203,6 +2225,48 @@ void function InstanceLocationPing( entity wp )
 			iconScale = <0.5, 0.5, 0>
 			break
 
+                   
+                                            
+                                                                               
+                                             
+                                       
+                                             
+                                             
+                                                
+                                       
+                                             
+                       
+                      
+                                                            
+                         
+                                                                                                             
+                                             
+    
+
+                                                               
+        
+
+                                     
+                                       
+                                             
+                                             
+                                                
+                                                    
+                                                  
+                                             
+                       
+                      
+                                                            
+                         
+                                                                                                             
+                                             
+                                                      
+    
+
+                                                               
+        
+      
+
 		case ePingType.HOLOSPRAY_LIKE:
 			RuiSetFloat( rui, "iconSize", 56.0 )
 			RuiSetFloat( rui, "iconSizePinned", 72.0 )
@@ -2213,10 +2277,10 @@ void function InstanceLocationPing( entity wp )
 			break
 
                       
-                         
-                                       
-                                             
-        
+		case ePingType.STATION:
+			RuiSetFloat( rui, "iconSize", 56.0 )
+			RuiSetFloat( rui, "iconSizePinned", 72.0 )
+			break
       
 
                         
@@ -2752,6 +2816,13 @@ array<entity> function Waypoints_GetActiveLootPings()
 		                              
 		                             
 		                                       
+                        
+                                            
+                                               
+      
+                   
+                                     
+        
 		                                    
 			            
 
@@ -2823,6 +2894,13 @@ array<entity> function Waypoints_GetActiveLootPings()
 		                                  
 		                                  
 		                                
+                     
+                              
+      
+                   
+                                     
+                                            
+      
 			           
 	 
 
@@ -2865,6 +2943,11 @@ array<entity> function Waypoints_GetActiveLootPings()
 			 
 				                                        
 				 
+                        
+                                                                                                                                                              
+                                                                                          
+                                                                                                  
+           
 					                      
 					        
 				 
@@ -2911,6 +2994,17 @@ array<entity> function Waypoints_GetActiveLootPings()
 	                                                    
 		           
 
+                         
+                                                                                     
+                                                                                                               
+             
+       
+
+                  
+                                                 
+             
+       
+
 	            
  
 
@@ -2925,6 +3019,10 @@ array<entity> function Waypoints_GetActiveLootPings()
 		 
 			                              
 			                            
+                     
+                                      
+                                             
+        
 				        
 		 
 		                      
@@ -2954,7 +3052,7 @@ array<entity> function Waypoints_GetActiveLootPings()
 			             
 
 		                                    
-			                                                                                                                            
+			                                                                                                                           
 
 		                              
                            
@@ -2977,6 +3075,7 @@ array<entity> function Waypoints_GetActiveLootPings()
 		                                
 		                                   
 		                           
+		                         
 		                            
 		                                
 			           
@@ -2986,19 +3085,27 @@ array<entity> function Waypoints_GetActiveLootPings()
 		                           
 		                                 
 		                                                                            
+                   
+                                     
+                                            
+      
 		                                      
 		                                
+                        
+                                            
+                                               
+      
 			              
 
 		                            
 			          
 
                       
-                                 
-                 
+		                               
+			              
 
-                         
-                 
+		                       
+			              
       
 
                        
@@ -3012,7 +3119,6 @@ array<entity> function Waypoints_GetActiveLootPings()
                    
 		                            
 		                           
-		                                    
 			           
       
 
@@ -3052,13 +3158,16 @@ array<entity> function Waypoints_GetActiveLootPings()
 			                               
 			                        
 			                           
+                     
+                               
+      
 				           
 		 
 	 
 	            
  
 
-                                                                                                                                                                                
+                                                                                                                                                                                                        
  
 	                                                        
 		                      
@@ -3129,6 +3238,7 @@ array<entity> function Waypoints_GetActiveLootPings()
 			                                
 			                                   
 			                           
+			                         
 			                                
 			                            
                         
@@ -3137,18 +3247,30 @@ array<entity> function Waypoints_GetActiveLootPings()
 			                                       
 				                             
 				     
-
+                    
+                                      
+         
 			                        
 			                            
 			                     
 				                                
 				     
+                  
+			                                 
+			                                       
+                        
+                                             
+                                                
+      
+				                                                     
+         
 
 			        
 				                        
 		 
 	                
-	                                                                                       
+
+	                                                                                                       
 
 	                                                                
 	                                                   
@@ -3251,6 +3373,20 @@ array<entity> function Waypoints_GetActiveLootPings()
 	                    
  
 
+                   
+                                                                                                                  
+ 
+                                                                                                                                                                                        
+                                                 
+                                                                                         
+                                                    
+                                       
+                                             
+                                                                          
+                           
+ 
+      
+
                                                                               
  
 	                            
@@ -3278,6 +3414,23 @@ array<entity> function Waypoints_GetActiveLootPings()
 	   
 
 	             
+ 
+
+                                                                          
+ 
+	                                       
+		                     
+			            
+	   
+
+	                        
+		      
+
+	                            
+	                                 
+	                                             
+
+ 	             
  
 
                                                                                                                                             
@@ -3616,17 +3769,8 @@ void function TogglePlayerWaypointMute( entity player )
 	                                                                   
 
 	                                                                                                                
-	                                                                             
-	                   
-	                              
-	 
-		                         
-	 
-	    
-	 
-		                                                                                                                                             
-	 
-
+	                                                                         
+	
 	                  
 	                                 
 	                                            
@@ -3654,3 +3798,14 @@ void function TogglePlayerWaypointMute( entity player )
  
                               
 #endif              
+
+#if CLIENT
+void function SetMaxDrawDistanceOnRuiAfterDelay( var rui, entity wp, float delay, float maxDrawDistance )
+{
+	EndSignal( wp, "OnDestroy" )
+
+	wait delay
+
+	RuiSetFloat( rui, "maxDrawDistance", maxDrawDistance * METERS_TO_INCHES )
+}
+#endif

@@ -3,6 +3,12 @@ global function PlayerObjects_Init
                                         
 #endif
 
+global enum eEmpDestroyType
+{
+	EMP_DESTROY_DISSOLVE,
+	EMP_DESTROY_DAMAGE
+}
+
                                                                                       
 
 void function PlayerObjects_Init()
@@ -11,7 +17,7 @@ void function PlayerObjects_Init()
 
 #if SERVER
                                                                                                              
-		                                                                                                                   
+		                                                                                                                                                                           
  
 	                       
 	 
@@ -28,9 +34,12 @@ void function PlayerObjects_Init()
 	                  
 		                            
 
+	                   
+		                                          
+
                  
-                       
-                                      
+	                      
+		                                    
        
 
 	                                   

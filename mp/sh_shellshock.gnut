@@ -149,7 +149,7 @@ void function ShellShock_StartVisualEffect( entity ent, int statusEffect, bool a
 	entity viewPlayer = GetLocalViewPlayer()
 	if ( !viewPlayer.IsTitan() )
 	{
-		int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, COCKPIT_SHELLSHOCK_SCREEN_FX, FX_PATTACH_ABSORIGIN_FOLLOW, -1, viewPlayer.EyePosition(), <0,0,0> )
+		int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, COCKPIT_SHELLSHOCK_SCREEN_FX, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, viewPlayer.EyePosition(), <0,0,0> )
 		EffectSetIsWithCockpit( fxHandle, true )
 
 		EmitSoundOnEntity( ent, "gruntcooper_wounded_loop_1p" )

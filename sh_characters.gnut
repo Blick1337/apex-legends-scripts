@@ -2,6 +2,7 @@ global function ShCharacters_LevelInit
 
 global function Loadout_Character
 global function GetAllCharacters
+global function GetAllCharacterGUIDStringsForStats
 global function Character_IsCharacterOwnedByPlayer
 global function CharacterClass_GetSetFile
 global function CharacterClass_GetShippingStatus
@@ -25,6 +26,17 @@ global function CharacterClass_GetCharacterUnlockedStoreIcon
 global function CharacterClass_GetCharacterRoleImage
                     
 global function CharacterClass_GetCharacterRolePerkDesc
+     
+                                                       
+                                      
+                                                          
+                                                       
+                                                       
+                                                       
+                                           
+                                              
+                                          
+                                           
       
 global function CharacterClass_GetReadyUpVoicelineEventList
 global function CharacterClass_IsAvailable
@@ -43,6 +55,11 @@ global function CharacterClass_AllowDuplicateCharacterPicksInTeam
       
 global function CharacterClass_ConsiderLegHitBoxAsTorso
 global function CharacterClass_GetMenuZoomOffset
+global function WIP_CharacterClass_ShouldTrackStats
+
+global function ItemFlavor_GetCharacterRef
+global function IsValidItemFlavorCharacterRef
+global function GetItemFlavorByCharacterRef
 
 #if SERVER
                                                           
@@ -78,9 +95,9 @@ global enum eCharacterClassRole
                     
              
        
+	RECON,
 	DEFENSE,
 	SUPPORT,
-	RECON,
 	_COUNT,
 }
 
@@ -94,6 +111,80 @@ const table<int, asset> CHARACTER_ROLE_ICONS = {
 	[eCharacterClassRole.SUPPORT]   = $"rui/menu/character_select/utility/util_role_support",
 	[eCharacterClassRole.RECON]     = $"rui/menu/character_select/utility/util_role_recon",
 }
+
+                   
+                                                    
+                                        
+                                                                                      
+                                                                                          
+                                                                                      
+                                                                                      
+                                                                                    
+ 
+
+                                                        
+                                       
+                                                                
+                                                                      
+                                                                    
+                                                                
+                                                                   
+ 
+
+                                                        
+                                       
+                                                                 
+                                                                    
+                                                                    
+                                                                 
+                                                               
+ 
+
+                                                        
+                                       
+                                                                 
+                                                                    
+                                                                    
+                                                                 
+                                                               
+ 
+
+                                                        
+                                       
+                                                                 
+                                                                    
+                                                                    
+                                                                 
+                                                               
+ 
+
+                                                  
+                                       
+                                                    
+                                                       
+                                                       
+                                                    
+                                                  
+ 
+
+                                                     
+                                       
+                                                             
+                                                                
+                                                                
+                                                             
+                                                           
+ 
+
+                                                  
+                                            
+                                                          
+                                                        
+                                                         
+                                                         
+                                                        
+ 
+      
 
 global struct CharacterMenuLightData
 {
@@ -159,7 +250,8 @@ struct CharacterDamageStruct
 struct FileStruct_LifetimeLevel
 {
 	LoadoutEntry& characterSelectionSlot
-
+	array< string > charactersWithStatsGUIDStrings                                                                                                                   
+	table<string, ItemFlavor> characterRefMap
 	table<ItemFlavor, int> characterFlavorSortOrdinalMap
 }
 FileStruct_LifetimeLevel& fileLevel
@@ -207,7 +299,7 @@ void function ShCharacters_LevelInit()
 #if SERVER || CLIENT || UI
 void function OnRegisterRootItemFlavors()
 {
-	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_selection" )
+	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_selection", eLoadoutEntryClass.ACCOUNT )
 	entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.CHARACTER
 	entry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
 	entry.networkVarName = "CharacterSelection"
@@ -224,6 +316,10 @@ void function OnRegisterRootItemFlavors()
 			return true                      
 		#endif
 	}
+	#if SERVER
+		                                                                                                           
+			                                                                                                 
+	#endif
 	fileLevel.characterSelectionSlot = entry
 
 	array<ItemFlavor> characterList = []
@@ -254,7 +350,7 @@ void function OnRegisterRootItemFlavors()
 
 	foreach ( character in characterList )
 	{
-		string characterRef = ItemFlavor_GetHumanReadableRef( character )
+		string characterRef = ItemFlavor_GetCharacterRef( character )
 
 		CharacterDamageStruct data
 		data.damageScale = GetCurrentPlaylistVarFloat( "damage_scale_" + characterRef.tolower(), GetGlobalSettingsFloat( ItemFlavor_GetAsset( character ), "damageScale" ) )
@@ -263,6 +359,11 @@ void function OnRegisterRootItemFlavors()
 		data.damageSlow_easeOut = GetCurrentPlaylistVarFloat( "damage_slowdown_easeOut_" +  characterRef.tolower(), GetGlobalSettingsFloat( ItemFlavor_GetAsset( character ), "damageSlowdown_easeOut" ) )
 		data.damageSlow_debounce = GetCurrentPlaylistVarFloat( "damage_slowdown_debounce_" +  characterRef.tolower(), GetGlobalSettingsFloat( ItemFlavor_GetAsset( character ), "damageSlowdown_debounce" ) )
 		file.characterDamageData[ characterRef ] <- data
+
+		if ( WIP_CharacterClass_ShouldTrackStats( character ) == false )
+			continue
+
+		fileLevel.charactersWithStatsGUIDStrings.append( ItemFlavor_GetGUIDString( character ) )
 	}
 }
 #endif
@@ -271,6 +372,10 @@ void function OnRegisterRootItemFlavors()
 #if SERVER || CLIENT || UI
 void function OnItemFlavorRegistered_Character( ItemFlavor character )
 {
+	table<string, string> ornull tmp = character.metaData
+	expect table<string, string>(tmp)
+	fileLevel.characterRefMap[ tmp[ "character_ref" ] ] <- character
+
 	#if SERVER || CLIENT
 		PrecacheModel( GetGlobalSettingsAsset( CharacterClass_GetSetFile( character ), "bodyModel" ) )
 		PrecacheModel( GetGlobalSettingsAsset( CharacterClass_GetSetFile( character ), "armsModel" ) )
@@ -281,7 +386,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor character )
 	#endif
 
                     
-                                                                    
+                                                                
 
                                                                                   
                                                   
@@ -306,24 +411,61 @@ void function OnItemFlavorRegistered_Character( ItemFlavor character )
 }
 #endif
 
+#if SERVER || CLIENT || UI
+bool function IsValidItemFlavorCharacterRef( string ref, int validationBehavior = eValidation.DONT_ASSERT )
+{
+	bool good = (ref in fileLevel.characterRefMap)
+
+	Assert( good || validationBehavior != eValidation.ASSERT, "Unknown item flavor character ref: " + ref )
+	return good
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+ItemFlavor function GetItemFlavorByCharacterRef( string ref )
+{
+	Assert( IsValidItemFlavorCharacterRef( ref, eValidation.ASSERT ) )
+
+	return fileLevel.characterRefMap[ ref ]
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+string function ItemFlavor_GetCharacterRef( ItemFlavor flavor )
+{
+	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
+	Assert( flavor.typeIndex == eItemType.character )
+	Assert( flavor.metaData != null )
+
+	table<string, string> ornull tmp = flavor.metaData
+	expect table<string, string>(tmp)
+
+	return tmp[ "character_ref" ]
+}
+#endif
+
 
 #if SERVER && DEV
                                       
  
-	                                                      
+	                                                                                                                                    
 	                                   
 	                                       
 	                                                     
 	 
 		                                                                
-		                                                                          
+			        
+
+		                                                                
+		                                                                      
 	 
-	                                                                                                                                                                
+	                                                                                                                                                                                      
 
+	                                                                                                                                                                      
 	                                                           
-
 	                                                                                         
-
 	                           
  
 #endif
@@ -344,6 +486,11 @@ LoadoutEntry function Loadout_Character()
 array<ItemFlavor> function GetAllCharacters()
 {
 	return GetAllItemFlavorsOfType( eItemType.character )
+}
+
+array<string> function GetAllCharacterGUIDStringsForStats()
+{
+	return fileLevel.charactersWithStatsGUIDStrings
 }
 
 bool function CharacterClass_AllowDuplicateCharacterPicksInTeam()
@@ -538,6 +685,42 @@ asset function CharacterClass_GetGalleryPortraitBackground( ItemFlavor flavor )
 	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "galleryPortraitBackground" )
 }
 
+                   
+                                                                            
+ 
+                                                              
+
+         
+
+                                            
+                                             
+     
+                                                                                              
+
+               
+  
+                                                              
+  
+                    
+  
+                                                                 
+  
+                    
+  
+                                                            
+  
+                    
+  
+                                                              
+  
+                    
+  
+                                                              
+  
+
+                                                             
+ 
+      
 
 asset function CharacterClass_GetCharacterSelectPortrait( ItemFlavor flavor )
 {
@@ -568,7 +751,12 @@ asset function CharacterClass_GetCharacterRoleImage( ItemFlavor flavor )
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
 
 	int role = CharacterClass_GetRole( flavor )
+
+                   
+                                      
+     
 	return CHARACTER_ROLE_ICONS[role]
+      
 }
 
                     
@@ -579,6 +767,65 @@ string function CharacterClass_GetCharacterRolePerkDesc( ItemFlavor flavor )
 	int role = CharacterClass_GetRole( flavor )
 	return file.characterRolePerkDesc[role]
 }
+     
+                                                                                                    
+                                                                                                                     
+                                                                               
+ 
+                                                              
+
+                                            
+                                         
+ 
+
+                                                                   
+ 
+                                              
+
+                                         
+ 
+
+                                                                   
+ 
+                                              
+
+                                         
+ 
+
+                                                                   
+ 
+                                              
+
+                                         
+ 
+
+                                                       
+ 
+                                        
+
+                                   
+ 
+
+                                                          
+ 
+                                           
+
+                                      
+ 
+
+                                                       
+ 
+                                        
+
+                                   
+ 
+
+                                                     
+ 
+                                           
+
+                                      
+ 
       
 
 array<string> function CharacterClass_GetReadyUpVoicelineEventList( ItemFlavor flavor )
@@ -614,14 +861,14 @@ bool function CharacterClass_IsAvailable( EHI playerEHI, ItemFlavor desiredChara
 #if SERVER
                                                                
  
-	                                                              
+	                                                          
 	                                                                                  
  
 #endif
 
 float function CharacterClass_GetDamageSlowAmount( ItemFlavor flavor )
 {
-	string characterRef = ItemFlavor_GetHumanReadableRef( flavor )
+	string characterRef = ItemFlavor_GetCharacterRef( flavor )
 	float damageScale = file.characterDamageData[ characterRef ].damageSlow_amount
 
 	return damageScale
@@ -629,7 +876,7 @@ float function CharacterClass_GetDamageSlowAmount( ItemFlavor flavor )
 
 float function CharacterClass_GetDamageSlowDuration( ItemFlavor flavor )
 {
-	string characterRef = ItemFlavor_GetHumanReadableRef( flavor )
+	string characterRef = ItemFlavor_GetCharacterRef( flavor )
 	float duration = file.characterDamageData[ characterRef ].damageSlow_duration
 
 	return duration
@@ -637,7 +884,7 @@ float function CharacterClass_GetDamageSlowDuration( ItemFlavor flavor )
 
 float function CharacterClass_GetDamageSlowEaseOut( ItemFlavor flavor )
 {
-	string characterRef = ItemFlavor_GetHumanReadableRef( flavor )
+	string characterRef = ItemFlavor_GetCharacterRef( flavor )
 	float easeOut = file.characterDamageData[ characterRef ].damageSlow_easeOut
 
 	return easeOut
@@ -645,7 +892,7 @@ float function CharacterClass_GetDamageSlowEaseOut( ItemFlavor flavor )
 
 float function CharacterClass_GetDamageSlowDebounce( ItemFlavor flavor )
 {
-	string characterRef = ItemFlavor_GetHumanReadableRef( flavor )
+	string characterRef = ItemFlavor_GetCharacterRef( flavor )
 	float debounce = file.characterDamageData[ characterRef ].damageSlow_debounce
 
 	return debounce
@@ -653,7 +900,7 @@ float function CharacterClass_GetDamageSlowDebounce( ItemFlavor flavor )
 
 float function CharacterClass_GetDamageScale( ItemFlavor flavor )
 {
-	string characterRef = ItemFlavor_GetHumanReadableRef( flavor )
+	string characterRef = ItemFlavor_GetCharacterRef( flavor )
 	float damageScale = file.characterDamageData[ characterRef ].damageScale
 
 	return damageScale
@@ -662,7 +909,7 @@ float function CharacterClass_GetDamageScale( ItemFlavor flavor )
                    
                                                                           
  
-                                                               
+                                                           
                                                                                                                    
 
                       
@@ -675,13 +922,13 @@ void function InitLegHitBoxOverrides( ItemFlavor character )
 {
 	                                                        
 	{
-		string characterRef = ItemFlavor_GetHumanReadableRef( character )
+		string characterRef = ItemFlavor_GetCharacterRef( character )
 		string legHitBoxOverrideString = GetCurrentPlaylistVarString( "leg_hitbox_override_" + characterRef.tolower(), "" )
 		if ( legHitBoxOverrideString == "" )
 			return
 
 		legHitBoxOverrides[character] <- []
-		array<string> hitBoxStrings = split( legHitBoxOverrideString, " " )
+		array<string> hitBoxStrings = split( legHitBoxOverrideString, WHITESPACE_CHARACTERS )
 		foreach ( hitBoxString in hitBoxStrings )
 		{
 			int hitBoxID = hitBoxString.tointeger()
@@ -715,7 +962,7 @@ vector function CharacterClass_GetMenuZoomOffset( ItemFlavor flavor )
 	                                                    
 	 
 		                                                                                           
-			                                                            
+			                                                        
 	 
 	              
  
@@ -734,6 +981,9 @@ vector function CharacterClass_GetMenuZoomOffset( ItemFlavor flavor )
 	 
 	                                                    
 	 
+		                                                                 
+			        
+
 		                                                                              
 		                                                                                                             
 	 
@@ -750,7 +1000,7 @@ bool function IsCharacterGRXUnlockedForLoadoutSlot( EHI playerEHI, ItemFlavor it
 		case eTristate.FALSE:
 			return false
 		default:
-			return Character_IsCharacterOwnedByPlayer( itemFlavor, FromEHI( playerEHI ) )
+			return GetCurrentPlaylistVarBool( "all_characters_unlocked", false ) || Character_IsCharacterOwnedByPlayer( itemFlavor, FromEHI( playerEHI ) )
 	}
 	unreachable
 }
@@ -791,19 +1041,15 @@ array<ItemFlavor> function GetCharacterButtonOrder( array<ItemFlavor> allCharact
 	{
 		ItemFlavor character = allCharacters[i]
 		int index            = CharacterClass_GetMenuButtonIndex( character )
-		Assert( index >= -1 && index < totalButtons, "Invalid characterMenuButtonIndex value for character " + ItemFlavor_GetHumanReadableRef( character ) )
+		Assert( index >= -1 && index < totalButtons, "Invalid characterMenuButtonIndex value for character " + string(ItemFlavor_GetAsset( character )) )
 	}
 
 	array<ItemFlavor> sortedCharacters = clone allCharacters
-	sortedCharacters.sort( SortByMenuButtonIndex )
-
-	                     
-	                                        
-	  	                                                     
-	  
-	                    
-	                                           
-	  	                                                     
+                    
+                                                 
+      
+		sortedCharacters.sort( SortByMenuButtonIndex )
+       
 
 	return sortedCharacters
 }
@@ -829,6 +1075,39 @@ int function SortByMenuButtonIndex( ItemFlavor a, ItemFlavor b )
 	return 0
 }
 
+                   
+                                                                 
+ 
+                                                    
+                                                    
+                                         
+                                         
+
+                      
+           
+
+                      
+          
+
+                      
+  
+                                     
+           
+
+                                     
+            
+
+                        
+           
+
+                        
+            
+  
+
+         
+ 
+      
+
 #if SERVER || CLIENT
 int function GetPlayerSettingBaseHealth( entity player )
 {
@@ -841,6 +1120,15 @@ int function GetPlayerSettingBaseShield( entity player )
 }
 #endif
 
+bool function WIP_CharacterClass_ShouldTrackStats( ItemFlavor character )
+{
+	Assert( ItemFlavor_GetType( character ) == eItemType.character )
+
+	if ( CharacterClass_GetIsShippingCharacter( character ) )
+		return true
+
+	return GetGlobalSettingsBool( ItemFlavor_GetAsset( character ), "shouldTrackStatsInDev" )
+}
                    
                    
                    

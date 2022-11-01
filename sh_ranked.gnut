@@ -5,6 +5,7 @@ global function GetCurrentRankedDivisionFromScore
 global function GetCurrentRankedDivisions
 global function GetNextRankedDivisionFromScore
 global function GetPlayerRankScore
+global function GetPrevSeasonPeakPlayerRankScore
 global function IsRankedPersistenceValid
 global function IsRankedInSeason
 global function GetRankedPersistenceData
@@ -20,12 +21,14 @@ global function Ranked_GetPointsForKillsPlacement
 global function Ranked_GetRankedDivisionDataForTier
 global function Ranked_GetNextTierData
 global function Ranked_GetLadderPosition
+global function Ranked_GetPeakLadderPositionPrevSeason
 global function GetDemotionProtectionBuffer
 
 global function Ranked_GetHistoricalRankScore
 global function Ranked_GetHistoricalFirstSplitRankScore
 global function Ranked_GetHistoricalRankedDivisionFromScore
 global function Ranked_GetHighestHistoricalRankedTierData                 
+global function Ranked_GetHistoricalRankedDivisionFromScoreAndLadderPosition
 global function Ranked_GetHistoricalLadderPosition
 global function Ranked_GetHistoricalLadderOnlyDivision
 global function Ranked_GetNewDivisionForNewSeasonReset
@@ -36,6 +39,9 @@ global function Ranked_UpdateEHIRankScore
 global function Ranked_UpdateEHIRankedLadderPosition
 global function Ranked_GetNumPlayersOnLadder
 
+global function Ranked_UpdateEHIRankScorePrevSeason
+global function Ranked_UpdateEHIRankedLadderPositionPrevSeason
+
 global function Ranked_GetStryderLadderNameForLatestRankedPeriod
 
 global function SharedRanked_CompareDivision
@@ -44,6 +50,7 @@ global function SharedRanked_GetNumPlayerOnLaddersOverridePlaylistVar
 
 #if CLIENT || UI
 global function PopulateRuiWithRankedBadgeDetails
+global function PopulateRuiWithPreviousSeasonRankedBadgeDetails
 global function CreateNestedRankedRui
 global function SharedRanked_FillInRuiEmblemText
 #endif
@@ -53,6 +60,7 @@ global function IsRankedGame
 global function Ranked_IsPlayerAbandoning
 global function SharedRanked_DidPlayerEverHaveAFullTeam
 global function SharedRanked_GetAbandonPenaltyLength
+
 #endif
 
 #if SERVER
@@ -84,6 +92,7 @@ global function SharedRanked_GetAbandonPenaltyLength
                                                                 
                                                  
 
+                                                         
 #endif
 
 #if SERVER && DEV
@@ -108,6 +117,8 @@ global function DEV_ForceClientError
 
 #if CLIENT
 global function ShRanked_RegisterNetworkFunctions
+global function ServerToClient_Ranked_UpdatePlayerPrevRankedScore
+global function ServerToClient_Ranked_UpdatePlayerPrevLadderPos
 #endif
 
 #if UI
@@ -125,9 +136,11 @@ global function Ranked_HasBeenInitialized
 global function ServerToUI_Ranked_NotifyRankedPeriodScoreChanged
 global function Ranked_ConstructSingleRankBadgeForStatsCard
 global function Ranked_ConstructDoubleRankBadgeForStatsCard
+global function GetRankedDivisionData
+global function GetRankEmblemText
 #endif
 
-global const SHARED_RANKED_LEVEL_REQUIREMENT = (10 - 1)                                                                                                      
+global const SHARED_RANKED_LEVEL_REQUIREMENT = (20 - 1)                                                                                                      
 global const RANKED_MAX_KILL_SCORE = 6
 
 global const SHARED_RANKED_NUM_ABANDON_FORGIVENESS_GAMES = 3
@@ -167,15 +180,17 @@ global const int MASTER_PLUS_SCALING_RP_INTERVAL = 1000
 const int MASTER_PLUS_SCALING_RP_MAX = 170
 const int MASTER_PLUS_TIER_INDEX = 6
 
+const string RANKED_RECHECK_SEASONS_STARTING_WITH = "SAID01091892544"                                                             
+
                                          
 const int RANKED_RP_TIER_MINUS_4 = 0
 const int RANKED_RP_TIER_MINUS_3 = 3
 const int RANKED_RP_TIER_MINUS_2 = 7
 const int RANKED_RP_TIER_MINUS_1 = 10
 const int RANKED_RP_TIER_EQUAL   = 10
-const int RANKED_RP_TIER_PLUS_1  = 10
-const int RANKED_RP_TIER_PLUS_2  = 15
-const int RANKED_RP_TIER_PLUS_3  = 20
+const int RANKED_RP_TIER_PLUS_1  = 15
+const int RANKED_RP_TIER_PLUS_2  = 20
+const int RANKED_RP_TIER_PLUS_3  = 25
 
 global enum emblemDisplayMode                                            
 {
@@ -421,6 +436,7 @@ void function Sh_Ranked_Init()
 	#if SERVER
 		                                              
 		                                                         
+		                                                                     
 		                                                               
 		                                                                       
 		                                                              
@@ -432,9 +448,21 @@ void function Sh_Ranked_Init()
 
 		                
 		 
-			                                                                                                                
-			                                    
-			                                                                                     
+			                                                                          
+			                                                                                                         
+			 
+				                                                                  
+				                                                                                                                                                                                 
+					                   
+
+				                                                            
+					                   
+
+				                                                                     
+					                  
+
+				                                                                                  
+			 
 		 
 
 		       
@@ -450,6 +478,9 @@ void function Sh_Ranked_Init()
 		Remote_RegisterServerFunction( "ClientCallback_rankedCurrentPeriodRPAdjusted" )
 
 		Remote_RegisterUIFunction( "ServerToUI_Ranked_NotifyRankedPeriodScoreChanged" )                                                                                  
+
+		Remote_RegisterClientFunction ( "ServerToClient_Ranked_UpdatePlayerPrevRankedScore" , "entity", "int", -1, INT_MAX )                    
+		Remote_RegisterClientFunction ( "ServerToClient_Ranked_UpdatePlayerPrevLadderPos" , "entity", "int", -1, INT_MAX )                    
 
 		if ( !IsRankedGame() )
 			return
@@ -720,7 +751,7 @@ int function Ranked_GetNumPlayersOnLadder()
 
 string function SharedRanked_GetNumPlayerOnLaddersOverridePlaylistVar( ItemFlavor rankedPeriod )
 {
-	return ItemFlavor_GetHumanReadableRef( rankedPeriod ) + "_num_players_on_ladder"
+	return ItemFlavor_GetCalEventRef( rankedPeriod ) + "_num_players_on_ladder"
 }
 
 
@@ -745,6 +776,20 @@ SharedRankedTierData function Ranked_GetHighestHistoricalTierAcrossSplitsForPlay
 }
 
 
+int function Ranked_GetHistoricalRankScoreAcrossSplitsForPlayer ( entity player, ItemFlavor rankedPeriod )
+{
+	Assert( SharedRankedPeriod_HasSplits( rankedPeriod ) )
+	Assert( GetActiveRankedPeriodByType( GetUnixTimestamp(), eItemType.calevent_rankedperiod ) != rankedPeriod )
+
+	string rankedPeriodGUID = ItemFlavor_GetGUIDString( rankedPeriod )
+
+	int firstSplitRankedScore    = Ranked_GetHistoricalFirstSplitRankScore( player, rankedPeriodGUID, true )
+	int secondSplitRankedScore   = Ranked_GetHistoricalRankScore ( player, rankedPeriodGUID, true )
+
+	return maxint ( firstSplitRankedScore , secondSplitRankedScore )
+}
+
+
 bool function Ranked_NeedToCheckWithStryderForEndRankedSplitOrPeriod( entity player, string rankedPeriodGUID )
 {
 	if ( !GetCurrentPlaylistVarBool( "ranked_end_series_stryder_check", true ) )
@@ -755,7 +800,6 @@ bool function Ranked_NeedToCheckWithStryderForEndRankedSplitOrPeriod( entity pla
 		return false
 
 	return true
-
 }
 
 
@@ -795,7 +839,7 @@ string function Ranked_GetStryderLadderNameForLatestRankedPeriod()
 			break
 
 		default:
-			baseLadderName = ItemFlavor_GetHumanReadableRef( latestPeriod )
+			baseLadderName = ItemFlavor_GetCalEventRef( latestPeriod )
 			break
 	}
 
@@ -839,7 +883,7 @@ string function Ranked_GetStryderLadderNameForHistoricalRankedPeriod( ItemFlavor
 			break
 
 		default:
-			baseLadderName = ItemFlavor_GetHumanReadableRef( rankedPeriod )
+			baseLadderName = ItemFlavor_GetCalEventRef( rankedPeriod )
 			break
 	}
 
@@ -893,6 +937,31 @@ void function ShRanked_RegisterNetworkFunctions()
 	RegisterNetworkedVariableChangeCallback_int( "nv_currentRankedScore", OnRankedScoreChanged )
 	RegisterNetworkedVariableChangeCallback_int( "nv_currentRankedLadderPosition", OnRankedLadderPositionChanged )
 }
+
+void function ServerToClient_Ranked_UpdatePlayerPrevRankedScore ( entity player, int score )
+{
+	if ( IsLobby() )
+		return
+
+	if ( score == SHARED_RANKED_INVALID_RANK_SCORE )
+		return
+
+	EHI playerEHI = ToEHI( player )
+	Ranked_UpdateEHIRankScorePrevSeason( playerEHI, score )
+}
+
+void function ServerToClient_Ranked_UpdatePlayerPrevLadderPos ( entity player, int pos )
+{
+	if ( IsLobby() )
+		return
+
+	if ( pos == SHARED_RANKED_INVALID_LADDER_POSITION )
+		return
+
+	EHI playerEHI = ToEHI( player )
+	Ranked_UpdateEHIRankedLadderPositionPrevSeason( playerEHI, pos )
+}
+
 #endif
 
 
@@ -1719,6 +1788,82 @@ int function GetPlayerRankScore( entity player )
 	unreachable
 }
 
+                                                                                               
+int function GetPrevSeasonPeakPlayerRankScore( entity player )
+{
+#if UI
+	if ( !IsFullyConnected() )
+		return 0
+#endif
+
+#if CLIENT
+	if ( !IsConnected() )
+		return 0
+#endif
+
+	#if SERVER
+		              
+		                                                                                                                                       
+		                                                                                                      
+
+
+		                                                           
+		 
+			                                                                                           
+		 
+		    
+		 
+			                                                                                  
+			                                                                               
+		 
+
+
+		                  
+			        
+
+		            
+	#endif
+
+	#if CLIENT
+		Assert( !IsLobby() )
+		EHI playerEHI = ToEHI( player )
+		return GetEHIScriptStruct( playerEHI ).rankScorePrevSeason
+	#endif
+
+	#if UI
+		if ( !IsLobby() )
+		{
+			EHI playerEHI = ToEHI( player )
+			return GetEHIScriptStruct( playerEHI ).rankScorePrevSeason
+		}
+		else
+		{
+			Assert( player == GetLocalClientPlayer() )
+			int score = -1
+			ItemFlavor latestRankedPeriod = expect ItemFlavor ( GetActiveRankedPeriodByType( GetUnixTimestamp(), eItemType.calevent_rankedperiod ))
+			ItemFlavor previousRankedPeriod = expect ItemFlavor ( GetPrecedingRankedPeriod( latestRankedPeriod ) )
+
+			if ( SharedRankedPeriod_HasSplits( previousRankedPeriod ) )
+			{
+				score = Ranked_GetHistoricalRankScoreAcrossSplitsForPlayer ( player, previousRankedPeriod )
+			}
+			else
+			{
+				string previousRankedPeriodRef  = ItemFlavor_GetGUIDString( previousRankedPeriod )
+				score = Ranked_GetHistoricalRankScore ( player, previousRankedPeriodRef, true )
+			}
+
+			if ( score == -1 )
+				return 0
+
+			return score
+		}
+	#endif
+
+	unreachable
+}
+
+
 
 #if SERVER || CLIENT
 bool function IsRankedGame()
@@ -1768,6 +1913,7 @@ bool function SharedRanked_DidPlayerEverHaveAFullTeam( entity player )
 #endif
 
 #if SERVER || CLIENT
+
 int function SharedRanked_GetAbandonPenaltyLength( entity player )
 {
 	if( !IsValid( player ) )
@@ -2207,7 +2353,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                                                                                                   
 	                                                                                
 
-	                                                                                                                          
+	                                                                                                                       
 
 	                                                           
  
@@ -2217,13 +2363,13 @@ int function GetDemotionProtectionBuffer ( entity player )
  
 	                                                                                                                   
 	                                                                                
-	                                                                                                                          
+	                                                                                                                       
 
 
 	                                                                                                        
 	                                                                            
 
-	                                                                                                                      
+	                                                                                                                   
 
 	                                                            
  
@@ -2941,10 +3087,12 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                                                                                                           
 	                                                    
 	 
+		                                                                                                      
+		                                                                
+			      
+
 		                                                           
 
-		                                                                                                      
-		                                                      
 		                                                    
 
 		                                                                   
@@ -2955,21 +3103,21 @@ int function GetDemotionProtectionBuffer ( entity player )
 		                                                                                                                      
 		                                                                   
 
-		            
+		                    
 		                                                   
 		 
 			                                                                                                        
 			              
 				                                                                
 		 
+		                                                                                                              
 		                                                                                                                
 
-		                       
-		 
-			                                                                         
-			                                                                                                      
-			                                                                                                                           
-		 
+		                                                                        
+		                                                                         
+		                                                                                                    
+		                                                                                                                                
+		                                                                                                                           
 
 		                                                   
 			                                                   
@@ -2977,6 +3125,12 @@ int function GetDemotionProtectionBuffer ( entity player )
 		                                                                                                             
 		                                                                                                                        
 		                                        
+
+		                                                                                                           
+		                                                                                                                             
+
+		                                                                     
+			                                                                                                                                                                 
 	 
  
 
@@ -3020,8 +3174,6 @@ int function GetDemotionProtectionBuffer ( entity player )
 	 
 
 	                                                                                                                
-
-	                                                                                                                                                                 
 
 	                    
 		                                                                                                                                                                                             
@@ -3200,7 +3352,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 
                                                             
  
-	                                                                                             
+	                                 
 
 	                                            
 		          
@@ -3263,6 +3415,21 @@ int function GetDemotionProtectionBuffer ( entity player )
 			                                                                                                        
 			                                                                                  
 		 
+
+		                                                                                        
+		                                                                            
+		 
+			                                                                  
+			                                                                                   
+			                                                                                                       
+			                                                                                                                                  
+			                                           
+			 
+				                                                                                                                           
+				                                                                     
+					                                                                                                                                                            
+			 
+		 
 	 
  
 
@@ -3292,11 +3459,14 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                         
 		                                                           
 
-	                                                                                                                                                                                                       
+	                                                                                        
+	                                                   
+	                                                              
 	 
 		                                                                                                                  
 		                                                                                                                         
 		 
+			                                                                                              
 			      
 		 
 
@@ -3341,10 +3511,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 		                                                                                                                     
 
 		                                                                                                         
-		 
-			                                                                                                                                                                               
 			        
-		 
 
 		                                                                                 
 
@@ -3378,10 +3545,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 
 		                                                                                            
 		                                                                                               
-		 
-			                                                                                                                                                                        
 			      
-		 
 
 		                                                   
 		 
@@ -3398,7 +3562,6 @@ int function GetDemotionProtectionBuffer ( entity player )
 
                                                                                           
  
-	                                                                                                                                                             
 	                                                                 
 	                                                                                                                                                                                                  
 
@@ -3426,7 +3589,6 @@ int function GetDemotionProtectionBuffer ( entity player )
 				                                                                                                                         
 				                                                                                                       
 				                                                                                                           
-				                                                                                                                                                                                                      
 				                                                                                                                                       
 			 
 			    
@@ -3503,16 +3665,13 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                                                  
 		                                                                                    
 
-	                                                                                                                                                           
 	           
  
 
 
                                                                                    
  
-	                                                                                                                                                           
 	                                                                 
-	                                                                                                                                                                                                       
 
 	                                                                            
 
@@ -3552,6 +3711,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                                                                                               
 	                                                                                                          
 	                                                                                                  
+	                                                                                                          
 
 	                           
 	                                                            
@@ -3660,7 +3820,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 			        
 		 
 
-		                                                                                                                                                                                           
+		                                                                                                                                                                                        
 
 		                                   
 
@@ -3669,11 +3829,11 @@ int function GetDemotionProtectionBuffer ( entity player )
 		                                                                                                           
 
 		                                                   
-		 
+		 			
 			                                                                                                                       
 		 
 		    
-		 
+		 			
 			                                                                                                                
 			                                
 			 
@@ -3715,7 +3875,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 			                                                                                 
 			 
 				                                                                      
-				                                                                                                                              
+				                                                                                              
 			  
 			                                                                                     
 				                                                                             
@@ -3724,7 +3884,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 
 				                                                
 			  
-			                                                                          
+			                                                             
 			                                             
 		 
 
@@ -3783,6 +3943,40 @@ int function GetDemotionProtectionBuffer ( entity player )
 	 
  
 
+                                                                                  
+ 
+	                             
+	                                                         
+
+	                               
+	 
+		      
+		                                                                   
+		                                                                                                                
+		                                                                                                                       
+
+		                                                                             
+		                                                                                                                           
+		                                                                                                                         
+
+		                 
+		 
+			      
+			                                                             
+			                                                                                                                 
+			                                                                                                                       
+
+			                                                                       
+			                                                                                                                              
+			                                                                                                                         
+		 
+	 
+ 
+
+                                                          
+ 
+	                                          
+ 
 
                                                        
  
@@ -3790,6 +3984,21 @@ int function GetDemotionProtectionBuffer ( entity player )
 		                                    
 			      
 	      
+
+	                     
+	 
+		                                                                          
+		 
+			                                                                                       
+			                                                                                   
+			                                                                                  
+		 
+		                                                                       
+		 
+			                                                                     
+			                                      
+		 
+	 
 
 	                    
 
@@ -3812,6 +4021,8 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                        
 	                                                   
 	                                                        
+
+	                                    
 
 	                                                                                                                                                              
 	                                                                                                
@@ -4051,12 +4262,22 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                                                                                                                
  
 
-
                                                                                                                               
  
-	                                                                                                           
+                                                                                                               
 	                                                                               
 	                                                                                                                         
+
+	                                                  
+	                                                                        
+	                                                                                                           
+
+	                               
+	 
+		                                                                                                
+	                                    
+	 
+	
 	                                                                                                                                                               
 
 	                                      
@@ -4067,7 +4288,7 @@ int function GetDemotionProtectionBuffer ( entity player )
 
 	                                                                                                                                                                                                                          
 	 
-		                                                                                                                     
+		                                                                                                                                                
 		                                                                                                                      
 		                                                                                                                                                                                      
 		                                              
@@ -4091,6 +4312,8 @@ int function GetDemotionProtectionBuffer ( entity player )
 #if CLIENT
 void function OnRankedScoreChanged( entity player, int new )
 {
+
+	printf ("Baadge onrankedscoredchanged aaaa  " + player.GetPlayerName() + " " + new )
 	if ( IsLobby() )
 		return
 
@@ -4266,8 +4489,19 @@ array< SharedRankedDivisionData > function Ranked_GetRankedDivisionDataForTier( 
 void function Ranked_UpdateEHIRankScore( EHI playerEHI, int rankScore )
                                                                                                                                
 {
+	printf ( "baadge 11111 Ranked_UpdateEHIRankScore :" +  rankScore)
 	EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
 	ehiss.rankScore = rankScore
+}
+
+void function Ranked_UpdateEHIRankScorePrevSeason( EHI playerEHI, int rankScore )
+                                                                                                                               
+{
+	printf ( "baadge 11111 Ranked_UpdateEHIRankScorePrevSeason :" +  rankScore)
+
+	EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
+	ehiss.rankScorePrevSeason = rankScore
+
 }
 
 
@@ -4276,6 +4510,14 @@ void function Ranked_UpdateEHIRankedLadderPosition( EHI playerEHI, int rankedLad
 {
 	EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
 	ehiss.rankedLadderPosition = rankedLadderPosition
+}
+
+
+void function Ranked_UpdateEHIRankedLadderPositionPrevSeason( EHI playerEHI, int rankedLadderPosition )
+                                                                                                                               
+{
+	EHIScriptStruct ehiss = GetEHIScriptStruct( playerEHI )
+	ehiss.rankedLadderPositionPrevSeason = rankedLadderPosition
 }
 
 
@@ -4315,11 +4557,77 @@ int function Ranked_GetLadderPosition( entity player )
 	unreachable
 }
 
+int function Ranked_GetPeakLadderPositionPrevSeason( entity player )
+{
+	#if SERVER
+		                               
+		                                                           
+
+	#endif
+
+	#if CLIENT
+		Assert( !IsLobby() )
+		EHI playerEHI = ToEHI( player )
+		return GetEHIScriptStruct( playerEHI ).rankedLadderPosition
+	#endif
+
+	#if UI
+		if ( !IsLobby() )
+		{
+			EHI playerEHI = ToEHI( player )
+			return GetEHIScriptStruct( playerEHI ).rankedLadderPosition
+		}
+		else
+		{
+			Assert( player == GetLocalClientPlayer() )
+			CommunityUserInfo ornull cui = GetUserInfo( GetPlayerHardware(), GetPlayerUID() )
+
+			if ( cui == null )
+				return -1
+
+			expect CommunityUserInfo( cui )
+			return cui.rankedLadderPos
+		}
+	#endif
+
+	unreachable
+}
+
+
 
 #if UI
 void function Ranked_SetupMenuGladCardForUIPlayer()
 {
 	entity player = GetLocalClientPlayer()
+
+	int ladderPos = -1
+	int highScore = -1
+
+	ItemFlavor ornull latestRankedPeriodOrNull = GetActiveRankedPeriodByType( GetUnixTimestamp(), eItemType.calevent_rankedperiod )
+
+	if ( latestRankedPeriodOrNull != null )
+	{
+		ItemFlavor latestRankedPeriod = expect ItemFlavor ( latestRankedPeriodOrNull )
+		ItemFlavor ornull previousRankedPeriodOrNull = GetPrecedingRankedPeriod( expect ItemFlavor ( latestRankedPeriodOrNull ) )
+		if ( previousRankedPeriodOrNull != null )
+		{
+			ItemFlavor previousRankedPeriod = expect ItemFlavor ( previousRankedPeriodOrNull )
+
+			if ( SharedRankedPeriod_HasSplits( previousRankedPeriod ) )
+			{
+				highScore = Ranked_GetHistoricalRankScoreAcrossSplitsForPlayer ( player, previousRankedPeriod )
+			}
+			else
+			{
+				string previousRankedPeriodRef  = ItemFlavor_GetGUIDString( previousRankedPeriod )
+				highScore = Ranked_GetHistoricalRankScore ( player, previousRankedPeriodRef, true )
+			}
+
+			Ranked_SetupMenuGladCard_internal( Ranked_GetLadderPosition( player ), GetPlayerRankScore( player ) , highScore , ladderPos )
+			return
+		}
+	}
+
 	Ranked_SetupMenuGladCard_internal( Ranked_GetLadderPosition( player ), GetPlayerRankScore( player ) )
 }
 
@@ -4330,11 +4638,12 @@ void function Ranked_SetupMenuGladCardFromCommunityUserInfo( CommunityUserInfo u
 }
 
 
-void function Ranked_SetupMenuGladCard_internal( int ladderPos, int rankScore )
+void function Ranked_SetupMenuGladCard_internal( int ladderPos, int rankScore, int ladderPosPrev = -1, int rankScorePrev = -1 )
 {
 	int rankShouldShow = IsRankedPlaylist( Lobby_GetSelectedPlaylist() ) ? 1 : 0
 	SendMenuGladCardPreviewCommand( eGladCardPreviewCommandType.RANKED_SHOULD_SHOW, rankShouldShow, null )
 	SendMenuGladCardPreviewCommand( eGladCardPreviewCommandType.RANKED_DATA, ladderPos, null, rankScore )
+	SendMenuGladCardPreviewCommand( eGladCardPreviewCommandType.RANKED_DATA_PREV, ladderPosPrev, null, rankScorePrev )                            
 }
 
 
@@ -4476,6 +4785,9 @@ bool function Ranked_ManageDialogFlow( bool rankedSplitChangeAudioPlayed = false
 
 bool function Ranked_HasRankedPeriodMarkedForRewardAcknowledgement()
 {
+	if ( IsFeatureSuppressed( eFeatureSuppressionFlags.RANKED_DIALOG ) )
+		return false
+
 	string earliestRankedPeriod = Ranked_EarliestRankedPeriodWithRewardsNotAcknowledged()
 	if ( earliestRankedPeriod == "" )
 		return false
@@ -4555,6 +4867,9 @@ bool function Ranked_NeedToNotifySplitReset()
                                                                                                        
 {
 	if ( !IsPersistenceAvailable() )
+		return false
+
+	if( IsFeatureSuppressed( eFeatureSuppressionFlags.RANKED_SPLIT_DIALOG ) )
 		return false
 
 	ItemFlavor ornull activeRankedPeriod = GetActiveRankedPeriodByType( GetUnixTimestamp(), eItemType.calevent_rankedperiod )
@@ -4891,7 +5206,11 @@ void function Ranked_ConstructSingleRankBadgeForStatsCard( var badgeRui, entity 
 
 void function Ranked_ConstructDoubleRankBadgeForStatsCard( var firstSplitBadgeRui, var secondSplitBadgeRui, entity player, string rankedPeriodRef )
 {
-	int firstSplitScore                        = Ranked_GetHistoricalFirstSplitRankScore( player, rankedPeriodRef )
+	ItemFlavor rankedPeriodItemFlavor = GetItemFlavorByGUID( ConvertItemFlavorGUIDStringToGUID( rankedPeriodRef ) )
+	var settingBlockForPeriod = ItemFlavor_GetSettingsBlock ( rankedPeriodItemFlavor )
+	bool rewardOnHighestWatermark = GetSettingsBlockBool ( settingBlockForPeriod , "rewardOnHighestWatermark" )
+
+	int firstSplitScore                        = Ranked_GetHistoricalFirstSplitRankScore( player, rankedPeriodRef, rewardOnHighestWatermark )
 	SharedRankedDivisionData firstSplitDivData = Ranked_GetHistoricalRankedDivisionFromScore( firstSplitScore, rankedPeriodRef )
 	int firstSplitLadderPos                    = Ranked_GetHistoricalLadderPosition( player, rankedPeriodRef, true )
 
@@ -4901,7 +5220,7 @@ void function Ranked_ConstructDoubleRankBadgeForStatsCard( var firstSplitBadgeRu
 	RuiSetFloat( firstSplitBadgeRui, "scoreFrac", 1.0 )
 	RuiSetString( firstSplitBadgeRui, "rankName", firstSplitDivData.divisionName )
 
-	int secondSplitSplitScore                   = Ranked_GetHistoricalRankScore( player, rankedPeriodRef )
+	int secondSplitSplitScore                   = Ranked_GetHistoricalRankScore( player, rankedPeriodRef , rewardOnHighestWatermark)
 	SharedRankedDivisionData secondSplitDivData = Ranked_GetHistoricalRankedDivisionFromScore( secondSplitSplitScore, rankedPeriodRef )
 
 	if ( rankedPeriodRef == GetCurrentStatRankedPeriodRefOrNullByType( eItemType.calevent_rankedperiod ) )
@@ -4945,6 +5264,31 @@ void function PopulateRuiWithRankedBadgeDetails( var rui, int rankScore, int lad
 	{
 		RuiDestroyNestedIfAlive( rui, "rankedBadgeHandle" )
 		CreateNestedRankedRui( rui, currentRank.tier, "rankedBadgeHandle", rankScore, ladderPosition )
+	}
+}
+
+void function PopulateRuiWithPreviousSeasonRankedBadgeDetails( var rui, int rankScore, int ladderPosition, bool isNested = false )
+{
+	SharedRankedDivisionData currentRank = GetCurrentRankedDivisionFromScoreAndLadderPosition( rankScore, ladderPosition )
+	                                                       
+	SharedRankedTierData currentTier     = currentRank.tier
+	RuiSetImage( rui, "rankedIconPrev", currentTier.icon )
+	if ( currentTier.isLadderOnlyTier )                                                      
+	{
+		SharedRankedTierData tierByScore = GetCurrentRankedDivisionFromScore( rankScore ).tier
+		RuiSetInt( rui, "rankedIconStatePrev", tierByScore.index + 1 )
+	}
+	else
+	{
+		RuiSetInt( rui, "rankedIconStatePrev", currentTier.index )
+	}
+
+	SharedRanked_FillInRuiEmblemText( rui, currentRank, rankScore, ladderPosition, "Prev" )
+
+	if ( !isNested )
+	{
+		RuiDestroyNestedIfAlive( rui, "rankedBadgeHandlePrev" )
+		CreateNestedRankedRui( rui, currentRank.tier, "rankedBadgeHandlePrev", rankScore, ladderPosition )
 	}
 }
 
@@ -5051,3 +5395,65 @@ void function Ranked_AssertFalse()
 	Assert( false )
 }
 #endif                
+
+#if UI
+SharedRankedDivisionData function GetRankedDivisionData( int rankScore, int ladderPosition, string rankedPeriodGUID )
+{
+	ItemFlavor rankedPeriodItemFlavor = GetItemFlavorByGUID( ConvertItemFlavorGUIDStringToGUID( rankedPeriodGUID ) )
+	int rankedPeriodItemType          = ItemFlavor_GetType( rankedPeriodItemFlavor )
+
+	Assert( rankedPeriodItemType == eItemType.calevent_rankedperiod || rankedPeriodItemType == eItemType.calevent_arenas_ranked_period )
+
+	bool isRankedPeriodActive = rankedPeriodGUID == GetCurrentStatRankedPeriodRefOrNullByType( rankedPeriodItemType )
+	SharedRankedDivisionData division
+
+	if ( rankedPeriodItemType == eItemType.calevent_rankedperiod )
+	{
+		if ( isRankedPeriodActive )
+			division = GetCurrentRankedDivisionFromScoreAndLadderPosition( rankScore, ladderPosition )
+		else
+			division = Ranked_GetHistoricalRankedDivisionFromScoreAndLadderPosition( rankScore, ladderPosition, rankedPeriodGUID )
+	}
+	else                                           
+	{
+		if ( isRankedPeriodActive )
+			division = GetCurrentArenasRankedDivisionFromScoreAndLadderPosition( rankScore, ladderPosition )
+		else
+			division = ArenasRanked_GetHistoricalRankedDivisionFromScoreAndLadderPosition( rankScore, ladderPosition, rankedPeriodGUID )
+	}
+
+	return division
+}
+
+string function GetRankEmblemText( SharedRankedDivisionData division, int rankScore, int ladderPosition )
+{
+	switch ( division.emblemDisplayMode )
+	{
+		case emblemDisplayMode.DISPLAY_DIVISION:
+			return Localize( division.emblemText )
+
+		case emblemDisplayMode.DISPLAY_RP:
+		{
+			string rankScoreShortened = FormatAndLocalizeNumber( "1", float( rankScore ), IsTenThousandOrMore( rankScore ) )
+			return Localize( "#RANKED_POINTS_GENERIC", rankScoreShortened )
+		}
+
+		case emblemDisplayMode.DISPLAY_LADDER_POSITION:
+		{
+			string ladderPosShortened
+			if ( ladderPosition == SHARED_RANKED_INVALID_LADDER_POSITION )
+				ladderPosShortened = ""
+			else
+				ladderPosShortened = Localize( "#RANKED_LADDER_POSITION_DISPLAY", FormatAndLocalizeNumber( "1", float( ladderPosition ), IsTenThousandOrMore( ladderPosition ) ) )
+
+			return ladderPosShortened
+		}
+
+		case emblemDisplayMode.NONE:
+		default:
+			return ""
+	}
+
+	unreachable
+}
+#endif      

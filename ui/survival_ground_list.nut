@@ -26,6 +26,8 @@ global function UIToClient_SurvivalGroundList_OnMouseLeftPressed
 global function UIToClient_RestrictedLootConfirmDialog_DoIt
 
 global function UIToClient_CloseQuickSwapIfOpen
+
+global function ServerToClient_UpdateItem
 #endif
 
 #if CLIENT
@@ -359,6 +361,9 @@ void function UIToClient_SurvivalGroundListOpened( var menu )
 	                             
 	foreach ( string ammoPoolTypeKey, int ammoPoolTypeVal in eAmmoPoolType )
 	{
+		if ( !ArrowsCanBePickedUp() && ammoPoolTypeVal == eAmmoPoolType.arrows )
+			continue
+
 		DeathBoxEntryData entryData
 		entryData.lootFlav = SURVIVAL_Loot_GetLootDataByRef( ammoPoolTypeKey )
 		entryData.key = entryData.lootFlav.ref
@@ -476,7 +481,7 @@ void function OnPlayerEquipmentChanged( entity player, string equipSlot, int idx
 void function UpdateSurvivalGroundList( SurvivalGroundListUpdateParams params )
 {
 	entity deathBox = GetEntityFromEncodedEHandle( fileLevel.currentDeathBoxEEH )
-	if ( !IsValid( deathBox ) || Distance( params.player.GetOrigin(), deathBox.GetOrigin() ) > DEATH_BOX_MAX_DIST || GetGameState() >= eGameState.WinnerDetermined )
+	if ( !IsValid( deathBox ) || Distance( params.player.GetOrigin(), deathBox.GetOrigin() ) > DEATH_BOX_MAX_DIST || GetGameState() >= eGameState.WinnerDetermined || GetLocalViewPlayer().ContextAction_IsReviving() )
 	{
 		RunUIScript( "CloseAllMenus" )
 		return
@@ -594,7 +599,7 @@ void function UpdateSurvivalGroundList( SurvivalGroundListUpdateParams params )
 					if ( GetPropSurvivalMainPropertyFromEnt( lootEnt ) < GetPropSurvivalMainPropertyFromEnt( otherLootEnt ) )
 						continue                             
 
-					else if ( GetPropSurvivalMainPropertyFromEnt( lootEnt ) <= GetPropSurvivalMainPropertyFromEnt( otherLootEnt ) && SURVIVAL_CreateLootRef(lootFlavor, lootEnt).lootExrtaProperty > SURVIVAL_CreateLootRef(lootFlavor, otherLootEnt).lootExrtaProperty )
+					else if ( GetPropSurvivalMainPropertyFromEnt( lootEnt ) <= GetPropSurvivalMainPropertyFromEnt( otherLootEnt ) && SURVIVAL_CreateLootRef(lootFlavor, lootEnt).lootExtraProperty > SURVIVAL_CreateLootRef(lootFlavor, otherLootEnt).lootExtraProperty )
 						continue                       
 				}
 				break
@@ -890,9 +895,15 @@ void function UpdateItem( DeathBoxListPanelItem item )
 	var button        = item.allocatedButton
 	entity viewPlayer = GetLocalViewPlayer()
 
-	Assert( item.key in fileLevel.deathBoxEntryDataByKey )
 	if ( !(item.key in fileLevel.deathBoxEntryDataByKey) )
+	{
+		foreach ( string entryDataKey, DeathBoxEntryData entryData in fileLevel.deathBoxEntryDataByKey )
+			printf( "Debug death box item: " + entryDataKey )
+
+		Assert( item.key in fileLevel.deathBoxEntryDataByKey, "Debug death box item: " + item.key + "does not exist" )
 		return
+	}
+
 	DeathBoxEntryData entryData = fileLevel.deathBoxEntryDataByKey[item.key]
 
 	LootData lootFlavor   = entryData.lootFlav
@@ -1024,13 +1035,23 @@ void function UpdateItem( DeathBoxListPanelItem item )
 
 		RuiSetFloat( rui, "shieldFrac", float(GetPropSurvivalMainPropertyFromEnt( bestLootEnt )) )
 		RuiSetBool( rui, "isEvolvingShield", isEvolving )
-		RuiSetInt( rui, "shieldEvolutionProgress", SURVIVAL_CreateLootRef(lootFlavor, bestLootEnt).lootExrtaProperty)
+		RuiSetInt( rui, "shieldEvolutionProgress", SURVIVAL_CreateLootRef(lootFlavor, bestLootEnt).lootExtraProperty)
 		RuiSetInt( rui, "replaceShieldEvolutionProgress", EvolvingArmor_GetEvolutionProgress(localPlayer))
 		RuiSetInt( rui, "lootTierReplace", armorTier )
 	}
 
-
-
+                    
+                                          
+  
+                                                                                                       
+                                                                                                               
+                                                 
+  
+     
+  
+                                                  
+  
+       
 
 
 	entryData.isRestrictedItem = false
@@ -1087,6 +1108,28 @@ void function UpdateItem( DeathBoxListPanelItem item )
 
 	RuiSetInt( rui, "useCounter", entryData.useCounter )
 	RuiSetInt( rui, "pingCounter", entryData.pingCounter )
+}
+#endif
+
+
+#if CLIENT
+void function ServerToClient_UpdateItem( entity lootEnt )
+{
+	if ( IsValid( lootEnt ) )
+	{
+		LootData lootFlavor = SURVIVAL_Loot_GetLootDataByIndex( lootEnt.GetSurvivalInt() )
+
+		bool hasSpecialAmmo = (lootFlavor.lootType == eLootType.MAINWEAPON && !GetWeaponInfoFileKeyField_GlobalBool( lootFlavor.baseWeapon, "uses_ammo_pool" ))
+		string itemKey = (hasSpecialAmmo ? format( "specialammo%d", lootEnt.GetEncodedEHandle() ) : lootFlavor.ref)
+
+		if ( fileLevel.listPanel != null )
+		{
+			DeathBoxListPanelItem ornull item = DeathBoxListPanel_GetItemByKey( fileLevel.listPanel, itemKey )
+			if ( item != null )
+				UpdateItem( expect DeathBoxListPanelItem(item) )
+
+		}
+	}
 }
 #endif
 
@@ -1743,8 +1786,8 @@ void function UIToClient_SurvivalGroundList_OnQuickSwapItemClick( var button, in
 	LootData dropLootFlav                  = SURVIVAL_Loot_GetLootDataByIndex( inventoryEntry.type )
 
                 
-                           
-        
+	if ( dropLootFlav.noDrop )
+		return
        
 
 	PredictedLootActionData plad
@@ -1769,7 +1812,7 @@ void function UIToClient_SurvivalGroundList_OnQuickSwapItemClick( var button, in
 	if ( isRightClick )
 	{
 		                                                                    
-		Remote_ServerCallFunction( "ClientCallback_Sur_DropBackpackItem_UI", dropLootFlav.ref, inventoryEntry.count, fileLevel.currentDeathBoxEEH )
+		Remote_ServerCallFunction( "ClientCallback_Sur_DropBackpackItem_UI", dropLootFlav.index, inventoryEntry.count, fileLevel.currentDeathBoxEEH )
 		RefreshQuickSwapIfOpen()
 	}
 	else

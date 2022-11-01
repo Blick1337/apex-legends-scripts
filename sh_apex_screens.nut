@@ -1435,9 +1435,13 @@ bool function OnEnumStaticPropRui( StaticPropRui staticPropRuiInfo )
 		}
 	}
 
+	                                                                                                                                                                
+	                                                                                         
 	bool needsScreenPositionSetup = true
 	switch( staticPropRuiInfo.modelName )
 	{
+		case "mdl/olympus/path_tt_screen_01_off.rmdl":
+		case "mdl/eden/beacon_small_screen_02_off.rmdl":
 		case "mdl/olympus\\path_tt_screen_01_off.rmdl":
 		case "mdl/eden\\beacon_small_screen_02_off.rmdl":
 			apexScreen.uvMin = <0.0, 0.295, 0.0>
@@ -1446,11 +1450,16 @@ bool function OnEnumStaticPropRui( StaticPropRui staticPropRuiInfo )
 			needsScreenPositionSetup = false
 			break
 
+		case "mdl/thunderdome/apex_screen_05.rmdl":
 		case "mdl/thunderdome\\apex_screen_05.rmdl":
 			apexScreen.uvMin = <0.235, 0.0, 0.0>
 			apexScreen.uvMax = <0.765, 1.0, 0.0>
 			break
 
+		case "mdl/thunderdome/survival_modular_flexscreens_01.rmdl":
+		case "mdl/thunderdome/survival_modular_flexscreens_02.rmdl":
+		case "mdl/thunderdome/survival_modular_flexscreens_03.rmdl":
+		case "mdl/thunderdome/survival_modular_flexscreens_04.rmdl":
 		case "mdl/thunderdome\\survival_modular_flexscreens_01.rmdl":
 		case "mdl/thunderdome\\survival_modular_flexscreens_02.rmdl":
 		case "mdl/thunderdome\\survival_modular_flexscreens_03.rmdl":
@@ -1459,6 +1468,7 @@ bool function OnEnumStaticPropRui( StaticPropRui staticPropRuiInfo )
 			apexScreen.uvMax = <0.684, 1.0, 0.0>
 			break
 
+		case "mdl/thunderdome/survival_modular_flexscreens_05.rmdl":
 		case "mdl/thunderdome\\survival_modular_flexscreens_05.rmdl":
 			apexScreen.uvMin = <0.0, 0.215, 0.0>
 			apexScreen.uvMax = <1.0, 0.785, 0.0>

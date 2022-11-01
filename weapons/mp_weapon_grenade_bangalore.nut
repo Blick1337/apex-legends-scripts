@@ -480,7 +480,7 @@ void function BangaloreSmokescreenEffectEnabled( entity ent, int statusEffect, b
 
 	if ( !viewPlayer.IsTitan() )
 	{
-		int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, file.smokeGasScreenFxId, FX_PATTACH_ABSORIGIN_FOLLOW, -1, viewPlayer.EyePosition(), <0, 0, 0> )
+		int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, file.smokeGasScreenFxId, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, viewPlayer.EyePosition(), <0, 0, 0> )
 		EffectSetIsWithCockpit( fxHandle, true )
 
 		Chroma_StartSmokescreenEffect()

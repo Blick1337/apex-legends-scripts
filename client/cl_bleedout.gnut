@@ -279,7 +279,7 @@ void function ShowWoundedMarker( entity woundedPlayer, float endTime )
 	else
 	{
 		RuiSetString( rui, "title", "#SURVIVAL_BLEEDING_OUT" )
-                 
+                                  
                                                               
     
                                                            
@@ -295,8 +295,8 @@ void function ShowWoundedMarker( entity woundedPlayer, float endTime )
 			RuiSetString( shieldRUI, "nameText", lootData.pickupString )
 
                           
-				if ( incapShieldTier >= 4 )
-					RuiSetString( shieldRUI, "nameText", "#BLEEDOUT_USE_SELF_RES_TITLE" )
+                               
+                                                                          
          
 
 			RuiSetBool( shieldRUI, "hasKOShield", true )
@@ -313,7 +313,7 @@ void function ShowWoundedMarker( entity woundedPlayer, float endTime )
 			thread TrackForceBleedoutState( woundedPlayer, shieldRUI )
                                 
 
-               
+                                
                                                               
       
 		thread BleedoutScreenFX_Start( woundedPlayer, startTime, endTime )

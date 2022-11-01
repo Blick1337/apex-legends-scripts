@@ -10,6 +10,10 @@ global function FRC_IsEnabled
                                
                                
                                      
+                                              
+       
+                                           
+             
 #endif
 
 #if CLIENT
@@ -391,6 +395,9 @@ void function EntitiesDidLoad()
 	                                        
 
 	                                      
+
+	                                                      
+
 	                                   
 	                                                                                           
 	                                                                                                                                                       
@@ -424,6 +431,7 @@ void function EntitiesDidLoad()
 	                               
 	                         
 	                                        
+	                            
 	                            
 
 	                                                                             
@@ -480,7 +488,7 @@ void function EntitiesDidLoad()
 	                         
 		      
 
-	                                                        
+	                                          
 
 	                                                                 
 	                                                                                                  
@@ -712,7 +720,10 @@ void function EntitiesDidLoad()
 
 	                             
 	 
-		                                                              
+                         
+                                                                     
+      
+			                                                 
 		                                    
 		                                                               
 		                                                                                                   
@@ -722,12 +733,19 @@ void function EntitiesDidLoad()
 	 
 
 	                                                
-	                                  
-	                                  
-	                           
-	                                  
-	                                      
-	                                   
+
+                            
+                                 
+   
+                                                                       
+   
+      
+   
+                                                      
+   
+      
+		                                                   
+       
 
  	         
 	                                     
@@ -779,7 +797,7 @@ void function EntitiesDidLoad()
                                                      
  
 	                                
-	                                      
+	                                                
 	                                       
  
 
@@ -971,7 +989,25 @@ void function EntitiesDidLoad()
 
 	                                                                                                                            
  
-#endif
+
+                                                              
+ 
+	                                 
+
+	                                                            
+		            
+
+	                                                                              
+ 
+
+       
+                                           
+ 
+	                                                    
+ 
+             
+
+#endif          
 
 #if CLIENT
 void function ServerCallback_FRC_UpdateState( int state )
@@ -1443,9 +1479,9 @@ bool function FRC_CanCharacterPickup( entity player, entity weapon )
 		return true
 
 	array<string> disabledChars = []
-	disabledChars.extend( split( disabledCharsOverride, " " ) )
+	disabledChars.extend( split( disabledCharsOverride, WHITESPACE_CHARACTERS ) )
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
-	string characterRef  = ItemFlavor_GetHumanReadableRef( character ).tolower()
+	string characterRef  = ItemFlavor_GetCharacterRef( character ).tolower()
 
 	if ( disabledChars.contains( characterRef ) )
 		return false

@@ -662,7 +662,7 @@ vector function GetAnalysisOffset( FlightPath flightPath )
 
 void function MaskTester( int mask )
 {
-	printt( "called from " + DumpPreviousFunction() )
+	printt( "called from " + GetPreviousFunction() )
 	table Table
 	Table[" CONTENTS_EMPTY				"] <- CONTENTS_EMPTY
 	Table[" CONTENTS_SOLID				"] <- CONTENTS_SOLID

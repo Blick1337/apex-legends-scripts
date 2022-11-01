@@ -9,6 +9,7 @@ global function PIN_Shutdown
 global function PIN_PageView
 global function PIN_Message
 global function PIN_UM_Message
+global function PIN_LobbyPopUp_Event
 global function PIN_Survey
 global function PIN_Settings
 global function PIN_UIInteraction_Select
@@ -344,6 +345,26 @@ void function PIN_UM_Message( string titleText, string trackingId, string msgTyp
 		}
 	)
 }
+void function PIN_LobbyPopUp_Event( string popupType, int status )
+{
+	string msg_status = PIN_GetMessageStatusText( status )
+	AddPINTelemetryEvent( "message",
+		PIN_StandardHeader(),
+		{
+			sdur = PIN_GetSessionDuration()
+			service = "game"
+			status = msg_status
+			type = "in_game"
+			en = "message"
+			service = "aruba"
+			count = 1
+			custom =
+			{
+				msg_type = popupType
+			}
+		}
+	)
+}
 #endif
 
 
@@ -457,7 +478,6 @@ void function PIN_Customization( ItemFlavor ornull context, ItemFlavor itemFlavo
 		case eItemType.weapon_skin:
 			customizeTarget = "weapon"
 			customizeType = "skin"
-			                                                                                                            
 			break
 
 		case eItemType.weapon_charm:
@@ -479,14 +499,14 @@ void function PIN_Customization( ItemFlavor ornull context, ItemFlavor itemFlavo
 			customizeType = customizeType == "" ? "intro_quip" : customizeType
 			customizeTarget = "gladiator_card"
 			if ( context != null )
-				customizeClass = ItemFlavor_GetHumanReadableRef( expect ItemFlavor( context ) )
+				customizeClass = ItemFlavor_GetHumanReadableRefForPIN_Slow( expect ItemFlavor( context ) )
 			break
 
 		case eItemType.emote_icon:
 			customizeType = "holospray"
 			customizeTarget = "character"
 			if ( context != null )
-				customizeClass = ItemFlavor_GetHumanReadableRef( expect ItemFlavor( context ) )
+				customizeClass = ItemFlavor_GetHumanReadableRefForPIN_Slow( expect ItemFlavor( context ) )
 			break
 
 		case eItemType.character_skin:
@@ -497,60 +517,50 @@ void function PIN_Customization( ItemFlavor ornull context, ItemFlavor itemFlavo
 			customizeType = customizeType == "" ? "melee" : customizeType
 			customizeTarget = "character"
 			if ( context != null )
-				customizeClass = ItemFlavor_GetHumanReadableRef( expect ItemFlavor( context ) )
+				customizeClass = ItemFlavor_GetHumanReadableRefForPIN_Slow( expect ItemFlavor( context ) )
 			break
 	}
 
 	if ( indexToUse <= 0 )
 	{
-		selection1 = ItemFlavor_GetHumanReadableRef( itemFlavor ).tolower()
+		selection1 = ItemFlavor_GetHumanReadableRefForPIN_Slow( itemFlavor ).tolower()
 		selection1_rarity = customizeQuality.tolower()
 	}
 	else if ( indexToUse == 1 )
 	{
-		selection2 = ItemFlavor_GetHumanReadableRef( itemFlavor ).tolower()
+		selection2 = ItemFlavor_GetHumanReadableRefForPIN_Slow( itemFlavor ).tolower()
 		selection2_rarity = customizeQuality.tolower()
 	}
 	else if ( indexToUse == 2 )
 	{
-		selection3 = ItemFlavor_GetHumanReadableRef( itemFlavor ).tolower()
+		selection3 = ItemFlavor_GetHumanReadableRefForPIN_Slow( itemFlavor ).tolower()
 		selection3_rarity = customizeQuality.tolower()
 	}
 	else if ( indexToUse == 3 )
 	{
-		selection4 = ItemFlavor_GetHumanReadableRef( itemFlavor ).tolower()
+		selection4 = ItemFlavor_GetHumanReadableRefForPIN_Slow( itemFlavor ).tolower()
 		selection4_rarity = customizeQuality.tolower()
 	}
 	else if ( indexToUse == 4 )
 	{
-		selection5 = ItemFlavor_GetHumanReadableRef( itemFlavor ).tolower()
+		selection5 = ItemFlavor_GetHumanReadableRefForPIN_Slow( itemFlavor ).tolower()
 		selection5_rarity = customizeQuality.tolower()
 	}
 	else if ( indexToUse == 5 )
 	{
-		selection6 = ItemFlavor_GetHumanReadableRef( itemFlavor ).tolower()
+		selection6 = ItemFlavor_GetHumanReadableRefForPIN_Slow( itemFlavor ).tolower()
 		selection6_rarity = customizeQuality.tolower()
 	}
 	else if ( indexToUse == 6 )
 	{
-		selection7 = ItemFlavor_GetHumanReadableRef( itemFlavor ).tolower()
+		selection7 = ItemFlavor_GetHumanReadableRefForPIN_Slow( itemFlavor ).tolower()
 		selection7_rarity = customizeQuality.tolower()
 	}
 	else if ( indexToUse == 7 )
 	{
-		selection8 = ItemFlavor_GetHumanReadableRef( itemFlavor ).tolower()
+		selection8 = ItemFlavor_GetHumanReadableRefForPIN_Slow( itemFlavor ).tolower()
 		selection8_rarity = customizeQuality.tolower()
 	}
-	                               
-	                               
-	                                                     
-	                        
-	  	                                                                                        
-	      
-	  	                                
-	                                                                           
-	                                                   
-	                                               
 
 	AddPINTelemetryEvent( "customization",
 		PIN_StandardHeader(),

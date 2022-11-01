@@ -27,7 +27,9 @@ global function ArenasRanked_UpdateEHIRankedLadderPosition
 global function ArenasRanked_GetNumPlayersOnLadder
 global function ArenasRanked_GetStryderLadderNameForLatestRankedPeriod                                                                            
 
+global function ArenasRanked_GetHistoricalRankedDivisionFromScoreAndLadderPosition
 global function ArenasRanked_GetTierOfThresholdForRankedPartyDifferences
+global function ArenasRanked_GetPlacementWinsAsArray
 
 #if CLIENT || UI
 global function PopulateRuiWithArenasRankedBadgeDetails
@@ -103,6 +105,8 @@ global const int ARENAS_RANKED_NUM_PLACEMENT_MATCHES = 10
 global const int ARENAS_RANKED_SPLIT_NUM_PLACEMENT_MATCHES = 5
 
 const int ARENAS_RANKED_ABANDON_AP_LOSS = 15
+
+const string ARENAS_RANKED_RECHECK_SEASONS_STARTING_WITH = "SAID00781342567"                                                                   
 
 global struct ArenasRankedPostGameScoringStruct
 {
@@ -193,9 +197,21 @@ void function Sh_ArenasRanked_Init()
 
 		                
 		 
-			                                                                                                                       
-			                                    
-			                                                                                     
+			                                                                                 
+			                                                                                                                 
+			 
+				                                                                  
+				                                                                                                                                                                                        
+					                   
+
+				                                                            
+					                   
+
+				                                                                     
+					                  
+
+				                                                                                  
+			 
 		 
 
 	#endif
@@ -454,7 +470,7 @@ string function ArenasRanked_GetStryderLadderNameForLatestRankedPeriod()
 {
 	ItemFlavor latestPeriod = GetLatestRankedPeriodByType( GetUnixTimestamp(), eItemType.calevent_arenas_ranked_period )
 
-	string baseLadderName = ItemFlavor_GetHumanReadableRef( latestPeriod )
+	string baseLadderName = ItemFlavor_GetCalEventRef( latestPeriod )
 
 	if ( !SharedRankedPeriod_HasSplits( latestPeriod ) )
 		return baseLadderName
@@ -472,7 +488,7 @@ string function ArenasRanked_GetStryderLadderNameForHistoricalRankedPeriod( Item
 {
 	Assert( ItemFlavor_GetType( rankedPeriod ) == eItemType.calevent_arenas_ranked_period )
 
-	string baseLadderName = ItemFlavor_GetHumanReadableRef( rankedPeriod )
+	string baseLadderName = ItemFlavor_GetCalEventRef( rankedPeriod )
 
 	if ( !SharedRankedPeriod_HasSplits( rankedPeriod ) )
 		return baseLadderName
@@ -1745,10 +1761,12 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 	                                                                                                                                 
 	                                                    
 	 
+		                                                                                                      
+		                                                                      
+			      
+
 		                                                                 
 
-		                                                                                                      
-		                                                            
 		                                                          
 
 		                                                                   
@@ -1759,7 +1777,7 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 		                                                                                                                      
 		                                                                   
 
-		            
+		                    
 		                                                   
 		 
 			                                                                                                              
@@ -1768,12 +1786,10 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 		 
 		                                                                                                                      
 
-		                       
-		 
-			                                                                               
-			                                                                                                            
-			                                                                                                                                  
-		 
+		                                                                        
+		                                                                               
+		                                                                                                          
+		                                                                                                                                  
 
 		                                                         
 			                                                         
@@ -1809,8 +1825,6 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 	 
 
 	                                                                                                                      
-
-	                                                                                                                                                                 
 
 	                    
 		                                                                                                                                                                                                   
@@ -1861,6 +1875,21 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 		 
 			                                                                                                              
 			                                                                                        
+		 
+
+		                                                                                        
+		                                                                            
+		 
+			                                                                  
+			                                                                                         
+			                                                                                                             
+			                                                                                                                                         
+			                                           
+			 
+				                                                                                                                                  
+				                                                                     
+					                                                                                                                                                                  
+			 
 		 
 	 
  
@@ -1937,10 +1966,7 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 		                                                                                                                                 
 
 		                                                                                                         
-		 
-			                                                                                                                                                                                     
 			        
-		 
 
 		                                                                                 
 
@@ -1974,10 +2000,7 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 
 		                                                                                                  
 		                                                                                               
-		 
-			                                                                                                                                                                              
 			      
-		 
 
 		                                                   
 		 
@@ -2017,7 +2040,6 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 
 					                                                                                                                 
 
-					                                                                                                                                                                                                            
 					                                                                                                                                       
 				 
 				    
@@ -2214,8 +2236,6 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 			        
 		 
 
-		                                                                                                                                                       
-
 		                                   
 
 		                                                   
@@ -2257,7 +2277,7 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 
 				                                                
 			  
-			                                                                          
+			                                                             
 			                                             
 		 
 	 
@@ -2910,6 +2930,9 @@ bool function ArenasRanked_ManageDialogFlow( bool rankedSplitChangeAudioPlayed =
 
 bool function ArenasRanked_HasRankedPeriodMarkedForRewardAcknowledgement()
 {
+	if( IsFeatureSuppressed( eFeatureSuppressionFlags.RANKED_ARENAS_DIALOG ) )
+		return false
+
 	string earliestRankedPeriod = ArenasRanked_EarliestRankedPeriodWithRewardsNotAcknowledged()
 	if ( earliestRankedPeriod == "" )
 		return false
@@ -2990,6 +3013,9 @@ bool function ArenasRanked_NeedToNotifySplitReset()
                                                                                                        
 {
 	if ( !IsPersistenceAvailable() )
+		return false
+
+	if ( IsFeatureSuppressed( eFeatureSuppressionFlags.RANKED_SPLIT_DIALOG ) )
 		return false
 
 	ItemFlavor ornull activeRankedPeriod = GetActiveRankedPeriodByType( GetUnixTimestamp(), eItemType.calevent_arenas_ranked_period )

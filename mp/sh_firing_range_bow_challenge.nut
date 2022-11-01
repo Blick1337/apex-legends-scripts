@@ -14,6 +14,8 @@ const vector TRAVEL_3Q_POINT = <TARGET_ORIGIN.x, TARGET_ORIGIN.y + ( 3 * TRAVEL_
 
 const array< vector > MOVE_TARGETS =[ TARGET_ORIGIN , TRAVEL_1Q_POINT, TRAVEL_MID_POINT , TRAVEL_3Q_POINT, TARGET_END]
 
+const string BOW_CHALLENGE_TARGET_MOVER_SCRIPTNAME = "bow_challenge_target_mover"
+
 struct NextMoveIndexData
 {
 	int nextIndex = -1
@@ -122,7 +124,7 @@ void function ShFRC_Bow_Init()
 
 	                                                                                                 
 
-	                                                        
+	                                                                                               
 	                                                
 	                                             
 

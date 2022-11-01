@@ -114,6 +114,7 @@ global struct StatEntry
 	int    behavior
 	int    flags = 0
 	bool   shouldCache                             
+	int    gameMode                           
 
 	array<string> enumKeys
 
@@ -175,6 +176,7 @@ global struct StatTemplate
 	int  behavior                                     
 	int  flags = 0
 	bool shouldCache = false                             
+	int  gameMode                           
 
 	string fieldName
 
@@ -312,6 +314,11 @@ bool function HasStatCachingOptimizations()
 #if SERVER || CLIENT || UI
 int function GetStat_Int( entity player, StatEntry entry, int when = eStatGetWhen.CURRENT )
 {
+	#if SERVER
+		                             
+			        
+	#endif
+
 	Assert( entry.type == eStatType.INT )
 	#if CLIENT || UI
 		if ( !(entry.flags & eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY) )
@@ -560,7 +567,7 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
 			                                                                    
 		 
 	 
-	    
+	                                                             
 	 
 		                                              
 		                                          
@@ -592,8 +599,8 @@ bool function DoesStatSatisfyValue( entity player, StatEntry entry, float checkV
                        
                        
 
-#if (SERVER || CLIENT || UI) && DEV
-string function DEV_GetStatTemplateDebugName( StatTemplate template )
+#if SERVER || CLIENT || UI
+string function GetStatTemplateDebugName( StatTemplate template )
 {
 	string sesPart                 = ""
 	StatEnumStruct ornull ancestor = template.parentEnumStruct
@@ -763,6 +770,9 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
 
                                                                                                                          
  
+	                             
+		      
+
 	                                     
 	                                                                                                 
 	                              
@@ -817,6 +827,9 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
 #if SERVER
                                                                                                             
  
+	                             
+		      
+
 	                                     
 
 	       
@@ -869,6 +882,9 @@ string function DEV_GetStatTemplateDebugName( StatTemplate template )
 #if SERVER
                                                                                
  
+	                             
+		      
+
 	                                                                         
 
 	                                
@@ -914,7 +930,7 @@ StatEntry function ResolveStatEntry( StatTemplate template, ... )
 	Assert( template.type != eStatType.INVALID, "StatTemplate was not initialized." )
 
 	int keyArgCount = expect int(vargc)
-	Assert( keyArgCount == template.enumKeyCount, "Stat '" + DEV_GetStatTemplateDebugName( template ) + "' requires " + template.enumKeyCount + " enum keys but ResolveStatEntry was called with " + keyArgCount + "." )
+	Assert( keyArgCount == template.enumKeyCount, "Stat '" + GetStatTemplateDebugName( template ) + "' requires " + template.enumKeyCount + " enum keys but ResolveStatEntry was called with " + keyArgCount + "." )
 
 	if ( vargc == 0 )
 		return template.rootEntry
@@ -924,23 +940,61 @@ StatEntry function ResolveStatEntry( StatTemplate template, ... )
 	{
 		Assert( !resolver.isFinal )
 		string key = expect string(vargv[resolveDepth])
+
+                                             
+                                               
+                                                                   
+        
+
 		resolver = resolver.children[key]
 	}
 	Assert( resolver.isFinal )
 	string key = expect string(vargv[keyArgCount - 1])
 
+                                            
+                                              
+                                                                  
+       
+
 	#if SERVER && DEV
 		                                                                     
 		                                 
 		 
-			                                                                                                                                                      
+			                                                                                                             
 			                         
 		 
 	#endif
 
 	return resolver.entries[key]
 }
-#endif
+
+                                           
+                                                                                 
+ 
+                                                   
+                                                                        
+                                                                                      
+                                                                                
+                                                                               
+                                                                                   
+                                                                        
+                                                                                 
+                                                            
+    
+                                                                                      
+                                     
+  
+                                                    
+                                                               
+   
+                                                                   
+                                                                              
+   
+  
+           
+ 
+             
+#endif                          
 
 
 #if SERVER || CLIENT || UI
@@ -975,7 +1029,7 @@ StatEnumStruct function RegisterStatEnumStruct( StatEnumStruct ornull parentSESO
 
 
 #if SERVER || CLIENT || UI
-StatTemplate function InternalRegisterStatCommon( StatEnumStruct ornull parentSESOrNull, string fieldName, int type, int behavior, int flags, bool shouldCache )
+StatTemplate function InternalRegisterStatCommon( StatEnumStruct ornull parentSESOrNull, string fieldName, int type, int behavior, int flags, bool shouldCache, int gameMode )
 {
 	StatTemplate template
 
@@ -984,14 +1038,18 @@ StatTemplate function InternalRegisterStatCommon( StatEnumStruct ornull parentSE
 	template.behavior = behavior
 	template.flags = flags
 	template.shouldCache = shouldCache
+	template.gameMode = gameMode
 	Assert( !shouldCache || template.behavior == eStatBehavior.CALCULATED )
 
 	if ( parentSESOrNull == null )
 	{
+		Assert( gameMode != MODE_SPECIFIC )
+
 		template.rootEntry.type = template.type
 		template.rootEntry.behavior = template.behavior
 		template.rootEntry.flags = template.flags
 		template.rootEntry.shouldCache = template.shouldCache
+		template.rootEntry.gameMode = template.gameMode
 
 		template.rootEntry.persistenceFullKey_Current = STATS_PERSISTENCE_PREFIX_CURRENT + "." + fieldName
 		if ( template.rootEntry.behavior != eStatBehavior.CALCULATED || template.rootEntry.shouldCache )
@@ -1084,9 +1142,19 @@ StatTemplateEnumKeyResolver function BuildStatTemplateEnumKeyResolversRecursive(
 			entry.behavior = template.behavior
 			entry.flags = template.flags
 			entry.shouldCache = template.shouldCache
+			entry.gameMode = template.gameMode
 
 			string entryPersistencePartialKey = partialKey + ancestor.fieldName + "[" + choice + "]" + "." + stat.fieldName
 			entry.persistenceFullKey_Current = STATS_PERSISTENCE_PREFIX_CURRENT + "." + entryPersistencePartialKey
+
+			if ( template.gameMode == MODE_SPECIFIC )
+			{
+				foreach ( int gameModeEnum, string modeRef in GAME_MODE_TO_STAT_REF_MAP )
+				{
+					if ( entryPersistencePartialKey.find( modeRef ) != -1 )
+						entry.gameMode = gameModeEnum
+				}
+			}
 
 			if ( entry.behavior != eStatBehavior.CALCULATED || entry.shouldCache )
 			{
@@ -1147,26 +1215,26 @@ StatTemplateEnumKeyResolver function BuildStatTemplateEnumKeyResolversRecursive(
 
 
 #if SERVER || CLIENT || UI
-StatTemplate function RegisterAccumulatedStat_Int( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags = 0 )
+StatTemplate function RegisterAccumulatedStat_Int( StatEnumStruct ornull enumStructOrNull, string fieldName, int gameMode, int flags = 0 )
 {
-	return InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.INT, eStatBehavior.ACCUMULATED, flags, false )
+	return InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.INT, eStatBehavior.ACCUMULATED, flags, false, gameMode )
 }
 #endif
 
 
 #if SERVER || CLIENT || UI
-StatTemplate function RegisterVariableStat_Int( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags = 0 )
+StatTemplate function RegisterVariableStat_Int( StatEnumStruct ornull enumStructOrNull, string fieldName, int gameMode, int flags = 0 )
 {
-	return InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.INT, eStatBehavior.VARIABLE, flags, false )
+	return InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.INT, eStatBehavior.VARIABLE, flags, false, gameMode )
 }
 #endif
 
 
 #if SERVER || CLIENT || UI
 StatTemplate function InternalRegisterCalculatedStatCommon( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags, bool shouldCache,
-		StatCalcFuncInfo functionref( StatEntry, array<StatTemplate> ) setupFunc, array<StatTemplate> sourceTemplates )
+		StatCalcFuncInfo functionref( StatEntry, array<StatTemplate> ) setupFunc, array<StatTemplate> sourceTemplates, int gameMode )
 {
-	StatTemplate stat = InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.INT, eStatBehavior.CALCULATED, flags, shouldCache )
+	StatTemplate stat = InternalRegisterStatCommon( enumStructOrNull, fieldName, eStatType.INT, eStatBehavior.CALCULATED, flags, shouldCache, gameMode )
 
 	                                                           
 	  	                                                                                                                                       
@@ -1197,18 +1265,18 @@ StatTemplate function InternalRegisterCalculatedStatCommon( StatEnumStruct ornul
 
 #if SERVER || CLIENT || UI
 StatTemplate function RegisterExpensiveCalculatedStat_Int( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags,
-		StatCalcFuncInfo functionref( StatEntry, array<StatTemplate> ) setupFunc, array<StatTemplate> sourceTemplates )
+		StatCalcFuncInfo functionref( StatEntry, array<StatTemplate> ) setupFunc, array<StatTemplate> sourceTemplates, int gameMode )
 {
-	return InternalRegisterCalculatedStatCommon( enumStructOrNull, fieldName, flags, false, setupFunc, sourceTemplates )
+	return InternalRegisterCalculatedStatCommon( enumStructOrNull, fieldName, flags, false, setupFunc, sourceTemplates, gameMode )
 }
 #endif
 
 
 #if SERVER || CLIENT || UI
 StatTemplate function RegisterCachedCalculatedStat_Int( StatEnumStruct ornull enumStructOrNull, string fieldName, int flags,
-		StatCalcFuncInfo functionref( StatEntry, array<StatTemplate> ) setupFunc, array<StatTemplate> sourceTemplates )
+		StatCalcFuncInfo functionref( StatEntry, array<StatTemplate> ) setupFunc, array<StatTemplate> sourceTemplates, int gameMode )
 {
-	return InternalRegisterCalculatedStatCommon( enumStructOrNull, fieldName, flags, true, setupFunc, sourceTemplates )
+	return InternalRegisterCalculatedStatCommon( enumStructOrNull, fieldName, flags, true, setupFunc, sourceTemplates, gameMode )
 }
 #endif
 
@@ -1217,6 +1285,9 @@ StatTemplate function RegisterCachedCalculatedStat_Int( StatEnumStruct ornull en
 
                                          
  
+	                             
+		      
+
 	                           
 
 	       
@@ -1255,6 +1326,13 @@ StatTemplate function RegisterCachedCalculatedStat_Int( StatEnumStruct ornull en
 		                                    
 			      
 	      
+
+	                                                                                
+	                                                        
+	 
+		                                              
+		                                          
+	 
 
 	                                                                      
 	 

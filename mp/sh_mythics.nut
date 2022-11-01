@@ -49,7 +49,7 @@ void function RegisterMythicBundlesForCharacter( ItemFlavor characterClass )
 
 	array<ItemFlavor> mythicBundlesList = RegisterReferencedItemFlavorsFromArray( characterClass, "mythicBundles", "flavor" )
 
-	Assert ( mythicBundlesList.len() <= 1, "Character " + ItemFlavor_GetHumanReadableRef( characterClass ) + " has more than one Mythic bundle registered." )
+	Assert ( mythicBundlesList.len() <= 1, "Character " + string(ItemFlavor_GetAsset( characterClass )) + " has more than one Mythic bundle registered." )
 
 	if ( mythicBundlesList.len() == 0 )
 		return
@@ -105,7 +105,8 @@ void function RegisterMythicBundlesForCharacter( ItemFlavor characterClass )
 		ItemFlavor challengeFlav = expect ItemFlavor( challengeFlavOrNull )
 		RegisterChallengeSource( challengeFlav, mythicBundleFlav, CHALLENGE_SORT_ORDINAL )
 
-		table<string, string> metaData = ItemFlavor_GetMetaData( challengeFlav )
+		table<string, string> ornull metaData = ItemFlavor_GetMetaData( challengeFlav )
+		expect table<string, string>(metaData)
 
 		metaData[ HAS_MYTHIC_PREREQ ] <- string( preRegGUID )
 
@@ -174,7 +175,7 @@ ItemFlavor function Mythics_GetChallengeForCharacter( ItemFlavor character )
 
 bool function Mythics_IsItemFlavorMythicSkin( ItemFlavor item )
 {
-	return ItemFlavor_GetType( item ) == eItemType.character_skin && ItemFlavor_GetQuality( item ) == eRarityTier.HEIRLOOM
+	return ItemFlavor_GetType( item ) == eItemType.character_skin && ItemFlavor_GetQuality( item ) == eRarityTier.MYTHIC
 }
 
 #if UI

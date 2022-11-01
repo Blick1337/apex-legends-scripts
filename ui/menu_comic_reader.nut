@@ -1320,7 +1320,7 @@ void function UIToClient_LoadPanelImages( int panelIndex, asset panelImage, asse
 			continue                                                              
 
 		string rpak         = PanelImage_GetRPakName( images[ i ] )
-		PakHandle pakHandle = RequestPakFile( rpak )
+		PakHandle pakHandle = RequestPakFile( rpak, TRACK_FEATURE_UI )
 		file.pakHandles[pakIndex] <- pakHandle
 		printt( "#PAK - request", pakIndex )
 	}

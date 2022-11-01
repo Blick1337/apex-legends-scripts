@@ -37,7 +37,7 @@ void function PassiveAdrenaline_StartVisualEffect( entity ent, int statusEffect,
 	CreatePassiveAdrenalineRUI()
 	thread PassiveAdrenaline_UpdatePlayerScreenColorCorrection( viewPlayer )
 
-	int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, file.ScreenFxId, FX_PATTACH_ABSORIGIN_FOLLOW, -1, viewPlayer.EyePosition(), <0,0,0> )
+	int fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, file.ScreenFxId, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, viewPlayer.EyePosition(), <0,0,0> )
 	EffectSetIsWithCockpit( fxHandle, true )
 
 	thread PassiveAdreneline_ScreenEffectThread( viewPlayer, fxHandle, statusEffect )

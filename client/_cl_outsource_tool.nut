@@ -1,38 +1,35 @@
-#if DEV && PC_PROG
-untyped
-#endif
-
 global function ServerCallback_OVUpdateModelBounds
 global function ServerCallback_OVAddSpawnNode
 global function ServerCallback_OVSpawnModel
 global function ServerCallback_OVEnable
 global function ServerCallback_OVDisable
 
-global function ClientCodeCallback_OutsourceModelOrCamReset
+global function ClientCodeCallback_ResetCamera
+global function ClientCodeCallback_ResetModel
 global function ClientCodeCallback_SwitchOutsourceEnv
 global function ClientCodeCallback_UpdateOutsourceModel
 global function ClientCodeCallback_ToggleAxisLocked
+global function ClientCodeCallback_UpdateMousePos
+global function ClientCodeCallback_InputMouseScrolledUp
+global function ClientCodeCallback_InputMouseScrolledDown
+global function ClientCodeCallback_ToggleMoveModel
+global function ClientCodeCallback_ToggleModelInShadow
 
 #if DEV && PC_PROG
 global function OutsourceViewer_IsActive
 
-const string OUTSOURCE_VIEWER_NODES_SCRIPT_NAME = "Outsource_Viewer_Node"
-
 const int AXIS_LOCKED_X	= ( 1 << 0 )
 const int AXIS_LOCKED_Y	= ( 1 << 1 )
-const int AXIS_LOCKED_Z	= ( 1 << 2 )
 
 const int SKIN_QUALITY_OTHER = 5
 
-const int MAX_MODEL_NAMES = 10
-
 const float SUN_PITCH = 30.0
 
-const vector WEAPON_HEIGHT_OFFSET = < 0, 0, 20.0 >
-const vector CHARM_HEIGHT_OFFSET = < 0, 0, 20.0 >
+const vector WEAPON_HEIGHT_OFFSET = < 0.0, 0.0, 3.0 >
+const vector CHARACTER_HEIGHT_OFFSET = < 0, 0, 20.0 >
 
-const vector WEAPON_ROTATION_OFFSET = < 0.0, 90.0, 0.0 >
-const vector CHARM_ROTATION_OFFSET = < 0.0, 90.0, 0.0 >
+const vector WEAPON_ROTATION_OFFSET = < 0.0, -90.0, 0.0 >
+const vector CHARM_ROTATION_OFFSET = < 0.0, -90.0, 0.0 >
 
 const float VIEWER_CHARM_SIZE = 10.0
 
@@ -40,14 +37,28 @@ const float MODEL_TRANSLATESPEED = 0.25
 const float MODEL_TRANSLATESPEED_Z = 0.75
 const float MODEL_ROTATESPEED = 1.0
 
-const vector colorSelected = <160,160,0>
+const float STICK_DEADZONE = 0.1
+const float STICK_ROTATE_SPEED = 2.0
+const float STICK_MOVE_SPEED = 0.5
+
+const float MOUSE_MOVE_SPEED = 0.1
+
+const float BOUNDING_BOX_HEIGHT = 140
+const float BOUNDING_BOX_RADIUS = 19600
+
+const float MIN_DIST_FROM_FOCUS = 0.0
+const float MAX_DIST_FROM_FOCUS = 160.0
+
+const float HALF_MAX_ZOOM = 0.5
+const float QUARTER_MAX_ZOOM = 0.25
+
+const float halfPi = PI / 2.0
 
 enum eAssetType
 {
 	ASSETTYPE_CHARACTER,
 	ASSETTYPE_WEAPON,
 	ASSETTYPE_CHARM,
-	ASSETTYPE_PROP,
 
 	_count
 }
@@ -69,6 +80,8 @@ struct {
 	array<ItemFlavor> availableAssets
 	array<ItemFlavor> availableAssetSkins
 	array<ItemFlavor> availableCharms
+
+	bool useWorldModel = false
 	int currentAssetType = eAssetType.ASSETTYPE_CHARACTER
 	int currentAsset = 0
 	int currentAssetSkin = 0
@@ -76,299 +89,61 @@ struct {
 
 	table<string, vector> modelBounds
 	bool modelSelectionBoundsVisible = false
-	bool modelBoundsNeedsRefresh = false
+	bool hasCurrentModelBounds = false
 
-	vector colorSelected = <160,160,0>
-
-	bool shouldUsePreloadedModels = false
-	int selectedPreloadedModel = 0
-
-	bool tumbleModeActive = false
-	bool freecamActive = false
+	bool tumbleModeActive = true
 	int axisLockedFlags = 0
-	int noclipState = 0
+
+	float screenWidth = 1920                             
+	float screenHeight = 1080                              
+	float[2] previousMousePos	= [0, 0]
+	float[2] mouseDelta			= [0, 0]
+	float[2] rotationDelta		= [0, 0]
+	float[2] rotationVel		= [0, 0]
+	float[2] movementDelta		= [0, 0]
 
 	array<spawnNode> spawnNodes
 	array<string> spawnNodeNames
 	int currentNode = 0
+	int previousNode = 0
 	int maxNodes = 0
 
 	bool shouldBeInShadow = false
 
-	bool controllerHudCreated = false
-	bool shouldShowHud = false
-	array<var> hudModelNames
-	var controllerRui
-
 	int lastEnablematchending
 	int lastEnabletimelimit
 
-	bool extraCamModesEnabled = false
-
 	bool watermarkEnabled = false
 	var watermarkRui
+
+	entity viewerCameraEntity
+	float viewerCameraFOV
+	vector cameraStartPos
+	vector cameraStartAngle
+
+	float mouseWheelNewValue
+	float mouseWheelLastValue
+
+	bool shouldResetCameraOnModelUpdate = true
+	float maxPercentIncrement = 0.02
+	float lastZoomVal = 0.0
+	float maxZoomAmount
+	vector zoomTrackStartPos
+	vector zoomTrackEndPos
+	vector zoomNormVec
 } file
-
-void function CreateControllerHud()
-{
-	if ( file.controllerHudCreated )
-		return
-
-	file.controllerRui = RuiCreate( $"ui/controller_layout.rpak", clGlobal.topoFullScreen, RUI_DRAW_HUD, MINIMAP_Z_BASE + 1000 )
-	RuiSetImage( file.controllerRui, "gamepadImage", $"rui/menu/controls_menu/xbx_gamepad_button_layout" )
-	RuiSetString( file.controllerRui, "ultimateText", "" )
-	RuiSetVisible( file.controllerRui, false )
-
-	file.controllerHudCreated = true
-
-	file.hudModelNames.append( HudElement( "ModelViewerModelName0" ) )
-	file.hudModelNames.append( HudElement( "ModelViewerModelName1" ) )
-	file.hudModelNames.append( HudElement( "ModelViewerModelName2" ) )
-	file.hudModelNames.append( HudElement( "ModelViewerModelName3" ) )
-	file.hudModelNames.append( HudElement( "ModelViewerModelName4" ) )
-	file.hudModelNames.append( HudElement( "ModelViewerModelName5" ) )
-	file.hudModelNames.append( HudElement( "ModelViewerModelName6" ) )
-	file.hudModelNames.append( HudElement( "ModelViewerModelName7" ) )
-	file.hudModelNames.append( HudElement( "ModelViewerModelName8" ) )
-	file.hudModelNames.append( HudElement( "ModelViewerModelName9" ) )
-
-	Hud_SetColor( file.hudModelNames[0], 255, 255, 128 )
-
-	file.lastEnablematchending = 1
-	file.lastEnabletimelimit = 1
-}
-
-void function RefreshHudLabels()
-{
-	if ( file.tumbleModeActive )
-	{
-		RuiSetString( file.controllerRui, "lTriggerText",	"Zoom Out %[L_TRIGGER|]%" )
-		RuiSetString( file.controllerRui, "rTriggerText",	"%[R_TRIGGER|]% Zoom In" )
-		RuiSetString( file.controllerRui, "lShoulderText",	"Rotate CCW %[L_SHOULDER|]%" )
-		RuiSetString( file.controllerRui, "rShoulderText",	"%[R_SHOULDER|]% Rotate CW" )
-		RuiSetString( file.controllerRui, "yText", 			"%[Y_BUTTON|]%" )
-		RuiSetString( file.controllerRui, "xText",			"%[X_BUTTON|]% Swap Shadow Side" )
-		RuiSetString( file.controllerRui, "bText",			"%[B_BUTTON|]%" )
-		RuiSetString( file.controllerRui, "aText", 			"%[A_BUTTON|]%" )
-		RuiSetString( file.controllerRui, "lStickText",		"Unused %$vgui/fonts/buttons/stick_left_move%\nToggle Move %[STICK1|]%" )
-		RuiSetString( file.controllerRui, "rStickText",		"%$vgui/fonts/buttons/stick_right_move% Rotate Model\n%[STICK2|]% Reset Model" )
-		RuiSetString( file.controllerRui, "upText", 		"Previous Preloaded Model %[UP|]%" )
-		RuiSetString( file.controllerRui, "downText", 		"Next Preloaded Model %[DOWN|]%" )
-		RuiSetString( file.controllerRui, "leftText", 		"Previous Environment %[LEFT|]%" )
-		RuiSetString( file.controllerRui, "rightText", 		"Next Environment %[RIGHT|]%" )
-		RuiSetString( file.controllerRui, "backText", 		"Show/Hide Controls" )
-		RuiSetString( file.controllerRui, "startText", 		"Menu" )
-	}
-	else
-	{
-		RuiSetString( file.controllerRui, "lTriggerText",	"Zoom Out %[L_TRIGGER|]%" )
-		RuiSetString( file.controllerRui, "rTriggerText",	"%[R_TRIGGER|]% Zoom In" )
-		RuiSetString( file.controllerRui, "lShoulderText",	"Move Down %[L_SHOULDER|]%" )
-		RuiSetString( file.controllerRui, "rShoulderText",	"%[R_SHOULDER|]% Move Up" )
-		RuiSetString( file.controllerRui, "yText", 			"%[Y_BUTTON|]%" )
-		RuiSetString( file.controllerRui, "xText",			"%[X_BUTTON|]% Swap Shadow Side" )
-		RuiSetString( file.controllerRui, "bText",			"%[B_BUTTON|]%" )
-		RuiSetString( file.controllerRui, "aText", 			"%[A_BUTTON|]%" )
-		RuiSetString( file.controllerRui, "lStickText",		"Unused %$vgui/fonts/buttons/stick_left_move%\nToggle Rotation %[STICK1|]%" )
-		RuiSetString( file.controllerRui, "rStickText",		"%$vgui/fonts/buttons/stick_right_move% Move Model\n%[STICK2|]% Reset Model" )
-		RuiSetString( file.controllerRui, "upText", 		"Previous Preloaded Model %[UP|]%" )
-		RuiSetString( file.controllerRui, "downText", 		"Next Preloaded Model %[DOWN|]%" )
-		RuiSetString( file.controllerRui, "leftText", 		"Previous Environment %[LEFT|]%" )
-		RuiSetString( file.controllerRui, "rightText", 		"Next Environment %[RIGHT|]%" )
-		RuiSetString( file.controllerRui, "backText", 		"Show/Hide Controls" )
-		RuiSetString( file.controllerRui, "startText", 		"Menu" )
-	}
-}
-
 
 bool function OutsourceViewer_IsActive()
 {
 	return file.outsourceViewerEnabled
 }
 
-                                                    
-                                                    
-                                                    
-
-array<int> OUTSOURCE_VIEWER_BUTTONS = [
-	             
-	BUTTON_DPAD_UP,			             
-	BUTTON_DPAD_DOWN,		                 
-	BUTTON_DPAD_LEFT,		                       
-	BUTTON_DPAD_RIGHT,		                   
-	BUTTON_SHOULDER_LEFT,	                                             
-	BUTTON_SHOULDER_RIGHT,	                                   
-
-	BUTTON_TRIGGER_LEFT,	           
-	BUTTON_TRIGGER_RIGHT,	          
-
-	BUTTON_A,				                                                  
-	BUTTON_B,				                                                     
-	BUTTON_X,				                     
-	BUTTON_Y,				         
-	BUTTON_BACK,			            
-	BUTTON_STICK_LEFT,		                  
-	BUTTON_STICK_RIGHT,		              
-
-	           
-	KEY_UP,		             
-	KEY_DOWN,	                 
-	KEY_LEFT,	                       
-	KEY_RIGHT,	                   
-	KEY_Q,		                                             
-	KEY_E,		                                   
-
-	KEY_W,		                     
-	KEY_S,		                  
-	KEY_A,		                  
-	KEY_D,		                   
-
-	KEY_F,		                                                  
-	KEY_C,		                                                     
-	KEY_TAB,	            
-	KEY_T,		                  
-	KEY_SPACE,	              
-]
-
-void function RegisterButtons()
-{
-	foreach ( int buttonId in OUTSOURCE_VIEWER_BUTTONS )
-	{
-		RegisterButtonPressedCallback( buttonId, void function( var button ) : ( buttonId )
-		{
-			OnButtonPressed( button, buttonId )
-		} )
-	}
-}
-
-                      
-void function OnButtonPressed( var button, int key )
-{
-	bool xLocked = ( file.axisLockedFlags & AXIS_LOCKED_X ) != 0
-	bool yLocked = ( file.axisLockedFlags & AXIS_LOCKED_Y ) != 0
-	bool zLocked = ( file.axisLockedFlags & AXIS_LOCKED_Z ) != 0
-
-	switch ( key )
-	{
-		case KEY_W:
-			if ( !file.freecamActive && !yLocked  )
-			{
-				if ( file.tumbleModeActive )
-					thread PitchModelForward()
-				else
-					thread TranslateModelUp()
-			}
-			break
-		case KEY_S:
-			if ( !file.freecamActive && !yLocked )
-			{
-				if ( file.tumbleModeActive )
-					thread PitchModelBack()
-				else
-					thread TranslateModelDown()
-			}
-			break
-		case KEY_A:
-			if ( !file.freecamActive && !xLocked  )
-			{
-				if ( file.tumbleModeActive )
-					thread RotateModelCCW()
-				else
-					thread TranslateModelLeft()
-			}
-			break
-		case KEY_D:
-			if ( !file.freecamActive && !xLocked )
-			{
-				if ( file.tumbleModeActive )
-					thread RotateModelCW()
-				else
-					thread TranslateModelRight()
-			}
-			break
-		case KEY_UP:
-		case BUTTON_DPAD_UP:
-			NextModel()
-			break
-		case KEY_DOWN:
-		case BUTTON_DPAD_DOWN:
-			PrevModel()
-			break
-		case KEY_LEFT:
-		case BUTTON_DPAD_LEFT:
-			PrevEnvironmentNode()
-			break
-		case KEY_RIGHT:
-		case BUTTON_DPAD_RIGHT:
-			NextEnvironmentNode()
-			break
-		case KEY_Q:
-		case BUTTON_SHOULDER_LEFT:
-			if ( !zLocked )
-			{
-				if ( file.tumbleModeActive )
-					thread RollModelLeft()
-				else
-					thread TranslateModelZDown()
-			}
-			break
-		case KEY_E:
-		case BUTTON_SHOULDER_RIGHT:
-			if ( !zLocked )
-			{
-				if ( file.tumbleModeActive )
-					thread RollModelRight()
-				else
-					thread TranslateModelZUp()
-			}
-			break
-		case BUTTON_TRIGGER_LEFT:
-		case BUTTON_TRIGGER_RIGHT:
-			break
-		case KEY_C:
-			ToggleModelSelectionBounds()
-			break
-		case BUTTON_B:
-			if ( file.extraCamModesEnabled )
-				CycleCamMode()
-			break
-		case KEY_F:
-		case BUTTON_A:
-			if ( !file.tumbleModeActive && file.extraCamModesEnabled )
-				EnableNoclip()
-			break
-		case BUTTON_X:
-			file.shouldBeInShadow = !file.shouldBeInShadow
-			UpdateSunAngles( file.spawnNodes[ file.currentNode ].ang )
-			break
-		case BUTTON_Y:
-			break
-		case KEY_TAB:
-		case BUTTON_BACK:
-			file.shouldShowHud = !file.shouldShowHud
-			RefreshControllerLayoutVisibility()
-			RefreshModelListVisibility()
-			break
-		case KEY_T:
-		case BUTTON_STICK_LEFT:
-			ToggleTumbleMode()
-			break
-		case KEY_SPACE:
-		case BUTTON_STICK_RIGHT:
-			if ( file.extraCamModesEnabled )
-				OutsourceViewer_ResetView( file.viewerModel )
-			else
-				thread ResetViewerModelOriginAndAngles()
-			break
-	}
-}
-
 void function EnableViewerWatermark()
 {
-	if ( !file.watermarkEnabled )
-		file.watermarkEnabled = true
-	else
+	if ( file.watermarkEnabled )
 		return
+
+	file.watermarkEnabled = true
 
 	var watermarkRui = RuiCreate( MINIMAP_UID_COORDS_RUI, clGlobal.topoFullScreen, RUI_DRAW_HUD, MINIMAP_Z_BASE + 1000 )
 	InitHUDRui( watermarkRui, true )
@@ -405,7 +180,7 @@ void function DisableViewerWatermark()
 	RuiDestroyIfAlive( file.watermarkRui )
 }
 
-void function SetCurrentModelType( string modelName )                                                             
+void function SetCurrentModelType( string modelName )
 {
 	if ( modelName.find( "humans" ) > 0 )
 		file.currentAssetType = eAssetType.ASSETTYPE_CHARACTER
@@ -414,14 +189,7 @@ void function SetCurrentModelType( string modelName )
 	else if ( modelName.find( "charm" ) > 0 || modelName.find( "Charm" ) > 0 )
 		file.currentAssetType = eAssetType.ASSETTYPE_CHARM
 	else
-		file.currentAssetType = eAssetType.ASSETTYPE_PROP
-}
-
-void function ToggleModelSelectionBounds()
-{
-	file.modelSelectionBoundsVisible = !file.modelSelectionBoundsVisible
-	if ( file.modelSelectionBoundsVisible )
-		thread ShowModelSectionBounds()
+		Warning( "Art Viewer - Error: Unknown asset type on SetCurrentModelType." )
 }
 
 int function SortItemFlavorsByQuality( ItemFlavor item1, ItemFlavor item2 )
@@ -450,24 +218,17 @@ void function RefreshWeaponItemFlavors()
 		return
 	}
 
+	if ( file.currentAsset >= file.availableAssets.len() )
+	{
+		Warning( "Art Viewer - Current asset out of bounds, setting to 0." )
+		file.currentAsset = 0
+	}
+
 	array< string > availableWeaponNames
 	foreach ( int weaponIndex, ItemFlavor weapon in file.availableAssets )
 	{
 		string weaponName = Localize( ItemFlavor_GetLongName( weapon ) )
 		availableWeaponNames.append( weaponName )
-
-		if ( file.shouldUsePreloadedModels )
-		{
-			asset preloadedModel = file.modelViewerModels[ file.selectedPreloadedModel ]
-			if ( preloadedModel.find( weaponName.tolower() ) != -1 )
-				file.currentAsset = weaponIndex
-		}
-	}
-
-	if ( file.currentAsset >= file.availableAssets.len() )
-	{
-		Warning( "Art Viewer - Current asset out of bounds, setting to 0." )
-		file.currentAsset = 0
 	}
 
 	ItemFlavor currentWeapon = file.availableAssets[ file.currentAsset ]
@@ -527,24 +288,17 @@ void function RefreshCharacterItemFlavors()
 		return
 	}
 
+	if ( file.currentAsset >= file.availableAssets.len() )
+	{
+		Warning( "Art Viewer - Current asset out of bounds, setting to 0." )
+		file.currentAsset = 0
+	}
+
 	array< string > availableCharacterNames
 	foreach ( int characterIndex, character in file.availableAssets )
 	{
 		string characterName = Localize( ItemFlavor_GetLongName( character ) )
 		availableCharacterNames.append( characterName )
-
-		if ( file.shouldUsePreloadedModels )
-		{
-			asset preloadedModel = file.modelViewerModels[ file.selectedPreloadedModel ]
-			if ( preloadedModel.find( characterName.tolower() ) != -1 )
-				file.currentAsset = characterIndex
-		}
-	}
-
-	if ( file.currentAsset >= file.availableAssets.len() )
-	{
-		Warning( "Art Viewer - Current asset out of bounds, setting to 0." )
-		file.currentAsset = 0
 	}
 
 	ItemFlavor currentCharacter = file.availableAssets[ file.currentAsset ]
@@ -588,46 +342,21 @@ void function RefreshCharmItemFlavors()
 		return
 	}
 
-	array< string > availableCharmNames
-	foreach ( int charmIndex, charm in file.availableCharms )
-	{
-		string charmName = Localize( ItemFlavor_GetLongName( charm ) )
-		availableCharmNames.append( charmName )
-
-		if ( file.shouldUsePreloadedModels )
-		{
-			asset preloadedModel = file.modelViewerModels[ file.selectedPreloadedModel ]
-			if ( preloadedModel.find( charmName.tolower() ) != -1 )
-				file.currentCharm = charmIndex
-		}
-	}
-
 	if ( file.currentCharm >= file.availableCharms.len() )
 	{
 		Warning( "Art Viewer - Current charm out of bounds, setting to 0." )
 		file.currentCharm = 0
 	}
 
+	array< string > availableCharmNames
+	foreach ( int charmIndex, charm in file.availableCharms )
+	{
+		string charmName = Localize( ItemFlavor_GetLongName( charm ) )
+		availableCharmNames.append( charmName )
+	}
+
 	array< OutsourceViewer_SkinDetails > currentSkinNamesAndTiers
 	UpdateOVAssetUI( availableCharmNames, currentSkinNamesAndTiers, availableCharmNames, file.currentAssetType, file.currentCharm, file.currentAssetSkin, file.currentCharm )
-}
-
-void function RefreshPropsAndPropSkins()
-{
-	file.availableAssets.clear()
-	file.availableAssetSkins.clear()
-
-	file.currentAsset = 0
-	file.currentAssetSkin = 0
-
-	array< string > availablePropNames = [ "None" ]
-	OutsourceViewer_SkinDetails skinDetails
-	skinDetails.skinName = "None"
-	skinDetails.skinTier = SKIN_QUALITY_OTHER
-	array< OutsourceViewer_SkinDetails > currentPropSkinNamesAndTiers = [ skinDetails ]
-	array< string > availableCharmNames
-
-	UpdateOVAssetUI( availablePropNames, currentPropSkinNamesAndTiers, availableCharmNames, file.currentAssetType, file.currentAsset, file.currentAssetSkin, file.currentCharm )
 }
 
 void function RefreshAssetItemFlavors()
@@ -643,90 +372,15 @@ void function RefreshAssetItemFlavors()
 		case eAssetType.ASSETTYPE_CHARM:
 			RefreshCharmItemFlavors()
 			break
-		case eAssetType.ASSETTYPE_PROP:
-			RefreshPropsAndPropSkins()
-			break
 		default:
 			Warning( "Art Viewer - Unknown asset type: ", file.currentAssetType  )
 			break
 	}
 }
 
-void function RefreshControllerLayoutVisibility()
-{
-	RuiSetVisible( file.controllerRui, file.shouldShowHud )
-}
-
-void function RefreshModelListVisibility()
-{
-	foreach ( element in file.hudModelNames )
-	{
-		if ( file.shouldShowHud )
-			element.Show()
-		else
-			element.Hide()
-	}
-}
-
 void function ToggleTumbleMode()
 {
-	if ( !file.tumbleModeActive && file.viewerModel != null )
-		file.tumbleModeActive = true
-	else
-		file.tumbleModeActive = false
-
-	RefreshHudLabels()
-}
-
-void function CycleCamMode()
-{
-	Remote_ServerCallFunction( "ClientCallback_CycleCamMode" )
-
-	if ( file.freecamActive )
-	{
-		file.freecamActive = false
-		thread MoveModel( GetLocalClientPlayer() )
-	}
-	else
-		file.freecamActive = true
-}
-
-void function GetPreloadedModels()
-{
-	                                               
-
-	                                               
-	   
-	  	                
-	  	                       
-
-	  	                                           
-	  		                                                                     
-
-	  	                           
-	  		                                       
-
-	  	                         
-	   
-	  
-	                                 
-
-	                                        
-	  	                                        
-	                                                      
-}
-
-void function RestoreNoclip()
-{
-	if ( file.noclipState == 1 )
-		GetLocalClientPlayer().ClientCommand( "noclip" )       
-}
-
-void function EnableNoclip()
-{
-	GetLocalClientPlayer().ClientCommand( "noclip" )       
-
-	file.noclipState = file.noclipState == 0 ? 1 : 0
+	file.tumbleModeActive = !file.tumbleModeActive
 }
 
 void function ShowModelSectionBounds()
@@ -750,117 +404,346 @@ void function ShowModelSectionBounds()
 	}
 }
 
+void function ToggleModelSelectionBounds()
+{
+	file.modelSelectionBoundsVisible = !file.modelSelectionBoundsVisible
+	if ( file.modelSelectionBoundsVisible )
+		thread ShowModelSectionBounds()
+}
+
+void function SetupCamZoom( bool calcStartingZoom )
+{
+	float baseZoomPercentage = 1.0
+	vector focusOffset = < 0, 0, 0 >
+	switch ( file.currentAssetType )
+	{
+		case eAssetType.ASSETTYPE_WEAPON:
+			focusOffset = WEAPON_HEIGHT_OFFSET
+			baseZoomPercentage = QUARTER_MAX_ZOOM
+			break
+		case eAssetType.ASSETTYPE_CHARACTER:
+			focusOffset = CHARACTER_HEIGHT_OFFSET
+			baseZoomPercentage = HALF_MAX_ZOOM
+			break
+		case eAssetType.ASSETTYPE_CHARM:
+			baseZoomPercentage = QUARTER_MAX_ZOOM
+			break
+	}
+
+	vector focalPoint 		= file.spawnNodes[ file.currentNode ].pos + focusOffset
+	vector normToFocalPoint = Normalize( focalPoint - file.cameraStartPos )
+	file.zoomTrackStartPos  = file.cameraStartPos + ( normToFocalPoint * MIN_DIST_FROM_FOCUS )
+	file.zoomTrackEndPos    = file.cameraStartPos + ( normToFocalPoint * MAX_DIST_FROM_FOCUS )
+	file.maxZoomAmount 		= Distance( file.zoomTrackStartPos, file.zoomTrackEndPos )
+	file.zoomNormVec      	= Normalize( file.zoomTrackEndPos - file.zoomTrackStartPos )
+
+	if ( calcStartingZoom )
+	{
+		float zoomAmount
+		if ( file.hasCurrentModelBounds )
+		{
+			float halfModelBoundsHeight = GetCurrentModelHeight() / 2.0
+			float halfModelBoundsWidth = GetCurrentModelWidth() / 2.0
+
+			float horizontalFOV = DegToRad( file.viewerCameraFOV )
+
+			float hwRatio =  file.screenHeight / file.screenWidth
+
+			float topPlanAng = atan( tan( horizontalFOV / 2.0 ) * hwRatio )
+			float topPlanToModelBoundsAng = halfPi - topPlanAng
+			float zoomDistFromBoundsHeight = ( ( halfModelBoundsHeight * sin( topPlanToModelBoundsAng ) ) / sin( topPlanAng ) )
+
+			float leftPlanAng = ( horizontalFOV / 2.0 )
+			float leftPlanToModelBoundsAng = halfPi - leftPlanAng
+			float zoomDistFromBoundsWidth = ( ( halfModelBoundsWidth * sin( leftPlanToModelBoundsAng ) ) / sin( leftPlanAng ) )
+
+			float zoomDistFromBounds = zoomDistFromBoundsHeight > zoomDistFromBoundsWidth ? zoomDistFromBoundsHeight : zoomDistFromBoundsWidth
+			zoomAmount = zoomDistFromBounds + ( GetCurrentModelDepth() / 2 )
+			zoomAmount += zoomDistFromBounds / 10.0                                                          
+		}
+		else
+		{
+			zoomAmount = file.maxZoomAmount * baseZoomPercentage
+		}
+
+		vector dest = file.zoomTrackEndPos - ( file.zoomNormVec * zoomAmount )
+		file.viewerCameraEntity.SetOrigin( dest )
+		file.lastZoomVal = file.maxZoomAmount - zoomAmount
+	}
+	else
+	{
+		vector dest = file.zoomTrackStartPos + ( file.zoomNormVec * file.lastZoomVal )
+		file.viewerCameraEntity.SetOrigin( dest )
+	}
+}
+
+void function ArtViewer_SetCameraZoomPos()
+{
+	float newZoomVal   = 0.0
+	float newIncrement = 0.0
+
+	if ( IsControllerModeActive() )
+	{
+		float maxDistIncrement = file.maxPercentIncrement * file.maxZoomAmount
+
+		float stickLTriggerRaw         = clamp( InputGetAxis( ANALOG_L_TRIGGER ), -1.0, 1.0 )
+		float stickLTriggerRemappedAbs = ( fabs( stickLTriggerRaw ) < STICK_DEADZONE ) ? 0.0 : ( ( fabs( stickLTriggerRaw ) - STICK_DEADZONE ) / ( 1.0 - STICK_DEADZONE ) )
+		float stickLTrigger            = EaseIn( stickLTriggerRemappedAbs ) * ( stickLTriggerRaw < 0.0 ? -1.0 : 1.0 )
+
+		float stickRTriggerRaw         = clamp( InputGetAxis( ANALOG_R_TRIGGER ), -1.0, 1.0 )
+		float stickRTriggerRemappedAbs = ( fabs( stickRTriggerRaw ) < STICK_DEADZONE ) ? 0.0 : ( ( fabs( stickRTriggerRaw ) - STICK_DEADZONE ) / ( 1.0 - STICK_DEADZONE ) )
+		float stickRTrigger            = EaseIn( stickRTriggerRemappedAbs ) * ( stickRTriggerRaw < 0.0 ? -1.0 : 1.0 )
+
+		float normalizedTriggerInput = 0.0
+		if ( stickLTrigger > 0.0 )
+			normalizedTriggerInput = -stickLTrigger
+		else if ( stickRTrigger > 0.0 )
+			normalizedTriggerInput = stickRTrigger
+		else
+			return
+
+		newIncrement = normalizedTriggerInput * maxDistIncrement
+		newZoomVal = Clamp( file.lastZoomVal + newIncrement, 0.0, file.maxZoomAmount )
+
+		float distChange = fabs( newZoomVal - file.lastZoomVal )
+		if ( distChange < 0.001 )
+			return
+
+		vector destination = file.zoomTrackStartPos + ( file.zoomNormVec * newZoomVal )
+		file.viewerCameraEntity.SetOrigin( destination )
+	}
+	else
+	{
+		float delta = file.mouseWheelNewValue - file.mouseWheelLastValue
+		if ( delta == 0.0 )
+			return
+
+		file.mouseWheelNewValue = Clamp( file.mouseWheelNewValue, -100.0, 100.0 )
+		file.mouseWheelLastValue = file.mouseWheelNewValue
+
+		float maxDistIncrement = file.maxPercentIncrement * file.maxZoomAmount
+		newIncrement = delta * maxDistIncrement
+		newZoomVal = Clamp( file.lastZoomVal + newIncrement, 0.0, file.maxZoomAmount )
+		float distChange = fabs( newZoomVal - file.lastZoomVal )
+		if ( distChange < 0.001 )
+			return
+
+		vector destination = file.zoomTrackStartPos + ( file.zoomNormVec * newZoomVal )
+
+		file.viewerCameraEntity.SetOrigin( destination )
+	}
+
+	file.lastZoomVal = newZoomVal
+}
+
+void function ArtViewer_UpdateEntityAngles()
+{
+	spawnNode node = file.spawnNodes[ file.currentNode ]
+	vector pitchTowardCamera = AnglesCompose( node.ang + < 0, 180, 0>, <file.rotationDelta[1], 0, 0> )
+	vector newAng            = AnglesCompose( pitchTowardCamera, <0, file.rotationDelta[0], 0> )
+
+	file.modelMover.SetAngles( newAng )
+}
+
+void function ArtViewer_UpdateEntityOrigin()
+{
+	vector transXY	= AnglesToRight( file.viewerCameraEntity.GetAngles() ) * file.movementDelta[0]
+	vector transZ 	= <0,0,-1> * file.movementDelta[1]
+	vector trans	= transXY + transZ
+
+	float distFromModel = file.maxZoomAmount - file.lastZoomVal
+	trans *= ( distFromModel * FrameTime() )                                              
+	vector newOrigin = file.modelMover.GetOrigin() + trans
+	spawnNode currentNode = file.spawnNodes[ file.currentNode ]
+
+	vector lowerBounds = ( currentNode.pos - < 0.0, 0.0, BOUNDING_BOX_HEIGHT / 2 > )
+	vector upperBounds = ( currentNode.pos + < 0.0, 0.0, BOUNDING_BOX_HEIGHT / 2 > )
+
+	bool xLocked = ( file.axisLockedFlags & AXIS_LOCKED_X ) != 0
+	if ( xLocked )
+	{
+		trans = < 0.0, 0.0, trans.z >
+	}
+	else
+	{
+		if ( GetDistanceSqrFromLineSegment( lowerBounds, upperBounds, newOrigin ) > BOUNDING_BOX_RADIUS )
+			trans = < 0.0, 0.0, trans.z >
+	}
+
+	bool yLocked = ( file.axisLockedFlags & AXIS_LOCKED_Y ) != 0
+	if ( yLocked )
+	{
+		trans.z = 0.0
+	}
+	else
+	{
+		vector bottomVec     = Normalize( upperBounds - lowerBounds )
+		vector pointToBottom = Normalize( newOrigin - lowerBounds )
+
+		vector topVec     = Normalize( lowerBounds - upperBounds )
+		vector pointToTop = Normalize( newOrigin - upperBounds )
+
+		if ( DotProduct( bottomVec, pointToBottom ) < 0 || DotProduct( topVec, pointToTop ) < 0.0  )
+			trans.z = 0.0
+	}
+
+	newOrigin = file.modelMover.GetOrigin() + trans
+	file.modelMover.SetOrigin( newOrigin )
+}
+
+float function StepTowardsZero( float vel, float amount )
+{
+	if ( vel > 0.0 )
+		return vel > amount ? (  vel - amount ) : 0.0
+	else if ( vel < 0.0 )
+		return vel < amount ? ( vel + amount ) : 0.0
+
+	return 0.0
+}
+
+void function ArtViewer_UpdateAnglesFromInput()
+{
+	float[2] currentRotationDelta = file.rotationDelta
+	float[2] newRotationDelta
+	float maxTurnSpeed = 270
+
+	if ( IsControllerModeActive() )
+	{
+		float stickXRaw         = clamp( InputGetAxis( ANALOG_RIGHT_X ), -1.0, 1.0 )
+		float stickXRemappedAbs = ( fabs( stickXRaw ) < STICK_DEADZONE ) ? 0.0 : ( ( fabs( stickXRaw ) - STICK_DEADZONE ) / ( 1.0 - STICK_DEADZONE ) )
+		float stickX            = EaseIn( stickXRemappedAbs ) * (stickXRaw < 0.0 ? -1.0 : 1.0)
+		file.rotationVel[0] += stickX * maxTurnSpeed * FrameTime() * STICK_ROTATE_SPEED
+
+		float stickYRaw         = clamp( InputGetAxis( ANALOG_RIGHT_Y ), -1.0, 1.0 )
+		float stickYRemappedAbs = ( fabs( stickYRaw ) < STICK_DEADZONE ) ? 0.0 : ( ( fabs( stickYRaw ) - STICK_DEADZONE ) / ( 1.0 - STICK_DEADZONE ) )
+		float stickY            = EaseIn( stickYRemappedAbs ) * ( -stickYRaw < 0.0 ? -1.0 : 1.0 )
+		file.rotationVel[1] -= stickY * maxTurnSpeed * FrameTime() * STICK_ROTATE_SPEED
+	}
+	else
+	{
+		file.rotationVel[0] += file.mouseDelta[0]
+		file.mouseDelta[0] = 0                                                  
+
+		file.rotationVel[1] += file.mouseDelta[1]
+		file.mouseDelta[1] = 0                                                  
+	}
+
+	newRotationDelta[0] = currentRotationDelta[0] + (file.rotationVel[0] * FrameTime()) % 360.0
+	newRotationDelta[1] = currentRotationDelta[1] + (file.rotationVel[1] * FrameTime()) % 360.0
+
+	float velDecay = 180 * FrameTime()
+	float dampX = max( fabs( file.rotationVel[0] ) / 60.0, 0.1 )
+	float dampY = max( fabs( file.rotationVel[1] ) / 60.0, 0.1 )
+	file.rotationVel[0] = clamp( StepTowardsZero( file.rotationVel[0], velDecay * dampX ), -maxTurnSpeed, maxTurnSpeed )
+	file.rotationVel[1] = clamp( StepTowardsZero( file.rotationVel[1], velDecay * dampY ), -maxTurnSpeed, maxTurnSpeed )
+
+	if ( currentRotationDelta[0] == newRotationDelta[0] && currentRotationDelta[1] == newRotationDelta[1] )
+		return
+
+	if ( !( file.axisLockedFlags & AXIS_LOCKED_Y ) )
+		currentRotationDelta[0] = newRotationDelta[0]
+	if ( !( file.axisLockedFlags & AXIS_LOCKED_X ) )
+		currentRotationDelta[1] = newRotationDelta[1]
+
+	ArtViewer_UpdateEntityAngles()
+}
+
+void function ArtViewer_UpdateOriginFromInput()
+{
+	float[2] currentMoveDelta = file.movementDelta
+	float[2] newMoveDelta
+	float maxMoveSpeed = 27
+
+	if ( IsControllerModeActive() )
+	{
+		float stickXRaw         = clamp( InputGetAxis( ANALOG_RIGHT_X ), -1.0, 1.0 )
+		float stickXRemappedAbs = ( fabs( stickXRaw ) < STICK_DEADZONE ) ? 0.0 : ( ( fabs( stickXRaw ) - STICK_DEADZONE ) / ( 1.0 - STICK_DEADZONE ) )
+		float stickX            = EaseIn( stickXRemappedAbs ) * (stickXRaw < 0.0 ? -1.0 : 1.0)
+		newMoveDelta[0] = stickX * maxMoveSpeed * FrameTime() * STICK_MOVE_SPEED
+
+		float stickYRaw         = clamp( InputGetAxis( ANALOG_RIGHT_Y ), -1.0, 1.0 )
+		float stickYRemappedAbs = ( fabs( stickYRaw ) < STICK_DEADZONE ) ? 0.0 : ( ( fabs( stickYRaw ) - STICK_DEADZONE ) / ( 1.0 - STICK_DEADZONE ) )
+		float stickY            = EaseIn( stickYRemappedAbs ) * ( -stickYRaw < 0.0 ? -1.0 : 1.0 )
+		newMoveDelta[1] = -stickY * maxMoveSpeed * FrameTime() * STICK_MOVE_SPEED
+	}
+	else
+	{
+		newMoveDelta[0] = file.mouseDelta[0] * MOUSE_MOVE_SPEED
+		file.mouseDelta[0] = 0
+
+		newMoveDelta[1] = file.mouseDelta[1] * MOUSE_MOVE_SPEED
+		file.mouseDelta[1] = 0
+	}
+
+	if ( newMoveDelta[0] == 0.0 && newMoveDelta[1] == 0.0 )
+		return
+
+	currentMoveDelta[0] = newMoveDelta[0]
+	currentMoveDelta[1] = newMoveDelta[1]
+
+	ArtViewer_UpdateEntityOrigin()
+}
+
 void function MoveModel( entity player )
 {
 	player.EndSignal( "Stop_MoveModel" )
 
 	if ( file.viewerModel == null || file.modelMover == null )
 		return
-	if ( file.freecamActive )
-		return
-	if ( file.modelBoundsNeedsRefresh )
-		return
 
-	RefreshHudLabels()
-
-	while ( file.viewerModel != null && file.modelMover != null && !file.freecamActive && !file.modelBoundsNeedsRefresh )
+	while ( file.viewerModel != null && file.modelMover != null )
 	{
-		float xAxis
-		float yAxis
-		if ( file.extraCamModesEnabled )
-		{
-			xAxis = InputGetAxis( 0 )
-			yAxis = InputGetAxis( 1 )
-		}
-		else
-		{
-			xAxis = InputGetAxis( 2 )
-			yAxis = InputGetAxis( 3 )
-		}
-
+		ArtViewer_SetCameraZoomPos()
 		if ( file.tumbleModeActive )
-		{
-			xAxis *= -1
-			yAxis *= 1
-
-			vector angles = file.modelMover.GetAngles()
-
-			if ( fabs( yAxis ) + fabs( xAxis ) < 0.5 )
-			{
-				wait( 0.0 )
-				continue
-			}
-
-			if ( fabs( yAxis ) > fabs( xAxis ) )
-			{
-				vector anglesRight = AnglesToRight( player.CameraAngles() )
-				angles = RotateAnglesAboutAxis( angles, anglesRight, yAxis )
-			}
-			else
-			{
-				vector anglesUp = AnglesToUp( player.CameraAngles() )
-				angles = RotateAnglesAboutAxis( angles, anglesUp, xAxis )
-			}
-
-			file.modelMover.SetAngles( angles )
-		}
+			ArtViewer_UpdateAnglesFromInput()
 		else
-		{
-			xAxis *= 0.5
-			yAxis *= -0.5
+			ArtViewer_UpdateOriginFromInput()
 
-			if ( fabs( yAxis ) + fabs( xAxis ) < 0.5)
-			{
-				wait( 0.0 )
-				continue
-			}
-
-			vector yMove = file.modelMover.GetOrigin() - player.CameraPosition()
-			yMove.z = 0.0
-			yMove = Normalize( yMove )
-			yMove *= yAxis
-
-			vector xMove = AnglesToRight( <0,player.CameraAngles().y,0> )
-			xMove *= xAxis
-
-			vector trans = xMove + yMove
-
-			file.modelMover.SetOrigin( file.modelMover.GetOrigin() + trans )
-		}
-		wait( 0.0 )
+		WaitFrame()
 	}
 	file.viewerModel.ClearParent()
 }
 
 void function ResetViewerModelOriginAndAngles()
 {
-	WaitFrame()                                                      
-	if ( file.viewerModel != null && file.modelMover != null)
+	if ( file.viewerModel != null && file.modelMover != null )
 	{
 		spawnNode node = file.spawnNodes[ file.currentNode ]
 
-		vector offset = < 0,0,0 >
-		vector orientation = < 0.0, 180.0, 0.0 >
-		switch ( file.currentAssetType )
-		{
-			case eAssetType.ASSETTYPE_WEAPON:
-				offset = WEAPON_HEIGHT_OFFSET
-				orientation = WEAPON_ROTATION_OFFSET
-				break
-			case eAssetType.ASSETTYPE_CHARM:
-				offset = CHARM_HEIGHT_OFFSET
-				orientation = CHARM_ROTATION_OFFSET
-				break
-		}
+		file.previousMousePos[0] = 0
+		file.previousMousePos[1] = 0
+		file.mouseDelta[0] = 0
+		file.mouseDelta[1] = 0
 
-		file.modelMover.SetOrigin( node.pos + offset )
-		file.modelMover.SetAngles( node.ang + orientation )
+		file.rotationDelta[0] = 0
+		file.rotationDelta[1] = 0
+		file.rotationVel[0] = 0
+		file.rotationVel[1] = 0
+
+		file.movementDelta[0] = 0
+		file.movementDelta[1] = 0
+
+		file.modelMover.SetOrigin( node.pos )
+		file.modelMover.SetAngles( node.ang + <0, 180, 0> )                                        
 	}
 }
 
 void function SetCharmModel()
 {
-	ItemFlavor charmToApply  = file.availableCharms[ file.currentCharm ]
+	file.viewerModel.Hide()
+
+	Assert( file.availableCharms.len() > 0 )
+	if ( file.availableCharms.len() == 0 )
+	{
+		Warning( "Art Viewer - ERROR: No avaliable charms to update with." )
+
+		if ( IsValid( file.viewerCharmModel ) )
+			file.viewerCharmModel.Hide()
+
+		return
+	}
+
+	ItemFlavor charmToApply = file.availableCharms[ file.currentCharm ]
 	string charmModel = WeaponCharm_GetCharmModel( charmToApply )
 	if ( charmModel == "" )
 	{
@@ -870,107 +753,139 @@ void function SetCharmModel()
 		return
 	}
 
-	WaitFrame()
 	if ( IsValid( file.viewerCharmModel ) )
 		file.viewerCharmModel.Destroy()
 
-	file.viewerCharmModel = CreateClientSidePropDynamicCharm( <0,0,0>, <0,0,0>, charmModel )
+	file.viewerCharmModel = CreateClientSidePropDynamicCharm( <0, 0, 0>, CHARM_ROTATION_OFFSET, charmModel )
 
-	if ( file.currentAssetType == eAssetType.ASSETTYPE_WEAPON )
+	Assert( IsValid( file.modelMover ) )
+	if ( !IsValid( file.modelMover ) )
 	{
-		Assert( IsValid( file.viewerModel ) )
-		if ( !IsValid( file.viewerModel ) )
-		{
-			file.viewerCharmModel.Hide()
-			return
-		}
-		file.viewerCharmModel.kv.renderamt = file.viewerModel.kv.renderamt
+		file.viewerCharmModel.Hide()
+		return
+	}
 
-		string attachmentName = WeaponCharm_GetAttachmentName( charmToApply )
-		file.viewerCharmModel.SetParent( file.viewerModel, attachmentName, false )
-		file.viewerCharmModel.SetModelScale( file.viewerModel.GetModelScale() )
+	file.modelMover.SetOrigin( file.viewerCharmModel.GetOrigin() )
+	file.viewerCharmModel.SetOrigin( file.modelMover.GetOrigin() + <0, 0, 5.0> )
+	file.viewerCharmModel.SetParent( file.modelMover, "", true )
+	file.viewerCharmModel.SetModelScale( VIEWER_CHARM_SIZE )
+}
+
+void function UpdateCharacterSkin()
+{
+	file.viewerModel.SetAngles( <0, 0, 0> )
+
+	Assert( file.availableAssetSkins.len() > 0 )
+	if ( file.availableAssetSkins.len() == 0 )
+	{
+		Warning( "Art Viewer - ERROR: No avaliable character skins to update with." )
+		return
+	}
+
+	ItemFlavor skinToApply = file.availableAssetSkins[ file.currentAssetSkin ]
+
+	file.viewerModel.Show()
+	if ( IsValid( file.viewerCharmModel ) )
+		file.viewerCharmModel.Hide()
+
+	CharacterSkin_Apply( file.viewerModel, skinToApply )
+
+	Assert( file.hasCurrentModelBounds )
+	if ( !file.hasCurrentModelBounds )
+		return
+
+	file.modelMover.SetOrigin( GetViewerModelCenter() )
+}
+
+void function UpdateWeaponSkin()
+{
+	Assert( file.availableAssetSkins.len() > 0 )
+	if ( file.availableAssetSkins.len() == 0 )
+	{
+		Warning( "Art Viewer - ERROR: No avaliable weapon skins to update with." )
+		return
+	}
+
+	ItemFlavor skinToApply = file.availableAssetSkins[ file.currentAssetSkin ]
+
+	file.viewerModel.Show()
+	if ( IsValid( file.viewerCharmModel ) )
+		file.viewerCharmModel.Hide()
+
+	if ( file.useWorldModel )
+	{
+		DestroyCharmForWeaponEntity( file.viewerModel )
+
+		asset model = WeaponSkin_GetWorldModel( skinToApply )
+		file.viewerModel.SetModel( model )
+
+		int skinIndex = file.viewerModel.GetSkinIndexByName( WeaponSkin_GetSkinName( skinToApply ) )
+		int camoIndex = WeaponSkin_GetCamoIndex( skinToApply )
+
+		if ( skinIndex == -1 )
+		{
+			skinIndex = 0
+			camoIndex = 0
+		}
+
+		if ( camoIndex >= CAMO_SKIN_COUNT )
+		{
+			Assert ( false, "Tried to set camoIndex of " + string(camoIndex) + " but the maximum index is " + string(CAMO_SKIN_COUNT) )
+			camoIndex = 0
+		}
+
+		file.viewerModel.SetSkin( skinIndex )
+		file.viewerModel.SetCamo( camoIndex )
 	}
 	else
 	{
-		Assert( IsValid( file.modelMover ) )
-		if ( !IsValid( file.modelMover ) )
-		{
-			file.viewerCharmModel.Hide()
-			return
-		}
+		ItemFlavor ornull charmToApply = null
+		if ( file.availableCharms.len() > 0 )
+			charmToApply = file.availableCharms[ file.currentCharm ]
 
-		file.modelMover.SetOrigin( file.viewerCharmModel.GetOrigin() - <0, 0, 5.0> )
-		file.viewerCharmModel.SetParent( file.modelMover, "", true )
-		file.viewerCharmModel.SetModelScale( VIEWER_CHARM_SIZE )
-
-		thread ResetViewerModelOriginAndAngles()
+		WeaponCosmetics_Apply( file.viewerModel, skinToApply, charmToApply )
 	}
+
+	bool isReactive = WeaponSkin_DoesReactToKills( skinToApply )
+	ItemFlavor weaponFlavor = WeaponSkin_GetWeaponFlavor( skinToApply )
+	if ( isReactive )
+		MenuWeaponModel_ApplyReactiveSkinBodyGroup( skinToApply, weaponFlavor, file.viewerModel )
+	else
+		ShowDefaultBodygroupsOnFakeWeapon( file.viewerModel, WeaponItemFlavor_GetClassname( weaponFlavor ) )
+
+	MenuWeaponModel_ClearReactiveEffects( file.viewerModel )
+	if ( isReactive )
+	{
+		MenuWeaponModel_StartReactiveEffects( file.viewerModel, skinToApply )
+	}
+
+	file.viewerModel.kv.rendercolor = "0 0 0 255"                                          
+	file.viewerModel.SetAngles( WEAPON_ROTATION_OFFSET )
+
+	vector weaponRotatePoint
+	int MenuAttachmentID = file.viewerModel.LookupAttachment( "MENU_ROTATE" )
+	if ( !MenuAttachmentID )
+	{
+		if ( file.hasCurrentModelBounds )
+		{
+			if( !file.useWorldModel )
+				Warning( "Failed to find weapon model center. Falling back onto model bounds center." )
+
+			weaponRotatePoint = GetViewerModelCenter()
+		}
+		else
+		{
+			Warning( "Failed to find weapon model center. Falling back onto model origin." )
+			weaponRotatePoint = file.viewerModel.GetOrigin()
+		}
+	}
+	else
+		weaponRotatePoint = file.viewerModel.GetAttachmentOrigin( MenuAttachmentID )
+
+	file.modelMover.SetOrigin( weaponRotatePoint )
 }
 
 void function UpdateModelViewerSkin()
-{
-	if ( file.shouldUsePreloadedModels )
-	{
-		file.viewerModel.SetModel( file.modelViewerModels[ file.selectedPreloadedModel ] )
-	}
-	else
-	{
-		ItemFlavor skinToApply  = file.availableAssetSkins[ file.currentAssetSkin ]
-		switch ( file.currentAssetType )
-		{
-			case eAssetType.ASSETTYPE_CHARACTER:
-				file.viewerModel.Show()
-				if ( IsValid( file.viewerCharmModel ) )
-					file.viewerCharmModel.Hide()
-
-				CharacterSkin_Apply( file.viewerModel, skinToApply )
-				break
-			case eAssetType.ASSETTYPE_WEAPON:
-				file.viewerModel.Show()
-
-				asset model = WeaponSkin_GetWorldModel( skinToApply )
-				file.viewerModel.SetModel( model )
-				int skinIndex = file.viewerModel.GetSkinIndexByName( WeaponSkin_GetSkinName( skinToApply ) )
-				int camoIndex = WeaponSkin_GetCamoIndex( skinToApply )
-
-				if ( skinIndex == -1 )
-				{
-					skinIndex = 0
-					camoIndex = 0
-				}
-
-				if ( camoIndex >= CAMO_SKIN_COUNT )
-				{
-					Assert ( false, "Tried to set camoIndex of " + string(camoIndex) + "but the maximum index is " + string(CAMO_SKIN_COUNT) )
-					camoIndex = 0
-				}
-
-				file.viewerModel.SetSkin( skinIndex )
-				file.viewerModel.SetCamo( camoIndex )
-
-				thread SetCharmModel()
-				break
-			case eAssetType.ASSETTYPE_CHARM:
-				Assert( file.availableCharms.len() > 0 )
-				if ( file.availableCharms.len() > 0 )
-				{
-					thread SetCharmModel()
-					file.viewerModel.Hide()
-				}
-				else
-				{
-					Warning( "Art Viewer - ERROR: No avaliable charms to update with." )
-					if ( IsValid( file.viewerCharmModel ) )
-						file.viewerCharmModel.Hide()
-				}
-				break
-			case eAssetType.ASSETTYPE_PROP:
-				break
-		}
-	}
-}
-
-void function InitViewerModel()
 {
 	entity player = GetLocalClientPlayer()
 	player.Signal( "Stop_MoveModel" )
@@ -979,21 +894,37 @@ void function InitViewerModel()
 	if ( !IsValid( file.modelMover ) || !IsValid( file.viewerModel ) )
 		return
 
-	file.modelMover.SetAngles( < 0, 0, 0 > )
-	file.viewerModel.SetAngles( < 0, 0, 0 > )
+	vector prevAng = file.modelMover.GetAngles()
+	vector prevPos = file.modelMover.GetOrigin()
 
-	UpdateModelViewerSkin()
-	RefreshHudLabels()
-
-	if ( file.currentAssetType == eAssetType.ASSETTYPE_CHARM )
-		return
-
+	file.modelMover.SetAngles( <0, 0, 0> )
 	file.viewerModel.ClearParent()
 
-	file.modelMover.SetOrigin( GetModelCenter( file.viewerModel ) )
-	file.viewerModel.SetParent( file.modelMover, "", true )
+	switch ( file.currentAssetType )
+	{
+		case eAssetType.ASSETTYPE_CHARACTER:
+			UpdateCharacterSkin()
+			break
+		case eAssetType.ASSETTYPE_WEAPON:
+			UpdateWeaponSkin()
+			break
+		case eAssetType.ASSETTYPE_CHARM:
+			SetCharmModel()
+			break
+		default:
+			Warning( "Art Viewer - ERROR: Unexpected asset type: ", file.currentAssetType )
+			return
+	}
 
-	thread ResetViewerModelOriginAndAngles()
+	file.viewerModel.SetParent( file.modelMover, "", true )
+	file.modelMover.SetAngles( prevAng )
+	file.modelMover.SetOrigin( prevPos )
+
+	OVPostModelUpdate()
+
+	SetupCamZoom( file.shouldResetCameraOnModelUpdate )
+	if ( file.shouldResetCameraOnModelUpdate )
+		file.shouldResetCameraOnModelUpdate = false
 
 	thread MoveModel( player )
 }
@@ -1007,9 +938,23 @@ void function UpdateModelToCurrentEnvNode()
 	if ( IsValid( file.modelMover ) )
 	{
 		UpdateSunAngles( node.ang )
-		OutsourceViewer_ResetView( file.modelMover )
-		Remote_ServerCallFunction( "ClientCallback_OrbitPosition", file.currentNode, file.extraCamModesEnabled )
-		thread ResetViewerModelOriginAndAngles()
+
+		vector forward = AnglesToForward( node.ang )
+		vector cameraPos = OffsetPointRelativeToVector( node.pos, <0, -160, 0>, forward )
+
+		file.cameraStartPos = cameraPos
+		file.cameraStartAngle = node.ang
+		file.viewerCameraEntity.SetAngles( node.ang )
+		SetupCamZoom( false )
+
+		spawnNode prevNode = file.spawnNodes[ file.previousNode ]
+		float dist = Distance( prevNode.pos, file.modelMover.GetOrigin() )
+		vector normVec = Normalize( file.modelMover.GetOrigin() - prevNode.pos  )
+
+		float angDiff = ( node.ang.y - prevNode.ang.y )
+		vector posOffset = ( RotateVector( normVec, < 0, angDiff, 0 > ) * dist )
+		file.modelMover.SetOrigin( node.pos + posOffset )
+		file.modelMover.SetAngles( file.modelMover.GetAngles() + < 0, angDiff, 0 > )
 	}
 	else
 		Warning( "Art Viewer - ERROR: Invalid model mover on current node update." )
@@ -1018,305 +963,58 @@ void function UpdateModelToCurrentEnvNode()
 void function UpdateSunAngles( vector angles )
 {
 	entity lightEnvironmentEntity = GetLightEnvironmentEntity()
+
 	Assert( IsValid( lightEnvironmentEntity ) )
-
-	if ( IsValid( lightEnvironmentEntity ) )
+	if ( !IsValid( lightEnvironmentEntity ) )
 	{
-		angles += file.shouldBeInShadow ? < 0, 180, 0 > :  < 0, 0, 0 >
-		lightEnvironmentEntity.OverrideAngles( SUN_PITCH, angles.y )
-	}
-	else
 		Warning( "Art Viewer - ERROR: Invalid Light Environment Entity on sun angle update." )
-}
-
-void function NextEnvironmentNode()
-{
-	file.currentNode++
-	if ( file.currentNode == file.maxNodes )
-		file.currentNode = 0
-
-	SetConVarInt( "outsourceviewer_environmentnode", file.currentNode )
-	thread UpdateModelToCurrentEnvNode()
-}
-
-void function PrevEnvironmentNode()
-{
-	file.currentNode--
-	if ( file.currentNode < 0 )
-		file.currentNode = file.maxNodes - 1
-
-	SetConVarInt( "outsourceviewer_environmentnode", file.currentNode )
-	thread UpdateModelToCurrentEnvNode()
-}
-
-void function UpdatePreloadedModel()
-{
-	file.shouldUsePreloadedModels = true
-	file.currentAsset = 0
-	file.currentAssetSkin = 0
-	SetCurrentModelType( string( file.modelViewerModels[ file.selectedPreloadedModel ] ) )
-	RefreshAssetItemFlavors()
-
-	if ( file.currentAssetType != eAssetType.ASSETTYPE_PROP )
-	{
-		file.modelBoundsNeedsRefresh = true
-		Remote_ServerCallFunction( "ClientCallback_GetModelBounds", string ( file.modelViewerModels[ file.selectedPreloadedModel ] ) )
-	}
-	else
-	{
-		file.modelBoundsNeedsRefresh = false
-		table<string, vector> tab = { mins = <0,0,0>, maxs = <0,0,0> }
-		file.modelBounds = tab
-		InitViewerModel()
-	}
-}
-
-void function NextModel()
-{
-	if ( file.modelViewerModels.len() == 0 )
 		return
+	}
 
-	file.selectedPreloadedModel--
-	if ( file.selectedPreloadedModel < 0 )
-		file.selectedPreloadedModel = file.modelViewerModels.len() -1
-
-	foreach ( elem in file.hudModelNames )
-		Hud_SetColor( elem, 255, 255, 255, 255 )
-	Hud_SetColor( file.hudModelNames[file.selectedPreloadedModel], 255, 255, 128 )
-
-	UpdatePreloadedModel()
+	angles += file.shouldBeInShadow ? < 0, 180, 0 > :  < 0, 0, 0 >
+	lightEnvironmentEntity.OverrideAngles( SUN_PITCH, angles.y )
 }
 
-void function PrevModel()
-{
-	if ( file.modelViewerModels.len() == 0 )
-		return
-
-	file.selectedPreloadedModel++
-	if ( file.selectedPreloadedModel >= file.modelViewerModels.len() )
-		file.selectedPreloadedModel = 0
-
-	foreach ( elem in file.hudModelNames )
-		Hud_SetColor( elem, 255, 255, 255, 255 )
-	Hud_SetColor( file.hudModelNames[file.selectedPreloadedModel], 255, 255, 128 )
-
-	UpdatePreloadedModel()
-}
-
-vector function GetModelCenter( entity model )
+vector function GetViewerModelCenter()
 {
 	vector mins = file.modelBounds.mins
 	vector maxs = file.modelBounds.maxs
 
-	return model.GetOrigin() + <mins.x + ( ( maxs.x - mins.x ) * 0.5 ), mins.y + ( ( maxs.y - mins.y ) * 0.5 ), mins.z + ( ( maxs.z - mins.z ) * 0.5 )>
+	AABB rotatedBounds = RotateAABB( mins, maxs, file.viewerModel.GetAngles() )
+
+	mins = rotatedBounds.mins
+	maxs = rotatedBounds.maxs
+	
+	return file.viewerModel.GetOrigin() + <mins.x + ( ( maxs.x - mins.x ) * 0.5 ), mins.y + ( ( maxs.y - mins.y ) * 0.5 ), mins.z + ( ( maxs.z - mins.z ) * 0.5 )>
 }
 
-void function TranslateModelUp()
+float function GetCurrentModelWidth()
 {
-	entity player = GetLocalViewPlayer()
-	while ( InputIsButtonDown( KEY_W ) )
-	{
-		if ( !IsValid( player ) )
-			break
-		
-		if ( IsValid( file.modelMover ) )
-		{
-			vector trans = file.modelMover.GetOrigin() - player.CameraPosition()
-			trans.z = 0.0
-			trans = Normalize( trans )
-			trans *= MODEL_TRANSLATESPEED
-
-			vector newOrigin = file.modelMover.GetOrigin() + trans
-			file.modelMover.SetOrigin( newOrigin )
-		}
-		wait( 0.0 )
-	}
+	return file.modelBounds.maxs.x - file.modelBounds.mins.x
 }
 
-void function TranslateModelDown()
+float function GetCurrentModelHeight()
 {
-	entity player = GetLocalViewPlayer()
-	while ( InputIsButtonDown( KEY_S ))
-	{
-		if ( !IsValid( player ) )
-			break
-
-		if ( IsValid( file.modelMover ) )
-		{
-			vector trans = file.modelMover.GetOrigin() - player.CameraPosition()
-			trans.z = 0.0
-			trans = Normalize( trans )
-			trans *= -MODEL_TRANSLATESPEED
-
-			vector newOrigin = file.modelMover.GetOrigin() + trans
-			file.modelMover.SetOrigin( newOrigin )
-		}
-		wait( 0.0 )
-	}
+	return file.modelBounds.maxs.z - file.modelBounds.mins.z
 }
 
-void function TranslateModelLeft()
+float function GetCurrentModelDepth()
 {
-	entity player = GetLocalViewPlayer()
-	while ( InputIsButtonDown( KEY_A ) )
-	{
-		if ( !IsValid( player ) )
-			break
-		
-		if ( IsValid( file.modelMover ) )
-		{
-			vector trans = AnglesToRight( <0,player.CameraAngles().y,0> )
-			trans *= -MODEL_TRANSLATESPEED
-			vector newOrigin = file.modelMover.GetOrigin() + trans
-			file.modelMover.SetOrigin( newOrigin )
-		}
-		wait( 0.0 )
-	}
+	return file.modelBounds.maxs.y - file.modelBounds.mins.y
 }
 
-void function TranslateModelRight()
-{
-	entity player = GetLocalViewPlayer()
-	while ( InputIsButtonDown( KEY_D ) )
-	{
-		if ( !IsValid( player ) )
-			break
-		
-		if ( IsValid( file.modelMover ) )
-		{
-			vector trans = AnglesToRight( <0,player.CameraAngles().y,0> )
-			trans *= MODEL_TRANSLATESPEED
-			vector newOrigin = file.modelMover.GetOrigin() + trans
-			file.modelMover.SetOrigin( newOrigin )
-		}
-		wait( 0.0 )
-	}
-}
-
-void function TranslateModelZUp()
-{
-	while ( InputIsButtonDown( BUTTON_SHOULDER_RIGHT ) || InputIsButtonDown( KEY_E ) )
-	{
-		if ( IsValid( file.modelMover ) )
-		{
-			vector trans = <0,0,1>
-			trans *= MODEL_TRANSLATESPEED_Z
-			vector newOrigin = file.modelMover.GetOrigin() + trans
-			file.modelMover.SetOrigin( newOrigin )
-		}
-		wait( 0.0 )
-	}
-}
-
-void function TranslateModelZDown()
-{
-	while ( InputIsButtonDown( BUTTON_SHOULDER_LEFT ) || InputIsButtonDown( KEY_Q ))
-	{
-		if ( IsValid( file.modelMover ) )
-		{
-			vector trans = <0,0,-1>
-			trans *= MODEL_TRANSLATESPEED_Z
-			vector newOrigin = file.modelMover.GetOrigin() + trans
-			file.modelMover.SetOrigin( newOrigin )
-		}
-		wait( 0.0 )
-	}
-}
-
-void function PitchModelBack()
-{
-	while( InputIsButtonDown( KEY_S ) )
-	{
-		entity player = GetLocalClientPlayer()
-		vector angles = file.modelMover.GetAngles()
-		vector anglesRight = AnglesToRight( player.CameraAngles() )
-		angles = RotateAnglesAboutAxis( angles, anglesRight, MODEL_ROTATESPEED )
-		file.modelMover.SetAngles( angles )
-		wait( 0.0 )
-	}
-}
-
-void function PitchModelForward()
-{
-	while( InputIsButtonDown( KEY_W ) )
-	{
-		entity player = GetLocalClientPlayer()
-		vector angles = file.modelMover.GetAngles()
-		vector anglesRight = AnglesToRight( player.CameraAngles() )
-		angles = RotateAnglesAboutAxis( angles, anglesRight, -MODEL_ROTATESPEED )
-		file.modelMover.SetAngles( angles )
-		wait(0.0)
-	}
-}
-
-void function RollModelRight()
-{
-	while( InputIsButtonDown( BUTTON_SHOULDER_RIGHT ) || InputIsButtonDown( KEY_E ) )
-	{
-		entity player = GetLocalClientPlayer()
-		vector angles = file.modelMover.GetAngles()
-		vector anglesForward = AnglesToForward( player.CameraAngles() )
-		angles = RotateAnglesAboutAxis( angles, anglesForward, MODEL_ROTATESPEED )
-		file.modelMover.SetAngles( angles )
-		wait( 0.0 )
-	}
-}
-
-void function RollModelLeft()
-{
-	while( InputIsButtonDown( BUTTON_SHOULDER_LEFT ) || InputIsButtonDown( KEY_Q ) )
-	{
-		entity player = GetLocalClientPlayer()
-		vector angles = file.modelMover.GetAngles()
-		vector anglesForward = AnglesToForward( player.CameraAngles() )
-		angles = RotateAnglesAboutAxis( angles, anglesForward, -MODEL_ROTATESPEED )
-		file.modelMover.SetAngles( angles )
-		wait( 0.0 )
-	}
-}
-
-void function RotateModelCCW()
-{
-	while ( InputIsButtonDown( KEY_A ) )
-	{
-		if ( IsValid( file.viewerModel ) )
-		{
-			entity player = GetLocalClientPlayer()
-			vector angles = file.modelMover.GetAngles()
-			vector anglesUp = AnglesToUp( player.CameraAngles() )
-			angles = RotateAnglesAboutAxis( angles, anglesUp, MODEL_ROTATESPEED )
-			file.modelMover.SetAngles( angles )
-		}
-		wait( 0.0 )
-	}
-}
-
-void function RotateModelCW()
-{
-	while ( InputIsButtonDown( KEY_D ) )
-	{
-		if ( IsValid( file.viewerModel ) )
-		{
-			entity player = GetLocalClientPlayer()
-			vector angles = file.modelMover.GetAngles()
-			vector anglesUp = AnglesToUp( player.CameraAngles() )
-			angles = RotateAnglesAboutAxis( angles, anglesUp, -MODEL_ROTATESPEED )
-			file.modelMover.SetAngles( angles )
-		}
-		wait( 0.0 )
-	}
-}
-
-void function OutsourceViewer_ResetView( entity model )
+void function OutsourceViewer_ResetView()
 {
 	spawnNode currNode = file.spawnNodes[ file.currentNode ]
-	vector forward = AnglesToForward( currNode.ang )
-	vector playerPos = OffsetPointRelativeToVector( currNode.pos, <0, 100, 0>, forward )
-	vector viewAng = currNode.ang + < 0, 180.0, 0 >
+	file.viewerCameraEntity.SetAngles( currNode.ang )
 
-	entity player = GetLocalClientPlayer()
-	player.ClientCommand( "setpos " + playerPos.x + " " + playerPos.y + " " + playerPos.z )       
-	player.ClientCommand( "setang " + viewAng.x + " " + viewAng.y + " " + viewAng.z )       
+	vector forward = AnglesToForward( currNode.ang )
+	vector cameraPos = OffsetPointRelativeToVector( currNode.pos, <0, -160, 0>, forward )
+
+	file.cameraStartPos = cameraPos
+	file.cameraStartAngle = currNode.ang
+
+	SetupCamZoom( true )
 }
 #endif                      
 
@@ -1327,10 +1025,10 @@ void function OutsourceViewer_ResetView( entity model )
 void function ServerCallback_OVUpdateModelBounds( float minX, float minY, float minZ, float maxX, float maxY, float maxZ )
 {
 #if DEV && PC_PROG
-	file.modelBoundsNeedsRefresh = false
+	file.hasCurrentModelBounds = true
 	table<string, vector> tab = { mins = <minX,minY,minZ>, maxs = <maxX,maxY,maxZ> }
 	file.modelBounds = tab
-	InitViewerModel()
+	UpdateModelViewerSkin()
 #endif                      
 }
 
@@ -1350,22 +1048,12 @@ void function ServerCallback_OVAddSpawnNode( vector pos, vector ang, string name
 void function ServerCallback_OVSpawnModel( vector pos, vector ang )
 {
 #if DEV && PC_PROG
-	entity player = GetLocalClientPlayer()
-	player.ClientCommand( "noclip" )       
-	file.noclipState = file.noclipState == 0 ? 1 : 0
-	HideScriptHUD( player )
+	file.currentAssetType	= eAssetType.ASSETTYPE_CHARACTER
+	file.currentAsset		= 0
+	file.currentAssetSkin	= 0
+	file.currentCharm		= 0
 
-	file.shouldUsePreloadedModels = file.modelViewerModels.len() > 0
-	file.selectedPreloadedModel = 0
-	file.currentAssetType = eAssetType.ASSETTYPE_CHARACTER
-	file.currentAsset = 0
-	file.currentAssetSkin = 0
-	file.currentCharm = 0
-
-	if ( file.shouldUsePreloadedModels )
-		SetCurrentModelType( string( file.modelViewerModels[ 0 ] ) )
-
-	file.modelMover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", < 0, 0, 0 >, < 0, 0, 0 > )
+	file.modelMover	 = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", pos, ang + <0, 180, 0> )                                        
 	file.viewerModel = CreateOVClientSideEntity( pos, ang, $"mdl/dev/empty_model.rmdl" )
 
 	if ( file.modelMover == null || file.viewerModel == null )
@@ -1375,25 +1063,22 @@ void function ServerCallback_OVSpawnModel( vector pos, vector ang )
 		return
 	}
 
-	if ( file.shouldUsePreloadedModels )
-	{
-		Hud_SetColor( file.hudModelNames[file.selectedPreloadedModel], 255, 255, 128 )
-		UpdatePreloadedModel()
-	}
-	else
-	{
-		RefreshAssetItemFlavors()
-		ClientCodeCallback_UpdateOutsourceModel( ARTVIEWER_PROPERTIES_ASSETTYPE, 0 )
-	}
+	entity player = GetLocalClientPlayer()
+	player.ClientCommand( "noclip" )       
+	HideScriptHUD( player )
 
-	OutsourceViewer_ResetView( file.viewerModel )
+	file.viewerCameraFOV = DEFAULT_FOV
+	file.viewerCameraEntity = CreateClientSidePointCamera( <0, 0, 0>, <0, 0, 0>, file.viewerCameraFOV )
+	player.SetMenuCameraEntityWithAudio( file.viewerCameraEntity )
 
-	Remote_ServerCallFunction( "ClientCallback_OrbitPosition", 0, file.extraCamModesEnabled )
+	RefreshAssetItemFlavors()
+	file.shouldResetCameraOnModelUpdate = true
+	ClientCodeCallback_UpdateOutsourceModel( ARTVIEWER_PROPERTIES_ASSETTYPE, 0 )
+
+	OutsourceViewer_ResetView()
 
 	InitOutsourceUI_EnvironmentNodes( file.spawnNodeNames )
 	UpdateSunAngles( ang )
-
-	RefreshHudLabels()
 #endif                      
 }
 
@@ -1406,16 +1091,10 @@ void function ServerCallback_OVEnable()
 
 	file.viewerModel = null
 	file.modelMover = null
-	file.extraCamModesEnabled = GetConVarBool( "outsourceviewer_extracammodes" )
-
-	UpdateMainHudVisibility( GetLocalViewPlayer() )
 
 	EnableViewerWatermark()
+	UpdateMainHudVisibility( GetLocalViewPlayer() )
 
-	CreateControllerHud()
-	GetPreloadedModels()
-
-	RegisterButtons()
 	RegisterSignal( "Stop_MoveModel" )
 
 	file.lastEnablematchending = GetConVarInt( "mp_enablematchending" )
@@ -1423,9 +1102,8 @@ void function ServerCallback_OVEnable()
 	file.lastEnabletimelimit = GetConVarInt( "mp_enabletimelimit" )
 	GetLocalClientPlayer().ClientCommand( "mp_enabletimelimit 0" )       
 
-	GetLocalClientPlayer().ClientCommand( "exec outsource_viewer" )
-
-	ModelViewerModeEnabled()
+	file.screenHeight = float( GetScreenSize().height )
+	file.screenWidth = float( GetScreenSize().width )
 #endif                      
 }
 
@@ -1442,14 +1120,9 @@ void function ServerCallback_OVDisable()
 	if ( IsValid( file.modelMover ) )
 		file.modelMover.Destroy()
 
-	RuiDestroyIfAlive( file.controllerRui )
 	DisableViewerWatermark()
 	UpdateMainHudVisibility( GetLocalViewPlayer() )
 
-
-	delaythread( 0.5 ) RestoreNoclip()                                                       
-
-	GetLocalClientPlayer().ClientCommand( "exec config_default_pc" )
 	GetLocalClientPlayer().ClientCommand( "mp_enablematchending " + file.lastEnablematchending )       
 	GetLocalClientPlayer().ClientCommand( "mp_enabletimelimit " + file.lastEnabletimelimit )       
 #endif                      
@@ -1459,13 +1132,18 @@ void function ServerCallback_OVDisable()
                                                                  
                                                                  
 
-void function ClientCodeCallback_OutsourceModelOrCamReset()
+
+void function ClientCodeCallback_ResetCamera()
 {
 #if DEV && PC_PROG
-	if ( file.extraCamModesEnabled )
-		OutsourceViewer_ResetView( file.viewerModel )
-	else
-		thread ResetViewerModelOriginAndAngles()
+	OutsourceViewer_ResetView()
+#endif                      
+}
+
+void function ClientCodeCallback_ResetModel()
+{
+#if DEV && PC_PROG
+	ResetViewerModelOriginAndAngles()
 #endif                      
 }
 
@@ -1478,6 +1156,7 @@ void function ClientCodeCallback_SwitchOutsourceEnv( int envNum )
 		return
 	}
 
+	file.previousNode = file.currentNode
 	file.currentNode = envNum
 	thread UpdateModelToCurrentEnvNode()
 #endif                      
@@ -1486,7 +1165,6 @@ void function ClientCodeCallback_SwitchOutsourceEnv( int envNum )
 void function ClientCodeCallback_UpdateOutsourceModel( int pickerProperty, int updatedValue )
 {
 #if DEV && PC_PROG
-	file.shouldUsePreloadedModels = false
 	switch ( pickerProperty )
 	{
 		case ARTVIEWER_PROPERTIES_ASSETTYPE:
@@ -1496,6 +1174,7 @@ void function ClientCodeCallback_UpdateOutsourceModel( int pickerProperty, int u
 			file.currentAssetType = updatedValue
 			file.currentAsset = 0
 			file.currentAssetSkin = 0
+			file.shouldResetCameraOnModelUpdate = true
 
 			if ( file.currentAssetType != eAssetType.ASSETTYPE_CHARM && file.currentAssetType != eAssetType.ASSETTYPE_WEAPON )
 				file.currentCharm = 0
@@ -1533,11 +1212,15 @@ void function ClientCodeCallback_UpdateOutsourceModel( int pickerProperty, int u
 
 			file.currentCharm = updatedValue
 			break
+		case ARTVIEWER_PROPERTIES_WORLDMODEL:
+			file.useWorldModel = bool( updatedValue )
+			break
 		default:
 			return
 			break
 	}
 
+	file.hasCurrentModelBounds = false
 	string modelName
 	switch ( file.currentAssetType )
 	{
@@ -1556,7 +1239,7 @@ void function ClientCodeCallback_UpdateOutsourceModel( int pickerProperty, int u
 			modelName = string( WeaponSkin_GetWorldModel( currentSkin ) )
 			break
 		case eAssetType.ASSETTYPE_CHARM:
-			InitViewerModel()
+			UpdateModelViewerSkin()
 			return
 			break
 		default:
@@ -1566,7 +1249,6 @@ void function ClientCodeCallback_UpdateOutsourceModel( int pickerProperty, int u
 
 	if ( modelName != "" )
 	{
-		file.modelBoundsNeedsRefresh = true
 		Remote_ServerCallFunction( "ClientCallback_GetModelBounds", modelName )
 	}
 #endif                      
@@ -1576,6 +1258,63 @@ void function ClientCodeCallback_ToggleAxisLocked( int flag )
 {
 #if DEV && PC_PROG
 	file.axisLockedFlags = file.axisLockedFlags ^ flag
+#endif                      
+}
+
+void function ClientCodeCallback_UpdateMousePos( float posX, float posY, bool imGuiFocused )
+{
+#if DEV && PC_PROG
+	if ( IsControllerModeActive() )
+		return
+
+	float screenScaleXModifier = 1920.0 / file.screenWidth                             
+	float mousePosXAdjustedForScale  = posX * screenScaleXModifier
+
+	float screenScaleYModifier = 1080.0 / file.screenHeight                              
+	float mousePosYAdjustedForScale  = posY * screenScaleYModifier
+
+	if ( posX >= 0.0 && posY >= 0.0 && posX <= file.screenWidth && posY <= file.screenHeight )
+	{
+		if ( InputIsButtonDown( MOUSE_LEFT ) && !imGuiFocused )
+		{
+			file.mouseDelta[0] = mousePosXAdjustedForScale - file.previousMousePos[0]
+			file.mouseDelta[1] = mousePosYAdjustedForScale - file.previousMousePos[1]
+		}
+	}
+
+	file.previousMousePos[0] = mousePosXAdjustedForScale
+	file.previousMousePos[1] = mousePosYAdjustedForScale
+#endif                      
+}
+
+void function ClientCodeCallback_InputMouseScrolledUp()
+{
+#if DEV && PC_PROG
+	file.mouseWheelNewValue++
+#endif                      
+}
+
+void function ClientCodeCallback_InputMouseScrolledDown()
+{
+#if DEV && PC_PROG
+	file.mouseWheelNewValue--
+#endif                      
+}
+
+void function ClientCodeCallback_ToggleMoveModel()
+{
+#if DEV && PC_PROG
+	file.tumbleModeActive = !file.tumbleModeActive
+
+	file.rotationVel[0] = 0
+	file.rotationVel[1] = 0
+#endif                      
+}
+void function ClientCodeCallback_ToggleModelInShadow( bool inShadow )
+{
+#if DEV && PC_PROG
+	file.shouldBeInShadow = inShadow
+	UpdateSunAngles( file.spawnNodes[ file.currentNode ].ang )
 #endif                      
 }
 

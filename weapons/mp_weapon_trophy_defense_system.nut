@@ -15,6 +15,9 @@ global function OnWeaponPrimaryAttack_weapon_trophy_defense_system
                                               
                                                
                                                  
+       
+                                        
+      
 #endif
 
 #if CLIENT
@@ -49,6 +52,7 @@ const float TROPHY_AR_EFFECT_SIZE = 768.0
 
                                     
 global const string TROPHY_SYSTEM_NAME = "trophy_system"
+global const string TROPHY_SYSTEM_MOVER_NAME = "trophy_system_mover"
 
                      
 const TROPHY_TARGET_EXPLOSION_IMPACT_TABLE = "exp_medium"
@@ -122,9 +126,8 @@ const bool TROPHY_DEBUG_DRAW_INTERSECTION = false
 
 const int TROPHY_SHIELD_AMOUNT = 250
 
-
 #if CLIENT
-const float TROPHY_ICON_HEIGHT = 68.0
+const float TROPHY_ICON_HEIGHT = 96.0
 #endif         
 
 global enum eTrophySystemIgnores
@@ -154,13 +157,17 @@ struct TrophyShieldData
 {
 	int healResource = 1
 	array<entity> healTargets = []
-	array<int> statusEffectHandles = []
 }
 
 #if SERVER
                        
  
 	             
+ 
+
+                               
+ 
+	          
  
 #endif         
 
@@ -179,6 +186,9 @@ struct
 		                                                               
 		                                                               
 		                                                                       
+       
+		                        				                      
+      
 	#else
 		int tacticalChargeFXHandle
 	#endif
@@ -242,7 +252,6 @@ function MpWeaponTrophy_Init()
 		RegisterSignal( "Trophy_StopPlacementProxy" )
 		RegisterSignal( "EndTacticalChargeRepair" )
 		RegisterSignal( "EndTacticalShieldRepair" )
-		RegisterSignal( "UpdateShieldRepair" )
 
 		StatusEffect_RegisterEnabledCallback( eStatusEffect.trophy_tactical_charge, TacticalChargeVisualsEnabled )
 		StatusEffect_RegisterDisabledCallback( eStatusEffect.trophy_tactical_charge, TacticalChargeVisualsDisabled )
@@ -265,10 +274,6 @@ function MpWeaponTrophy_Init()
 void function MpWeaponTrophyLate_Init()
 {
 	WaitEndFrame()
-
-	#if CLIENT
-		AddCallback_OnEquipSlotTrackingIntChanged( "armor", ArmorChanged )
-	#endif         
 }
 
 
@@ -596,9 +601,10 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 	                                    
 
 	                       
-	                                                                           
+	                                                                                   
 	                                                     
-	                                                             
+	                                                                 
+	                    
 	                        
 	                             
 	                                        
@@ -617,8 +623,8 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 	                                                                                                          
 	                                                                                                                                          
                 
-                   
-                                                
+	                  
+	                                               
        
 
 	                                                          
@@ -633,7 +639,15 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 	                                             
 	                                   
 
-	                                                                                      
+	                         
+	                        
+
+	                                                                             
+		                   
+	    
+		                  
+
+	                                                                                                                                              
 
                  
                                  
@@ -673,7 +687,7 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 	            
 	                                     
 	 
-		                                           
+		                                                                     
 		                                         
 		                         
 	 
@@ -902,7 +916,7 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 				                                                                          
 				 
 					                                                                         
-					                                                                                                              
+					                                                                                                                                
 					                                                                                                             
 					                                                       
 					                                           
@@ -915,7 +929,7 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 			    
 			 
 				                                                                         
-				                                                                                                              
+				                                                                                                                                
 				                                                                                                             
 				                                                       
 				                                           
@@ -1258,6 +1272,17 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 
 	                                  
 
+       
+	                                             
+	 
+		                                           
+	 
+	    
+	 
+		                                          
+	 
+      
+
 	                         
 		      
 
@@ -1265,8 +1290,12 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 	                                                  
 	                             
 
+	                                                             
+	                                           
+	                              
+
 	            
-		                                          
+		                                                              
 		 
 			                        
 			 
@@ -1281,13 +1310,10 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 					                                                                         
 
 				                                  
-				                                                                  
+
+				                                      
 				 
-					                                          
-					 
-						                                                                         
-						     
-					 
+					                                                      
 				 
 			 
 
@@ -1297,12 +1323,17 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 				                                                       
 					                                            
 			 
+
+			       
+				                                                                                 
+				 
+					                                        
+				 
+			      
 		 
 	 
 
 	                                
-
-	                                                          
 
 	                                 
 
@@ -1372,17 +1403,15 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 				 
 			 
 
-			                                                                                                                                             
+			                                                                                                    
+					                                                                                                   
 			 
 				                                                  
 				 
-					                                                                  
+					                                      
 					 
-						                                          
-						 
-							                                                                         
-							     
-						 
+						                                                      
+						                              
 					 
 
 					                       
@@ -1395,42 +1424,6 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 					        
 				 
 
-				                                                                           
-				                                             
-
-				                                     
-				 
-					                                                         
-
-					                                                                                                                                
-					                                                  
-					 
-						                                                      
-
-						                                                    
-						 
-							                                                                   
-								        
-
-							                                                           
-							                                                                  
-							 
-								                                                    
-								 
-									                                                                         
-									     
-								 
-							 
-
-							                                                     
-								                                                                        
-								                                                                                                                                
-							 
-						 
-					 
-				 
-				                             
-
 				                                 
 				 
 					                                 
@@ -1442,6 +1435,7 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 					                                                  
 
 					                                                                                                          
+
 					                                                                
 
 					                       
@@ -1461,6 +1455,17 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 					                                                                  
 				 
 
+
+				                                                     
+				                                                                                
+
+				                                      
+				 
+					                                                      
+				 
+
+				                                                                                          
+					                                                              
 			 
 			                            
 			 
@@ -1470,10 +1475,30 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 
 				                                                               
 				                           
+
+				                                      
+				 
+					                                                      
+				 
 			 
 		 
 	 
  
+
+       
+                                                                   
+ 
+	                       
+		      
+
+	                                                 
+
+	                       
+		      
+
+	                                               
+ 
+      
 
                                                                                              
  
@@ -2199,8 +2224,8 @@ void function OnCreateClientOnlyModel_weapon_trophy_defense_system( entity weapo
 	 
 
                  
-                              
-                                                                               
+		                            
+			                                                                            
        
  
 
@@ -2351,7 +2376,7 @@ void function TacticalChargeFXThink( entity player, entity cockpit )
 	{
 		if ( !EffectDoesExist( file.tacticalChargeFXHandle ) )
 		{
-			file.tacticalChargeFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( TACTICAL_CHARGE_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+			file.tacticalChargeFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( TACTICAL_CHARGE_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 			EffectSetIsWithCockpit( file.tacticalChargeFXHandle, true )
 			EmitSoundOnEntity( player, TROPHY_TACTICAL_CHARGE_SOUND )
 		}
@@ -2420,11 +2445,6 @@ void function TacticalShieldRepairFXStart( entity player )
 
 		WaitFrame()
 	}
-}
-
-void function ArmorChanged( entity player, string equipSlot, int new )
-{
-	player.Signal( "UpdateShieldRepair" )
 }
 
 void function OnWaypointCreated( entity wp )
@@ -2603,7 +2623,6 @@ void function WattsonShieldsWaypointThink( entity wp )
 	if ( isOwned )
 	{
 		ownedRui = CreateCockpitRui( $"ui/wattson_ult_shields_world.rpak", 1 )
-		RuiTrackFloat3( ownedRui, "worldPos", wp, RUI_TRACK_ABSORIGIN_FOLLOW )
 		RuiTrackInt( ownedRui, "currentShields", wp, RUI_TRACK_WAYPOINT_INT, 0 )
 		RuiTrackInt( ownedRui, "totalShields", wp, RUI_TRACK_WAYPOINT_INT, 1 )
 		ruis.append( ownedRui )
@@ -2620,9 +2639,11 @@ void function WattsonShieldsWaypointThink( entity wp )
 
 	if ( isOwned )
 	{
-		vector waypointOrigin = wp.GetOrigin()
 		while ( IsValid( wp ) )
 		{
+			vector waypointOrigin = wp.GetOrigin() + wp.GetUpVector() * TROPHY_ICON_HEIGHT
+			RuiSetFloat3( ownedRui, "worldPos", waypointOrigin )
+
 			entity player = GetLocalViewPlayer()
 			bool canTrace = false
 			float distance = Distance( player.EyePosition(), waypointOrigin )

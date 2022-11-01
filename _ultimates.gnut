@@ -168,6 +168,9 @@ int function GetCommsActionForUltReady( entity player )
 	int ammo = ultWeapon.GetWeaponPrimaryClipCount()
 	int maxAmmo =ultWeapon.GetWeaponPrimaryClipCountMax()
 	float frac = clamp( (float( ammo ) / float( maxAmmo )), 0.0, 1.0 )
+	int minReq = ultWeapon.GetWeaponSettingInt( eWeaponVar.ammo_min_to_fire )
+	if ( minReq < maxAmmo )
+		frac = clamp( (float( ammo ) / float( minReq )), 0.0, 1.0 )
 
 	if ( frac >= 0.99 )
 		return eCommsAction.QUICKCHAT_ULTIMATE_READY_FULL

@@ -9,8 +9,11 @@ global function OnProjectileCollision_weapon_shotgun
 
 void function MpWeaponShotgun_Init()
 {
-	AddCallback_OnPlayerAddWeaponMod( OnPlayerWeaponModCommand )
-	AddCallback_OnPlayerRemoveWeaponMod( OnPlayerWeaponModCommand )
+#if SERVER
+	                                                                      
+#endif
+	AddCallback_OnPlayerAddWeaponMod( OnPlayerChangeWeaponMod )
+	AddCallback_OnPlayerRemoveWeaponMod( OnPlayerChangeWeaponMod )
 }
 
 void function OnWeaponActivate_weapon_shotgun( entity weapon )
@@ -27,6 +30,8 @@ void function OnWeaponDeactivate_weapon_shotgun( entity weapon )
 
 void function UpdateDoubleTapShotgunBoltPairing( entity weapon )
 {
+	if ( !IsValid( weapon ) )
+		return
 
 	bool isPredictedOrServer = InPrediction() && IsFirstTimePredicted()
 #if SERVER
@@ -81,11 +86,18 @@ var function OnWeaponPrimaryAttack_weapon_shotgun( entity weapon, WeaponPrimaryA
 	                        
 	                                                     
  
+
+
+                                                                                                           
+ 
+	                        
+		                                           
+ 
 #endif              
 
-void function OnPlayerWeaponModCommand( entity player, entity weapon, string mod )
+void function OnPlayerChangeWeaponMod( entity player, entity weapon, string mod )
 {
-	if ( IsValid( player ) && IsValid( mod ) && mod == "altfire_double_tap" )
+	if ( IsValid( player ) && mod == "altfire_double_tap" )
 		UpdateDoubleTapShotgunBoltPairing( weapon )
 }
 

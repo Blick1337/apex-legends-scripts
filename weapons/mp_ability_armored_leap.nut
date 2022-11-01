@@ -10,6 +10,7 @@ global function CodeCallback_ArmoredLeapPhaseChange
 
 global const string ARMORED_LEAP_WEAPON_NAME = "mp_ability_armored_leap"
 global const string ARMORED_LEAP_SHIELD_ANCHOR_SCRIPTNAME 		= "al_shield_anchor"
+global const string CASTLE_WALL_SNAKEHEAD_SCRIPTNAME 		= "axiom_castle_wall_snakehead"
 global const string ARMORED_LEAP_SHIELD_BARRIER_SCRIPTNAME 		= "al_shield_barrier"
 global const string CASTLE_WALL_THREAT_TARGETNAME = "axiom_castle_wall_threat"
 global const string ARMORED_LEAP_IMPACT_ZONE_THREAT_TARGETNAME = "axiom_impact_zone_threat"
@@ -20,10 +21,12 @@ global const string ARMORED_LEAP_SHIELD_ANCHOR_RIGHT = "al_shield_anchor_r"
 global const string ARMORED_LEAP_SHIELD_LOW_LEFT = "al_shield_low_l"
 global const string ARMORED_LEAP_SHIELD_LOW_RIGHT = "al_shield_low_r"
 
+const string ARMORED_LEAP_MOVER_SCRIPTNAME = "Newcastle_Leap_mover"
+
 global function IsCastleWallEnt
 global function CastleWall_EntityShouldBeHighlighted
 global function ArmoredLeap_TargetEntityShouldBeHighlighted
-global function ArmoredLeap_Handle_StatusEffectInterrupt
+global function ArmoredLeap_HandleInterruptedMidLeap
 
 #if SERVER
                                                   
@@ -866,7 +869,7 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 		                 
 		                               
 		 
-			                                                                   
+			                                                                                                  
 		 
 
 		       
@@ -1339,7 +1342,7 @@ bool function WasArmoredLeapInterrupted( entity player, table signalData )
 #if SERVER
                                                
  
-	                                                                                                                                                                                                                              
+	                                                                                                                                                                                                                                                                                   
 	                                                                                                                                            
 	 
 		                                                   
@@ -1391,7 +1394,7 @@ int function GetCurrentArmoredLeapPhase( entity player )
 }
 
 
-void function ArmoredLeap_Handle_StatusEffectInterrupt( entity player )
+void function ArmoredLeap_HandleInterruptedMidLeap( entity player )
 {
 	if ( player.IsArmoredLeapActive() )
 	{
@@ -2485,6 +2488,11 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 			                                                                                                   
 		 
 	 
+
+	                                                                           
+	 
+		                                              
+	 
  
                                                                
  
@@ -2900,28 +2908,28 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 
 	                                                  
 	int fxID           = GetParticleSystemIndex( ARMORED_LEAP_AR_TARGET_FX_ALTZ )
-	int screenFxHandle = StartParticleEffectOnEntity( endPointMover, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )          
+	int screenFxHandle = StartParticleEffectOnEntity( endPointMover, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )          
 	EffectSetControlPointVector( screenFxHandle, 1, NC_COLOR_FRIENDLY )
 	EffectSetControlPointVector( screenFxHandle, 3, NC_COLOR_BEHIND )
 
 	int allyBeamFxID =  GetParticleSystemIndex( ARMORED_LEAP_ALLY_BEAM_FX )
-	int allyBeamHandle = StartParticleEffectOnEntityWithPos( allyMover, allyBeamFxID, FX_PATTACH_ABSORIGIN_FOLLOW, -1, endPointMover.GetOrigin() +<0,0,250>, <0,0,1> )
+	int allyBeamHandle = StartParticleEffectOnEntityWithPos( allyMover, allyBeamFxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, endPointMover.GetOrigin() +<0,0,250>, <0,0,1> )
 	EffectSetControlPointVector( allyBeamHandle, 1, TEAM_COLOR_FRIENDLY )
 
 	int arcFxID =  GetParticleSystemIndex( ARMORED_LEAP_PLACEMENT_ARC )
-	int arcFxHandle = StartParticleEffectOnEntity( shieldMover, arcFxID, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int arcFxHandle = StartParticleEffectOnEntity( shieldMover, arcFxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	                                                                                  
 	EffectSetControlPointVector( arcFxHandle, 2, NC_COLOR_FRIENDLY )
 
 
 	                                                    
 	int leapFxID           = GetParticleSystemIndex( ARMORED_LEAP_PLACEMENT_ARROW_LEAP_FX_ALTZ )
-	int leapFxHandle = StartParticleEffectOnEntity( arrowLeap, leapFxID, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )          
+	int leapFxHandle = StartParticleEffectOnEntity( arrowLeap, leapFxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )          
 	EffectSetControlPointVector( leapFxHandle, 1, NC_COLOR_FRIENDLY )
 	EffectSetControlPointVector( leapFxHandle, 3, NC_COLOR_BEHIND )
 
 	int dashFxID           = GetParticleSystemIndex( ARMORED_LEAP_PLACEMENT_ARROW_DASH_FX )
-	int dashFxHandle = StartParticleEffectOnEntity( arrowDash, dashFxID, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )          
+	int dashFxHandle = StartParticleEffectOnEntity( arrowDash, dashFxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )          
 	EffectSetControlPointVector( leapFxHandle, 1, NC_COLOR_FRIENDLY )
 	EffectSetControlPointVector( leapFxHandle, 3, NC_COLOR_BEHIND )
 
@@ -3134,8 +3142,8 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 				{
 					wp = file.bleedoutWP[ally]
 				}
-
-				if( allyRui[ally] != null )
+				
+				if( allyRui[ally] == null )
 					continue
 
 				ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( ally ), Loadout_Character() )
@@ -4505,7 +4513,7 @@ bool function ArmoredLeap_HasValidHullRoom( entity ent, vector pos, bool useLand
 	maxs = < maxs.x, maxs.y, 80 >                                                                      
 
 	if( useLandingHulls )
-		maxs = maxs + <0,0,50>
+		maxs = maxs + <0,0,38>
 
 	TraceResults results = TraceHull( pos, pos, mins, maxs, ignoreArray, TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT, up, ent )
 	if ( results.startSolid )
@@ -4552,7 +4560,7 @@ bool function ArmoredLeap_HasValidLeapPos( entity ent, entity targetAlly, vector
 	if( !ent.IsOnGround() )                         
 	{
 		                                                                                                                               
-		TraceResults airLOSTrace = TraceLine( leapPos, endPos, ignoreArray, TRACE_MASK_VISIBLE, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
+		TraceResults airLOSTrace = TraceLine( leapPos, endPos, ignoreArray, TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
 		                                                                                                                                                                               
 		if ( airLOSTrace.fraction < 0.98 )                                                                                   
 			return false
@@ -4796,6 +4804,11 @@ bool function ArmoredLeap_IsInDashRange( entity player, vector endPoint, entity 
 
 	if( dist <= ARMORED_LEAP_GROUND_DASH_RANGE && visionTrace.fraction == 1 && distZ < ARMORED_LEAP_GROUND_DASH_HEIGHT_LIMIT && player.IsOnGround() )
 	{
+		TraceResults dashBackTrace = TraceHull( endPoint + <0,0,16>, player.EyePosition(), ARMORED_LEAP_COL_MINS, ARMORED_LEAP_COL_MAXS, ignoreArray, TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
+		if ( dashBackTrace.fraction < 0.98 )        
+		{
+			return false
+		}
 		return true
 	}
 
@@ -5090,7 +5103,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 			                                              
 
 			                                                                                                                                                                                                   
-			                                                                                    
+			                                    
 				     
 
 			                                                 
@@ -5218,7 +5231,7 @@ array<entity> function GetAllyPlayerArray( entity owner )
 
 	                                          
 	                                    
-	                                                                                    
+	                                                                                                                      
 	                       
 	                           
 	                                      
@@ -6028,44 +6041,51 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 					                               
 					                             
 					                                          
+					 
 						                  
 						     
-				 
-
-				                                                                                          
-				 
-					                                                 
-					                                                                    
 					 
-						                                
-						                                              
-						 
-							                                                                                                     
+				 
 
-							                   		                                                                           
-							                      	                                                                              
+				                                                                                                             
+					            	                     
+
+			 
+			                                                                  
+			                            
+			                                                                                                                                                                                         
+
+			                                                                                
+			                 
+			 
+				                                                 
+				                                                                    
+				 
+					                                
+					                                              
+					 
+						                                                                     
+
+						                               
+						 
+							                                                                      
+
+							                   		                                            
+							                      	                                               
 
 							                            
 							 
 								                                                                                                                                          
 								                                 
 								                                               
-								 
-									            	                     
-									                                                                     
-
-									                               
-										                                                                                              
-								 
+									                                                                                              
 							 
 						 
+
+
 					 
 				 
-
 			 
-			                                                                  
-			                            
-			                                                                                                                                                                                         
 
 			                                       
 			 
@@ -6236,6 +6256,7 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 	                                                                          
 	                                                             
 	                                                     
+	                                                                                          
 	                                                         
 	                                                                  
 
@@ -6313,6 +6334,8 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 	                                                             
 	                            
 
+	                                                                                          
+
 	                                                                                   
 		                                                                                                                                    
 		 
@@ -6349,7 +6372,7 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 	                            
 
                     
-                                         
+	                                        
        
 
 	                                                      
@@ -6884,7 +6907,8 @@ bool function IsCastleWallEnt( entity ent )
 
 					                                                                                                             
 					                                                                                                 
-					                                                                                                     
+					                                                                                                      
+					                                                                                                      
 				 
 
 				                                                                                                                                                                                                                        
@@ -7033,7 +7057,7 @@ bool function IsCastleWallEnt( entity ent )
 	      
 
 	           
-	                                                                                                                                    
+	                                                                                                                                                      
 	                                                                
 	                                                                        
 
@@ -7042,7 +7066,7 @@ bool function IsCastleWallEnt( entity ent )
 	                        
 
 	            
-	                                                                                                                                     
+	                                                                                                                                                       
 	                                                                  
 	                                                                          
 

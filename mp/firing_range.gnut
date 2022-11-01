@@ -1,16 +1,53 @@
+global const int TRAININGDUMMY_SHIELD_LV1_MAXHEALTH = 50
+global const int TRAININGDUMMY_SHIELD_LV2_MAXHEALTH = 75
+global const int TRAININGDUMMY_SHIELD_LV3_MAXHEALTH = 100
+global const int TRAININGDUMMY_SHIELD_LV4_MAXHEALTH = 125
+global const string TRAININGDUMMY_PLAYLISTVAR_MATCH_ARMORHELMS = "trainingdummies_match_armor_helmets"
+global const int MAX_FR_REALMS = 60
+
+                        
+                                                                                   
+      
+
+                         
+                                                      
+                                            
+                               
+
+const vector NOTIFY_INCREASE_COLOR = < 190, 119, 119 >
+const vector NOTIFY_DECREASE_COLOR = < 119, 119, 190 >
+
 global function FiringRangeGameMode_Init
+
+#if DEV
+const bool DEBUG_MANTLING = false
+#endif
+
 
 #if SERVER
                                                          
                                                         
                                                           
                                                    
+
+                                
                                      
+
                                                               
+
+                                
+                                 
+
                          
                                                               
                                    
-      
+                                                           
+
+                                                
+                                                        
+
+                                                                 
+                               
 
        
                                                  
@@ -18,41 +55,123 @@ global function FiringRangeGameMode_Init
 #endif          
 
 #if CLIENT
-global function SCB_BroadcastFriendlyFireChange
 global function FiringRange_IsCharacterSwitchingEnabled
 global function SCB_FiringRange_EnableCharacterChange
 global function SCB_FiringRange_SetPlayerInFinale
 global function FiringRange_IsPlayerInFinale
+
+                         
+                                                            
+                                                           
+                                                                
+
+                                      
+                                    
+                                    
+                                      
+                                                    
+
+                                                                 
+
+                                                               
+                                                         
+                                                         
+                                                         
+                                                        
+                               
+
+                        
+                                             
+      
+
 #endif          
 
+#if SERVER
+                                                                                           
+ 
+	                             
+	                                
+	                          
+ 
+#endif
 
+enum eFRSettingsBroadcastType
+{
+	FRIENDLYFIRE,
+	FRTARGETSPEED,
+	FRDUMMYSHIELDLEVEL,
+	COUNT_
+}
 
-struct {
-                         
-          
-                                                
-      
-      
+const float SCB_MININTERVAL = 3.0
+
+struct
+{
+	#if SERVER
+                           
+                                          
+
+                                  
+                                                          
+        
+		                                                             
+	#endif
+
 	#if CLIENT
 		bool characterSwitchingEnabled = true
 		bool inFinale = false
-	#endif
+                          
+                             
+                           
+
+                     
+                   
+                   
+                       
+                                
+
+                           
+                            
+
+                                      
+                                      
+                                     
+
+                                       
+                                
+
+                                                   
+
+                                              
+        
+	#endif          
 }file
-
-
-
-global const string FIRING_RANGE_DUMMIE_SCRIPT_NAME = "npc_dummie"
 
 void function FiringRangeGameMode_Init()
 {
 	if ( !IsFiringRangeGameMode() )
 		return
 
-	Remote_RegisterClientFunction( "SCB_BroadcastFriendlyFireChange", "entity" )
 	Remote_RegisterServerFunction( "ClientCallback_firingrange_toggle_friendlyfire" )
+
                           
-                                                                                  
-       
+                                                                                   
+                                                                
+                                                              
+                                                                                     
+                                                                                                                   
+                                                                                      
+
+                                                                                           
+                                                                         
+                                                                                      
+                                                                                      
+                                                                                      
+                                                                                                 
+                                                                                           
+
+                                                                                                                                                      
+                                
 
 	#if SERVER
 		                                                  
@@ -60,34 +179,193 @@ void function FiringRangeGameMode_Init()
 		                                                
 		                                            
 
+                           
+                                           
+        
 		                   
 		                     
+
 		                                 
 
 		                              
 	#endif          
 
 	#if CLIENT
-		                                                                  
+		AddCallback_OnClientScriptInit( OnClientScriptInit )
+		AddClientCallback_OnResolutionChanged( FiringRange_ResolutionChanged )
+
+                           
+                                                                     
+        
+
+                          
+                                                 
+                                                       
+
+                                 
+        
 
 		IntroDisplayThread()
 	#endif          
 }
 
+                         
+                                                                                  
+ 
+                                                  
+                                                        
+                                                         
+                                                      
+ 
+      
+
+#if SERVER
+                         
+        
+                              
+        
+                                                      
+ 
+                                         
+  
+                                 
+                                                   
+                                                  
+  
+ 
+
+                                                                         
+ 
+                                          
+                                               
+  
+                                     
+                                                          
+                                                                           
+  
+
+                                            
+ 
+
+                                                                                         
+ 
+                         
+        
+
+                                                                           
+        
+
+                                                 
+                                                                             
+
+                                                               
+
+                                              
+                           
+                                                                                     
+  
+                                                               
+  
+                     
+  
+                                                   
+  
+
+                                                         
+                         
+  
+                                                                                                                                                                   
+                                                                                                                                                     
+                                                                             
+  
+ 
+
+        
+        
+        
+                           
+#endif
+
 #if CLIENT
-void function SCB_BroadcastFriendlyFireChange( entity playerThatChanged )
-{
-	entity localPlayer = GetLocalClientPlayer()
-	bool isEnabled = IsTeamRabid( localPlayer.GetTeam() )
-	string mainText = (isEnabled ? "#NOTIFY_FRIENDLY_FIRE_ON" : "#NOTIFY_FRIENDLY_FIRE_OFF")
-	string subText = (IsValid( playerThatChanged ) ? Localize( "#NOTIFY_FRIENDLY_FIRE_SUBTEXT", playerThatChanged.GetPlayerName() ) : "")
-	vector titleColor = (isEnabled ? ENEMY_COLOR : FRIENDLY_COLOR)
-	AnnouncementMessage( localPlayer, mainText, subText, titleColor )
-}
+                         
+                                                                                      
+ 
+                                                                                
+  
+                                             
+                                                           
+                                                                                             
+                                           
+                                                                                                                                           
+                                                                 
+                                                                      
+                                                                                     
+  
+
+                                     
+  
+                          
+  
+ 
+
+                                                                                                                  
+ 
+                                                                                 
+  
+                                             
+                                                                                           
+                                                                                                                                         
+                                                                                     
+                                                                  
+                                                                            
+                                                                                      
+  
+
+                                     
+  
+                          
+  
+ 
+
+                                                                                                                            
+ 
+                                                                                      
+  
+                                             
+                                                                                               
+                                                                                                                                         
+                                                                                     
+                                                                       
+                                                                            
+                                                                                           
+  
+
+                                     
+  
+                          
+  
+ 
+
+                                                             
+ 
+                                                        
+  
+                                                   
+             
+  
+
+                                                                                   
+ 
+                               
 
 bool function FiringRange_IsCharacterSwitchingEnabled()
 {
 	return file.characterSwitchingEnabled
+}
+
+void function FiringRange_ResolutionChanged()
+{
+	SCB_FiringRange_EnableCharacterChange( file.characterSwitchingEnabled )
 }
 
 void function SCB_FiringRange_EnableCharacterChange( bool enable )
@@ -132,119 +410,82 @@ bool function FiringRange_IsPlayerInFinale()
 	                                        
 
 	                                           
-		                                                                                      
+	 
+                           
+                                                                                                      
+                                       
+    
+                                                                                                              
+    
+        
+	 
  
 
                          
-                                                                             
+                                                                                
  
-                                     
+                                            
+        
+
+                         
+        
+
+                                                 
+
+                                                      
+
+                                                         
+                         
+  
+                                                                                              
+                                                                             
+  
  
 
-                                                                     
+                                                                             
+ 
+                              
+ 
+
+                                                                          
+ 
+                                                       
+ 
+
+                                                                        
  
                                                                  
         
 
-                                                                                                         
-
-                                                                     
-  
-                                                 
-
-                                                
-                                          
-
-             
-                               
-   
-                    
-                         
-                                                                         
-
+                                                                                                                 
         
-   
 
-                                                          
-
-                                                                                  
-                                                                   
-
-                                  
-   
-                                                 
-                                            
-    
-                                  
-                              
-    
-   
-
-                                   
+                                           
                                                 
-   
-                                                 
-                      
-    
-                                   
-     
-                     
-      
-                                                                  
-                                             
-      
-     
-    
-   
-  
-     
-  
-                                                 
-
-                                                
-                                          
-
-             
-                               
-   
-                    
-                         
-                                                                         
-
         
-   
 
-                                                          
+                                                               
+                                                                 
+                  
 
-                                                                                                        
-                                                        
+              
+  
+                                                            
 
-                                  
-   
-                                                 
-                                            
-    
-                                  
-                              
-    
-   
-
-                                   
+                                                                    
                                                 
-   
-                                                 
-                      
-    
-                                   
+  
      
-                     
-      
-                                                                  
-                                             
-      
-     
-    
-   
+  
+                                                             
+
+                                                                    
+                                                           
+  
+                                    
+  
+                                                                                              
+                                                                                 
   
  
       
@@ -373,17 +614,50 @@ bool function FiringRange_IsPlayerInFinale()
  
 	                              
 	 
+		                        
+			      
+
 		                               
 		                             
 		                                 
 
+		                                                             
+		 
+			                                                     
+			                                               
+
+			                                                                
+
+			                                                         
+			                                                                                             
+			                      
+			 
+				               
+			 
+			                         
+			                                                                                                       
+			                      
+			           
+			                                                         
+
+			                        
+				      
+
+			                    
+
+			              
+			 
+				                                                     
+			 
+		 
+
 		                                  
+
 		           
 
 		                                
 
                            
-                                                                
                                       
         
 
@@ -392,6 +666,9 @@ bool function FiringRange_IsPlayerInFinale()
 			                                          
 			                            
 		 
+
+		                                                             
+			                                                              
 	   
  
 
@@ -399,6 +676,41 @@ bool function FiringRange_IsPlayerInFinale()
  
 	                              
 	                               
+
+	                                                                       
+	                                                                                                                                                                                                                        
+		      
+
+	                                                                                                
+	                                                                
+	 
+		                       
+		                                                  
+		                         
+		 
+			                                                 
+			       
+				                    
+				 
+					                                                          
+					                                                           
+				 
+			      
+		 
+		    
+		 
+			                                    
+			       
+				                    
+				 
+					                                                             
+					                                                           
+				 
+			      
+		 
+		                                       
+		                                                               
+	 
  
 
                                                                   
@@ -426,6 +738,14 @@ bool function FiringRange_IsPlayerInFinale()
 
 #if CLIENT
 
+void function OnClientScriptInit( entity player )
+{
+	if( GetFirstTimePlayerState() < eNewPlayerState.FIRING_RANGE_COMPLETED )
+	{
+		SetFirstTimePlayerState( eNewPlayerState.FIRING_RANGE_COMPLETED )
+	}
+}
+
 void function IntroDisplayThread()
 {
 	thread function() : ()
@@ -449,18 +769,19 @@ void function IntroDisplayThread()
  
 
        
-                                                                  
+                                                                                       
  
 	                                                  
 	                                     
 	                                                 
 
-	                                                    
+	                                                                 
 	                                 
 	          
  
              
 
+                               
                                                                                                     
  
 	                                                                                     
@@ -472,63 +793,16 @@ void function IntroDisplayThread()
 	                  
 	                      
 
-	                 	         
-	                   
-	                    
-	             
-	                    
-	 
-                  
-          
-                       
-                 
-            
-                  
-        
-       
-		                      
-			             	      
-			                
-			         
-			      
-		       
-			             	                                                          
-			               
-			         
-			     
-		       
-			             	       
-			               
-			         
-			     
-		       
-			             	         
-			                
-			         
-			     
-		       
-			             	      
-			                
-			         
-			     
-	 
-	                     
-	                        
+	                                     
 
 	                     
 	                                                                          
 	                                                                              
 
-	                             
-	                          
-	                                    
-	                                 
-
 	                                                    
 
 	                                     
 
-	  
 	                                                                              
 	 
 		                                                          
@@ -536,10 +810,9 @@ void function IntroDisplayThread()
 		                               
 		                                                     
 
-		                                                                                 
+		                                                                                    
 	   
 
-	  
 	                                                                                                               
 	 
 		                                   
@@ -558,22 +831,447 @@ void function IntroDisplayThread()
 	          
  
 
-                                                            
+                                
+                                                              
  
-	                                 
-		        
-
-	                                         
-
-	                                      
-	                          
-		                                     
-	                              
-		                                     
-	    
-		                                     
-
+	                 	         
+	                   
+	                    
 	             
+
+	                    
+	 
+                 
+          
+                          
+                 
+            
+                  
+        
+      
+
+		                      
+		                       
+		                
+		         
+		      
+
+		       
+			                                                                           
+			                                               
+			         
+			     
+
+		       
+			                        
+			                                               
+			         
+			     
+
+		       
+			                          
+			                                               
+			         
+			     
+
+		       
+			                       
+			                                               
+			         
+			     
+	 
+	                     
+	                        
+
+	                             
+	                          
+	                                    
+	                                 
+ 
+#endif          
+
+  
+                                                            
+	             
+                                                            
+  
+                        
+          
+                                             
+ 
+                                       
+                                       
  
 
-#endif          
+                                                           
+ 
+                                       
+        
+
+                                                       
+  
+               
+                          
+  
+     
+  
+               
+                         
+                         
+  
+ 
+
+                                                                                                                                      
+ 
+                                                                                                      
+        
+
+                                                  
+        
+
+                                                                                                                                                                                                                      
+  
+                                                                                                                                     
+         
+  
+
+                                        
+                                                                                                                                        
+  
+                    
+  
+
+                                                                                                   
+  
+                    
+  
+
+                                                                                                                  
+  
+                    
+  
+
+                                                                   
+  
+                     
+  
+
+                                                              
+  
+                     
+  
+                                
+
+                               
+     
+                   
+
+                     
+                  
+              
+                
+                   
+  
+
+                                             
+ 
+
+                                                                                                                             
+ 
+                                                                                                              
+        
+
+                                                                                                                                     
+  
+                                                                                                         
+         
+  
+
+                                  
+                                    
+  
+                                                                                                              
+   
+                                  
+                       
+                    
+                
+                  
+                     
+    
+         
+   
+  
+
+                                
+                
+
+                                
+  
+                     
+  
+
+                     
+                  
+              
+                
+                   
+  
+
+                                               
+ 
+
+                                                       
+ 
+                                
+                                   
+
+                                 
+
+         
+
+                        
+
+         
+
+               
+ 
+
+                                            
+ 
+                        
+        
+
+                    
+                
+                  
+                      
+
+                     
+                  
+              
+                
+                   
+  
+ 
+
+                                                                                                     
+ 
+                                     
+        
+
+                                                        
+               
+
+                                    
+        
+
+                                                                        
+                       
+                                                            
+     
+                
+
+                                                      
+                                                        
+                                                         
+                                                      
+ 
+
+                              
+ 
+                                  
+        
+
+                                                                        
+
+                                     
+                                            
+ 
+
+                             
+ 
+                                  
+        
+
+                                         
+                            
+ 
+                
+                              
+
+  
+                                                            
+	               
+                                                            
+  
+                         
+
+                                            
+ 
+                                                                    
+ 
+
+          
+                                      
+ 
+                                      
+        
+
+                                 
+  
+                        
+  
+     
+  
+                        
+  
+
+ 
+
+                                    
+ 
+                                      
+        
+
+                                 
+        
+
+                                     
+ 
+
+                                           
+ 
+                                                                         
+            
+                         
+ 
+
+                                    
+ 
+                                      
+        
+
+                                 
+        
+
+                                        
+                           
+ 
+
+                                                    
+ 
+                         
+ 
+
+                                      
+ 
+                                      
+        
+
+                                 
+        
+
+                                     
+                 
+
+                                                                        
+                                                                                                                                      
+
+                                                                    
+                                                                                                                                      
+
+                                                                    
+                                                                                                                                      
+
+                                                                                                                                                               
+                                                                                                                                                   
+
+             
+                                                                                                   
+                                                                                                                                                
+
+                                                                                                         
+                                                                                                                                                            
+
+                                                                                                          
+                                                                                                                                                              
+
+                                                                                                   
+                                                                                                                                                
+
+                                                                                                       
+                                                                                                                                       
+ 
+
+                                                                            
+ 
+                                           
+ 
+
+                                                                            
+ 
+                                           
+ 
+
+                                                                            
+ 
+                                           
+ 
+
+                                                                               
+ 
+                                                     
+  
+                                                                                            
+  
+                                                           
+  
+                                                                                             
+  
+
+                                               
+ 
+
+                                                                         
+ 
+                                               
+  
+                                                                                        
+  
+                                                     
+  
+                                                                                         
+  
+
+                                         
+ 
+
+                                                                                                                                         
+ 
+                                                      
+
+                                     
+                                                            
+  
+                                         
+                         
+                             
+                                                                              
+                                                          
+
+                                                                                                                                                 
+                                                                                      
+                                                                                                 
+                                                                                                  
+                                                                                   
+                                                  
+                                                                   
+
+                                             
+                                                                                                                                           
+                                                                               
+  
+ 
+               
+                               

@@ -128,20 +128,22 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 			if ( characterClass != GetItemFlavorByAsset( CHARACTER_RANDOM ) && !( characterClass in fileLevel.defaultSkins ) && !ItemFlavor_IsTheFavoriteSentinel( skin ) )
 				fileLevel.defaultSkins[characterClass] <- skin
 		}
-		Assert( characterClass == GetItemFlavorByAsset( CHARACTER_RANDOM ) || characterClass in fileLevel.defaultSkins, "No default skin found for: " + ItemFlavor_GetHumanReadableRef( characterClass ) )
+		Assert( characterClass == GetItemFlavorByAsset( CHARACTER_RANDOM ) || characterClass in fileLevel.defaultSkins, "No default skin found for: " + string(ItemFlavor_GetAsset( characterClass )) )
 
 		MakeItemFlavorSet( skinList, fileLevel.cosmeticFlavorSortOrdinalMap )
 
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_skin_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "character_skins"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " Skin"
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_skin_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.CHARACTER_SKINS
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " Skin"
+		#endif
 		entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.CHARACTER_SKIN
-		entry.defaultItemFlavor = skinList[1]
-		entry.favoriteItemFlavor = skinList[0]
-		entry.validItemFlavorList = skinList
-		entry.maxFavoriteCount = 8
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.defaultItemFlavor         = skinList[1]
+		entry.favoriteItemFlavor        = skinList[0]
+		entry.validItemFlavorList       = skinList
+		entry.maxFavoriteCount          = 8
+		entry.isSlotLocked              = bool function( EHI playerEHI ) {
 			#if SERVER
 				                                              
 					                                                              
@@ -168,13 +170,15 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 
 		MakeItemFlavorSet( executionsList, fileLevel.cosmeticFlavorSortOrdinalMap )
 
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_execution_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "character_executions"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " Execution"
-		entry.defaultItemFlavor = executionsList[0]
-		entry.validItemFlavorList = executionsList
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_execution_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.CHARACTER_EXECUTIONS
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " Execution"
+		#endif
+		entry.defaultItemFlavor    = executionsList[0]
+		entry.validItemFlavorList  = executionsList
+		entry.isSlotLocked         = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
 		entry.isItemFlavorUnlocked = (bool function( EHI playerEHI, ItemFlavor execution, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false ) {
@@ -194,19 +198,21 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		array<ItemFlavor> quipList = RegisterReferencedItemFlavorsFromArray( characterClass, "introQuips", "flavor" )
 		MakeItemFlavorSet( quipList, fileLevel.cosmeticFlavorSortOrdinalMap )
 
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_intro_quip_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "character_intro_quips"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " Intro Quip"
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_intro_quip_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.CHARACTER_INTRO_QUIPS
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " Intro Quip"
+		#endif
 		entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.CHARACTER_INTRO_QUIP
-		entry.defaultItemFlavor = quipList[0]
-		entry.validItemFlavorList = quipList
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.defaultItemFlavor         = quipList[0]
+		entry.validItemFlavorList       = quipList
+		entry.isSlotLocked              = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		entry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
-		entry.networkVarName = "IntroQuip"
+		entry.isActiveConditions        = { [Loadout_Character()] = { [characterClass] = true, }, }
+		entry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
+		entry.networkVarName            = "IntroQuip"
 		fileLevel.loadoutCharacterIntroQuipSlotMap[characterClass] <- entry
 
 		allEmotes.extend( quipList )
@@ -217,18 +223,20 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		array<ItemFlavor> quipList = RegisterReferencedItemFlavorsFromArray( characterClass, "killQuips", "flavor" )
 		MakeItemFlavorSet( quipList, fileLevel.cosmeticFlavorSortOrdinalMap )
 
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_kill_quip_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "character_kill_quips"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " Kill Quip"
-		entry.defaultItemFlavor = quipList[0]
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_kill_quip_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.CHARACTER_KILL_QUIPS
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " Kill Quip"
+		#endif
+		entry.defaultItemFlavor   = quipList[0]
 		entry.validItemFlavorList = quipList
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.isSlotLocked        = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		entry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
-		entry.networkVarName = "KillQuip"
+		entry.isActiveConditions  = { [Loadout_Character()] = { [characterClass] = true, }, }
+		entry.networkTo           = eLoadoutNetworking.PLAYER_GLOBAL
+		entry.networkVarName      = "KillQuip"
 		fileLevel.loadoutCharacterKillQuipSlotMap[characterClass] <- entry
 
 		allEmotes.extend( quipList )
@@ -829,7 +837,7 @@ void function CharacterSkin_CheckBloodhoundRavenSkin ( entity child, entity mode
 {
 	if ( IsValid( model ) )
 	{
-		if ( child.GetModelName() == BLOODHOUND_BIRD_MDL && ( IsLobby() || IsShowingVictorySequence() || CharacterSelect_MenuIsOpen()) )
+		if ( child.GetModelName() == BLOODHOUND_BIRD_MDL && ( IsLobby() || IsEmoteEnabledForPodiumScreen() || CharacterSelect_MenuIsOpen()) )
 		{
 			child.SetSkin ( model.GetSkin() == 22 ? 2 : 0 )
 		}
@@ -848,7 +856,7 @@ void function DEV_TestCharacterSkinData()
 
 		foreach ( skin in characterSkins )
 		{
-			printt( ItemFlavor_GetHumanReadableRef( skin ), "skinName:", CharacterSkin_GetSkinName( skin ) )
+			printt( string(ItemFlavor_GetAsset( skin )), "skinName:", CharacterSkin_GetSkinName( skin ) )
 			CharacterSkin_Apply( model, skin )
 		}
 	}

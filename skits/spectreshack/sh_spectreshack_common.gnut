@@ -11,6 +11,8 @@ global const int CONTROLSCREEN_WAVES_CLEARED = 3
 global const int CONTROLSCREEN_MASTER_STATE_INDEX = 4
 global const int CONTROLSCREEN_SIDESCREEN_INDEX = 5
 global const int CONTROLSCREEN_COMBATSTATE_INDEX = 6
+global const int CONTROLSCREEN_EXIT_PROMPT_START = 2
+global const int CONTROLSCREEN_EXIT_PROMPT_END = 3
 
 global const int ARMORY_SCREEN_MAIN_ENT = 0
 global const int ARMORY_SCREEN_SIDE1_ENT = 1
@@ -26,6 +28,8 @@ global function ServerCallback_SpectreShacksUpdateLootBinRarity
 #endif          
 
 #if SERVER
+                                                                    
+
                                                    
                                               
                                            
@@ -105,7 +109,6 @@ void function SpectreShacks_Bootstrap()
 
 	#if SERVER
 		                                                                                    
-		                                                   
 		                   
 	#endif
 	#if CLIENT
@@ -204,6 +207,9 @@ void function ArmoryControlPanel_LongPress_Thread( entity cp, entity player )
 		settings.hint = Localize( "#PROMPT_CONFIRM" )
 		settings.successSound = "ui_menu_store_purchase_success"
 	#elseif SERVER              
+		                            
+		                                   
+		                                                
 		                                                
 	#endif          
 
@@ -221,6 +227,11 @@ void function ArmoryActivation_DisplayRui( entity ent, entity player, var rui, E
 }
 
 #if SERVER
+                                                                                                 
+ 
+	              
+ 
+
                                                                                                  
  
 	                        
@@ -378,7 +389,7 @@ void function Cl_SpectreShack_OnProximityTriggerLeave( entity wp )
  
 	                                       
 
-	                                               
+	                                                                               
 	                                                                 
 	                      
 	                      
@@ -485,6 +496,8 @@ void function SpectreShackTimerWaypointThink_Thread( entity wp )
 				RuiSetGameTime( rui, "startTime", startTime )
 				endTime   = wp.GetWaypointGametime( 1 )
 				RuiSetGameTime( rui, "endTime", endTime )
+				RuiSetGameTime( rui, "openArmoryStartTime", wp.GetWaypointGametime(CONTROLSCREEN_EXIT_PROMPT_START) )
+				RuiSetGameTime( rui, "openArmoryEndTime", wp.GetWaypointGametime(CONTROLSCREEN_EXIT_PROMPT_END) )
 
 				bool inCombat = ( wp.GetWaypointInt( CONTROLSCREEN_COMBATSTATE_INDEX ) == 1 )
 				RuiSetBool( rui, "inCombat", inCombat )

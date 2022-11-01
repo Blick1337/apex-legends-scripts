@@ -629,7 +629,7 @@ void function UIToClient_OnGRXPackOpeningResultsAvailable()
 		Assert( theCurrencyQty > 0 )
 
 		if ( !IsEven( theCurrencyQty ) )
-			Warning( "Pack %s gave an odd amount of currency but we expected an even amount: %d", ItemFlavor_GetHumanReadableRef( fileLevel.currentPackFlav ), theCurrencyQty )
+			Warning( "Pack %s gave an odd amount of currency but we expected an even amount: %d", string(ItemFlavor_GetAsset( fileLevel.currentPackFlav )), theCurrencyQty )
 
 		int leftCurrencyAmount  = theCurrencyQty / 2
 		int rightCurrencyAmount = theCurrencyQty - leftCurrencyAmount
@@ -674,7 +674,7 @@ void function UIToClient_OnGRXPackOpeningResultsAvailable()
 
 			ItemPresentationData data
 			data.item = mythicSkins[i]
-			data.rarity = eRarityTier.HEIRLOOM                                                             
+			data.rarity = eRarityTier.MYTHIC                                                             
 			data.attachment = TICK_LOOT_ATTACHMENTS[ attachmentIndex ]
 
 			fileLevel.itemPresentationDatas.append( data )
@@ -683,7 +683,7 @@ void function UIToClient_OnGRXPackOpeningResultsAvailable()
 	else
 	{
 		for ( int i = 0; i < bag.quantities.len(); i++ )
-			Assert( bag.quantities[i] == 1, "Quantity is not 1 for loot ceremony item flavor: " + ItemFlavor_GetHumanReadableRef( bag.flavors[i] ) )
+			Assert( bag.quantities[i] == 1, "Quantity is not 1 for loot ceremony item flavor: " + string(ItemFlavor_GetAsset( bag.flavors[i] )) )
 
 		array<ItemFlavor> filteredAndSortedItemFlavors = FilterAndSortPackResults( bag.flavors )
 
@@ -705,6 +705,27 @@ void function UIToClient_OnGRXPackOpeningResultsAvailable()
 }
 #endif
 
+#if CLIENT
+bool function ZerothItemIsSpecial( ItemFlavor flav, bool isThematicCharacterPack, ItemFlavor ornull packTheme, bool isThematicItemTypePack, int packThemeType )
+{
+	if ( ItemFlavor_GetType( flav ) == eItemType.melee_skin )
+		return true
+
+	if ( ItemFlavor_GetType( flav) == eItemType.weapon_skin ? (GetGlobalSettingsBool( ItemFlavor_GetAsset( flav ), "featureReactsToKills" )) : false )
+		return true
+
+	if ( ItemFlavor_GetSourceIcon( flav ) != $"" )
+		return true
+
+	if ( isThematicCharacterPack && packTheme == GetItemFlavorAssociatedCharacterOrWeapon( flav ) && ItemFlavor_GetQuality( flav ) >= eRarityTier.RARE )
+		return true
+
+	if ( isThematicItemTypePack && packThemeType == ItemFlavor_GetType( flav ) && ItemFlavor_GetQuality( flav ) >= eRarityTier.RARE )
+		return true
+
+	return false
+}
+#endif
 
 #if CLIENT
 array<ItemFlavor> function FilterAndSortPackResults( array<ItemFlavor> resultList )
@@ -756,6 +777,16 @@ array<ItemFlavor> function FilterAndSortPackResults( array<ItemFlavor> resultLis
 		}
 	}
 
+                 
+		                                                                                                                                                             
+		bool hasStickers = GetGlobalSettingsBool( ItemFlavor_GetAsset( fileLevel.currentPackFlav ), "hasStickers" )
+		if ( hasStickers )
+		{
+			isThematicItemTypePack = true                                                                                     
+			packThemeType = eItemType.sticker
+		}
+                       
+
 	                                                                                                                 
 	out.sort( int function( ItemFlavor a, ItemFlavor b ) : ( isThematicCharacterPack, isThematicItemTypePack, isThematicWeaponCategoryPack, packTheme, packThemeType ) {
 		bool aIsMeleeSkin = (ItemFlavor_GetType( a ) == eItemType.melee_skin)
@@ -765,20 +796,31 @@ array<ItemFlavor> function FilterAndSortPackResults( array<ItemFlavor> resultLis
 		if ( bIsMeleeSkin )
 			return 1
 
-		if ( ItemFlavor_GetSourceIcon( a ) != $"" )
+		bool aIsReactive = (ItemFlavor_GetType( a ) == eItemType.weapon_skin) ? (GetGlobalSettingsBool( ItemFlavor_GetAsset( a ), "featureReactsToKills" )) : false
+		bool bIsReactive = (ItemFlavor_GetType( b ) == eItemType.weapon_skin) ? (GetGlobalSettingsBool( ItemFlavor_GetAsset( b ), "featureReactsToKills" )) : false
+		if ( aIsReactive )
 			return -1
-
-		if ( ItemFlavor_GetSourceIcon( b ) != $"" )
+		if ( bIsReactive )
 			return 1
+
+		asset packIcon = ItemFlavor_GetSourceIcon( fileLevel.currentPackFlav )
+		if  ( packIcon != $"" )
+		{
+			if ( ItemFlavor_GetSourceIcon( a ) == packIcon )
+				return -1
+
+			if ( ItemFlavor_GetSourceIcon( b ) == packIcon )
+				return 1
+		}
 
 		                                                                                                                                  
 		if ( isThematicCharacterPack )
 		{
 			if ( packTheme == GetItemFlavorAssociatedCharacterOrWeapon( a ) && ItemFlavor_GetQuality( a ) >= eRarityTier.RARE )
-			return -1
+				return -1
 
 			if ( packTheme == GetItemFlavorAssociatedCharacterOrWeapon( b ) && ItemFlavor_GetQuality( b ) >= eRarityTier.RARE )
-			return 1
+				return 1
 		}
 		else if ( isThematicWeaponCategoryPack )
 		{
@@ -803,15 +845,20 @@ array<ItemFlavor> function FilterAndSortPackResults( array<ItemFlavor> resultLis
 				return 1
 		}
 
+		                                                                         
+		if ( ItemFlavor_GetSourceIcon( a ) != $"" )
+			return -1
+
+		if ( ItemFlavor_GetSourceIcon( b ) != $"" )
+			return 1
+
 		return 0
 	} )
 
 	                                                                  
-	bool centerMeleeSkin         = ( out.len() >= 2 && ( ItemFlavor_GetType( out[0] ) == eItemType.melee_skin || ItemFlavor_GetSourceIcon( out[0] ) != $"" ) )
-	bool centerCharacterThematic = ( out.len() >= 2 && isThematicCharacterPack && packTheme == GetItemFlavorAssociatedCharacterOrWeapon( out[0] ) && ItemFlavor_GetQuality( out[0] ) >= eRarityTier.RARE )
-	bool centerItemTypeThematic  = ( out.len() >= 2 && isThematicItemTypePack && packThemeType == ItemFlavor_GetType( out[0] ) && ItemFlavor_GetQuality( out[0] ) >= eRarityTier.RARE )
+	bool shouldCenterSpecialItem = ( out.len() >= 2 ) && ZerothItemIsSpecial(out[0], isThematicCharacterPack, packTheme, isThematicItemTypePack, packThemeType )
 
-	if ( centerMeleeSkin || centerCharacterThematic || centerItemTypeThematic )
+	if ( shouldCenterSpecialItem )
 	{
 		ItemFlavor temp = out[0]
 		out[0] = out[1]
@@ -834,7 +881,7 @@ bool function BagIsHeirloom( array<ItemFlavor> flavors )
 		return false
 	if ( !ItemFlavor_HasQuality( flavors[0] ) )
 		return false
-	if ( ItemFlavor_GetQuality( flavors[0] ) != eRarityTier.HEIRLOOM )
+	if ( ItemFlavor_GetQuality( flavors[0] ) != eRarityTier.MYTHIC )
 		return false
 
 	return true
@@ -1730,9 +1777,9 @@ void function ShowRewardBasedOnItemType( int itemType, ItemFlavor item, vector a
 			break
 
                 
-                         
-                                                                                       
-        
+		case eItemType.sticker:
+			thread ShowRewards_Sticker( item, attachOrigin, attachAngles, rarity, displayIndex )
+			break
                       
 
 		default:
@@ -1798,7 +1845,7 @@ void function ShowRewards_Currency( ItemFlavor item, vector origin, vector angle
 				modelAsset = CURRENCY_MODEL_LEGENDARY
 				break
 
-			case eRarityTier.HEIRLOOM:
+			case eRarityTier.MYTHIC:
 				ItemFlavor currencyFlav = GRXCurrencyBundle_GetCurrencyFlav( item )
 				modelAsset = GRXCurrency_GetPreviewModel( currencyFlav )
 				break
@@ -2663,7 +2710,7 @@ void function ShowRewards_Loadscreen( ItemFlavor item, vector origin, vector ang
 
 	                     
 	string rpak         = Loadscreen_GetRPakName( item )
-	PakHandle pakHandle = RequestPakFile( rpak )
+	PakHandle pakHandle = RequestPakFile( rpak, TRACK_FEATURE_UI )
 	fileLevel.pakHandles.append( pakHandle )
 
 	if ( !pakHandle.isAvailable )
@@ -2737,7 +2784,7 @@ void function ShowRewards_CharacterEmote( ItemFlavor item, vector origin, vector
 	ItemFlavor skin = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_CharacterSkin( char ) )
 
 	           
-	if ( ItemFlavor_GetHumanReadableRef(item) == "character_emote_caustic_epic_rakestep" )
+	if ( string(ItemFlavor_GetAsset( item )) == CAUSTIC_SPECIAL_CASE_EMOTE_ASSET_PATH )
 	{
 		angles += < 0, 50, 0 >
 	}
@@ -2827,44 +2874,45 @@ void function ShowRewards_Voucher( ItemFlavor item, vector origin, vector angles
 
 #if CLIENT
                 
-                                                                                                                
- 
-                                             
-                                                       
-                                                               
+void function ShowRewards_Sticker( ItemFlavor item, vector origin, vector angles, int rarity, int displayIndex )
+{
+	EndSignal( level, "EndSetPresentationType" )
+	EndSignal( fileLevel.signalDummy, "LootCeremonyExit" )
+	EndSignal( fileLevel.signalDummy, "LootCeremonyAnimSeqStart" )
 
-                     
+	origin += <0, 0, 29>
 
-                                                                                          
-                                
+	entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
+	mover.MakeSafeForUIScriptHack()
 
-                                                                                        
-                                      
-                                       
-                                
+	entity stickerModel = CreateClientSidePropDynamic( origin, angles, FLAT_STICKER_MODEL )
+	stickerModel.MakeSafeForUIScriptHack()
+	stickerModel.SetParent( mover )
 
-                                                        
-                                                                
-                             
-                            
-                                                                                            
+	asset stickerMat = Sticker_GetReplacementMaterialAsset( item )
+	int stickerInstance = Sticker_SetMaterialModForLocalPlayer( stickerModel, stickerMat )
 
-             
-                                      
-   
-                         
-                  
-   
-  
+	int flashType     = GetLootCeremonyFlashType( item )
+	vector flashColor = ItemFlavor_GetQualityColor( item ) / 255
+	Sticker_CreateFlashData( stickerInstance, stickerModel, flashType, flashColor )
+	Sticker_OnPlaced( stickerInstance, Sticker_FlashOnLoadComplete )
 
-                 
-                         
+	OnThreadEnd(
+		function() : ( mover, stickerModel )
+		{
+			stickerModel.Destroy()
+			mover.Destroy()
+		}
+	)
 
-                                             
-                                                                                                  
-     
-                                                                                                             
- 
+	int quantity = 1
+	float maxYaw = 0        
+
+	if ( IsSpecialItemPresentationModeActive() )
+		SpecialItemPresentationView_Model( item, rarity, quantity, angles, mover, stickerModel, maxYaw )
+	else
+		InspectMenuFunctionality_Model( item, displayIndex, rarity, quantity, stickerModel, mover, angles, maxYaw )
+}
                       
 #endif
 
@@ -2912,7 +2960,7 @@ const float RUI_PLACARD_HEIGHT 			= 256.0
 const float RUI_PLACARD_Z_OFFSET		= 7.0
 const float RUI_PLACARD_FORWARD_OFFSET 	= 32.0
 const bool  RUI_PLACARD_DEBUG 			= false
-const int   MYTHIC_RARITY_INDEX 		= eRarityTier.HEIRLOOM + 1                                                                                  
+const int   MYTHIC_RARITY_INDEX 		= eRarityTier.MYTHIC + 1                                                                                  
 
 #if CLIENT
 void function ShowRewards_Placard( ItemFlavor item, vector origin, vector angles, int rarity, int displayIndex )
@@ -2927,7 +2975,7 @@ void function ShowRewards_Placard( ItemFlavor item, vector origin, vector angles
 	vector placardAngles = VectorToAngles( AnglesToForward( angles ) * -1 )
 
 	var topoPlacard = CreateRUITopology_Worldspace( placardOrigin + <0, 0, (height * 0.5)>, placardAngles, width, height )
-	int ruiDrawMode = ItemFlavor_GetHumanReadableRef(item) == "character_emote_caustic_epic_rakestep" ? RUI_DRAW_VIEW_MODEL : RUI_DRAW_WORLD
+	int ruiDrawMode = string(ItemFlavor_GetAsset( item )) == CAUSTIC_SPECIAL_CASE_EMOTE_ASSET_PATH ? RUI_DRAW_VIEW_MODEL : RUI_DRAW_WORLD
 	var ruiPlacard  = RuiCreate( $"ui/loot_placard.rpak", topoPlacard, ruiDrawMode, 1 )
 
 	if ( ItemFlavor_GetType( item ) == eItemType.account_currency )
@@ -3225,7 +3273,7 @@ void function DEV_SetCustomLootRewardsToDisplay( string itemRef0 = "", string it
 		if ( ref == "" )
 			continue
 
-		ItemFlavor flavor = GetItemFlavorByHumanReadableRef( ref )
+		ItemFlavor flavor = DEV_GetItemFlavorByGRXRef( ref )
 		asset flavorAsset = ItemFlavor_GetAsset( flavor )
 		flavorAssets.append( flavorAsset )
 	}
@@ -3570,9 +3618,9 @@ array<LoadoutEntry> function EquipButton_GetItemLoadoutEntries( ItemFlavor item,
 			break
 
                 
-                         
-          
-        
+		case eItemType.sticker:
+			       
+			break
                       
 
 		default:
@@ -4022,7 +4070,7 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 		eItemType.emote_icon,
 		eItemType.character_emote,
                 
-                    
+		eItemType.sticker,
                       
 	]
 
@@ -4043,7 +4091,8 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 				Hud_SetLocked( fileLevel.equipToWheelButton, false )
 
 				var equipWheelButtonRui = Hud_GetRui( fileLevel.equipToWheelButton )
-				RuiSetString( equipWheelButtonRui, "buttonText", "#EQUIP_WHEEL_LOOT_REWARD" )
+				string equipTip = ItemFlavor_GetType( item ) == eItemType.skydive_emote ? "#EQUIP_SKYDIVE_WHEEL_REWARD" : "#EQUIP_WHEEL_LOOT_REWARD"
+				RuiSetString( equipWheelButtonRui, "buttonText", equipTip )
 				RuiSetString( equipWheelButtonRui, "descText", "" )
 			}
 			else if ( isOwned && ! hasValidCharacterOrWeapon )
@@ -4069,7 +4118,8 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 			Hud_SetLocked( fileLevel.equipToWheelButton, false )
 
 			var equipWheelButtonRui = Hud_GetRui( fileLevel.equipToWheelButton )
-			RuiSetString( equipWheelButtonRui, "buttonText", "#EQUIP_WHEEL_LOOT_REWARD" )
+			string equipTip = ItemFlavor_GetType( item ) == eItemType.skydive_emote ? "#EQUIP_SKYDIVE_WHEEL_REWARD" : "#EQUIP_WHEEL_LOOT_REWARD"
+			RuiSetString( equipWheelButtonRui, "buttonText", equipTip )
 			RuiSetString( equipWheelButtonRui, "descText", "" )
 		}
 
@@ -4097,7 +4147,8 @@ void function PopulateInspectMenuDetails( ItemFlavor item, int rarity, int quant
 				Hud_SetLocked( fileLevel.equipToWheelButton, false )
 
 				var equipWheelButtonRui = Hud_GetRui( fileLevel.equipToWheelButton )
-				RuiSetString( equipWheelButtonRui, "buttonText", "#EQUIP_WHEEL_LOOT_REWARD" )
+				string equipTip = ItemFlavor_GetType( item ) == eItemType.skydive_emote ? "#EQUIP_SKYDIVE_WHEEL_REWARD" : "#EQUIP_WHEEL_LOOT_REWARD"
+				RuiSetString( equipWheelButtonRui, "buttonText", equipTip )
 				RuiSetString( equipWheelButtonRui, "descText", "" )
 			}
 
@@ -4263,7 +4314,7 @@ void function InspectMenuFunctionality_Model( ItemFlavor item, int displayIndex,
 		bool includeChildren = true
 		bool depthDiscard = false
                   
-                                                                 
+			depthDiscard = ItemFlavor_GetType( item ) == eItemType.sticker
                         
 		thread FlashMenuModel( model, eMenuModelFlashType.LOOT_CEREMONY_QUICK, flashColor, includeChildren, depthDiscard )
 
@@ -5548,7 +5599,7 @@ bool function InspectItemTypePresentationSupported( ItemFlavor item )
 		case eItemType.emote_icon:
 		case eItemType.character_emote:
                 
-                         
+		case eItemType.sticker:
                       
 			return true
 
@@ -5974,7 +6025,7 @@ void function UpdateSpecialItemPresentationPurchaseButton()
 		else if ( ItemFlavor_GetGRXMode( itemFlav ) == eItemFlavorGRXMode.REGULAR )
 			isOwned = GRX_IsItemOwnedByPlayer( itemFlav, null )
 
-		if ( TEMP_IsItemFlavorEquippable( itemFlav ) )
+		if ( IsItemFlavorTypeEquippable( itemFlav ) )
 		{
 			if ( !fileLevel.specialItemHidePurchaseButton )
 				showPurchase = !isOwned
@@ -6018,7 +6069,7 @@ void function UpdateSpecialItemPresentationPurchaseButton()
 
 	bool showUnlockedWithoutEquip = isOwned && ( itemType == eItemType.gladiator_card_badge ||
                 
-                                             
+											  itemType == eItemType.sticker ||
                       
 											  itemType == eItemType.weapon_charm ||
 										      itemType == eItemType.music_pack )
@@ -6037,8 +6088,8 @@ void function UpdateSpecialItemPresentationPurchaseButton()
 		else if ( itemType == eItemType.weapon_charm || itemType == eItemType.music_pack )
 			descText = "#EQUIP_IN_LOADOUT_MENU"
                 
-                                                                                                           
-                                      
+		else if ( itemType == eItemType.sticker )                                                                
+			descText = "#EQUIP_IN_LEGENDS_MENU"
                       
 
 		HudElem_SetRuiArg( fileForever.equipButton, "descText", descText )

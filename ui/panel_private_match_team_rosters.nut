@@ -16,6 +16,7 @@ global function ConfirmKickPlayerDialogue
 
 global const string PRIVATE_MATCH_TEAM_BUTTON_PANEL = "TeamPlayerRoster"
 global const string PRIVATE_MATCH_TEAM_HEADER_PANEL = "TeamHeader"
+global const string PRIVATE_MATCH_TEAM_FRAME_PANEL = "TeamFrame"
 
 struct RosterButtonData
 {
@@ -225,6 +226,13 @@ void function PrivateMatch_TeamRosters_Update( table< int, array< entity > > tea
 			                                                                                                    
 			teamRoster.teamDisplayNumber = teamDisplayNumber
 			HudElem_SetRuiArg( teamRoster.headerPanel, "teamNumber", teamRoster.teamDisplayNumber )
+
+			var teamFrame = Hud_GetChild( teamRoster.headerPanel, "TeamFrame" )
+			var teamHeader	= Hud_GetChild( teamRoster.headerPanel, "TeamHeader" )
+			var headerRui = Hud_GetRui( teamHeader )
+			var frameRui = Hud_GetRui( teamFrame )
+			vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamRoster.teamDisplayNumber ) / 255.0 )
+			RuiSetColorAlpha( frameRui, "teamColor", smokeColor, 1.0 )
 		}
 
 		var scrollPanel = Hud_GetChild( teamRoster.listPanel, "ScrollPanel" )

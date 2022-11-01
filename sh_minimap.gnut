@@ -47,6 +47,9 @@ global enum eMinimapObject_prop_script
                   
             
        
+                 
+	SPIKE_STRIP,
+       
 	DEPLOYABLE_MEDIC,
 	PHASE_GATE,
                
@@ -55,6 +58,11 @@ global enum eMinimapObject_prop_script
 		VAULT_KEY,
        
 	SURVEY_BEACON,
+                    
+                         
+               
+             
+       
 	CRYPTO_DRONE,
 	RAMPART_WALL,
 	RAMPART_TURRET,
@@ -125,6 +133,10 @@ global enum eMinimapObject_prop_script
 
                                 
 		PLAYER_DUMMY,
+       
+
+                         
+             
        
 
 	COUNT

@@ -18,12 +18,18 @@ global function ThemedShopEvent_HasSpecialsTab
 #if UI
 global function ThemedShopEvent_GetTabText
 global function ThemedShopEvent_GetGRXOfferLocation
+global function ThemedShopEvent_GetTabTextDefaultCol
 global function ThemedShopEvent_GetTabBGDefaultCol
 global function ThemedShopEvent_GetTabBarDefaultCol
 global function ThemedShopEvent_GetTabBGFocusedCol
 global function ThemedShopEvent_GetTabBarFocusedCol
 global function ThemedShopEvent_GetTabBGSelectedCol
 global function ThemedShopEvent_GetTabBarSelectedCol
+global function ThemedShopEvent_GetTabTextSelectedCol
+global function ThemedShopEvent_GetTabGlowFocusedCol
+global function ThemedShopEvent_GetTabLeftSideImage
+global function ThemedShopEvent_GetTabRightSideImage
+global function ThemedShopEvent_GetTabCenterRui
 global function ThemedShopEvent_GetItemButtonBGImage
 global function ThemedShopEvent_GetItemGroupHeaderImage
 global function ThemedShopEvent_GetItemGroupHeaderText
@@ -112,7 +118,7 @@ ItemFlavor ornull function GetActiveThemedShopEvent( int t )
 		if ( !CalEvent_IsActive( ev, t ) )
 			continue
 
-		Assert( event == null, format( "Multiple themedshop events are active!! (%s, %s)", ItemFlavor_GetHumanReadableRef( expect ItemFlavor(event) ), ItemFlavor_GetHumanReadableRef( ev ) ) )
+		Assert( event == null, format( "Multiple themedshop events are active!! (%s, %s)", string(ItemFlavor_GetAsset( expect ItemFlavor(event) )), string(ItemFlavor_GetAsset( ev )) ) )
 		event = ev
 	}
 	return event
@@ -147,6 +153,14 @@ string function ThemedShopEvent_GetGRXOfferLocation( ItemFlavor event )
 }
 #endif
 
+
+#if UI
+vector function ThemedShopEvent_GetTabTextDefaultCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabTextDefaultCol" )
+}
+#endif
 
 #if UI
 vector function ThemedShopEvent_GetTabBGDefaultCol( ItemFlavor event )
@@ -201,6 +215,45 @@ vector function ThemedShopEvent_GetTabBarSelectedCol( ItemFlavor event )
 }
 #endif
 
+#if UI
+vector function ThemedShopEvent_GetTabTextSelectedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabTextSelectedCol" )
+}
+#endif
+
+#if UI
+vector function ThemedShopEvent_GetTabGlowFocusedCol( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsVector( ItemFlavor_GetAsset( event ), "tabGlowFocusedCol" )
+}
+#endif
+
+#if UI
+asset function ThemedShopEvent_GetTabLeftSideImage( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "leftSideImage" )
+}
+#endif
+
+#if UI
+asset function ThemedShopEvent_GetTabRightSideImage( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "rightSideImage" )
+}
+#endif
+
+#if UI
+asset function ThemedShopEvent_GetTabCenterRui( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsStringAsAsset( ItemFlavor_GetAsset( event ), "centerRuiAsset" )
+}
+#endif
 
 #if UI
 asset function ThemedShopEvent_GetItemButtonBGImage( ItemFlavor event, bool isHighlighted )

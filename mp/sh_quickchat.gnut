@@ -14,9 +14,9 @@ global function PlayerIsInCombat
 
 #if CLIENT
 global function Quickchat
-global function QuickchatToLivingAndDead
 global function HandleBroadcastCommsAction
 global function ServerToClient_BroadcastCommsActionToTeam
+global function ServerToClient_BroadcastCommsActionToTeamItem
 global function GetChatTitleColorForPlayer
 global function GetMenuOptionTextForCommsAction
 global function GetShortTextForCommsAction
@@ -32,6 +32,7 @@ global function PlaySoundForCommsAction
                                           
                                                       
                                         
+                                               
                                            
 #endif
 
@@ -155,7 +156,7 @@ void function LoadCommsActionsFromDatatable()
 			action.menuText = GetDataTableString( dt, row, col_menuText )
 			action.shortText = GetDataTableString( dt, row, col_shortText )
 			action.chatText = GetDataTableString( dt, row, col_chatText )
-			action.attachmentPoints = split( GetDataTableString( dt, row, col_attachmentPoints ), " " )
+			action.attachmentPoints = split( GetDataTableString( dt, row, col_attachmentPoints ), WHITESPACE_CHARACTERS )
 			action.aliasSubname = GetDataTableString( dt, row, col_aliasSubname )
 			action.hasCalm = GetDataTableBool( dt, row, col_hasCalm )
 			action.hasCalmFar = GetDataTableBool( dt, row, col_hasCalmFar )
@@ -186,8 +187,16 @@ void function ShQuickchat_Init()
 	#endif
 
 	#if SERVER || CLIENT
-		Remote_RegisterServerFunction( "ClientCallback_Quickchat_UI", "int", 0, eCommsAction._count, "int", 0, 1 << eCommsFlags._flagCount, "string" )
-		Remote_RegisterServerFunction( "ClientCallback_Quickchat", "int", 0, eCommsAction._count, "int", 0, 1 << eCommsFlags._flagCount, "entity", "string" )
+		Remote_RegisterServerFunction( "ClientCallback_Quickchat_UI", "int", 0, eCommsAction._count, "int", 0, 1 << eCommsFlags._flagCount, "int", 0, eEquipmentSlotType.COUNT  )
+		Remote_RegisterServerFunction( "ClientCallback_Quickchat", "int", 0, eCommsAction._count, "int", 0, 1 << eCommsFlags._flagCount )
+		Remote_RegisterServerFunction( "ClientCallback_QuickchatSubject", "int", 0, eCommsAction._count, "int", 0, 1 << eCommsFlags._flagCount, "entity" )
+
+		            
+		var dt = GetDataTable( LOOT_DATATABLE )
+		int numRows = GetDataTableRowCount( dt )
+
+		Remote_RegisterClientFunction( "ServerToClient_BroadcastCommsActionToTeam", "entity", "int", 0, eCommsAction._count, "int", 0, (1 << eCommsFlags._flagCount), "int", -1, INT_MAX,"int", 0, eCommsAction._count, "entity", "vector", -32000.0, 32000.0, 32  )
+		Remote_RegisterClientFunction( "ServerToClient_BroadcastCommsActionToTeamItem", "entity", "int", 0, eCommsAction._count, "int", 0, (1 << eCommsFlags._flagCount), "int", -1, INT_MAX,"int", 0, eCommsAction._count, "entity", "vector", -32000.0, 32000.0, 32, "int", -1, numRows )
 	#endif          
 
 	#if CLIENT
@@ -197,6 +206,12 @@ void function ShQuickchat_Init()
 		file.replyMap[ eCommsAction.REPLY_THANKS ] <- eCommsAction.REPLY_WELCOME
 		file.replyMap[ eCommsAction.REPLY_REVIVE_THANKS ] <- eCommsAction.REPLY_REVIVE_WELCOME
 
+                                 
+                                                                                 
+                                                                                           
+                                                                                                
+        
+
 		file.altMap[ eCommsAction.REPLY_WELCOME ] <- eCommsAction.REPLY_WELCOME_ALT
 		file.altMap[ eCommsAction.REPLY_REVIVE_WELCOME ] <- eCommsAction.REPLY_REVIVE_WELCOME_ALT
 
@@ -204,6 +219,10 @@ void function ShQuickchat_Init()
                                                                          
                                                                         
         
+	#endif
+
+	#if SERVER
+		                                                                             
 	#endif
 
 	#if SERVER || CLIENT
@@ -216,7 +235,7 @@ void function ShQuickchat_Init()
                                                    
  
 	                                                                                              
-	                                                                                     
+	                                                                                                       
 
 	                                  
 	                                                               
@@ -240,23 +259,23 @@ void function DEV_ReloadCommsTable()
 
 
 #if CLIENT
-void function Quickchat( entity player, int index, entity subject = null )
+void function Quickchat( int index, entity subject )
 {
 	if ( !file.quickchatInitialized )
 		return
 
-	Remote_ServerCallFunction( "ClientCallback_Quickchat", index, eCommsFlags.NONE, subject, "" )
+	QuickchatInternal( index, eCommsFlags.NONE, subject )
 }
-#endif
 
-
-#if CLIENT
-void function QuickchatToLivingAndDead( entity player, int index, entity subject = null )
+void function QuickchatInternal( int index, int commsFlags, entity subject )
 {
 	if ( !file.quickchatInitialized )
 		return
 
-	Remote_ServerCallFunction( "ClientCallback_Quickchat", index, eCommsFlags.INCLUDE_DEAD, subject, "" )
+	if( !IsValid( subject ) )
+		Remote_ServerCallFunction( "ClientCallback_Quickchat", index, commsFlags )
+	else
+		Remote_ServerCallFunction( "ClientCallback_QuickchatSubject", index, commsFlags, subject )
 }
 #endif
 
@@ -425,7 +444,7 @@ array<string> function GetSubjectNamesForCommsAction( int commsAction, entity su
 		{
 			return [Localize( "#NPC_SPECTRE" )]
 		}
-		else if ( commsAction == eCommsAction.PING_NPC_MARVIN_LOOT || commsAction == eCommsAction.PING_NPC_MARVIN_LOOT_DISABLED || commsAction == eCommsAction.PING_NPC_MARVIN_STORY )
+		else if ( commsAction == eCommsAction.PING_NPC_MARVIN_LOOT  || commsAction == eCommsAction.PING_NPC_MARVIN_STORY )
 		{
 			return [Localize( "#NPC_MARVIN_UI_TITLE" )]
 		}
@@ -442,6 +461,12 @@ array<string> function GetSubjectNamesForCommsAction( int commsAction, entity su
 		return [Localize( "#LOOT_ROLLER_UI_TITLE" )]
 	}
 
+                         
+                                                                                                     
+  
+                                     
+  
+       
                
 		if ( IsVaultPanel( subjectEnt ) )
 		{
@@ -529,15 +554,15 @@ vector function GetSubjectColorForCommsAction( entity subjectEnt, string itemRef
 			{
 				if ( subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == ALLIANCE_NONE )
 				{
-					return CONTROL_OBJECTIVE_RED
+					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
 				}
 				else if ( IsTeamInAlliance( player.GetTeam(), subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) ) )
 				{
-					return CONTROL_OBJECTIVE_GREEN
+					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
 				}
 				else if ( !IsTeamInAlliance( player.GetTeam(), subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) ) )
 				{
-					return CONTROL_OBJECTIVE_RED
+					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
 				}
 			}
 			break
@@ -583,11 +608,11 @@ vector function GetSecondarySubjectColorForCommsAction( entity subjectEnt, entit
 				}
 				else if ( IsTeamInAlliance( player.GetTeam(), subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) ) )
 				{
-					return CONTROL_OBJECTIVE_GREEN
+					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
 				}
 				else if ( !IsTeamInAlliance( player.GetTeam(), subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) ) )
 				{
-					return CONTROL_OBJECTIVE_RED
+					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
 				}
 			}
 			break
@@ -799,14 +824,24 @@ float function GetCooldownTimeForCommsAction( int commsAction )
 		case eCommsAction.PING_ENEMY_SPOTTED_SPECIFIC:
 		case eCommsAction.PING_ENEMY_TRAP:
 		case eCommsAction.PING_ENEMY_SMOKE:
+		case eCommsAction.PING_TOXIC_GAS:
 		case eCommsAction.PING_ENEMY_SHIELD:
 		case eCommsAction.PING_ENEMY_TELEPORTER:
 			return 1.5
                
-                                               
-             
+		case eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_1:
+		case eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_2:
+		case eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_3:
+		case eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_4:
+		case eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_5:
+			return 0.7
       
                          
+                                                     
+             
+      
+                   
+                                              
                                                      
              
       
@@ -820,6 +855,11 @@ float function GetCooldownTimeForCommsAction( int commsAction )
 #if CLIENT
 bool function ShouldMuteCommsActionForCooldown( entity player, int commsAction, entity subjectEnt )
 {
+                                
+                                                             
+               
+       
+
 	if ( IsValid( subjectEnt ) && (subjectEnt.GetNetworkedClassName() == "prop_survival") && commsAction != eCommsAction.REPLY_LOOT_DIBS )
 	{
 		float delta = (Time() - subjectEnt.e.lastVocalizedCommsTime)
@@ -861,15 +901,20 @@ string function GetNameForCommsAction( int commsAction )
 
 
 #if CLIENT
-void function ServerToClient_BroadcastCommsActionToTeam( entity player, int commsAction, entity subjectEnt, vector subjectPos, int commsFlags, string itemRef, int subjectCount, int secondaryCommsAction, float creationTime )
+void function ServerToClient_BroadcastCommsActionToTeamItem( entity player, int commsAction, int commsFlags, int subjectCount, int secondaryCommsAction, entity subjectEnt, vector subjectPos, int itemIndex )
 {
-	HandleBroadcastCommsAction( player, commsAction, subjectEnt, subjectPos, commsFlags, itemRef, subjectCount, secondaryCommsAction, creationTime )
+	HandleBroadcastCommsAction( player, commsAction, subjectEnt, subjectPos, commsFlags, itemIndex, subjectCount, secondaryCommsAction, 0.0 )
+}
+
+void function ServerToClient_BroadcastCommsActionToTeam( entity player, int commsAction, int commsFlags, int subjectCount, int secondaryCommsAction, entity subjectEnt, vector subjectPos )
+{
+	HandleBroadcastCommsAction( player, commsAction, subjectEnt, subjectPos, commsFlags, -1, subjectCount, secondaryCommsAction, 0.0 )
 }
 #endif
 
 
 #if CLIENT
-void function HandleBroadcastCommsAction( entity player, int commsAction, entity subjectEnt, vector subjectPos, int commsFlags, string itemRef, int subjectCount, int secondaryCommsAction, float creationTime = 0.0)
+void function HandleBroadcastCommsAction( entity player, int commsAction, entity subjectEnt, vector subjectPos, int commsFlags, int itemIndex, int subjectCount, int secondaryCommsAction, float creationTime = 0.0  )
 {
 	if ( !file.quickchatInitialized )
 		return
@@ -885,6 +930,13 @@ void function HandleBroadcastCommsAction( entity player, int commsAction, entity
 
 	bool shouldUseAllianceCommsBehaviour = false
 	bool shouldUseTeamCommsBehaviour = true
+
+	string itemRef = ""
+	if( SURVIVAL_Loot_IsLootIndexValid( itemIndex ) )
+	{
+		LootData data = SURVIVAL_Loot_GetLootDataByIndex( itemIndex )
+		itemRef = data.ref
+	}
 
                          
 		bool isControlObjectivePing = false
@@ -902,7 +954,7 @@ void function HandleBroadcastCommsAction( entity player, int commsAction, entity
 			                                                                                         
 			if ( commsAction == eCommsAction.PING_CONTROL_OBJECTIVE_ATTACK || commsAction == eCommsAction.PING_CONTROL_OBJECTIVE_DEFEND )
 			{
-				if ( IsValid( subjectEnt ) && IsValid( subjectEnt.GetOwner() ) && subjectEnt.GetOwner().GetWaypointType() == eWaypoint.CONTROL_OBJECTIVE )
+				if ( IsValid( subjectEnt ) && IsValid( subjectEnt.GetOwner() ) && IsPlayerWaypoint( subjectEnt.GetOwner() ) && subjectEnt.GetOwner().GetWaypointType() == eWaypoint.CONTROL_OBJECTIVE )
 				{
 					if ( AllianceProximity_GetAllianceFromTeam( player.GetTeam() ) == AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() ) )
 					{
@@ -1017,32 +1069,54 @@ void function HandleBroadcastCommsAction( entity player, int commsAction, entity
                                 
 
                  
-                                                                
-    
-                                                                                                
-                                                      
-                            
+			if ( commsAction == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_1 ||
+					commsAction == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_2 ||
+					commsAction == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_3 ||
+					commsAction == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_4 ||
+					commsAction == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_5 )
+			{
+				ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( subjectEnt ), Loadout_Character() )
+				string name = ItemFlavor_GetShortName( character )
+				subjectNames = [  name ]
 
-                
-                                                                         
-                                       
-                                                                             
+				            
+				int armorTier = EquipmentSlot_GetEquipmentTier( subjectEnt, "armor" )
+				subjectTier  = string ( armorTier )
+				secondarySubjectColor = GetKeyColor( COLORID_TEXT_LOOT_TIER0, armorTier )
 
-                
-                                                                            
-                                     
-                            
-    
+				            
+				array<entity> teamPlayers = GetPlayerArrayOfTeam_Alive( subjectEnt.GetTeam() )
+				int teamCount = teamPlayers.len()
+				subjectCount = teamCount
+			}
         
 
 		string countText		   = ( subjectCount >= 0 ) ? string ( subjectCount ) : ""
 
 		if ( !PlayerIsPingMuted( player ) )
 		{
-			int elapseTime = int(Time() - creationTime)
+			int elapseTime = int( Time() - creationTime )
 			foreach ( string subjectName in subjectNames )
 			{
-				string locText = Localize( chatText, playerName, Localize( subjectName ), subjectTier, countText, elapseTime)
+				string locText
+                               
+                                                                                                                               
+     
+                                                                
+
+                        
+      
+                                                                
+
+                                                                                                           
+      
+         
+                                                                                                            
+     
+        
+         
+					locText = Localize( chatText, playerName, Localize( subjectName ), subjectTier, countText, elapseTime)
+
                            
 				if ( Control_IsModeEnabled() )
 				{
@@ -1081,8 +1155,10 @@ void function PlaySoundForCommsAction( entity player, entity subjectEnt, CommsAc
 	if ( ShouldCommsActionDialogBeMuted( subjectEnt, act ) )
 		return
 
-	if ( act.aliasSubname.find( "outOfAmmo" ) != -1 && PlayerHasPassive( player, ePassives.PAS_INFINITE_AMMO_CLIPS ) )
-		return
+	                                         
+	                                                                          
+		      
+	  
 
 	string sound = GetPlayerDialogSound( player, subjectEnt, act, opt )
 	if ( sound != "" )
@@ -1095,6 +1171,8 @@ void function PlaySoundForCommsAction( entity player, entity subjectEnt, CommsAc
 			player.p.lastCanceledCommsAction = player.p.lastSaidCommsAction
 			StopSoundOnEntity( player, player.p.sayLineLatestSound )
 		}
+		else
+			player.p.lastCanceledCommsAction = eCommsAction.BLANK
 
 		                                                                                                                                                              
 		                                                                                                                             
@@ -1120,22 +1198,34 @@ void function PlaySoundForCommsAction( entity player, entity subjectEnt, CommsAc
 		player.p.sayLineLatestTime = Time()
 		player.p.lastSaidCommsAction = act.index
 
-		string subEvent    = act.subEvent
-		string flavorEvent = flavorEventOverride == "" ? act.flavorEvent : flavorEventOverride
+		string subEventString    = act.subEvent
+		int subEvent = GetCommsActionEnumForName( subEventString )
                  
-                                                             
-   
-                                                                              
-   
-        
-
-		if ( subEvent != "" )
+		if ( act.index == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_1 ||
+				act.index == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_2 ||
+				act.index == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_3 ||
+				act.index == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_4 ||
+				act.index == eCommsAction.PING_VANTAGE_ENEMY_SPOTTED_5 )
 		{
-			thread PlaySoundForSubActionWhenPrimaryFinishes( soundHandle, act, file.actions[ GetCommsActionForName( subEvent ) ], player, subjectEnt, opt, flavorEvent )
+			                                                                             
+			subEvent = eCommsAction.SUB_TYPE_VANTAGE_TEAM_1
+			array<entity> teamPlayers = GetPlayerArrayOfTeam_Alive( subjectEnt.GetTeam() )
+			int teamCount = teamPlayers.len()
+			if ( teamCount == 2 )
+				subEvent = eCommsAction.SUB_TYPE_VANTAGE_TEAM_2
+			else if ( teamCount > 2 )
+				subEvent = eCommsAction.SUB_TYPE_VANTAGE_TEAM_3
+		}
+        
+		string flavorEvent = flavorEventOverride == "" ? act.flavorEvent : flavorEventOverride
+
+		if ( subEvent != eCommsAction.BLANK )
+		{
+			thread PlaySoundForSubActionWhenPrimaryFinishes( soundHandle, act, file.actions[ subEvent ], player, subjectEnt, opt, flavorEvent )
 		}
 		else if ( flavorEvent != "" )
 		{
-			int flavorAction   = GetCommsActionForName( flavorEvent )
+			int flavorAction   = GetCommsActionEnumForName( flavorEvent )
 			CommsAction fAct   = GetCommsAction( flavorAction )
 			string flavorSound = GetPlayerDialogSound( player, subjectEnt, fAct, opt )
 			if ( DoesAliasExist( flavorSound ) && ShouldPlayFlavorAction( player, flavorAction ) )
@@ -1262,6 +1352,17 @@ void function PromptReplyWhenPrimaryFinishes( entity playerSpeakingPrimary, int 
 		case eCommsAction.REPLY_REVIVE_WELCOME_ALT:
 			locString = Localize( "#PING_SAY_WELCOME" )
 			break
+                               
+
+                                        
+                                                    
+        
+
+                                             
+                                                         
+        
+      
+
 		default:
 			locString = ""
 	}
@@ -1502,10 +1603,15 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 
 
 #if SERVER
-                                                                                                      
+                                                                                                       
  
+	                                                                       
+		      
+
+	                                                                      
+	                        
 	                     
-	                   
+	                  
 	              
 	                                                        
 	 
@@ -1521,16 +1627,39 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 			                                                 
 		 
 
-		                   
+		                       
 	 
 
+	                                                                                
+ 
+
+                                                                                 
+ 
 	                                                                      
  
 
-                                                                                                                 
+                                                                                                        
+ 
+	                                                                         
+ 
+
+                                                                                                                        
  
 	                                            
 		      
+	                                                                              
+		      
+
+	                   
+	                                                           
+	 
+		       
+	 
+	    
+	 
+		                                                             
+		                  
+	 
 
 	                                             
 	 
@@ -1538,7 +1667,6 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 		                                                  
 		                                               
 		 
-
 			                       
 			 
 				                                                             
@@ -1560,8 +1688,10 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 
 
 #if SERVER
-                                                                                                                                                                                                                
+                                                                                                                                                        
  
+	                            
+
                    
                                              
                                                                  
@@ -1571,6 +1701,20 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 	 
 		                                                                                            
 		      
+	 
+
+	                  
+	                   
+	 
+		                                                  
+		 
+			                                  
+		 
+		    
+		 
+			                                                             
+			                          
+		 
 	 
 
 	                                                                              
@@ -1609,16 +1753,45 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 
 	                                                                
 
+                   
+                 
+                                                                   
+  
+                                                                    
+                   
+  
+     
+  
+                                                                                         
+  
+     
 	                                                                                           
+      
+
+                             
+                                                 
+   
+                                                                      
+
+                                                                   
+    
+                                                                                                                                    
+    
+       
+    
+                                                                                               
+                                                                                                        
+    
+   
+       
 
 	                                            
 	 
 		                                                          
 
 		                             
-			                                                                                                   
-				                                                         
-				                                                  
+			                                                                                
+				                                                                                                
 
 		      
 	 
@@ -1636,9 +1809,8 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 			 
 				                           
 				 
-					                                                                                                   
-						                                                         
-						                                                  
+					                                                                                   
+						                                                                                                
 				 
 			 
 		 
@@ -1647,9 +1819,21 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 	 
 
 	                             
+		                                                                                
+			                                                                                                 
+ 
+
+                                                                                                                             
+		                                                                                                                  
+ 
+	                                                          
 		                                                                                                
-			                                                         
-			                                                  
+			                        
+			                                                            
+	    
+		                                                                                                    
+			                        
+			                                                                       
  
 
 
@@ -1718,7 +1902,7 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
        
                          
                                                      
-                                                              
+                                                       
       
 	 
 
@@ -1738,6 +1922,14 @@ void function RunQuickChatCallbacks( entity player, int commsAction, entity subj
 		}
 	}
 }
+#endif
+
+#if SERVER
+                                                                                     
+ 
+	                                                                             
+		                                      
+ 
 #endif
 
 

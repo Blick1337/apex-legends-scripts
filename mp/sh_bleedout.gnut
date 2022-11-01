@@ -160,6 +160,9 @@ void function BleedoutShared_Init()
 		file.canForceBleedoutTimeout = GetCurrentPlaylistVarBool( "bleedout_can_force_bleedout_timeout", false )
                                
 
+	if (IsFiringRangeGameMode())
+		file.canForceBleedoutTimeout = true
+
 	AddCallback_CheckPlayerCanUse( CheckPlayerCanUse )
 
 	file.bleedoutLogicActive = true
@@ -290,9 +293,15 @@ bool function Bleedout_CanRevivePlayer( entity reviver, entity victim, int useFl
 	return true
 }
 
+bool function Bleedout_ShouldUseBlockReload( entity player, entity ent )
+{
+	return false;
+}
+
 void function OnPlayerCreated( entity player )
 {
 	SetCallback_CanUseEntityCallback( player, Bleedout_CanRevivePlayer )
+	SetCallback_ShouldUseBlockReloadCallback( player, Bleedout_ShouldUseBlockReload )
 }
 
                         
@@ -308,7 +317,7 @@ void function OnPlayerCreated( entity player )
 
 float function Bleedout_GetBleedoutTime( entity player )
 {
-                
+                                 
                                                      
   
                                     
@@ -610,7 +619,11 @@ int function BleedoutState_GetPlayerBleedoutState( entity player )
 #if CLIENT
 void function OnPingCreatedByAnyPlayer_TrackCrosshairTarget( entity pingingPlayer, int pingType, entity focusEnt, vector pingLoc, entity wayPoint )
 {
-	if ( pingType != ePingType.BLEEDOUT && pingType != ePingType.RESPAWN_BANNER )
+                    
+                                                                                                                                                                                
+      
+		if ( pingType != ePingType.BLEEDOUT && pingType != ePingType.RESPAWN_BANNER )
+       
 			return
 
 	                                                

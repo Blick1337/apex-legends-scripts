@@ -11,6 +11,7 @@ global function ServerCallback_AdDroneKillBillboardVFX
                                                 
                                                       
                                                          
+                                                   
 #endif          
 
 #if DEV && SERVER
@@ -183,7 +184,7 @@ void function ServerCallback_AdDroneSetBillboardVFX( entity projectorEnt, int bi
 void function AdDroneSetBillboardVFX( entity projectorEnt, int billboardToDisplay )
 {
 	int fxId = GetParticleSystemIndex( file.availableAdDroneBillboardVFX[ billboardToDisplay ] )
-	int billboardFXHandle = StartParticleEffectOnEntity( projectorEnt, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int billboardFXHandle = StartParticleEffectOnEntity( projectorEnt, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	file.projectorModelToBillboardVFXTable[ projectorEnt ] <- billboardFXHandle
 }
 

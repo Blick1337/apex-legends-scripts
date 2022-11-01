@@ -17,8 +17,19 @@ global function InitializeHeartbeatSensorUI
                                                       
 #endif         
 global const float HEARTBEAT_SENSOR_NATURAL_RANGE = 75 / INCHES_TO_METERS            
-global const float HEARTBEAT_SENSOR_PING_INTERVAL = 1.75
+                               
+                                                                  
+                                                           
+                                                                                                                                                                                                                                                                                                                              
+                                                                                                                                                      
+                                                                                          
+     
 global const float HEARTBEAT_SENSOR_PING_INTERVAL_MIN = 0.4
+global const float HEARTBEAT_SENSOR_PING_INTERVAL_MAX = 1.75
+const float HEARTBEAT_SENSOR_STARTUP_TARGET_DELAY_MIN = HEARTBEAT_SENSOR_PING_INTERVAL_MIN                                                                                           
+const float HEARTBEAT_SENSOR_STARTUP_TARGET_DELAY_MAX = HEARTBEAT_SENSOR_PING_INTERVAL_MAX
+                                    
+
 const float TICK_RATE = 0.01
 const float HEARTBEAT_SOUND_BAR_WAIT_TIME = 0.28                                                                  
 const float HEARTBEAT_SENSOR_MIN_ZOOM_FOV = 55
@@ -29,10 +40,10 @@ const float HEARTBEAT_SENSOR_RANGE_VISUAL_COMBAT_THRESHOLD = 2.0
 const float HEARTBEAT_SENSOR_RANGE_VISUAL_DEBOUNCE_THRESHOLD = 3.5
                                    
 const float HEARTBEAT_SENSOR_TEAMMATES_COMMS_DISPLAYTIME = 6.0
-const float HEARTBEAT_SENSOR_REPORT_DELAY = 1.75
+const float HEARTBEAT_SENSOR_REPORT_DELAY = HEARTBEAT_SENSOR_PING_INTERVAL_MAX
 const float HEARTBEAT_SENSOR_COMMS_COOLDOWN_CLEAR_AFTER_ENEMIES = 15.0
 const float HEARTBEAT_SENSOR_COMMS_COOLDOWN = 35.0
-const float HEARTBEAT_SENSOR_STATE_COOLDOWN = 1.75
+const float HEARTBEAT_SENSOR_STATE_COOLDOWN = HEARTBEAT_SENSOR_PING_INTERVAL_MAX
 const float HEARTBEAT_SENSOR_GLOBAL_COOLDOWN = 3.5
 const float HEARTBEAT_SENSOR_REPORT_LISTEN_DELAY = 2.0
                                         
@@ -51,7 +62,7 @@ const asset FX_HEARTBEAT_SENSOR_SONAR_PULSE = $"P_heart_sensor_pulse_1p"
 const asset FX_HEARTBEAT_SENSOR_SONAR_PULSE_NO_INTRO = $"P_heart_sensor_on_1p"
 
                             
-                                                                                          
+                                                                                              
                                  
 
 #if DEV
@@ -70,13 +81,6 @@ struct BarData
 	float lastGameTimeBeat
 	bool isLocked
 	bool inTacRange
-}
-
-struct ScreenSpaceData
-{
-	int   deltaCenterX
-	int   deltaCenterY
-	float degsFromCenter
 }
 
 struct
@@ -326,8 +330,31 @@ void function OnWeaponActivate_ability_heartbeat_sensor( entity weapon )
 	if ( !PlayerHasPassive( player, ePassives.PAS_PARIAH ) )
 		return
 
+                                
+                                                              
+      
 	ActivateHeartbeatSensor( player, false )
+       
 }
+                               
+                                                                                  
+ 
+                               
+                                 
+
+                                                                     
+                            
+  
+                        
+         
+                                        
+         
+             
+  
+
+                                           
+ 
+      
 
 void function OnWeaponDeactivate_ability_heartbeat_sensor( entity weapon )
 {
@@ -566,6 +593,9 @@ void function InitializeHeartbeatSensorUI( entity player )
 	{
 		file.heartbeatSensorRui = CreateCockpitRui( $"ui/heartbeat_sensor_waveform_radial.rpak" )
 		RuiSetGameTime( file.heartbeatSensorRui, "startTime", Time() )
+                                 
+                                                              
+        
 		entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 		thread CL_HeartSeekerRUIThread( player, activeWeapon )
 	}
@@ -845,14 +875,14 @@ void function ManageHeartbeatSensorComms_Thread( entity player )
 
 void function TryHeartbeatSensorEnemiesNearCommsTeammates( entity player )
 {
-	Quickchat( GetLocalViewPlayer(), eCommsAction.HEARTBEAT_SENSOR_DETECT_ENEMY )
+	Quickchat( eCommsAction.HEARTBEAT_SENSOR_DETECT_ENEMY, null )
 
 	file.lastCommsLocation = player.EyePosition()
 }
 
 void function TryHeartbeatSensorEnemiesClearCommsTeammates( entity player )
 {
-	Quickchat( GetLocalViewPlayer(), eCommsAction.HEARTBEAT_SENSOR_NO_ENEMY )
+	Quickchat( eCommsAction.HEARTBEAT_SENSOR_NO_ENEMY, null )
 	file.lastCommsLocation = player.EyePosition()
 	                                                                                                                                                                                                                                                 
 	file.lastCommsTimeEnemies = 0.0
@@ -882,7 +912,7 @@ void function ShowHeartbeatSensorRange_Thread( entity player )
 		                                                                                               
 		int fxId          		 = ( inWeaponCombat || showRangeDebounce ) ? GetParticleSystemIndex( FX_HEARTBEAT_SENSOR_SONAR_PULSE_NO_INTRO ) : GetParticleSystemIndex( FX_HEARTBEAT_SENSOR_SONAR_PULSE )
 
-		int pulseVFX      = StartParticleEffectOnEntity( player, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+		int pulseVFX      = StartParticleEffectOnEntity( player, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		float adjustedRange = file.heartbeatSensorRange
 		EffectSetControlPointVector( pulseVFX, 1, <adjustedRange, 0, 0> )
 
@@ -984,7 +1014,7 @@ void function ManageVictims_Thread( entity player )
 				DebugDrawSphere( player.EyePosition(), file.heartbeatSensorRange, COLOR_RED, true, 0.1 )
 			}
 		#endif      
-		float viewportFOV = GetFOVForPlayer( player )
+		float viewportFOV = GetCurrentPlayerFOV( player )
 
 
 		                                                                                                                                                                                                                                                                                                   
@@ -1001,6 +1031,8 @@ void function ManageVictims_Thread( entity player )
 		array<PlayersInViewInfo> victimsInfo = player.GetPlayersInViewInfoArray( true, true, watchRange, viewportFOV, MAX_HEARTBEAT_SENSOR_TARGETS, false, file.heartbeatSensorRange )
 		array<entity> victimsReturned
 
+		float minDot = deg_cos( viewportFOV )
+
 		                                                                                                                                               
 		                                                              
 		if ( IsFiringRangeGameMode() )
@@ -1012,26 +1044,29 @@ void function ManageVictims_Thread( entity player )
 				if ( !IsAlive( dummy ) )
 					continue
 
-				float minDot = deg_cos( viewportFOV )
-				float dot = DotProduct( Normalize( dummy.GetWorldSpaceCenter() - player.EyePosition() ), player.GetViewVector() )
-				float watchRangeSqr = pow( watchRange, 2 )
-				float distanceSqr = DistanceSqr( player.EyePosition(), dummy.GetWorldSpaceCenter() )
+				PlayersInViewInfo ornull data = GeneratePlayersInViewInfo( player, dummy, minDot, watchRange )
 
-				if ( dot < minDot )
-					continue
+				if ( data != null )
+					victimsInfo.append( expect PlayersInViewInfo( data ) )
+			}
+		}
+		
+		array<entity> decoys = GetEntArrayByScriptName( DECOY_SCRIPTNAME )
+		decoys.extend( GetEntArrayByScriptName( CONTROLLED_DECOY_SCRIPTNAME ) )
 
-				if ( distanceSqr > watchRangeSqr )
-					continue
+		foreach ( entity decoy in decoys )
+		{
+			if ( !IsValid( decoy ) )
+				continue
 
-				PlayersInViewInfo data
-				data.player = dummy
-				data.dot = dot
-				data.distanceSqr = DistanceSqr( player.EyePosition(), dummy.GetWorldSpaceCenter() )
+			if ( IsFriendlyTeam( decoy.GetTeam(), player.GetTeam() ) )
+				continue
 
-				TraceResults trace = TraceLine( player.EyePosition(), dummy.GetWorldSpaceCenter(), null, TRACE_MASK_BLOCKLOS, TRACE_COLLISION_GROUP_NONE )
-				data.hasLOS = ( trace.fraction >= 0.99 )
+			PlayersInViewInfo ornull data = GeneratePlayersInViewInfo( player, decoy, minDot, watchRange )
 
-				victimsInfo.append( data )
+			if ( data != null )
+			{
+				victimsInfo.append( expect PlayersInViewInfo( data ) )
 			}
 		}
 
@@ -1070,6 +1105,16 @@ void function ManageVictims_Thread( entity player )
 
 		foreach ( PlayersInViewInfo victimInfo in victimsInfo )
 		{
+                        
+                                                  
+             
+         
+
+                   
+				if ( IsValid( victimInfo.player ) && FerroWall_BlockScan( player.GetOrigin(), victimInfo.player.GetOrigin() ) )
+					continue
+         
+
 			victimsReturned.append( victimInfo.player )
 
 			if ( victimInfo.player in file.victimPlayerViewportInfo )
@@ -1128,6 +1173,32 @@ void function ManageVictims_Thread( entity player )
 
 		wait 0.1
 	}
+}
+
+PlayersInViewInfo ornull function GeneratePlayersInViewInfo( entity player, entity target, float minDot, float watchRange )
+{
+	if ( !IsValid( target ) )
+		return null
+
+	float dot = DotProduct( Normalize( target.GetWorldSpaceCenter() - player.EyePosition() ), player.GetViewVector() )
+	float watchRangeSqr = pow( watchRange, 2 )
+	float distanceSqr = DistanceSqr( player.EyePosition(), target.GetWorldSpaceCenter() )
+
+	if ( dot < minDot )
+		return null
+
+	if ( distanceSqr > watchRangeSqr )
+		return null
+
+	PlayersInViewInfo data
+	data.player = target
+	data.dot = dot
+	data.distanceSqr = DistanceSqr( player.EyePosition(), target.GetWorldSpaceCenter() )
+
+	TraceResults trace = TraceLine( player.EyePosition(), target.GetWorldSpaceCenter(), null, TRACE_MASK_BLOCKLOS, TRACE_COLLISION_GROUP_NONE )
+	data.hasLOS = ( trace.fraction >= 0.99 )
+
+	return data
 }
 
                             
@@ -1218,14 +1289,32 @@ void function DoVictimHeartbeat_Thread( entity player, entity victim, float watc
 	)
 
 	                                                                                                                       
-	float randomWait = RandomFloatRange( HEARTBEAT_SENSOR_PING_INTERVAL_MIN, HEARTBEAT_SENSOR_PING_INTERVAL )
+	float randomWait = RandomFloatRange( HEARTBEAT_SENSOR_STARTUP_TARGET_DELAY_MIN, HEARTBEAT_SENSOR_STARTUP_TARGET_DELAY_MAX )
 	wait randomWait
 
 	while ( true )
 	{
 		int victimHealth = Bleedout_IsBleedingOut( victim ) ? 25 : victim.GetHealth()
 		float healthPercent = float( victimHealth ) / float(victim.GetMaxHealth())
-		float scaledWait = Graph( healthPercent, 0.0, 1.0, HEARTBEAT_SENSOR_PING_INTERVAL_MIN, HEARTBEAT_SENSOR_PING_INTERVAL )
+
+		if ( victim.IsPlayerDecoy() )
+		{
+			entity decoyOwner = victim.GetOwner()
+			if ( IsValid( decoyOwner ) )
+			{
+				victimHealth = decoyOwner.GetHealth()
+				int decoyOwnerMaxHealth = decoyOwner.GetMaxHealth()
+
+				if ( victimHealth > 0 && decoyOwnerMaxHealth > 0 )
+					healthPercent = float( victimHealth ) / float( decoyOwnerMaxHealth )
+				else                                                                                                                                                
+					healthPercent = 1.0
+
+			}
+		}
+
+
+		float scaledWait = Graph( healthPercent, 0.0, 1.0, HEARTBEAT_SENSOR_PING_INTERVAL_MIN, HEARTBEAT_SENSOR_PING_INTERVAL_MAX )
 		float beatSoundTime = 0.0
 
 		bool playAudio = IsValid( file.bestVictimForAudio ) ? victim == file.bestVictimForAudio : false
@@ -1310,25 +1399,6 @@ bool function IsVicitmInTacRange( PlayersInViewInfo data )
 	return false
 }
 
-float function GetFOVForPlayer( entity player )
-{
-	float viewportFOV = 60.0
-	entity weapon     = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
-
-	if ( IsValid( weapon ) )
-	{
-		if ( weapon.IsWeaponAdsButtonPressed() || weapon.IsWeaponInAds() )
-		{
-			viewportFOV = weapon.GetWeaponZoomFOV()
-		}
-	}
-
-	                                                                                                                                                                                                                                    
-	viewportFOV = min( 60.0, viewportFOV )
-
-	return viewportFOV
-}
-
 void function UpdateDataForHeartseekerRadarWaveformRadial( entity player, entity victim, bool inTacRange, bool distPercentOverride=false )
 {
 	bool isLocked = false
@@ -1348,7 +1418,7 @@ void function UpdateDataForHeartseekerRadarWaveformRadial( entity player, entity
 		UISize screenSize = GetScreenSize()
 		entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 		float offset = GetHeartbeatSensorUIOffsetForWeapon( player, activeWeapon, screenSize )
-		ScreenSpaceData data = GetScreenSpaceData( player, victim )
+		ScreenSpaceData data = GetScreenSpaceData( player, victim.GetWorldSpaceCenter() )
 
 		                         
 		float distOnScreen = sqrt( pow( data.deltaCenterX, 2 ) + pow( data.deltaCenterY, 2 ) )
@@ -1382,60 +1452,6 @@ void function UpdateDataForHeartseekerRadarWaveformRadial( entity player, entity
 	file.waveformRadialValueTable[victim] <- data
 
 	return
-}
-
-ScreenSpaceData function GetScreenSpaceData( entity player, entity victim )
-{
-	ScreenSpaceData data
-	int screenWidth          = GetScreenSize().width
-	int screenHeight         = GetScreenSize().height
-
-	bool posOnScreen = false
-	int screenPosX   = -1
-	int screenPosY   = -1
-
-	array<int> results = player.GetPositionInScreenSpace( victim.GetWorldSpaceCenter() )
-
-	#if DEV
-		if ( HEARTBEAT_SENSOR_DEBUG )
-		{
-			DebugDrawMark( victim.GetWorldSpaceCenter(), 5, COLOR_RED, true, 1.5 )
-		}
-	#endif      
-
-	posOnScreen = bool( results[0] )
-	screenPosX = results[1]
-	screenPosY = results[2]
-
-	screenPosX = ClampInt( screenPosX, 0, screenWidth )
-	screenPosY = ClampInt( screenPosY, 0, screenHeight )
-
-	int centerX = screenWidth / 2
-	int centerY = screenHeight / 2
-
-	int deltaX = screenPosX - centerX
-	int deltaY = centerY - screenPosY                                                            
-
-	float angleRad = atan2( deltaX, deltaY )
-
-	float degs = RadToDeg( angleRad )
-	if ( degs < 0 )
-	{
-		degs += 360
-	}
-
-	#if DEV
-		if ( HEARTBEAT_SENSOR_DEBUG )
-		{
-			printt( "posOnScreen: " + posOnScreen + " screenX: " + screenPosX + " screenY: " + screenPosY + "degrees: " + degs)
-		}
-	#endif      
-
-	data.deltaCenterX   = deltaX
-	data.deltaCenterY   = deltaY
-	data.degsFromCenter = degs
-
-	return data
 }
 #endif         
 
@@ -1528,8 +1544,8 @@ void function CL_HeartSeekerRUIThread( entity player, entity weapon )
 		{
 			if(file.heartbeatSensorRui != null)
 			{
-				RuiSetFloat( file.heartbeatSensorRui, "target" + (i + 1) + "GameTimeBeat", -1 )
-				RuiSetBool( file.heartbeatSensorRui, "target" + (i + 1) + "Locked", false )
+				RuiSetFloat( file.heartbeatSensorRui, "target" + (j + 1) + "GameTimeBeat", -1 )
+				RuiSetBool( file.heartbeatSensorRui, "target" + (j + 1) + "Locked", false )
 			}
 		}
 		if(lastTargetsInRange != targetsInRange){

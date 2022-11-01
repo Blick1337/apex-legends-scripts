@@ -139,7 +139,7 @@ global enum eGameModes
 	CONTROL_ID				= 5,
       
                        
-                   
+	FREEDM_ID		 		= 6,
       
 	_count,
 }
@@ -155,7 +155,7 @@ const table<string, int> gameModesStringToIdMap = {
       
 	[ GAMEMODE_FREELANCE ]					= eGameModes.GAMEMODE_FREELANCE_ID,
                        
-                                                 
+	[ GAMEMODE_FREEDM ]						= eGameModes.FREEDM_ID,
       
 }
 
@@ -192,6 +192,30 @@ void function GameModes_Init()
 	GameMode_AddScoreboardColumnData( gameMode, "#SCOREBOARD_PILOT_KILLS", PGS_PILOT_KILLS, 2 )
 	GameMode_SetColor( gameMode, [147, 204, 57, 255] )
 
+#if UI
+	AddCallback_UI_GameModeRulesDialog_PopulateTabsForMode( ShadowRoyale_PopulateAboutText, GAMEMODE_SHADOW_ROYALE )
+#endif
+
+                                  
+      
+                                                                                                                          
+      
+      
+
+                         
+      
+                                                                                                                 
+      
+
+                               
+      
+                                                                                                            
+      
+      
+
+
+      
+
                        
 	gameMode = GAMEMODE_ARENAS
 	GamemodeSettings arenas = GameMode_Create( gameMode )
@@ -209,7 +233,7 @@ void function GameModes_Init()
                         
 	gameMode = GAMEMODE_CONTROL
 	GameMode_Create( gameMode )
-	GameMode_SetName( gameMode, "#GAMEMODE_CONTROL" )
+	GameMode_SetName( gameMode, "#CONTROL_NAME" )
 	GameMode_SetGameModeAnnouncement( gameMode, "ffa_modeDesc" )
 	GameMode_SetDesc( gameMode, "#GAMEMODE_CONTROL_DESC" )
 	GameMode_SetIcon( gameMode, $"vgui/burncards/burncard_group_icon_weapons" )
@@ -237,21 +261,29 @@ void function GameModes_Init()
 	GameMode_SetPVEMode( gameMode, true )
 
                        
-                           
-                            
-                                                 
-                                                               
-                                                      
-                                                      
-                                                  
-                                                   
-                                                                                      
-                                                                                  
-                                                                                    
-                                                   
-                                                 
+	gameMode = GAMEMODE_FREEDM
+	GameMode_Create( gameMode )
+	GameMode_SetName( gameMode, "#PL_pilot_hunter" )
+	GameMode_SetGameModeAnnouncement( gameMode, "phunt_modeDesc" )
+	GameMode_SetDesc( gameMode, "#PL_pilot_hunter_hint" )
+	GameMode_SetIcon( gameMode, $"ui/menu/playlist/tdm" )
+	GameMode_SetDefaultScoreLimits( gameMode, 50, 0 )
+	GameMode_SetDefaultTimeLimits( gameMode, 15, 0.0 )
+	GameMode_AddScoreboardColumnData( gameMode, "#SCOREBOARD_KILLS", PGS_PILOT_KILLS, 2 )
+	GameMode_AddScoreboardColumnData( gameMode, "#SCOREBOARD_DEATHS", PGS_DEATHS, 2 )
+	GameMode_AddScoreboardColumnData( gameMode, "#SCOREBOARD_ASSISTS", PGS_ASSISTS, 2 )
+	GameMode_SetColor( gameMode, [212, 83, 152, 255] )
+	GameMode_SetTimedEventsEnabled( gameMode, true )
+	#if UI
+		AddCallback_UI_GameModeRulesDialog_PopulateTabsForMode( FreeDM_PopulateAboutText, GAMEMODE_FREEDM )
+	#endif      
       
 
+                      
+	#if UI
+		AddCallback_UI_GameModeRulesDialog_PopulateTabsForMode( WinterExpress_PopulateAboutText, GAMEMODE_WINTER_EXPRESS )
+	#endif
+      
                    
                     
        

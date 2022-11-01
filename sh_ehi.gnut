@@ -71,6 +71,8 @@ global function GetPlayerNameFromEHI
 global function GetKillerNameFromEHI
 global function GetPlayerRankScoreFromEHI
 global function GetPlayerLadderPosFromEHI
+global function GetPlayerRankScorePrevSeasonFromEHI
+global function GetPlayerLadderPosPrevSeasonFromEHI
                        
 global function GetPlayerArenasRankScoreFromEHI
 global function GetPlayerArenasLadderPosFromEHI
@@ -412,6 +414,32 @@ int function EHI_GetRankedLadderPos( EHI ent )
 }
 #endif
 
+#if SERVER || CLIENT || UI
+int function EHI_GetRankScorePrevSeason( EHI ent )
+{
+	#if SERVER
+		                        
+		                                              
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).rankScorePrevSeason
+	#endif
+}
+#endif
+
+#if SERVER || CLIENT || UI
+int function EHI_GetRankedLadderPosPrevSeason( EHI ent )
+{
+	#if SERVER
+		                        
+		                                                    
+	#elseif CLIENT || UI
+		Assert( ent != EHI_null )
+		return GetEHIScriptStruct( ent ).rankedLadderPositionPrevSeason
+	#endif
+}
+#endif
+
                        
 
 #if SERVER || CLIENT || UI
@@ -603,6 +631,7 @@ void function ShEHI_OnPlayerCreated( entity ent )
 	ehiss.platformID = GetHardwareFromName( ent.GetHardwareName() )
 	#if CLIENT
 		ehiss.isLocalClientPlayer = IsLocalClientPlayer( ent )
+		ehiss.obfuscatedID = GetObfuscatedIdFromPlayer( ent )
 
 		if ( fileLevel.localClientEHI == EHI_null && ehiss.isLocalClientPlayer )
 		{
@@ -794,7 +823,15 @@ string function GetKillerNameFromEHI( EHI playerEHI )
 
 	string playerName = EHI_GetName( playerEHI )
 	if ( (ShouldPlayerNameBeAnonymized( playerEHI ) || !DisplayKillerName()) && playerEHI != LocalClientEHI() && EHI_GetTeam( playerEHI ) != EHI_GetTeam( LocalClientEHI() ) )
+	{
+	#if DEV
+		printt( "GetKillerNameFrom ShouldPlayerNameBeAnonymized[" + ShouldPlayerNameBeAnonymized( playerEHI ) + "]  ---"  + playerName)
+		printt( "GetKillerNameFrom DisplayKillerName[" + DisplayKillerName() + "]")
+		printt( "GetKillerNameFrom EHI_GetTeam[" + EHI_GetTeam( playerEHI )  + "]")
+		printt( "GetKillerNameFrom EHI_GetTeam( LocalClientEHI() )[" + EHI_GetTeam( LocalClientEHI() )  + "]")
+	#endif
 		return GetObsfuscatedName( playerEHI )
+	}
 
 	return clubTag + " " + playerName
 }
@@ -811,7 +848,18 @@ string function GetPlayerNameFromEHI( EHI playerEHI )
 	bool isPlayerEHISameAsLocalClientEHI = playerEHI == LocalClientEHI()
 
 	if ( isSetToObsfuscatedName && !isPlayerEHISameAsLocalClientEHI && EHI_GetTeam( playerEHI ) != EHI_GetTeam( LocalClientEHI() ) )
+	{
+	#if DEV
+		printt( "GetPlayerNameFromEHI DisplayObituaryName[" + DisplayObituaryName() + "] ------- " + playerName)
+		printt( "GetPlayerNameFromEHI ShouldPlayerNameBeAnonymized( playerEHI )[" + ShouldPlayerNameBeAnonymized( playerEHI ) + "]")
+		printt( "GetPlayerNameFromEHI isSetToObsfuscatedName[" + isSetToObsfuscatedName + "]")
+		printt( "GetPlayerNameFromEHI isPlayerEHISameAsLocalClientEHI[" + isPlayerEHISameAsLocalClientEHI + "]")
+		printt( "GetPlayerNameFromEHI EHI_GetTeam[" + EHI_GetTeam( playerEHI )  + "]")
+		printt( "GetPlayerNameFromEHI EHI_GetTeam( LocalClientEHI() )[" + EHI_GetTeam( LocalClientEHI() )  + "]")
+	#endif
+
 		return GetObsfuscatedName( playerEHI )
+	}
 
                          
 		                                                                                                                
@@ -842,7 +890,11 @@ string function GetPlayerClubTag( EHI playerEHI )
 	string clubTag = ""
 	entity player = FromEHI( playerEHI )
 	if( !IsValid( player ) )
-		return ""
+	{
+		if ( GetEHIScriptStruct(playerEHI ).clubTag  != "" )
+			clubTag = "[" + GetEHIScriptStruct(playerEHI ).clubTag + "]"
+		return clubTag
+	}
 
 	#if DEV
 	if ( player.IsBot() )
@@ -853,7 +905,10 @@ string function GetPlayerClubTag( EHI playerEHI )
 	#endif
 
 	clubTag = player.GetClubTag()
-	if ( clubTag != "" )
+	if ( GetEHIScriptStruct(playerEHI ).clubTag == "" && clubTag != "")
+		GetEHIScriptStruct(playerEHI ).clubTag = clubTag
+
+	if(clubTag != "")
 		clubTag = "[" + clubTag + "]"
 
 	                                                                                                               
@@ -882,6 +937,24 @@ int function GetPlayerRankScoreFromEHI( EHI playerEHI )
 int function GetPlayerLadderPosFromEHI( EHI playerEHI )
 {
 	int rankScore = EHI_GetRankedLadderPos( playerEHI )
+
+	return rankScore
+}
+#endif
+
+#if CLIENT
+int function GetPlayerRankScorePrevSeasonFromEHI( EHI playerEHI )
+{
+	int rankScore = EHI_GetRankScorePrevSeason( playerEHI )
+
+	return rankScore
+}
+#endif
+
+#if CLIENT
+int function GetPlayerLadderPosPrevSeasonFromEHI( EHI playerEHI )
+{
+	int rankScore = EHI_GetRankedLadderPosPrevSeason( playerEHI )
 
 	return rankScore
 }

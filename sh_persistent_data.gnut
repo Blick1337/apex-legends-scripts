@@ -106,7 +106,7 @@ FileStruct_LifetimeLevel& fileLevel
 #if DEV
 void function SetShouldIgnorePersistence()
 {
-	dev_should_ignore_persistence = GetConVarBool( "loadouts_ignore_persistence" )
+	dev_should_ignore_persistence = GetCurrentPlaylistVarBool( "dev_should_ignore_persistence", false )
 }
 #endif
 
@@ -159,7 +159,7 @@ void function ShPersistentData_LevelInit_Finish()
 #if (SERVER || CLIENT || UI) && DEV
 bool function DEV_ShouldIgnorePersistence()
 {
-	return dev_should_ignore_persistence                                                  
+	return dev_should_ignore_persistence
 }
 #endif
 
@@ -671,6 +671,9 @@ bool function IsAnyPersistenceBitSet( entity player, string persistenceVar )
 #if SERVER
                                                                            
  
+	                             
+		      
+
 	                                                                             
 	                                                            
 

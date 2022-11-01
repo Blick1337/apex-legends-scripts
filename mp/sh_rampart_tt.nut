@@ -19,11 +19,12 @@ const string VEND_INST_GOLD = "rampart_tt_vend_gold"
 const string VEND_LOOT_TABLE_BLUE = "rampart_tt_blue_weapons"
 const string VEND_LOOT_TABLE_PURPLE = "rampart_tt_purple_weapons"
 const string VEND_LOOT_TABLE_GOLD = "rampart_tt_gold_weapons"
-const string VEND_SPAWNED_WEAPON =  "rampart_tt_vend_spawnedWeapon"
+global const string VEND_SPAWNED_WEAPON =  "rampart_tt_vend_spawnedWeapon"
 const string VEND_SPAWNED_AMMO =  "rampart_tt_vend_spawnedAmmo"
 const float DISTANCE_PANEL_TO_LOOT_SQR = 3500
 const string ALARM_SFX_POSITION = "rampart_tt_alarm_sfx_pos"
 const string ALARM_VFX_POSITION = "rampart_tt_alarm_vfx_pos"
+const float VEND_PICKUP_GRACE_PERIOD = 5.0
 
 
 const string SFX_ALARM = "Loba_Ultimate_Staff_VaultAlarm"
@@ -83,6 +84,8 @@ struct
 	bool alarmActive = false
 	float alarmTime
 	array < array <string> > datapadDialogue = []
+
+	float vendPickupGracePeriod
 }file
 
 
@@ -110,6 +113,8 @@ void function Rampart_TT_Init()
 	#if SERVER
 	                                              
 	                                                        
+
+	                                                                                                                   
 	#endif         
 
 	#if CLIENT
@@ -360,7 +365,7 @@ void function Vend_DisplayRui( entity ent, entity player, var rui, ExtendedUseSe
 			                                                                      
 			                                                             
 			                                 
-			                             
+			                                     
 			                                                                   
 			     
 		 
@@ -389,6 +394,7 @@ void function Vend_DisplayRui( entity ent, entity player, var rui, ExtendedUseSe
 	                                        
 	                                                                    
 
+
 	                     
 	                                                            
 	 
@@ -402,7 +408,7 @@ void function Vend_DisplayRui( entity ent, entity player, var rui, ExtendedUseSe
 #endif         
 
 #if SERVER
-                                                      
+                                                                     
  
 	                  
 	                   
@@ -433,11 +439,19 @@ void function Vend_DisplayRui( entity ent, entity player, var rui, ExtendedUseSe
 			 
 			                         
 			 
+				                                        
+				 
+					                                                                     
+				 
 				                                       
 				     
 			 
 			                       
 			 
+				                                        
+				 
+					                                                                     
+				 
 				                                       
 				     
 			 
@@ -531,11 +545,31 @@ bool function IsRampartTTPanelLocked ( entity vendPanel )
 entity function GetRampartTTPanelForLoot( entity lootEnt )
 {
 	array<entity> linkedEnts = lootEnt.GetLinkParentArray()
-	foreach (entity linkedEnt in linkedEnts)
+	if ( linkedEnts.len() > 0 )
 	{
-		if ( linkedEnt.GetScriptName() == VEND_PANEL )
+		foreach (entity linkedEnt in linkedEnts)
 		{
-			return linkedEnt
+			if ( linkedEnt.GetScriptName() == VEND_PANEL )
+			{
+				return linkedEnt
+			}
+		}
+	}
+
+	    
+	                                                                                       
+	                                                                                      
+	                                                                                      
+	                               
+	   
+	vector lootLocation = lootEnt.GetOrigin()
+
+	foreach (entity panel in GetEntArrayByScriptName( VEND_PANEL ))
+	{
+		foreach ( entity child in panel.GetLinkEntArray() )
+		{
+			if ( child.GetOrigin() == lootLocation )
+				return panel
 		}
 	}
 
@@ -567,7 +601,7 @@ entity function GetRampartTTPanelForLoot( entity lootEnt )
 	                                                             
 	                                     
 	                                                   
-	                                 
+	                                         
 	                 
 
 	           
@@ -881,7 +915,7 @@ string function MirageOnly_UseTextOverride( entity loreEnt )
 	}
 
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
-	string characterRef  = ItemFlavor_GetHumanReadableRef( character ).tolower()
+	string characterRef  = ItemFlavor_GetCharacterRef( character ).tolower()
 	if ( characterRef != "character_mirage" )
 	{
 		return "#RAMPART_TT_REQ_MIRAGE"
@@ -901,7 +935,7 @@ string function RampartOnly_UseTextOverride( entity loreEnt )
 	}
 
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
-	string characterRef  = ItemFlavor_GetHumanReadableRef( character ).tolower()
+	string characterRef  = ItemFlavor_GetCharacterRef( character ).tolower()
 	if ( characterRef != "character_rampart" )
 	{
 		return "#RAMPART_TT_REQ_RAMPART"
@@ -915,7 +949,7 @@ string function RampartOnly_UseTextOverride( entity loreEnt )
                                                                                 
  
 	                                                                                            
-	                                                                            
+	                                                                        
 	                   
 
 	                                          
@@ -973,7 +1007,7 @@ bool function CheckRampartTTMuralLegends( entity player )
 {
 	                                                
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
-	string playerChar  = ItemFlavor_GetHumanReadableRef( character ).tolower()
+	string playerChar  = ItemFlavor_GetCharacterRef( character ).tolower()
 	foreach ( validChar in RAMPART_TT_S10_MURAL_LEGENDS )
 	{
 		if( validChar == playerChar )

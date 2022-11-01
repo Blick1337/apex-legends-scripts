@@ -10,6 +10,7 @@ global function ServerToClient_SpaceElevatorTacProgressRuiStart
 #endif
 
 global const string SPACE_ELEVATOR_SCRIPTNAME = "space_elevator"
+const string SPACE_ELEVATOR_MOVER_SCRIPTNAME = "space_elevator_mover"
 
                   
 int SPACEELEVATOR_1P_SCREEN_FX_ID
@@ -171,7 +172,7 @@ void function MpSpaceElevator_Init()
 	            
 	                       
 	 
-		                                                         
+		                                                                                          
 		                           
 		                               
 	 
@@ -226,9 +227,9 @@ void function MpSpaceElevator_Init()
 	                                      
 	                                               
 
-	                                                                                                                                                                                            
-	                                                                                                                                                                                         
-	                                                                                                                                                                                        
+	                                                                                                                                                                                                               
+	                                                                                                                                                                                                            
+	                                                                                                                                                                                                           
 
 	                                             
 	                                                 
@@ -243,7 +244,7 @@ void function MpSpaceElevator_Init()
 	                    
 	                                          
 	 
-		                                                                                                                                                                                     
+		                                                                                                                                                                                                        
 		                                                
 		                                                         
 
@@ -255,7 +256,7 @@ void function MpSpaceElevator_Init()
 		                                       
 	 
 
-	                                                                                                                                                                                                                          
+	                                                                                                                                                                                                                                             
 	                                                
 	                                                         
 
@@ -505,7 +506,7 @@ void function MpSpaceElevator_Init()
 	                                   
 	                                     
 	                                     
-	                                    
+	                                   
 	                                      
 	                                        
 	                           
@@ -1049,7 +1050,7 @@ void function SpaceElevatorTac_1PFX_Start( entity ent, int statusEffect, bool ac
 
 	entity viewPlayer = GetLocalViewPlayer()
 	int fxHandle
-	fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, SPACEELEVATOR_1P_SCREEN_FX_ID, FX_PATTACH_ABSORIGIN_FOLLOW, -1, viewPlayer.EyePosition(), <0, 0, 0> )
+	fxHandle = StartParticleEffectOnEntityWithPos( viewPlayer, SPACEELEVATOR_1P_SCREEN_FX_ID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, viewPlayer.EyePosition(), <0, 0, 0> )
 	EffectSetIsWithCockpit( fxHandle, true )
 
 	thread SpaceElevator_1PFX_Thread( viewPlayer, fxHandle )

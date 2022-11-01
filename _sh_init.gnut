@@ -104,6 +104,7 @@ void function SV_CL_Init()
 	GrappleWeaponInit()
 	#if DEV
 		ShDevUtility_Init()
+		test_init()
 	#endif
                    
          
@@ -129,10 +130,22 @@ void function SV_CL_Init()
               
                         
                           
+                                
                                
                             
                           
+                           
+                            
+                             
+                            
+
+                         
        
+
+                    
+                   
+       
+
 	ShCharacterCosmetics_LevelInit()
 	ShCalEvent_LevelInit()
 	Vouchers_LevelInit()
@@ -153,7 +166,7 @@ void function SV_CL_Init()
 	ShQuips_LevelInit()
 	ShSkydiveEmotes_LevelInit()
                  
-                        
+		ShStickers_LevelInit()
        
 	ShMythics_LevelInit()
 	ShLoadscreen_Init()
@@ -168,21 +181,17 @@ void function SV_CL_Init()
 	PassiveGrenadier_Init()
 
                  
-                         
-                           
+		PassiveReinforce_Init()
        
 
 	Clubs_Init()
 
-                        
-		TreasureBox_SharedInit()
-		SeasonQuest_SharedInit()
-          
+	TreasureBox_SharedInit()
+	SeasonQuest_SharedInit()
 	MenuCamera_Init()
 	MenuScene_Init()
 	ShSceneCapture_LevelInit()
 	ShCommsMenu_Init()
-	ShCharacterInfo_Init()
 	ShEmotes_Init()
 	SPDialogueInit()
 	MeleeShared_Init()
@@ -221,6 +230,9 @@ void function SV_CL_Init()
        
 	ShSurvivalTraining_Init()
 	FiringRangeGameMode_Init()
+                    
+                   
+       
 	ShFiringRangeStoryEvents_Init()
 	ShFiringRangeChallenges_Init()
 	ShFRC_G7Scout_Init()
@@ -229,8 +241,8 @@ void function SV_CL_Init()
 	PanicButton_Init()
 	ShGas_Init()
                  
-                
-                         
+		ShResin_Init()
+		MpAbilityUpswell_Init()
        
                     
                
@@ -297,6 +309,10 @@ void function SV_CL_Init()
 		ShExplosiveHold_Init()
        
 
+                     
+                    
+       
+
                       
 		ShSniperTowers_Init()
        
@@ -328,6 +344,10 @@ void function SV_CL_Init()
 		Campfire_Init()
        
 
+                          
+                             
+       
+
                               
                       
        
@@ -353,6 +373,15 @@ void function SV_CL_Init()
                          
        
 
+                 
+                          
+       
+
+             
+                            
+                           
+       
+
 	Sh_PersistentDamageLayer_Init()
                        
                       
@@ -363,7 +392,7 @@ void function SV_CL_Init()
        
 
                        
-                      
+		WinterExpress_Init()
        
 
 	if ( GetCurrentPlaylistVarBool( "character_loadouts_enabled", true ) )
@@ -406,12 +435,12 @@ void function SV_CL_Init()
 	PassiveHeartbeatSensor_Init()
 
                            
-		ShGameMode_DeathTrigger_Init()
-		ShGameMode_ShieldRegen_Init()
-		ShGameMode_AutoCards_Init()
-		ShGameMode_SecondChance_Init()
-		ShGameMode_GlowZones_Init()
-		ShGameMode_ArmedDrop_Init()
+                                
+                               
+                             
+                                
+                             
+                             
        
 
                     
@@ -438,6 +467,14 @@ void function SV_CL_Init()
                                  
                             
        
+	
+                                 
+                       
+       
+
+                                
+                            
+       
 
                    
 		Caustic_TT_Init()
@@ -455,7 +492,7 @@ void function SV_CL_Init()
 
 	Sh_SkydiveLaunchers_Init()
 
-                                        
+                                              
                          
       
 
@@ -468,6 +505,15 @@ void function SV_CL_Init()
 
 	NET_TraceRoute_Init()
 
+                    
+		MapMetrics_Init()
+       
+
+	Sh_Squads_Init()
+
+                     
+                      
+       
 }
 
 #if SERVER
@@ -577,7 +623,7 @@ void function SV_CL_Init()
 	                            
 
                        
-                           
+		                         
        
 
                  
@@ -654,14 +700,14 @@ void function SV_CL_Init()
                      
 		                  
        
-
-                          
-                    
-       
 	
 	                 
 
 	                 
+
+                                     
+                         
+       
  
 #endif          
 
@@ -765,7 +811,6 @@ void function Client_Init()
        
 
 	ShEpilogue_Init()
-
 }
 #endif          
 
@@ -813,8 +858,10 @@ void function Shared_Lobby_Init()
                         
                           
                                
+                                
                             
                           
+                            
        
 	ShCharacterCosmetics_LevelInit()
 	ShCalEvent_LevelInit()
@@ -835,7 +882,7 @@ void function Shared_Lobby_Init()
 	ShQuips_LevelInit()
 	ShSkydiveEmotes_LevelInit()
                  
-                        
+		ShStickers_LevelInit()
        
 	ShMythics_LevelInit()
 	ShLoadscreen_Init()
@@ -843,10 +890,8 @@ void function Shared_Lobby_Init()
 	ShMusic_LevelInit()
 	ShBattlePass_LevelInit()
 	Clubs_Init()
-                        
-		TreasureBox_SharedInit()
-		SeasonQuest_SharedInit()
-          
+	TreasureBox_SharedInit()
+	SeasonQuest_SharedInit()
 	MenuCamera_Init()
 	MenuScene_Init()
 	ShSceneCapture_LevelInit()
@@ -937,5 +982,3 @@ void function Client_Lobby_Init()
 	Sh_InitToolTips()
 }
 #endif          
-
-

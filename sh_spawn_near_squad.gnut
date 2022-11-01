@@ -502,6 +502,8 @@ int function RespawnNearSquad_GetRemainingRespawnsForPlayer( entity player )
 		                                            
 	 
 
+	                                                                                                        
+	                                              
 
 	                         
 		      
@@ -557,7 +559,7 @@ int function RespawnNearSquad_GetRemainingRespawnsForPlayer( entity player )
 			                                      
 			                               
 			                                     
-			                                     
+			                                        
 		 
 		    
 		 
@@ -568,7 +570,7 @@ int function RespawnNearSquad_GetRemainingRespawnsForPlayer( entity player )
 			                                                            
 			                                      
 			                                            
-			                                            
+			                                               
 			                                          
 		 
 	 
@@ -727,6 +729,13 @@ int function RespawnNearSquad_GetRemainingRespawnsForPlayer( entity player )
  
 #endif         
 
+#if SERVER
+                                                        
+ 
+	                                               
+		        
+ 
+#endif         
 
 #if SERVER
                               

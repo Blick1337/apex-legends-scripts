@@ -26,6 +26,7 @@ global const vector COLOR_DARK_CYAN		= <  0, 139, 139>
 
 global const vector COLOR_GREEN			= <  0, 255,   0>
 global const vector COLOR_DARK_GREEN	= <  0, 128,   0>
+global const vector COLOR_LIGHT_GREEN	= <100, 255, 170>
 
 global const vector COLOR_OLIVE			= <128, 128,   0>
 global const vector COLOR_DARK_OLIVE	= < 85, 107,  47>

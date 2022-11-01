@@ -40,6 +40,7 @@ global function Minimap_CommonTrackEntOrigin
 
 global function Minimap_AddEnemyToMinimap
 global function Minimap_AddIconAtPosition
+global function Minimap_AddRuitPosition
 global function Minimap_AddCryptoPulseToMinimap
 global function Minimap_SetTintParams
 
@@ -77,6 +78,8 @@ global function UpdateEquipmentSlot
 
 global function Minimap_SetVisiblityCone
 global function Minimap_SetVisiblityConeColor
+
+global function Minimap_SetPlayerColorOverride
 
 #if DEV
 global function DEV_Minimap_DumpEntHandles
@@ -119,7 +122,7 @@ struct {
 	#endif
 
 	array<var> minimapOtherRuis
-	array<var> minimapPlayers
+	table<entity, var> minimapPlayers
 	array<var> fullmapRuis
 	array<var> fullmapRuis_Tintable
 
@@ -241,6 +244,7 @@ void function RegisterMinimapPackage( string entityClassname, int customStateInd
 		case "prop_script":
 		case "prop_loot_grabber":
 		case "item_flag":
+		case "prop_ferro_prop":
 			Assert( customStateIndex > 0 && customStateIndex < eMinimapObject_prop_script.COUNT )
 			minimapAssetMap[entityClassname].resize( eMinimapObject_prop_script.COUNT )
 			minimapAssetMap[entityClassname][customStateIndex] = minimapPackage
@@ -372,16 +376,17 @@ void function ClMinimap_Init()
 
 		AddScoreboardShowCallback( ChallengesOnScoreboardShow )
 		AddScoreboardHideCallback( ChallengesOnScoreboardHide )
-		if( !Control_IsModeEnabled() )                               
-		{
-			#if NX_PROG
-				file.fullmap_questBoxRui = RuiCreate( $"ui/minimap_questinfo_box.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, RUI_SORT_SCREENFADE - 2 )
-			#else
-				file.fullmap_questBoxRui = RuiCreate( $"ui/minimap_questinfo_box.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, RUI_SORT_SCREENFADE - 1 )
-			#endif
-			InitHUDRui( file.fullmap_questBoxRui, false )
-			Scoreboard_AddRui( file.fullmap_questBoxRui )
-		}
+		                                     
+		                                                               
+		   
+			             
+			  	                                                                                                                                                         
+			       
+			  	                                                                                                                                                         
+			        
+			                                               
+			                                               
+		   
 	}
 
 	                                               
@@ -451,7 +456,7 @@ void function OnSpectateTargetChanged( entity spectatingPlayer, entity oldSpecta
 
 void function OnSpectatorVisibleEnemiesChanged( bool enemiesVisible )
 {
-	foreach ( playerRui in file.minimapPlayers )
+	foreach ( player, playerRui in file.minimapPlayers )
 		RuiSetBool( playerRui, "spectatorShowEnemies", enemiesVisible )
 }
 
@@ -676,8 +681,7 @@ void function MinimapObjectThread( entity ent )
 				var rui = e["rui"]
 				if ( rui != null )
 				{
-					if( file.minimapPlayers.contains( rui ) )
-						file.minimapPlayers.removebyvalue( rui )
+					RemovePlayerMinimapRui( rui )
 					file.minimapOtherRuis.removebyvalue( rui )
 					RuiDestroy( rui )
 				}
@@ -738,6 +742,9 @@ void function MinimapObjectThread( entity ent )
 						case eMinimapObject_prop_script.RAMPART_WALL:
 						case eMinimapObject_prop_script.RAMPART_TURRET:
 						case eMinimapObject_prop_script.BLACK_MARKET:
+                             
+                                                  
+           
 						{
 							thread AllianceProximity_ManageIconVisibility_Thread( ent, e["rui"], false, false )           
 							thread AllianceProximity_ManageIconVisibility_Thread( ent, e["fullRui"], true, false )       
@@ -919,6 +926,11 @@ bool function ShouldCreateRuiForPlayer( entity ent, entity viewPlayer )
 	{
 		return clGlobal.onMinimapEntShouldCreateCallbacks_scriptname[ ent.GetScriptName() ]( ent )
 	}
+
+	if ( ent.GetTargetName() in clGlobal.onMinimapEntShouldCreateCallbacks_targetname )
+	{
+		return clGlobal.onMinimapEntShouldCreateCallbacks_targetname[ ent.GetTargetName() ]( ent )
+	}
 	return true
 }
 
@@ -977,6 +989,8 @@ var function Minimap_RingPulse( float radius, vector color, float pulseDuration,
 	if ( customRing != $"" )
 		RuiSetImage( rui, "pulse", customRing )
 
+	RuiSetInt( rui, "objectFlags", MINIMAP_FLAG_VISIBILITY_SHOW )
+
 	if ( lifeTime > 0 )
 		thread Minimap_RingPulseCleanup( rui, lifeTime )
 
@@ -1022,6 +1036,23 @@ var function Minimap_AddIconAtPosition( vector position, vector angles, asset ic
 	RuiSetBool( rui, "alwaysShowOnMinimap", true )
 	RuiSetBool( rui, "useTeamColor", false )
 	RuiSetImage( rui, "defaultIcon", icon )
+	RuiSetImage( rui, "clampedDefaultIcon", $"" )
+
+	return rui
+}
+
+var function Minimap_AddRuitPosition( vector position, vector angles, asset ruiAsset, float scale, vector iconColor )
+{
+	entity viewPlayer = GetLocalViewPlayer()
+	var rui = Minimap_CommonAdd( ruiAsset, MINIMAP_Z_BASE + 20, position, angles )
+
+	RuiTrackInt( rui, "objectFlags", viewPlayer, RUI_TRACK_MINIMAP_FLAGS )
+	RuiTrackInt( rui, "customState", viewPlayer, RUI_TRACK_MINIMAP_CUSTOM_STATE )
+	RuiSetFloat3( rui, "objectPos", position )
+	RuiSetFloat3( rui, "iconColor", iconColor )
+	RuiSetFloat2( rui, "iconScale", < scale, scale, 0 > )
+	RuiSetBool( rui, "alwaysShowOnMinimap", true )
+	RuiSetBool( rui, "useTeamColor", false )
 	RuiSetImage( rui, "clampedDefaultIcon", $"" )
 
 	return rui
@@ -1185,6 +1216,19 @@ void function UpdatePlayerRuiTracking( entity player )
 	}
 }
 
+void function Minimap_SetPlayerColorOverride( entity player, vector color )
+{
+	var rui = null
+	if( player == GetLocalClientPlayer() )
+		rui = file.minimap_you
+	else if( player in file.minimapPlayers )
+		rui = file.minimapPlayers[player]
+
+	if( rui == null )
+		return
+
+	RuiSetFloat3( rui, "iconColorOverride", color  )
+}
 
 void function MinimapPackage_DummyInit( entity ent, var rui )
 {
@@ -1217,7 +1261,24 @@ void function MinimapPackage_PlayerInit( entity ent, var rui )
 
 	}
 
-	file.minimapPlayers.append( rui )
+	if( !(ent in file.minimapPlayers ) )
+		file.minimapPlayers[ent] <- rui
+}
+
+void function RemovePlayerMinimapRui( var ruiToRemove )
+{
+	entity keyToRemove = null
+	foreach( player, rui in file.minimapPlayers )
+	{
+		if( rui == ruiToRemove )
+		{
+			keyToRemove = player
+			break
+		}
+	}
+
+	if( keyToRemove != null )
+		delete file.minimapPlayers[ keyToRemove ]
 }
 
 void function MinimapPackage_NPCHumanSizedInit( entity ent, var rui )
@@ -1652,6 +1713,10 @@ void function Fullmap_SetVisible_MapOnly( bool state )
 		RuiSetVisible( rui, state )
 	}
 	file.fullmapVisible = state
+
+#if PS5_PROG
+	SetConVarBool( "ps5_fullmap_visible", state );
+#endif
 }
 
 bool function Fullmap_IsVisible()
@@ -1689,6 +1754,7 @@ void function FullmapChallengeCategoryRight( var button )
 {
 	Assert( file.fullmap_challengeRuiArray.len() > 0 )
 	IncrementCategorySelection( true )
+	EmitUISound( "UI_Menu_Focus_Small" )
 	UpdateMinimapChallengeRui( file.fullmap_challengeRuiArray )
 }
 
@@ -1696,6 +1762,7 @@ void function FullmapChallengeCategoryLeft( var button )
 {
 	Assert( file.fullmap_challengeRuiArray.len() > 0 )
 	DecrementCategorySelection( true )
+	EmitUISound( "UI_Menu_Focus_Small" )
 	UpdateMinimapChallengeRui( file.fullmap_challengeRuiArray )
 }
 
@@ -1748,6 +1815,10 @@ void function UpdateFullmapRuiTracks()
 
 	RuiSetInt( viewPlayerRui, "frameSlot", -1 )
 	RuiSetBool( viewPlayerRui, "useShadowFormFrame", viewPlayer.IsShadowForm() )
+
+                    
+                                                                                                                                                           
+       
 
 	if ( IsValid( clientPlayer ) )
 	{

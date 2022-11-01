@@ -31,7 +31,7 @@ const bool TRANSLOCATION_DEBUG = false
 const float TRANSLOCATION_DEBUG_TIMEOUT = 40
 const int MAX_BACKUP_CANDIDATE_SPOTS = 2                                                                          
 const bool TRANSLOCATION_DO_VERIFICATION = true                                                                                                                     
-const bool TRANSLOCATION_ADDITIONAL_DEBUG = true
+const bool TRANSLOCATION_ADDITIONAL_DEBUG = false
 
 const bool FORCE_TELEPORT_FAIL = false
 
@@ -147,12 +147,24 @@ void function OnWeaponActivate_ability_translocation( entity weapon )
 #if SERVER || CLIENT
 void function OnWeaponDeactivate_ability_translocation( entity weapon )
 {
+
+	#if TRANSLOCATION_ADDITIONAL_DEBUG
+		                                      
+		                                                                                
+	#endif
+
 	#if CLIENT
 		if ( !InPrediction() )
+		{
+			#if TRANSLOCATION_ADDITIONAL_DEBUG
+				                                                                                               
+			#endif
 			return
-		#if TRANSLOCATION_ADDITIONAL_DEBUG
-			printt( "TRANSLOCATION: Weapon deactivated" )
-		#endif
+		}
+	#endif
+
+	#if TRANSLOCATION_ADDITIONAL_DEBUG
+		                                                                
 	#endif
 
 	Signal( weapon, "Translocation_Deactivate" )
@@ -167,6 +179,8 @@ void function TranslocationLifetimeThread( entity owner, entity weapon )
 	EndSignal( weapon, "OnDestroy" )
 	EndSignal( weapon, "Translocation_Deactivate" )
 
+	string ownerName = IsValid( owner ) ? owner.GetPlayerName() : "NULL"
+
 	var rui
 	#if CLIENT
 		rui = CreateFullscreenRui( $"ui/crosshair_loba_translocation.rpak", 500 )
@@ -176,9 +190,9 @@ void function TranslocationLifetimeThread( entity owner, entity weapon )
 
 	bool[1] haveLockedForToss = [false]
 
-	OnThreadEnd( void function() : ( owner, weapon, rui, haveLockedForToss ) {
-		#if CLIENT && TRANSLOCATION_ADDITIONAL_DEBUG
-			printt( "TRANSLOCATION: translocation lifetime thread end" )
+	OnThreadEnd( void function() : ( owner, weapon, rui, haveLockedForToss, ownerName ) {
+		#if TRANSLOCATION_ADDITIONAL_DEBUG
+			                                                                               
 		#endif
 
 		if ( IsValid( weapon ) )
@@ -222,7 +236,7 @@ void function TranslocationLifetimeThread( entity owner, entity weapon )
 		#endif
 	} )
 
-	Assert( !weapon.w.translocate_isADSForced )
+	                                             
 	#if CLIENT
 	if ( InPrediction() )
 	#endif
@@ -235,8 +249,15 @@ void function TranslocationLifetimeThread( entity owner, entity weapon )
 
 	while ( true )
 	{
-		if ( owner.GetActiveWeapon( offhandSlot ) != weapon )
+		entity currentActiveOffhandWeapon = owner.GetActiveWeapon( offhandSlot )
+		if ( currentActiveOffhandWeapon != weapon )
+		{
+			#if TRANSLOCATION_ADDITIONAL_DEBUG
+				                                                                                                                           
+				                                                                                                                                                                           
+			#endif
 			break
+		}
 
 		#if CLIENT
 			int crosshairStage = eLobaCrosshairStage.HELD
@@ -382,10 +403,10 @@ var function OnWeaponTossReleaseAnimEvent_ability_translocation( entity weapon, 
 			                                         
 		#endif
 
-		                         
-		vector ownerPos = owner.GetOrigin(), ownerAng = owner.EyeAngles()
-		printf( "TRANSLOCATION: Toss from   setpos %f %f %f; setang %f %f %f", ownerPos.x, ownerPos.y, ownerPos.z, ownerAng.x, ownerAng.y, ownerAng.z )
-		        
+		#if TRANSLOCATION_ADDITIONAL_DEBUG
+			                                                                 
+			                                                                                                                                                                            
+		#endif
 
 		thread TranslocationTossedThread( owner, weapon )
 	}
@@ -415,10 +436,10 @@ bool function OnWeaponRedirectProjectile_ability_translocation( entity weapon, W
 			            
 	#endif
 
-	                         
-	vector ownerPos = owner.GetOrigin(), ownerAng = owner.EyeAngles()
-	printf( "TRANSLOCATION: Redirect at   setpos %f %f %f", params.projectilePos.x, params.projectilePos.y, params.projectilePos.z )
-	        
+	#if TRANSLOCATION_ADDITIONAL_DEBUG
+		                                                                 
+		                                                                                                                                                             
+	#endif
 
 	weapon.StartCustomActivity( "ACT_VM_HITCENTER", WCAF_NONE )
 
@@ -480,8 +501,22 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 	array<int> fxIds
 	table[1] rumbleHandle = [{}]
 
-	OnThreadEnd( void function() : ( owner, weapon, fxIds, rumbleHandle ) {
+	string ownerName = IsValid( owner ) ? owner.GetPlayerName() : "NULL"
+
+	#if TRANSLOCATION_ADDITIONAL_DEBUG
+		                                      
+		                            
+		 
+			                                                                                                           
+		 
+	#endif
+
+	OnThreadEnd( void function() : ( owner, weapon, fxIds, rumbleHandle, ownerName ) {
 		#if SERVER
+			                                  
+				                                                                  
+			      
+
 			                        
 			 
 				                                       
@@ -493,13 +528,18 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 				                                                                             
 
 				                                    
+				 
+					                                  
+						                                                                                                   
+					      
 					                                                    
+				 
 
 				                                      
 				                                                           
 				 
 					                                  
-						                                                
+						                                                                                              
 					      
 
 					                              
@@ -514,7 +554,9 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 					                       
 					 
 						                                  
-							                                                                                                   
+							                                                                              
+							                                                                                                    
+							                                                                                                                                                                                       
 						      
 
 						                                               
@@ -539,6 +581,10 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 			CleanupFXArray( fxIds, true, false )
 
 			rumbleHandle[0].loop = false
+
+			#if TRANSLOCATION_ADDITIONAL_DEBUG
+				                                                     
+			#endif
 		#endif
 	} )
 
@@ -571,7 +617,12 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 	{
 		entity currentProjectile = GetCurrentTranslocationProjectile( owner, weapon )
 		if ( !IsValid( currentProjectile ) )
+		{
+			#if TRANSLOCATION_ADDITIONAL_DEBUG
+				                                                                                                   
+			#endif
 			break
+		}
 
 		#if SERVER
 			                           
@@ -586,7 +637,13 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 			 
 
 			                                                           
+			 
+				                                  
+					                                                                                     
+					                                                                                                                                   
+				      
 				                                                                         
+			 
 
 			                                       
 			                                                                            
@@ -609,7 +666,12 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 
 	#if SERVER
 		                                                           
+		 
+			                                  
+				                                                                                                   
+			      
 			                                                    
+		 
 	#endif
 }
 #endif
@@ -621,7 +683,7 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 	                                                                                                                        
 	                         
 	 
-		                                                                                                  
+		                                                                                                                                  
 		            
 	 
 
@@ -631,7 +693,7 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 		                               
 		                                                  
 	 
-		                                                                                                     
+		                                                                                                                                     
 		            
 	 
 
@@ -644,7 +706,7 @@ void function TranslocationTossedThread( entity owner, entity weapon )
 		                                                     
 		 
 			                                                   
-			                                                                                                              
+			                                                                                                                                              
 			            
 		 
 	 
@@ -668,7 +730,7 @@ void function OnProjectilePlanted( entity projectile, DeployableCollisionParams 
 
 	#if SERVER
 		                                  
-			                                             
+			                                                                            
 		      
 
 		                                                
@@ -676,6 +738,9 @@ void function OnProjectilePlanted( entity projectile, DeployableCollisionParams 
 
 		                                                                                                                      
 	#elseif CLIENT
+		#if TRANSLOCATION_ADDITIONAL_DEBUG
+			                                                                
+		#endif
 		ClientProjectilePlantHandler( weapon, projectile )                   
 	#endif
 }
@@ -687,10 +752,6 @@ void function ServerToClient_Translocation_ClientProjectilePlantedHandler( entit
 {
 	if ( !IsValid( weapon ) || !IsValid( projectile ) )
 		return
-
-	#if TRANSLOCATION_ADDITIONAL_DEBUG
-		printt( "TRANSLOCATION: Client Projectile planted" )
-	#endif
 
 	ClientProjectilePlantHandler( weapon, projectile )
 }
@@ -704,6 +765,10 @@ void function ClientProjectilePlantHandler( entity weapon, entity projectile )
 
 	if ( weapon.w.translocate_impactRumbleObj == null )
 		weapon.w.translocate_impactRumbleObj = expect table(Rumble_Play( "loba_tactical_impact_and_teleport", {} ))
+
+	#if TRANSLOCATION_ADDITIONAL_DEBUG
+		                                                    
+	#endif
 }
 #endif
 
@@ -712,7 +777,7 @@ void function ClientProjectilePlantHandler( entity weapon, entity projectile )
 void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 {
 	#if TRANSLOCATION_ADDITIONAL_DEBUG
-		printt( "TRANSLOCATION: Client teleport failed" )
+		                                                 
 	#endif
 
 	if ( !IsValid( weapon ) )
@@ -731,8 +796,15 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 #if SERVER
                                                                                                                                                         
  
+	                                                                    
+
 	                             
+	 
+		                                  
+			                                                                                                                            
 		      
+		      
+	 
 
 	                             
 	                                
@@ -762,7 +834,7 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 	                            
 	 
 		                                        
-		                                                                    
+		                                                                                       
 		                                                    
 		      
 	 
@@ -775,7 +847,12 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 	                                               
 	                                                                      
 
-	                                                  
+	                                                             
+		                                  
+			                                                                                                                                                            
+			                                                                                                                
+		      
+
 		                                            
 		 
 			                                                           
@@ -793,13 +870,25 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 	                        
 	                                                                                       
 	                     
+	                                  
+		                                                                                             
+	      
 	                                                
 	 
 		                                               
+		 
+			                                  
+				                                                                                                                                            
+			      
 			                                                               
+		 
 
 		           
 	 
+
+	                                  
+		                                                                                    
+	      
 
 	                                           
 	                                                                                                                                                          
@@ -808,7 +897,12 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 	                                    
 	 
 		                                               
+		 
+			                                  
+				                                                                                                                                           
+			      
 			                                                               
+		 
 
 		           
 	 
@@ -830,6 +924,9 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 		                            
 		 
 			                                                    
+			                                  
+				                                                                                                                   
+			      
 			      
 		 
 	 
@@ -863,8 +960,14 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
 		                                  
 		                                 
 		                                                    
+		                                  
+			                                                                                         
+		      
 		      
 	 
+	                                  
+		                                                                                     
+	      
 	                                                   
 	                                                                                                                                
 	                                                                          
@@ -1028,7 +1131,8 @@ void function ServerToClient_Translocation_TeleportFailed( entity weapon )
  
 	                                                                                
 	  
-		                                                                  
+		                                                                     
+		                                                                                      
 		             
 	  
 	           
@@ -1134,7 +1238,7 @@ void function DropToGroundFXThread( entity player, entity existingProjectile, en
 	TraceResults tr = TraceLineHighDetail( currentProjectilePos, currentProjectilePos - <0, 0, 2500>,
 		[ existingProjectile, predictedRedirectedProjectile ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE, predictedRedirectedProjectile )
 
-	FXHandle flashFX = StartEntityFXWithHandle( predictedRedirectedProjectile, TRANSLOCATION_DROP_TO_GROUND_ACTIVATE_FX, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	FXHandle flashFX = StartEntityFXWithHandle( predictedRedirectedProjectile, TRANSLOCATION_DROP_TO_GROUND_ACTIVATE_FX, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 
 	FXHandle lineFX = StartWorldFXWithHandle( TRANSLOCATION_DROP_TO_GROUND_DESTINATION_FX, currentProjectilePos, <0, predictedRedirectedProjectile.GetAngles().y, 0> )
 	#if SERVER
@@ -1165,7 +1269,7 @@ void function StartVisualEffect( entity player, int statusEffect, bool actuallyC
 
 		int fxHandle = StartParticleEffectOnEntityWithPos( player,
 			GetParticleSystemIndex( TRANSLOCATION_WARP_SCREEN_FX ),
-			FX_PATTACH_ABSORIGIN_FOLLOW, -1, player.EyePosition(), <0, 0, 0> )
+			FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, player.EyePosition(), <0, 0, 0> )
 
 		EffectSetIsWithCockpit( fxHandle, true )
 

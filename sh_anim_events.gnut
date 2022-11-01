@@ -229,7 +229,7 @@ void function AddGlobalAnimEventTokenize( string name, void functionref(entity, 
 
                                                                                      
  
-	                                        
+	                                                          
 	                                
 	             
 	                        
@@ -256,7 +256,7 @@ void function AddGlobalAnimEventTokenize( string name, void functionref(entity, 
                                
 void function GlobalAnimEventWithStringParameter_CloakStart( entity guy, string msg )
 {
-	array<string> tokens = split( msg, " " )
+	array<string> tokens = split( msg, WHITESPACE_CHARACTERS )
 	float duration = float( tokens[0] )
 	float fadeIn = float( tokens[1] )
 
@@ -399,7 +399,7 @@ void function ClientCodeCallback_HandleClientAnimEvent( entity eventCaller, stri
 		case "screenshake":
 			                                                                         
 			Assert( tokens.len() == 4 )
-			Assert( eventCaller.IsPlayer() || IsShowingVictorySequence(), "\"screenshake\" only defined for players and victory screen currently. Needs to be updated if you want to use it with a non-player ent." )
+			Assert( eventCaller.IsPlayer() || IsEmoteEnabledForPodiumScreen(), "\"screenshake\" only defined for players and podiums screens that allow emotes currently. Needs to be updated if you want to use it with a non-player ent." )
 			if ( eventCaller == GetLocalViewPlayer() )
 				ClientScreenShake( float( tokens[1] ), float( tokens[2] ), float( tokens[3] ), <0, 0, 0> )
 			break

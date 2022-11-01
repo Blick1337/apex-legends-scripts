@@ -404,7 +404,7 @@ void function OnCharacterRegistered( ItemFlavor flavor )
 		if ( voiceCCD == "playerm1" )
 		{
 			const string MY_PREFIX = "character_"
-			string flavorStr = ItemFlavor_GetHumanReadableRef( flavor )
+			string flavorStr = ItemFlavor_GetCharacterRef( flavor )
 			if ( flavorStr.find( MY_PREFIX ) == 0 )
 				voiceCCD = flavorStr.slice( MY_PREFIX.len() )
 		}
@@ -646,8 +646,8 @@ void function RegisterDialogueLine( string name, string alias, int priority, str
 
 	                                         
 	 
-		                                                                                   
-		                                                                                   
+		                                                                             
+		                                                                             
 
 		                                      
 		 
@@ -657,7 +657,7 @@ void function RegisterDialogueLine( string name, string alias, int priority, str
 
 		                             
 		 
-			                                                                                               
+			                                                                                         
 		 
 	 
 	    
@@ -677,7 +677,7 @@ void function RegisterDialogueLine( string name, string alias, int priority, str
 		 
 			                                                    
 			 
-				                                                                                        
+				                                                                                  
 			 
 			    
 			 
@@ -687,7 +687,7 @@ void function RegisterDialogueLine( string name, string alias, int priority, str
 					                                                                                     
 						        
 
-					                                                                                   
+					                                                                             
 				 
 			 
 		 
@@ -1772,14 +1772,14 @@ string function SpecifyAliasFromGeneric( DialogueData data, string alias, entity
 			Assert( specifiedPerspective != "", "Dialogue with generic perspective specified in CSV alias without specifying intended perspective!" )
 		#endif       
 
-		milesAlias = StringReplace( milesAlias, "%perspective%", specifiedPerspective )
+		milesAlias = replace( milesAlias, "%perspective%", specifiedPerspective )
 	}
 
 	string aliasWithGenericVoice = milesAlias
 
 	string voice = GetPlayerVoice( speaker )
 	if ( milesAlias.find( "%voice%" ) >= 0 )
-		milesAlias = StringReplace( milesAlias, "%voice%", voice )
+		milesAlias = replace( milesAlias, "%voice%", voice )
 
 	#if DEV
 		if ( ShouldTryToReplaceMissingVoiceWithTempVoice() )
@@ -1788,7 +1788,7 @@ string function SpecifyAliasFromGeneric( DialogueData data, string alias, entity
 			{
 				if ( aliasWithGenericVoice.find( "%voice%" ) >= 0 )
 				{
-					milesAlias = StringReplace( aliasWithGenericVoice, "%voice%", TEMP_VOICE )
+					milesAlias = replace( aliasWithGenericVoice, "%voice%", TEMP_VOICE )
 
 					if ( !DoesAliasExist( milesAlias ) )
 						Warning( "Attempted to fall back to temp voice \"" + TEMP_VOICE + "\", but resulting alias \"" + milesAlias + "\" does not exist in miles." )
@@ -1805,7 +1805,7 @@ string function SpecifyAliasFromGeneric( DialogueData data, string alias, entity
 	{
 		                                                                                                                                           
 		                                                                                                                                                                      
-		milesAlias = StringReplace( milesAlias, "solo", "1p" )
+		milesAlias = replace( milesAlias, "solo", "1p" )
 	}
 
 	return milesAlias
@@ -1817,11 +1817,11 @@ string function SpecifyRadioDialoguePerspective( DialogueData data )
 	if ( data.perspective != "radio" )
 		return data.alias
 
-	string radioAlias = StringReplace( milesAlias, "%perspective%", data.perspective )
+	string radioAlias = replace( milesAlias, "%perspective%", data.perspective )
 
 	                                                                                   
 	if ( !DoesAliasExist( radioAlias ) )
-		return StringReplace( milesAlias, "%perspective%", "3p" )
+		return replace( milesAlias, "%perspective%", "3p" )
 
 	return radioAlias
 }

@@ -10,7 +10,6 @@ global function GetPlayerBattlePassXPProgress
 global function GetBattlePassLevelForXP
 global function GetBattlePassXPForLevel
 global function GetPlayerBattlePassLevel
-global function GetPlayerBattlePassCharacterXP
 global function GetBattlePassLevelRewards
 global function GetBattlePassBaseRewards
 global function GetBattlePassXPEventValue
@@ -56,7 +55,6 @@ global function ItemFlavorBagToBattlePassRewardByIndex
 
 #if SERVER
                                 
-                                         
                                          
                                       
 
@@ -721,22 +719,6 @@ int function GetPlayerBattlePassLevel( entity player, ItemFlavor pass, bool getP
 
 
 #if SERVER || CLIENT || UI
-int function GetPlayerBattlePassCharacterXP( entity player, ItemFlavor pass, ItemFlavor character )
-{
-	#if DEV
-		if ( DEV_ShouldIgnorePersistence() )
-			return 1
-	#endif
-
-	string characterGS        = ItemFlavor_GetGUIDString( character )
-	string pdefCharacterXpKey = format( "battlePasses[%s].characterXP[%s]", ItemFlavor_GetGUIDString( pass ), characterGS )
-
-	return player.GetPersistentVarAsInt( pdefCharacterXpKey )
-}
-#endif
-
-
-#if SERVER || CLIENT || UI
 array<BattlePassReward> function GetBattlePassBaseRewards( ItemFlavor pass )
 {
 	return GetBattlePassLevelRewards( pass, 0 )
@@ -779,12 +761,12 @@ array<BattlePassReward> function GetBattlePassLevelRewards( ItemFlavor pass, int
 				BattlePassReward reward
 
 				reward.flav = GetItemFlavorByAsset( rewardAsset )
-				string overrideRef = GetCurrentPlaylistVarString( format( "%s_level_%d_override_ref", ItemFlavor_GetHumanReadableRef( pass ), levelIndex ), "" )
-				if ( overrideRef != "" )
-					reward.flav = GetItemFlavorByHumanReadableRef( overrideRef )
+				string overrideRefGUIDString = GetCurrentPlaylistVarString( format( "%s_level_%d_override_ref", ItemFlavor_GetGUIDString( pass ), levelIndex ), "" )
+				if ( overrideRefGUIDString != "" )
+					reward.flav = GetItemFlavorByGUID( ConvertItemFlavorGUIDStringToGUID( overrideRefGUIDString ) )
 
 				reward.quantity = rewardQty
-				int overrideQty = GetCurrentPlaylistVarInt( format( "%s_level_%d_override_qty", ItemFlavor_GetHumanReadableRef( pass ), levelIndex ), -1 )
+				int overrideQty = GetCurrentPlaylistVarInt( format( "%s_level_%d_override_qty", ItemFlavor_GetGUIDString( pass ), levelIndex ), -1 )
 				if ( overrideQty != -1 )
 					reward.quantity = overrideQty
 
@@ -1042,26 +1024,6 @@ int function BattlePassPurchasedXP_GetXPAmount( ItemFlavor purchasedXPFlav )
 
 
 #if SERVER
-                                                                         
- 
-	                                                            
-
-	       
-		                                    
-			      
-	      
-
-	                                                                              
-	                                        
-	 
-		                                                                                                                       
-		                                                
-	 
- 
-#endif
-
-
-#if SERVER
                                                                             
  
 	                             
@@ -1110,9 +1072,6 @@ int function BattlePassPurchasedXP_GetXPAmount( ItemFlavor purchasedXPFlav )
 	                              
 	 
 		                                                           
-		                                    
-			                                                                   
-		    
 			                                                    
 	 
  
@@ -1184,16 +1143,24 @@ int function BattlePassPurchasedXP_GetXPAmount( ItemFlavor purchasedXPFlav )
 
 		                              
 		                       
-		                                                                                                                       
-		                                                                                   
-		                                                                                                                             
+		                                                                                                                  
+		                                                                                                                     
+
+		                                                                                      
 		                                                                                         
+
+		       
+			                                                                                                                                                                                                                                   
+		      
+
+		                                                                                                                                  
+			        
 
 		                         
 		                                                                                             
 
 		                         
-		                                                             
+		                                                 
 		                                                                                                                 
 		 
 			                                             
@@ -1412,7 +1379,7 @@ ItemFlavor function DEV_BattlePass( EHI playerEHI = EHI_null )
 	                                                                           
 	 
 		                                                          
-		                                                                    
+		                                                                 
 	 
 	                                                                                                                  
 	                                  
@@ -1421,7 +1388,6 @@ ItemFlavor function DEV_BattlePass( EHI playerEHI = EHI_null )
 	                                      
 	                                              
 	                                               
-	                                                                          
 	                                              
 	                                                 
 	                                                
@@ -1553,12 +1519,6 @@ asset function GetBattlePassDisplayBadge( int levelIndex )
 		                                                                 
 		                                                              
 		                                                                 
-
-		                                                                              
-		                                  
-		 
-			                                                                       
-		 
 	 
  
 #endif
@@ -1569,7 +1529,7 @@ bool function CanPlayerPurchaseBattlePass( entity player, ItemFlavor activeBattl
 {
 	if ( DoesPlayerOwnBattlePass( player, activeBattlePass ) )
 	{
-		printt("CanPlayerPurchaseBattlePass - returning false because player already owns battlepass" + ItemFlavor_GetHumanReadableRef( activeBattlePass ))
+		printt("CanPlayerPurchaseBattlePass - returning false because player already owns battlepass" + ItemFlavor_GetAsset( activeBattlePass ))
 		return false
 	}
 
@@ -1577,12 +1537,12 @@ bool function CanPlayerPurchaseBattlePass( entity player, ItemFlavor activeBattl
 	#if UI
 		if ( GRX_GetPackCount( ItemFlavor_GetGRXIndex( BattlePass_GetBasicPurchasePack( activeBattlePass ) ) ) != 0 )
 		{
-			printt("CanPlayerPurchaseBattlePass - returning false because for battlepass" + ItemFlavor_GetHumanReadableRef( activeBattlePass ) + "and GRX_GetPackCount( ItemFlavor_GetGRXIndex( BattlePass_GetBasicPurchasePack( activeBattlePass ) ) ) != 0")
+			printt("CanPlayerPurchaseBattlePass - returning false because for battlepass" + string(ItemFlavor_GetAsset( activeBattlePass )) + "and GRX_GetPackCount( ItemFlavor_GetGRXIndex( BattlePass_GetBasicPurchasePack( activeBattlePass ) ) ) != 0")
 			return false
 		}
 		if ( GRX_GetPackCount( ItemFlavor_GetGRXIndex( BattlePass_GetBundlePurchasePack( activeBattlePass ) ) ) != 0 )
 		{
-			printt("CanPlayerPurchaseBattlePass - returning false because for battlepass" + ItemFlavor_GetHumanReadableRef( activeBattlePass ) + "and GRX_GetPackCount( ItemFlavor_GetGRXIndex( BattlePass_GetBundlePurchasePack( activeBattlePass ) ) ) != 0")
+			printt("CanPlayerPurchaseBattlePass - returning false because for battlepass" + string(ItemFlavor_GetAsset( activeBattlePass )) + "and GRX_GetPackCount( ItemFlavor_GetGRXIndex( BattlePass_GetBundlePurchasePack( activeBattlePass ) ) ) != 0")
 			return false
 		}
 	#endif

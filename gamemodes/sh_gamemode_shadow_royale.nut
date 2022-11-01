@@ -101,14 +101,12 @@ void function ShGameModeShadowRoyale_Init()
 		                                                                             
 		                                                           
 		                                                 
-		                                                                  
 	#endif         
 
 	#if CLIENT
 		SetCustomScreenFadeAsset( $"ui/screen_fade_shadow_fall.rpak" )
 		ClApexScreens_SetCustomApexScreenBGAsset( $"rui/rui_screens/banner_c_shadowfall" )
 		ClApexScreens_SetCustomLogoTint( <1.0, 1.0, 1.0> )
-
 		Survival_SetVictorySoundPackageFunction( GetVictorySoundPackage )
 		AddCallback_GameStateEnter( eGameState.Playing, ShadowRoyale_OnPlaying )
 		AddCallback_OnVictoryCharacterModelSpawned( OnVictoryCharacterModelSpawned )
@@ -453,7 +451,7 @@ void function ShadowRoyale_OnPlaying()
 
 		                              
 		                                                                   
-		                                                                                                                                 
+		                                                                                                                                
 	   
 
 	                                                                  
@@ -664,7 +662,7 @@ VictorySoundPackage function GetVictorySoundPackage()
 			continue
 
 		ItemFlavor character = LoadoutSlot_GetItemFlavor( data.eHandle, loadoutSlotCharacter )
-		string characterName = ItemFlavor_GetHumanReadableRef( character )
+		string characterName = ItemFlavor_GetCharacterRef( character )
 		if ( characterName == "character_revenant" )
 			isRevenantInSquad = true
 
@@ -970,7 +968,7 @@ bool function IsPlayerRevenant( entity player )
 		return false
 
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
-	string characterName = ItemFlavor_GetHumanReadableRef( character )
+	string characterName = ItemFlavor_GetCharacterRef( character )
 	if ( characterName != "character_revenant" )
 		return false
 
@@ -1042,7 +1040,7 @@ bool function IsPlayerRevenant( entity player )
 				 
 					                                                
 					                                                                                        
-					                                                                  
+					                                                              
 					                                                         
 					                                                                                                                            
 					                                                                                                                        
@@ -1340,6 +1338,9 @@ void function AnnouncementMessageSweepShadowRoyale( int style, entity player, st
 #if SERVER
                                            
  
+	                            
+		      
+
 	                                                         
 	 
 		                         
@@ -1387,17 +1388,6 @@ void function OnVictoryCharacterModelSpawned( entity characterModel, ItemFlavor 
 	int FX_EYE_R = StartParticleEffectOnEntity( characterModel, GetParticleSystemIndex( FX_SHADOW_FORM_EYEGLOW ), FX_PATTACH_POINT_FOLLOW, characterModel.LookupAttachment( "EYE_R" ) )
 }
 #endif         
-
-
-#if SERVER
-                                                                      
- 
-	                                           
-	 
-		                                             
-	 
- 
-#endif          
 
 #if CLIENT
 void function ServerCallback_PlayerRespawned( entity respawnedPlayer )

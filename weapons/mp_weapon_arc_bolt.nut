@@ -386,7 +386,7 @@ void function OnProjectileCollision_arc_bolt( entity projectile, vector pos, vec
 	 
 		                                                                                                                                                                                             
 
-		                                                                                                                                                         
+		                                                                                                                                                                           
 		                                                      
 		                                                        
 		                                     
@@ -737,7 +737,7 @@ void function OnProjectileCollision_arc_bolt( entity projectile, vector pos, vec
 	 
 
 	 
-		                                                                                                                                                                
+		                                                                                                                                                                                  
 		                                                                        
 		                                                          
 		                                        
@@ -910,7 +910,7 @@ void function OnProjectileCollision_arc_bolt( entity projectile, vector pos, vec
 		                                  
 		 
 			                            
-			                                   
+			                                                                      
 			                            
 			                            
 
@@ -963,7 +963,7 @@ void function ArcBolt_ServerToClient_NewTetherAdded( int tetherID, entity tether
 void function TetherScreenEffects_Thread( entity player, int tetherID, entity tetherEnt )
 {
 	EndSignal( player, "OnDeath", "OnDestroy")
-	int tetheredScreenFx = StartParticleEffectOnEntity( player, GetParticleSystemIndex( ARC_BOLT_TETHER_SCREEN_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int tetheredScreenFx = StartParticleEffectOnEntity( player, GetParticleSystemIndex( ARC_BOLT_TETHER_SCREEN_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 
 	OnThreadEnd(
 		function() : ( tetheredScreenFx )
@@ -1000,7 +1000,7 @@ void function TetherDirectionalEffect_Thread( entity player, int tetherID, entit
 		WaitFrame()
 	}
 
-	int tetherDirectionalIndicator = StartParticleEffectOnEntity( player, GetParticleSystemIndex( ARC_BOLT_TETHER_INDICATOR_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int tetherDirectionalIndicator = StartParticleEffectOnEntity( player, GetParticleSystemIndex( ARC_BOLT_TETHER_INDICATOR_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 
 	OnThreadEnd(
 		function() : ( tetherDirectionalIndicator )
@@ -1082,19 +1082,6 @@ void function RemoveWaypointPopout( entity wp )
 	                        
 	 
 		                                                                                 
-	 
- 
-
-                                                                      
- 
-	                                                                   
-	 
-		                       
-		 
-			                                                                  
-			                                                                                               
-				                                                                                                                                                                                                                      
-		 
 	 
  
 

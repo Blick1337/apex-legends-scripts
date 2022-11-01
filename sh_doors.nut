@@ -24,8 +24,8 @@ global function IsDoorLocked
                                        
                                   
                                             
-                          
-                            
+                             
+                               
                                  
                                          
 #endif
@@ -102,6 +102,7 @@ void function ShDoors_Init()
 		                                               
 		                                           
 		                                     
+		                               
 		                               
 
 		                                                                   
@@ -1002,6 +1003,8 @@ bool function IsCodeDoor( entity door )
 			 
 				                                 
 				                                                    
+
+				                                       
 			 
 
 			                                  
@@ -1046,6 +1049,8 @@ bool function IsCodeDoor( entity door )
 					                               
 
 				                        
+
+				                                      
 			 
 			                                       
 			 
@@ -1283,8 +1288,8 @@ const table<int, vector> BLOCKABLE_DOOR_NOTCH_ROTATIONS = {
 	                                    
 	                                   
                  
-                                        
-                                       
+		                                      
+		                                     
        
 	                                                               
 	                                    
@@ -1922,6 +1927,7 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	                     		                                    
 	             				                                    
 	                   			                                                    
+	               				                                       
 	                  			                                                               
 	                        	       
 	                     		       
@@ -1932,6 +1938,12 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 		                          
 		 
 			                                                  
+                   
+				                           
+				 
+					                    
+				 
+         
 			                      
 		 
 	 
@@ -1939,10 +1951,10 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	 
 		                                                                                                    
                   
-                                                     
-    
-                                                                 
-    
+			                                                  
+			 
+				                                                             
+			 
         
 		                                                                                     
 
@@ -1997,7 +2009,7 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	 
 	                                                                                               
 	 
-
+		                               
 		                        
 		 
 			                                                                        
@@ -2013,19 +2025,11 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 						                                                        
 						                                             
 					 
+					                     
 				 
-
-				    
-				 
-					                   
-				 
-			 
-			    
-			 
-				                   
 			 
 		 
-		    
+		                   
 		 
 			                   
 		 
@@ -2091,6 +2095,12 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 		 
 			                                               
 			                                                    
+                   
+				                           
+				 
+					                                                                  
+				 
+         
 		 
 		                                        
 
@@ -2115,13 +2125,19 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	    
 	 
 		                                                                                                                              
-
+		                             
 		                                                  
 		                                                                    
 			                                  
 		                                                                             
 			                                           
 		                                                               
+                  
+			                           
+			 
+				                                                                                              
+			 
+        
 
 		                                                 
 			                                                                                                                                               
@@ -2588,12 +2604,22 @@ void function CodeCallback_OnDoorInteraction( entity door, entity user, entity o
 		                       
 		                         
 		 
+			                            
 			                                                                            
 			                                     
 			                                 
 		 
 		                                            
 	 
+
+                 
+	                                                    
+	                               
+	 
+		                     
+			              
+	 
+       
 
 	                                    
 
@@ -2727,27 +2753,21 @@ bool function IsDoorLocked( entity door )
 }
 
 #if SERVER
-                                       
+                                          
  
 	                         
 	 
-		                          
+		                              
 		      
 	 
-
-	                        
  
 
-                                         
+                                            
  
-	                      
 	                         
 	 
-		                                    
-		                           
+		                               
 		      
 	 
-
-	                         
  
 #endif         

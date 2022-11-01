@@ -6,6 +6,7 @@ struct RealmStoryData
 {
 }
 
+
 struct
 {
 	table< int,  RealmStoryData > realmStoryDataByRealmTable
@@ -49,5 +50,8 @@ void function EntitiesDidLoad()
 
 }
 #endif                    
+
+
+
 
 

@@ -369,8 +369,8 @@ void function TrainOnFullUpdate()
                                              
  
                        
-                                                                                    
-         
+	                                                                                   
+		       
        
 
 	                            
@@ -412,7 +412,7 @@ void function TrainOnFullUpdate()
 			                                                    
 			 
 				                                                                   
-				                                                                                                                                                                                                              
+				                                                                                                                                                                                                                                
 
 				       
 					                                    
@@ -740,8 +740,8 @@ void function TrainOnFullUpdate()
 			                                              
 
                          
-                                     
-        
+	                                    
+		      
        
 
 	                                                                            
@@ -784,8 +784,8 @@ void function TrainOnFullUpdate()
 		      
 
                        
-                                     
-        
+	                                    
+		      
        
 
 	                                            
@@ -862,12 +862,12 @@ void function TrainOnFullUpdate()
 	                                      
 
 	                          
-	                                                                                                                                                                                                               
+	                                                                                                                                                                                                                                 
 
 	                                   
 
 	                          
-	                                                                                                                                                                                                              
+	                                                                                                                                                                                                                                
  
 
 

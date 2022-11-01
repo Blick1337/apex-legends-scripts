@@ -9,6 +9,8 @@ const float WEAPON_GAS_GRENADE_DURATION = 15.0
 
 const string GAS_GRENADE_WARNING_SOUND 	= "weapon_vortex_gun_explosivewarningbeep"
 
+const string GAS_GRENADE_MOVER_SCRIPTNAME = "caustic_gas_nade_mover"
+
 const asset GAS_GRENADE_FX_GLOW_FP = $"P_wpn_grenade_gas_glow_FP"
 const asset GAS_GRENADE_FX_GLOW_3P = $"P_wpn_grenade_gas_glow_3P"
 
@@ -116,7 +118,7 @@ void function OnProjectileCollision_weapon_grenade_gas( entity projectile, vecto
 
 	        
 
-	                                          
+	                                                                        
 	                       
 	         
 	 

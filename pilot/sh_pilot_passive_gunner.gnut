@@ -60,7 +60,7 @@ void function OnPrimaryWeaponStatusUpdate( entity selectedWeapon, var weaponRui 
 		RuiSetBool( weaponRui, "showPassiveBonusIconAmmo", true )
 		RuiSetImage( weaponRui, "passiveBonusIconAmmo", $"rui/hud/character_abilities/rampart_passive_weapon_hud_dongle" )
 	}
-	else if ( ( IsValid( lastSelectedWeapon ) && ! lastSelectedWeapon.HasMod( GUNNER_MOD_NAME ) ) || noWeapon )
+	else if ( ( IsValid( lastSelectedWeapon ) && ! lastSelectedWeapon.HasMod( GUNNER_MOD_NAME ) && !lastSelectedWeapon.HasMod( "auto_loader" ) ) || noWeapon )
 	{
 		RuiSetBool( weaponRui, "showPassiveBonusIconAmmo", false )
 		RuiSetImage( weaponRui, "passiveBonusIconAmmo", $"" )

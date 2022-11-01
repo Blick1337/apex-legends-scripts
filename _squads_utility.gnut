@@ -1,0 +1,305 @@
+
+global function Sh_Squads_Init
+
+#if SERVER
+      
+ 
+	                                  
+      
+#endif
+
+#if CLIENT
+global function Squads_GetSquadUIIndex
+global function Squads_GetSquadIcon
+global function Squads_GetSquadColor
+global function Squads_GetNonLinearSquadColor
+global function Squads_GetSquadName
+global function Squads_GetSquadNameLong
+global function Squads_GetTeamsUIId
+
+global function SetCustomPlayerInfo
+global function ServerCallback_Squad_SetIsNessie
+
+const int  MAX_NUMBER_SQUADS = 4
+
+const asset[ MAX_NUMBER_SQUADS ] SQUAD_ICONS = [
+	$"rui/gamemodes/tdm/tdm_squad_icon0",
+	$"rui/gamemodes/tdm/tdm_squad_icon1",
+	$"rui/gamemodes/tdm/tdm_squad_icon2",
+	$"rui/gamemodes/tdm/tdm_squad_icon3"
+]
+
+const string[ MAX_NUMBER_SQUADS ] SQUAD_NAMES = [
+	"#TEAM_NAME_0",
+	"#TEAM_NAME_1",
+	"#TEAM_NAME_2",
+	"#TEAM_NAME_3"
+]
+
+const string[ MAX_NUMBER_SQUADS] SQUAD_NAMES_LONG = [
+	"#TEAM_NAME_LONG_0",
+	"#TEAM_NAME_LONG_1",
+	"#TEAM_NAME_LONG_2",
+	"#TEAM_NAME_LONG_3"
+]
+
+                      
+const int  WINTER_EXPRESS_MAX_NUMBER_SQUADS = 3
+
+const asset[ WINTER_EXPRESS_MAX_NUMBER_SQUADS ] WINTER_EXPRESS_SQUAD_ICONS = [
+	$"rui/gamemodes/winter_express/winter_express_squad_icon0",
+	$"rui/gamemodes/winter_express/winter_express_squad_icon1",
+	$"rui/gamemodes/winter_express/winter_express_squad_icon2"
+]
+
+
+const string[ WINTER_EXPRESS_MAX_NUMBER_SQUADS ] WINTER_EXPRESS_SQUAD_NAMES = [
+	"#WINTER_EXPRESS_TEAM_NAME_0",
+	"#WINTER_EXPRESS_TEAM_NAME_1",
+	"#WINTER_EXPRESS_TEAM_NAME_2"
+]
+
+const string[ WINTER_EXPRESS_MAX_NUMBER_SQUADS] WINTER_EXPRESS_SQUAD_NAMES_LONG = [
+	"#WINTER_EXPRESS_TEAM_NAME_LONG_0",
+	"#WINTER_EXPRESS_TEAM_NAME_LONG_1",
+	"#WINTER_EXPRESS_TEAM_NAME_LONG_2"
+]
+      
+
+struct
+{
+	int squadIdIsNessie = -1
+} file
+
+#endif
+
+const string SERVERCALLBACK_SQUAD_SET_IS_NESSIE = "ServerCallback_Squad_SetIsNessie"
+
+global function Squads_GetArrayIndexForTeam
+
+void function Sh_Squads_Init()
+{
+	Squads_RegisterNetworking()
+
+	#if SERVER
+		                
+	#endif
+
+	#if CLIENT
+		Cl_Squads_Init()
+	#endif
+
+}
+
+void function Squads_RegisterNetworking()
+{
+	Remote_RegisterClientFunction( SERVERCALLBACK_SQUAD_SET_IS_NESSIE, "int", -1, INT_MAX )
+}
+
+#if SERVER
+                              
+ 
+	                                                                               
+
+	                                                  
+ 
+#endif
+
+#if SERVER
+                                         
+ 
+	                                   
+	                   
+ 
+#endif
+
+#if SERVER
+                                 
+ 
+	              
+	                            
+	                                         
+	                                                                 
+
+	               
+	 
+		                                      
+		                                            
+	 
+	                                                                    
+	 
+		                                                        
+			                                                                                                      
+	 
+ 
+#endif
+
+#if SERVER
+                                                
+ 
+	                                              
+	 
+		                                                                                                 
+	 
+ 
+#endif
+
+#if CLIENT
+void function Cl_Squads_Init()
+{
+
+}
+#endif
+
+#if CLIENT
+int function Squads_GetSquadUIIndex(int squadIndex)
+{
+	int uiTeamId = Squads_GetTeamsUIId( squadIndex )
+	int index    = Squads_GetArrayIndexForTeam( uiTeamId )
+	Assert( index >= 0, "Local Squad index out of range. Original index = " + squadIndex )
+
+	return index
+}
+#endif
+
+#if CLIENT
+vector function Squads_GetSquadColor( int squadIndex )
+{
+	return SrgbToLinear( Squads_GetNonLinearSquadColor( squadIndex )/255 )
+}
+#endif
+
+#if CLIENT
+vector function Squads_GetNonLinearSquadColor( int squadIndex )
+{
+	bool skipNessie = false
+
+                       
+		skipNessie = WinterExpress_IsModeEnabled()
+       
+
+	if( squadIndex == file.squadIdIsNessie && !skipNessie)
+		return GetKeyColor( COLORID_LTM_SQUAD_0_EASTEREGG )
+
+
+	array<vector> squad_colors = [
+		GetKeyColor( COLORID_LTM_SQUAD_0 ),
+		GetKeyColor( COLORID_LTM_SQUAD_1 ),
+		GetKeyColor( COLORID_LTM_SQUAD_2 ),
+		GetKeyColor( COLORID_LTM_SQUAD_3 )
+	]
+
+	return squad_colors[ squadIndex ]
+}
+#endif
+
+#if CLIENT
+asset function Squads_GetSquadIcon( int squadIndex )
+{
+                       
+		if( WinterExpress_IsModeEnabled() )
+			return WINTER_EXPRESS_SQUAD_ICONS[ squadIndex ]
+       
+
+	if( squadIndex == file.squadIdIsNessie )
+		return $"rui/gamemodes/tdm/tdm_squad_icon0_easteregg"
+
+	return SQUAD_ICONS[ squadIndex ]
+}
+#endif
+
+#if CLIENT
+string function Squads_GetSquadName( int squadIndex )
+{
+                       
+		if( WinterExpress_IsModeEnabled() )
+			return WINTER_EXPRESS_SQUAD_NAMES[ squadIndex ]
+       
+
+	if( squadIndex == file.squadIdIsNessie )
+		return "#TEAM_NAME_0_EASTEREGG"
+
+	return SQUAD_NAMES[ squadIndex ]
+}
+
+string function Squads_GetSquadNameLong( int squadIndex )
+{
+                       
+		if( WinterExpress_IsModeEnabled() )
+			return WINTER_EXPRESS_SQUAD_NAMES_LONG[ squadIndex ]
+       
+
+	if( squadIndex == file.squadIdIsNessie )
+		return "#TEAM_NAME_LONG_0_EASTEREGG"
+
+
+	return SQUAD_NAMES_LONG[ squadIndex ]
+}
+#endif
+
+#if CLIENT
+void function SetCustomPlayerInfo( entity player )
+{
+	entity localPlayer = GetLocalViewPlayer()
+	if ( !IsValid(player) || player == null || !IsValid(localPlayer) || localPlayer == null)
+		return
+
+	int team   = player.GetTeam()
+	if( team == TEAM_SPECTATOR )
+		return
+
+	int myTeam = localPlayer.GetTeam()
+	int squadIndex = Squads_GetSquadUIIndex( team )
+
+	if( squadIndex >= 0 && squadIndex < MAX_NUMBER_SQUADS )
+	{
+		SetCustomPlayerInfoColor( player, Squads_GetNonLinearSquadColor( squadIndex ) )
+		player.SetTargetInfoIcon( Squads_GetSquadIcon( squadIndex ) )
+
+		if( team == myTeam )
+		{
+			vector color = Squads_GetSquadColor( squadIndex )
+			SetUnitFrameCustomColor( player, color )
+			Minimap_SetPlayerColorOverride( player, color )
+		}
+	}
+	if ( LoadoutSlot_IsReady( ToEHI( player ), Loadout_Character() ) )
+	{
+		ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
+		player.SetTargetInfoCharacterPortrait( CharacterClass_GetGalleryPortrait( character ) )
+	}
+}
+#endif
+
+int function Squads_GetArrayIndexForTeam( int team )
+{
+	return team - TEAM_IMC
+}
+
+#if CLIENT
+void function ServerCallback_Squad_SetIsNessie( int squadIdIsNessie )
+{
+	file.squadIdIsNessie = squadIdIsNessie
+}
+#endif
+
+
+
+#if CLIENT
+int function Squads_GetTeamsUIId( int team )
+{
+	int teamsUIId      = team
+	entity localPlayer = GetLocalViewPlayer()
+	if( IsValid( localPlayer ) )
+	{
+		int localTeam = localPlayer.GetTeam()
+		if( localTeam != TEAM_SPECTATOR )                                                 
+			if( localTeam == team )                                                         
+				teamsUIId = TEAM_IMC
+			else if ( team == TEAM_IMC )                                                                                             
+				teamsUIId = localTeam
+	}
+
+	return teamsUIId
+}
+#endif

@@ -1,8 +1,6 @@
   
 global const float DEFAULT_FOV = 70.0
 
-global const bool ASSERTING = !!DEV                                                                                        
-
 global const int INT_MIN = (1 << 31)
 global const int INT_MAX = (1 << 31) - 1
 global const float FLT_MAX = 3.40282e+38
@@ -112,8 +110,25 @@ global const GAMEMODE_CONTROL = "control"
       
 global const GAMEMODE_FREELANCE = "freelance"
                        
-                                       
+global const GAMEMODE_FREEDM = "freedm"
       
+                              
+global const GAMEMODE_SHADOW_ROYALE = "shadow_royale"
+      
+                      
+global const GAMEMODE_WINTER_EXPRESS = "winter_express"
+      
+                         
+                                                    
+      
+                                  
+                                                             
+      
+                               
+                                                    
+      
+
+
 
 global const bool R2_SCOREBOARD = false
 global const bool MINIMAP_DEBUG = false
@@ -345,7 +360,7 @@ global enum eRespawnStyle
 		ROLLING_RESPAWN,
        
                            
-		SKYDIVE_RESPAWN,
+                  
        
 	_COUNT,
 }
@@ -534,6 +549,8 @@ global enum PerfIndexServer
 	SmartLoot,
 
 	WreckingBall,
+
+	LeftoverLootWeightingFix,
 }
 
 global const SharedPerfIndexStart = 100
@@ -782,8 +799,8 @@ global enum ePresentationType
 	CLUB_DISCOVERY,
 	ARENAS_RANKED,
                 
-                 
-              
+	APPLIED_STICKER,
+	FLAT_STICKER,
                       
 
 	COUNT
@@ -951,6 +968,41 @@ global enum achievements
 	APEX_RECON,                                  
 	APEX_LEGEND,                                      
 	MAX_ACHIVEMENTS
+}
+
+global enum eNewPlayerState
+{
+	NEVER_PLAYED = 0
+	SEEN_INTRO
+	TRAINING_COMPLETED
+	FIRING_RANGE_COMPLETED
+
+	FIRST_MATCH_PLAYED
+}
+
+global enum eFeatureSuppressionFlags
+{
+	NONE								= 0x0000
+
+	                  
+	PROMO_USER_MESSAGES_DIALOG			= 0x0001
+	RANKED_DIALOG						= 0x0002
+	RANKED_ARENAS_DIALOG				= 0x0004
+	RANKED_SPLIT_DIALOG					= 0x0008
+
+	               
+	STORY_EVENT_CHALLENGES_POPUP		= 0x0010
+	CURRENCY_EXPIRATION_POPUP			= 0x0020
+	STORY_EVENT_AUTOPLAY_DIALOGUE_POPUP	= 0x0040
+	BATTLE_PASS_POPUP					= 0x0080
+	HEIRLOOM_SHOP_POPUP					= 0x0100
+	QUEST_POPUP							= 0x0200
+
+	                   
+	TRAINING_RETURN_TO_LOBBY			= 0x0400
+
+
+	ALL									= 0x07FF
 }
 
 
@@ -1140,10 +1192,10 @@ global enum eCommsAction
 	PING_ATTACHMENT_BARREL_STABILIZER_4_FLASH_HIDER,
 	  
                           
-                                
-                                
-                                
-                                
+		PING_ATTACHMENT_LASER_SIGHT_1,
+		PING_ATTACHMENT_LASER_SIGHT_2,
+		PING_ATTACHMENT_LASER_SIGHT_3,
+		PING_ATTACHMENT_LASER_SIGHT_4,
        
 	  
 	PING_ATTACHMENT_HOPUP_TURBOCHARGER,
@@ -1222,16 +1274,28 @@ global enum eCommsAction
 	PING_NEED_HEALTH,
 	PING_HOLD_ON,
 	  
+                             
+                 
+                  
+                   
+                  
+                      
+                            
+                
+                 
+                  
+                  
+       
 	PING_ABILITY_ME,
 	PING_ABILITY_ALLY,
 	PING_AREA_CLEAR,
 	PING_AREA_VISITED,
 	PING_DOOR,
+	PING_DOOR_OPEN,
 	PING_DEATHBOX,
 	PING_LOOTBIN,
 	PING_LOOTBIN_OPEN,
 	PING_LOOTBIN_EXTENDED,
-	PING_LOOTBIN_EXTENDED_NOT_EMPTY,
 	PING_CAREPACKAGE,
 	PING_MY_CAREPACKAGE,
 	PING_SURVEYBEACON,
@@ -1244,9 +1308,16 @@ global enum eCommsAction
 	PING_ENEMY_SPOTTED_GENERAL,
 	PING_ENEMY_SPOTTED_SPECIFIC,
                 
-                             
-                         
-                               
+		PING_VANTAGE_ENEMY_SPOTTED_1,
+		PING_VANTAGE_ENEMY_SPOTTED_2,
+		PING_VANTAGE_ENEMY_SPOTTED_3,
+		PING_VANTAGE_ENEMY_SPOTTED_4,
+		PING_VANTAGE_ENEMY_SPOTTED_5,
+		SUB_TYPE_VANTAGE_TEAM_1,
+		SUB_TYPE_VANTAGE_TEAM_2,
+		SUB_TYPE_VANTAGE_TEAM_3,
+		PING_VANTAGE_COMPANION,
+		PING_ENEMY_VANTAGE_COMPANION,
        
                             
                                     
@@ -1254,7 +1325,6 @@ global enum eCommsAction
        
 	PING_ENEMY_SPOTTED_REVIVING,
 	PING_ENEMY_SPOTTED_SHADOW,
-	PING_ENEMY_SUSPECTED,
 	PING_DEATHBOX_FROM_MAP_BY_DATAKNIFE,
 	PING_ENEMY_MARKED_BY_DATAKNIFE,
 	PING_DEATHBOX_MARKED_BY_DATAKNIFE,
@@ -1269,6 +1339,15 @@ global enum eCommsAction
 		PING_ENEMY_CASTLE_WALL,
 		PING_CASTLE_WALL_ENERGIZED,
 		PING_ENEMY_CASTLE_WALL_ENERGIZED,
+       
+                 
+		PING_BARRICADED_DOOR,
+		PING_BARRICADED_DOOR_OPEN,
+		SUB_TYPE_BARRICADED_DOOR,
+		PING_PIERCING_SPIKES,
+		PING_PIERCING_SPIKES_ENEMY,
+		PING_DARK_VEIL,
+		PING_DARK_VEIL_ENEMY,
        
 	  
 	PING_ENEMY_NPC_SNIPER,
@@ -1287,7 +1366,6 @@ global enum eCommsAction
                     
 		PING_NPC_MARVIN_STORY,
 		PING_NPC_MARVIN_LOOT,
-		PING_NPC_MARVIN_LOOT_DISABLED,
 		PING_ITEM_MARVIN_ARM,
        
 	  
@@ -1297,6 +1375,7 @@ global enum eCommsAction
 	PING_TROPHY_SYSTEM,
 	PING_TROPHY_SYSTEM_NEUTRAL
 	PING_ENEMY_SMOKE,
+	PING_TOXIC_GAS,
 	PING_ENEMY_SHIELD,
 	PING_ENEMY_TELEPORTER,
 	  
@@ -1309,6 +1388,10 @@ global enum eCommsAction
 	  
 	PING_RESPAWN_MOBILE,
                           
+                         
+       
+
+                  
                          
        
 
@@ -1351,6 +1434,11 @@ global enum eCommsAction
 	REPLY_LOOT_DIBS,
 	REPLY_LOOT_UNDIBS,
 	REPLY_RESPAWN_YES,
+                                
+                
+                     
+                          
+       
                  
 	PING_REPLICATOR_INCOMING,
 	PING_REPLICATOR,
@@ -1446,6 +1534,11 @@ global enum eCommsAction
 	INVENTORY_NEED_ATTACHMENT_BARREL_SNIPER,
 	INVENTORY_NEED_ATTACHMENT_BARREL_MARKSMAN,
 
+                          
+		INVENTORY_NEED_ATTACHMENT_LASERSIGHT_SMG
+		INVENTORY_NEED_ATTACHMENT_LASERSIGHT_PISTOL
+       
+
 	INVENTORY_NEED_WEAPONATTACHMENT_HOPUP,
 	INVENTORY_NEED_WEAPONATTACHMENT_HOPUP_MULTI_A,
 	INVENTORY_NEED_WEAPONATTACHMENT_HOPUP_MULTI_B,
@@ -1477,6 +1570,7 @@ global enum eCommsAction
 	INVENTORY_NEED_BETTER_ATTACHMENT_MAG_HIGHCAL,
 	INVENTORY_NEED_BETTER_ATTACHMENT_MAG_BULLET,
 	INVENTORY_NEED_BETTER_ATTACHMENT_MAG_SPECIAL,
+	INVENTORY_NEED_BETTER_ATTACHMENT_LASERSIGHT,
        
 	  
 	LOOTWHEEL_HEALTH_SMALL,
@@ -1512,8 +1606,8 @@ global enum eCommsAction
 	  
 	PING_SKYDIVE_LAUNCHER,
                        
-                      
-               
+		PING_TRAINOBJECTIVE,
+		PING_STATION,
        
 		PING_OBJECTIVE,
 		PING_SPAWNREGION,
@@ -1527,11 +1621,9 @@ global enum eCommsAction
 		SHADOWFALL_SHADOW_DEATH,
        
 	  
-                        
-		QUEST_OBJECTIVE,
-		QUEST_DRILL,
-       
-		PING_CHARGE_PYLON,
+	QUEST_OBJECTIVE,
+	QUEST_DRILL,
+	PING_CHARGE_PYLON,
 
                       
 		PING_HATCH_BUNKER_OPEN,
@@ -1601,6 +1693,7 @@ global enum eCommsAction
 	FLAVOR_WEAPON_SEMIPISTOL,
 	FLAVOR_WEAPON_AUTOPISTOL,
 	FLAVOR_WEAPON_SENTINEL,
+	FLAVOR_WEAPON_BOCEK,
 	FLAVOR_WEAPON_3030,
 	FLAVOR_WEAPON_DRAGON,
 	FLAVOR_OFFHAND_GRENADE_FIRESTAR,
@@ -1640,6 +1733,9 @@ global enum eCommsAction
 	FLAVOR_ATTACHMENT_MAG_HIGHCAL_1,
 	FLAVOR_ATTACHMENT_MAG_HIGHCAL_2,
 	FLAVOR_ATTACHMENT_MAG_HIGHCAL_3,
+	FLAVOR_ATTACHMENT_MAG_SNIPER_1,
+	FLAVOR_ATTACHMENT_MAG_SNIPER_2,
+	FLAVOR_ATTACHMENT_MAG_SNIPER_3,
 	FLAVOR_ATTACHMENT_SHOTGUN_BOLT_1,
 	FLAVOR_ATTACHMENT_SHOTGUN_BOLT_2,
 	FLAVOR_ATTACHMENT_SHOTGUN_BOLT_3,
@@ -1670,14 +1766,19 @@ global enum eCommsAction
 	FLAVOR_LOOT_DIBS,
 
                           
-                                  
-                                  
-                                  
-                                  
+		FLAVOR_ATTACHMENT_LASER_SIGHT_1,
+		FLAVOR_ATTACHMENT_LASER_SIGHT_2,
+		FLAVOR_ATTACHMENT_LASER_SIGHT_3,
+		FLAVOR_ATTACHMENT_LASER_SIGHT_4,
        
 
                                
                         
+       
+
+                       
+		PING_WEAPON_THROWINGKNIFE,
+		FLAVOR_WEAPON_THROWINGKNIFE
        
 
                     
@@ -1723,6 +1824,8 @@ global enum eCommsAction
 		PING_MY_LAST_DEATHBOX,
 		MARK_MY_LAST_DEATHBOX,
        
+
+		PROMPT_THANKS_RESPAWN,
 
                                          
 		QUICKCHAT_SKYDIVE_ENEMIES_NEARBY,
@@ -1797,6 +1900,29 @@ global enum eCommsAction
 
 	PING_CAREPACKAGE_INCOMING,
 
+                 
+		PING_ZIPRAIL,
+       
+
+                              
+                        
+       
+
+                         
+                   
+                                     
+                                  
+       
+
+                      
+                    
+       
+
+                    
+                            
+                                   
+       
+
 	_count
 }
 
@@ -1810,7 +1936,15 @@ global const string BUBBLE_SHIELD_SCRIPTNAME = "bubble_shield"
 global const string CARE_PACKAGE_SCRIPTNAME = "care_package"
 global const string CARE_PACKAGE_TARGETNAME = "care_package"
 global const string CARE_PACKAGE_LIFELINE_TARGETNAME = "care_package_lifeline"
+
+                   
+                                                                          
+                                                                                  
+     
 global const string SURVEY_BEACON_SCRIPTNAME = "survey_beacon"
+      
+
+
 global const string REVIVE_SHIELD_SCRIPTNAME = "revive_shield"
 global const string GENERIC_PING_PANEL_SCRIPTNAME = "generic_panel"
 global const string GENERIC_PING_PANEL_SCRIPTNAME_COOLDOWN = "generic_panel_cooldown"
@@ -1857,6 +1991,7 @@ global enum eTooltipStyle
                       
 	CUSTOM_MATCHES,
       
+	STORE_CONFIRM,
 }
 
 global struct LootTooltipData
@@ -1888,6 +2023,11 @@ global struct CustomMatchTooltipData
 	int actionEnabledMask
 }
 
+global struct StoreToolTipData
+{
+	vector tooltipAltDescColor
+}
+
 global struct ToolTipData
 {
 	asset image
@@ -1912,6 +2052,8 @@ global struct ToolTipData
 	ClubMemberTooltipData & clubMemberData
 
 	CustomMatchTooltipData & customMatchData
+
+	StoreToolTipData & storeTooltipData
 }
 
 
@@ -1959,6 +2101,8 @@ global enum eLootPromptStyle
 	_COUNT
 }
 
+global const asset LOOT_DATATABLE = $"datatable/survival_loot.rpak"
+
 global const asset LOOT_PICKUP_HINT_DEFAULT_RUI = $"ui/loot_pickup_hint_v2.rpak"
 global const asset LOOT_PICKUP_HINT_COMPACT_RUI = $"ui/loot_pickup_hint_compact.rpak"
 global const asset WEAPON_PICKUP_HINT_DEFAULT_RUI = $"ui/loot_pickup_hint_weapon.rpak"
@@ -1981,6 +2125,61 @@ global const vector MEMBER_COLOR2 = <125, 175, 10>
 global const vector MEMBER_COLOR3 = <10, 180, 180>                    
 global const vector MEMBER_COLOR4 = <150, 95, 215>                    
 
+                      
+                                                     
+                      
+global const string FIRING_RANGE_DUMMIE_SCRIPT_NAME = "npc_dummie"
+global const string FIRING_RANGE_COMBAT_DUMMIE_SCRIPT_NAME = "npc_dummie_combat"
+
+                         
+                                                                      
+                               
+
+                         
+                               
+ 
+       
+             
+              
+           
+       
+ 
+
+                                    
+ 
+      
+           
+           
+         
+       
+ 
+      
+
+                      
+                                                                                                     
+                      
+                   
+                              
+ 
+           
+           
+                  
+                
+                  
+       
+ 
+
+                                
+ 
+                 
+                  
+                   
+                
+       
+ 
+                         
+                      
+
 global enum eRarityTier
 {
 	NONE = -1,
@@ -1988,7 +2187,7 @@ global enum eRarityTier
 	RARE = 1,
 	EPIC = 2,
 	LEGENDARY = 3,
-	HEIRLOOM = 4,
+	MYTHIC = 4,
 	_COUNT,
 }
 
@@ -2149,6 +2348,8 @@ global struct ValkTacTargetData
                                                                       
 global const float PLAYER_STANDING_SPEED = 173.5
 global const float PLAYER_STANDING_SPRINT_SPEED = 260
+
+global const int MAX_ACTIVITY_MODE_FOR_BOTS = 5
 
                                                                                   
                                                                           

@@ -14,11 +14,13 @@ global function AllianceProximity_GetMaxNumAlliances
 global function AllianceProximity_GetMaxNumPlayersPerAlliance
 global function AllianceProximity_GetAllianceFromTeam
 global function AllianceProximity_GetTeamsInAlliance
+global function AllianceProximity_GetRepresentativeTeamForAlliance
 global function AllianceProximity_GetTeamsInSameAllianceAsTeam
 global function AllianceProximity_GetMaxDistForProximity
 global function AllianceProximity_IsTeamInAnAlliance
 global function AllianceProximity_GetOtherAlliances
 global function AllianceProximity_GetOtherAlliance
+global function AllianceProximity_GetAllAlliances
 
 #if SERVER || CLIENT
 global function AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI
@@ -28,6 +30,7 @@ global function AllianceProximity_GetAllPlayersInAlliance
 global function AllianceProximity_GetAllPlayersInOtherAlliances
 global function AllianceProximity_GetPlayersInSameAllianceAsTeam
 global function AllianceProximity_GetLivingPlayerTeamsInSameAllianceAsTeam
+global function AllianceProximity_GetAllianceScoreDifference
 #endif                    
 
 #if SERVER
@@ -37,6 +40,8 @@ global function AllianceProximity_GetLivingPlayerTeamsInSameAllianceAsTeam
 
 #if CLIENT
 global function AllianceProximity_ManageIconVisibility_Thread
+global function AllianceProximity_GetUIAllianceFromTeam
+global function AllianceProximity_GetUIAlliance
 #endif          
 
 struct {
@@ -44,6 +49,7 @@ struct {
 	int maxAlliances
 	int maxPlayersPerAlliance
 	float maxDistAllianceProximity
+	array < int > allAlliances
 
 	table< int, int > teamToAllianceTable
 	table< int, array< int > > allianceToTeamsTable
@@ -131,9 +137,37 @@ int function AllianceProximity_GetMaxNumPlayersPerAlliance()
                                                          
 int function AllianceProximity_GetAllianceFromTeam( int team )
 {
-	Assert( AllianceProximity_IsTeamInAnAlliance( team ) , "Attempted to get an Alliance from a Team that isn't in the teamToAllianceTable, probably didn't run the AllianceProximity_SetTeamsToAlliances function first" )
+	if( team == TEAM_SPECTATOR )
+		return ALLIANCE_NONE
+
+	Assert( AllianceProximity_IsTeamInAnAlliance( team ), "Attempted to get an Alliance from a Team that isn't in the teamToAllianceTable, probably didn't run the AllianceProximity_SetTeamsToAlliances function first" )
 	return file.teamToAllianceTable[ team ]
 }
+
+#if CLIENT
+int function AllianceProximity_GetUIAllianceFromTeam( int team )
+{
+	int alliance = AllianceProximity_GetAllianceFromTeam( team )
+	return AllianceProximity_GetUIAlliance( alliance )
+}
+#endif          
+
+#if CLIENT
+int function AllianceProximity_GetUIAlliance( int alliance )
+{
+	entity localPlayer = GetLocalViewPlayer()
+	if( !IsValid( localPlayer ) )
+		return alliance
+
+	int localTeam = localPlayer.GetTeam()
+	if( localTeam == TEAM_SPECTATOR )
+		return alliance
+
+	int localAlliance = AllianceProximity_GetAllianceFromTeam( localTeam )
+	int uiAlliance = alliance == localAlliance ? 0 : alliance == 0 ? localAlliance : alliance
+	return uiAlliance
+}
+#endif          
 
                                                        
 array< int > function AllianceProximity_GetOtherAlliances( int alliance )
@@ -147,6 +181,13 @@ array< int > function AllianceProximity_GetOtherAlliances( int alliance )
 	}
 
 	return otherAlliances
+}
+
+                    
+array < int > function AllianceProximity_GetAllAlliances()
+{
+	array< int > resultArray = clone file.allAlliances
+	return resultArray
 }
 
                                                              
@@ -332,6 +373,15 @@ array<int> function AllianceProximity_GetTeamsInAlliance( int alliance )
 	return file.allianceToTeamsTable[ alliance ]
 }
 
+                                                                                                                                                                                        
+int function AllianceProximity_GetRepresentativeTeamForAlliance( int alliance )
+{
+	array<int> teamsInAlliance = AllianceProximity_GetTeamsInAlliance( alliance )
+	Assert( teamsInAlliance.len() > 0, "AllianceProximity_GetRepresentativeTeamForAlliance tried to get a team from an alliance but there are no teams in alliance " + alliance )
+
+	return teamsInAlliance[ 0 ]
+}
+
 #if SERVER || CLIENT
                                                             
 array<int> function AllianceProximity_GetLivingPlayerTeamsInAlliance( int alliance )
@@ -394,6 +444,9 @@ void function AllianceProximity_SetTeamsToAlliances()
 		{
 			file.allianceToTeamsTable[ allianceIndex ] <- [ team ]
 		}
+
+		if ( !file.allAlliances.contains( allianceIndex ) )
+			file.allAlliances.append( allianceIndex )
 
 		allianceIndex++
 
@@ -504,3 +557,37 @@ void function AllianceProximity_ManageIconVisibility_Thread( entity ent, var rui
 	 
  
 #endif          
+
+#if CLIENT || SERVER
+                                                                                                   
+int function AllianceProximity_GetAllianceScoreDifference()
+{
+	array< int > allAlliances = AllianceProximity_GetAllAlliances()
+	int scoreDifference = 0
+
+	                                                                                                    
+	if ( allAlliances.len() == 2 )
+	{
+		int allianceAScore = GetAllianceTeamsScore( ALLIANCE_A )
+		int allianceBScore = GetAllianceTeamsScore( ALLIANCE_B )
+		scoreDifference = maxint( allianceAScore, allianceBScore ) - minint( allianceAScore, allianceBScore )
+	}
+	else                                                                                                                             
+	{
+		int lowestScore = -1
+		int highestScore = 0
+		int currentAllianceScore = 0
+
+		foreach( alliance in allAlliances )
+		{
+			currentAllianceScore = GetAllianceTeamsScore( alliance )
+			lowestScore = currentAllianceScore < lowestScore || lowestScore == -1 ? currentAllianceScore : lowestScore
+			highestScore = currentAllianceScore > highestScore ? currentAllianceScore : highestScore
+		}
+		scoreDifference = highestScore - lowestScore
+	}
+
+
+	return scoreDifference
+}
+#endif                    

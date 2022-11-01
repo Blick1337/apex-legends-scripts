@@ -2,11 +2,6 @@ global function OnWeaponPrimaryAttack_hunt_mode
 global function MpAbilityHuntModeWeapon_Init
 global function MpAbilityHuntModeWeapon_OnWeaponTossPrep
 global function OnWeaponDeactivate_hunt_mode
-                                        
-          
-                                   
-      
-      
 
 #if DEV && CLIENT
 global function GetBloodhoundColorCorrectionID
@@ -75,7 +70,12 @@ void function MpAbilityHuntModeWeapon_Init()
 			                                                                                                              
 			                                                                                                       
 
-                                    
+                                                
+                                                        
+                                                                                    
+        
+
+                                                                                 
                         
     
                                                                          
@@ -116,7 +116,7 @@ void function MpAbilityHuntModeWeapon_Init()
 		                                                                                                              
 		                                                                                                       
 
-                                  
+                                                                               
                       
   
                                                                      
@@ -135,29 +135,7 @@ void function MpAbilityHuntModeWeapon_Init()
 	 
  
 
-                                        
-                                                  
- 
-                          
-              
-
-                                                                                       
-                                                                
-  
-                                                           
-                                            
-                                                               
-                                                                       
-                                                                                                              
-                                                                                                       
-             
-  
-
-             
- 
-      
-#endif         
-
+#endif
 
 void function MpAbilityHuntModeWeapon_OnWeaponTossPrep( entity weapon, WeaponTossPrepParams prepParams )
 {
@@ -228,6 +206,10 @@ void function HuntMode_Start( entity player )
 		 
 			                                     
 		 
+
+                                               
+                                                                                
+       
 
 	#endif
 }
@@ -409,6 +391,7 @@ void function EndThreadOn_HuntCommon( entity player )
 		                            
        
 
+                                                
 	                                                                           
 	 
 		                                                        
@@ -444,12 +427,14 @@ void function EndThreadOn_HuntCommon( entity player )
 		 
         
 	 
+                                                    
 
 	                                                                               
 	                                                                                                                                    
 	            
 		                                                                            
 		 
+                                                  
 			                                                    
 			 
 				                                                        
@@ -459,9 +444,11 @@ void function EndThreadOn_HuntCommon( entity player )
 					                                         
 				 
 			 
+                                                      
 
 			                        
 			 
+                                                   
                            
 					                                                        
 					 
@@ -469,6 +456,7 @@ void function EndThreadOn_HuntCommon( entity player )
 						                                                                               
 					 
           
+                                                       
 
 				                               
 
@@ -614,7 +602,7 @@ void function HuntMode_StartVisualEffect( entity ent, int statusEffect, bool act
 	if ( ent != GetLocalViewPlayer() )
 		return
 
-	GfxDesaturate( true )
+	GfxDesaturateOn()
 	Chroma_StartHuntMode()
 	thread HuntMode_UpdatePlayerScreenColorCorrection( ent )
 	thread HuntMode_PlayActivationScreenFX( ent )
@@ -628,7 +616,7 @@ void function HuntMode_StopVisualEffect( entity ent, int statusEffect, bool actu
 	if ( ent != GetLocalViewPlayer() )
 		return
 
-	GfxDesaturate( false )
+	GfxDesaturateOff()
 	Chroma_EndHuntMode()
 	ent.Signal( "HuntMode_StopColorCorrection" )
 	ent.Signal( "HuntMode_StopActivationScreenFX" )
@@ -642,7 +630,7 @@ void function HuntMode_PlayActivationScreenFX( entity clientPlayer )
 	entity viewPlayer = GetLocalViewPlayer()
 	int fxid          = GetParticleSystemIndex( HUNT_MODE_ACTIVATION_SCREEN_FX )
 
-	int fxHandle = StartParticleEffectOnEntity( viewPlayer, fxid, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int fxHandle = StartParticleEffectOnEntity( viewPlayer, fxid, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetIsWithCockpit( fxHandle, true )
 	Effects_SetParticleFlag( fxHandle, PARTICLE_SCRIPT_FLAG_NO_DESATURATE, true )
 

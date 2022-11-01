@@ -35,4 +35,13 @@ void function NPCPrecache_AllNPCTypes()
                     
 		NPCPrecache_Marvin()
        
+
+                          
+		NPCPrecache_Spider_Jungle()
+       
+
+                          
+                                 
+       
+
 }

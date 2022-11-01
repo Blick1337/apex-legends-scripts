@@ -129,10 +129,6 @@ void function ShItemPerPlayerState_LevelInit()
 		                                                   
 		 
 			                                                                                    
-			       
-				                                  
-					                                                                                                                                 
-			      
 			        
 		 
 
@@ -358,7 +354,7 @@ void function Newness_ReverseQuery_Setup(
 #if UI
 void function Newness_AddCallbackAndCallNow_OnRerverseQueryUpdated( Newness_ReverseQuery rq, OnNewnessReverseQueryUpdatedCallbackType cb, var optionalArg = null )
 {
-	#if ASSERTING
+	#if ASSERTS
 		int foundIndex = -1
 		foreach ( int index, OnNewnessReverseQueryUpdatedCallbackStruct cbs in rq.onChangeCallbackList )
 		{
@@ -502,10 +498,7 @@ void function OnPersistentDataReady( entity _unused )
 			continue
 
 		if ( !IsValidItemFlavorGUID( guid ) )
-		{
-			Warning( "Player had invalid item flavor GUID in their persistent sparse newness set: " + guid )
 			continue
-		}
 
 		ItemFlavor flav                                              = GetItemFlavorByGUID( guid )
 		array<Newness_ReverseQuery> affectedQueriesListForThisFlavor = []
@@ -540,7 +533,8 @@ void function ServerToClient_OnItemFlavorNewnessChanged( int guid, bool isNew )
 #if UI
 void function ClientToUI_OnItemFlavorNewnessChanged( int guid, bool isNew )
 {
-	if ( IsValidItemFlavorGUID( guid, eValidation.ASSERT ) == false )
+	                                                                                         
+	if ( IsValidItemFlavorGUID( guid, eValidation.DONT_ASSERT ) == false )
 		return
 
 	ItemFlavor flavor = GetItemFlavorByGUID( guid )
@@ -569,7 +563,7 @@ void function DEV_Newness_ReverseQueryTest()
 	Newness_ReverseQuery combinedRQ
 	Newness_ReverseQuery_Setup( combinedRQ, [charactersRQ, weaponSkinsRQ], [] )
 	Newness_ReverseQuery superCombinedRQ
-	Newness_ReverseQuery_Setup( superCombinedRQ, [combinedRQ], [ GetItemFlavorByHumanReadableRef( "character_skin_lifeline_common_05" ) ] )
+	Newness_ReverseQuery_Setup( superCombinedRQ, [combinedRQ], [ DEV_GetItemFlavorByGRXRef( "character_skin_lifeline_common_05" ) ] )
 
 	Newness_AddCallbackAndCallNow_OnRerverseQueryUpdated( charactersRQ, void function( int newCount, var unused ) {
 		printf( "NEWNESS TEST: charactersRQ    = %d", newCount )

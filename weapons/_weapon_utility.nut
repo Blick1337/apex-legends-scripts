@@ -71,6 +71,7 @@ global function OnWeaponEnergizedStart
                                                              
                                                              
                                                                
+                                                               
                                                          
                                     
                                        
@@ -78,16 +79,17 @@ global function OnWeaponEnergizedStart
                                       
                                                        
                                               
+                                               
 #endif
 
                          
-          
+#if SERVER
                                                             
                                                     
-                    
-          
-                                                
-                    
+#endif              
+#if CLIENT
+global function UICallback_UpdateLaserSightColor
+#endif              
                                    
 
 global function Weapon_AddSingleCharge
@@ -96,6 +98,7 @@ global function Weapon_AddSingleCharge
 global function ServerCallback_SetWeaponPreviewState
 global function ServerCallback_KineticLoaderReloadedThroughSlide
 global function ServerCallback_KineticLoaderReloadedThroughSlideEnd
+global function ApplyKineticLoaderFunctionality
 #endif
 
 global function OnWeaponTryEnergize
@@ -145,6 +148,8 @@ global function DevPrintAllStatusEffectsOnEnt
                                  
       
 
+                                                                     
+
 #endif         
 
 #if CLIENT
@@ -172,6 +177,19 @@ global function DisplayCenterDotRui
 
 global function IsTurretWeapon
 global function IsHMGWeapon
+
+#if SERVER || CLIENT
+global function GetInfiniteAmmo
+#if SERVER
+                                        
+                                        
+                                          
+       
+                                       
+      
+#endif
+global const string MOD_INFINITE_AMMO_CLIPS = "infinite_ammo_clips"
+#endif
 
                                                                                                                                                       
 global struct MarksmansTempoSettings
@@ -236,7 +254,7 @@ global const string ULTIMATE_ACTIVE_MOD_STRING = "ultimate_active"
 const vector LOWAMMO_UI_COLOR = <0, 255, 0> / 255.0
 const vector OVERLOADAMMO_UI_COLOR = <0, 200, 200> / 255.0
 const vector OUTOFAMMO_UI_COLOR = <255, 65, 65> / 255.0
-const vector NORMALAMMO_UI_COLOR = <0, 0, 0>
+const vector NORMALAMMO_UI_COLOR = ZERO_VECTOR
 
 global const string OVERLOAD_AMMO_SETTING = "smart_reload_overload_ammo_required"
 global const string LOW_AMMO_FAC_SETTING = "low_ammo_fraction"
@@ -332,6 +350,9 @@ const float BOUNCE_STUCK_DISTANCE = 5.0
 
 const float GOLD_MAG_TIME_BEFORE_STOWED_RELOAD = 5.0
 
+const int ITEM_STICKS = 1
+const int ITEM_NOT_FOUND_STICKINESS = -1
+
 global const string ARROWS_UNSTICK_SIGNAL = "arrows_unstick"
 
 global struct RadiusDamageData
@@ -426,9 +447,11 @@ struct
 	table<string, array<void functionref( entity, string, bool )> > weaponModChangedCallbacks
 
 	#if CLIENT
-	bool reloadedThroughSlide = false
-	int ammoToLoadTotal = 0
+		table < entity, bool > weaponReloadedThroughSlideTable
+		table < entity, int > weaponAmmoToLoadTotalTable
 	#endif
+
+	table< string, table <string, int> > throwableItemStickinessTable
 } file
 
 global int HOLO_PILOT_TRAIL_FX
@@ -480,13 +503,14 @@ void function WeaponUtility_Init()
 
 	RegisterSignal ( END_KINETIC_LOADER )
 	RegisterSignal ( END_KINETIC_LOADER_CHOKE )
-	Remote_RegisterClientFunction( "ServerCallback_KineticLoaderReloadedThroughSlide", "int", 0, 32 )
-	Remote_RegisterClientFunction( "ServerCallback_KineticLoaderReloadedThroughSlideEnd" )
+	Remote_RegisterClientFunction( "ServerCallback_KineticLoaderReloadedThroughSlide", "entity", "int", 0, 32 )
+	Remote_RegisterClientFunction( "ServerCallback_KineticLoaderReloadedThroughSlideEnd", "entity" )
+	Remote_RegisterClientFunction( "ApplyKineticLoaderFunctionality", "entity" , "entity" )
                            
                                                                  
                                     
                           
-                                                                        
+	Remote_RegisterServerFunction( "ClientCallback_UpdateLaserSightColor" )
                                     
 	#if CLIENT
 	RegisterSignal ( END_KINETIC_LOADER_RUI )
@@ -508,7 +532,8 @@ void function WeaponUtility_Init()
 	#if SERVER
 		                                                                                          
 		                                                                                              
-		                                                  
+		                                                               
+		                                                                        
 		                                                            
 		                                                                  
 		                                                             
@@ -517,8 +542,9 @@ void function WeaponUtility_Init()
 		                                                                                       
 		                                                                                           
 		                                                                                           
+		                                                                                             
                            
-                                                                                            
+		                                                                                          
         
 		                                                                                             
 		                                              
@@ -538,6 +564,38 @@ void function WeaponUtility_Init()
 
 		AddCallback_OnPlayerAddWeaponMod( ShatterRounds_OnPlayerAddedWeaponMod )
 		AddCallback_OnPlayerRemoveWeaponMod( ShatterRounds_OnPlayerRemovedWeaponMod )
+
+	InitThrowableItemStickinessDatatable()
+}
+
+const asset THROWABLE_ITEM_STICKINESS_DATATABLE = $"datatable/throwable_item_stickiness.rpak"
+
+void function InitThrowableItemStickinessDatatable()
+{
+	array< string > throwable_items = [
+		VOID_RING_WEAPON_REF, BUBBLE_BUNKER_WEAPON_NAME, ECHO_LOCATOR_WEAPON_NAME,
+		"mp_weapon_jump_pad", "mp_ability_space_elevator_tac", CAUSTIC_DIRTY_BOMB_WEAPON_CLASS_NAME,
+		GRENADE_EMP_WEAPON_NAME, GUNGAME_THROWING_KNIFE_WEAPON_NAME
+	]
+	var dataTable = GetDataTable( THROWABLE_ITEM_STICKINESS_DATATABLE )
+	int numRows = GetDataTableRowCount( dataTable )
+
+	foreach ( string item in throwable_items )
+	{
+		table< string, int > columnTable
+		int col = GetDataTableColumnByName( dataTable, item )
+
+		Assert( col >= 0 )
+
+		for ( int j = 0; j < numRows; j++ )
+		{
+			string entName = GetDataTableString( dataTable, j, 0 )
+			int value = int( GetDataTableString( dataTable, j, col ) )
+			columnTable[ entName ] <- value
+		}
+
+		file.throwableItemStickinessTable[ item ] <- columnTable
+	}
 }
 
 #if SERVER
@@ -1295,7 +1353,7 @@ string function GetDistanceString( float distInches )
 
 vector function GetZVelocityForDistOverTime( float distance, float duration, float gravity )
 {
-	vector startPoint = <0, 0, 0>
+	vector startPoint = ZERO_VECTOR
 	vector endPoint   = <distance, 0, 0>
 
 	float vox = distance / duration
@@ -1373,7 +1431,7 @@ var function OnWeaponPrimaryAttack_EPG( entity weapon, WeaponPrimaryAttackParams
 }
 
 
-bool function PlantStickyEntityOnWorldThatBouncesOffWalls( entity ent, DeployableCollisionParams collisionParams, float bounceDot, vector angleOffset = <0, 0, 0>, bool ignoreHullTrace = false )
+bool function PlantStickyEntityOnWorldThatBouncesOffWalls( entity ent, DeployableCollisionParams collisionParams, float bounceDot, vector angleOffset = ZERO_VECTOR, bool ignoreHullTrace = false )
 {
 	entity hitEnt = collisionParams.hitEnt
 	if ( HitEntIsValidToStick( hitEnt ) )
@@ -1383,7 +1441,7 @@ bool function PlantStickyEntityOnWorldThatBouncesOffWalls( entity ent, Deployabl
 		if ( dot < bounceDot )
 		{
 			#if SERVER
-				                                            
+				                                              
 				 
 					                                          
 					            
@@ -1426,7 +1484,7 @@ const float DEBUG_SURFACE_TEST_TIME = 20
 #endif
 const float SURFACE_TEST_TRACE_LENGTH = 66
 
-bool function PlantStickyEntityOnConsistentSurface( entity projectile, DeployableCollisionParams collisionParams, float consistentDotThreshold, float size, vector angleOffset = <0, 0, 0> )
+bool function PlantStickyEntityOnConsistentSurface( entity projectile, DeployableCollisionParams collisionParams, float consistentDotThreshold, float size, vector angleOffset = ZERO_VECTOR )
 {
 	bool surfaceIsConsistent = true
 
@@ -1516,14 +1574,14 @@ bool function PlantStickyEntityOnConsistentSurface( entity projectile, Deployabl
 	return PlantStickyEntity( projectile, collisionParams, angleOffset )
 }
 
-bool function PlantStickyEntityThatBouncesOffWalls( entity projectile, DeployableCollisionParams cp, float bounceDot, vector angleOffset = <0, 0, 0> )
+bool function PlantStickyEntityThatBouncesOffWalls( entity projectile, DeployableCollisionParams cp, float bounceDot, vector angleOffset = ZERO_VECTOR )
 {
                      
 	if ( (cp.deployableFlags & eDeployableFlags.VEHICLES_LARGE_DEPLOYABLE) && EntIsHoverVehicle( cp.hitEnt ) )
 		return PlantStickyEntity_LargeDeployableOnVehicle( projectile, cp, angleOffset )
                            
 
-	float dot = cp.normal.Dot( <0, 0, 1> )
+	float dot = cp.normal.Dot( UP_VECTOR )
 	if ( dot < bounceDot )
 	{
 		#if SERVER
@@ -1558,7 +1616,7 @@ bool function PlantStickyEntityThatBouncesOffWalls( entity projectile, Deployabl
 const bool DEBUG_DRAW_PLANT_STICKY = false
 #endif
 
-bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vector angleOffset = <0, 0, 0>, bool ignoreHullTrace = false, bool moveOnNoHitTrace = true )
+bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vector angleOffset = ZERO_VECTOR, bool ignoreHullTrace = false, bool moveOnNoHitTrace = true )
 {
 	if ( !EntityShouldStickEx( ent, cp ) )
 		return false
@@ -1566,7 +1624,12 @@ bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vecto
 	Assert( !cp.hitEnt.IsMarkedForDeletion(), "" )
 
 	                                                                                       
-	Assert( LengthSqr( cp.normal ) > FLT_EPSILON , "PlantStickyEntity: normal vector " + cp.normal + " is a zero vector. Entity: '" + ent + "' is sticking to HitEnt: '" + cp.hitEnt + "' at position: " + cp.pos )
+	if ( LengthSqr( cp.normal ) <= FLT_EPSILON )
+	{
+		Warning( "PlantStickyEntity: normal vector " + cp.normal + " is a zero vector. Entity: '" + ent + "' is sticking to HitEnt: '" + cp.hitEnt + "' at position: " + cp.pos )
+		cp.normal = UP_VECTOR
+	}
+
 	vector plantAngles = AnglesCompose( VectorToAngles( cp.normal ), angleOffset )
 	vector plantPosition
 	if ( ignoreHullTrace )
@@ -1654,7 +1717,7 @@ bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vecto
 		ent.SetOrigin( plantPosition )
 		ent.SetAngles( plantAngles )
 	#endif
-	ent.SetVelocity( <0, 0, 0> )
+	ent.SetVelocity( ZERO_VECTOR )
 
 	                                                                                                  
 	if ( !EntityShouldStickEx( ent, cp ) )
@@ -1665,7 +1728,7 @@ bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vecto
 	                                                              
 	if ( cp.hitEnt.IsWorld() )
 	{
-		ent.SetVelocity( <0, 0, 0> )
+		ent.SetVelocity( ZERO_VECTOR )
 		ent.StopPhysics()
 	}
 	else
@@ -1699,9 +1762,9 @@ void function CommonOnSuccessfulStickyPlant( entity ent, DeployableCollisionPara
 }
 
                      
-bool function PlantStickyEntity_LargeDeployableOnVehicle( entity ent, DeployableCollisionParams cp, vector angleOffset = <0, 0, 0> )
+bool function PlantStickyEntity_LargeDeployableOnVehicle( entity ent, DeployableCollisionParams cp, vector angleOffset = ZERO_VECTOR )
 {
-	if ( !HoverVehicle_AttachEntToNearestAbilityAttachment( ent, cp.hitEnt, false, false, <0,0,0> ) )
+	if ( !HoverVehicle_AttachEntToNearestAbilityAttachment( ent, cp.hitEnt, false, false, ZERO_VECTOR ) )
 		return false
 	CommonOnSuccessfulStickyPlant( ent, cp )
 	return true
@@ -1767,7 +1830,7 @@ bool function EntityShouldStickEx( entity stickyEnt, DeployableCollisionParams p
 	string className = GetClassnamefromStickyHitEnt( hitEnt )
 	if ( className == "prop_door" )
 	{
-		float normal = ((params.normal == <0,0,0>) ? 0.0 : params.normal.Dot( UP_VECTOR ))
+		float normal = ((params.normal == ZERO_VECTOR) ? 0.0 : params.normal.Dot( UP_VECTOR ))
 		if ( normal > DOT_60DEGREE )
 			return false
 	}
@@ -1825,12 +1888,17 @@ bool function EntityCanHaveStickyEnts( entity stickyEnt, entity ent )
 	if ( entClassname == null )
 		return false
 
+	                                                                                   
+	int stickyValue = GetThrowableEntStickinessToEntity( stickyEntWeaponClassName, ent.GetScriptName() )
+	if (  stickyValue != ITEM_NOT_FOUND_STICKINESS )
+		return stickyValue == ITEM_STICKS
+
+	                                                                                                                                       
+	if ( entClassname == "phys_bone_follower" && stickyEntWeaponClassName == "mp_weapon_throwingknife" )
+		return false
+
 	if ( entClassname == "prop_lootroller" && stickyEntWeaponClassName != "" )
 		return true
-
-	                                                           
-	if ( ent.GetScriptName() == MOBILE_SHIELD_SCRIPTNAME )
-		return MobileShield_IsAllowedStickyEnt( ent, stickyEnt, stickyEntWeaponClassName )
 
 	                                               
 	if ( ent.GetScriptName() == WRECKING_BALL_BALL_SCRIPT_NAME )
@@ -1838,6 +1906,10 @@ bool function EntityCanHaveStickyEnts( entity stickyEnt, entity ent )
 	                                                                                                    
 	if ( stickyEnt.GetScriptName() == RIOT_DRILL_SCRIPT_NAME )
 		return true
+
+	                                                           
+	if ( ent.GetScriptName() == MOBILE_SHIELD_SCRIPTNAME )
+		return MobileShield_IsAllowedStickyEnt( ent, stickyEnt, stickyEntWeaponClassName )
 
                        
 		                                                                                                                       
@@ -1890,6 +1962,14 @@ bool function EntityCanHaveStickyEnts( entity stickyEnt, entity ent )
 	return true
 }
 
+int function GetThrowableEntStickinessToEntity( string stickyEntClassName, string entScriptName )
+{
+	if ( stickyEntClassName in file.throwableItemStickinessTable &&
+			entScriptName in file.throwableItemStickinessTable[ stickyEntClassName ] )
+		return file.throwableItemStickinessTable[ stickyEntClassName ][ entScriptName ]
+
+	return ITEM_NOT_FOUND_STICKINESS
+}
 
 #if DEV
 void function ShowExplosionRadiusOnExplode( entity ent )
@@ -1900,7 +1980,7 @@ void function ShowExplosionRadiusOnExplode( entity ent )
 	float outerRadius = expect float( ent.GetWeaponInfoFileKeyField( "explosionradius" ) )
 
 	vector org    = ent.GetOrigin()
-	vector angles = <0, 0, 0>
+	vector angles = ZERO_VECTOR
 	thread DebugDrawCircle( org, angles, innerRadius, <255, 255, 51>, true, 3.0 )
 	thread DebugDrawCircle( org, angles, outerRadius, COLOR_WHITE, true, 3.0 )
 }
@@ -2019,7 +2099,7 @@ void function ShowExplosionRadiusOnExplode( entity ent )
        
 	                           
 	 
-		                                                                                                           
+		                                                                                                               
 		                 
 	 
 	    
@@ -2287,7 +2367,7 @@ void function InitMissileForRandomDriftForVortexLow( entity missile, vector star
 	                                              
 
 	                                   
-	                                            
+	                                                                                                                    
 	                                     
 	                                                
 	                                   
@@ -2831,7 +2911,6 @@ entity function GetMeleeWeapon( entity player )
 	              
  
 
-
                                                                   
  
 	                                                 
@@ -2847,9 +2926,6 @@ entity function GetMeleeWeapon( entity player )
 		            
 
 	                                   
-		            
-
-	                             
 		            
 
 	                              
@@ -2917,31 +2993,24 @@ entity function GetMeleeWeapon( entity player )
 	 
 		                  
 		                
-		                                                         
-		 
-			                                                               
-		 
+
+		                                               
 	 
                                 
                             
   
                     
                   
-                                                           
-   
-                                                                  
-   
+
+                                                 
   
       
 	                          
 	 
 		                  
 		                
-		                                                         
-		 
-			                                                               
-			                                              
-		 
+
+		                                               
 	 
 	                          
 	 
@@ -2979,7 +3048,7 @@ entity function GetMeleeWeapon( entity player )
 	 
       
 
-	                          
+		                          
 
 	                
 	 
@@ -3345,10 +3414,22 @@ entity function GetMeleeWeapon( entity player )
 		                                                                                                                                                                                            
 	 
 
-	                          
+	                               
 		                                       
 
-	                                                                                 
+	                                                                       
+	                                                           
+
+	                                                                                         
+	 
+		                                          
+		                                                                                    
+	 
+	    
+	 
+		                                                                                 
+	 
+
 	                                                                                       
 	                                                                       
  
@@ -3403,10 +3484,10 @@ entity function GetMeleeWeapon( entity player )
 	              
  
 
-                                                
+                                                             
  
                          
-                               
+	                              
                                    
  
 
@@ -3811,7 +3892,7 @@ void function RunWeaponModChangedCallbacks( entity weapon, string mod, bool modA
 	                                                                      
  
 
-                                                                                                                       
+                                                                                                                                                       
  
 	                          
 
@@ -3832,6 +3913,8 @@ void function RunWeaponModChangedCallbacks( entity weapon, string mod, bool modA
 	                             
 	                                  
 
+	                          
+
 	            
 		                             
 		 
@@ -3849,6 +3932,12 @@ void function RunWeaponModChangedCallbacks( entity weapon, string mod, bool modA
 
 		                               
 		 
+			                                          
+				        
+
+			                                            
+				        
+
 			                                                                                 
 			 
 				                                                            
@@ -4543,6 +4632,9 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 
 		                                                                                        
 
+		                                                                                       
+		                                                 
+
 		                                                             
 		                                                                   
 		 
@@ -4552,20 +4644,29 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 			 
 				                                   
 				                                 
+				                                   
 			 
 		 
 
 		                                                                              
 		                                                                                  
 		                                                                    
-		                                                                                       
 		                         
 		 
 			                                                                          
 			                                                   
 			 
-				                                 
-				                                                                                                      
+				                                            
+				 
+					                                   
+					                                                 
+					                                                                                       
+				 
+				    
+				 
+					                                 
+					                                                                                                      
+				 
 			 
 		 
 	 
@@ -4606,9 +4707,10 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 			                                                  
 			                                                        
 			                                                                                                                                     
+			                                             
 
 			                                                                                              
-			                                                   
+			                  
 				                            
 
 			                                       
@@ -4629,9 +4731,12 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 
 					                  
 					 
-						                                                                         
+						                   
+							                                                                     
+						    
+							                                                                         
 					 
-					                                                         
+					                        
 					 
 						                                                         
 					 
@@ -4670,38 +4775,38 @@ void function PlayDelayedShellEject( entity weapon, float time, int count = 1, b
 
                                                                                                                                
  
-                         
-        
+	                        
+		      
 
-                          
-        
+	                         
+		      
 
-                          
-        
+	                         
+		      
 
-                                                                                                                   
-  
-                                                                                                 
-  
-                                                                                                                                 
-  
-                                                                                                  
-  
+	                                                                                                                  
+	 
+		                                                                                               
+	 
+	                                                                                                                                
+	 
+		                                                                                                
+	 
  
 
                                                                    
  
-                               
+	                              
  
                                    
 #endif         
 
 #if CLIENT
                          
-                                                
- 
-                                                                    
- 
+void function UICallback_UpdateLaserSightColor()
+{
+	Remote_ServerCallFunction( "ClientCallback_UpdateLaserSightColor" )
+}
                                    
 
 bool function TryCharacterButtonCommonReadyChecks( entity player )
@@ -4953,7 +5058,7 @@ bool function OnWeaponTryEnergize( entity weapon, entity player )
 			AnnouncementMessageRight( player, Localize( pingStringData, consumableRequiredCount, Localize( consumableName ) ) )
 
 		string commsData = GetWeaponInfoFileKeyField_GlobalString ( weaponName, "energized_comms" )
-		Quickchat( player, eCommsAction[commsData] )
+		Quickchat( eCommsAction[commsData], null )
 		#endif
 
 		return false
@@ -4962,9 +5067,9 @@ bool function OnWeaponTryEnergize( entity weapon, entity player )
 	return true
 }
 
-void function OnWeaponEnergizedStart( entity weapon, entity player )
+void function OnWeaponEnergizedStart( entity weapon, entity player, bool costConsumable )
 {
-	if ( !IsValid( weapon ) )
+	if ( !IsValid( weapon ) || !costConsumable )
 		return
 
 	string weaponRef = weapon.GetWeaponClassName()
@@ -5354,6 +5459,36 @@ void function ShatterRounds_RemoveShatterRounds( entity weapon )
  
 #endif
 
+
+#if SERVER
+                                                                                                                                  
+ 
+                      
+
+	                        
+		      
+
+	                         
+		      
+
+	                         
+		      
+
+	                                         
+	 
+		                                                                                  
+		 
+			                              
+			                                  
+		 
+	 
+
+                           
+ 
+#endif
+
+
+
                       
 void function OnWeaponActivate_Smart_Reload ( entity weapon, SmartReloadSettings settings )
 {
@@ -5419,7 +5554,7 @@ void function OnWeaponReload_Smart_Reload ( entity weapon, int milestoneIndex )
 	else
 	{
 		#if SERVER
-		                                                                                                                   
+		                                                                                               
 		 
 			                                                                                        
 
@@ -5689,6 +5824,12 @@ void function OnWeaponActivate_Kinetic_Loader( entity weapon)
 
 void function OnWeaponDeactivate_Kinetic_Loader( entity weapon )
 {
+	if ( !IsValid( weapon ) )
+		return
+
+	if( !weapon.IsWeaponX() )
+		return
+
 	weapon.Signal( END_KINETIC_LOADER )
 	weapon.Signal( END_KINETIC_LOADER_CHOKE )
 
@@ -5699,6 +5840,15 @@ void function OnWeaponDeactivate_Kinetic_Loader( entity weapon )
 
 void function ApplyKineticLoaderFunctionality( entity player, entity weapon )
 {
+	if ( !IsValid( weapon ) )
+		return
+
+	if( !weapon.IsWeaponX() )
+		return
+
+	if ( !IsValid( player ) )
+		return
+
 	weapon.Signal( END_KINETIC_LOADER )
 	weapon.Signal( END_KINETIC_LOADER_CHOKE )
 
@@ -5810,7 +5960,7 @@ void function KineticLoaderFunctionality_ServerThink( entity player, entity weap
 				                                              
 					      
 
-				                                                                 
+				                                             
 				                                                                                                                          
 				 
 
@@ -5839,7 +5989,7 @@ void function KineticLoaderFunctionality_ServerThink( entity player, entity weap
 						 
 
 						                                                                   
-						                                                                                                            
+						                                                                                                                   
 
 						                
 						       
@@ -5858,7 +6008,7 @@ void function KineticLoaderFunctionality_ServerThink( entity player, entity weap
 				         
 				                              
 				                   
-				                                                                                              
+				                                                                                                      
 				           
 			 
 		 
@@ -5974,15 +6124,18 @@ void function KineticLoaderChokeGraceWindow_ServerThink( entity player, entity w
 #endif
 
 #if CLIENT
-void function ServerCallback_KineticLoaderReloadedThroughSlide( int ammoToLoadTotal )
+void function ServerCallback_KineticLoaderReloadedThroughSlide( entity weapon, int ammoToLoadTotal )
 {
-	file.ammoToLoadTotal = ammoToLoadTotal
-	file.reloadedThroughSlide = true
+	file.weaponReloadedThroughSlideTable[weapon] <- true
+	file.weaponAmmoToLoadTotalTable[weapon] <- ammoToLoadTotal
 }
-void function ServerCallback_KineticLoaderReloadedThroughSlideEnd()
+void function ServerCallback_KineticLoaderReloadedThroughSlideEnd( entity weapon )
 {
-	file.ammoToLoadTotal = 0
-	file.reloadedThroughSlide = false
+	if( weapon in file.weaponReloadedThroughSlideTable )
+		delete file.weaponReloadedThroughSlideTable[ weapon ]
+
+	if( weapon in file.weaponAmmoToLoadTotalTable )
+		delete file.weaponAmmoToLoadTotalTable[ weapon ]
 }
 #endif
 
@@ -6008,26 +6161,96 @@ void function ApplyKineticLoader_ClientThink( entity player, entity weapon )
 			function() : ( player, weapon, crosshairRui )
 			{
 				RuiDestroy( crosshairRui )
-				file.ammoToLoadTotal = 0
-				file.reloadedThroughSlide = false
+				if( weapon in file.weaponReloadedThroughSlideTable )
+					delete file.weaponReloadedThroughSlideTable[ weapon ]
+
+				if( weapon in file.weaponAmmoToLoadTotalTable )
+					delete file.weaponAmmoToLoadTotalTable[ weapon ]
 			}
 		)
 
 		if (!IsValid( weapon ) || !IsValid( player ) )
 			return
 
+
+		string ammoTypeRef = AmmoType_GetRefFromIndex( weapon.GetWeaponAmmoPoolType() )
+		asset ammoIcon = $""
+		if ( SURVIVAL_Loot_IsRefValid( ammoTypeRef ) )
+		{
+			LootData ammoData = SURVIVAL_Loot_GetLootDataByRef( ammoTypeRef )
+			ammoIcon = ammoData.hudIcon
+		}
+
+		               
+		string mod = GetInstalledWeaponAttachmentForPoint( weapon, "mag" )
+		int magTier = 4
+		asset magIcon = $""
+		LootData weaponData = SURVIVAL_GetLootDataFromWeapon( weapon )
+
+		if ( SURVIVAL_Loot_IsRefValid ( mod ) )                             
+		{
+			LootData magData = SURVIVAL_Loot_GetLootDataByRef( mod )
+			magTier = magData.tier
+			magIcon = magData.hudIcon
+		}
+
+		float UiStartTime = -1
+
 		while ( IsValid( weapon ) && IsValid( player ))
 		{
-			if ( file.reloadedThroughSlide )
+			int ammoToLoadTotal = 0
+			bool reloadedThroughSlide = false
+
+			if( weapon in file.weaponAmmoToLoadTotalTable )
+				ammoToLoadTotal = file.weaponAmmoToLoadTotalTable[ weapon ]
+
+			if( weapon in file.weaponReloadedThroughSlideTable )
+				reloadedThroughSlide = file.weaponReloadedThroughSlideTable[ weapon ]
+
+			if ( reloadedThroughSlide )
 			{
-				string ammoToLoadSting = Localize( "#WPN_HOPUP_KINETIC_LOADER_RELOAD_HINT", file.ammoToLoadTotal )
-				RuiSetString( crosshairRui, "ammoToLoadString", ammoToLoadSting )
-				RuiSetFloat3( rui, "ammoGlowColor", lowAmmoColor )
-				RuiSetBool( crosshairRui, "showKineticReloadText", true )
-				RuiSetBool( crosshairRui, "showHopupKineticReloadBG", true )
+				if( player.GetActiveWeapon( eActiveInventorySlot.mainHand ) == weapon  )
+				{
+					if( UiStartTime != -1 )
+					{
+						RuiSetFloat( rui, "passiveHoldTime", 0 )
+					}
+
+					string ammoToLoadSting = Localize( "#WPN_HOPUP_KINETIC_LOADER_RELOAD_HINT", ammoToLoadTotal )
+					RuiSetString( crosshairRui, "ammoToLoadString", ammoToLoadSting )
+					RuiSetFloat3( rui, "ammoGlowColor", lowAmmoColor )
+					RuiSetBool( crosshairRui, "showKineticReloadText", true )
+					RuiSetBool( crosshairRui, "showHopupKineticReloadBG", true )
+
+				}
+				else
+				{
+					if( UiStartTime == -1 )
+					{
+						UiStartTime = Time()
+						RuiSetFloat3( rui, "ammoGlowColor", normalAmmoColor )
+						RuiSetBool( crosshairRui, "showKineticReloadText", false )
+						RuiSetBool( crosshairRui, "showHopupKineticReloadBG", false )
+					}
+
+					RuiSetString( rui, "passiveDesc", Localize( "#WPN_HOPUP_KINETIC_LOADER_RELOAD_HINT", ammoToLoadTotal ) )
+					RuiSetImage( rui, "passiveMagIcon", magIcon )
+					RuiSetImage( rui, "passiveIcon", weapon.GetWeaponSettingAsset( eWeaponVar.hud_icon ) )
+					RuiSetImage( rui, "passiveAmmoIcon", ammoIcon )
+					RuiSetInt( rui, "passiveTier", magTier )
+					RuiSetInt( rui, "passiveAltTier", weaponData.tier )
+					RuiSetBool( rui, "displayPassiveBonusPopup", !GetCurrentPlaylistVarBool( "hud_hide_infopopup", false ) )
+
+					float timeDiff = Time() - UiStartTime                                                               
+					RuiSetGameTime( rui, "passiveActivationTime", UiStartTime )
+					RuiSetFloat( rui, "passiveHoldTime", max( timeDiff, 3.0 ) )
+
+				}
 			}
 			else
 			{
+				UiStartTime = -1
+
 				RuiSetFloat3( rui, "ammoGlowColor", normalAmmoColor )
 				RuiSetBool( crosshairRui, "showKineticReloadText", false )
 				RuiSetBool( crosshairRui, "showHopupKineticReloadBG", false )
@@ -6044,44 +6267,42 @@ void function ApplyKineticLoader_ClientThink( entity player, entity weapon )
                           
         
 
-                                                                                                         
-                                               
-  
-                                                  
+                                                                
+                                                             
 
-                         
-         
+                        
+        
 
                                             
    
                                              
                                                                                
                                                
-                                                                      
+                                                
 
-                                               
-                                                                                                                                                      
+                                              
+                                                                                                                                                     
 
-                                            
-                                                                 
-                                                                                         
+                                           
+                                                                
+                                                                                        
 
-                                                                                                       
-    
-                              
+                                                                                                      
+   
+                             
+                       
+                                                                          
+
                         
-                                                                           
+                                                                                      
 
-                         
-                                                                                       
-
-              
-                                                                                             
-                                                                           
-          
-    
+             
+                                                                                            
+                                                                          
+         
    
   
+
  
 
 
@@ -6093,3 +6314,255 @@ void function ApplyKineticLoader_ClientThink( entity player, entity weapon )
        
  
       
+
+               
+#if SERVER || CLIENT
+bool function GetInfiniteAmmo( entity weapon )
+{
+	                         
+	return weapon.HasMod( MOD_INFINITE_AMMO_CLIPS )
+}
+
+#if SERVER
+                                                                                                                                                          
+ 
+	                                                                             
+		            
+
+	                                                                                                  
+ 
+
+                                                                                                                                                                                           
+ 
+	                               
+		            
+
+	                                              
+	                                            
+
+	                       
+	 
+                   
+                                            
+                                                                                                           
+        
+
+		                                                                                                        
+	 
+
+	                            
+ 
+
+                                                                                                                                                                                             
+ 
+	                               
+		            
+
+	                                                      
+	                                                    
+
+	                       
+		                                                                                                                
+
+	                                    
+
+ 
+
+                                                                                                                            
+ 
+	                          
+	                                                                                                        
+	                                              
+	 
+		                                              
+		                                                 
+			        
+		                                                                                                              
+	 
+	                                                                                                                
+ 
+
+                 
+                                                                                                                            
+ 
+                           
+                                                                                                                              
+                                               
+  
+                                                
+                                                   
+           
+                                                                                                                
+  
+                                                                                                                 
+ 
+      
+
+                                                                                                                                             
+ 
+	       
+		                                        
+	      
+
+	                                                
+
+	                                                                                            
+	                  
+	 
+		                                             
+
+		                                                                                                        
+		                                                                                                       
+		                                                                                                       
+
+		                                                              
+
+		                         
+		                                    
+		 
+			                                            
+			                                                                                                    
+				                    
+			    
+				                   
+		 
+
+		                                                                           
+		                            
+		 
+			                                            
+			                                                                                            
+				                    
+			    
+				                   
+		 
+
+		                         
+		 
+			                                                                                      
+			                                          
+				                    
+			                                                            
+				                   
+		 
+
+		                                                                       
+		                        
+			                    
+
+		                                       
+		                           
+		 
+			                                               
+			 
+				                                                                     
+				                    
+				                   
+			 
+			    
+				                    
+		 
+	 
+	    
+	 
+		                                                             
+		                           
+		 
+			                    
+		 
+	 
+
+	                                                                                                  
+	                                                 
+
+	                                   
+	                   
+	 
+		                       
+		 
+			                   
+				                                        
+			                                                     
+				                                                                                              
+		 
+
+		                                                
+			                                        
+
+		                       
+			                                                                                                                     
+
+		                                                                                       
+			                                                             
+
+		                                                                                  
+	 
+	    
+	 
+		                                               
+			                                           
+
+		                       
+		 
+			                   
+				                                                                                                        
+			                                                     
+			 
+				                                                                                             
+				                                        
+			 
+		 
+		                                                                      
+			                                                                        
+
+		                                                                                  
+	 
+
+	                                
+ 
+
+                                                                                                      
+ 
+	                                                                                  
+
+	                              
+	 
+		                                   
+		                                      
+			           
+
+		                               
+		                                          
+			           
+
+		                     
+		                                          
+			           
+	 
+
+	            
+ 
+
+       
+                                                                                                             
+ 
+	                                                                                        
+ 
+
+                                                             
+ 
+	                                                
+	                                                      
+	                                                                                                        
+	                                                                                                       
+	                                                                                                       
+	                           			                        
+	                          			                       
+	                          			                       
+	                        			                                              
+ 
+      
+
+#endif
+
+#endif               

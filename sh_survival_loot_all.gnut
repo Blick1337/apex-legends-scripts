@@ -12,6 +12,7 @@ global function SURVIVAL_Loot_GetByType
 global function SURVIVAL_Loot_GetLootTypeFromString
 global function SURVIVAL_Loot_GetAttachmentType_Enum
 global function SURVIVAL_Loot_GetByTier
+global function SURVIVAL_Loot_GetSortedStringArrayFromSupportedAttachmentsString
 
 #if CLIENT || SERVER
 global function SURVIVAL_Loot_IsRestrictedPanelLocked
@@ -31,7 +32,12 @@ global function SURVIVAL_Loot_GetRestrictedDialogArray
 #if CLIENT || UI
 global function SURVIVAL_Loot_GetPickupString
 global function SURVIVAL_Loot_GetDesc
+
+global function AddCallback_EditLootDesc
+global function RemoveCallback_EditLootDesc
 #endif
+
+
 
 global function SURVIVAL_Loot_IsUniqueAmmoWeapon
 
@@ -39,9 +45,11 @@ global function SURVIVAL_Loot_IsUniqueAmmoWeapon
 global function GetRarityColor
 #endif
 
+                         
 #if SERVER
                                              
 #endif
+      
 
 #if CLIENT && DEV
 global function DumpModdedKeyColors
@@ -67,7 +75,7 @@ global enum eLootTier
 	RARE
 	EPIC
 	LEGENDARY
-	HEIRLOOM
+	MYTHIC
 
 	_count
 }
@@ -82,6 +90,7 @@ global struct LootData
 	asset         model
 	int           skinOverride
 	asset         hudIcon
+	asset		  craftingIcon
 	asset         emptyImage
 	string        attachSound
 	string        pickupSound_1p
@@ -192,6 +201,9 @@ global enum eRestrictedLootTypes
                        
 		SPECTRE_SHACK,
        
+                             
+		EXPLOSIVE_HOLDS,
+       
 }
 
 struct RestrictedLootInfo
@@ -287,6 +299,11 @@ struct
 			int                                                       profilesSent = 0
 		#endif          
                                     
+
+	#if CLIENT || UI
+	array<string functionref( string, entity , string)> editLootDescCallbacks
+	#endif
+
 } file
 
 
@@ -370,7 +387,7 @@ void function SURVIVAL_Loot_All_InitShared()
 		                                                 
 	#endif
 
-	var dt = GetDataTable( $"datatable/survival_loot.rpak" )
+	var dt = GetDataTable( LOOT_DATATABLE )
 	file.lootIndexToString.clear()
 	file.lootData.clear()
 	file.restrictedLootInfo.clear()
@@ -381,13 +398,13 @@ void function SURVIVAL_Loot_All_InitShared()
 	file.disabledRefs.clear()
 	#endif
 	string disabledRefs = GetCurrentPlaylistVarString( "survival_disabled_loot", " " )
-	file.disabledRefs.extend( split( disabledRefs, " " ) )
+	file.disabledRefs.extend( split( disabledRefs, WHITESPACE_CHARACTERS ) )
 
 	disabledRefs = GetCurrentPlaylistVarString( "survival_disabled_weapons", " " )
-	file.disabledRefs.extend( split( disabledRefs, " " ) )
+	file.disabledRefs.extend( split( disabledRefs, WHITESPACE_CHARACTERS ) )
 
 	disabledRefs = GetCurrentPlaylistVarString( "global_disabled_loot", " " )
-	file.disabledRefs.extend( split( disabledRefs, " " ) )
+	file.disabledRefs.extend( split( disabledRefs, WHITESPACE_CHARACTERS ) )
 
 	int numRows = GetDataTableRowCount( dt )
 	for ( int i = 0; i < numRows; i++ )
@@ -398,7 +415,7 @@ void function SURVIVAL_Loot_All_InitShared()
 		string pingCommsActionName = GetLootTableString( data.ref, dt, i, "pingCommsAction" )
 
 		#if (SERVER || CLIENT)
-			data.pingCommsAction = GetCommsActionForName( pingCommsActionName )
+			data.pingCommsAction = GetCommsActionEnumForName( pingCommsActionName )
 		#endif
 
 		string lootType = GetLootTableString( data.ref, dt, i, "type" )
@@ -412,7 +429,7 @@ void function SURVIVAL_Loot_All_InitShared()
 
 		data.fakeAmmoIcon = GetLootTableAsset( data.ref, dt, i, "fakeAmmoIcon" )
 
-		data.baseMods = split( GetLootTableString( data.ref, dt, i, "baseMods" ), " " )
+		data.baseMods = split( GetLootTableString( data.ref, dt, i, "baseMods" ), WHITESPACE_CHARACTERS )
 
 		data.model = GetLootTableAsset( data.ref, dt, i, "pickupModel" )
 		data.skinOverride = GetLootTableInt( data.ref, dt, i, "skinOverride" )
@@ -442,23 +459,9 @@ void function SURVIVAL_Loot_All_InitShared()
 			file.disabledRefs.append( data.ref )
 
 		string supportedAttachmentsString  = GetLootTableString( data.ref, dt, i, "supportedAttachments" )
-		array<string> supportedAttachments = split( supportedAttachmentsString, " " )
-		supportedAttachments.sort(
-			int function( string attachmentA, string attachmentB ) : ()
-			{
-				int aIndex = attachmentSortOrder.find( attachmentA )
-				int bIndex = attachmentSortOrder.find( attachmentB )
-				if ( aIndex > bIndex )
-					return 1
-				else if ( aIndex < bIndex )
-					return -1
+		data.supportedAttachments = SURVIVAL_Loot_GetSortedStringArrayFromSupportedAttachmentsString( supportedAttachmentsString )
 
-				return 0
-			}
-		)
-		data.supportedAttachments = supportedAttachments
-
-		data.lootTags = split( GetLootTableString( data.ref, dt, i, "lootTags" ), " " )
+		data.lootTags = split( GetLootTableString( data.ref, dt, i, "lootTags" ), WHITESPACE_CHARACTERS )
 
 		data.lootType = SURVIVAL_Loot_GetLootTypeFromString( lootType )
 		data.netInt = GetLootTableString( data.ref, dt, i, "netInt" )
@@ -486,6 +489,7 @@ void function SURVIVAL_Loot_All_InitShared()
 				data.pickupString = GetWeaponInfoFileKeyField_WithMods_GlobalString( data.baseWeapon, data.baseMods, "printName" )
 				data.desc = GetWeaponInfoFileKeyField_WithMods_GlobalString( data.baseWeapon, data.baseMods, "description" )
 				data.hudIcon = GetWeaponInfoFileKeyFieldAsset_Global( data.baseWeapon, "hud_icon" )
+				data.craftingIcon = GetWeaponInfoFileKeyFieldAsset_Global( data.baseWeapon, "crafting_icon" )
 				data.model = GetWeaponInfoFileKeyFieldAsset_Global( data.baseWeapon, "playermodel" )
 				if ( GetWeaponInfoFileKeyField_Global( data.baseWeapon, "ammo_pool_type" ) != null && GetWeaponInfoFileKeyField_Global( data.baseWeapon, "uses_ammo_pool" ) != false )
 				{
@@ -604,7 +608,7 @@ void function SURVIVAL_Loot_All_InitShared()
 					data.hudIcon = GetDataTableAsset( attachmentTable, row, GetDataTableColumnByName( attachmentTable, "image" ) )
 
 				string attachmentPointStr = GetDataTableString( attachmentTable, row, GetDataTableColumnByName( attachmentTable, "attachmentPoint" ) )
-				array<string> attachmentPointList = split( attachmentPointStr, " " )
+				array<string> attachmentPointList = split( attachmentPointStr, WHITESPACE_CHARACTERS )
 				data.attachmentStyle = GetDataTableString( attachmentTable, row, GetDataTableColumnByName( attachmentTable, "type" ) )
 				data.attachmentType = SURVIVAL_Loot_GetAttachmentType_Enum( attachmentPointList[0] )
 				data.emptyImage = GetDataTableAsset( attachmentTable, row, GetDataTableColumnByName( attachmentTable, "emptyImage" ) )
@@ -672,6 +676,24 @@ void function SURVIVAL_Loot_All_InitShared()
 	file.initialized = true
 }
 
+array<string> function SURVIVAL_Loot_GetSortedStringArrayFromSupportedAttachmentsString( string supportedAttachmentsString )
+{
+	array<string> supportedAttachments = split( supportedAttachmentsString, WHITESPACE_CHARACTERS )
+	supportedAttachments.sort(
+		int function( string attachmentA, string attachmentB ) : ()
+		{
+			int aIndex = attachmentSortOrder.find( attachmentA )
+			int bIndex = attachmentSortOrder.find( attachmentB )
+			if ( aIndex > bIndex )
+				return 1
+			else if ( aIndex < bIndex )
+				return -1
+
+			return 0
+		}
+	)
+	return supportedAttachments
+}
 
 table< string, LootData > function SURVIVAL_Loot_GetLootDataTable()
 {
@@ -857,6 +879,15 @@ bool function SURVIVAL_Loot_IsLootIndexValid( int index )
 
 LootData function SURVIVAL_Loot_GetLootDataByRef( string ref )
 {
+	#if SERVER || CLIENT
+		if ( ref == "" )
+		{
+			                                                                                             
+			                                                                                    
+			string stack = GetStack(3)
+			ForceScriptError("Calling SURVIVAL_Loot_GetLootDataByRef with empty string from " + stack)
+		}
+	#endif                    
 	return file.lootData[ ref ]
 }
 
@@ -959,7 +990,7 @@ vector function GetRarityColor( entity ent )
                                                        
                                                        
                                                                            
-                                              
+                                            
                                                     
 #endif
 
@@ -991,8 +1022,8 @@ vector function GetFXRarityColorForTier( int tier )
 			                         
 				                           
 
-			                        
-				                          
+			                      
+				                        
 
 			        
 				                      
@@ -1028,8 +1059,8 @@ vector function GetFXRarityColorForUnlockable( int tier )
 			                         
 				                           
 
-			                        
-				                          
+			                      
+				                        
 
 			        
 				                      
@@ -1117,54 +1148,26 @@ string function SURVIVAL_Loot_GetDesc( LootData data, entity forPlayer )
 		result = Localize( "#HUD_LOOT_WITH_PASSIVE_DESC", result, Localize( passiveName ).toupper(), Localize( passiveDesc ) )
 	}
 
-	                                                                                                                
-	                                                                                                                    
-	                                         
-	                                                                                      
-	if ( data.ref == "health_pickup_ultimate"
-	&& IsValid( forPlayer )
-	&& LoadoutSlot_IsReady( ToEHI( forPlayer ), Loadout_Character() )
-	&& ItemFlavor_GetAsset( LoadoutSlot_GetItemFlavor( ToEHI( forPlayer ), Loadout_Character() ) ) == $"settings/itemflav/character/loba.rpak" )
+	                
+	foreach ( func in file.editLootDescCallbacks )
 	{
-		return Localize( "#SURVIVAL_PICKUP_HEALTH_ULTIMATE_HINT_LOBA" )
+		result = func( data.ref, forPlayer, result )
 	}
 
-                 
-	                                                                                           
-	if ( SURVIVAL_Loot_GetLootDataByRef( data.ref ).lootType == eLootType.INCAPSHIELD
-	&& IsValid( forPlayer )
-	&& LoadoutSlot_IsReady( ToEHI( forPlayer ), Loadout_Character() )
-	&& ItemFlavor_GetAsset( LoadoutSlot_GetItemFlavor( ToEHI( forPlayer ), Loadout_Character() ) ) == $"settings/itemflav/character/newcastle.rpak" )
-	{
-		#if CLIENT
-		                                                                          
-		if (Crafting_IsPlayerAtWorkbench(forPlayer))
-			return result
-		#endif
-		string desc = ""
-		switch( data.ref )
-		{
-			case "incapshield_pickup_lv1":
-				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV1_HINT_NEWCASTLE" )
-				break
-			case "incapshield_pickup_lv2":
-				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV2_HINT_NEWCASTLE" )
-				break
-			case "incapshield_pickup_lv3":
-				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV3_HINT_NEWCASTLE" )
-				break
-			case "incapshield_pickup_lv4_selfrevive":
-				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV4_HINT_NEWCASTLE" )
-				break
-			default:
-				desc = Localize( "#SURVIVAL_PICKUP_INCAPSHIELD_LV1_HINT_NEWCASTLE" )
-				break
-		}
-		return desc
-	}
-      
 	return result
 }
+
+void function AddCallback_EditLootDesc( string functionref( string, entity, string ) callback )
+{
+	Assert( !file.editLootDescCallbacks.contains( callback ), "Tried to add a callback that was already added" )
+	file.editLootDescCallbacks.append( callback )
+}
+void function RemoveCallback_EditLootDesc( string functionref( string, entity, string ) callback )
+{
+	Assert( file.editLootDescCallbacks.contains( callback ), "Tried to remove a callback that was not added" )
+	file.editLootDescCallbacks.fastremovebyvalue( callback )
+}
+
 #endif
 
 
@@ -1347,8 +1350,6 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 
 	                                   
 	 
-		                            
-
 		                                                             
 
 		                                                                                                           
@@ -1360,10 +1361,10 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 		                                                                                                                              
 		                                                        
 		                    
-		                                                         
+		                                                                                  
 			        
 		    
-			                                                           
+			                                                                                    
 
 		                                                                                                                   
 
@@ -1371,10 +1372,10 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 		                                                                                                                    
 		                                                                  
 		               
-		                                                                       
+		                                                                             
 			        
 		    
-			                                                 
+			                                                                          
 
 		                                                                                                    
 
@@ -1382,30 +1383,30 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 		                                                                                                                      
 		                                                                        
 		                
-		                                                                        
+		                                                                              
 			        
 		    
-			                                                   
+			                                                                            
 
 		                                                                                                       
 
 		                                                                                                                        
 		                                                                          
 		                 
-		                                                                         
+		                                                                              
 			        
 		    
-			                                                     
+			                                                                              
 
 		                                                                                                          
 
 		                                                                                                                                
 		                                                                                
 		                     
-		                                                                             
+		                                                                                   
 			        
 		    
-			                                                             
+			                                                                                      
 
 		                                                                                                                      
 		                                                                                                                                      
@@ -1413,10 +1414,10 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 		                                                                                                                                  
 		                                                                                 
 		                      
-		                                                                              
+		                                                                                    
 			        
 		    
-			                                                               
+			                                                                                        
 
 		                                                                                                                         
 		                                                                                                                                        
@@ -1424,10 +1425,10 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 		                                                                                                                                
 		                                                                                
 		                     
-		                                                                             
+		                                                                                   
 			        
 		    
-			                                                             
+			                                                                                      
 
 		                                                                                                                      
 		                                                                                                                                      
@@ -1535,7 +1536,6 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 
  
 
-                         
                                                                  
  
 	                                   
@@ -1554,7 +1554,6 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 	                                                                
 	                                                                    
  
-      
 
                                                                                             
  
@@ -1585,7 +1584,6 @@ void function HAS_DEATHBOX_OVERRIDE_OnUserInfoUpdated( string hardware, string i
 	                                       
  
 #endif                     
-
                                    
 
 bool function IsDeathboxAutoPickupEnabled()
@@ -1786,6 +1784,26 @@ void function SURVIVAL_Loot_InitRestrictedLoot()
 				file.restrictedLootInfo[ eRestrictedLootTypes.SPECTRE_SHACK ].dialogPopupHeader = "#LOBA_ULT_BLACK_MARKET_SMARTLOOT_CONFIRM_HEADER"
 				file.restrictedLootInfo[ eRestrictedLootTypes.SPECTRE_SHACK ].dialogPopupAreYouSure = "#LOBA_ULT_BLACK_MARKET_SMARTLOOT_CONFIRM_BODY"
 				file.restrictedLootInfo[ eRestrictedLootTypes.SPECTRE_SHACK ].dialogPopupDeny = "#LOBA_ULT_BLACK_MARKET_SMARTLOOT_DENY_BODY"
+			#endif
+        
+	}
+
+	{
+		RestrictedLootInfo emptyLoot
+                              
+			                  
+			file.restrictedLootInfo[ eRestrictedLootTypes.EXPLOSIVE_HOLDS ] <- emptyLoot
+			#if SERVER || CLIENT
+				file.restrictedLootInfo[ eRestrictedLootTypes.EXPLOSIVE_HOLDS ].getRestrictedPanel = GetExplosiveHoldProxyForLoot
+				file.restrictedLootInfo[ eRestrictedLootTypes.EXPLOSIVE_HOLDS ].isRestrictedPanelLocked = IsPanelWithGradeFlagsLocked
+			#endif
+			#if SERVER
+				                                                                                                                                              
+			#endif
+			#if UI
+				file.restrictedLootInfo[ eRestrictedLootTypes.EXPLOSIVE_HOLDS ].dialogPopupHeader = "#LOBA_ULT_BLACK_MARKET_EXPLOSIVEHOLD_CONFIRM_HEADER"
+				file.restrictedLootInfo[ eRestrictedLootTypes.EXPLOSIVE_HOLDS ].dialogPopupAreYouSure = "#LOBA_ULT_BLACK_MARKET_EXPLOSIVEHOLD_CONFIRM_BODY"
+				file.restrictedLootInfo[ eRestrictedLootTypes.EXPLOSIVE_HOLDS ].dialogPopupDeny = "#LOBA_ULT_BLACK_MARKET_EXPLOSIVEHOLD_DENY_BODY"
 			#endif
         
 	}

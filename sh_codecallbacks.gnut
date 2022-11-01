@@ -6,6 +6,8 @@ global function CodeCallback_CanUseEntity
 global function ClearCallback_CanUseEntityCallback
 global function SetCallback_CanUseEntityCallback
 global function CodeCallback_CanUseZipline
+global function CodeCallback_ShouldUseBlockReload
+global function SetCallback_ShouldUseBlockReloadCallback
 global function CodeCallback_PlayerClassChanged
 global function CodeCallback_OnUseEntity
                                          
@@ -76,6 +78,9 @@ global function CodeCallback_GivePlayerDoubleJump
 global function AddCallback_GivePlayerDoubleJump
 global function RemoveCallback_GivePlayerDoubleJump
 
+global function CodeCallback_OnWeaponAttack
+global function AddCallback_OnWeaponAttack
+global function RemoveCallback_OnWeaponAttack
 
 struct
 {
@@ -196,6 +201,24 @@ bool function CodeCallback_CanUseEntity( entity player, entity ent, int useFlags
 	return true
 }
 
+void function ClearCallback_ShouldUseBlockReloadCallback( entity ent, bool functionref( entity, entity ) callbackFunc )
+{
+	ent.e.shouldUseBlockReloadCallback = null
+}
+
+void function SetCallback_ShouldUseBlockReloadCallback( entity ent, bool functionref( entity, entity ) callbackFunc )
+{
+	Assert( ent.e.shouldUseBlockReloadCallback == null )
+	ent.e.shouldUseBlockReloadCallback = callbackFunc
+}
+
+bool function CodeCallback_ShouldUseBlockReload( entity player, entity ent )
+{
+	if ( ent.e.shouldUseBlockReloadCallback != null )
+		return ent.e.shouldUseBlockReloadCallback( player, ent )
+
+	return true;
+}
 
 const float ZIPLINE_MAX_USE_ANGLE = 35.0
 bool function CodeCallback_CanUseZipline( entity player, entity zipline, vector ziplineClosestPoint )
@@ -627,8 +650,8 @@ void function AddCallback_CanStartCustomWeaponActivity( int activity, bool funct
 	s_callbacksCanStartCustomWeaponActivity[activity].append( func )
 }
 
-array <void functionref( entity )> s_callbacksOnPassThrough
-void function AddCallback_OnPassThrough( void functionref( entity hitEnt ) func )
+array <void functionref( entity, entity, vector )> s_callbacksOnPassThrough
+void function AddCallback_OnPassThrough( void functionref( entity owner, entity hitEnt, vector hitPos ) func )
 {
 	Assert( !s_callbacksOnPassThrough.contains( func ) )
 	s_callbacksOnPassThrough.append( func )
@@ -693,11 +716,11 @@ bool function CodeCallback_CanStartCustomWeaponActivity( entity player, int acti
 }
 
 
-string function CodeCallback_CheckPassThroughAddsMods( entity player, entity hitEnt, entity passingEntOrWeapon, string currWeaponName, array<string> currMods )
+string function CodeCallback_CheckPassThroughAddsMods( entity player, entity hitEnt, entity passingEntOrWeapon, string currWeaponName, array<string> currMods, vector hitPos )
 {
 	foreach ( func in s_callbacksOnPassThrough )
 	{
-		func( hitEnt )
+		func( player, hitEnt, hitPos )
 	}
 
 	if ( !IsValid( player ) )
@@ -849,4 +872,42 @@ void function RemoveCallback_GivePlayerDoubleJump( void functionref( entity play
 		if( clGlobal.givePlayerDoubleJumpCallbacks.contains( func ) )
 			clGlobal.givePlayerDoubleJumpCallbacks.fastremovebyvalue( func )
 	#endif
+}
+
+void function CodeCallback_OnWeaponAttack( entity player, entity weapon, string weaponName, int ammoUsed, vector attackOrigin, vector attackDir )
+{
+	#if SERVER
+		                                                                                   
+		                                                            
+		 
+			                                                                             
+		 
+	#else              
+		foreach ( callbackFunc in clGlobal.onWeaponAttackCallbacks )
+		{
+			callbackFunc( player, weapon, weaponName, ammoUsed, attackOrigin, attackDir )
+		}
+	#endif                       
+}
+
+void function AddCallback_OnWeaponAttack( void functionref( entity player, entity weapon, string weaponName, int ammoUsed, vector attackOrigin, vector attackDir ) callbackFunc )
+{
+	#if SERVER
+		                                                                                                               
+		                                                       
+	#else              
+		Assert( !clGlobal.onWeaponAttackCallbacks.contains( callbackFunc ), "Already added " + string( callbackFunc ) )
+		clGlobal.onWeaponAttackCallbacks.append( callbackFunc )
+	#endif                       
+}
+
+void function RemoveCallback_OnWeaponAttack( void functionref( entity player, entity weapon, string weaponName, int ammoUsed, vector attackOrigin, vector attackDir ) callbackFunc )
+{
+	#if SERVER
+		                                                                                                                            
+		                                                                  
+	#else              
+		Assert( clGlobal.onWeaponAttackCallbacks.contains( callbackFunc ), "Callback " + string( callbackFunc ) + " doesn't exist" )
+		clGlobal.onWeaponAttackCallbacks.fastremovebyvalue( callbackFunc )
+	#endif                       
 }

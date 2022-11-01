@@ -708,6 +708,7 @@ void function OnVaultPanelUse( entity panel, entity playerUser, int useInputFlag
 		                            
 		                               
 		                             
+		                                    
 	#endif         
 
 	thread ExtendedUse( panel, playerUser, settings )
@@ -1228,7 +1229,7 @@ entity function GetVaultPanelForLoot( entity lootEnt )
 	                  
 	 
 		                                                                                        
-		                                                                            
+		                                                                        
 
 		                                             
 			                                                                                   

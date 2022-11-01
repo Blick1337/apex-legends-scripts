@@ -26,16 +26,16 @@ const float MISSILE_SPEED = 1600
 const float MISSILE_APEX_HEIGHT = 400
 const float GRENADE_LOB_TIME = 0.75
 
-const float STUN_DURATION = 2.5
+const float STUN_DURATION = 2.0
 const float STUN_EASEOUT = 1.5
 
 const float STUN_MOVESLOW = 0.5
-const float STUN_TURNSLOW = 0.7
+const float STUN_TURNSLOW = 0.0
 
 const float EXPLOSION_DAMAGE = 25
 const float EXPLOSION_FOLLOWUP_FACTOR = 0.15                                                                    
 const float EXPLOSION_FOLLOWUP_TIME = 5                                                                          
-const float EXPLOSION_RADIUS = 170
+const float EXPLOSION_RADIUS = 125
 
 const float IN_ROW_DELAY = 0.05
 const float ROW_TO_ROW_DELAY = 0.3
@@ -168,7 +168,7 @@ void function MpAbilityValkClusterMissile_Init()
 		                                          
 		 
 			                                                
-			                                                                                                       
+			                                                                                                                                                                     
 			                        
 		 
 	 
@@ -971,7 +971,7 @@ void function OnProjectileCollision_ability_valk_cluster_missile( entity project
 		                                             
 			      
 
-		                               
+		                                                                             
 		                               
 		                                    
 

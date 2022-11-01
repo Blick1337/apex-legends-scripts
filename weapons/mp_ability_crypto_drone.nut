@@ -102,8 +102,9 @@ const float NEUROLINK_VIEW_MINDOT_BUFFED = 120.0
 const int CRYPTO_DRONE_HEALTH_PROJECTILE = 50
 const float CRYPTO_DRONE_STICK_RANGE = 670.0
 
-const vector CRYPTO_DRONE_HULL_TRACE_MIN	= <-6, -6, 0>
-const vector CRYPTO_DRONE_HULL_TRACE_MAX	= <6, 6, 12>
+                                            
+const vector CRYPTO_DRONE_HULL_TRACE_MIN	= <-14, -14, 0>
+const vector CRYPTO_DRONE_HULL_TRACE_MAX	= <14, 14, 14>
 
 const asset CRYPTO_DRONE_SIGHTBEAM_FX = $"P_BT_scan_SML_no_streaks"
                                                                       
@@ -832,7 +833,7 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 			 
 		 
                     
-		                                                                                                      
+		                                                                                         
 		 
 			                                                             
 			 
@@ -840,6 +841,14 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 				              
 			 
 		 
+                          
+                                                                                        
+   
+
+                                        
+                 
+   
+        
 
 		              
 		 
@@ -982,7 +991,16 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 		                           
 
 		                                                  
-		                                                                                                             
+
+		                                                                                                                                                                                                                                                                    
+		                                                                                                                                                                                                                                                                                           
+		                                            
+
+		                                                                                                                                               
+		                                                           
+			                     
+
+		                                                                                                       
 
 		                        
 		 
@@ -1753,8 +1771,16 @@ void function CryptoDrone_WeaponInputThink( entity player, entity weapon )
 					                                            
 					                                                     
 
-					                                                             
-					                                                                                  
+					                                                  
+					 
+						                                                             
+						                                                                                                                                                          
+					 
+					    
+					 
+						                                                             
+						                                                                                  
+					 
 
 					                                                                                          
 					                                                                                                         
@@ -2076,7 +2102,7 @@ void function Camera_OnBeginView_Think( entity player, int statusEffect, bool ac
 	                                              
 	  	                                             
 
-	                                                                                                                                                     
+	                                                                                                                                                                       
 	                                                                         
 	                               
       
@@ -2187,15 +2213,18 @@ void function Camera_OnEndView( entity player, int statusEffect, bool actuallyCh
 		                                              
 		  	                                             
 
-		                                                                                                                                               
+		                                                                                                                                                                 
 		                                                                         
 		                               
        
 
 	                                    
 
-	RuiDestroyIfAlive( file.cameraRui )
-	file.cameraRui = null
+	if ( file.cameraRui != null )
+	{
+		RuiDestroyIfAlive( file.cameraRui )
+		file.cameraRui = null
+	}
 }
 
 
@@ -2281,7 +2310,7 @@ void function TempUpdateRuiDistance( entity player )
 					entity cockpit = player.GetCockpit()
 					if ( IsValid( cockpit ) )
 					{
-						activeCamera.e.cameraMaxRangeFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( CAMERA_MAX_RANGE_SCREEN_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+						activeCamera.e.cameraMaxRangeFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( CAMERA_MAX_RANGE_SCREEN_FX ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 						EffectSetIsWithCockpit( activeCamera.e.cameraMaxRangeFXHandle, true )
 					}
 				}
@@ -2342,7 +2371,7 @@ void function TempUpdateRuiDistance( entity player )
 				{
 					targetString = "#CAMERA_HOLD_INTERACT_LORE_MESSAGE"
 				}
-				else if ( trace.hitEnt.GetScriptName() == SURVEY_BEACON_SCRIPTNAME )
+				else if ( SurveyBeacon_IsSurveyBeacon( trace.hitEnt ) )
 				{
 					if ( ControlPanel_CanUseFunction( player, trace.hitEnt, 0 ) )
 					{
@@ -2352,6 +2381,12 @@ void function TempUpdateRuiDistance( entity player )
 							targetString = "#CAMERA_INTERACT_SURVEY_BEACON"
 					}
 				}
+                            
+                                                                                          
+     
+                                                  
+     
+          
 
 				if ( (targetString != "") && useInputPressed )
 					RuiSetGameTime( file.cameraRui, "playerAttemptedUse", Time() )
@@ -2458,11 +2493,11 @@ bool function PlayerCanUseCamera( entity ownerPlayer, bool needsValidCamera )
 	                                                                
  
 
-                                                  
+                                                                                                          
  
 	                                                            
 
-	                             
+	                                         
  
 
                                                             
@@ -2613,6 +2648,16 @@ bool function PlayerCanUseCamera( entity ownerPlayer, bool needsValidCamera )
 				        
 			 
 
+                        
+                                                            
+             
+         
+
+                   
+				                                                                       
+					        
+         
+
 			                                                             
 			                                                                                                
 
@@ -2651,7 +2696,19 @@ bool function PlayerCanUseCamera( entity ownerPlayer, bool needsValidCamera )
 			 
 
 			                                          
-				        
+			 
+				                           
+                         
+                                        
+                          
+          
+                    
+					                                                                     
+						                     
+          
+				                     
+					        
+			 
 
 			                                                              
 			                                          
@@ -2659,11 +2716,22 @@ bool function PlayerCanUseCamera( entity ownerPlayer, bool needsValidCamera )
 
 			                                        
 			 
+                         
+                                                                                                   
+         
 				                                                             
+          
 				 
 					                                                                      
 					                                       
 				 
+                    
+				                                                                           
+				 
+					                                                                      
+					                                       
+				 
+          
 			 
 		 
 		           
@@ -2753,7 +2821,7 @@ bool function PlayerCanUseCamera( entity ownerPlayer, bool needsValidCamera )
 
 		                                      
 		 
-			                                           
+			                                                           
 				                                      
 		 
 
@@ -2766,19 +2834,19 @@ bool function PlayerCanUseCamera( entity ownerPlayer, bool needsValidCamera )
 	                       
  
 
-                                                                     
+                                                                                  
  
-	                                                                                                             
- 
-
-                                                                      
- 
-	                                                                                                              
+	                                                                                                         
  
 
-                                                                      
+                                                                                    
  
-	                                                                                                              
+	                                                                                                          
+ 
+
+                                                                                    
+ 
+	                                                                                                          
  
 
                                                       
@@ -2977,19 +3045,19 @@ var function GetCameraCircleStatusRui()
 	return file.cameraCircleStatusRui
 }
 
-var function CreateCameraCircleStatusRui()
+void function CreateCameraCircleStatusRui()
 {
                            
-		if ( IsDeathTriggerGameMode() )
-		{
-			file.cameraCircleStatusRui = CreateFullscreenRui( $"ui/camera_circle_status_death_trigger.rpak" )
-		}
-		else
-		{
-			file.cameraCircleStatusRui = CreateFullscreenRui( $"ui/camera_circle_status.rpak" )
-		}
+                                 
+   
+                                                                                                    
+   
       
-                                                                                     
+   
+                                                                                      
+   
+      
+		file.cameraCircleStatusRui = CreateFullscreenRui( $"ui/camera_circle_status.rpak" )
        
 	entity localViewPlayer = GetLocalViewPlayer()
 	RuiTrackFloat( file.cameraCircleStatusRui, "deathfieldDistance", localViewPlayer, RUI_TRACK_DEATHFIELD_DISTANCE )
@@ -2997,7 +3065,6 @@ var function CreateCameraCircleStatusRui()
                                 
 		RuiSetBool( file.cameraCircleStatusRui, "cryptoHudUpdate", true )
        
-	return file.cameraCircleStatusRui
 }
 
 void function DestroyCameraCircleStatusRui()
@@ -3035,8 +3102,6 @@ void function UpdateCryptoAnimatedTacticalRui()
 		RuiSetFloat( file.cryptoAnimatedTacticalRui, "maxFlightRange", MAX_FLIGHT_RANGE )
 		RuiTrackFloat( file.cryptoAnimatedTacticalRui, "bleedoutEndTime", localViewPlayer, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
 		RuiTrackFloat( file.cryptoAnimatedTacticalRui, "reviveEndTime", localViewPlayer, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "reviveEndTime" ) )
-		RuiTrackFloat( file.cryptoAnimatedTacticalRui, "silencedTimeRemaining", localViewPlayer, RUI_TRACK_STATUS_EFFECT_TIME_REMAINING, eStatusEffect.silenced )
-		RuiSetFloat( file.cryptoAnimatedTacticalRui, "silenceEffectDuration", Silence_GetEffectDuration() )
 
 		entity offhandWeapon = localViewPlayer.GetOffhandWeapon( OFFHAND_LEFT )
 		if ( IsValid( offhandWeapon ) )

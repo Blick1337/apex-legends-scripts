@@ -17,10 +17,25 @@ global function ServerCallback_Survival_PlayCrowdEvent
 global function ServerCallback_Survival_NewKillLeader
 global function ServerCallback_Survival_HighlightedPlayerKilled
 
+global function SurvivalCommentary_SetStringCallback
+global function SurvivalCommentary_GetCommentaryString
+
                           
 global function ServerCallback_AnnouncePlayerBreaksEnemyShield
       
 
+global enum eSurvivalCommentary_SringtoPrint
+{
+	NEWKILLLEADER_OBIT
+	YOUAREKILLLEADER
+	CHAMPION_OBIT
+	YOUKILLED_CHAMPION
+	KILLLEADER_OBIT
+	KILLLEADER_KILLS
+	YOUKILLED_KILLLEADER
+	BROKE_SHIELD
+
+}
 struct
 {
 	array<EnvironmentSpeaker> speakers
@@ -45,6 +60,8 @@ struct
 
 	bool didPlayerPlacementReview = false
 	bool isEnabled = false
+
+	string functionref(int) getCommentaryString
 } file
 
 bool function SurvivalCommentary_IsEnabled()
@@ -72,6 +89,7 @@ void function ClSurvivalCommentary_Init()
 
 	AddCallback_KillReplayStarted( KillReplayStarted )
 	AddCallback_KillReplayEnded( KillReplayEnded )
+	SurvivalCommentary_SetStringCallback( SurvivalCommentary_GetCommentaryString )
 
 	FlagInit( "KillReplayStarted" )
 	FlagInit( "KillReplayComplete" )
@@ -491,6 +509,56 @@ void function Dev_Survival_InfoMessageAndCrashDelayed()
 	Assert( false )
 }
 
+void function SurvivalCommentary_SetStringCallback(string functionref ( int ) stringCallback )
+{
+	file.getCommentaryString = stringCallback
+	printt("SurvivalCommentary_SetStringCallback called - Shicks" )
+}
+
+string function SurvivalCommentary_GetCommentaryString( int infoId )
+{
+	string retVal = ""
+	switch ( infoId )
+	{
+		case eSurvivalCommentary_SringtoPrint.NEWKILLLEADER_OBIT:
+			retVal = "#SURVIVAL_NEWKILLLEADER_OBIT"
+			break
+
+		case eSurvivalCommentary_SringtoPrint.YOUAREKILLLEADER:
+			retVal = "#SURVIVAL_YOUAREKILLLEADER"
+			break
+
+		case eSurvivalCommentary_SringtoPrint.CHAMPION_OBIT:
+			retVal = "#SURVIVAL_CHAMPION_OBIT"
+			break
+
+		case eSurvivalCommentary_SringtoPrint.YOUKILLED_CHAMPION:
+			retVal = "#SURVIVAL_YOUKILLED_CHAMPION"
+			break
+
+		case eSurvivalCommentary_SringtoPrint.KILLLEADER_OBIT:
+			retVal = "#SURVIVAL_KILLLEADER_OBIT"
+			break
+
+		case eSurvivalCommentary_SringtoPrint.KILLLEADER_KILLS:
+			retVal = "#SURVIVAL_KILLLEADERKILLS"
+			break
+
+		case eSurvivalCommentary_SringtoPrint.YOUKILLED_KILLLEADER:
+			retVal = "#SURVIVAL_YOUKILLED_KILLLEADER"
+			break
+
+		case eSurvivalCommentary_SringtoPrint.BROKE_SHIELD:
+			retVal = "#CHAT_BROKE_ENEMY_SHIELD"
+			break
+
+		default:
+			Assert(0, "Unsupported Type")
+			break
+	}
+	return retVal
+}
+
 void function ServerCallback_Survival_NewKillLeader( entity killLeader, int numKills )
 {
 	EHI playerEHI = ToEHI( killLeader )
@@ -502,21 +570,21 @@ void function ServerCallback_Survival_NewKillLeader( entity killLeader, int numK
 	string playerName = GetPlayerNameFromEHI( playerEHI )
 	vector playerNameColor = killLeader.GetTeam() == GetLocalViewPlayer().GetTeam() ? GetPlayerInfoColor( killLeader ) : GetKeyColor( COLORID_ENEMY )
 
-	Obituary_Print_Localized( Localize( "#SURVIVAL_NEWKILLLEADER_OBIT", playerName, numKills ), playerNameColor )
+	Obituary_Print_Localized( Localize( file.getCommentaryString( eSurvivalCommentary_SringtoPrint.NEWKILLLEADER_OBIT ), playerName, numKills ), playerNameColor )
 
 	if (GetLocalViewPlayer() == killLeader )
 	{
 		AnnouncementData announcement = Announcement_Create( "" )
 		Announcement_SetStyle( announcement, ANNOUNCEMENT_STYLE_KILL_LEADER )
 		Announcement_SetPurge( announcement, true )
-		Announcement_SetOptionalTextArgsArray( announcement, [Localize("#SURVIVAL_YOUAREKILLLEADER"), Localize( "#SURVIVAL_KILLLEADERKILLS", numKills, GetPlayerInfoColor( killLeader ) ), string( numKills ) ] )
+		                                                                                               
+		Announcement_SetOptionalTextArgsArray( announcement, [Localize(file.getCommentaryString( eSurvivalCommentary_SringtoPrint.YOUAREKILLLEADER )), Localize( file.getCommentaryString( eSurvivalCommentary_SringtoPrint.KILLLEADER_KILLS ), numKills, GetPlayerInfoColor( killLeader ) ), string( numKills ) ] )
 		Announcement_SetPriority( announcement, 200 )
 		Announcement_SetSoundAlias( announcement, SOUND_NEW_KILL_LEADER )
 		announcement.duration = 4.0
 		AnnouncementFromClass( GetLocalViewPlayer(), announcement )
 	}
 }
-
 
 void function ServerCallback_Survival_HighlightedPlayerKilled(entity killedPlayer, entity killer, int playerType)
 {
@@ -533,15 +601,19 @@ void function ServerCallback_Survival_HighlightedPlayerKilled(entity killedPlaye
 
 		if ( playerType == eSurvivalCommentaryPlayerType.CHAMPION )
 		{
-			Obituary_Print_Localized( Localize( "#SURVIVAL_CHAMPION_OBIT", playerName ), playerNameColor )
+			Obituary_Print_Localized( Localize( file.getCommentaryString( eSurvivalCommentary_SringtoPrint.CHAMPION_OBIT ), playerName ), playerNameColor )
+
 			if ( localClientPlayer == killer && killer != killedPlayer )
-				AnnouncementMessageSweep( localClientPlayer, "#SURVIVAL_YOUKILLED_CHAMPION", Localize( killedPlayer.GetPlayerName() ), GetPlayerInfoColor( killedPlayer ) )
+			{
+				AnnouncementMessageSweep( localClientPlayer, file.getCommentaryString( eSurvivalCommentary_SringtoPrint.YOUKILLED_CHAMPION ), Localize( killedPlayer.GetPlayerName() ), GetPlayerInfoColor( killedPlayer ) )
+			}
 		}
 		else if ( playerType == eSurvivalCommentaryPlayerType.KILLLEADER )
 		{
-			Obituary_Print_Localized( Localize( "#SURVIVAL_KILLLEADER_OBIT", playerName ), playerNameColor )
+			Obituary_Print_Localized( Localize( file.getCommentaryString( eSurvivalCommentary_SringtoPrint.KILLLEADER_OBIT ), playerName ), playerNameColor )
+
 			if ( localClientPlayer == killer && killer != killedPlayer )
-				AnnouncementMessageSweep( localClientPlayer, "#SURVIVAL_YOUKILLED_KILLLEADER", Localize( killedPlayer.GetPlayerName() ), GetPlayerInfoColor( killedPlayer ) )
+				AnnouncementMessageSweep( localClientPlayer, file.getCommentaryString( eSurvivalCommentary_SringtoPrint.YOUKILLED_KILLLEADER ), Localize( killedPlayer.GetPlayerName() ), GetPlayerInfoColor( killedPlayer ) )
 		}
 	}
 }
@@ -552,7 +624,7 @@ void function ServerCallback_AnnouncePlayerBreaksEnemyShield( entity playerBroke
 	ItemFlavor char = LoadoutSlot_GetItemFlavor( ToEHI( playerBroken ), Loadout_Character() )
 	string name = Localize( ItemFlavor_GetShortName( char ) )
 
-	string locText = Localize( "#CHAT_BROKE_ENEMY_SHIELD", name )
+	string locText = Localize( file.getCommentaryString( eSurvivalCommentary_SringtoPrint.BROKE_SHIELD ), name )
 	Obituary_Print_Localized( locText , OBITUARY_COLOR_ENEMY )
 }
       

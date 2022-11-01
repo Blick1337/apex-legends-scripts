@@ -15,9 +15,11 @@
 
                                                                                    
 
+                                                    
                                                    
 
                                                     
+                                                      
 #endif
 
 #if SERVER && DEV
@@ -33,6 +35,9 @@ global function ServerCallback_SetCommsDialogueEnabled
 
 const string RESPAWN_CHAMBER_TARGET_NAME = "TrainingRespawnChamber"
 global const string DEATH_BOX_TARGETNAME_TRAINING = "player_death_box_training"
+global const string FIRINGRANGE_PLAYLIST_NAME = "survival_firingrange"
+
+const string SURVIVAL_TRAINING_MOVER_SCRIPTNAME = "survival_training_mover"
 
 #if SERVER
                                                                       
@@ -67,7 +72,9 @@ global function Tutorial_TryAction_HealDummy
 global function Tutorial_TryAction_PickUpDNA
 global function Tutorial_TryAction_UsedRespawnChamber
 global function Tutorial_TryAction_UsedUltimate
-
+#if CLIENT
+global function TrainingEndTimeChanged
+#endif
 global function ShSurvivalTraining_Init
 
 struct PlayerTrainingData
@@ -127,6 +134,9 @@ struct
 {
 	table<entity, PlayerTrainingData> playerTrainingData
 	table<entity, entity>             playerUltimateDropPods
+	#if SERVER
+	                                 
+	#endif
 } file
 
 #if DEV
@@ -151,6 +161,7 @@ void function ShSurvivalTraining_Init()
 	AddCallback_EntitiesDidLoad( Training_EntitiesDidLoad )
 
 	Remote_RegisterServerFunction( "ClientCallback_TrainingUsedCommsMenu", "int", 0, 2 )
+	Remote_RegisterServerFunction( "ClientCallback_SetProceedToFiringRange", "bool" )
 
 	#if SERVER
 		                                                  
@@ -475,11 +486,21 @@ void function Training_EntitiesDidLoad()
 	 
 
 	                                                       
-	                                                                                       
+	                                                                           
 	                                                 
 
-	                                                                       
+	                                                           
 	        
+ 
+
+                                   
+ 
+                     
+	                               
+		                                       
+                          
+	
+	                                       
  
 
                                                                                                            
@@ -497,6 +518,20 @@ void function Training_EntitiesDidLoad()
 
 #endif
 
+bool function Training_IsFTUEEnabled()
+{
+	if( !GetConVarBool( "ftue_flow_enabled" ) )
+		return false
+
+	bool ret = false
+	#if CLIENT || UI
+		ret = IsFeatureSuppressed( eFeatureSuppressionFlags.TRAINING_RETURN_TO_LOBBY )
+	#elseif SERVER
+		                               
+	#endif
+	return ret
+}
+
 #if CLIENT
 void function Training_AddPlayer( entity player )
 {
@@ -506,14 +541,34 @@ void function Training_AddPlayer( entity player )
 void function OnLocalClientConnected( entity player )
 {
 	printt( "Training: OnLocalClientConnected", player )
+	Remote_ServerCallFunction( "ClientCallback_SetProceedToFiringRange", Training_IsFTUEEnabled() )
 }
 
 void function TrainingEndTimeChanged( entity player, float new )
 {
 	if ( new > 0 )
 	{
+		if ( GetFirstTimePlayerState() < eNewPlayerState.TRAINING_COMPLETED )
+		{
+			SetFirstTimePlayerState( eNewPlayerState.TRAINING_COMPLETED )
+		}
+
 		var rui = CreateFullscreenRui( $"ui/training_end_countdown.rpak" )
-		RuiSetGameTime( rui, "quitTime", new )
+
+		if ( !AreWeMatchmaking() && Training_IsFTUEEnabled() )
+		{
+			RuiSetGameTime( rui, "quitTime", Time() )
+			RuiSetBool( rui, "countUp", true )
+			                                  
+			StartMatchmakingStandard( FIRINGRANGE_PLAYLIST_NAME )
+		}
+		else if ( !Training_IsFTUEEnabled() )
+		{
+			RuiSetGameTime( rui, "quitTime", new )
+			RuiSetBool( rui, "countUp", false )
+		}
+
+		                                                                                       
 		thread QuitToLobbyDelayed( player, new )
 	}
 }
@@ -522,15 +577,17 @@ void function QuitToLobbyDelayed( entity player, float time )
 {
 	EndSignal( player, "OnDestroy" )
 	wait max( 0, time - Time() )
+
+	if( AreWeMatchmaking() )                                                       
+		CancelMatchmaking()
+
 	ScreenFade( player, 0, 0, 0, 255, 1.5, 5.0, FFADE_OUT )
 	wait 2.0
 	Remote_ServerCallFunction( "ClientCallback_LeaveMatch" )
 }
 #endif
 
-
 #if SERVER
-
                                                                                       
  
 	                                           
@@ -604,7 +661,7 @@ void function QuitToLobbyDelayed( entity player, float time )
 		                         
 			                                                                     
 				                                                          
-			                                                                          
+			                                                                                                                                        
 			                                                          
 			           
 
@@ -615,11 +672,11 @@ void function QuitToLobbyDelayed( entity player, float time )
 			           
 			                                            
 			 
-				                                                                           
+				                                                                                                                                         
 			 
 			    
 			 
-				                                                                 
+				                                                                                                                               
 			 
 
 			                                                           
@@ -628,14 +685,14 @@ void function QuitToLobbyDelayed( entity player, float time )
 		                          
 			                                                                      
 				                                                           
-			                                                                         
+			                                                                                                                                       
 			                                                           
 			           
 
 		                          
 			                                                                      
 				                                                           
-			                                                                        
+			                                                                                                                                      
 			                                                           
 			           
 
@@ -1318,11 +1375,11 @@ void function QuitToLobbyDelayed( entity player, float time )
 	                                                                   
 	                                                                                                                        
 
-	                                                            
-
-	                                            
+	                                                   
 
 	                                                          
+
+	                                            
 
 	                                       
 	             
@@ -1370,6 +1427,8 @@ void function QuitToLobbyDelayed( entity player, float time )
  
 	                              
 
+	                               
+
 	                                                                                                                                                                                                                     
 	                                                                                                 
 	                               
@@ -1378,13 +1437,21 @@ void function QuitToLobbyDelayed( entity player, float time )
 	             
 
 	                                                                           
+	 
+		                              
 		      
+	 
 
 	                                                                                   
 	                                                                                                     
 	                                                                        
 	                                                                                                 
 	             
+
+	                              
+
+	                                                            
+
 	                                                                                           
  
 
@@ -1522,7 +1589,7 @@ void function QuitToLobbyDelayed( entity player, float time )
 	 
 		                     
 		                                             
-	 	
+	 
  
 
                                                                  
@@ -1613,7 +1680,7 @@ void function QuitToLobbyDelayed( entity player, float time )
 
 	                                                                                   
 	                  
-	                                                                           
+	                                                                  
 	        
 	                                                 
 
@@ -1777,7 +1844,7 @@ void function QuitToLobbyDelayed( entity player, float time )
 	                                
 	                                       
 
-	                                                               
+	                                                                                                                               
 	                           
 	                                      
 	                                
@@ -1958,14 +2025,30 @@ void function DisplayRuiForRespawnChamber( entity ent, entity player, var rui, E
 	                                                                                                 
 	             
 
-	                                                                                                     
-
 	        
 
-	                             
-	                                                                      
-	                                                                                                 
-	             
+	                              
+	 
+		                                                                                                 
+		             
+
+		                                                                                                 
+		             
+
+		                                                                                                     
+
+		                                                                                                 
+		             
+	 
+	    
+	 
+		                                                                                                     
+
+		                             
+		                                                                      
+		                                                                                                 
+		             
+	 
 
 	                                    
 
@@ -2486,16 +2569,25 @@ void function ServerCallback_SetCommsDialogueEnabled( int enabled )
 		                                                       
 	 
  
+                                                                                   
+ 
+	                                          
+	 
+		                                   
+	 
+ 
 #endif
 
 #if SERVER && DEV
                                                                                        
  
+	                                               
+	                                                       
+	                                                                           
+
 	                                                 
  
-#endif
 
-#if SERVER && DEV
                                        
  
 	                             

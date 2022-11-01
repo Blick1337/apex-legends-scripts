@@ -19,7 +19,12 @@ void function ShPrecacheSkydiveLauncherAssets()
 		                                                                                  
 		                                                    
 
-		                                                                      
+		                                                                       
 		                                                                 
+
+                  
+		                                                                       
+		                                                                    
+        
 	#endif
 }

@@ -28,11 +28,15 @@ global function SetNestedGladiatorCardOverrideArenasRankedDetails
 #endif          
 
 #if CLIENT || UI
+global function GetBadgeData
 global function CreateNestedGladiatorCardBadge
 #endif
 
 #if UI
 global function SetupMenuGladCard
+#if RTK
+global function SetupMenuGladCardRTK
+#endif
 global function SendMenuGladCardPreviewCommand
 global function SendMenuGladCardPreviewString
 #endif
@@ -43,13 +47,13 @@ global function HideGladiatorCardSidePane
 global function HideGladiatorCardSidePaneThreaded
 global function UpdateRuiWithStatTrackerData
 global function UIToClient_SetupMenuGladCard
+#if RTK
+global function UIToClient_SetupMenuGladCardRTK
+#endif
 global function UIToClient_HandleMenuGladCardPreviewCommand
 global function UIToClient_HandleMenuGladCardPreviewString
 global function OnWinnerDetermined
 global function GetSituationPlayer
-                         
-global function GladCardDebug
-      
 #endif
 
 #if CLIENT && DEV
@@ -102,8 +106,6 @@ global function ShGladiatorCards_OnDevnetBugScreenshot
 
 global const int GLADIATOR_CARDS_NUM_BADGES = 3
 global const int GLADIATOR_CARDS_NUM_TRACKERS = 3
-
-global const float GLADIATOR_CARDS_STAT_TRACKER_MAX_PRECISION = 100.0
 
 global const int GLADIATOR_CARDS_NUM_FRAME_KEY_COLORS = 3
 
@@ -203,11 +205,7 @@ global enum eGladCardPreviewCommandType
 		ARENAS_RANKED_DATA,
        
 	NAME,
-}
-
-enum eStatTrackerValueFormat
-{
-	INTEGER = 0,
+	RANKED_DATA_PREV
 }
 
 #if CLIENT
@@ -299,6 +297,9 @@ global struct NestedGladiatorCardHandle
 	int ornull  rankedScoreOrNull = null
 	int ornull  rankedLadderPosOrNull = null
 	bool ornull rankedForceShowOrNull = null
+
+	int ornull  rankedScoreOrNullPrevSeason = null
+	int ornull  rankedLadderPosOrNullPrevSeason = null
 
                         
 		int ornull  arenasRankedScoreOrNull = null
@@ -446,7 +447,12 @@ void function ShGladiatorCards_LevelShutdown()
 {
 	if ( fileLevel.currentMenuGladCardPanel != null )
 	{
-		RuiDestroyNestedIfAlive( Hud_GetRui( fileLevel.currentMenuGladCardPanel ), fileLevel.currentMenuGladCardArgName )
+#if RTK
+		if ( typeof( fileLevel.currentMenuGladCardPanel ) == "rtk_panel" )
+			RuiDestroyNestedIfAlive( RTKPanel_GetPersistentRui( expect rtk_panel( fileLevel.currentMenuGladCardPanel ) ), fileLevel.currentMenuGladCardArgName )
+		else
+#endif
+			RuiDestroyNestedIfAlive( Hud_GetRui( fileLevel.currentMenuGladCardPanel ), fileLevel.currentMenuGladCardArgName )
 		fileLevel.currentMenuGladCardPanel = null
 		fileLevel.currentMenuGladCardArgName = ""
 	}
@@ -654,6 +660,12 @@ void function SetNestedGladiatorCardOverrideRankedDetails( NestedGladiatorCardHa
 	handle.rankedLadderPosOrNull = ladderPos
 }
 
+void function SetNestedGladiatorCardOverrideRankedDetailsPreviousSeason( NestedGladiatorCardHandle handle, int rankScore,  int ladderPos )
+{
+	handle.rankedScoreOrNullPrevSeason = rankScore
+	handle.rankedLadderPosOrNullPrevSeason = ladderPos
+}
+
                        
 void function SetNestedGladiatorCardOverrideArenasRankedDetails( NestedGladiatorCardHandle handle, int rankScore, int ladderPos )
 {
@@ -681,6 +693,17 @@ GladCardBadgeDisplayData function GetBadgeData( EHI playerEHI, ItemFlavor ornull
 	int tierIndex = badgeData.dataInteger
 	if ( GladiatorCardBadge_GetDynamicTextStatRef( badge ) != "" )
 		tierIndex = 0                                                            
+
+	                                                                                                        
+	if ( string(ItemFlavor_GetAsset( badge )) == ACCOUNT_BADGE_ASSET_PATH_STRING )
+	{
+		if ( badgeData.dataInteger <= ACCOUNT_LEVEL_RUI_SWITCH_0_BASE || GetCurrentPlaylistVarInt( "account_progression_version", 3 ) == 2 )
+			badgeData.ruiAsset = $"ui/gcard_badge_account_t1.rpak"
+		else
+			badgeData.ruiAsset = $"ui/gcard_badge_account_p1.rpak"
+
+		return badgeData
+	}
 
 	array<GladCardBadgeTierData> tierDataList = GladiatorCardBadge_GetTierDataList( badge )
 	if ( tierDataList.isvalidindex( tierIndex ) )
@@ -818,6 +841,19 @@ void function SetupMenuGladCard( var panel, string argName, bool isForLocalPlaye
 	fileLevel.currentMenuGladCardArgName = argName
 	RunClientScript( "UIToClient_SetupMenuGladCard", panel, argName, isForLocalPlayer, false )
 }
+
+#if RTK
+void function SetupMenuGladCardRTK( rtk_panel panel, string argName, bool isForLocalPlayer )
+{
+	fileLevel.currentMenuGladCardPanel = panel
+	fileLevel.currentMenuGladCardArgName = argName
+	if ( CanRunClientScript() )
+		RunClientScript( "UIToClient_SetupMenuGladCardRTK", panel, argName, isForLocalPlayer, false )
+	else
+		printl( "Can't show RTK gladiator card without the client VM!" )
+}
+#endif
+
 #endif
 
 
@@ -887,6 +923,31 @@ void function UIToClient_SetupMenuGladCard( var panel, string argName, bool isFo
 		thread MenuGladCardThread( isForLocalPlayer )
 	}
 }
+
+#if RTK
+void function UIToClient_SetupMenuGladCardRTK( rtk_panel panel, string argName, bool isForLocalPlayer, bool isParentAlreadyDead )
+{
+	if ( !IsValidSignal( "HaltMenuGladCardThread" ) )
+		return
+
+	Signal( fileLevel, "HaltMenuGladCardThread" )
+
+	if ( fileLevel.currentMenuGladCardPanel != null )
+	{
+		CleanupNestedGladiatorCard( fileLevel.currentMenuGladCardHandle, isParentAlreadyDead )
+		fileLevel.currentMenuGladCardPanel = null
+	}
+
+	fileLevel.currentMenuGladCardPanel = panel
+	if ( fileLevel.currentMenuGladCardPanel != null )
+	{
+		var rui = RTKPanel_GetPersistentRui( panel )
+		fileLevel.currentMenuGladCardHandle = CreateNestedGladiatorCard( rui, argName, eGladCardDisplaySituation.MENU_CUSTOMIZE_ANIMATED, eGladCardPresentation.FULL_BOX )
+		thread MenuGladCardThread( isForLocalPlayer )
+	}
+}
+#endif
+
 #endif
 
 
@@ -998,6 +1059,11 @@ void function MenuGladCardThread( bool isForLocalPlayer )
 					SetNestedGladiatorCardOverrideRankedDetails( fileLevel.currentMenuGladCardHandle, mgcpc.dataInteger, mgcpc.index )
 					break
 				}
+				case eGladCardPreviewCommandType.RANKED_DATA_PREV:
+				{
+					SetNestedGladiatorCardOverrideRankedDetailsPreviousSeason( fileLevel.currentMenuGladCardHandle, mgcpc.dataInteger, mgcpc.index )
+					break
+				}
 
                            
 					case eGladCardPreviewCommandType.ARENAS_RANKED_DATA:
@@ -1011,48 +1077,6 @@ void function MenuGladCardThread( bool isForLocalPlayer )
 	}
 }
 #endif
-
-                         
-#if CLIENT
-void function GladCardDebug()
-{
-	printt( "GladCard:" )
-
-	LoadoutEntry characterSlot = Loadout_Character()
-
-	ItemFlavor character = LoadoutSlot_GetItemFlavor( LocalClientEHI(), characterSlot )
-
-	LoadoutEntry skinSlot = Loadout_CharacterSkin( character )
-	ItemFlavor skin       = LoadoutSlot_GetItemFlavor( LocalClientEHI(), skinSlot )
-
-	LoadoutEntry frameSlot = Loadout_GladiatorCardFrame( character )
-	ItemFlavor frame       = LoadoutSlot_GetItemFlavor( LocalClientEHI(), frameSlot )
-
-
-	LoadoutEntry stanceSlot = Loadout_GladiatorCardStance( character )
-	ItemFlavor stance       = LoadoutSlot_GetItemFlavor( LocalClientEHI(), stanceSlot )
-
-
-	LoadoutEntry badge1Slot = Loadout_GladiatorCardBadge( character, 0 )
-	ItemFlavor badge1       = LoadoutSlot_GetItemFlavor( LocalClientEHI(), badge1Slot )
-	int badge1DataInt       = GetPlayerBadgeDataInteger( LocalClientEHI(), badge1, 0, character )
-
-	LoadoutEntry badge2Slot = Loadout_GladiatorCardBadge( character, 1 )
-	ItemFlavor badge2       = LoadoutSlot_GetItemFlavor( LocalClientEHI(), badge2Slot )
-	int badge2DataInt       = GetPlayerBadgeDataInteger( LocalClientEHI(), badge2, 1, character )
-
-
-	LoadoutEntry badge3Slot = Loadout_GladiatorCardBadge( character, 2 )
-	ItemFlavor badge3       = LoadoutSlot_GetItemFlavor( LocalClientEHI(), badge3Slot )
-	int badge3DataInt       = GetPlayerBadgeDataInteger( LocalClientEHI(), badge3, 2, character )
-
-
-	printt( GetPlayerNameFromEHI( LocalClientEHI() ) + "," + ItemFlavor_GetHumanReadableRef( character ) + "," + ItemFlavor_GetHumanReadableRef( skin ) + ","
-	+ ItemFlavor_GetHumanReadableRef( frame ) + "," + ItemFlavor_GetHumanReadableRef( stance ) + "," + ItemFlavor_GetHumanReadableRef( badge1 ) + ","
-	+ badge1DataInt + "," + ItemFlavor_GetHumanReadableRef( badge2 ) + "," + badge2DataInt + "," + ItemFlavor_GetHumanReadableRef( badge3 ) + "," + badge3DataInt )
-}
-#endif              
-                                   
 
 #if CLIENT
 void function UIToClient_HandleMenuGladCardPreviewCommand( int previewType, int index, int guid, int dataInteger )
@@ -1102,7 +1126,7 @@ void function DEV_DumpCharacterCaptures()
 	{
 		printf( "%s -- %s", key, DEV_ArrayConcat( ccs.DEV_culprits ) )
 		printf( "%s, %s, %s, %s, %s, %s", string(FromEHI( ccs.playerEHI )), ccs.isMoving ? "moving" : "still",
-			ItemFlavor_GetHumanReadableRef( ccs.character ), ItemFlavor_GetHumanReadableRef( ccs.skin ), ccs.frameOrNull == null ? "null" : ItemFlavor_GetHumanReadableRef( expect ItemFlavor(ccs.frameOrNull) ), ItemFlavor_GetHumanReadableRef( ccs.stance ) )
+			DEV_ItemFlavor_GetCleanedAssetPath( ccs.character ), DEV_ItemFlavor_GetCleanedAssetPath( ccs.skin ), ccs.frameOrNull == null ? "null" : DEV_ItemFlavor_GetCleanedAssetPath( expect ItemFlavor(ccs.frameOrNull) ), DEV_ItemFlavor_GetCleanedAssetPath( ccs.stance ) )
 	}
 }
 #endif
@@ -1161,10 +1185,12 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		array<ItemFlavor> frameList = RegisterReferencedItemFlavorsFromArray( characterClass, "gcardFrames", "flavor" )
 		MakeItemFlavorSet( frameList, fileLevel.cosmeticFlavorSortOrdinalMap )
 
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "gcard_frame_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "gcard_frames"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " GCard Frame"
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "gcard_frame_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.GCARD_FRAMES
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " GCard Frame"
+		#endif
 		entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_FRAME
 		foreach ( ItemFlavor frame in frameList )
 		{
@@ -1192,19 +1218,21 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		array<ItemFlavor> stanceList = RegisterReferencedItemFlavorsFromArray( characterClass, "gcardStances", "flavor" )
 		MakeItemFlavorSet( stanceList, fileLevel.cosmeticFlavorSortOrdinalMap )
 
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "gcard_stance_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "gcard_stances"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " GCard Stance"
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "gcard_stance_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER	)
+		entry.category     = eLoadoutCategory.GCARD_STANCES
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " GCard Stance"
+		#endif
 		entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_STANCE
-		entry.defaultItemFlavor = stanceList[0]                                                                                           
-		entry.validItemFlavorList = stanceList
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.defaultItemFlavor         = stanceList[0]                                                                                           
+		entry.validItemFlavorList       = stanceList
+		entry.isSlotLocked              = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		entry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
-		entry.networkVarName = "GladiatorCardStance"
+		entry.isActiveConditions        = { [Loadout_Character()] = { [characterClass] = true, }, }
+		entry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
+		entry.networkVarName            = "GladiatorCardStance"
 		#if CLIENT
 			AddCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer( entry, OnGladiatorCardSlotChanged )
 		#endif
@@ -1212,14 +1240,14 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 	}
 
 	array<ItemFlavor> badgeList = RegisterReferencedItemFlavorsFromArray( characterClass, "gcardBadges", "flavor" )
-	#if ASSERTING
+	#if ASSERTS
 	foreach ( int index, ItemFlavor badge in badgeList )
 	{
 		Assert( GladiatorCardBadge_IsTheEmpty( badge ) == (index == 0), "The first (and only the first) badge in the _base character should be the _empty badge." )
 	}
 	#endif
 
-	#if SERVER && ASSERTING
+	#if SERVER && ASSERTS
 		AddCallback_EntitiesDidLoad( void function() : ( badgeList ) {
 			                                                 
 			foreach ( ItemFlavor badge in badgeList )
@@ -1236,17 +1264,13 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 					continue
 				}
 
-				Assert( IsValidStatEntryRef( unlockStatRef ), "Badge '" + ItemFlavor_GetHumanReadableRef( badge ) + "' refers to non-existant stat: '" + unlockStatRef + "'" )
+				Assert( IsValidStatEntryRef( unlockStatRef ), "Badge '" + string(ItemFlavor_GetAsset( badge )) + "' refers to non-existant stat: '" + unlockStatRef + "'" )
 				StatEntry unlockStat = GetStatEntryByRef( unlockStatRef )
-				                                                                                                                                                                                                       
-				if ( (unlockStat.flags & eStatFlags.STORE_START_OF_PREVIOUS_MATCH) == 0 ) Warning( "Badge '" + ItemFlavor_GetHumanReadableRef( badge ) + "' refers to stat that has incorrect flags: '" + unlockStatRef + "'" )
 
 				if ( dynamicTextStatRef != "" )
 				{
-					Assert( IsValidStatEntryRef( dynamicTextStatRef ), "Badge '" + ItemFlavor_GetHumanReadableRef( badge ) + "' refers to non-existant stat: '" + dynamicTextStatRef + "'" )
+					Assert( IsValidStatEntryRef( dynamicTextStatRef ), "Badge '" + string(ItemFlavor_GetAsset( badge )) + "' refers to non-existant stat: '" + dynamicTextStatRef + "'" )
 					StatEntry dynamicTextStat = GetStatEntryByRef( dynamicTextStatRef )
-					                                                                                                                                                                                                                 
-					if ( (dynamicTextStat.flags & eStatFlags.STORE_START_OF_PREVIOUS_MATCH) == 0 ) Warning( "Badge '" + ItemFlavor_GetHumanReadableRef( badge ) + "' refers to stat that has incorrect flags: '" + dynamicTextStatRef + "'" )
 				}
 			}
 		} )
@@ -1258,12 +1282,14 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 
 	for ( int badgeIndex = 0; badgeIndex < GLADIATOR_CARDS_NUM_BADGES; badgeIndex++ )
 	{
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "gcard_badge_" + badgeIndex + "_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "gcard_badges"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " GCard Badge " + badgeIndex
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "gcard_badge_" + badgeIndex + "_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.GCARD_BADGES
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " GCard Badge " + badgeIndex
+		#endif
 		entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_BADGE1 + 2 * badgeIndex
-		entry.validItemFlavorList = badgeList
+		entry.validItemFlavorList       = badgeList
 		if ( badgeIndex == 0 && badgeList.len() > 1 )
 		{
 			entry.defaultItemFlavor = entry.validItemFlavorList[ 1 ]
@@ -1317,18 +1343,17 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 
 		fileLevel.loadoutCharacterBadgesSlotListMap[characterClass].append( entry )
 
-		LoadoutEntry tierEntry = RegisterLoadoutSlot( eLoadoutEntryType.INTEGER, "gcard_badge_" + badgeIndex + "_tier_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		tierEntry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		tierEntry.DEV_category = "gcard_badge_tier"
-		tierEntry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " GCard Badge" + badgeIndex + " Tier"
+		LoadoutEntry tierEntry = RegisterLoadoutSlot( eLoadoutEntryType.INTEGER, "gcard_badge_" + badgeIndex + "_tier_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		tierEntry.category     = eLoadoutCategory.GCARD_BADGE_TIER
+		#if DEV
+			tierEntry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			tierEntry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " GCard Badge" + badgeIndex + " Tier"
+		#endif
 		tierEntry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_BADGE1_TIER + 2 * badgeIndex
-		tierEntry.minInteger = 0
-		tierEntry.maxInteger = INT_MAX
-		tierEntry.defaultInteger = 0
 		                                            
-		tierEntry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		tierEntry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
-		tierEntry.networkVarName = "GladiatorCardBadge" + badgeIndex + "Tier"
+		tierEntry.isActiveConditions        = { [Loadout_Character()] = { [characterClass] = true, }, }
+		tierEntry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
+		tierEntry.networkVarName            = "GladiatorCardBadge" + badgeIndex + "Tier"
 		#if CLIENT
 			                                                                                     
 		#endif
@@ -1340,14 +1365,14 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 	}
 
 	array<ItemFlavor> trackerList = RegisterReferencedItemFlavorsFromArray( characterClass, "gcardStatTrackers", "flavor" )
-	#if ASSERTING
+	#if ASSERTS
 	foreach ( int index, ItemFlavor tracker in trackerList )
 	{
 		Assert( GladiatorCardTracker_IsTheEmpty( tracker ) == (index == 0), "The first (and only the first tracker) in the _base character should be the _empty tracker." )
 	}
 	#endif
 
-	#if SERVER && ASSERTING
+	#if SERVER && ASSERTS
 		AddCallback_EntitiesDidLoad( void function() : ( trackerList, characterClass ) {
 			                                                 
 			foreach ( ItemFlavor tracker in trackerList )
@@ -1357,11 +1382,8 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 
 				string statRef = GladiatorCardStatTracker_GetStatRef( tracker, characterClass )
 				Assert( IsValidStatEntryRef( statRef ),
-					"Stat tracker '" + ItemFlavor_GetHumanReadableRef( tracker ) + "' refers to non-existant stat: '" + statRef + "'. The stat may be missing and pdef needs to be regenerated, the bakery stat may have a spelling error, or there's some bakery data trying to access a stat not loaded based on enabled feature flags." )
+					"Stat tracker '" + string(ItemFlavor_GetAsset( tracker )) + "' refers to non-existant stat: '" + statRef + "'. The stat may be missing and pdef needs to be regenerated, the bakery stat may have a spelling error, or there's some bakery data trying to access a stat not loaded based on enabled feature flags." )
 				StatEntry stat = GetStatEntryByRef( statRef )
-				                                                                    
-				  			                                                                                                                               
-				                                                                                                                                                                                                              
 			}
 		} )
 	#endif
@@ -1372,36 +1394,37 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 
 	for ( int trackerIndex = 0; trackerIndex < GLADIATOR_CARDS_NUM_TRACKERS; trackerIndex++ )
 	{
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "gcard_tracker_" + trackerIndex + "_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "gcard_trackers"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " GCard Tracker " + trackerIndex
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "gcard_tracker_" + trackerIndex + "_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.GCARD_TRACKERS
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " GCard Tracker " + trackerIndex
+		#endif
 		entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_TRACKER1 + 2 * trackerIndex
-		entry.validItemFlavorList = trackerList
-		entry.defaultItemFlavor = entry.validItemFlavorList[ 0 ]
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.validItemFlavorList       = trackerList
+		entry.defaultItemFlavor         = entry.validItemFlavorList[ 0 ]
+		entry.isSlotLocked              = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		entry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
-		entry.networkVarName = "GladiatorCardTracker" + trackerIndex
+		entry.isActiveConditions        = { [Loadout_Character()] = { [characterClass] = true, }, }
+		entry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
+		entry.networkVarName            = "GladiatorCardTracker" + trackerIndex
 		#if CLIENT
 			AddCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer( entry, OnGladiatorCardSlotChanged )
 		#endif
 		fileLevel.loadoutCharacterTrackersSlotListMap[characterClass].append( entry )
 
-		LoadoutEntry valueEntry = RegisterLoadoutSlot( eLoadoutEntryType.INTEGER, "gcard_tracker_" + trackerIndex + "_value_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		valueEntry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		valueEntry.DEV_category = "gcard_tracker_tier"
-		valueEntry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " GCard Tracker" + trackerIndex + " Value"
+		LoadoutEntry valueEntry = RegisterLoadoutSlot( eLoadoutEntryType.INTEGER, "gcard_tracker_" + trackerIndex + "_value_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		valueEntry.category     = eLoadoutCategory.GCARD_TRACKER_TIER
+		#if DEV
+			valueEntry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			valueEntry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " GCard Tracker" + trackerIndex + " Value"
+		#endif
 		valueEntry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_TRACKER1_VALUE + 2 * trackerIndex
-		valueEntry.minInteger = 0
-		valueEntry.maxInteger = INT_MAX
-		valueEntry.defaultInteger = 0
 		                                             
-		valueEntry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		valueEntry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
-		valueEntry.networkVarName = "GladiatorCardTracker" + trackerIndex + "Value"
+		valueEntry.isActiveConditions        = { [Loadout_Character()] = { [characterClass] = true, }, }
+		valueEntry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
+		valueEntry.networkVarName            = "GladiatorCardTracker" + trackerIndex + "Value"
 		#if CLIENT
 			AddCallback_IntegerLoadoutSlotDidChange_AnyPlayer( valueEntry, void function( EHI playerEHI, int value ) : ( trackerIndex ) {
 				OnGladiatorCardStatTrackerValueChanged( playerEHI, value, trackerIndex )
@@ -1507,7 +1530,7 @@ void function OnYouRespawned()
 	                                                             
 
 	                                                                                                                       
-		                                                                                                                       
+		                                                              
 	 
 	                                                                   
 		                                                  
@@ -1626,12 +1649,12 @@ void function ActualUpdateNestedGladiatorCard( NestedGladiatorCardHandle handle 
 						                                           
 						if ( GetGlobalSettingsAsset( ItemFlavor_GetAsset( expect ItemFlavor(stanceOrNull) ), "parentItemFlavor" ) == "" )
 						{
-							Warning( "Attempted to use gladiator card stance - which has NO parentItemFlavor - %s on %s", ItemFlavor_GetHumanReadableRef( expect ItemFlavor(stanceOrNull) ), ItemFlavor_GetHumanReadableRef( character ) )
+							Warning( "Attempted to use gladiator card stance - which has NO parentItemFlavor - %s on %s", string(ItemFlavor_GetAsset( expect ItemFlavor(stanceOrNull) )), string(ItemFlavor_GetAsset( character )) )
 							stanceOrNull = null
 						}
 						else if ( GladiatorCardStance_GetCharacterFlavor( expect ItemFlavor(stanceOrNull) ) != characterOrNull )
 						{
-							Warning( "Attempted to use gladiator card stance %s on %s", ItemFlavor_GetHumanReadableRef( expect ItemFlavor(stanceOrNull) ), ItemFlavor_GetHumanReadableRef( character ) )
+							Warning( "Attempted to use gladiator card stance %s on %s", string(ItemFlavor_GetAsset( expect ItemFlavor(stanceOrNull) )), string(ItemFlavor_GetAsset( character )) )
 							stanceOrNull = null
 						}
 					}
@@ -1684,12 +1707,6 @@ void function ActualUpdateNestedGladiatorCard( NestedGladiatorCardHandle handle 
 		}
 	}
 
-	                                                                                                                                                                 
-	                                                                                                                                                  
-	                                                                                                                                                     
-	                                                                                                                                                        
-
-
 	if ( handle.presentation == eGladCardPresentation.FRONT_STANCE_ONLY )
 	{
 		fgFrameRuiAsset = $"ui/gcard_frame_stance_preview.rpak"
@@ -1698,7 +1715,7 @@ void function ActualUpdateNestedGladiatorCard( NestedGladiatorCardHandle handle 
 	else if ( frameOrNull != null )
 	{
 		ItemFlavor frame = expect ItemFlavor(frameOrNull)
-		frameRpakPath = ItemFlavor_GetHumanReadableRef( frame )
+		frameRpakPath = ItemFlavor_GetCleanDownloadAssetPath_Slow( frame )                                                                                                        
 		if ( frameRpakPath == "gcard_frame__temp" )
 			frameRpakPath = ""
 
@@ -1740,7 +1757,7 @@ void function ActualUpdateNestedGladiatorCard( NestedGladiatorCardHandle handle 
 		}
 		if ( frameRpakPath != "" )
 		{
-			handle.framePakHandleOrNull = RequestPakFile( frameRpakPath, void function() : ( handle ) {
+			handle.framePakHandleOrNull = RequestPakFile( frameRpakPath, TRACK_FEATURE_UI, void function() : ( handle ) {
 				if ( handle.cardRui != null )
 					TriggerNestedGladiatorCardUpdate( handle )
 			} )
@@ -1851,7 +1868,12 @@ void function ActualUpdateNestedGladiatorCard( NestedGladiatorCardHandle handle 
 					int rankScore = handle.rankedScoreOrNull != null ? expect int( handle.rankedScoreOrNull ) : SHARED_RANKED_INVALID_RANK_SCORE
 					int ladderPos = handle.rankedLadderPosOrNull != null ? expect int( handle.rankedLadderPosOrNull ) : SHARED_RANKED_INVALID_LADDER_POSITION
 
+					int rankScorePrev = handle.rankedScoreOrNull != null ? expect int( handle.rankedScoreOrNullPrevSeason ) : SHARED_RANKED_INVALID_RANK_SCORE
+					int ladderPosPrev = handle.rankedLadderPosOrNull != null ? expect int( handle.rankedLadderPosOrNullPrevSeason ) : SHARED_RANKED_INVALID_LADDER_POSITION
+
 					PopulateRuiWithRankedBadgeDetails( handle.cardRui, rankScore, ladderPos )
+					PopulateRuiWithPreviousSeasonRankedBadgeDetails ( handle.cardRui, rankScorePrev, ladderPosPrev )
+
 					showRanked = true
 				}
                            
@@ -1866,19 +1888,38 @@ void function ActualUpdateNestedGladiatorCard( NestedGladiatorCardHandle handle 
           
 				else if ( IsRankedGame() )
 				{
+
 					int rankScore = EEHHasValidScriptStruct( handle.currentOwnerEHI ) ? GetPlayerRankScoreFromEHI( handle.currentOwnerEHI ) : SHARED_RANKED_INVALID_RANK_SCORE
 					int ladderPos = EEHHasValidScriptStruct( handle.currentOwnerEHI ) ? GetPlayerLadderPosFromEHI( handle.currentOwnerEHI ) : SHARED_RANKED_INVALID_LADDER_POSITION
+					int rankScorePrev = EEHHasValidScriptStruct( handle.currentOwnerEHI ) ? GetPlayerRankScorePrevSeasonFromEHI( handle.currentOwnerEHI ) : SHARED_RANKED_INVALID_RANK_SCORE
+					int ladderPosPrev = EEHHasValidScriptStruct( handle.currentOwnerEHI ) ? GetPlayerLadderPosPrevSeasonFromEHI( handle.currentOwnerEHI ) : SHARED_RANKED_INVALID_LADDER_POSITION
+
+					printt ("BadgeDebug playerName: " + playerName)
+					printt ("BadgeDebug rankScore: " + rankScore )
+					printt ("BadgeDebug rankScorePrev: " + rankScorePrev )
+
 					PopulateRuiWithRankedBadgeDetails( handle.cardRui, rankScore, ladderPos )
+					PopulateRuiWithPreviousSeasonRankedBadgeDetails ( handle.cardRui, rankScorePrev, ladderPosPrev )
+
 					showRanked = true
 				}
 
 				RuiSetBool( handle.cardRui, "showRanked", showRanked )
+
+				if (showRanked && FromEHI(handle.currentOwnerEHI) != null && FromEHI(handle.currentOwnerEHI).GetTeam() == GetLocalViewPlayer().GetTeam() )
+				{
+					if (!IsLobby() )
+					{
+						RuiSetBool( handle.cardRui, "showPrevRank", true )
+					}
+				}
 			}
 		}
 
 		if ( handle.situation == eGladCardDisplaySituation.GAME_INTRO_CHAMPION_SQUAD_STILL
 		|| handle.situation == eGladCardDisplaySituation.GAME_INTRO_CHAMPION_SQUAD_ANIMATED )
 		{
+			RuiSetBool( handle.cardRui, "showPrevRank", false )
 			RuiSetInt( handle.cardRui, "teamMemberIndex", -1 )
 			RuiSetBool( handle.cardRui, "isChampion", (handle.currentOwnerEHI == GetGlobalNetInt( "championEEH" )) )
 		}
@@ -1977,8 +2018,8 @@ CharacterCaptureState function GetOrStartCharacterCapture( NestedGladiatorCardHa
 {
 	string key = format( "%d:%s:%s:%s:%s:%s",
 		playerEHI, isMoving ? string(handle) : "still",
-		ItemFlavor_GetHumanReadableRef( character ), ItemFlavor_GetHumanReadableRef( skin ),
-		frameOrNull == null ? "null" : ItemFlavor_GetHumanReadableRef( expect ItemFlavor(frameOrNull) ), ItemFlavor_GetHumanReadableRef( stance ) )
+		ItemFlavor_GetGUIDString( character ), ItemFlavor_GetGUIDString( skin ),
+		frameOrNull == null ? "null" : ItemFlavor_GetGUIDString( expect ItemFlavor(frameOrNull) ), ItemFlavor_GetGUIDString( stance ) )
 	if ( key in fileLevel.ccsMap )
 	{
 		CharacterCaptureState ccs = fileLevel.ccsMap[key]
@@ -2083,11 +2124,11 @@ void function DoGladiatorCardCharacterCapture( CharacterCaptureState ccs )
 	#if DEV
 		if ( fileLevel.DEV_disableCameraAlpha && ccs.frameOrNull != null )
 		{
-			string frameRpakPath     = ItemFlavor_GetHumanReadableRef( expect ItemFlavor( ccs.frameOrNull ) )
+			string frameRpakPath = DEV_ItemFlavor_GetCleanedAssetPath( expect ItemFlavor( ccs.frameOrNull ) )
 
 			if ( frameRpakPath != "gcard_frame__temp" )                                                                       
 			{
-				PakHandle framePakHandle = RequestPakFile( frameRpakPath )
+				PakHandle framePakHandle = RequestPakFile( frameRpakPath, TRACK_FEATURE_UI )
 
 				OnThreadEnd( function() : ( framePakHandle ) {
 					if ( framePakHandle.rpakPath != "" )
@@ -2558,8 +2599,7 @@ void function OnGladiatorCardSlotChanged( EHI playerEHI, ItemFlavor unused )
 #if CLIENT
 void function OnGladiatorCardStatTrackerValueChanged( EHI playerEHI, int value, int trackerIndex )
 {
-	float newVal = float(value) / GLADIATOR_CARDS_STAT_TRACKER_MAX_PRECISION
-	UpdateStatTrackerIndexOfAllNestedGladiatorCardsForPlayer( playerEHI, trackerIndex, newVal )
+	UpdateStatTrackerIndexOfAllNestedGladiatorCardsForPlayer( playerEHI, trackerIndex, value )
 }
 #endif
 
@@ -2581,7 +2621,7 @@ void function TriggerUpdateOfNestedGladiatorCardsForPlayer( entity owner )
 
 
 #if CLIENT
-void function UpdateStatTrackerIndexOfAllNestedGladiatorCardsForPlayer( EHI ownerEHI, int trackerIndex, float newVal )
+void function UpdateStatTrackerIndexOfAllNestedGladiatorCardsForPlayer( EHI ownerEHI, int trackerIndex, int newVal )
 {
 	if ( !(ownerEHI in fileLevel.ownerNestedCardListMap) )
 		return
@@ -2632,8 +2672,7 @@ void function UpdateRuiWithStatTrackerData( var rui, string prefix, EHI playerEH
 	if ( trackerFlavorOrNull == null || GladiatorCardTracker_IsTheEmpty( expect ItemFlavor(trackerFlavorOrNull) ) )
 	{
 		RuiSetString( rui, prefix + "Label", "" )
-		RuiSetFloat( rui, prefix + "Value", 0 )
-		RuiSetInt( rui, prefix + "ValueFormat", 0 )
+		RuiSetInt( rui, prefix + "Value", 0 )
 		RuiSetString( rui, prefix + "ValueSuffix", "" )
 
 		if ( isLootCeremony )
@@ -2647,7 +2686,6 @@ void function UpdateRuiWithStatTrackerData( var rui, string prefix, EHI playerEH
 
 	ItemFlavor trackerFlav = expect ItemFlavor(trackerFlavorOrNull)
 	RuiSetString( rui, prefix + "Label", ItemFlavor_GetShortName( trackerFlav ) )
-	RuiSetInt( rui, prefix + "ValueFormat", GladiatorCardStatTracker_GetValueNumberFormat( trackerFlav ) )
 	RuiSetString( rui, prefix + "ValueSuffix", GladiatorCardStatTracker_GetValueSuffix( trackerFlav ) )
 	RuiSetAsset( rui, prefix + "BackgroundImage", GladiatorCardStatTracker_GetBackgroundImage( trackerFlav ) )
 
@@ -2663,38 +2701,36 @@ void function UpdateRuiWithStatTrackerData( var rui, string prefix, EHI playerEH
 	LoadoutEntry valueEntry
 	if ( characterOrNull != null && trackerIndex != -1 )
 		valueEntry = Loadout_GladiatorCardStatTrackerValue( expect ItemFlavor(characterOrNull), trackerIndex )
-	float value = -1337.0
+	int value = 0
 	if ( playerEHI == LocalClientEHI() && (isLootCeremony || IsLobby() || !IsLoadoutSlotActive( playerEHI, valueEntry )) )
 	{
 		if ( !GladiatorCardTracker_IsTheEmpty( trackerFlav ) )
 		{
 			string desiredStatRef = GladiatorCardStatTracker_GetStatRef( trackerFlav, expect ItemFlavor(characterOrNull) )
 			StatEntry desiredStat = GetStatEntryByRef( desiredStatRef )
-			value = float( GetStat_Int( GetLocalClientPlayer(), desiredStat, eStatGetWhen.START_OF_CURRENT_MATCH ) )
+			value = GetStat_Int( GetLocalClientPlayer(), desiredStat, eStatGetWhen.START_OF_CURRENT_MATCH )
 		}
 	}
 	else
 	{
-		int intValue
 		if ( overrideDataIntegerOrNull != null )
 		{
-			intValue = expect int(overrideDataIntegerOrNull)
+			value = expect int(overrideDataIntegerOrNull)
 		}
 		else
 		{
-			intValue = LoadoutSlot_GetInteger( playerEHI, valueEntry )
+			value = LoadoutSlot_GetInteger( playerEHI, valueEntry )
 		}
-		value = float(intValue) / GLADIATOR_CARDS_STAT_TRACKER_MAX_PRECISION
 	}
-	RuiSetFloat( rui, prefix + "Value", value )
+	RuiSetInt( rui, prefix + "Value", value )
 }
 #endif
 
 
 #if CLIENT
-void function UpdateRuiWithStatTrackerData_JustValue( var rui, string prefix, float value )
+void function UpdateRuiWithStatTrackerData_JustValue( var rui, string prefix, int value )
 {
-	RuiSetFloat( rui, prefix + "Value", value )
+	RuiSetInt( rui, prefix + "Value", value )
 }
 #endif
 
@@ -3196,7 +3232,7 @@ ItemFlavor ornull function GladiatorCardBadge_GetCharacterFlavor( ItemFlavor fla
 	if ( GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "parentItemFlavor" ) != "" )
 		return GetItemFlavorByAsset( GetGlobalSettingsAsset( ItemFlavor_GetAsset( flavor ), "parentItemFlavor" ) )
 
-	Assert( !GladiatorCardBadge_IsCharacterBadge( flavor ), "" + ItemFlavor_GetHumanReadableRef( flavor ) + " is a CHARACTER badge but it doesn't have a parentItemFlavor" )
+	Assert( !GladiatorCardBadge_IsCharacterBadge( flavor ), "" + string(ItemFlavor_GetAsset( flavor )) + " is a CHARACTER badge but it doesn't have a parentItemFlavor" )
 	return null
 }
 #endif
@@ -3210,9 +3246,9 @@ string function GladiatorCardBadge_GetUnlockStatRef( ItemFlavor flavor, ItemFlav
 
 	string statRef = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "unlockStatRef" )
 	if ( character != null )
-		statRef = StringReplace( statRef, "%char%", ItemFlavor_GetGUIDString( expect ItemFlavor(character) ) )
+		statRef = replace( statRef, "%char%", ItemFlavor_GetGUIDString( expect ItemFlavor(character) ) )
 	else
-		Assert( StringReplace( statRef, "%char%", "" ) == statRef )
+		Assert( replace( statRef, "%char%", "" ) == statRef )
 	return statRef
 }
 #endif
@@ -3340,20 +3376,11 @@ string function GladiatorCardStatTracker_GetStatRef( ItemFlavor flavor, ItemFlav
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.gladiator_card_stat_tracker )
 
 	string statRef = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "statRef" )
-	statRef = StringReplace( statRef, "%char%", ItemFlavor_GetGUIDString( character ) )
+	statRef = replace( statRef, "%char%", ItemFlavor_GetGUIDString( character ) )
 	return statRef
 }
 #endif
 
-
-#if SERVER || CLIENT || UI
-int function GladiatorCardStatTracker_GetValueNumberFormat( ItemFlavor flavor )
-{
-	Assert( ItemFlavor_GetType( flavor ) == eItemType.gladiator_card_stat_tracker )
-
-	return eStatTrackerValueFormat[GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "valueNumberFormat" )]
-}
-#endif
 
 
 #if SERVER || CLIENT || UI
@@ -3392,7 +3419,6 @@ string function GladiatorCardStatTracker_GetFormattedValueText( entity player, I
 	if ( GladiatorCardTracker_IsTheEmpty( flavor ) )
 		return ""
 
-	int valueFormat = GladiatorCardStatTracker_GetValueNumberFormat( flavor )
 	string statRef  = GladiatorCardStatTracker_GetStatRef( flavor, character )
 
 	StatEntry statEntry = GetStatEntryByRef( statRef )
@@ -3401,7 +3427,6 @@ string function GladiatorCardStatTracker_GetFormattedValueText( entity player, I
 
 	string valueText
 
-	Assert( valueFormat == eStatTrackerValueFormat.INTEGER )
 	valueText = format( "%i", statVal )
 
 	return valueText

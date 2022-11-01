@@ -227,7 +227,7 @@ void function PlayLootPickupFeedbackFX( entity ent )
 			                                                                                             
 			                            
 
-			                                                                                                                   
+			                                                                                                                                     
 
 			                            
 		 
@@ -364,7 +364,8 @@ void function Survival_UseHealthPack( entity player, string ref )
 	  	      
 
 	                                              
-	Remote_ServerCallFunction( "ClientCallback_Sur_UseHealthPack", ref )
+	LootData data = SURVIVAL_Loot_GetLootDataByRef( ref )
+	Remote_ServerCallFunction( "ClientCallback_Sur_UseHealthPack", data.index )
 }
 
 
@@ -444,6 +445,7 @@ void function OnDeathBoxCreated( entity ent )
 		{
 			thread CreateDeathBoxRui( ent )
 		}
+		DeathBoxTextOverride( ent )                      
 	}
 }
 
@@ -519,8 +521,10 @@ void function CreateDeathBoxRui( entity deathBox )
 		NestedGladiatorCardHandle nestedGCHandle = CreateNestedGladiatorCard( rui, "card", eGladCardDisplaySituation.DEATH_BOX_STILL, eGladCardPresentation.FRONT_DETAILS )
 		nestedGCHandleOrNull = nestedGCHandle
 
+                           
 		if ( ruiOverrideType == 1 )
 			CreateDeathBoxRuiWithOverridenData( deathBox, nestedGCHandle )
+        
 
 		ChangeNestedGladiatorCardOwner( nestedGCHandle, ehi, null, eGladCardLifestateOverride.ALIVE )
 	}
@@ -556,7 +560,7 @@ string function DeathBoxTextOverride( entity ent )
 	if ( ent.e.isBusy )
 		return " "
 
-                 
+                                 
                                                                            
   
                                 
@@ -1101,7 +1105,7 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 			}
 		}
 		RuiSetInt( rui, "propertyValue", shieldPropertyValue )
-		RuiSetInt( rui, "extraPropertyValue", lootRef.lootExrtaProperty )
+		RuiSetInt( rui, "extraPropertyValue", lootRef.lootExtraProperty )
 	}
 
 	if ( data.lootType == eLootType.MAINWEAPON && GetWeaponInfoFileKeyField_GlobalBool( data.baseWeapon, "uses_ammo_pool" ) )
@@ -1166,6 +1170,27 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 
 	if ( data.lootType == eLootType.MAINWEAPON )
 	{
+		                                                                         
+		                   
+		                                                           
+		 
+			                                                   
+
+			                         
+				                                                               
+			    
+				                                                              
+		 
+		    
+		 
+			                                       
+		 
+		        
+
+                     
+                                                                   
+        
+
 		RuiSetString( rui, "skinName", "" )
 		RuiSetInt( rui, "skinTier", 0 )
 
@@ -1365,7 +1390,7 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 
 
                    
-                                                                              
+                                                                                         
                                               
     
                                                                    
@@ -2075,7 +2100,7 @@ AttachmentTagData function AttachmentTags( string attachment )
 void function SetupSurvivalLoot( var categories )
 {
 	string cats              = expect string( categories )
-	array<string> stringCats = split( cats, " " )
+	array<string> stringCats = split( cats, WHITESPACE_CHARACTERS )
 
 	                                             
 	array<int> catTypes
@@ -2299,6 +2324,11 @@ void function TryHolsterWeapon( entity player )
 				return
 			}
 		}
+
+                  
+			if( PassiveReinforce_BlockControllerHolster( player, useEnt ) )
+				return
+        
 	}
 
 	entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
@@ -2463,7 +2493,7 @@ void function ApplyEquipmentColorAndFXOverrides( entity prop )
 			if( (prop in file.equipmentFX) && EffectDoesExist( file.equipmentFX[prop] ) )
 				EffectStop( file.equipmentFX[prop], true, false )
 
-			int armorFX = StartParticleEffectOnEntityWithPos( prop, fxIdx, FX_PATTACH_ABSORIGIN_FOLLOW, -1, < 0, 0, 15>, <0, 0, 0> )
+			int armorFX = StartParticleEffectOnEntityWithPos( prop, fxIdx, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID, < 0, 0, 15>, <0, 0, 0> )
 			EffectSetControlPointVector( armorFX, 1, tierColor )
 			file.equipmentFX[prop] <- armorFX
 		}

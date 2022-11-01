@@ -198,7 +198,7 @@ bool function PrivateMatch_TeamRoster_Configure( PlacementStruct teamPlacement, 
 	var buttonPanel = teamPlacement.listPanel
 	int teamSize    = teamPlacement.teamSize
 
-	HudElem_SetRuiArg( teamPlacement.headerPanel, "teamName", teamName )
+	HudElem_SetRuiArg( teamPlacement.headerPanel, "headerText", teamName )
 	HudElem_SetRuiArg( teamPlacement.headerPanel, "teamNumber", teamPlacement.teamDisplayNumber )
 
 	Hud_InitGridButtons( buttonPanel, teamSize )

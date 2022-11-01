@@ -3,11 +3,9 @@
 #if SERVER || CLIENT || UI
 global function Vouchers_LevelInit
 global function Voucher_GetEffectBattlepassLevels
-global function Voucher_GetEffectBattlepassGrindPoints
 global function Voucher_GetEffectBattlepassStars
 global function Voucher_GetEffectStatRef
 global function Voucher_GetEffectStatAmount
-global function Voucher_GetPassiveEffectBattlepassGrindPointsMultipler
 global function Voucher_GetModel
 #endif
 
@@ -16,7 +14,6 @@ global function Voucher_GetModel
 #if SERVER
                                                   
                                           
-                                                        
 #endif
 
 
@@ -140,7 +137,7 @@ void function InitScriptDrivenVoucherCallbacks()
 			        
 
 		                            
-		                                                                                                                                                                                
+		                                                                                                                                                                             
 
 		                                       
 	 
@@ -300,16 +297,6 @@ int function Voucher_GetEffectBattlepassLevels( ItemFlavor flav )
 }
 #endif
 
-
-#if SERVER || CLIENT || UI
-int function Voucher_GetEffectBattlepassGrindPoints( ItemFlavor flav )
-{
-	Assert( ItemFlavor_GetType( flav ) == eItemType.voucher )
-
-	return GetGlobalSettingsInt( ItemFlavor_GetAsset( flav ), "effectBattlepassGrindPoints" )
-}
-#endif
-
 #if SERVER || CLIENT || UI
 int function Voucher_GetEffectBattlepassStars( ItemFlavor flav )
 {
@@ -342,16 +329,6 @@ int function Voucher_GetEffectStatAmount( ItemFlavor flav )
 
 
 #if SERVER || CLIENT || UI
-float function Voucher_GetPassiveEffectBattlepassGrindPointsMultipler( ItemFlavor flav )
-{
-	Assert( ItemFlavor_GetType( flav ) == eItemType.voucher )
-
-	return GetGlobalSettingsFloat( ItemFlavor_GetAsset( flav ), "passiveEffectBattlepassGrindPointsMultipler" )
-}
-#endif
-
-
-#if SERVER || CLIENT || UI
 asset function Voucher_GetModel( ItemFlavor flav )
 {
 	Assert( ItemFlavor_GetType( flav ) == eItemType.voucher )
@@ -372,7 +349,7 @@ int function GetVoucherActiveCount( entity player, ItemFlavor voucherFlav )
 		case eVoucherBehavior.STACKABLE_SCRIPT_DRIVEN:
 			if ( !(ItemFlavor_GetAsset( voucherFlav ) in fileLevel.voucherFlavGetActiveQuantityFuncMap) )
 			{
-				Assert( false, format( "Voucher %s registered with type eVoucherBehavior.STACKABLE_SCRIPT_DRIVEN but doesn't have a voucherFlavGetActiveQuantityFuncMap", ItemFlavor_GetHumanReadableRef( voucherFlav ) ) )
+				Assert( false, format( "Voucher %s registered with type eVoucherBehavior.STACKABLE_SCRIPT_DRIVEN but doesn't have a voucherFlavGetActiveQuantityFuncMap", string(ItemFlavor_GetAsset( voucherFlav )) ) )
 				return 0
 			}
 
@@ -480,17 +457,17 @@ int function GetVoucherRedeemedCount( entity player, ItemFlavor voucherFlav )
 	                                             
 	 
 		                                
-			                                                                                                                                                                                                                                                                                                                                                
+			                                                                                                                                                                                                                                                                                                                                             
 			     
 
 		                                              
-			                                                                                                                                                          
+			                                                                                                                                                       
 			     
 
 		                                    
 		                                             
 		                                               
-			                                                                                                                                                                                                                                                                                                                                                      
+			                                                                                                                                                                                                                                                                                                                                                   
 			                     
 			     
 
@@ -511,25 +488,6 @@ int function GetVoucherRedeemedCount( entity player, ItemFlavor voucherFlav )
 #endif
 
 #if SERVER
-                                                                        
- 
-	                    
-	                                                                                  
-	 
-		                                                                                 
-		                 
-		 
-			                                                            
-			                                                                
-				               
-		 
-	 
-	               
- 
-#endif
-
-
-#if SERVER
                                                                                                     
  
 	                                                                                    
@@ -539,25 +497,12 @@ int function GetVoucherRedeemedCount( entity player, ItemFlavor voucherFlav )
 		                               
 		 
 			                                   
-			                      
-			                                                   
-			                
-				                              
+			                                                     
 		 
 		    
 		 
-			                                                                                                                                                                            
+			                                                                                                                                                                         
 		 
-	 
-
-	                                                                                              
-	                                
-	 
-		                                                                        
-		                               
-			                                                 
-		    
-			                                                                                                                                                                                       
 	 
 
 	                                                                        
@@ -567,7 +512,7 @@ int function GetVoucherRedeemedCount( entity player, ItemFlavor voucherFlav )
 		                               
 			                           
 		    
-			                                                                                                                                                             
+			                                                                                                                                                          
 	 
 
 	                                                               

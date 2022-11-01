@@ -199,6 +199,10 @@ void function InitWeaponScripts()
 
 	MpAbilityShifter_Init()
 	MpWeaponDefender_Init()
+                               
+                               
+      
+
 	MpWeaponSentinel_Init()
                    
                     
@@ -246,13 +250,23 @@ void function InitWeaponScripts()
 	MpWeaponWattsonGadgetPrimary_Init()
 	MeleeCryptoHeirloom_Init()
 	MpWeaponCryptoHeirloomPrimary_Init()
+	MeleeValkyrieSpear_Init()
+	MpWeaponValkyrieSpearPrimary_Init()
                      
-		MeleeValkyrieSpear_Init()
-		MpWeaponValkyrieSpearPrimary_Init()
+		MeleeLobaHeirloom_Init()
+		MpWeaponLobaHeirloomPrimary_Init()
        
                      
                           
                                     
+       
+                     
+                              
+                                         
+       
+                     
+                         
+                                   
        
 	MeleeGibraltarClub_Init()
 	MpWeaponGibraltarClubPrimary_Init()
@@ -278,6 +292,7 @@ void function InitWeaponScripts()
                            
                              
                            
+                          
        
 
 	MpWeaponEmoteProjector_Init()
@@ -374,6 +389,13 @@ void function InitWeaponScripts()
                             
        
 
+                        
+                            
+                            
+                              
+                              
+       
+
 	MpWeaponBlackHole_Init()
 	MpSpaceElevatorAbility_Init()
 
@@ -387,6 +409,7 @@ void function InitWeaponScripts()
 
                                  
                       
+                        
                                
                          
                               
@@ -418,18 +441,17 @@ void function InitWeaponScripts()
        
 
                 
-                       
-                  
-                         
-                              
+		PassiveVantage_Init()
+		SniperUlt_Init()
+		Companion_Launch_Init()
+		MpWeaponVantageRecall_Init()
 
-                    
-                         
+		SniperRecon_Init()
+		VantageCompanion_Init()
 
-              
-                                        
-                        
-                          
+		            
+		                                      
+		                      
        
 
                 
@@ -437,15 +459,21 @@ void function InitWeaponScripts()
                            
        
 
-                 
-                            
-                         
-                                  
-                          
-                          
+             
                            
-                          
                             
+       
+
+                 
+		MpWeaponGrenadeCryo_Init()
+		MpWeaponCryoWall_Init()
+		MpWeaponFerrofluidGrenade_Init()
+		MpWeaponResinShot_Init()
+		MpWeaponIronTower_Init()
+		MpWeaponIronBridge_Init()
+		MpWeaponFerroWall_Init()
+		MpAbilitySpikeStrip_Init()
+		MpAbilityReinforce_Init()
        
 
                     
@@ -460,6 +488,18 @@ void function InitWeaponScripts()
 
                            
                               
+       
+
+                              
+                                 
+       
+	
+                            
+                               
+       
+
+                         
+                            
        
 
 	VOID_RING_Init()
@@ -762,7 +802,7 @@ int function GetClosestIndex( array<entity> Array, vector origin )
 }
 
                                                                                            
-table function StringToColors( string colorString, string delimiter = " " )
+table function StringToColors( string colorString, string delimiter = WHITESPACE_CHARACTERS )
 {
 	PerfStart( PerfIndexShared.StringToColors + SharedPerfIndexStart )
 	array<string> tokens = split( colorString, delimiter )
@@ -786,7 +826,7 @@ table function StringToColors( string colorString, string delimiter = " " )
                                                                         
 function ColorStringToArray( string colorString )
 {
-	array<string> tokens = split( colorString, " " )
+	array<string> tokens = split( colorString, WHITESPACE_CHARACTERS )
 
 	Assert( tokens.len() >= 3 && tokens.len() <= 4 )
 
@@ -1761,12 +1801,6 @@ entity function GetOffhand( entity ent, string classname )
 }
 
 
-bool function IsCloaked( entity ent )
-{
-	return ent.IsCloaked( true )                                     
-}
-
-
 float function GetGameStateChangeTime()
 {
 	return GetGlobalNonRewindNetTime( "gameStateChangeTime" )
@@ -2242,7 +2276,7 @@ float function GetPulseFrac( rate = 1, startTime = 0 )
 }
 
 
-vector function StringToVector( string vecString, string delimiter = " " )
+vector function StringToVector( string vecString, string delimiter = WHITESPACE_CHARACTERS )
 {
 	array<string> tokens = split( vecString, delimiter )
 
@@ -3592,7 +3626,7 @@ float function GetDeathCamSpectateLength()
 	if ( file.getDeathCamSpectateTimeOverride != null )
 		return file.getDeathCamSpectateTimeOverride()
 
-	return 0
+	return GetCurrentPlaylistVarFloat( "min_deathcam_spectate_length", 0.0 )
 }
 
 float function GetRespawnButtonCamTime( entity player )
@@ -3800,6 +3834,35 @@ int function GetSpStartIndex()
 array<entity> function GetAllSoldiers()
 {
 	return GetNPCArrayByClass( "npc_soldier" )
+}
+
+
+array< entity > function GetAllPlayersByRealm( int realm, bool mustBeAlive = true )
+{
+	array<entity> players = GetPlayerArray()
+	array< entity > playersInRealm = []
+	foreach( player in players)
+	{
+		if( !IsValid( player ) )
+			continue
+
+		if( mustBeAlive && !IsAlive( player ) )
+			continue
+
+		bool inRealmCheck = false
+		array< int > playerRealms = player.GetRealms()
+		foreach( playerRealm in playerRealms )
+		{
+			inRealmCheck = inRealmCheck || ( playerRealm == realm )
+		}
+
+		if( !inRealmCheck )
+			continue
+
+		playersInRealm.append( player )
+	}
+
+	return playersInRealm
 }
 
 
@@ -4011,6 +4074,19 @@ void function SetAllPlayersToTeam( int teamNum = 5 )
 	{
 		if( IsValid( player ) )
 			SetTeam( player, teamNum )
+	}
+}
+
+void function SetPlayerToTeam( string playerName, int teamNum = 5 )
+{
+	array< entity > allPlayers = GetPlayerArray()
+	foreach( player in allPlayers )
+	{
+		if( IsValid( player ) && ( player.GetPlayerName() == playerName ))
+		{
+			SetTeam( player, teamNum )
+			return
+		}
 	}
 }
 
@@ -4677,8 +4753,20 @@ bool function IsGunship( entity ent )
 
 bool function IsTrainingDummie( entity ent )
 {
-	return ent.GetNetworkedClassName() == "npc_dummie"
+	string ornull networkedClassName = ent.GetNetworkedClassName()
+
+	if( networkedClassName == null )
+		return false
+
+	expect string( networkedClassName )
+	return (( networkedClassName == "npc_training_dummy" ) || ( networkedClassName == "npc_combatrange_dummy" ) || ( networkedClassName == "npc_dummie" ))
 }
+
+        
+                                                   
+   
+  	            
+   
 
 bool function IsCombatNPC( entity ent )
 {
@@ -4713,6 +4801,24 @@ bool function IsEnvDecoy( entity ent )
 
 
 #if SERVER
+                                                                 
+ 
+	                                                         
+	 
+		                        
+		                               
+		 
+			           
+		 
+
+		                                                               
+		                    
+		 
+			                                              
+		 
+	 
+ 
+
                                   
  
 	                                                            
@@ -4983,7 +5089,7 @@ float function GetClosestDistanceBetweenLineSegments( vector line1Point1, vector
 }
 
 
-bool function PlayerCanSee( entity player, entity ent, bool doTrace, float degrees )
+bool function PlayerCanSee( entity player, entity ent, bool doTrace, float degrees, bool passIfChildHit = false )
 {
 	float minDot = deg_cos( degrees )
 
@@ -4997,6 +5103,8 @@ bool function PlayerCanSee( entity player, entity ent, bool doTrace, float degre
 	{
 		TraceResults trace = TraceLine( player.EyePosition(), ent.GetWorldSpaceCenter(), null, TRACE_MASK_BLOCKLOS, TRACE_COLLISION_GROUP_NONE )
 		if ( trace.hitEnt == ent || trace.fraction >= 0.99 )
+			return true
+		else if( passIfChildHit && trace.hitEnt != null && trace.hitEnt.GetParent() == ent )
 			return true
 		else
 			return false
@@ -5168,6 +5276,16 @@ bool function PlayerIsInADS( entity player, bool checkMelee = true )
 	return activeWeapon.IsWeaponAdsButtonPressed() || activeWeapon.IsWeaponInAds()
 }
 
+float function GetCurrentPlayerFOV( entity player )
+{
+	entity weapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
+	if ( IsValid( weapon ) )
+	{
+		return weapon.GetWeaponZoomFOV()
+	}
+
+	return float( player.GetDefaultFOV() )
+}
 
       
               
@@ -5416,7 +5534,12 @@ vector function Get2DLineIntersection( vector A, vector B, vector C, vector D )
 
 int function GetSlotForWeapon( entity player, entity weapon )
 {
-	array<int> slots = [ WEAPON_INVENTORY_SLOT_PRIMARY_0, WEAPON_INVENTORY_SLOT_PRIMARY_1, WEAPON_INVENTORY_SLOT_ANTI_TITAN ]
+                  
+                                                                                                                                              
+      
+		array<int> slots = [ WEAPON_INVENTORY_SLOT_PRIMARY_0, WEAPON_INVENTORY_SLOT_PRIMARY_1, WEAPON_INVENTORY_SLOT_ANTI_TITAN ]
+       
+
 	foreach ( slot in slots )
 	{
 		if ( player.GetNormalWeapon( slot ) == weapon )
@@ -5457,6 +5580,11 @@ string function GetBaseWeaponRef( string weaponRef )
                                  
                                                                    
                                                                                             
+       
+
+                                
+                                                              
+                                                                                       
        
 	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL ) != -1 )
 		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL.len()) )

@@ -9,6 +9,7 @@ global function PingSecondPageIsEnabled
 global function AddCallback_OnCommsMenuStateChanged
 global function IsCommsMenuActive
 
+global function CommsMenu_GetMenuForNewPing
 global function CommsMenu_ExecuteSelectionIfValid
 global function CommsMenu_CanUseMenu
 global function CommsMenu_OpenMenuTo
@@ -97,6 +98,9 @@ global enum eChatPage
 
                 
 	CRAFTING,
+                   
+	               
+        
       
                       
            
@@ -259,6 +263,24 @@ void function CommsMenu_ExecuteSelectionIfValid( entity player, int requiredComm
 	}
 
 	player.SetLookStickDebounce()
+}
+
+int function CommsMenu_GetMenuForNewPing( entity player )
+{
+	int chatPage = eChatPage.PING_MAIN_1
+
+	int ms = PlayerMatchState_GetFor( player )
+
+	if ( (ms == ePlayerMatchState.SKYDIVE_PRELAUNCH) || (ms == ePlayerMatchState.SKYDIVE_FALLING) )
+	{
+		chatPage = eChatPage.PING_SKYDIVE
+	}
+	else if ( Bleedout_IsBleedingOut( player ) )
+	{
+		chatPage = eChatPage.BLEEDING_OUT
+	}
+
+	return chatPage
 }
 
 void function CommsMenu_OpenMenuForNewPing( entity player, vector targetPos )
@@ -546,7 +568,7 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 		{
 			EHI playerEHI = ToEHI( player )
 
-			if ( !IsShowingVictorySequence() )
+			if ( !IsEmoteEnabledForPodiumScreen() )
 				results.append( MakeOption_CommsAction( eCommsAction.QUICKCHAT_CELEBRATE ) )
 
 			if ( IsControllerModeActive() )
@@ -568,7 +590,7 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 				ItemFlavor quip    = LoadoutSlot_GetItemFlavor( playerEHI, entry )
 				if ( !CharacterQuip_IsTheEmpty( quip ) )
 				{
-					if ( IsShowingVictorySequence() && ItemFlavor_GetType( quip ) != eItemType.character_emote )
+					if ( IsEmoteEnabledForPodiumScreen() && ItemFlavor_GetType( quip ) != eItemType.character_emote )
 						continue
 
 					quipsInWheel++
@@ -607,22 +629,67 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 		case eChatPage.BLEEDING_OUT:
 		{
 			results.append( MakeOption_CommsAction( eCommsAction.QUICKCHAT_BLEEDOUT_HELP ) )
-			results.append( MakeOption_Ping( ePingType.I_GO ) )
+                                
+				results.append( MakeOption_Ping( ePingType.I_GO ) )
+         
 			results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )
 			                                                                                      
+                               
+                                                                       
+                                                                
+                                                             
+                                                                                         
+         
+
 		}
 			break
 
 		case eChatPage.PING_MAIN_1:
 		{
-			results.append( MakeOption_Ping( ePingType.WE_GO ) )
-			results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )
-			results.append( MakeOption_Ping( ePingType.I_LOOTING ) )
-			results.append( MakeOption_Ping( ePingType.I_ATTACKING ) )
-			results.append( MakeOption_Ping( ePingType.I_GO ) )
-			results.append( MakeOption_Ping( ePingType.I_DEFENDING ) )
-			results.append( MakeOption_Ping( ePingType.I_WATCHING ) )
-			results.append( MakeOption_Ping( ePingType.AREA_VISITED ) )
+                               
+                                                                          
+     
+                                                             
+                                                                      
+                                                                  
+                                                                 
+                                                                   
+                                                                 
+                                                                    
+                                                                   
+     
+                                                                                                                                                                                                            
+     
+                                                                 
+                                                                  
+                                                                  
+                                                                  
+                                                                  
+                                                               
+                                                                  
+                                                                    
+     
+                                                                                                                                                                                                  
+     
+                                                             
+                                                                     
+                                                                 
+                                                                   
+                                                            
+                                                                   
+                                                                  
+                                                                    
+     
+        
+				results.append( MakeOption_Ping( ePingType.WE_GO ) )    
+				results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )    
+				results.append( MakeOption_Ping( ePingType.I_LOOTING ) )    
+				results.append( MakeOption_Ping( ePingType.I_ATTACKING ) )    
+				results.append( MakeOption_Ping( ePingType.I_GO ) )    
+				results.append( MakeOption_Ping( ePingType.I_DEFENDING ) )    
+				results.append( MakeOption_Ping( ePingType.I_WATCHING ) )    
+				results.append( MakeOption_Ping( ePingType.AREA_VISITED ) )    
+         
 		}
 			break
 
@@ -630,7 +697,10 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 		{
 			results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )
 			results.append( MakeOption_Ping( ePingType.I_GO ) )
-			  			                                                    
+                               
+                                                             
+                                                           
+         
 		}
 			break
 
@@ -709,14 +779,60 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 			int counter = 0
 			foreach( data in Crafting_GetCraftingDataArray() )
 			{
-				for( int i = 0; i< data.numSlots; i++ )
+				                   
+				                                                                  
+				 
+					                                         
+					 
+						                                                 
+						         
+					 
+				 
+				       
+				for ( int i = 0; i < data.numSlots; i++ )
 				{
+                        
+                                    
+      
+                                                                                                                 
+       
+                                                        
+       
+      
+                                               
+      
+                                                                                                                                                         
+                                                                                       
+       
+                                                        
+       
+      
+         
+           
 					results.append( MakeOption_CraftItem( counter ) )
 					counter++
 				}
 			}
 			break
 		}
+		                   
+		                              
+		 
+			                
+			                                                  
+			 
+				                                                                  
+				 
+					                                         
+					 
+						                                                 
+						         
+					 
+				 
+			 
+			     
+		 
+		        
         
                         
                            
@@ -840,6 +956,11 @@ string[2] function GetPromptsForMenuOption( int index )
      
                                
                                                             
+     
+                                                                 
+     
+                                            
+                                                                                                          
      
           
 				else
@@ -1251,9 +1372,44 @@ void function SetRuiOptionsForChatPage( var rui, int chatPage )
 			RuiSetString( file.menuRui, "descText", Crafting_GetWorkbenchDescString() )
 			labelText = "#CRAFTING_WORKBENCH"
 			promptText = "#CRAFTING_USE"
+
+			                   
+			                                                                                       
+			 
+				                                                           
+					        
+
+				                       
+				                               
+			 
+			        
+
 			outerCircleColor = <25, 0, 15>
 			break
+
+			                   
+		                              
+			                                                                                                                                           
+			                                                                           
+			                                                                           
+			                                 
+			                            
+
+			                                                                                       
+			 
+				                                                           
+					        
+
+				                       
+				                               
+			 
+
+
+			                              
+			     
+			        
         
+
                         
                            
                              
@@ -1270,7 +1426,7 @@ void function SetRuiOptionsForChatPage( var rui, int chatPage )
 	RuiSetFloat3( rui, "outerCircleColor", SrgbToLinear( outerCircleColor / 255.0 ) )                                                                           
 }
 
-const int MAX_COMMS_MENU_OPTIONS = 11
+const int MAX_COMMS_MENU_OPTIONS = 13
 void function ShowCommsMenu( int chatPage )
 {
 	RunUIScript( "ClientToUI_SetCommsMenuOpen", true )
@@ -1320,11 +1476,11 @@ void function ShowCommsMenu( int chatPage )
 				countText = "%$models/weapons/attachments/infinity_symbol%"
 
                   
-                                                                                         
-     
-                                                                      
-                                                    
-     
+				if ( StatusEffect_GetSeverity( GetLocalViewPlayer(), eStatusEffect.healing_denied ) )
+				{
+					bool isBlocked = Consumable_IsShieldItem( options[idx].healType )
+					RuiSetBool( nestedRui, "isBlocked", isBlocked )
+				}
          
 
 			RuiSetString( nestedRui, "text", countText )
@@ -1365,6 +1521,13 @@ void function ShowCommsMenu( int chatPage )
 			int index = options[idx].craftingIndex
 			Crafting_PopulateItemRuiAtIndex( nestedRui, index )
 		}
+		                   
+		                                                
+		 
+			                                      
+			                                                   
+		 
+		        
         
 	}
 
@@ -1390,6 +1553,7 @@ void function ShowCommsMenu( int chatPage )
 				continue
 
 			RuiSetInt( rui, "selectedSlot", idx )
+			SetCurrentChoice( idx )
 			break
 		}
 	}
@@ -1486,7 +1650,49 @@ bool function CommsMenu_HandleKeyInput( int key )
 				}
 			}
 		}
+		                   
+		                                                                                       
+		 
+			                                                           
+				        
+
+			                                           
+			 
+				                   
+			 
+
+			                   
+			 
+				                                                           
+				                                                                                           
+				 
+					                                    
+					                                 
+
+					                                                                   
+					 
+						                                   
+					 
+					                                                         
+					 
+						                             
+					 
+
+					                                    
+					 
+						                
+						                                                 
+						                         
+						                         
+						           
+					 
+				 
+			 
+		 
+		        
 	}
+
+
 
 
 	bool shouldExecute    = false
@@ -1688,7 +1894,17 @@ void function SetCurrentChoice( int choice )
 
 			int count = SURVIVAL_CountItemsInInventory( GetLocalViewPlayer(), lootRef )
 			if ( count == 0 )
-				RuiSetString( file.menuRui, "promptText", "#PING_PROMPT_REQUEST" )
+			{
+				                                                                        
+				if ( GetCurrentPlaylistVarBool( "infinite_heal_items", false ) )
+				{
+					RuiSetString( file.menuRui, "promptText", "" )
+				}
+				else
+				{
+					RuiSetString( file.menuRui, "promptText", "#PING_PROMPT_REQUEST" )
+				}
+			}
 		}
 	}
 }
@@ -1836,7 +2052,7 @@ bool function MakeCommMenuSelection( int choice, int wheelInputType )
 
 		case eOptionType.NEW_PING:
 		{
-			Ping_ExecutePendingNewPingWithOverride( op.pingType )
+			Ping_ExecutePendingNewPingWithOverride( op.pingType , CommsMenu_GetMenuForNewPing(GetLocalClientPlayer()))
 			return true
 		}
 
@@ -1854,6 +2070,10 @@ bool function MakeCommMenuSelection( int choice, int wheelInputType )
 			}
 			else if ( wheelInputType == eWheelInputType.REQUEST )
 			{
+				                                                                               
+				if ( GetCurrentPlaylistVarBool( "infinite_heal_items", false ) )
+					return false
+
 				HealthPickup pickup   = SURVIVAL_Loot_GetHealthKitDataFromStruct( op.healType )
 				int kitCat            = SURVIVAL_Loot_GetHealthPickupCategoryFromData( pickup )
 				bool useShieldRequest = (kitCat == eHealthPickupCategory.SHIELD)
@@ -1865,9 +2085,9 @@ bool function MakeCommMenuSelection( int choice, int wheelInputType )
 				}
 
 				if ( useShieldRequest )
-					Quickchat( GetLocalViewPlayer(), eCommsAction.INVENTORY_NEED_SHIELDS )
+					Quickchat( eCommsAction.INVENTORY_NEED_SHIELDS, null )
 				else
-					Quickchat( GetLocalViewPlayer(), eCommsAction.INVENTORY_NEED_HEALTH )
+					Quickchat( eCommsAction.INVENTORY_NEED_HEALTH, null )
 
 				return false                        
 			}
@@ -1986,7 +2206,7 @@ void function HandleCommsActionPick( int commsAction, int directionIndex )
 	Assert( (commsAction >= 0) && (commsAction < eCommsAction._count) )
 
 	EmitSoundOnEntity( GetLocalViewPlayer(), WHEEL_SOUND_ON_EXECUTE )
-	Quickchat( GetLocalViewPlayer(), commsAction )
+	Quickchat( commsAction, null )
 }
 
 void function HandleHealthItemSelection( int healthPickupType )
@@ -2225,6 +2445,9 @@ bool function CommsMenu_CanUseMenu( entity player, int menuType = eChatPage.DEFA
 	if ( IsPlayerInCryptoDroneCameraView( player ) )
 		return false
 
+	if ( FiringRange_IsPlayerInFinale() )
+		return false
+
 	return true
 }
 
@@ -2291,4 +2514,4 @@ void function SetHintTextOnHudElem( var hudElem, string text, string subtext )
 {
 	RuiSetString( Hud_GetRui( hudElem ), "buttonText", Localize( text, Localize( subtext ) ) )
 }
-#endif                                   
+#endif

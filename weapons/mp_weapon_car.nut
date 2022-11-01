@@ -2,6 +2,7 @@ global function MpWeaponCar_Init
 global function OnWeaponActivate_Car
 global function OnWeaponDeactivate_Car
 global function OnWeaponPrimaryAttack_weapon_Car
+global function OnWeaponReadyToFire_Car
 
 global const string CMDNAME_CAR_AMMO_SWAP = "ClientCallback_CarHandleAmmoSwap"
 
@@ -42,6 +43,18 @@ void function OnWeaponDeactivate_Car( entity weapon )
 {
 }
 
+
+void function OnWeaponReadyToFire_Car( entity weapon )
+{
+	if ( !IsValid( weapon ) )
+		return
+
+#if SERVER
+	                                                    
+		                                                
+#endif
+}
+
 var function OnWeaponPrimaryAttack_weapon_Car( entity weapon, WeaponPrimaryAttackParams attackParams )
 {
 	if ( !IsValid( weapon ) )
@@ -80,6 +93,9 @@ void function Weapon_CAR_TryApplyAmmoSwap( entity player, entity weapon )
 	if ( !IsValid( player ) || !IsValid( weapon ) )
 		return
 
+	if ( weapon.HasMod( CAR_AMMO_SWAP_MOD_FOR_RELOAD ) || weapon.IsReloading() )
+		return
+
 	Remote_ServerCallFunction( CMDNAME_CAR_AMMO_SWAP, weapon )
 }
 #endif
@@ -93,11 +109,11 @@ void function Weapon_CAR_TryApplyAmmoSwap( entity player, entity weapon )
 	                          
 		      
 
-	                                                                            
+	                                                                              
 	 
 		                                                                                                
 			                           
-		
+
 		                              
 	 
  
@@ -168,7 +184,7 @@ void function Weapon_CAR_TryApplyAmmoSwap( entity player, entity weapon )
 	 
                               
 
-	                                                          
+	                                
 	 
 		                          
 		      
@@ -210,7 +226,7 @@ void function Weapon_CAR_TryApplyAmmoSwap( entity player, entity weapon )
 #if SERVER
                                                                                
  
-	                             
+	                              
 	 
 		                         
 			      
@@ -299,8 +315,9 @@ void function Weapon_CAR_TryApplyAmmoSwap( entity player, entity weapon )
 #if SERVER
                                                                         
  
-	                       
+	                         
 		      
+
 	                                                    
 		                                                
  

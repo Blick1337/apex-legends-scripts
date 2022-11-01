@@ -23,6 +23,11 @@ void function ShLobaPassiveEyeForQuality_LevelInit()
 		AddCreateCallback( "player", OnPlayerCreated )
 		AddCallback_OnLootBinOpening( OnLootBinOpening )
 	#endif
+
+
+	#if CLIENT || UI
+		AddCallback_EditLootDesc( Loba_EditUALootDesc )
+	#endif
 }
 #endif
 
@@ -41,6 +46,24 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 			thread ClientThinkThread( player )
 		#endif
 	}
+}
+#endif
+
+
+#if CLIENT || UI
+string function Loba_EditUALootDesc( string lootRef, entity player, string originalDesc )
+{
+	string finalDesc = originalDesc
+
+	                                                                                      
+	if ( lootRef == "health_pickup_ultimate"
+			&& IsValid( player )
+			&& LoadoutSlot_IsReady( ToEHI( player ), Loadout_Character() )
+			&& ItemFlavor_GetAsset( LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() ) ) == $"settings/itemflav/character/loba.rpak" )
+	{
+		finalDesc = Localize( "#SURVIVAL_PICKUP_HEALTH_ULTIMATE_HINT_LOBA" )
+	}
+	return finalDesc
 }
 #endif
 

@@ -12,17 +12,21 @@ global function CheckPlayerCanEmote
                                     
                                   
                                                  
+                    
+                                                 
+      
                                            
                                                
                                                        
-                                                              
+                                                             
 #endif
 
 #if CLIENT
 global function RequestCharacterEmote
-global function ServerCallback_PlayerPerformVictoryScreenEmote
+global function ServerCallback_PlayerPerformPodiumScreenEmote
 global function GetOptionTextForEmote
 global function ModelPerformEmote
+global function IsEmoteEnabledForPodiumScreen
 #endif
 
 #if CLIENT
@@ -64,6 +68,14 @@ const string EMOTE_PIN_ACTION_INTERRUPT 			= "interrupted"
 
                                                           
                                                                              
+
+                    
+                                                     
+                                                                   
+                                           
+                                      
+      
+
 #endif
 
                        
@@ -169,7 +181,7 @@ struct
 
 	#if CLIENT
 		string							lastUsedEmoteAttachment
-		table< entity, bool >			characterVictoryModelIsEmoting
+		table< entity, bool >			characterPodiumModelIsEmoting
 	#endif          
 
 	table<ItemFlavor, ItemFlavor> characterBaseEmoteMap
@@ -217,6 +229,11 @@ void function ShEmotes_Init()
 	                                                                    
 
 	                             
+
+                     
+                                        
+                                    
+       
 #endif          
 
 #if CLIENT
@@ -245,7 +262,8 @@ void function ShEmotes_Init()
 
 	RegisterNetworkedVariableChangeCallback_bool( "isEmoting", Cl_OnPlayerEmoteStateChanged )
 
-	AddCallback_OnVictoryCharacterModelSpawned( OnVictoryCharacterModelSpawned )
+	AddCallback_OnVictoryCharacterModelSpawned( OnPodiumCharacterModelSpawned )
+	AddCallback_OnIntroPodiumCharacterModelSpawned( OnPodiumCharacterModelSpawned )
 #endif          
 
 	file.emotesInitialized = true
@@ -301,12 +319,10 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
  
 	                               
 
-	                                                 
-
 	                                         
 		           
 
-	                                              
+	                                                      
 	 
 		                                               
 	 
@@ -330,17 +346,43 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 	                                              
 	 
 		                                                          
-		                                                                  
 
-		                        
-			      
+		                                           
+		                                                                       
+		 
+			                                                                
+			                                    
+			 
+				                                                               
+				                        
+					      
+			 
+		                                     
+		    
+		 
+			                                                               
+			                        
+				      
+		 
 	 
 
 	                                              
 	 
 		                                                          
-		                                                                  
 
+		                                           
+		                                                                       
+		 
+			                                                                
+			                                             
+			 
+				                                                       
+				      
+			 
+		 
+		                                   
+
+		                                                               
 		                                       
 		 
 			                                                       
@@ -371,22 +413,29 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 #endif          
 
 #if CLIENT
-void function OnVictoryCharacterModelSpawned( entity characterModel, ItemFlavor character, int eHandle )
+void function OnPodiumCharacterModelSpawned( entity characterModel, ItemFlavor character, int eHandle )
 {
-	file.characterVictoryModelIsEmoting[ characterModel ] <- false
+	file.characterPodiumModelIsEmoting[ characterModel ] <- false
 
 	if ( LocalClientEHI() == eHandle )
 	{
-		thread TryPromptVictoryScreenEmote( characterModel )
+		thread TryPromptPodiumScreenEmote( characterModel )
 	}
 }
 
-bool function CanLocalClientPerformVictoryScreenEmote()
+bool function CanLocalClientPerformPodiumScreenEmote()
 {
-	if ( !IsAlive( GetLocalClientPlayer() ) )
+	entity localClientPlayer = GetLocalClientPlayer()
+
+	if ( !IsValid( localClientPlayer ) )
 		return false
 
-	if ( GetPlayerIsEmoting( GetLocalClientPlayer() ) )
+	                                                                                                            
+	                                                                       
+	if ( !CanPlayerSpeak( localClientPlayer ) )
+		return false
+
+	if ( GetPlayerIsEmoting( localClientPlayer ) )
 		return false
 
 	EHI playerEHI = LocalClientEHI()
@@ -395,37 +444,55 @@ bool function CanLocalClientPerformVictoryScreenEmote()
 	if ( ItemFlavor_GetQuipArrayForCharacter( character, true ).len() == 0 && ItemFlavor_GetFavoredQuipArrayForCharacter( character, true ).len() == 0 )
 		return false
 
-	if ( IsShowingVictorySequence() )
+	if ( IsEmoteEnabledForPodiumScreen() )
 	{
-		entity characterModel = GetVictoryScreenCharacterModelForEHI( playerEHI )
+		entity characterModel = GetPodiumScreenCharacterModelForEHI( playerEHI )
 
 		if ( !IsValid( characterModel ) )
 			return false
 
-		if ( ! ( characterModel in file.characterVictoryModelIsEmoting ) )
+		if ( ! ( characterModel in file.characterPodiumModelIsEmoting ) )
+		{
 			return false
-		else if ( file.characterVictoryModelIsEmoting[ characterModel ] )
+		}
+		else if ( file.characterPodiumModelIsEmoting[ characterModel ] )
+		{
 			return false
+		}
+	}
+	else
+	{
+		return false
 	}
 
 	return true
 }
 
-void function TryPromptVictoryScreenEmote( entity characterModel )
+bool function IsEmoteEnabledForPodiumScreen()
+{
+	bool isEmoteEnabled = false
+
+	if ( IsShowingVictorySequence() || ( IsShowingIntroPodiumSequence() && GetCurrentPlaylistVarBool( "podium_allow_intro_screen_emotes", false ) ) )
+		isEmoteEnabled = true
+
+	return isEmoteEnabled
+}
+
+void function TryPromptPodiumScreenEmote( entity characterModel )
 {
 	EndSignal( GetLocalClientPlayer(), "OnDestroy" )
 	EndSignal( characterModel, "OnDestroy" )
 	EndSignal( characterModel, SIGNAL_STARTING_EMOTE )
 
-	if ( CanLocalClientPerformVictoryScreenEmote() )
+	if ( CanLocalClientPerformPodiumScreenEmote() )
 	{
-		RegisterConCommandTriggeredCallback( "+jump", TryPerformVictoryScreenEmote )
-		RuiSetBool( GetVictorySequenceRui(), "emoteAvailable", true )
+		RegisterConCommandTriggeredCallback( "+jump", TryPerformPodiumScreenEmote )
+		RuiSetBool( GetPodiumSequenceRui(), "emoteAvailable", true )
 
 		OnThreadEnd(
 			function() : ()
 			{
-				DeregisterConCommandTriggeredCallback( "+jump", TryPerformVictoryScreenEmote )
+				DeregisterConCommandTriggeredCallback( "+jump", TryPerformPodiumScreenEmote )
 			}
 		)
 
@@ -433,7 +500,7 @@ void function TryPromptVictoryScreenEmote( entity characterModel )
 	}
 }
 
-void function TryPerformVictoryScreenEmote( entity player )
+void function TryPerformPodiumScreenEmote( entity player )
 {
 	if ( player != GetLocalClientPlayer() )
 		return
@@ -453,7 +520,7 @@ void function TryPerformVictoryScreenEmote( entity player )
 	if ( IsValid( localPlayer ) && !CanPlayerSpeak( localPlayer ) )
 		return
 
-	entity spawnedCharacterModel = GetVictoryScreenCharacterModelForEHI( playerEHI )
+	entity spawnedCharacterModel = GetPodiumScreenCharacterModelForEHI( playerEHI )
 
 	if ( !IsValid( spawnedCharacterModel ) )
 		return
@@ -502,37 +569,43 @@ void function TryPerformVictoryScreenEmote( entity player )
 	if ( selectedIndex >= 0 )
 	{
 		if ( pickFromFavored )
-			VictoryScreenPerformFavoredEmoteByIndex( spawnedCharacterModel, selectedIndex, playerEHI )
+		{
+			PodiumScreenPerformFavoredEmoteByIndex( spawnedCharacterModel, selectedIndex, playerEHI )
+		}
 		else
-			VictoryScreenPerformEmoteByIndex( spawnedCharacterModel, selectedIndex, playerEHI )
+		{
+			PodiumScreenPerformEmoteByIndex( spawnedCharacterModel, selectedIndex, playerEHI )
+		}
 	}
 }
 
-void function VictoryScreenPerformEmoteByIndex( entity characterModel, int quipIndex, EHI playerEHI, bool sendCallback = true )
+void function PodiumScreenPerformEmoteByIndex( entity characterModel, int quipIndex, EHI playerEHI, bool sendCallback = true )
 {
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
 	ItemFlavor emote     = LoadoutSlot_WaitForItemFlavor( playerEHI, Loadout_CharacterQuip( character, quipIndex ) )
 
-	thread VictoryScreenPerformEmote( characterModel, emote, playerEHI, sendCallback )
+	thread PodiumScreenPerformEmote_Thread( characterModel, emote, playerEHI, sendCallback )
 }
 
-void function VictoryScreenPerformFavoredEmoteByIndex( entity characterModel, int quipIndex, EHI playerEHI, bool sendCallback = true )
+void function PodiumScreenPerformFavoredEmoteByIndex( entity characterModel, int quipIndex, EHI playerEHI, bool sendCallback = true )
 {
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
 	ItemFlavor emote     = LoadoutSlot_WaitForItemFlavor( playerEHI, Loadout_FavoredQuip( character, quipIndex ) )
 
-	thread VictoryScreenPerformEmote( characterModel, emote, playerEHI, sendCallback )
+	thread PodiumScreenPerformEmote_Thread( characterModel, emote, playerEHI, sendCallback )
 }
 
-void function VictoryScreenPerformEmoteByGUID( entity characterModel, int emoteGUID, EHI playerEHI, bool sendCallback = true )
+void function PodiumScreenPerformEmoteByGUID( entity characterModel, int emoteGUID, EHI playerEHI, bool sendCallback = true )
 {
 	ItemFlavor emote = GetItemFlavorByGUID( emoteGUID )
 
-	thread VictoryScreenPerformEmote( characterModel, emote, playerEHI, sendCallback )
+	thread PodiumScreenPerformEmote_Thread( characterModel, emote, playerEHI, sendCallback )
 }
 
-void function VictoryScreenPerformEmote( entity characterModel, ItemFlavor emote, EHI playerEHI, bool sendCallback = true )
+void function PodiumScreenPerformEmote_Thread( entity characterModel, ItemFlavor emote, EHI playerEHI, bool sendCallback = true )
 {
+	Assert( IsNewThread(), "Must be threaded off" )
+
 	entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", characterModel.GetOrigin(), characterModel.GetAngles() )
 	mover.MakeSafeForUIScriptHack()
 	characterModel.SetParent( mover )
@@ -540,7 +613,7 @@ void function VictoryScreenPerformEmote( entity characterModel, ItemFlavor emote
 	if ( sendCallback )
 	{
 		int emoteGUID = ItemFlavor_GetGUID( emote )
-		Remote_ServerCallFunction( "ClientCallback_PlayerPerformVictoryScreenEmote", playerEHI, emoteGUID )
+		Remote_ServerCallFunction( "ClientCallback_PlayerPerformPodiumScreenEmote", playerEHI, emoteGUID )
 	}
 
 	OnThreadEnd(
@@ -551,22 +624,22 @@ void function VictoryScreenPerformEmote( entity characterModel, ItemFlavor emote
 		}
 	)
 
-	file.characterVictoryModelIsEmoting[ characterModel ] <- true
+	file.characterPodiumModelIsEmoting[ characterModel ] <- true
 
 	vector savedAngles = mover.GetAngles()
 
 	               
-	if ( ItemFlavor_GetHumanReadableRef( emote ) == "character_emote_caustic_epic_rakestep" )
+	if ( string(ItemFlavor_GetAsset( emote )) == CAUSTIC_SPECIAL_CASE_EMOTE_ASSET_PATH )
 	{
 		mover.SetAngles( mover.GetAngles() + <0,45,0> )
 	}
 
 	waitthread ModelPerformEmote( characterModel, emote, mover )
 
-	file.characterVictoryModelIsEmoting[ characterModel ] <- false
+	file.characterPodiumModelIsEmoting[ characterModel ] <- false
 
 	if ( GetBugReproNum() == 451 )
-		thread TryPromptVictoryScreenEmote( characterModel )
+		thread TryPromptPodiumScreenEmote( characterModel )
 
 	mover.SetAngles( savedAngles )
 	thread VictoryScreenEmoteCleanup( characterModel, playerEHI, mover )
@@ -591,37 +664,37 @@ void function VictoryScreenEmoteCleanup( entity characterModel, EHI playerEHI, e
 #endif          
 
 #if SERVER
-                                                                                                                     
+                                                                                                                    
  
 	                                                                                  
 
-	                                                                                                                                       
+	                                                                                                                                                  
 
 	                                                                     
 	 
 		                                         
 			        
 
-		                                                                                                                              
+		                                                                                                                             
 	 
  
 #endif          
 
 #if CLIENT
-void function ServerCallback_PlayerPerformVictoryScreenEmote( int performingPlayerEHI, int emoteGUID )
+void function ServerCallback_PlayerPerformPodiumScreenEmote( int performingPlayerEHI, int emoteGUID )
 {
-	entity characterModel = GetVictoryScreenCharacterModelForEHI( performingPlayerEHI )
+	entity characterModel = GetPodiumScreenCharacterModelForEHI( performingPlayerEHI )
 
 	if ( !IsValid( characterModel ) )
 		return
 
-	if ( ! ( characterModel in file.characterVictoryModelIsEmoting ) )
+	if ( ! ( characterModel in file.characterPodiumModelIsEmoting ) )
 		return
 
-	if ( file.characterVictoryModelIsEmoting[ characterModel ] )
+	if ( file.characterPodiumModelIsEmoting[ characterModel ] )
 		return
 
-	thread VictoryScreenPerformEmoteByGUID( characterModel, emoteGUID, performingPlayerEHI, false )
+	thread PodiumScreenPerformEmoteByGUID( characterModel, emoteGUID, performingPlayerEHI, false )
 }
 #endif          
 
@@ -859,7 +932,12 @@ int function CheckPlayerCanEmote( entity player )
 	if ( player.GetPlayerNetBool( "isHealing" ) )
 		return eCanEmoteCheckReults.FAIL_GENERIC
 	if ( player.IsUsingOffhandWeapon( eActiveInventorySlot.mainHand ) )
-		return eCanEmoteCheckReults.FAIL_GENERIC
+	{
+		entity offhandWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
+		var offhandAllowsInteract = offhandWeapon.GetWeaponInfoFileKeyField( "offhand_allow_player_interact" )
+		if ( !offhandAllowsInteract || offhandAllowsInteract <= 0 )
+			return eCanEmoteCheckReults.FAIL_GENERIC
+	}
 	if ( player.IsUsingOffhandWeapon( eActiveInventorySlot.altHand ) )
 		return eCanEmoteCheckReults.FAIL_GENERIC
 	                                                   
@@ -876,7 +954,7 @@ int function CheckPlayerCanEmote( entity player )
 	if ( player.IsSlipping() )
 		return eCanEmoteCheckReults.FAIL_GENERIC
 	if ( player.IsCrouched() && !player.CanStand() )
-		return eCanEmoteCheckReults.FAIL_GENERIC
+		return eCanEmoteCheckReults.FAIL_TOO_CLOSE_TO_WALL
 	int playerMatchState = PlayerMatchState_GetFor( player )
 	if ( playerMatchState < ePlayerMatchState.NORMAL && playerMatchState != ePlayerMatchState.STAGING_AREA )
 		return eCanEmoteCheckReults.FAIL_GENERIC
@@ -907,7 +985,7 @@ int function CheckPlayerCanEmote( entity player )
 
 bool function IsPlayerTooCloseToWall( entity player )
 {
-	TraceResults result = TraceHull( player.GetOrigin() + CLEARANCE_HULL_ORIGIN_OFFSET, player.GetOrigin() + CLEARANCE_HULL_ORIGIN_OFFSET, CLEARANCE_HULL_MINS, CLEARANCE_HULL_MAXS, GetPlayerArray_AliveConnected(), TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_PLAYER )
+	TraceResults result = TraceHull( player.GetOrigin() + CLEARANCE_HULL_ORIGIN_OFFSET, player.GetOrigin() + CLEARANCE_HULL_ORIGIN_OFFSET, CLEARANCE_HULL_MINS, CLEARANCE_HULL_MAXS, GetPlayerArray_AliveConnected(), TRACE_MASK_PLAYERSOLID, TRACE_COLLISION_GROUP_PLAYER )
 
 	if ( IsValid( result.hitEnt ) )
 		return true
@@ -927,19 +1005,19 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	OnThreadEnd(
 		function() : ( model )
 		{
-			if ( IsValid( model ) && IsShowingVictorySequence() )
+			if ( IsValid( model ) && IsEmoteEnabledForPodiumScreen() )
 			{
 				Signal( model, SIGNAL_END_EMOTE_ENDED )
 			}
 		}
 	)
 
-	int flashType = IsShowingVictorySequence() ? eMenuModelFlashType.VICTORY_SEQUENCE : eMenuModelFlashType.DEFAULT
+	int flashType = IsEmoteEnabledForPodiumScreen() ? eMenuModelFlashType.VICTORY_SEQUENCE : eMenuModelFlashType.DEFAULT
 	vector flashColor = MENU_MODELS_DEFAULT_HIGHLIGHT_COLOR / 255
 	thread FlashMenuModel( model, flashType, flashColor )
 
-	if ( IsShowingVictorySequence() && !CanLocalClientPerformVictoryScreenEmote() )
-		RuiSetBool( GetVictorySequenceRui(), "emoteAvailable", false )
+	if ( IsEmoteEnabledForPodiumScreen() && !CanLocalClientPerformPodiumScreenEmote() )
+		RuiSetBool( GetPodiumSequenceRui(), "emoteAvailable", false )
 
 	string anim3p     = CharacterQuip_GetAnim3p( item )
 	string loopAnim3p = CharacterQuip_GetAnimLoop3p( item )
@@ -1099,7 +1177,7 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 		      
 	 
 
-	                                                                                                            
+	                                                                                                                       
 
 	                                             
 	 
@@ -1109,7 +1187,7 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	 
 		                                             
 		 
-			                                                                                                                                                               
+			                                                                                                                                                              
 		 
 	 
  
@@ -1342,7 +1420,7 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 		                                             
 		 
 			                       
-				                                                                                                                                    
+				                                                                                                                                               
 		 
 	 
 
@@ -1487,8 +1565,6 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
 		                                                                                                                          
 		      
 	 
-	                                                                        
-	                                                    
 	                                                      
 
 	                                                                                                                                            
@@ -1507,6 +1583,11 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
 		                      
 			                            
 			     
+                    
+                        
+                               
+        
+      
 		        
 		 
 			                                                                                                                 
@@ -1523,6 +1604,7 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
 	                              
 	                                
 
+
 	                                                                                                                                                                              
 
 	                               
@@ -1533,41 +1615,9 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
 
 		                                                                                                                                                                 
 
-		                                                   
+		                                         
 
-		                                                                    
-		 
-			                                
-			                               
-
-			                                                              
-			 
-				                                                   
-				 
-					                           
-					     
-				 
-				                                                      
-				 
-					                                
-					                                          
-				 
-			 
-
-			                                 
-			 
-				                                                                       
-				                            
-					                                             
-			 
-			    
-				                                                                                                                                            
-		 
-
-		                                              
-			                                     
-
-		                                                        
+		                                     
 	 
 	    
 	 
@@ -1576,4 +1626,103 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
 		                                            
 	 
  
+
+                                                                 
+ 
+	                                                                    
+	 
+		                                  
+		                               
+
+		                                                              
+		 
+			                                                    
+			 
+				                           
+				     
+			 
+			                                                      
+			 
+				                                     
+				                                          
+			 
+		 
+
+		                                 
+		 
+			                                                                       
+			                              
+				                                             
+		 
+		    
+			                                                                                                                                            
+	 
+	                                            
+		                                     
+
+	                                                        
+ 
+
+                    
+                                                                                 
+ 
+                                  
+                                                         
+
+                                                                                                   
+
+                                   
+                                                   
+ 
+
+                                                                       
+ 
+                                      
+                               
+                                 
+                                      
+
+             
+                                      
+   
+                                                               
+                                                                                                        
+                                                                  
+
+                                
+                                                
+   
+  
+
+                                         
+                                                             
+
+                                                                                                                            
+
+                                
+  
+                                        
+                                           
+
+                                            
+                                                                    
+                                                                  
+                                                                                                                         
+
+                                                                                                    
+
+                                                              
+                                         
+
+                                 
+  
+     
+  
+                                                                      
+                                                                                                    
+                             
+  
+ 
+
+      
 #endif

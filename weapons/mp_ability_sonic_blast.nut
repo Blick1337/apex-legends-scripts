@@ -23,6 +23,8 @@ const asset SONIC_BLAST_FX_HOLD_3P = $"P_wpn_foa_blast_hold_3p"
 const asset SONIC_BLAST_FX_TRACER = $"P_foa_warning_mover_spiral"
 const asset FX_DRONE_TARGET = $"P_ar_foa_lockon"
 
+const string SONIC_BLAST_MOVER_SCRIPTNAME = "seer_tactical_mover"
+
 #if CLIENT
 global function ServerCallback_ApplyScreenShake
 global function ServerCallback_DoDamageIndicator
@@ -174,6 +176,7 @@ void function ChargeUpSound_Thread( entity weapon, entity weaponOwner )
 	weaponOwner.EndSignal( "OnDeath" )
 	weaponOwner.EndSignal( "OnDestroy" )
 	weaponOwner.EndSignal( "BleedOut_OnStartDying" )
+	weaponOwner.EndSignal( "SonicBlastCancelled" )
 
 	#if CLIENT
 	if ( weaponOwner != GetLocalViewPlayer() )
@@ -260,7 +263,7 @@ void function OnWeaponTossPrep_weapon_sonic_blast( entity weapon, WeaponTossPrep
 	entity weaponOwner = weapon.GetWeaponOwner()
 	if ( weaponOwner == GetLocalViewPlayer() )
 	{
-		thread DoHeartbeatSensorUI_Thread( weaponOwner )
+		thread DoHeartbeatSensorUI_Thread( weaponOwner, weapon )
 	}
 	#endif         
 }
@@ -310,7 +313,11 @@ void function OnWeaponTossPrep_weapon_sonic_blast( entity weapon, WeaponTossPrep
 	 
 
 	                                                                                
+                               
+                                               
+     
 	                                                                                               
+      
 
 	                                                                            
 	 
@@ -328,13 +335,14 @@ void function OnWeaponTossPrep_weapon_sonic_blast( entity weapon, WeaponTossPrep
 #endif
 
 #if CLIENT
-void function DoHeartbeatSensorUI_Thread( entity player )
+void function DoHeartbeatSensorUI_Thread( entity player, entity weapon )
 {
 	Assert ( IsNewThread(), "Must be threaded off." )
 	player.EndSignal( "OnDeath" )
 	player.EndSignal( "OnDestroy" )
 	player.EndSignal( "SonicBlastReleased" )
 	player.EndSignal( "EndHeartbeatSensorUI" )
+	weapon.EndSignal( "OnDestroy" )
 
 	OnThreadEnd(
 		function() : ( player )
@@ -344,15 +352,29 @@ void function DoHeartbeatSensorUI_Thread( entity player )
 		}
 	)
 
-	entity weapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 	float pulloutTime = weapon.GetWeaponSettingFloat( eWeaponVar.toss_pullout_time )
 
+                               
+                                               
+     
 	wait pulloutTime * 1.1                                                                         
+      
 
 	InitializeHeartbeatSensorUI( player )
 	ActivateHeartbeatSensor( player, true )
 
-	WaitForever()
+	while ( true )
+	{
+		int weaponActivity = weapon.GetWeaponActivity()
+
+		if ( weaponActivity != ACT_VM_TOSS_PREP_PULLOUT &&
+				weaponActivity != ACT_TRANSITION &&
+				weaponActivity != ACT_VM_TOSS_HOLD &&
+				weaponActivity != ACT_VM_TOSS_HOLD_SPRINTING )
+			return
+
+		WaitFrame()
+	}
 }
 #endif         
 
@@ -458,7 +480,7 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 	 
 
 	                                                               
-	                                                                           
+	                                                                                                         
 	                                                  
 	                                                                                   
 
@@ -614,6 +636,16 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 	                                                                                                      
 	                                         
 
+                      
+                                                      
+         
+       
+
+                 
+		                                                          
+			      
+       
+
 	                                                                                                                                                          
 	                                                                 
 	 
@@ -691,6 +723,9 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 
 	                             
 	                               
+                      
+                                              
+       
 
 	                                     
 	                       
@@ -984,6 +1019,9 @@ void function ServerToClient_ShowHealthRUI_Thread( entity owner, entity victim, 
 
 	victim.EndSignal( "OnDestroy" )
 	victim.EndSignal( "OnDeath" )
+                      
+                                              
+       
 
 	float endTime = Time() + duration
 	bool visible = true

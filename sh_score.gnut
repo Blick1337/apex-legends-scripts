@@ -145,7 +145,7 @@ void function InitScoreEvents()
 		string displayTypeStr = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "displayType" ) )
 		if ( displayTypeStr != "" )
 		{
-			array<string> displayTypeSplit = split( displayTypeStr, " " )
+			array<string> displayTypeSplit = split( displayTypeStr, WHITESPACE_CHARACTERS )
 			foreach ( Type in displayTypeSplit )
 			{
 				event.displayType = event.displayType | eEventDisplayType[ Type ]

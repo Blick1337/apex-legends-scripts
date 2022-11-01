@@ -52,7 +52,7 @@ PresenceState function ClientCodeCallback_GetPresenceState( string mapName )
 
 	PresenceState state
 	state.substitutionMode = eRichPresenceSubstitutionMode.NONE
-	state.mapName = "#" + mapName
+	state.mapName = GetCurrentPlaylistVarString( "map_name", "#" + mapName )
 	state.gamemode = GetGamemodeLocKey()
 	state.matchStartTime = startPlayingTime
 

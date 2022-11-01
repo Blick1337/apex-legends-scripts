@@ -240,9 +240,9 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 		            
 
 	                                                                                   
-	                                                                 
+	                                                             
 	                                                                                
-	                                                      
+	                                                                        
 
 	                                                  
  
@@ -283,7 +283,11 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 			                                                
 		 
 
-		                                                                                                                                                             
+		                                                                                                                                                                             
+                          
+                                                                                      
+        
+		                    
 		 
 			                                     
 			                              
@@ -296,8 +300,8 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 				                                                                                         
 					                                                
                    
-                                                                                             
-                                                     
+				                                                                                         
+					                                                
           
                   
                                                                                               
@@ -305,7 +309,15 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
           
 				    
 					                                                
-				                                                                                                                                         
+
+				         
+                            
+                                                              
+                                                                                                                                                          
+         
+          
+				                                                                                                                                  
+
 				                        
 				                         
 				                                                                            
@@ -323,7 +335,19 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 		                                                  
 
 		                                                     
-		                                                                          
+		                      
+                    
+                                                                                                   
+   
+         
+   
+                                                                                                               
+   
+                                                                                                                                
+   
+      
+      
+		                                                                      
 
 		                                                                                                                                                                                              
 		                                                                                                                                                                                                                                     
@@ -614,12 +638,6 @@ void function EntitySonarDetectedDisabled( entity ent, int statusEffect, bool ac
 		{
 			                                       
 			EntitySonarDetectedEnabled( ent, eStatusEffect.sonar_detected, true )
-			return
-		}
-
-		else if ( StatusEffect_GetSeverity( ent, eStatusEffect.echo_locator_scanned ) )
-		{
-			                                                                                                    
 			return
 		}
 

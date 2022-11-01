@@ -326,6 +326,7 @@ void function ShWarpGates_Init()
 	                                                
 	 
 		                                              
+		                                              
 	 
 
 	                                                                                                                           
@@ -466,8 +467,8 @@ void function ShWarpGates_Init()
 	                       
 	                        
 	                       
-	                              
-	  	                                              
+	                            
+		                                              
 
 	                                   
  
@@ -477,7 +478,7 @@ void function ShWarpGates_Init()
 	                                                
 	 
 		                                             
-		                                                                                                                                              
+		                                                                                                                                                        
 
 		                                                                             
 	 
@@ -701,7 +702,14 @@ void function ShWarpGates_Init()
 	                             
  
 
+
                                                               
+ 
+	                                                
+ 
+
+
+                                                                     
  
 	                      
 		      
@@ -709,11 +717,22 @@ void function ShWarpGates_Init()
 	                                    
 		      
 
+	                            
+
 	                                                                              
 
 	                                                         
 	                                                                          
 		                                  
+
+	                                                                                                           
+	                                                                                       
+	 
+		                             
+			      
+
+		           
+	 
 
 	                                         
 		      
@@ -748,6 +767,14 @@ void function ShWarpGates_Init()
 	                                                
  
 
+                                                              
+ 
+	                      
+		      
+
+	                             
+ 
+
 
                                                                         
  
@@ -774,7 +801,7 @@ void function ShWarpGates_Init()
 
 	                                                                  
 	                             
-	                                                                                                               
+	                                                                     
 
 	                                                                        
 
@@ -1411,7 +1438,7 @@ void function ServerCallback_FlashScreenForPlayer()
 	entity player  = GetLocalViewPlayer()
 	                            
 	entity cockpit = player.GetCockpit()
-	int fxHandle   = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( FX_1P_GATE_ENTER ), FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int fxHandle   = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( FX_1P_GATE_ENTER ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	EffectSetIsWithCockpit( fxHandle, true )
 }
 

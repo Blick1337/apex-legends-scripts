@@ -5,6 +5,10 @@ global function Loadout_SkydiveEmote
 global function GetValidPlayerSkydiveEmotes
 global function GetPlayerSkydiveEmote
 
+#if SERVER
+                                                             
+#endif
+
 global function SkydiveEmote_IsTheEmpty
 global function SkydiveEmote_GetCharacterFlavor
 global function SkydiveEmote_GetAnimSeq
@@ -30,6 +34,13 @@ void function ShSkydiveEmotes_LevelInit()
 {
 	FileStruct_LifetimeLevel newFileLevel
 	fileLevel = newFileLevel
+
+	#if SERVER
+	                                                                        
+	 
+		                                                                                       
+	 
+	#endif
 }
 
 
@@ -42,13 +53,15 @@ void function RegisterSkydiveEmotesForCharacter( ItemFlavor characterClass )
 
 	for ( int i = 0; i < NUM_SKYDIVE_EMOTE_SLOTS; i++ )
 	{
-		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_skydive_emote_" + i + "_for_" + ItemFlavor_GetGUIDString( characterClass ) )
-		entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
-		entry.DEV_category = "character_skydive_emotes"
-		entry.DEV_name = ItemFlavor_GetHumanReadableRef( characterClass ) + " Skydive Emote " + i
-		entry.defaultItemFlavor = skydiveEmotesList[0]
+		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "character_skydive_emote_" + i + "_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
+		entry.category     = eLoadoutCategory.CHARACTER_SKYDIVE_EMOTES
+		#if DEV
+			entry.pdefSectionKey = "character " + ItemFlavor_GetGUIDString( characterClass )
+			entry.DEV_name       = ItemFlavor_GetCharacterRef( characterClass ) + " Skydive Emote " + i
+		#endif
+		entry.defaultItemFlavor   = skydiveEmotesList[0]
 		entry.validItemFlavorList = skydiveEmotesList
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.isSlotLocked        = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
 		            
@@ -161,6 +174,18 @@ int function SkydiveEmote_GetSortOrdinal( ItemFlavor item )
 
 	return fileLevel.skydiveEmoteSortOrdinalMap[item]
 }
+
+#if SERVER
+                                                                            
+ 
+	                                     
+	 
+		                                     
+		                                                          
+		                                                                                          
+	 
+ 
+#endif
 
 
 #if CLIENT || UI

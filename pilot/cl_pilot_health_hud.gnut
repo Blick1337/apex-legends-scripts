@@ -370,7 +370,7 @@ void function DamageOverlayUpdate( entity player, float healthFrac, float lastHe
 	entity cockpit = player.GetCockpit()
 	if ( healthFrac < file.healthDisplayMax && healthFrac < lastHealthFrac && cockpit && !IsSpectating() )
 	{
-		int fxHandle = StartParticleEffectOnEntity( cockpit, file.healthFX, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+		int fxHandle = StartParticleEffectOnEntity( cockpit, file.healthFX, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		EffectSetIsWithCockpit( fxHandle, true )
 		player.s.healthFX.append( fxHandle )
 		file.healthFXCount++
@@ -419,7 +419,7 @@ void function PlayShieldOverlayFX( entity player, int particleSystemIdx )
 	if ( !cockpit )
 		return
 
-	int fxHandle = StartParticleEffectOnEntity( cockpit, particleSystemIdx, FX_PATTACH_ABSORIGIN_FOLLOW, -1 )
+	int fxHandle = StartParticleEffectOnEntity( cockpit, particleSystemIdx, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 
 	int armorTier = maxint( 1, EquipmentSlot_GetEquipmentTier( GetLocalViewPlayer(), "armor" ) )
 

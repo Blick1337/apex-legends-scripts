@@ -30,6 +30,9 @@ global function CodeCallback_PlayerDecoyStateChange
                                              
                                            
                                                       
+                     
+                                             
+                           
 #endif          
 
 global const SOUND_DECOY_CONTROL = "Mirage_PsycheOut_ModeSwitch"
@@ -42,6 +45,10 @@ const DECOY_FLAG_FX = $"P_flag_fx_foe"
 const HOLO_EMITTER_CHARGE_FX_1P = $"P_mirage_holo_emitter_glow_FP"
 const HOLO_EMITTER_CHARGE_FX_3P = $"P_mirage_emitter_flash"
 const asset DECOY_TRIGGERED_ICON = $"rui/hud/tactical_icons/tactical_mirage_in_world"
+
+                     
+                                               
+                           
 
 enum eDecoyReceiveDamage
 {
@@ -70,6 +77,10 @@ struct
 
 void function Decoy_Init()
 {
+                      
+                                        
+                            
+
 	file.decoyFlashEnabled = GetCurrentPlaylistVarBool( "mirage_flashbang_decoys", false )
 
 	Remote_RegisterServerFunction( "ClientCallback_ToggleDecoys" )
@@ -463,7 +474,7 @@ void function DestroyAfterTime( int fxHandle, float time )
 	            
 		                              
 		 
-			                                               
+			                                                    
 				                      
 			                                                          
 		 
@@ -642,7 +653,18 @@ void function DestroyAfterTime( int fxHandle, float time )
 
 	                                                             
 
-	                                                          
+                      
+                                                                    
+   
+                                                         
+   
+      
+   
+                                                             
+   
+      
+		                                                          
+                            
  
 
                                                                                                              
@@ -686,6 +708,42 @@ void function DestroyAfterTime( int fxHandle, float time )
 	         
  
 
+                     
+                                                                                       
+ 
+                                
+        
+
+                              
+                                                                                 
+
+                                          
+
+                                       
+                                               
+
+                                                                                                                                                                                               
+                                            
+                                                           
+
+             
+                                       
+   
+                              
+                                      
+
+                              
+                           
+   
+  
+
+                                                                            
+  
+             
+  
+ 
+                           
+
           
                                                         
  
@@ -700,7 +758,6 @@ void function DestroyAfterTime( int fxHandle, float time )
                                           
  
 	                             
-
 	                                                                         
  
 

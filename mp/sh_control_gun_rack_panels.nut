@@ -299,8 +299,8 @@ void function ControlGunRackPanels_ExtendedUseSuccess( entity gunRackPanel, enti
 		                                                                                
 		                                                            
 		                                                                
-		                                                                                  
-		                                                                                      
+		                                                                                
+		                                                                                    
 
 		                                                                                        
 			                                                 

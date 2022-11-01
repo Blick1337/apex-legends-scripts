@@ -7,6 +7,8 @@ global function PlayerPetsEnabled
 	                                                      
 #endif
 
+const int DICE_MAX_INT = 20
+
 struct
 {
 	int 			petType
@@ -568,7 +570,7 @@ void function OnPetCreatedClient( entity pet )
 	 
 	                                                                    
 	 
-		                                      
+		                                                
 		                                            
 	 
 	    

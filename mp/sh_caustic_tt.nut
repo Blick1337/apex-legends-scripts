@@ -12,6 +12,8 @@ global function CausticTT_SetGasFunctionInvertedValue
 #if CLIENT
 global function Caustic_TT_ServerCallback_SetCanistersOpen
 global function Caustic_TT_ServerCallback_SetCanistersClosed
+global function Caustic_TT_ServerCallback_SetSwitchesEnabled
+global function Caustic_TT_ServerCallback_SetSwitchesDisabled
 global function Caustic_TT_ServerCallback_ToxicWaterEmitterOn
 global function Caustic_TT_ServerCallback_ToxicWaterEmitterOff
 
@@ -101,7 +103,8 @@ const int CANISTER_DISTANCE_FRAME_TO_LOOT_SQR = 4900
 
 struct
 {
-	bool 				canistersClosed
+	bool 				canistersClosed = true
+	bool				switchesEnabled = true
 	array < entity >	canisterFrames
 	array < entity >	canisterSwitches
 	array < entity >	windowHighlights
@@ -147,6 +150,8 @@ void function Caustic_TT_RegisterNetworking()
 {
 	Remote_RegisterClientFunction( "Caustic_TT_ServerCallback_SetCanistersOpen" )
 	Remote_RegisterClientFunction( "Caustic_TT_ServerCallback_SetCanistersClosed" )
+	Remote_RegisterClientFunction( "Caustic_TT_ServerCallback_SetSwitchesEnabled" )
+	Remote_RegisterClientFunction( "Caustic_TT_ServerCallback_SetSwitchesDisabled" )
 	Remote_RegisterClientFunction( "Caustic_TT_ServerCallback_ToxicWaterEmitterOn" )
 	Remote_RegisterClientFunction( "Caustic_TT_ServerCallback_ToxicWaterEmitterOff" )
 }
@@ -223,8 +228,6 @@ void function EntitiesDidLoad()
 		}
 	#endif          
 
-	file.canistersClosed = true
-
 	foreach ( entity canisterSwitch in GetEntArrayByScriptName( CAUSTIC_TT_SWITCH_SCRIPTNAME ) )
 	{
 		Caustic_TT_SetButtonUsable( canisterSwitch )
@@ -268,6 +271,7 @@ void function EntitiesDidLoad()
 
 					                                                 
 					                                               
+					                                                           
 					                                            
 				 
 				                                                       
@@ -370,7 +374,7 @@ bool function CanisterSwitch_CanUse ( entity player, entity canisterSwitch, int 
 #if CLIENT
 string function GetCanisterSwitchUseTextOverride( entity canisterSwitch )
 {
-	if ( file.canistersClosed )
+	if ( file.switchesEnabled )
 	{
 		if ( !file.isGasFunctionInverted )
 			return "#CAUSTIC_TT_SWITCH_ON"
@@ -384,11 +388,8 @@ string function GetCanisterSwitchUseTextOverride( entity canisterSwitch )
 
 void function CanisterSwitch_OnUse( entity canisterSwitch, entity player, int useInputFlags )
 {
-	if ( file.canistersClosed )
-	{
-		if ( useInputFlags & USE_INPUT_LONG )
+	if ( file.switchesEnabled && useInputFlags & USE_INPUT_LONG )
 			thread CanisterSwitch_UseThink_Thread( canisterSwitch, player )
-	}
 	else
 	{
 		#if SERVER
@@ -429,7 +430,7 @@ void function CanisterSwitch_DisplayRui( entity ent, entity player, var rui, Ext
 
 void function CanisterSwitch_ExtendedUseSuccess( entity canisterSwitch, entity player, ExtendedUseSettings settings )
 {
-		if ( !file.canistersClosed )
+		if ( !file.switchesEnabled )
 			return
 
 		if ( !IsValid( player ) )
@@ -438,7 +439,7 @@ void function CanisterSwitch_ExtendedUseSuccess( entity canisterSwitch, entity p
 		if ( !IsValid( canisterSwitch ) )
 			return
 
-		CanisterSwitches_Disabled()
+		CanisterSwitches_Disabled( true )
 
 	if ( !file.isGasFunctionInverted )
 		thread CanisterSwitch_TrapActivate_Thread( player )
@@ -560,6 +561,8 @@ void function CanisterSwitch_TrapExpired_Thread()
 		                                                                                                 
 	#endif          
 
+	SetCanistersClosed()
+
 	wait 5.0
 
 	#if SERVER
@@ -677,6 +680,7 @@ void function CanisterSwitch_TrapExpired_Inverted_Thread()
 					                              
 						                                           
 
+					                                                    
 					                                                                                                                      
 					                                                                                                   
 				 
@@ -692,6 +696,7 @@ void function CanisterSwitch_TrapExpired_Inverted_Thread()
 		                                                          
 			                                                                                              
 	#endif          
+	SetCanistersClosed()
 
 	wait 5.0
 
@@ -708,20 +713,25 @@ void function CanisterSwitch_TrapExpired_Inverted_Thread()
 	CanisterSwitches_Enabled()
 }
 
-void function CanisterSwitches_Disabled()
+void function CanisterSwitches_Disabled( bool enableLooting )
 {
 	#if SERVER
 		                                                   
 		 
 			                           
-
-			                                                          
-				                                                                                          
 		 
-		                                    
+
+		                                                          
+			                                                                                             
+
 	#endif          
 
-	file.canistersClosed = false
+	if ( enableLooting )
+		SetCanistersOpen()
+	else
+		SetCanistersClosed()
+
+	file.switchesEnabled = false
 }
 
 void function CanisterSwitches_Enabled()
@@ -742,10 +752,13 @@ void function CanisterSwitches_Enabled()
 			                                                   
 			 
 				                           
-
-				                                                          
-					                                                                                            
 			 
+
+			                           
+
+			                                                          
+				                                                                                            
+
 		 
 		                                                                       
 		 
@@ -754,12 +767,49 @@ void function CanisterSwitches_Enabled()
 				                           
 				                            
 			 
-
 		 
 	#endif          
-
-	file.canistersClosed = true
 }
+
+void function SetCanistersClosed()
+{
+	file.canistersClosed = true
+	#if SERVER
+		                                    
+
+		                                                          
+			                                                                                            
+
+		                        
+	#endif
+}
+
+void function SetCanistersOpen()
+{
+	file.canistersClosed = false
+	#if SERVER
+		                                   
+
+		                                                          
+			                                                                                          
+
+		                        
+	#endif
+}
+
+#if SERVER
+                                      
+ 
+	                                                   
+	 
+		                         
+		 
+			                                                          
+				                                                                                  
+		 
+	 
+ 
+#endif
 
 #if SERVER
                                                                             
@@ -895,8 +945,13 @@ void function CanisterSwitches_Enabled()
 	                                                  
 		      
 
+	                            
+		      
+
 	                                                          
 
+	                                                  
+	                                                 
 	                                
 	                                                                                                                    
 
@@ -937,7 +992,6 @@ void function CanisterSwitches_Enabled()
 		                                                                                                                                                                                                                    
 	 
 
-	                                                 
 
 	            
 		                            
@@ -957,7 +1011,8 @@ void function CanisterSwitches_Enabled()
 	 
 		                                                                                                
 
-		                           
+		                                                                
+		                                  
 
 		                                                    
 			                            
@@ -984,7 +1039,8 @@ void function CanisterSwitches_Enabled()
 
 	              
 	 
-		                
+		                                 
+		                                    
 		                                            
 		  
 		       
@@ -996,7 +1052,8 @@ void function CanisterSwitches_Enabled()
 	 
 	    
 	 
-		                  
+		                                                                      
+		                                   
 		                                            
 		  
 		       
@@ -1018,6 +1075,16 @@ void function Caustic_TT_ServerCallback_SetCanistersOpen()
 void function Caustic_TT_ServerCallback_SetCanistersClosed()
 {
 	file.canistersClosed = true
+}
+
+void function Caustic_TT_ServerCallback_SetSwitchesEnabled()
+{
+	file.switchesEnabled = true
+}
+
+void function Caustic_TT_ServerCallback_SetSwitchesDisabled()
+{
+	file.switchesEnabled = false
 }
 
 void function Caustic_TT_ServerCallback_ToxicWaterEmitterOff()
@@ -1061,7 +1128,7 @@ bool function AreCausticTTCanistersClosed( entity canisterPanel )
 		            
 
 	                                                                                        
-	                                                                            
+	                                                                        
 
 	                                          
 		            

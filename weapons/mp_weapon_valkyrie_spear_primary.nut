@@ -1,4 +1,3 @@
-                    
 global function MpWeaponValkyrieSpearPrimary_Init
 global function OnWeaponActivate_weapon_valkyrie_spear_primary
 global function OnWeaponDeactivate_weapon_valkyrie_spear_primary
@@ -78,6 +77,3 @@ void function OnWeaponCustomActivityEnd_weapon_valkyrie_spear_primary( entity we
 			weapon.PlayWeaponEffect( VALK_AMB_EXHAUST_FP, VALK_AMB_EXHAUST_3P, "fx_r_thruster_bot" , true )
 		}
 }
-
-
-      

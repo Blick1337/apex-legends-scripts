@@ -58,6 +58,7 @@ enum eGameStatusPanel
 
 struct TeamRosterStruct
 {
+	var           framePanel
 	var           headerPanel
 	var           listPanel
 	table< var, int > connectionMap
@@ -135,7 +136,6 @@ struct
 
 	int maxTeamSize = MAX_TEAM_SIZE
 	int overviewSizeTotal = 0
-
 	AdminConfigData adminConfig
 } file
 
@@ -157,8 +157,6 @@ void function InitPrivateMatchGameStatusMenu( var menu )
 		AddMenuEventHandler( menu, eUIEvent.MENU_CLOSE, OnClosePrivateMatchGameStatusMenu )
 		AddMenuEventHandler( menu, eUIEvent.MENU_NAVIGATE_BACK, OnNavigateBack )
 
-		AddMenuFooterOption( menu, LEFT, BUTTON_B, true, "#B_BUTTON_CLOSE", "#B_BUTTON_CLOSE", null, CanNavigateBack )
-		AddMenuFooterOption( menu, LEFT, BUTTON_BACK, true, "", "", ClosePrivateMatchGameStatusMenu, CanNavigateBack )
 
 		AddCommandForMenuToPassThrough( menu, "toggle_inventory" )
 		
@@ -167,9 +165,6 @@ void function InitPrivateMatchGameStatusMenu( var menu )
 			Assert( CanRunClientScript() )
 			RunClientScript( "InitPrivateMatchGameStatusMenu", menu )
 		} )
-		
-		HudElem_SetChildRuiArg( Hud_GetChild( menu, "TabsCommon" ), "Background", "bgColor", <0, 0, 1>, eRuiArgType.VECTOR )
-		HudElem_SetChildRuiArg( Hud_GetChild( menu, "TabsCommon" ), "Background", "bgAlpha", 1.6, eRuiArgType.FLOAT )
 
 		SetTabRightSound( menu, "UI_InGame_InventoryTab_Select" )
 		SetTabLeftSound( menu, "UI_InGame_InventoryTab_Select" )
@@ -247,6 +242,7 @@ void function InitPrivateMatchGameStatusMenu( var menu )
 #if UI
 void function InitPrivateMatchRosterPanel( var panel )
 {
+	AddPanelFooterOption( panel ,LEFT, BUTTON_B, true, "#B_BUTTON_BACK", "#B_BUTTON_BACK")
 }
 
 void function RegisterInputs()
@@ -313,6 +309,8 @@ void function EndMatchButton_OnActivate( var button )
 
 void function InitPrivateMatchSummaryPanel( var panel )
 {
+	AddPanelFooterOption( panel ,LEFT, BUTTON_B, true, "#B_BUTTON_BACK", "#B_BUTTON_BACK")
+
 	var teamOneHeaderRui = Hud_GetRui( Hud_GetChild( panel, "TeamOverviewHeader01" ) )
 	RuiSetString( teamOneHeaderRui, "kills", Localize( "#TOURNAMENT_SPECTATOR_TEAM_KILLS" ) )
 	RuiSetString( teamOneHeaderRui, "teamName", Localize( "#TOURNAMENT_SPECTATOR_TEAM_NAME" ) )
@@ -328,6 +326,8 @@ void function InitHeaderTitle( var panel, string headerName, string headerTitle,
 
 void function InitPrivateMatchOverviewPanel( var panel )
 {
+	AddPanelFooterOption( panel ,LEFT, BUTTON_B, true, "#B_BUTTON_BACK", "#B_BUTTON_BACK")
+
 	InitHeaderTitle( panel, "AliveSquadsHeader", Localize( "#TOURNAMENT_SPECTATOR_ALIVE_TEAMS_HEADER" ), <36, 36, 36> / 255.0 )
 	InitHeaderTitle( panel, "EliminatedSquadsHeader", Localize( "#TOURNAMENT_SPECTATOR_DEAD_TEAMS_HEADER" ), <121, 25, 26 > / 255.0 )
 
@@ -341,6 +341,8 @@ void function InitPrivateMatchOverviewPanel( var panel )
 
 void function InitPrivateMatchAdminPanel( var panel )
 {
+	AddPanelFooterOption( panel ,LEFT, BUTTON_B, true, "#B_BUTTON_BACK", "#B_BUTTON_BACK")
+
 	AddUICallback_InputModeChanged( ControllerIconVisibilty )
 
 	file.endMatchButton = Hud_GetChild( panel, "EndMatchButton" )
@@ -516,6 +518,7 @@ void function SetupOverviewPanel( int panelNum, int panelSize, int maxTeams )
 TeamRosterStruct function CreateTeamPlacement( var panel )
 {
 	TeamRosterStruct teamPlacement
+	teamPlacement.framePanel = Hud_GetChild( panel, PRIVATE_MATCH_TEAM_FRAME_PANEL )
 	teamPlacement.headerPanel = Hud_GetChild( panel, PRIVATE_MATCH_TEAM_HEADER_PANEL )
 	Hud_Hide( teamPlacement.headerPanel )
 	teamPlacement.listPanel = Hud_GetChild( panel, PRIVATE_MATCH_TEAM_BUTTON_PANEL )
@@ -829,8 +832,18 @@ void function PrivateMatch_GameStatus_TeamRoster_Update( int dirtyBit )
 		Hud_Show( teamRoster.listPanel )
 		Hud_Show( teamRoster.headerPanel )
 
-		HudElem_SetRuiArg( teamRoster.headerPanel, "teamName", teamName )
-		HudElem_SetRuiArg( teamRoster.headerPanel, "teamNumber", teamIndex - 1 )
+		var headerRui = Hud_GetRui( teamRoster.headerPanel )
+		var frameRui = Hud_GetRui( teamRoster.framePanel )
+		vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+
+		RuiSetColorAlpha( frameRui, "teamColor", smokeColor, 1.0 )
+
+		RuiSetColorAlpha( headerRui, "teamColor", smokeColor, 1.0 )
+		RuiSetString( headerRui, "headerText", "["+ ( teamIndex - 1 ) + "] " + teamName )
+		RuiSetInt( headerRui, "numScoreColumns", 1 )
+		RuiSetInt( headerRui, "playerScore1NumDigits", 2 )
+		RuiSetImage( headerRui, "playerScore1Image", $"rui/hud/gamestate/player_kills_icon" )
+		RuiSetFloat( headerRui, "rowWidth", float( Hud_GetWidth( teamRoster.headerPanel ) ) )
 
 		var scrollPanel = Hud_GetChild( teamRoster.listPanel, "ScrollPanel" )
 
@@ -1151,11 +1164,28 @@ void function TryInitializeGameStatusMenu()
 	{
 		TabData tabData = GetTabDataForPanel( file.menu )
 		tabData.centerTabs = true
-		AddTab( file.menu, Hud_GetChild( file.menu, "PrivateMatchRosterPanel" ), "#TOURNAMENT_TEAM_STATUS" )		    
-		AddTab( file.menu, Hud_GetChild( file.menu, "PrivateMatchOverviewPanel" ), "#TOURNAMENT_MATCH_STATS" )		    
-		AddTab( file.menu, Hud_GetChild( file.menu, "PrivateMatchSummaryPanel" ), "#TOURNAMENT_MATCH_STATS" )		    
+
+		{
+			TabDef tabdef = AddTab( file.menu, Hud_GetChild( file.menu, "PrivateMatchRosterPanel" ), "#TOURNAMENT_TEAM_STATUS" )		    
+			tabdef.width = 220
+		}
+		{
+			TabDef tabdef = AddTab( file.menu, Hud_GetChild( file.menu, "PrivateMatchOverviewPanel" ), "#TOURNAMENT_MATCH_STATS" )		    
+			tabdef.width = 240
+		}
+		{
+			TabDef tabdef = AddTab( file.menu, Hud_GetChild( file.menu, "PrivateMatchSummaryPanel" ), "#TOURNAMENT_MATCH_STATS" )		    
+			tabdef.width = 240
+		}
+
 		if ( HasMatchAdminRole() )
-			AddTab( file.menu, Hud_GetChild( file.menu, "PrivateMatchAdminPanel" ), "#TOURNAMENT_ADMIN_CONTROLS" )	    
+		{
+			TabDef tabdef = AddTab( file.menu, Hud_GetChild( file.menu, "PrivateMatchAdminPanel" ), "#TOURNAMENT_ADMIN_CONTROLS" )
+			tabdef.width = 300
+		}        
+
+		SetTabDefsToSeasonal(tabData)
+		SetTabBackground( tabData, Hud_GetChild( file.menu, "TabsBackground" ), eTabBackground.STANDARD )
 
 		file.tabsInitialized = true
 	}

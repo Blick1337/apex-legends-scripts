@@ -136,6 +136,10 @@ void function Sh_InitToolTips()
 	file.tooltipInfos[ style ].ruiAsset = $"ui/custom_match_tooltip.rpak"
 	file.tooltipInfos[ style ].hasActionText = true
       
+
+	style = eTooltipStyle.STORE_CONFIRM
+	file.tooltipInfos[ style ].ruiAsset = $"ui/cannot_afford_tooltip.rpak"
+	file.tooltipInfos[ style ].hasActionText = true
 }
 
 #if UI
@@ -437,6 +441,11 @@ void function UpdateToolTipElement( var toolTipElement, var focusElement )
 		RuiSetInt( rui, "actionEnabledMask", dt.customMatchData.actionEnabledMask )
 	}
       
+
+	if ( dt.tooltipStyle == eTooltipStyle.STORE_CONFIRM )
+	{
+		RuiSetFloat3( rui, "descTextAltColor", dt.storeTooltipData.tooltipAltDescColor)
+	}
 }
 
 void function AddCallback_OnUpdateTooltip( int style, void functionref(int style, ToolTipData) func )

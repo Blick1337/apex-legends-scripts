@@ -12,6 +12,9 @@ global function OnWeaponAttemptOffhandSwitch_ability_valk_jets
 #if CLIENT
 global function Valk_EnableHudColorCorrection
 global function Valk_DisableHudColorCorrection
+global function Valk_CreateJetPackRui
+global function Valk_GetJetPackRui
+global function Valk_DestroyJetPackRui
 #endif
 
 global function CodeCallback_OnPlayerJetpackStop
@@ -23,22 +26,20 @@ const float VALK_JETPACK_REACTIVATION_DELAY = 0.25
 const asset SKYWARD_JUMPJETS_FRIENDLY = $"P_valk_jet_fly_ON"
 const asset SKYWARD_JUMPJETS_ENEMY = $"P_valk_jet_fly_ON"
 
-                    
 const asset VALK_AMB_EXHAUST_FP = $"P_valk_spear_thruster_idle"
 const asset VALK_AMB_EXHAUST_3P = $"P_valk_spear_thruster_idle_3P"
-                              
 
 struct
 {
 	#if CLIENT
-		var jetMeterRui
-
 		int  colorCorrection
 		bool colorCorrectionActive
 
 		int                       valkTrackersActive
 		array<entity>             valkEnemiesTracked
 		table<entity, int>        valkEnemiesTrackedCount
+
+		var jetPackRui
 	#endif
 
 	table<entity, float>                  valkToJumpHeldStartTime
@@ -57,6 +58,7 @@ void function MpAbilityValkJets_Init()
 {
 	PrecacheWeapon( "mp_ability_valk_jets" )
 
+	RegisterSignal( "JetpackPassiveRemoved" )
 	RegisterSignal( "JetpackOff" )
 	RegisterSignal( "ValkFreefallEnd" )
 	RegisterSignal( "ValkFlightReveal" )
@@ -76,10 +78,8 @@ void function MpAbilityValkJets_Init()
 		file.colorCorrection = ColorCorrection_Register( "materials/correction/launch_hud.raw_hdr" )
 	#endif
 	
-                    
 	PrecacheParticleSystem( VALK_AMB_EXHAUST_FP )
 	PrecacheParticleSystem( VALK_AMB_EXHAUST_3P )
-                              
 }
 
 #if SERVER
@@ -131,19 +131,44 @@ void function ValkTeammateStartTracking( entity valk )
 	float valkPasRevealDistance = GetCurrentPlaylistVarFloat( "valkpas_enemy_reveal_distance", 69000000 )
 	while ( true )
 	{
-		array<entity> enemyPlayers = GetPlayerArrayOfEnemies( valk.GetTeam() )
+		int valkTeam				= valk.GetTeam()
+		array<entity> enemyPlayers 	= GetPlayerArrayOfEnemies( valkTeam )
+		array<entity> decoyArray 	= GetPlayerDecoyArray()
+		decoyArray.extend( GetEntArrayByScriptName( MIRAGE_DECOY_DROP_SCRIPTNAME ) )
+
+		foreach ( decoy in decoyArray )
+		{
+			if( !IsValid(decoy) )
+				continue
+
+			int decoyTeam = decoy.GetTeam()
+			if( decoyTeam != valkTeam )
+				enemyPlayers.append( decoy )
+		}
 
 		foreach ( enemy in enemyPlayers )
 		{
 			bool dropThisEnemy
+			bool isDropDecoy
+			string scriptName
 
-			if ( IsAlive( enemy ) )
+			if( IsValid( enemy ) )
+			{
+				scriptName = enemy.GetScriptName()
+				isDropDecoy = ( scriptName == MIRAGE_DECOY_DROP_SCRIPTNAME )
+			}
+
+			if ( IsAlive( enemy ) || isDropDecoy )
 			{
 				dropThisEnemy = false
 
 				if ( DistanceSqr( valk.GetOrigin(), enemy.GetOrigin() ) < valkPasRevealDistance )
 				{
-					TraceResults trace = TraceLine( valk.EyePosition(), enemy.EyePosition(), [ valk ], TRACE_MASK_VISIBLE, TRACE_COLLISION_GROUP_NONE )
+					vector enemyTracePos = enemy.GetOrigin()
+					if( !isDropDecoy )
+						enemyTracePos = enemy.EyePosition()
+
+					TraceResults trace = TraceLine( valk.EyePosition(), enemyTracePos, [ valk ], TRACE_MASK_VISIBLE, TRACE_COLLISION_GROUP_NONE )
 					if ( trace.fraction == 1.0 && ValkThreatVisionShouldRevealEnemy( enemy ) )
 					{
 						if ( !(targetsShown.contains( enemy )) )
@@ -186,13 +211,54 @@ void function ValkTeammateStartTracking( entity valk )
 	}
 }
 
+void function Valk_CreateJetPackRui( entity player )
+{
+	if ( file.jetPackRui != null )
+		return
+
+	file.jetPackRui = CreateCockpitRui( $"ui/valk_jets_meter.rpak" )
+
+	RuiTrackFloat( file.jetPackRui, "chargeFrac", player, RUI_TRACK_GLIDE_METER_FRACTION )
+	RuiTrackFloat( file.jetPackRui, "bleedoutEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
+	RuiTrackFloat( file.jetPackRui, "reviveEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "reviveEndTime" ) )
+}
+
+var function Valk_GetJetPackRui()
+{
+	return file.jetPackRui
+}
+
+void function Valk_DestroyJetPackRui()
+{
+	if ( file.jetPackRui != null )
+	{
+		RuiDestroyIfAlive( file.jetPackRui )
+		file.jetPackRui = null
+	}
+}
+
+
 bool function ValkThreatVisionShouldRevealEnemy( entity enemy )
 {
 	if ( !enemy.IsPlayer() && !enemy.IsPlayerDecoy() )
-		return false
+	{
+		string scriptName = enemy.GetScriptName()
+		if( scriptName == MIRAGE_DECOY_DROP_SCRIPTNAME )
+			return true
+		else
+			return false
+	}
 
-	if ( BleedoutState_GetPlayerBleedoutState( enemy ) != BS_NOT_BLEEDING_OUT )
-		return false
+	if( !enemy.IsPlayerDecoy() )
+	{
+		if ( BleedoutState_GetPlayerBleedoutState( enemy ) != BS_NOT_BLEEDING_OUT )
+			return false
+	}
+
+                      
+                                                              
+               
+       
 
 	return true
 }
@@ -372,6 +438,47 @@ void function Valk_DisableHudColorCorrection()
 #endif
 
 #if SERVER
+                                                            
+ 
+	                                                
+	                             
+	                               
+	                                           
+
+	            
+		                       
+		 
+			                        
+			 
+
+				                                                         
+					                                                         
+			 
+		 
+	 
+
+	              
+	 
+		                                                                
+		                                                                     
+		 
+			              
+			 
+				                                                         
+			 
+		 
+		    
+		 
+			             
+			 
+				                                                         
+			 
+		 
+
+		           
+	 
+ 
+
                                               
  
 	                                                                                               
@@ -472,7 +579,6 @@ void function OnWeaponActivate_ability_valk_jets( entity weapon )
 		}
 	#endif
 
-                    
 	if ( weapon.HasMod( "heirloom" ) )
 	{
 		weapon.PlayWeaponEffect( VALK_AMB_EXHAUST_FP, VALK_AMB_EXHAUST_3P, "fx_l_thruster_top" , true )
@@ -480,7 +586,6 @@ void function OnWeaponActivate_ability_valk_jets( entity weapon )
 		weapon.PlayWeaponEffect( VALK_AMB_EXHAUST_FP, VALK_AMB_EXHAUST_3P, "fx_r_thruster_top" , true )
 		weapon.PlayWeaponEffect( VALK_AMB_EXHAUST_FP, VALK_AMB_EXHAUST_3P, "fx_r_thruster_bot" , true )
 	}
-                              
 }
 
 #if SERVER
@@ -542,12 +647,15 @@ void function OnWeaponDeactivate_ability_valk_jets( entity weapon )
 		                                                            
 
 		                                                                                 
+			                                        
 			                                             
 	 
 	             
 	 
 		                                                                         
 		                                                                       
+
+		                                              
 	 
  
 

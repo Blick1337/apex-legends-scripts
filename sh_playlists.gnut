@@ -23,6 +23,7 @@ global function CanPlaylistFitPartySize
 global function GetModeEmblemImage
 global function GetImageFromImageMap
 global function GetThumbnailImageFromImageMap
+global function GetGamemodeLogoFromImageMap
 global function GetImageFromMiniIconMap
 global function GetBinkFromBinkMap
 #endif
@@ -59,27 +60,38 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 	ranked_2 = $"rui/menu/gamemode/playlist_bg_worldsedge_ranked",
 	ranked_3 = $"rui/menu/gamemode/playlist_bg_olympus_mu2_ranked",
 	ranked_4 = $"rui/menu/gamemode/playlist_bg_storm_point_ranked",
+	ranked_5 = $"rui/menu/gamemode/playlist_bg_divided_moon_ranked",
 	solo_iron_crown = $"rui/menu/gamemode/solo_iron_crown",
 	solo = $"rui/menu/gamemode/solo_iron_crown",
 	duos = $"rui/menu/gamemode/duos_v2",
+                                
+                                                         
+       
 	trios = $"rui/menu/gamemode/trios",
+
 	panel_worlds_edge = $"rui/menu/gamemode/playlist_bg_worldsedge_vanilla",
 	panel_worlds_edge_mu1 = $"rui/menu/gamemode/worlds_edge_mu1",
 	panel_worlds_edge_mu2 = $"rui/menu/gamemode/playlist_bg_worldsedge_mu2",
 	panel_worlds_edge_mu3 = $"rui/menu/gamemode/playlist_bg_worldsedge_mu3",
+
 	panel_olympus = $"rui/menu/gamemode/playlist_bg_olympus",
 	panel_olympus_mu1 = $"rui/menu/gamemode/playlist_bg_olympus_mu1",
 	panel_olympus_mu2 = $"rui/menu/gamemode/playlist_bg_olympus_mu2",
+
 	canyon_land_mu1 = $"rui/menu/gamemode/play_apex",
 	panel_canyon_land = $"rui/menu/gamemode/playlist_bg_kc_vanilla",
 	panel_canyon_land_mu1 = $"rui/menu/gamemode/playlist_bg_kc",
 	panel_canyon_land_mu2 = $"rui/menu/gamemode/playlist_bg_kc_mu2",
 	panel_canyon_land_mu3 = $"rui/menu/gamemode/playlist_bg_kc_mu3",
+	panel_canyon_land_mu3_hu1 = $"rui/menu/gamemode/playlist_bg_kc_mu3_hu1",
 	panel_canyon_land_night = $"rui/menu/gamemode/playlist_bg_kc_night",
-	shotguns_and_snipers = $"rui/menu/gamemode/playlist_bg_shotguns_and_snipers",
+
 	panel_storm_point = $"rui/menu/gamemode/playlist_bg_storm_point",
 	panel_storm_point_mu1 = $"rui/menu/gamemode/playlist_bg_storm_point_mu1",
 
+	panel_divided_moon = $"rui/menu/gamemode/playlist_bg_divided_moon",
+
+	shotguns_and_snipers = $"rui/menu/gamemode/playlist_bg_shotguns_and_snipers",
 	panel_worlds_edge_mu2_airdrop = $"rui/menu/gamemode/playlist_bg_worldsedge_airdrop",
 	panel_olympus_airdrop = $"rui/menu/gamemode/playlist_bg_olympus_airdrop",
 	panel_canyon_land_mu2_airdrop = $"rui/menu/gamemode/playlist_bg_kc_mu2_airdrop",
@@ -93,20 +105,20 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 		shadow_royale = $"rui/menu/gamemode/playlist_bg_shadow_royale",
        
                        
-                                                       
+		winter_express = $"rui/menu/gamemode/playlist_bg_winterexpress",
        
                            
 		tournament = $"rui/menu/gamemode/tournament",
        
                            
-		salvo_wargames_kc = $"rui/menu/gamemode/salvo_wargames_kc",
-		salvo_wargames_oly = $"rui/menu/gamemode/salvo_wargames_oly",
-		wargames_duos = $"rui/menu/gamemode/wargames_duos",
-		wargames_trios = $"rui/menu/gamemode/wargames_trios",
-		deathtrigger = $"rui/menu/gamemode/playlist_bg_deathtrigger",
-		deathtrigger_kc = $"rui/menu/gamemode/playlist_bg_kc_mu3_deathtrigger",
-		deathtrigger_oly = $"rui/menu/gamemode/playlist_bg_olympus_mu1_deathtrigger",
-		deathtrigger_we = $"rui/menu/gamemode/playlist_bg_worldsedge_mu3_deathtrigger",
+                                                             
+                                                               
+                                                     
+                                                       
+                                                               
+                                                                         
+                                                                               
+                                                                                 
        
                                
                                                      
@@ -151,6 +163,13 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 		control_hammond_labs = $"rui/menu/gamemode/playlist_bg_control_hammond_labs",
 		control_caustic_tt = $"rui/menu/gamemode/playlist_bg_control_caustic_tt",
 		control_lava_siphon = $"rui/menu/gamemode/playlist_bg_control_lava_siphon",
+		control_hammond_labs_night = $"rui/menu/gamemode/playlist_bg_control_hammond_labs_night",
+       
+                         
+		gungame_skull_town = $"rui/menu/gamemode/playlist_bg_gungame_skull_town",
+		gungame_fragment_east = $"rui/menu/gamemode/playlist_bg_gungame_fragment_east",
+		gungame_estates_night = $"rui/menu/gamemode/playlist_bg_gungame_estates_night",
+		gungame_the_wall = $"rui/menu/gamemode/playlist_bg_gungame_the_wall",
        
 }
 
@@ -161,31 +180,43 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 	firing_range = $"rui/menu/gamemode/playlist_bg_sq_firing_range",
 	generic_01 = $"rui/menu/gamemode/generic_01",
 	generic_02 = $"rui/menu/gamemode/generic_02",
-	ranked_1 = $"rui/menu/gamemode/playlist_bg_kc_mu2_ranked",
-	ranked_2 = $"rui/menu/gamemode/playlist_bg_worldsedge_ranked",
-	ranked_3 = $"rui/menu/gamemode/playlist_bg_olympus_mu2_ranked",
-	ranked_4 = $"rui/menu/gamemode/playlist_bg_storm_point_ranked",
+	ranked_1 = $"rui/menu/gamemode/playlist_bg_kc_mu2_ranked",                                     
+	ranked_2 = $"rui/menu/gamemode/playlist_bg_worldsedge_ranked",                                     
+	ranked_3 = $"rui/menu/gamemode/playlist_bg_olympus_mu2_ranked",                                     
+	ranked_4 = $"rui/menu/gamemode/playlist_bg_storm_point_ranked",                                     
+	ranked_5 = $"rui/menu/gamemode/playlist_bg_sq_divided_moon_ranked",
 	solo_iron_crown = $"rui/menu/gamemode/solo_iron_crown",
 	solo = $"rui/menu/gamemode/solo_iron_crown",
 	duos = $"rui/menu/gamemode/playlist_bg_sq_duos",
+                                
+                                                                        
+       
+
 	trios = $"rui/menu/gamemode/playlist_bg_sq_trios",
+
 	panel_worlds_edge = $"rui/menu/gamemode/playlist_bg_worldsedge_vanilla",
 	panel_worlds_edge_mu1 = $"rui/menu/gamemode/worlds_edge_mu1",
 	panel_worlds_edge_mu2 = $"rui/menu/gamemode/playlist_bg_worldsedge_mu2",
 	panel_worlds_edge_mu3 = $"rui/menu/gamemode/playlist_bg_worldsedge_mu3",
+
 	panel_olympus = $"rui/menu/gamemode/playlist_bg_olympus",
 	panel_olympus_mu1 = $"rui/menu/gamemode/playlist_bg_olympus_mu1",
 	panel_olympus_mu2 = $"rui/menu/gamemode/playlist_bg_olympus_mu2",
+
 	canyon_land_mu1 = $"rui/menu/gamemode/play_apex",
 	panel_canyon_land = $"rui/menu/gamemode/playlist_bg_kc_vanilla",
 	panel_canyon_land_mu1 = $"rui/menu/gamemode/playlist_bg_kc",
 	panel_canyon_land_mu2 = $"rui/menu/gamemode/playlist_bg_kc_mu2",
 	panel_canyon_land_mu3 = $"rui/menu/gamemode/playlist_bg_kc_mu3",
+	panel_canyon_land_mu3_hu1 = $"rui/menu/gamemode/playlist_bg_kc_mu3_hu1",
 	panel_canyon_land_night = $"rui/menu/gamemode/playlist_bg_kc_night",
-	shotguns_and_snipers = $"rui/menu/gamemode/playlist_bg_sq_shotguns_and_snipers",
+
 	panel_storm_point = $"rui/menu/gamemode/playlist_bg_storm_point",
 	panel_storm_point_mu1 = $"rui/menu/gamemode/playlist_bg_storm_point_mu1",
 
+	panel_divided_moon = $"rui/menu/gamemode/playlist_bg_divided_moon",
+
+	shotguns_and_snipers = $"rui/menu/gamemode/playlist_bg_sq_shotguns_and_snipers",
 	panel_worlds_edge_mu2_airdrop = $"rui/menu/gamemode/playlist_bg_worldsedge_airdrop",
 	panel_olympus_airdrop = $"rui/menu/gamemode/playlist_bg_olympus_airdrop",
 	panel_canyon_land_mu2_airdrop = $"rui/menu/gamemode/playlist_bg_kc_mu2_airdrop",
@@ -199,20 +230,20 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 		shadow_royale = $"rui/menu/gamemode/playlist_bg_sq_shadow_royale",
        
                        
-                                                       
+		winter_express = $"rui/menu/gamemode/playlist_bg_sq_winterexpress",
        
                            
 		tournament = $"rui/menu/gamemode/tournament",
        
                            
-		salvo_wargames_kc = $"rui/menu/gamemode/salvo_wargames_kc",
-		salvo_wargames_oly = $"rui/menu/gamemode/salvo_wargames_oly",
-		wargames_duos = $"rui/menu/gamemode/wargames_duos",
-		wargames_trios = $"rui/menu/gamemode/wargames_trios",
-		deathtrigger = $"rui/menu/gamemode/playlist_bg_sq_deathtrigger",
-		deathtrigger_kc = $"rui/menu/gamemode/playlist_bg_sq_kc_mu3_deathtrigger",
-		deathtrigger_oly = $"rui/menu/gamemode/playlist_bg_sq_olympus_mu1_deathtrigger",
-		deathtrigger_we = $"rui/menu/gamemode/playlist_bg_sq_worldsedge_mu3_deathtrigger",
+                                                             
+                                                               
+                                                     
+                                                       
+                                                                  
+                                                                            
+                                                                                  
+                                                                                    
        
                                
                                                      
@@ -256,12 +287,23 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 		control_hammond_labs = $"rui/menu/gamemode/playlist_bg_sq_control_hammond_labs",
 		control_caustic_tt = $"rui/menu/gamemode/playlist_bg_sq_control_caustic_tt",
 		control_lava_siphon = $"rui/menu/gamemode/playlist_bg_sq_control_lava_siphon",
+		control_hammond_labs_night = $"rui/menu/gamemode/playlist_bg_sq_control_hammond_labs_night",
+       
+
+                         
+		gungame_skull_town = $"rui/menu/gamemode/playlist_bg_sq_gungame_skull_town",
+		gungame_fragment_east = $"rui/menu/gamemode/playlist_bg_sq_gungame_fragment_east",
+		gungame_estates_night = $"rui/menu/gamemode/playlist_bg_sq_gungame_estates_night",
+		gungame_the_wall = $"rui/menu/gamemode/playlist_bg_sq_gungame_the_wall",
        
 }
 
 global const table<string, asset> GAMEMODE_MINI_ICON_MAP = {
 	airdrop = $"rui/menu/gamemode_emblem/airdrop_takeover",
 }
+
+global const string GAMEMODE_DEFAULT_LOGO_NAME = "BATTLE_ROYALE"
+global const asset GAMEMODE_LOGO_SHAREDMAP = $"settings/sharedmap/gamemode_logos.rpak"
 
 const table<string, asset> GAMEMODE_BINK_MAP = {
 	play_apex = $"media/gamemodes/play_apex.bik",
@@ -287,7 +329,7 @@ const table<string, asset> GAMEMODE_BINK_MAP = {
 		shadow_royale = $"media/gamemodes/shadow_squad.bik",
        
                        
-                                                         
+		winter_express = $"media/gamemodes/winter_express.bik",
        
                            
 		tournament = $"media/gamemodes/play_apex.bik",
@@ -336,11 +378,6 @@ global struct PlaylistScheduleData
                        
                        
 
-#if ASSERTING
-var ASSERTING_integerRegexp = null
-var ASSERTING_floatRegexp = null
-#endif
-
 struct CachedPlaylistData
 {
 	string name
@@ -353,6 +390,8 @@ struct
 {
 	array<CachedPlaylistData> cachedPlaylistArray
 	table<string, CachedPlaylistData> cachedPlaylistMap
+	int lastCheckedTime = 0
+	array<string> cachedPlaylistNames
 
 } file
 
@@ -488,6 +527,40 @@ asset function GetThumbnailImageFromImageMap( string keyName )
 	return imageAsset
 }
 
+asset function GetGamemodeLogoFromImageMap( string keyName )
+{
+	asset imageAsset = $"white"
+	if ( keyName != "" )
+	{
+		bool foundLogo = false
+		var parentBlock = GetSettingsBlockForAsset( GAMEMODE_LOGO_SHAREDMAP )
+		var arrField    = GetSettingsBlockArray( parentBlock, "gamemodeLogos" )
+
+		foreach ( var entryBlock in IterateSettingsArray( arrField ) )
+		{
+			string modeName = GetSettingsBlockString( entryBlock, "mode" )
+
+			if( modeName.tolower() == keyName.tolower() )
+			{
+				imageAsset = GetSettingsBlockAsset( entryBlock, "logo" )
+				foundLogo = true
+				break
+			}
+		}
+
+		if ( !foundLogo )
+		{
+			#if DEV
+				if ( GetConVarBool( "ui_automation_enabled" ) )
+					return imageAsset                    
+			#endif       
+
+			Warning( "Invalid playlist value for 'image': %s", keyName )
+		}
+	}
+	return imageAsset
+}
+
 
 asset function GetBinkFromBinkMap( string keyName )
 {
@@ -573,31 +646,14 @@ PlaylistScheduleData function Playlist_GetNonCachedScheduleData( string plName )
 		int ornull startTime = null
 		int ornull endTime   = null
 
-		if ( fields.len() == 1 )
+		if ( fields.len() != 2 )
 		{
-			if ( !IsValidItemFlavorHumanReadableRef( fields[0] ) )
-			{
-				Assert( false, format( "Bad itemflavor in playlist '%s' for setting '%s': '%s'", plName, varName, fields[0] ) )
-				break
-			}
-
-			ItemFlavor calEvent = GetItemFlavorByHumanReadableRef( fields[0] )
-			Assert( ItemFlavor_GetType( calEvent ) > eItemType._CALEVENT_RANGE_START && ItemFlavor_GetType( calEvent ) < eItemType._CALEVENT_RANGE_END )
-
-			startTime = CalEvent_GetStartUnixTime( calEvent )
-			endTime = CalEvent_GetFinishUnixTime( calEvent )
+			Assert( false, format( "Bad format in playlist '%s' for setting '%s': '%s'", plName, varName, varVal ) )
+			break
 		}
-		else
-		{
-			if ( fields.len() != 2 )
-			{
-				Assert( false, format( "Bad format in playlist '%s' for setting '%s': '%s'", plName, varName, varVal ) )
-				break
-			}
 
-			startTime = DateTimeStringToUnixTimestamp( fields[0] )
-			endTime = DateTimeStringToUnixTimestamp( fields[1] )
-		}
+		startTime = DateTimeStringToUnixTimestamp( fields[0] )
+		endTime = DateTimeStringToUnixTimestamp( fields[1] )
 
 		if ( startTime == null || endTime == null )
 		{
@@ -609,7 +665,7 @@ PlaylistScheduleData function Playlist_GetNonCachedScheduleData( string plName )
 		block.startUnixTime = expect int( startTime )
 		block.endUnixTime = expect int( endTime )
 
-		#if ASSERTING
+		#if ASSERTS
 			Assert( block.startUnixTime < block.endUnixTime, format( "Bad times in playlist '%s' for setting '%s': '%s'", plName, varName, varVal ) )
 			foreach ( TimestampRange otherBlock in data.blocks )
 			{
@@ -721,6 +777,17 @@ array<string> function GetPlaylistModNames()
 
 array<string> function GetVisiblePlaylistNames( bool isPrivateMatchQuery = false )
 {
+		bool doOptIn = false
+		#if UI
+			if ( ShouldDisplayOptInOptions() && IsOptInEnabled() )
+				doOptIn = true
+		#endif
+
+		if ( !doOptIn && ( ( GetUnixTimestamp() - file.lastCheckedTime ) < GetCurrentPlaylistVarInt( "visible_playlist_refresh_time_sec", 10 ) ) )
+			return file.cachedPlaylistNames
+
+	file.lastCheckedTime = GetUnixTimestamp()
+
 	if ( GetPlaylistCount() != file.cachedPlaylistArray.len() )
 		Warning( "Playlist count mismatch: cache (%d) != actual (%d)", file.cachedPlaylistArray.len(), GetPlaylistCount() )
 
@@ -732,7 +799,7 @@ array<string> function GetVisiblePlaylistNames( bool isPrivateMatchQuery = false
 			shouldDisplayOptInOptions = true
 	#endif      
 
-	array<string> forcedVisiblePlaylists = split( forcedVisiblePlaylistsString, " " )
+	array<string> forcedVisiblePlaylists = split( forcedVisiblePlaylistsString, WHITESPACE_CHARACTERS )
 
 	array<string> list      = []
 	array<string> optInList = []
@@ -789,6 +856,7 @@ array<string> function GetVisiblePlaylistNames( bool isPrivateMatchQuery = false
 		finalList = list
 
 	finalList.extend( optInList )
+	file.cachedPlaylistNames = finalList
 	return finalList
 }
 #endif
@@ -830,16 +898,16 @@ const table<string, asset> GAMEMODE_EMBLEM_MAP = {
 
 	duos = $"rui/menu/gamemode_emblem/duos",
                        
-                                                              
+		winter_express = $"rui/menu/gamemode_emblem/winter_express",
        
                            
-		death_trigger = $"rui/menu/gamemode_emblem/emblem_war_games_death_trigger",
-		flare_up = $"rui/menu/gamemode_emblem/emblem_war_games_flare_up",
-		second_chance = $"rui/menu/gamemode_emblem/emblem_war_games_second_chance",
-		armed_drop = $"rui/menu/gamemode_emblem/emblem_war_games_armed_drop",
-		glow_zones = $"rui/menu/gamemode_emblem/emblem_war_games_glow_zones",
-		shield_regen = $"rui/menu/gamemode_emblem/emblem_war_games_shield_regen",
-		auto_cards = $"rui/menu/gamemode_emblem/emblem_war_games_auto_cards",
+                                                                             
+                                                                   
+                                                                             
+                                                                       
+                                                                       
+                                                                           
+                                                                       
        
                                
                                                             
@@ -854,6 +922,10 @@ const table<string, asset> GAMEMODE_EMBLEM_MAP = {
                          
 		control_mode = $"rui/menu/gamemode_emblem/emblem_control"
                                
+
+                        
+	freedm = $"rui/menu/gamemode_emblem/emblem_freedm"                                
+       
 }
 #endif
 

@@ -400,7 +400,7 @@ bool function GetTriggerEnabled( entity trigger )
 
 array<string> function GetFlagsFromField( entity ent, string field )
 {
-	return split( ent.kv[ field ], " " )
+	return split( ent.kv[ field ], WHITESPACE_CHARACTERS )
 }
 
 #if SERVER

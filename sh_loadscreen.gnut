@@ -48,10 +48,11 @@ void function ShLoadscreen_LevelInit()
 #if SERVER || CLIENT || UI
 void function OnRegisterRootItemFlavors()
 {
-	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "loadscreen_selection" )
+	LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "loadscreen_selection", eLoadoutEntryClass.ACCOUNT )
 	entry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
-	                                              
-	entry.DEV_name = "Loadscreen"
+	#if DEV
+		entry.DEV_name       = "Loadscreen"
+	#endif
 	fileLevel.loadoutSelectionSlot = entry
 
 	array<ItemFlavor> loadscreenList = []

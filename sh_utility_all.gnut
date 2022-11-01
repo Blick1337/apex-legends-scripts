@@ -28,6 +28,8 @@ global const float DOT_60DEGREE =	0.5
 global const float DOT_80DEGREE =	0.17364817766
 global const float DOT_85DEGREE =	0.0871557427477
 
+global const string WHITESPACE_CHARACTERS = "\r\n\t "                                   
+
                         
 global const PST_TIME_ZONE_OFFSET = -8                               
 global const PDT_TIME_ZONE_OFFSET = -7
@@ -156,7 +158,39 @@ void function ShUtilityAll_Init()
 		PrecacheParticleSystem( $"P_ghurka_amb_plasma_3P" )
 		PrecacheParticleSystem( $"P_ghurka_plasma_mdl" )
 		PrecacheParticleSystem( $"P_ghurka_plasma_mdl_3P" )
-
+		               
+		                                                    
+		                                                       
+		                                                   
+		                                                    
+		                                                      
+		                                                       
+		                                                 
+		                                                      
+		                                                       
+		                                               
+		                                                 
+		                                                 
+		                                                 
+		                                                 
+		                                                 
+		                                                      
+		                                                   
+		                                                       
+		                                                       
+		                                                            
+		                                                            
+		                                                        
+		                                                          
+		                                                          
+		                                                       
+		                                                       
+		                                                       
+		                                                       
+		                                                       
+		                                                                 
+		                                                              
+		                                                           
 	#endif
 }
 
@@ -236,19 +270,8 @@ void function PrintObject( obj, int indent, int depth, int maxDepth )
 	}
 }
 
-                                      
-void function DumpStack( int offset = 1 )
-{
-	for ( int i = offset; i < 20; i++ )
-	{
-		if ( !("src" in getstackinfos( i )) )
-			break
-		printl( i + " File : " + getstackinfos( i )["src"] + " [" + getstackinfos( i )["line"] + "]\n    Function : " + getstackinfos( i )["func"] + "() " )
-	}
-}
-
-                                      
-string function GetStack( int offset = 1 )
+                                       
+string function GetStack( int offset = 2 )
 {
 	string stackInfo = ""
 
@@ -257,21 +280,16 @@ string function GetStack( int offset = 1 )
 		if ( !("src" in getstackinfos( i )) )
 			break
 
-		stackInfo += i + " File : " + getstackinfos( i )["src"] + " [" + getstackinfos( i )["line"] + "]\n    Function : " + getstackinfos( i )["func"] + "()\n"
+		if ( i != offset )
+		{
+			stackInfo += "\n"
+		}
+
+		stackInfo += getstackinfos( i )["src"] + " [" + getstackinfos( i )["line"] + "], " + getstackinfos( i )["func"] + "()"
 	}
 
 	return stackInfo
 }
-
-
-void function DumpPreviousFunction()
-{
-	int i = 3
-	if ( !("src" in getstackinfos( i )) )
-		return
-	printl( "Called from: " + getstackinfos( i )["src"] + " [" + getstackinfos( i )["line"] + "] : " + getstackinfos( i )["func"] + "() " )
-}
-
 
 string function GetPreviousFunction()
 {
@@ -311,7 +329,7 @@ bool function CallingFuncIsNewThread()
 
 void function AssertIsNewThread()
 {
-	Assert( CallingFuncIsNewThread(), "Must be threaded off" )
+	Assert( CallingFuncIsNewThread(), "Must be threaded" )
 }
 
 
@@ -390,7 +408,8 @@ float function CalcFOVScale( float baseFOV, float zoomScale )
 
 int function CalcZoomMag( float baseFOV, float fov )
 {
-	return int ( tan( DegToRad( baseFOV/2 ) ) / tan( DegToRad( fov/2 ) ) )
+	float magf = tan( DegToRad( baseFOV/2 ) ) / tan( DegToRad( fov/2 ) )
+	return int ( floor( magf + 0.5) )
 }
 
 
@@ -735,11 +754,20 @@ bool function Control_IsModeEnabled()
                               
 
                       
-                                           
- 
-                                                                    
- 
+bool function WinterExpress_IsModeEnabled()
+{
+	return GetCurrentPlaylistVarBool( "is_winter_express_game", false )
+}
       
+
+bool function IsSpectator( entity player )
+{
+	if ( !IsValid( player ) )
+		return false
+
+	return player.GetTeam() == TEAM_SPECTATOR
+}
+
 
 int function GetEnemyTeam( int team )
 {
@@ -837,34 +865,6 @@ string function GetMapDisplayDesc( string mapname )
 }
 
 
-string function StringReplace( string baseString, string searchString, string replaceString )
-{
-	Assert( searchString.len() > 0, "cannot use StringReplace with an empty searchString" )
-
-	string newString = ""
-
-	int searchIndex = 0
-	while( searchIndex < (baseString.len() - searchString.len() + 1) )
-	{
-		var occurenceIndexOrNull = baseString.find_olduntyped( searchString, searchIndex )
-
-		if ( occurenceIndexOrNull == null )
-			break
-
-		int occurenceIndex = expect int( occurenceIndexOrNull )
-
-		newString += baseString.slice( searchIndex, occurenceIndex )
-		newString += replaceString
-
-		searchIndex = occurenceIndex + searchString.len()
-	}
-
-	newString += baseString.slice( searchIndex )
-
-	return newString
-}
-
-
 var function MakeRegexp( string patternString )
 {
 	return regexp( patternString )
@@ -902,8 +902,8 @@ bool function DoesMatchRegexp( string baseString, string patternString )
 	return expect bool(regexp( patternString ).match( baseString ))
 }
 
-
-string function RegexpReplace( string baseString, string patternString, string replaceString )
+#if DEV
+string function DEV_RegexpReplace( string baseString, string patternString, string replaceString )
 {
 	var regexpReplaceSubstitutionPattern = regexp( "\\$(\\d+)" )                            
 
@@ -982,6 +982,7 @@ string function RegexpReplace( string baseString, string patternString, string r
 
 	return newString
 }
+#endif
 
 
 string function RegexpReplaceFunc( string baseString, string patternString, string functionref( array<string> captures ) replaceFunc )
@@ -1149,7 +1150,7 @@ bool function GetWeaponInfoFileKeyField_GlobalBool( string ref, string variable 
 	return expect bool( val )
 }
 
-vector function GetWeaponInfoFileKeyField_GlobalVectorFloat( string ref, string variable, string delimiter = " " )
+vector function GetWeaponInfoFileKeyField_GlobalVectorFloat( string ref, string variable, string delimiter = WHITESPACE_CHARACTERS )
 {
 	var val = GetWeaponInfoFileKeyField_Global( ref, variable )
 	Assert( val != null, "Weapon key \"" + variable + "\" does not exist in weapon \"" + ref + "\" !" )
@@ -1159,7 +1160,7 @@ vector function GetWeaponInfoFileKeyField_GlobalVectorFloat( string ref, string 
 	return <float(arr[0]), float(arr[1]), float(arr[2])>
 }
 
-vector function GetWeaponInfoFileKeyField_GlobalVectorInt( string ref, string variable, string delimiter = " " )
+vector function GetWeaponInfoFileKeyField_GlobalVectorInt( string ref, string variable, string delimiter = WHITESPACE_CHARACTERS )
 {
 	var val = GetWeaponInfoFileKeyField_Global( ref, variable )
 	Assert( val != null, "Weapon key \"" + variable + "\" does not exist in weapon \"" + ref + "\" !" )
@@ -1279,6 +1280,11 @@ string function VectorToColorString( vector color, float alpha )
 vector function FlattenNormalizeVec( vector v )
 {
 	return Normalize( <v.x, v.y, 0> )
+}
+
+bool function VectorWithinBounds( vector v, float maxValue )
+{
+	return (fabs( v.x ) < maxValue && fabs( v.y ) < maxValue && fabs( v.z ) < maxValue)
 }
 
 
@@ -1989,16 +1995,17 @@ string function GetEnumStringSlow( table enumTbl, int value )
 	return "<UNKNOWN ENUM VALUE: " + value + ">"
 }
 
-
+#if DEV
 string function DEV_EscapeString( string str, bool wrapInQuotes = true )
 {
-	string out = RegexpReplace( str, "[\\t\\n\\r\\\"\\\\]", "$0" )
+	string out = DEV_RegexpReplace( str, "[\\t\\n\\r\\\"\\\\]", "$0" )
 	if ( wrapInQuotes )
 		out = "\"" + out + "\""
 	return out
 }
+#endif
 
-
+#if DEV
 string function DEV_ArrayConcat( array<string> arr, string sep = ",", bool shouldQuote = true )
 {
 	string out   = ""
@@ -2017,6 +2024,7 @@ string function DEV_ArrayConcat( array<string> arr, string sep = ",", bool shoul
 	}
 	return out
 }
+#endif
 
 
 int function SortByInventoryIndexAndCount( ConsumableInventoryItem a, ConsumableInventoryItem b )
@@ -2236,6 +2244,13 @@ bool function FiringRangeHasFriendlyFire()
  
       
 
+                        
+                                          
+ 
+                                                                 
+ 
+      
+
 bool function FreelanceSystemsAreEnabled()
 {
 	const bool ENABLED_BY_DEFAULT = false
@@ -2248,7 +2263,7 @@ bool function SpectreShacksAreEnabled()
 }
       
 
-                       
+                      
                                     
  
                                                                  
@@ -2377,7 +2392,8 @@ bool function DisplayObituaryName()
 #if CLIENT || UI
 bool function DisplayHopupPopup()
 {
-	return GetConVarBool( "hud_setting_showHopUpPopUp" )
+	bool forceHidePopup = GetCurrentPlaylistVarBool( "hud_hide_hopuppopup", false )
+	return !forceHidePopup && GetConVarBool( "hud_setting_showHopUpPopUp" )
 }
 #endif
 
@@ -2519,6 +2535,7 @@ int ornull function DateTimeStringToUnixTimestamp( string str )
 	Assert( captures.len() == 0 || captures.len() == 10 )
 	if ( captures.len() == 0 )
 		return null
+
 	TimeParts parts
 	parts.year = int(captures[1])
 	parts.month = int(captures[2])
@@ -2692,6 +2709,13 @@ string function GetTimeString( int unixTime )
 	TimeParts timeParts = GetUnixTimeParts( unixTime )
 	return format( "%02i:%02i:%02i", timeParts.hour, timeParts.minute, timeParts.second )
 }
+
+string function GetDateTimeStringDayMonthYear( int unixTime, int timezoneOffsetHours = 0 )
+{
+	TimeParts timeParts = GetUnixTimeParts( unixTime, timezoneOffsetHours )
+	return format( "%02i-%02i-%04i",  timeParts.day, timeParts.month, timeParts.year )
+}
+
 
 
 int function GetStartOfDay( int unixTime )
@@ -3492,10 +3516,10 @@ bool function AreClubInvitesEnabled()
 
                                                                                  
                                                                                                                                            
-bool function IsMadMaggieHost()
-{
-	return GetCurrentPlaylistVarBool( "is_maggie_host", false )
-}
+                               
+ 
+                                                            
+ 
                                 
 
 #if SERVER || CLIENT
@@ -3844,6 +3868,24 @@ float function CalculateIntArrayVarianceWithGivenPercentile( array<int> inArr, f
 	}
 
 	return sumOfSquares / maxIndex
+}
+
+                                   
+
+float function MetersToInches( float meters )
+{
+	return( meters * METERS_TO_INCHES )
+}
+
+float function MetersToInchesSqr( float meters )
+{
+	float inches = MetersToInches( meters )
+	return( inches * inches )
+}
+
+float function InchesToMeters( float inches )
+{
+	return( inches * INCHES_TO_METERS )
 }
 
 #endif                    
