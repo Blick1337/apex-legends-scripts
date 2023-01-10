@@ -808,10 +808,10 @@ array<ComicPanel> function LoadComicPanelsFromDataTable( asset dtAsset, int page
 				panel.pageID = pageIndex
 				panel.panelID = panels.len()
 
-				panel.borderWidth = borderWidth ? borderWidth : width
-				panel.borderHeight = borderHeight ? borderHeight : height
-				panel.borderOffsetX = borderOffsetX ? borderOffsetX : 0.0
-				panel.borderOffsetY = borderOffsetY ? borderOffsetY : 0.0
+				panel.borderWidth = borderWidth > 0 ? borderWidth : width
+				panel.borderHeight = borderHeight > 0 ? borderHeight : height
+				panel.borderOffsetX = borderOffsetX > 0 ? borderOffsetX : 0.0
+				panel.borderOffsetY = borderOffsetY > 0 ? borderOffsetY : 0.0
 
 				firstPanel = false
 				Assert( width > 0, "A panel row in data table " + string( dtAsset ) + " has invalid width: " + string( width ) )
@@ -873,7 +873,7 @@ array<ComicPanel> function LoadComicPanelsFromDataTable( asset dtAsset, int page
 		if ( hadError )
 		{
 			string errMsg = format( "%s() - Unhandled command '%s' on row #%d of '%s'", FUNC_NAME(), cmd, rowIdx, string( dtAsset ) )
-			Assert( 0, errMsg )
+			Assert( false, errMsg )
 			Warning( "%s", errMsg )
 			hadError = false
 		}
@@ -1568,7 +1568,7 @@ void function OnClickedToAdvance( bool isForward )
 				                                                                                     
 				                                                               
 				                                                                                     
-				Assert( 0, "Trying to find panels associated with panel #" + (prevMinPanelToLoad+1) + "(index: " + prevMinPanelToLoad +
+				Assert( false, "Trying to find panels associated with panel #" + (prevMinPanelToLoad+1) + "(index: " + prevMinPanelToLoad +
 				", " + file.s_panels[prevMinPanelToLoad].panelImage + ") but " + numPanels + " were found, exceeding " + maxSupportedPanels + " panels a page can show. Check 'Type Of speech bubble' on Panel Rows are uniquely grouped.  See script comments for more details." )
 			}
 		#endif

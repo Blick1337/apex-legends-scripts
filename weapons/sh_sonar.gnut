@@ -327,7 +327,7 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 		 
 		    
 		 
-			                                                                                    
+			                                                                                
 				                                                                           
 			    
 				                                                                          
@@ -379,7 +379,7 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 	                                    
 	 
 		                                        
-		                                         
+		                                             
 		 
 			                                                        
 			                                            
@@ -390,7 +390,7 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 		                                    
 			                           
 
-		                                     
+		                                         
 		 
 			                                       
 			            
@@ -577,13 +577,13 @@ void function EntitySonarStatusDisabled( entity ent, int statusEffect, bool actu
 
 void function EntitySonarDetectedEnabled( entity ent, int statusEffect, bool actuallyChanged )
 {
-	bool scannedByCryptoTT        = StatusEffect_GetSeverity( ent, eStatusEffect.crypto_tt_scanned_visual ) > 0.0
+	bool scannedByCryptoTT        = StatusEffect_HasSeverity( ent, eStatusEffect.crypto_tt_scanned_visual )
 	bool showThirdPersonHighlight = !scannedByCryptoTT
 
 	if ( ent == GetLocalViewPlayer() )
 	{
 		                                       
-		if ( statusEffect == eStatusEffect.sonar_detected && StatusEffect_GetSeverity( ent, eStatusEffect.lockon_detected ) )
+		if ( statusEffect == eStatusEffect.sonar_detected && StatusEffect_HasSeverity( ent, eStatusEffect.lockon_detected ) )
 			return
 
 		entity viewModelArm              = ent.GetViewModelArmsAttachment()
@@ -594,7 +594,7 @@ void function EntitySonarDetectedEnabled( entity ent, int statusEffect, bool act
 		vector highlightColor = statusEffect == eStatusEffect.sonar_detected ? HIGHLIGHT_COLOR_ENEMY : <1, 0, 0>
 		string highlightSound = "HUD_MP_EnemySonarTag_Activated_1P"
 
-		if ( StatusEffect_GetSeverity( ent, eStatusEffect.damage_received_multiplier ) > 0.0 )
+		if ( StatusEffect_HasSeverity( ent, eStatusEffect.damage_received_multiplier ) )
 		{
 			highlightColor = <1, 0, 0>
 		}
@@ -630,11 +630,11 @@ void function EntitySonarDetectedDisabled( entity ent, int statusEffect, bool ac
 	if ( ent == GetLocalViewPlayer() )
 	{
 		                                        
-		if ( statusEffect == eStatusEffect.sonar_detected && StatusEffect_GetSeverity( ent, eStatusEffect.lockon_detected ) )
+		if ( statusEffect == eStatusEffect.sonar_detected && StatusEffect_HasSeverity( ent, eStatusEffect.lockon_detected ) )
 		{
 			return
 		}
-		else if ( statusEffect == eStatusEffect.lockon_detected && StatusEffect_GetSeverity( ent, eStatusEffect.sonar_detected ) )
+		else if ( statusEffect == eStatusEffect.lockon_detected && StatusEffect_HasSeverity( ent, eStatusEffect.sonar_detected ) )
 		{
 			                                       
 			EntitySonarDetectedEnabled( ent, eStatusEffect.sonar_detected, true )
@@ -671,7 +671,7 @@ void function EntitySonarBlockingEnabled( entity ent, int statusEffect, bool act
 	if ( ent == GetLocalViewPlayer() )
 	{
 		                                       
-		if ( statusEffect == eStatusEffect.sonar_detected && StatusEffect_GetSeverity( ent, eStatusEffect.lockon_detected ) )
+		if ( statusEffect == eStatusEffect.sonar_detected && StatusEffect_HasSeverity( ent, eStatusEffect.lockon_detected ) )
 			return
 
 		                                                   
@@ -679,7 +679,7 @@ void function EntitySonarBlockingEnabled( entity ent, int statusEffect, bool act
 		                                                                       
 
 		                                                                                                        
-		                                                                                        
+		                                                                                  
 		  	                        
 
 		                                   

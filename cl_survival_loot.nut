@@ -778,11 +778,11 @@ void function Sur_OnUseEntGainFocus( entity ent )
 
 void function TryStreamHintForWeapon( entity ent )
 {
-	int skinNetworkIdx = GetPropSurvivalMainProperty( ent.GetSurvivalProperty() )
+	int skinGUID = ent.GetItemFlavorGUID()
 	ItemFlavor ornull weaponSkinOrNull
-	if ( skinNetworkIdx > 0 )
+	if ( IsValidItemFlavorGUID( skinGUID ) )
 	{
-		weaponSkinOrNull = GetItemFlavorByNetworkIndex( skinNetworkIdx )
+		weaponSkinOrNull = GetItemFlavorByGUID( skinGUID )
 	}
 	else
 	{
@@ -882,6 +882,13 @@ void function UpdateUseHintForEntity( entity ent, var rui = null )
 	RuiSetFloat( rui, "zOffset", ent.GetBoundingMaxs().z )
 
 	PerfEnd( PerfIndexClient.UpdateLootRui )
+
+                  
+                                                          
+                                             
+      
+                                              
+       
 }
 
 
@@ -1196,10 +1203,13 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 
 		RuiSetBool( rui, "isFullyKitted", SURVIVAL_Weapon_IsAttachmentLocked( data.ref ) )
 
-		int skinNetworkIdx = GetPropSurvivalMainProperty( lootRef.lootProperty )
-		if ( skinNetworkIdx > 0 )
+		int skinGUID = 0
+		if ( IsValid( lootRef.lootEnt ) )
+			skinGUID = lootRef.lootEnt.GetItemFlavorGUID()
+		
+		if ( IsValidItemFlavorGUID( skinGUID ) )
 		{
-			ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( skinNetworkIdx )
+			ItemFlavor weaponSkin = GetItemFlavorByGUID( skinGUID )
 			if ( ItemFlavor_HasQuality( weaponSkin ) )
 			{
 				string weaponName = GetWeaponInfoFileKeyField_WithMods_GlobalString( data.baseWeapon, data.baseMods,"shortprintname" )
@@ -1490,7 +1500,7 @@ bool function HasWeaponForTag( entity player, int tagId )
 				break
 
 			default:
-				Assert( 0, "Unhandled tag " + tagId )
+				Assert( false, "Unhandled tag " + tagId )
 		}
 	}
 
@@ -1548,7 +1558,7 @@ bool function ShouldLootHintBeVisible( entity prop )
 
 void function ManageDeathBoxLootThread()
 {
-	while ( 1 )
+	while ( true )
 	{
 		WaitFrame()
 
@@ -1574,17 +1584,16 @@ void function ManageDeathBoxLoot()
 		return
 
 	bool isBlackMarket      = false
-	int blackMarketUseCount = -1
 	array<entity> loot
 	entity currentDeathBox = Survival_GetDeathBox()
 	if ( IsValid( currentDeathBox ) )
 	{
 		loot = GetDeathBoxLootEnts( currentDeathBox )
 
+		                      
 		if ( currentDeathBox.GetScriptName() == BLACK_MARKET_SCRIPTNAME )
 		{
 			isBlackMarket = true
-			blackMarketUseCount = GetBlackMarketUseCount( currentDeathBox, GetLocalClientPlayer() )
 		}
 	}
 
@@ -1605,7 +1614,7 @@ void function ManageDeathBoxLoot()
 #if LOOT_GROUND_VERTICAL_LINES
 void function ManageVerticalLines()
 {
-	while ( 1 )
+	while ( true )
 	{
 		WaitFrame()
 
@@ -1848,6 +1857,14 @@ void function TrackLootToPing( entity player )
 					DeathboxNetwork_UntrackBoxTargets( lastEnt )
 				}
 			}
+                      
+                                          
+    
+               
+            
+    
+
+         
 
 			if ( player.ContextAction_IsInVehicle() )
 				loot = GetSurvivalLootNearbyPos( player.EyePosition(), LOOT_PING_DISTANCE * GetFovScalar( player ), false, false, false, player )
@@ -1932,6 +1949,7 @@ entity function GetEntityPlayerIsLookingAt( entity player, array<entity> ents, f
 	array<PlayerLookAtItem> finalLootEnts
 
 	vector playerEyePos = player.EyePosition()
+	vector playerViewVector = player.GetViewVector()
 
 	foreach ( ent in ents )
 	{
@@ -1941,7 +1959,7 @@ entity function GetEntityPlayerIsLookingAt( entity player, array<entity> ents, f
 				continue
 		}
 
-		dot = DotProduct( Normalize( ent.GetWorldSpaceCenter() - playerEyePos ), player.GetViewVector() )
+		dot = DotProduct( Normalize( ent.GetWorldSpaceCenter() - playerEyePos ), playerViewVector )
 		if ( dot < minDot )
 			continue
 
@@ -1969,14 +1987,6 @@ entity function GetEntityPlayerIsLookingAt( entity player, array<entity> ents, f
 		int index     = item.ent.GetSurvivalInt()
 		LootData data = SURVIVAL_Loot_GetLootDataByIndex( index )
 
-		                   
-		                                                                                                                        
-		   
-		  	                  
-		  	      
-		   
-		      
-		        
 		if ( PlayerHasPassive( GetLocalViewPlayer(), ePassives.PAS_LOBA_EYE_FOR_QUALITY ) && data.tier - 1 >= eRarityTier.EPIC )
 		{
 			theEnt = item.ent

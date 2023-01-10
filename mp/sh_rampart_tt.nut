@@ -304,7 +304,7 @@ void function Vend_OnUse( entity panel, entity player, int useInputFlags )
 {
 	if( Vend_CostCheck( panel, player ) )
 	{
-		if ( useInputFlags & USE_INPUT_LONG )
+		if ( IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 		{
 			thread Vend_UseThink_Thread( panel, player )
 		}

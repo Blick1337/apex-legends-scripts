@@ -920,7 +920,7 @@ bool function Entitlement_IsSKUBundleOwned( int bundleEnum, ItemFlavor bundleFla
 
 	Assert( persistenceVarName != GENERIC_ACKNOWLEDGEMENT_PVAR, "SKU Bundles should not use the generic ack pvar." )
 
-	if ( GetPersistentVarAsInt( persistenceVarName ) )
+	if ( GetPersistentVarAsInt( persistenceVarName ) != 0 )
 		return true
 	
 	return LocalPlayerHasEntitlement( bundleEnum )

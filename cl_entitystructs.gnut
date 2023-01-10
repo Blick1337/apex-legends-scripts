@@ -78,8 +78,8 @@ global struct ClientEntityStruct
 	float lastUseTime
 	bool  isBusy
 
-	int __itemFlavorNetworkId
-	int charmItemFlavorNetworkId
+	int skinItemFlavorGUID  = ASSET_SETTINGS_UNIQUE_ID_INVALID
+	int charmItemFlavorGUID = ASSET_SETTINGS_UNIQUE_ID_INVALID
 
 	                               
 	void functionref( entity, entity, var )                    Callback_VortexTriggerBulletHit
@@ -97,8 +97,11 @@ global struct ClientEntityStruct
 		bool castleWallIsEnergized = false
        
 
-                  
+                                 
                               
+       
+
+                    
                                   
        
 
@@ -209,12 +212,32 @@ global struct ClientPlayerStruct
                                       
        
 
-                  
+                                 
                     
        
+
+                          
+                                     
+                                    
+                                            
+
+                                      
+                                                    
+                           
+       
+
+                    
+                                        
+                                       
+                                               
+                                             
+
+                                        
+                                              
+                                               
+                             
+       
 }
-
-
 
                                                 
 global struct ClientAIStruct
@@ -259,6 +282,10 @@ global struct ClientWeaponStruct
 
                  
                                  
+       
+
+                  
+                                         
        
 
 

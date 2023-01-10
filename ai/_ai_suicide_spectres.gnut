@@ -11,6 +11,9 @@ global function PlayWarningFXOnSPTick
 #if SERVER
                           				                     
                                   		                       
+                               
+                                                              
+      
                                 
 #elseif CLIENT
 int AI_GENERATED_TICK_WARNING_FX
@@ -48,7 +51,11 @@ void function SuicideSpectres_Init()
 
 	                                              
 	                                                
-		                                                                                
+                                
+		                                                  
+       
+
+	                                                                                
 
 	                                          
 	                                                                          
@@ -134,6 +141,14 @@ void function SuicideSpectres_Init()
 
 	                                                                                                                      
 	 
+                               
+		                                                                             
+		 
+			                           
+			                                                                          
+		 
+		    
+      
 		                                                                
 		                                                                  
 
@@ -142,6 +157,16 @@ void function SuicideSpectres_Init()
 			                     
 			                                                            
 			                                                                                     
+                               
+			                                                                             
+			 
+				                                                                      
+				                                                                            
+				                                  
+				                                              
+			 
+			    
+      
 			                                                                                                 
 		 
 		    
@@ -176,6 +201,23 @@ void function SuicideSpectres_Init()
 	  
 	                                                                                                                                                                                     
  
+
+                               
+                                                                           
+ 
+	                          
+	                                    
+
+	                                                                          
+	                                                      
+	                          
+	 
+		                                                                          
+		                      
+	 
+	                                                                                                                           
+ 
+      
 
                                                                 
  
@@ -381,7 +423,7 @@ void function SuicideSpectres_Init()
 		                                                            
 		 
 			                                                   
-			                              
+			                                  
 			      
 		 
 	 
@@ -630,7 +672,7 @@ void function SuicideSpectres_Init()
 
 	                                   
 	 
-		                                                                              
+		                                                                                           
 		 
 			                               
 			              

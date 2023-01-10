@@ -19,17 +19,13 @@ void function OnPassiveChanged( entity player, int passive, bool didHave, bool n
 	if ( didHave && !nowHas )
 	{
 		#if SERVER
-			                                                                         
-			                                                                                        
-			 
-				                                                          
-			 
+			                                 
 		#endif
 	}
 	else if ( nowHas && !didHave )
 	{
 		#if SERVER
-			                                                                                             
+			                             
 		#endif
 	}
 }
@@ -38,3 +34,26 @@ var function OnWeaponPrimaryAttack_ability_reinforce( entity weapon, WeaponPrima
 {
 	return 0
 }
+
+#if SERVER
+                                                    
+ 
+	                                                                         
+	                                                                                        
+		                                                          
+
+	                                                                            
+	 
+		                                                                                         
+	 
+
+	                                                                
+ 
+
+                                                      
+ 
+	                                                                         
+	                                                                                        
+		                                                          
+ 
+#endif

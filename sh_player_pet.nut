@@ -49,7 +49,7 @@ void function ShPlayerPet_Init()
 			#endif
 			break
 		default:
-			Assert( 0, "Unhandled playlist var 'squad_pet_type': " + petType )
+			Assert( false, "Unhandled playlist var 'squad_pet_type': " + petType )
 	}
 
 	#if SERVER

@@ -25,8 +25,8 @@ const int SKIN_QUALITY_OTHER = 5
 
 const float SUN_PITCH = 30.0
 
-const vector WEAPON_HEIGHT_OFFSET = < 0.0, 0.0, 3.0 >
-const vector CHARACTER_HEIGHT_OFFSET = < 0, 0, 20.0 >
+const vector WEAPON_FOCUS_OFFSET = < 0.0, 0.0, 3.0 >
+const vector CHARACTER_FOCUS_OFFSET = < 0, 0, 20.0 >
 
 const vector WEAPON_ROTATION_OFFSET = < 0.0, -90.0, 0.0 >
 const vector CHARM_ROTATION_OFFSET = < 0.0, -90.0, 0.0 >
@@ -47,10 +47,13 @@ const float BOUNDING_BOX_HEIGHT = 140
 const float BOUNDING_BOX_RADIUS = 19600
 
 const float MIN_DIST_FROM_FOCUS = 0.0
-const float MAX_DIST_FROM_FOCUS = 160.0
+const float MAX_DIST_FROM_FOCUS = 1200.0
 
-const float HALF_MAX_ZOOM = 0.5
-const float QUARTER_MAX_ZOOM = 0.25
+const float CHARACTER_BASE_ZOOM = 120
+const float WEAPON_BASE_ZOOM = 60
+const float CHARM_BASE_ZOOM = 42
+
+const float MODEL_FADE_DIST = 9999999
 
 const float halfPi = PI / 2.0
 
@@ -118,14 +121,13 @@ struct {
 
 	entity viewerCameraEntity
 	float viewerCameraFOV
-	vector cameraStartPos
-	vector cameraStartAngle
 
 	float mouseWheelNewValue
 	float mouseWheelLastValue
 
 	bool shouldResetCameraOnModelUpdate = true
-	float maxPercentIncrement = 0.02
+	float maxZoomIncrement_Mouse = 60.0
+	float maxZoomIncrement_Controller = 20.0
 	float lastZoomVal = 0.0
 	float maxZoomAmount
 	vector zoomTrackStartPos
@@ -413,29 +415,33 @@ void function ToggleModelSelectionBounds()
 
 void function SetupCamZoom( bool calcStartingZoom )
 {
-	float baseZoomPercentage = 1.0
+	float baseZoom = 120
 	vector focusOffset = < 0, 0, 0 >
 	switch ( file.currentAssetType )
 	{
 		case eAssetType.ASSETTYPE_WEAPON:
-			focusOffset = WEAPON_HEIGHT_OFFSET
-			baseZoomPercentage = QUARTER_MAX_ZOOM
+			focusOffset = WEAPON_FOCUS_OFFSET
+			baseZoom = WEAPON_BASE_ZOOM
 			break
 		case eAssetType.ASSETTYPE_CHARACTER:
-			focusOffset = CHARACTER_HEIGHT_OFFSET
-			baseZoomPercentage = HALF_MAX_ZOOM
+			focusOffset = CHARACTER_FOCUS_OFFSET
+			baseZoom = CHARACTER_BASE_ZOOM
 			break
 		case eAssetType.ASSETTYPE_CHARM:
-			baseZoomPercentage = QUARTER_MAX_ZOOM
+			baseZoom = CHARM_BASE_ZOOM
 			break
 	}
 
-	vector focalPoint 		= file.spawnNodes[ file.currentNode ].pos + focusOffset
-	vector normToFocalPoint = Normalize( focalPoint - file.cameraStartPos )
-	file.zoomTrackStartPos  = file.cameraStartPos + ( normToFocalPoint * MIN_DIST_FROM_FOCUS )
-	file.zoomTrackEndPos    = file.cameraStartPos + ( normToFocalPoint * MAX_DIST_FROM_FOCUS )
-	file.maxZoomAmount 		= Distance( file.zoomTrackStartPos, file.zoomTrackEndPos )
-	file.zoomNormVec      	= Normalize( file.zoomTrackEndPos - file.zoomTrackStartPos )
+	spawnNode currentNode	= file.spawnNodes[ file.currentNode ]
+	vector forward			= AnglesToForward( currentNode.ang )
+	file.zoomTrackEndPos	= OffsetPointRelativeToVector( currentNode.pos, <0, -MAX_DIST_FROM_FOCUS, 0>, forward )
+	file.zoomTrackStartPos	= currentNode.pos + focusOffset
+	file.zoomNormVec		= Normalize( file.zoomTrackStartPos - file.zoomTrackEndPos )
+
+	TraceResults traceResult = TraceLine( file.zoomTrackStartPos, file.zoomTrackEndPos, [], TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_NONE )
+	float tracedZoomLimit	 = Distance( file.zoomTrackStartPos, traceResult.endPos )
+	file.maxZoomAmount = Distance( file.zoomTrackStartPos, file.zoomTrackEndPos )
+	file.maxZoomAmount = tracedZoomLimit < file.maxZoomAmount ? tracedZoomLimit : file.maxZoomAmount
 
 	if ( calcStartingZoom )
 	{
@@ -446,7 +452,6 @@ void function SetupCamZoom( bool calcStartingZoom )
 			float halfModelBoundsWidth = GetCurrentModelWidth() / 2.0
 
 			float horizontalFOV = DegToRad( file.viewerCameraFOV )
-
 			float hwRatio =  file.screenHeight / file.screenWidth
 
 			float topPlanAng = atan( tan( horizontalFOV / 2.0 ) * hwRatio )
@@ -463,29 +468,28 @@ void function SetupCamZoom( bool calcStartingZoom )
 		}
 		else
 		{
-			zoomAmount = file.maxZoomAmount * baseZoomPercentage
+			zoomAmount = baseZoom
 		}
 
-		vector dest = file.zoomTrackEndPos - ( file.zoomNormVec * zoomAmount )
+		vector dest = file.zoomTrackStartPos - ( file.zoomNormVec * zoomAmount )
 		file.viewerCameraEntity.SetOrigin( dest )
-		file.lastZoomVal = file.maxZoomAmount - zoomAmount
+		file.lastZoomVal = zoomAmount
 	}
 	else
 	{
-		vector dest = file.zoomTrackStartPos + ( file.zoomNormVec * file.lastZoomVal )
+		file.lastZoomVal = min( file.lastZoomVal, file.maxZoomAmount )
+
+		vector dest = file.zoomTrackStartPos - ( file.zoomNormVec * file.lastZoomVal )
 		file.viewerCameraEntity.SetOrigin( dest )
 	}
 }
 
 void function ArtViewer_SetCameraZoomPos()
 {
-	float newZoomVal   = 0.0
 	float newIncrement = 0.0
 
 	if ( IsControllerModeActive() )
 	{
-		float maxDistIncrement = file.maxPercentIncrement * file.maxZoomAmount
-
 		float stickLTriggerRaw         = clamp( InputGetAxis( ANALOG_L_TRIGGER ), -1.0, 1.0 )
 		float stickLTriggerRemappedAbs = ( fabs( stickLTriggerRaw ) < STICK_DEADZONE ) ? 0.0 : ( ( fabs( stickLTriggerRaw ) - STICK_DEADZONE ) / ( 1.0 - STICK_DEADZONE ) )
 		float stickLTrigger            = EaseIn( stickLTriggerRemappedAbs ) * ( stickLTriggerRaw < 0.0 ? -1.0 : 1.0 )
@@ -496,43 +500,35 @@ void function ArtViewer_SetCameraZoomPos()
 
 		float normalizedTriggerInput = 0.0
 		if ( stickLTrigger > 0.0 )
-			normalizedTriggerInput = -stickLTrigger
+			normalizedTriggerInput = stickLTrigger
 		else if ( stickRTrigger > 0.0 )
-			normalizedTriggerInput = stickRTrigger
+			normalizedTriggerInput = -stickRTrigger
 		else
 			return
 
-		newIncrement = normalizedTriggerInput * maxDistIncrement
-		newZoomVal = Clamp( file.lastZoomVal + newIncrement, 0.0, file.maxZoomAmount )
-
-		float distChange = fabs( newZoomVal - file.lastZoomVal )
-		if ( distChange < 0.001 )
-			return
-
-		vector destination = file.zoomTrackStartPos + ( file.zoomNormVec * newZoomVal )
-		file.viewerCameraEntity.SetOrigin( destination )
+		float adjustedMaxIncrement = file.maxZoomIncrement_Controller * ( file.lastZoomVal / file.maxZoomAmount )
+		newIncrement = normalizedTriggerInput * adjustedMaxIncrement
 	}
 	else
 	{
-		float delta = file.mouseWheelNewValue - file.mouseWheelLastValue
+		float delta = file.mouseWheelLastValue - file.mouseWheelNewValue
 		if ( delta == 0.0 )
 			return
 
 		file.mouseWheelNewValue = Clamp( file.mouseWheelNewValue, -100.0, 100.0 )
 		file.mouseWheelLastValue = file.mouseWheelNewValue
 
-		float maxDistIncrement = file.maxPercentIncrement * file.maxZoomAmount
-		newIncrement = delta * maxDistIncrement
-		newZoomVal = Clamp( file.lastZoomVal + newIncrement, 0.0, file.maxZoomAmount )
-		float distChange = fabs( newZoomVal - file.lastZoomVal )
-		if ( distChange < 0.001 )
-			return
-
-		vector destination = file.zoomTrackStartPos + ( file.zoomNormVec * newZoomVal )
-
-		file.viewerCameraEntity.SetOrigin( destination )
+		float adjustedMaxIncrement = file.maxZoomIncrement_Mouse * ( file.lastZoomVal / file.maxZoomAmount )
+		newIncrement = delta * adjustedMaxIncrement
 	}
 
+	float newZoomVal = Clamp( file.lastZoomVal + newIncrement, 0.0, file.maxZoomAmount )
+	float distChange = fabs( newZoomVal + file.lastZoomVal )
+	if ( distChange < 0.001 )
+		return
+
+	vector destination = file.zoomTrackStartPos - ( file.zoomNormVec * newZoomVal )
+	file.viewerCameraEntity.SetOrigin( destination )
 	file.lastZoomVal = newZoomVal
 }
 
@@ -551,8 +547,7 @@ void function ArtViewer_UpdateEntityOrigin()
 	vector transZ 	= <0,0,-1> * file.movementDelta[1]
 	vector trans	= transXY + transZ
 
-	float distFromModel = file.maxZoomAmount - file.lastZoomVal
-	trans *= ( distFromModel * FrameTime() )                                              
+	trans *= ( file.lastZoomVal * FrameTime() )                                              
 	vector newOrigin = file.modelMover.GetOrigin() + trans
 	spawnNode currentNode = file.spawnNodes[ file.currentNode ]
 
@@ -640,9 +635,9 @@ void function ArtViewer_UpdateAnglesFromInput()
 	if ( currentRotationDelta[0] == newRotationDelta[0] && currentRotationDelta[1] == newRotationDelta[1] )
 		return
 
-	if ( !( file.axisLockedFlags & AXIS_LOCKED_Y ) )
+	if ( !IsBitFlagSet( file.axisLockedFlags, AXIS_LOCKED_Y ) )
 		currentRotationDelta[0] = newRotationDelta[0]
-	if ( !( file.axisLockedFlags & AXIS_LOCKED_X ) )
+	if ( !IsBitFlagSet( file.axisLockedFlags, AXIS_LOCKED_X ) )
 		currentRotationDelta[1] = newRotationDelta[1]
 
 	ArtViewer_UpdateEntityAngles()
@@ -765,7 +760,6 @@ void function SetCharmModel()
 		return
 	}
 
-	file.modelMover.SetOrigin( file.viewerCharmModel.GetOrigin() )
 	file.viewerCharmModel.SetOrigin( file.modelMover.GetOrigin() + <0, 0, 5.0> )
 	file.viewerCharmModel.SetParent( file.modelMover, "", true )
 	file.viewerCharmModel.SetModelScale( VIEWER_CHARM_SIZE )
@@ -864,11 +858,11 @@ void function UpdateWeaponSkin()
 
 	vector weaponRotatePoint
 	int MenuAttachmentID = file.viewerModel.LookupAttachment( "MENU_ROTATE" )
-	if ( !MenuAttachmentID )
+	if ( MenuAttachmentID == 0 )
 	{
 		if ( file.hasCurrentModelBounds )
 		{
-			if( !file.useWorldModel )
+			if ( !file.useWorldModel )
 				Warning( "Failed to find weapon model center. Falling back onto model bounds center." )
 
 			weaponRotatePoint = GetViewerModelCenter()
@@ -939,11 +933,6 @@ void function UpdateModelToCurrentEnvNode()
 	{
 		UpdateSunAngles( node.ang )
 
-		vector forward = AnglesToForward( node.ang )
-		vector cameraPos = OffsetPointRelativeToVector( node.pos, <0, -160, 0>, forward )
-
-		file.cameraStartPos = cameraPos
-		file.cameraStartAngle = node.ang
 		file.viewerCameraEntity.SetAngles( node.ang )
 		SetupCamZoom( false )
 
@@ -1008,12 +997,6 @@ void function OutsourceViewer_ResetView()
 	spawnNode currNode = file.spawnNodes[ file.currentNode ]
 	file.viewerCameraEntity.SetAngles( currNode.ang )
 
-	vector forward = AnglesToForward( currNode.ang )
-	vector cameraPos = OffsetPointRelativeToVector( currNode.pos, <0, -160, 0>, forward )
-
-	file.cameraStartPos = cameraPos
-	file.cameraStartAngle = currNode.ang
-
 	SetupCamZoom( true )
 }
 #endif                      
@@ -1062,6 +1045,8 @@ void function ServerCallback_OVSpawnModel( vector pos, vector ang )
 		ServerCallback_OVDisable()
 		return
 	}
+
+	file.viewerModel.SetFadeDistance( MODEL_FADE_DIST )
 
 	entity player = GetLocalClientPlayer()
 	player.ClientCommand( "noclip" )       

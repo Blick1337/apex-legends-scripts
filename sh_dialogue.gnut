@@ -155,7 +155,7 @@ string function Dispatch( int team, string alias )
 			return "diag_mcor_dispatch_" + alias
 	}
 
-	Assert( 0, "Unknown team " + team )
+	Assert( false, "Unknown team " + team )
 	unreachable
 }
 
@@ -171,7 +171,7 @@ array<string> function Voices( int team, string baseAlias, array<int> voiceAvail
 			return AI_Dialogue_AliasAllVoices( "diag_mcor_grunt", "_" + baseAlias, voiceAvailability, true )
 	}
 
-	Assert( 0, "Unknown team " + team )
+	Assert( false, "Unknown team " + team )
 	unreachable
 }
 
@@ -187,7 +187,7 @@ array<string> function AI_Dialogue_AliasAllVoices( string aliasPreVoice, string 
 	int firstAvailableVoiceIndex = -1
 	foreach ( voiceIndex, available in voiceAvailability )
 	{
-		if ( available )
+		if ( available != 0 )
 		{
 			firstAvailableVoiceIndex = voiceIndex
 			break
@@ -199,7 +199,7 @@ array<string> function AI_Dialogue_AliasAllVoices( string aliasPreVoice, string 
 	for ( int voiceIndex = 0; voiceIndex < VOICE_COUNT; voiceIndex++ )
 	{
 		int useIndex = voiceIndex
-		if ( !voiceAvailability[ useIndex ] )
+		if ( voiceAvailability[ useIndex ] == 0 )
 			useIndex = firstAvailableVoiceIndex
 
 		string radioAlias = aliasPreVoice + (useIndex + 1) + aliasPostVoice

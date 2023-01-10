@@ -333,7 +333,7 @@ void function OnProjectileCollision_sniper_ult( entity projectile, vector pos, v
 			                                                 
 			  	        
 			  
-			                                                                                   
+			                                                                               
 			   
 			  	                           
 			  	        
@@ -373,7 +373,7 @@ float function SniperUlt_GetMarkedDuration()
 	 
 		                                                        
 			                                           
-		                                                                                      
+		                                                                                  
 		 
 			                                                                                                     
 			                                                              
@@ -456,7 +456,7 @@ float function SniperUlt_GetMarkedDuration()
 
 	                                                      
 
-	                                                                                                        
+	                                                                                                    
 
 	                             
 	 
@@ -516,7 +516,7 @@ float function SniperUlt_GetMarkedDuration()
 		 
 	 
 	                                   
-	                                                                                    
+	                                                                                
 	 
 		           
 	 
@@ -598,7 +598,7 @@ float function SniperUlt_GetMarkedDuration()
                                                                                                      
  
 	                                   
-	                                                                                 
+	                                                                             
 	 
 		                              
 		                                                                                       
@@ -667,7 +667,7 @@ float function SniperUlt_GetMarkedDuration()
 		 
 	 
 	                                   
-	                                                                                    
+	                                                                                
 	 
 		                                       
 			      

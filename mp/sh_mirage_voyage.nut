@@ -205,19 +205,6 @@ void function InitMirageVoyageMusicEnts()
 	                               
 		      
 
-	            
-	                                                                      
-	                         
-	                                     
-	                                                                                                            
-	                                                      
-	                                                                      
-	                                                                                          
-
-	                                                  
-	                         
-		                                                                  
-
 	         
 	                                                                     
 	 
@@ -454,7 +441,6 @@ bool function IsMirageVoyageEnabled()
 		#if SERVER
 			                                                                
 			                                                        
-			                                                         
 			                                                           
 		#elseif CLIENT
 			entScriptnamesToCheck.append( MIRAGE_VOYAGE_AMBIENT_GENERIC_SCRIPT_NAME )
@@ -983,7 +969,7 @@ bool function IsMirageVoyageEnabled()
  
 	                                            
 
-	                                               
+	                                                        
 		      
 
 	                 
@@ -1009,7 +995,7 @@ bool function IsMirageVoyageEnabled()
 
                                                                                             
  
-	                                               
+	                                                        
 		      
 
 	                 

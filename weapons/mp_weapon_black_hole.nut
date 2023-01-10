@@ -71,7 +71,7 @@ const string BLACKHOLE_SOUND_PHASE_4 = "Nova_Ultimate_BlackHole_Phase4"
 const bool BLACKHOLE_DEBUG = false
 const bool BLACKHOLE_DEBUG_DRONES = false
 const bool BLACKHOLE_DEBUG_TRACE = false
-const bool BLACKHOLE_DEBUG_SPHERE = false
+const bool BLACKHOLE_DEBUG_SIZE = false
 const bool BLACKHOLE_DEBUG_VORTEX = false
 
 const float BLACKHOLE_TROPHY_HEALTH_AMOUNT = 175
@@ -95,6 +95,7 @@ const float BLACKHOLE_TUNING_PULL_ACTIVATION_FX_LEAD_TIME = 1.0
 const float BLACKHOLE_TUNING_START_FX_STOP_OFFSET = 0.0
 const float BLACKHOLE_TUNING_PULL_TIME = 0.8
 const float BLACKHOLE_TUNING_STABLE_TIME = 10
+const float BLACKHOLE_TUNING_DOOR_CHECK_DELAY = 0.3
 
 struct
 {
@@ -333,67 +334,6 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	           
  
 
-                                                                                                                           
- 
-	                         
-	 
-		            
-	 
-	                              
-	 
-		            
-	 
-
-	                                                                                             
-	                                                                                  
-	                                                                                                                
-	 
-		            
-	 
-
-	           
- 
-
-                                                                                                  
- 
-	                                                                                                        
-
-	                          
-	                                    
-		                        
-		                                             
-		                                                                                               
-
-	                             
-	 
-		                                                                         
-		                                              
-		                                                                                                                                                 
-
-		       
-			                            
-			 
-				               
-				                                  
-				 
-					       
-				 
-				    
-				 
-					       
-				 
-
-				                                                  
-			 
-		      
-		                                   
-		 
-			           
-		 
-	 
-
-	            
- 
 
 
                                                                                              
@@ -590,7 +530,6 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                                                                 
 	                                                              
 
-	                                       
 	                         
 	                                                                                                                           
 	                                                                   
@@ -660,35 +599,45 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	 
  
 
-                                                          
+                                                                          
  
-	                                                    
-	                                     
-		      
+	                                       
+	                                 
 
-	                                     
-		      
-
-	                                             
-	                                                                                                                   
-
-
-	                                      
+	             
 	 
-		       
-			                      
-			 
-				                                                          
-			 
-		            
+		                                                    
+		                                                                                                                                  
 
-		                                    
-		                                                                                  
-		                                                                                              
-		                                                                                                                                                                                                                     
+		                                             
+                  
+			                                        
+        
+		                                                                                                                   
 
-		                                                            
-		                                                                                              
+		                                      
+		 
+			       
+				                      
+				 
+					                                                                                         
+				 
+			            
+
+                   
+				                                                                                                 
+					        
+         
+
+			                                                                                  
+			                                                                                              
+			                                                                                                                                                                                                                     
+
+			                                                            
+			                                                                                              
+		 
+
+		                                      
 	 
  
 
@@ -829,6 +778,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                                                  
 	                                                                                              
 
+	                                                
 
 	                                 
 
@@ -857,7 +807,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                                                                                                           
 	                                                                                                               
 	                                                                                               
-	                             
+	                           
 	 
 		                                                                                                  
 		                                                                                                                              
@@ -988,7 +938,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 
 	                                                                               
 
-	                                                                            
+	                                                                        
 	 
 		                                                           
 		 
@@ -1009,7 +959,7 @@ void function BLACKHOLE_ProjectileLanded( entity projectile, DeployableCollision
 	                                                              
 	                                                    
 
-	                                 
+	                                                
 		                                                                                       
 	                                                                                 
 	 
@@ -1125,7 +1075,7 @@ void function BLACKHOLE_TriggerEnter( entity trigger, entity ent )
 		 
 		                                                                                                                 
 		 
-			                                                                              
+			                                                                          
 			 
 				                                                     
 			 
@@ -1198,50 +1148,43 @@ void function BLACKHOLE_InTriggerThread( entity trigger, entity player )
 		frameTime   = Time() - currentTime
 		currentTime = Time()
 		#if SERVER
-			                                                                                               
-			 
-				                            
+		                            
 
-				                                         
-					                            
+		                                         
+			                            
 
-				                                         
-				 
-					                      
-					                                       
-				 
+		                                         
+		 
+			                      
+			                                       
+		 
 
-				                                                                                 
-				 
-					                                                                         
-					                                                                      
-				 
+		                                                                             
+		 
+			                                                                         
+			                                                                      
+		 
 
-				                                                  
-				                                                                    
-				                                                         
-				                                                                                                      
-				                                                      
+		                                                  
+		                                                                    
+		                                                         
+		                                                                                                      
+		                                                      
 
-				                                                                                                                                                                      
+		                                                                                                                                                                      
 
-				                      
-				 
-					                                                                
-					                                                                       
-					                                                                        
+		                      
+		 
+			                                                                
+			                                                                       
+			                                                                        
 
-					                                                                                                   
-					                                                                                                                                 
-					                                                                                                                  
-					                                                                                                                  
-				 
-			 
-			    
-			 
-				                                                                                       
-				                                                                       
-			 
+			                                                                                                   
+			                                                                                                                                 
+			                                                                                                                  
+			                                                                                                                  
+		 
+
 		#endif
 
 		WaitFrame()

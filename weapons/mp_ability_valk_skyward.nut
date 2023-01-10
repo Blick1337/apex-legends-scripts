@@ -131,7 +131,7 @@ void function OnSpectatorTargetChanged( entity player, entity prevTarget, entity
 
 	if ( IsValid( newTarget ) && PlayerHasPassive( newTarget, ePassives.PAS_VALK ) )
 	{
-		bool isPlayerInAir = newTarget.Player_IsSkydiving() || StatusEffect_GetSeverity( newTarget, eStatusEffect.skyward_embark ) > 0.0
+		bool isPlayerInAir = newTarget.Player_IsSkydiving() || StatusEffect_HasSeverity( newTarget, eStatusEffect.skyward_embark )
 		UpdateValkFlightRui( newTarget, isPlayerInAir )
 	}
 	else if ( IsValid( prevTarget ) && PlayerHasPassive( prevTarget, ePassives.PAS_VALK ) )
@@ -271,10 +271,10 @@ bool function OnWeaponAttemptOffhandSwitch_ability_valk_skyward( entity weapon )
 	if ( owner.IsZiplining() )
 		return false
 
-	if ( StatusEffect_GetSeverity( owner, eStatusEffect.in_olympus_rift ) > 0.0 )
+	if ( StatusEffect_HasSeverity( owner, eStatusEffect.in_olympus_rift ) )
 		return false
 
-	if ( StatusEffect_GetSeverity( owner, eStatusEffect.in_black_hole_field ) > 0.0 )
+	if ( StatusEffect_HasSeverity( owner, eStatusEffect.in_black_hole_field ) )
 		return false
 
 	if ( owner.IsSlipping() )
@@ -1165,7 +1165,7 @@ bool function ValkUlt_CanUseAlly( entity ally, entity proxy, int useFlags )
 		return false
 
 	                       
-	if ( StatusEffect_GetSeverity( ally, eStatusEffect.placing_phase_tunnel ) != 0 )
+	if ( StatusEffect_HasSeverity( ally, eStatusEffect.placing_phase_tunnel ) )
 		return false
 
 	if ( Bleedout_IsBleedingOut( ally ) )

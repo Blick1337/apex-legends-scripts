@@ -2595,7 +2595,7 @@ void function UpdateVantageTacticalRui()
 		}
 
                  
-			if ( StatusEffect_GetSeverity( localViewPlayer, eStatusEffect.is_boxing ) )
+			if ( StatusEffect_HasSeverity( localViewPlayer, eStatusEffect.is_boxing ) )
 				RuiSetBool( file.vantageTacticalRui, "isBoxing", true )
 			else
 				RuiSetBool( file.vantageTacticalRui, "isBoxing", false )

@@ -178,7 +178,7 @@ void function Utility_Shared_Init()
 	#document( "IsAlive", "Returns true if the given ent is not null, and is alive." )
 	#document( "ArrayWithin", "Remove ents from array that are out of range" )
 
-	file.nonInstalledModsTracked = [ DRAGON_LMG_ENERGIZED_MOD ]
+	file.nonInstalledModsTracked = [ DRAGON_LMG_ENERGIZED_MOD, "altfire_double_tap" ]
 }
 
 
@@ -257,8 +257,8 @@ void function InitWeaponScripts()
 		MpWeaponLobaHeirloomPrimary_Init()
        
                      
-                          
-                                    
+		MeleeSeerHeirloom_Init()
+		MpWeaponSeerHeirloomPrimary_Init()
        
                      
                               
@@ -287,12 +287,8 @@ void function InitWeaponScripts()
 	MpWeaponBubbleBunker_Init()
 
                   
-                            
                                     
                            
-                             
-                           
-                          
        
 
 	MpWeaponEmoteProjector_Init()
@@ -316,6 +312,7 @@ void function InitWeaponScripts()
 	MpWeaponGrenadeBangalore_Init()
 	MpWeaponGrenadeCreepingBombardment_Init()
 	MpWeaponGrenadeCreepingBombardmentWeapon_Init()
+	MpAbilityNone_Init()
 	MpAbilityMirageUltimate_Init()
 	MpAbilityCryptoDrone_Init()
 	MpAbilityCryptoDroneEMP_Init()
@@ -378,6 +375,7 @@ void function InitWeaponScripts()
                                  
                                     
                               
+                                 
        
                  
                                 
@@ -394,6 +392,12 @@ void function InitWeaponScripts()
                             
                               
                               
+                            
+                            
+       
+
+                        
+                                    
        
 
 	MpWeaponBlackHole_Init()
@@ -418,6 +422,16 @@ void function InitWeaponScripts()
                                    
                                 
                              
+                           
+                             
+                          
+                            
+                            
+                         
+                                  
+                          
+                          
+                           
        
 
                
@@ -465,12 +479,6 @@ void function InitWeaponScripts()
        
 
                  
-		MpWeaponGrenadeCryo_Init()
-		MpWeaponCryoWall_Init()
-		MpWeaponFerrofluidGrenade_Init()
-		MpWeaponResinShot_Init()
-		MpWeaponIronTower_Init()
-		MpWeaponIronBridge_Init()
 		MpWeaponFerroWall_Init()
 		MpAbilitySpikeStrip_Init()
 		MpAbilityReinforce_Init()
@@ -547,7 +555,7 @@ void function TableDump( table Table, int depth = 0 )
 	foreach ( k, v in Table )
 	{
 		printl( "Key: " + k + " Value: " + v )
-		if ( type( v ) == "table" && depth )
+		if ( type( v ) == "table" && depth > 0 )
 			TableDump( expect table( v ), depth + 1 )
 	}
 }
@@ -1012,7 +1020,7 @@ int function RandomWeightedIndex( array Array )
 		randInt -= rangeForThisIndex
 	}
 
-	Assert( 0 )
+	Assert( false )
 	unreachable
 }
 
@@ -1338,6 +1346,11 @@ bool function ControlPanel_IsValidModel( entity controlPanel )
 	validModels.append( "mdl/props/pathfinder_beacon_radar/pathfinder_beacon_radar_animated.rmdl" )
 	validModels.append( "mdl/props/specter_shack_control/specter_shack_control.rmdl" )
 
+                    
+                                                                            
+                                                                              
+       
+
 	return validModels.contains( string( controlPanel.GetModelName() ) )
 }
 
@@ -1347,7 +1360,7 @@ bool function ControlPanel_CanUseFunction( entity playerUser, entity controlPane
 	if ( Bleedout_IsBleedingOut( playerUser ) )
 		return false
 
-	bool canUseWhileParented = EntIsHoverVehicle( playerUser.GetParent() ) && StatusEffect_GetSeverity( playerUser, eStatusEffect.camera_view ) > 0.0	                           
+	bool canUseWhileParented = EntIsHoverVehicle( playerUser.GetParent() ) && StatusEffect_HasSeverity( playerUser, eStatusEffect.camera_view )	                           
 	if ( IsValid( playerUser.GetParent() ) && !canUseWhileParented )
 		return false
 
@@ -1470,7 +1483,7 @@ array<vector> function GetAllPointsOnBezier( array<vector> points, int numSegmen
 	array<vector> curvePoints = []
 
 	                                           
-	if ( debugDrawTime )
+	if ( debugDrawTime != 0 )
 	{
 		for ( int i = 0; i < points.len() - 1; i++ )
 			DebugDrawLine( points[i], points[i + 1], <150, 150, 150>, true, debugDrawTime )
@@ -1482,7 +1495,7 @@ array<vector> function GetAllPointsOnBezier( array<vector> points, int numSegmen
 		curvePoints.append( GetSinglePointOnBezier( points, t ) )
 	}
 
-	if ( debugDrawTime )
+	if ( debugDrawTime != 0 )
 	{
 		for ( int i = 0; i < curvePoints.len() - 1; i++ )
 			DebugDrawLine( curvePoints[i], curvePoints[i + 1], <200, 0, 0>, true, debugDrawTime )
@@ -2383,7 +2396,7 @@ array<entity> function GetSortedPlayers( IntFromEntityCompare compareFunc, int t
 {
 	array<entity> players
 
-	if ( team )
+	if ( team != 0 )
 		players = GetPlayerArrayOfTeam( team )
 	else
 		players = GetPlayerArray()
@@ -2913,7 +2926,7 @@ int function CompareTeamScore( int teamA, int teamB )
 
 bool function IsHitEffectiveVsNonTitan( entity victim, int damageType )
 {
-	if ( damageType & DF_BULLET || damageType & DF_MAX_RANGE )
+	if ( IsBitFlagSet( damageType, DF_BULLET ) || IsBitFlagSet( damageType, DF_MAX_RANGE ) )
 		return false
 
 	return true
@@ -3680,6 +3693,16 @@ bool function EntHasModelSet( entity ent )
  
 	                            
 	                                                 
+ 
+#endif
+
+#if SERVER
+                                                                                                                       
+ 
+	                                                                    
+	                                                                                                    
+	                                                          
+		                           
  
 #endif
 
@@ -4811,7 +4834,7 @@ bool function IsEnvDecoy( entity ent )
 			           
 		 
 
-		                                                               
+		                                                                      
 		                    
 		 
 			                                              
@@ -4839,7 +4862,7 @@ bool function CanNPCDoDamageOnBehalfOfPlayer( entity ent )
                    
              
       
-                 
+                                
                                                      
              
       
@@ -5112,7 +5135,7 @@ bool function PlayerCanSee( entity player, entity ent, bool doTrace, float degre
 	else
 		return true
 
-	Assert( 0, "shouldn't ever get here" )
+	Assert( false, "shouldn't ever get here" )
 	unreachable
 }
 
@@ -5583,8 +5606,8 @@ string function GetBaseWeaponRef( string weaponRef )
        
 
                                 
-                                                              
-                                                                                       
+		if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_CUPID ) != -1 )
+			return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_CUPID.len()) )
        
 	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL ) != -1 )
 		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL.len()) )
@@ -5601,6 +5624,20 @@ string function GetBaseWeaponRef( string weaponRef )
 	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_BLUEPAINTBALL ) != -1 )
 		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_BLUEPAINTBALL.len()) )
 	return weaponRef
+}
+
+                                                                                
+                                                                                     
+array<string> function GetLockedSetsDisabledByCrafting()
+{
+	array<string> sets
+
+	sets.append( WEAPON_LOCKEDSET_SUFFIX_WHITESET )
+	sets.append( WEAPON_LOCKEDSET_SUFFIX_BLUESET )
+	sets.append( WEAPON_LOCKEDSET_SUFFIX_PURPLESET )
+	sets.append( WEAPON_LOCKEDSET_SUFFIX_GOLD )
+
+	return sets
 }
 
 bool function AttachmentPointSupported( string attachmentPoint, string weaponName )
@@ -5649,13 +5686,13 @@ string function GetAttachmentPointStyle( string attachmentPoint, string weaponNa
 
 		case "mag":
 			LootData weaponData = SURVIVAL_Loot_GetLootDataByRef( weaponName )
-			if ( weaponData.ammoType == "bullet" )
+			if ( weaponData.ammoType == BULLET_AMMO )
 				return "mag_straight"
-			if ( weaponData.ammoType == "special" || weaponData.ammoType == "arrows" )
+			if ( weaponData.ammoType == SPECIAL_AMMO || weaponData.ammoType == ARROWS_AMMO )
 				return "mag_energy"
-			if ( weaponData.ammoType == "shotgun" )
+			if ( weaponData.ammoType == SHOTGUN_AMMO )
 				return "mag_shotgun"
-			if ( weaponData.ammoType == "sniper" )
+			if ( weaponData.ammoType == SNIPER_AMMO )
 				return "mag_sniper"
             if ( weaponData.ref == "mp_weapon_car" )
                 return "mag_car"
@@ -5723,7 +5760,7 @@ array<string> function GetAttachmentsForPoint( string attachmentPoint, string we
 			break
 
 		default:
-			Assert( 0, "attachmentPoint " + attachmentPoint + " is not supported, but could be." )
+			Assert( false, "attachmentPoint " + attachmentPoint + " is not supported, but could be." )
 	}
 
 	return attachmentRefs
@@ -6550,7 +6587,7 @@ void function RemoveRefEntAreaFromInvalidOriginsForPlacingPermanentsOnto( entity
 	}
 	else
 	{
-		Assert( 0, "Ref ent is not in table of ref ent areas." )
+		Assert( false, "Ref ent is not in table of ref ent areas." )
 	}
 }
 

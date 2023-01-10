@@ -186,6 +186,9 @@ struct FileForeverStruct
 	var inspectRewardButton3
 	var skipAnimButton
 	var blackFlash
+                     
+                      
+       
 }
 FileForeverStruct& fileForever
 #endif
@@ -280,6 +283,10 @@ struct FileLevelStruct
 		asset ornull            	specialItemPackImg = null
 		PurchaseDialogConfig ornull	specialPurchaseDialogConfig = null
 		void functionref()			onNavigatingBackFunc = null
+                      
+                                      
+                              
+        
 	#endif
 }
 FileLevelStruct& fileLevel
@@ -3164,7 +3171,7 @@ void function ShowInspect_FX( int animAttachID, int rarity, vector rarityColor )
 			break
 
 		default:
-			Assert( 0, "Couldn't find particle beam asset based on rarity: " + rarity )
+			Assert( false, "Couldn't find particle beam asset based on rarity: " + rarity )
 	}
 
 	int fxIndexRarity = StartParticleEffectOnEntity( fileLevel.lootTickModel, GetParticleSystemIndex( particleAssetRarity ), FX_PATTACH_POINT_FOLLOW, animAttachID )
@@ -3221,7 +3228,7 @@ void function ShowRewards_FX( int animAttachID, int rarity, vector rarityColor, 
 			break
 
 		default:
-			Assert( 0, "Couldn't find particle beam asset based on rarity: " + rarity )
+			Assert( false, "Couldn't find particle beam asset based on rarity: " + rarity )
 	}
 
 	int fxIndexRarity = StartParticleEffectOnEntity( fileLevel.lootTickModel, GetParticleSystemIndex( particleAssetRarity ), FX_PATTACH_POINT_FOLLOW, animAttachID )
@@ -3273,7 +3280,14 @@ void function DEV_SetCustomLootRewardsToDisplay( string itemRef0 = "", string it
 		if ( ref == "" )
 			continue
 
-		ItemFlavor flavor = DEV_GetItemFlavorByGRXRef( ref )
+		ItemFlavor flavor
+		if ( DEV_IsValidGRXRef( ref ) )
+			flavor = DEV_GetItemFlavorByGRXRef( ref )
+		else if ( DEV_IsValidItemFlavorHumanReadableRef_Slow( ref ) )
+			flavor = DEV_GetItemFlavorByHumanReadableRef_Slow( ref )
+		else
+			Assert( false, "unknown item ref " + ref )
+
 		asset flavorAsset = ItemFlavor_GetAsset( flavor )
 		flavorAssets.append( flavorAsset )
 	}
@@ -3624,7 +3638,7 @@ array<LoadoutEntry> function EquipButton_GetItemLoadoutEntries( ItemFlavor item,
                       
 
 		default:
-			Assert( 0, "Loot Ceremony equip button does not support reward type: " + DEV_GetEnumStringSafe( "eItemType", itemType ) )
+			Assert( false, "Loot Ceremony equip button does not support reward type: " + DEV_GetEnumStringSafe( "eItemType", itemType ) )
 	}
 
 	return entry
@@ -4305,7 +4319,7 @@ void function InspectMenuFunctionality_Model( ItemFlavor item, int displayIndex,
 		if ( itemType == eItemType.character_emote )
 		{
 			model.Anim_Stop()
-			thread ModelPerformEmote( model, item, mover, false )
+			thread ModelPerformEmote( model, item, mover, false, true )
 		}
 
 		ShowEntityAndChildren( model )
@@ -5265,6 +5279,13 @@ void function InitLootBoxMenu( var newMenuArg )
 	HudElem_SetRuiArg( fileForever.purchaseButton, "buttonText", "" )
 	AddButtonEventHandler( fileForever.purchaseButton, UIE_CLICK, PurchaseButtonOnClick )
 
+                     
+                                                                                                    
+                                                                                                         
+                                                                                                  
+                                                                                           
+       
+
 	fileForever.mouseClickElem = Hud_GetChild( fileForever.menu, "ModelRotateMouseCapture" )
 	fileForever.inspectVideoPanel = Hud_GetChild( fileForever.menu, "InspectVideoPanel" )
 
@@ -5435,7 +5456,10 @@ void function SetStoreItemPresentationModeActive( GRXScriptOffer grxOffer )
 	fileLevel.specialItemPackImg = null
 	fileLevel.specialPurchaseDialogConfig = null
 	fileLevel.onNavigatingBackFunc = null
-
+                     
+                             
+                                     
+       
 	AdvanceMenu( GetMenu( "LootBoxOpen" ) )
 }
 
@@ -5458,6 +5482,18 @@ void function SetBattlePassItemPresentationModeActive( BattlePassReward bpReward
 	fileLevel.specialPurchaseDialogConfig = null
 	fileLevel.onNavigatingBackFunc = null
 
+                     
+                                                                                                       
+                                                                               
+                            
+   
+                                        
+                                                                                            
+   
+
+                                                  
+       
+
 	AdvanceMenu( GetMenu( "LootBoxOpen" ) )
 }
 
@@ -5479,6 +5515,10 @@ void function SetTreasurePackItemPresentationModeActive( BattlePassReward bpRewa
 	fileLevel.specialItemPackImg = null
 	fileLevel.specialPurchaseDialogConfig = null
 	fileLevel.onNavigatingBackFunc = null
+                     
+                             
+                                     
+       
 
 	AdvanceMenu( GetMenu( "LootBoxOpen" ) )
 }
@@ -5501,6 +5541,10 @@ void function SetGenericItemPresentationModeActiveWithNavBack( ItemFlavor itemFl
 	fileLevel.specialItemPackImg = null
 	fileLevel.specialPurchaseDialogConfig = null
 	fileLevel.onNavigatingBackFunc = onNavigatingBackFunc
+                     
+                             
+                                     
+       
 
 	AdvanceMenu( GetMenu( "LootBoxOpen" ) )
 }
@@ -5537,6 +5581,10 @@ void function SetCollectionEventItemPresentationModeActive( ItemFlavor flav, GRX
 	fileLevel.specialItemPackImg = packImg
 	fileLevel.specialPurchaseDialogConfig = null
 	fileLevel.onNavigatingBackFunc = null
+                     
+                             
+                                     
+       
 
 	AdvanceMenu( GetMenu( "LootBoxOpen" ) )
 }
@@ -5557,6 +5605,10 @@ void function SetChallengeRewardPresentationModeActive( ItemFlavor itemFlav, int
 	fileLevel.specialItemPackImg = null
 	fileLevel.specialPurchaseDialogConfig = null
 	fileLevel.onNavigatingBackFunc = null
+                     
+                             
+                                     
+       
 
 	if( Mythics_IsItemFlavorMythicSkin( itemFlav ) )
 	{
@@ -5668,6 +5720,11 @@ void function OnLootBoxMenu_Open()
 		Hud_SetVisible( fileForever.purchaseButton, false )
 		Hud_SetEnabled( fileForever.purchaseButton, false )
 
+                      
+                                                        
+                                                        
+        
+
 		AddCallbackAndCallNow_OnGRXInventoryStateChanged( LootCeremony_UpdateOpenAdditionalButton )
 		thread LootBoxOpenSequenceUI( true )
 	}
@@ -5700,6 +5757,10 @@ void function OnLootBoxMenu_Close()
 		fileLevel.specialItemPriceHeader = ""
 		fileLevel.specialItemLockPurchaseButton = false
 		fileLevel.onNavigatingBackFunc = null
+                      
+                              
+                                      
+        
 	}
 	else
 	{
@@ -5880,6 +5941,15 @@ void function PurchaseButtonOnClick( var button )
 }
 #endif
 
+#if UI
+                    
+                                                   
+ 
+                  
+                                               
+ 
+      
+#endif
 
 #if UI
 void function PreviewButtonOnClick( var button )
@@ -6050,6 +6120,11 @@ void function UpdateSpecialItemPresentationPurchaseButton()
 	Hud_SetVisible( fileForever.equipButton, showEquip )
 	Hud_SetEnabled( fileForever.equipButton, true )
 	Hud_SetLocked( fileForever.equipButton, false )
+
+                     
+                                                                                                     
+                                                                                                     
+       
 
 	if ( showPurchase || showEquip )
 	{

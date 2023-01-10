@@ -553,7 +553,7 @@ string function SurvivalCommentary_GetCommentaryString( int infoId )
 			break
 
 		default:
-			Assert(0, "Unsupported Type")
+			Assert(false, "Unsupported Type")
 			break
 	}
 	return retVal

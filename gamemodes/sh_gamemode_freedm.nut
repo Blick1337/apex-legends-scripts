@@ -5,6 +5,7 @@ global function FreeDM_GetScoreLimit
 global function FreeDM_GetOtherTeam
 global function FreeDM_IsActiveGameMode
 global function FreeDM_RegisterNetworking
+global function FreeDM_SetAudioEvent
 
 #if SERVER
                                          
@@ -16,6 +17,8 @@ global function FreeDM_RegisterNetworking
                                                       
                                   
                                              
+                                               
+                                                     
 #endif          
 
 #if CLIENT
@@ -36,6 +39,23 @@ global function ServerCallback_FreeDM_DisplayMatchTimeLimitWarning
 const string FREEDM_SECONDARY_SCORE_NAME = "FreeDM_SecondaryPoints"
 global const float FREEDM_MESSAGE_DURATION = 5.0
 const float FREEDM_MATCH_TIME_LIMIT_WARNING_TIME = 300.0                                                                       
+const float FREEDM_ROUND_WIN_ANNOUNCMENT_TIME = 2.0
+const float FREEDM_POST_ROUND_SCOREBOARD_TIME = 3.0
+
+const float FREEDM_INTRO_MUSIC_TIME            = 5.0
+const float FREEDM_POST_ROUND_MUSIC_STOP_DELAY = 2.0
+const int FREEDM_MUSIC_START_ON_KILLS_LEFT     = 5
+
+const string FREEDM_MUSIC_GAMEPLAY = "Music_GunGame_Gameplay"
+const string FREEDM_MUSIC_VICTORY  = "Music_GunGame_Victory"
+const string FREEDM_MUSIC_LOSS     = "Music_GunGame_Loss"
+const string FREEDM_MUSIC_PODIUM   = "Music_GunGame_Podium"
+
+const float FREEDM_SCORE_VO_BC_DELAY = 6.0                                     
+const int FREEDM_NEAR_ENDSCORE_DELTA = 5
+
+const string FREEDM_VICTORY_SOUND = "UI_InGame_GunGame_Victory"
+const string FREEDM_DEFEAT_SOUND = "UI_InGame_GunGame_Defeat"
 
 #if SERVER
                                                                                                                                 
@@ -43,7 +63,21 @@ const float FREEDM_MATCH_TIME_LIMIT_WARNING_TIME = 300.0
 
 #if CLIENT
 const string FREEDM_SFX_MATCH_TIME_LIMIT = "Ctrl_Match_End_Warning_1p"
+const string GUNGAME_COUNTDOWN_SOUND = "UI_InGame_GunGame_Countdown"
 #endif          
+
+global enum eFreeDMAudioEvents
+{
+	Gameplay_Music,
+	Victory_Music,
+	Loss_Music,
+	Podium_Music,
+
+	Victory_Sound,
+	Defeat_Sound,
+
+	Count
+}
 
 global const array<string> FREEDM_DISABLED_BATTLE_CHATTER_EVENTS = [
 "bc_anotherSquadAttackingUs",
@@ -80,6 +114,14 @@ eCommsAction.INVENTORY_NO_AMMO_SPECIAL,
  
 #endif
 
+#if SERVER
+                    
+ 
+	                               
+	                               
+ 
+#endif
+
 struct {
 #if SERVER
 	                                            
@@ -91,20 +133,34 @@ struct {
 
 	                                          
 	                          
+
+	                                                   
+	                                                                         
+	                                                                                                      
+
+	                                      
 #endif          
 
 #if CLIENT
 	bool                          isScoreText = false
+	var        					  introCountdownRUI = null
 	asset functionref( int team ) getCustomIndicatorCallback = null
 	void functionref()			  displayScoreThread = null
 	void functionref()			  scoreboardSetupFunc = null
 #endif          
+
+	        
+	table< int, string > audioEvents
 } file
 
 void function FreeDM_GamemodeInitShared()
 {
 	SetScoreEventOverrideFunc( FreeDM_SetScoreEventOverride )
 	GamemodeSurvivalShared_Init()
+
+#if SERVER
+	                                                            
+#endif
 
 	RegisterNetworkedVariable( FREEDM_SECONDARY_SCORE_NAME, SNDC_PLAYER_GLOBAL, SNVT_BIG_INT, 0 )
 
@@ -150,6 +206,13 @@ void function FreeDM_GamemodeInitShared()
 
 		TimedEvents_RegisterTimedEvent( airdropData )
 	}
+
+	FreeDM_SetAudioEvent( eFreeDMAudioEvents.Gameplay_Music, FREEDM_MUSIC_GAMEPLAY )
+	FreeDM_SetAudioEvent( eFreeDMAudioEvents.Victory_Music, FREEDM_MUSIC_VICTORY )
+	FreeDM_SetAudioEvent( eFreeDMAudioEvents.Loss_Music, FREEDM_MUSIC_LOSS )
+	FreeDM_SetAudioEvent( eFreeDMAudioEvents.Podium_Music, FREEDM_MUSIC_PODIUM )
+	FreeDM_SetAudioEvent( eFreeDMAudioEvents.Victory_Sound, FREEDM_VICTORY_SOUND )
+	FreeDM_SetAudioEvent( eFreeDMAudioEvents.Defeat_Sound, FREEDM_DEFEAT_SOUND )
 
                           
                  
@@ -201,6 +264,7 @@ void function FreeDM_GamemodeInitShared()
 
 	                                                                                  
 	                                                                                
+	                                                                                    
 
 	                                                                              
 
@@ -229,9 +293,9 @@ void function FreeDM_GamemodeInitShared()
 		                                                                          
 	 
 
-	                  
+	                                        
+		                   
 
-	                   
 	                               
  
 #endif          
@@ -344,6 +408,10 @@ float function GetMinJIPTime()
 		 
 	 
 
+	                                                                                   
+	                    
+		                                   
+
 	                                     
 	 
 		                                         
@@ -365,8 +433,156 @@ float function GetMinJIPTime()
 	                                                                                       
 	                                         
 	                                     
+
+	                                                               
+	 
+		                                        
+		                      
+			                                    
+	 
+	                             
+
+	                   
  
 #endif          
+
+#if SERVER
+                                         
+ 
+	                                                                                          
+
+	                                                               
+		                              
+ 
+#endif          
+
+#if SERVER
+                                    
+ 
+	                                                                                                          
+
+	                
+
+	                                                               
+	 
+		                                        
+		                      
+			                                  
+	 
+ 
+#endif          
+
+#if SERVER
+                                 
+ 
+	                                                
+	                                         
+	                                     
+	                                 
+ 
+#endif         
+
+#if SERVER
+                                                    
+ 
+	                     
+	                              
+	                                    
+
+	                                                               
+	 
+		                  
+		                                           
+			                                                                                  
+		    
+			                                          
+
+		                              
+		 
+			                        
+			                  
+		 
+	 
+
+	                                                                                                             
+	                                         
+	 
+		                                                                                                                     
+			      
+	 
+	    
+	 
+		                                 
+			      
+	 
+
+	                                                          
+	                                                                       
+	                    
+	 
+		                                   
+		                                                        
+			                                                                                            
+
+		                                                         
+	 
+ 
+#endif         
+
+#if SERVER
+                                                                                           
+ 
+	                                                   
+ 
+#endif         
+
+#if SERVER
+                                                                         
+ 
+	                                                 
+ 
+#endif          
+
+#if SERVER
+                                                                     
+ 
+	                                             
+	 
+		                                                                        
+		         
+	 
+
+	                                                        
+ 
+
+#endif         
+
+#if SERVER
+                                                              
+ 
+	                        
+	 
+		                
+		                 
+		                  
+		                  
+		                  
+	 
+
+	         
+ 
+#endif         
+
+void function FreeDM_SetAudioEvent( int event, string eventString )
+{
+	if( event < 0 || event >= eFreeDMAudioEvents.Count )
+	{
+		printf( "[FREEDM] - FreeDM_SetMusicEvent invalid event %d", event )
+		return
+	}
+
+	file.audioEvents[ event ] <- eventString
+}
 
 #if SERVER
                                
@@ -539,6 +755,119 @@ float function GetMinJIPTime()
 	 
 		                                        
 	 
+
+	                           
+	                           
+ 
+#endif          
+
+#if SERVER
+                                             
+ 
+	                                     
+	                                    
+	                              
+	                    
+	                                                
+
+	                                                              
+	 
+		                                                                                                                                                              
+		                              
+		 
+			                        
+			                  
+		 
+	 
+
+	                        
+	                                          
+		                                                                           
+
+	                                                           
+	                                                                                                                  
+	 
+		                                                                  
+		                                                                                                                                                                            
+		                                                       
+		                                                                     
+		 
+			                                
+			                                          
+			 
+				                               
+				 
+					                                                    
+					                                                                           
+				 
+			 
+			    
+			 
+				                                                           
+				                                                                           
+			 
+		 
+
+		      
+	 
+
+	                                                       
+
+	                                                    
+	                       
+	                                                                         
+	 
+		                                
+		                                    
+		                                                                                                                      
+	 
+	                                                                                                     
+	 
+		                                
+		                                    
+		                                                                                                                          
+	 
+
+	                       
+		      
+
+	                                                                               
+	                             
+
+	                                                                                  
+	                                                              
+	 
+		                                                    
+		                     
+			        
+
+		                                                                                                     
+			                                                                     
+		    
+			                                                                      
+	 
+
+ 
+#endif          
+
+#if SERVER
+                                                                 
+                                                    
+ 
+	                                                                                                               
+ 
+#endif          
+
+#if SERVER
+                                            
+ 
+	                                
+	 
+		                    
+		                               
+	 
+
+	                            
  
 #endif          
 
@@ -561,7 +890,6 @@ float function GetMinJIPTime()
 	 
  
 #endif          
-
 
 #if SERVER
                                                                             
@@ -695,12 +1023,18 @@ float function GetMinJIPTime()
 			                                    
 		    
 		 
-			                                                                                                                  
 			                                 
 			                                      
 			 
-				                                                                                                 
+				                        
+				 
+					                        
+					                                                                                                 
+				 
 			 
+			                                                                          
+			                                                                                                                  
+
 		 
 	 
 	    
@@ -1023,9 +1357,9 @@ float function GetMinJIPTime()
 #if SERVER
                                                     
  
+	                                
 	                                                    
 	 
-		                                            
 		                                                
 	 
 	    
@@ -1043,18 +1377,18 @@ float function GetMinJIPTime()
 #if SERVER
                                           
  
-	                                           
 	                                                          
 
 	                                                                                                                           
 	 
-		                                             
+		                                              
+		        
 		                                           
 		                                                    
 		                                                                               
 		                                                               
 	 
-
+	                                             
 	                      
  
 #endif          
@@ -1113,7 +1447,7 @@ float function GetMinJIPTime()
 
 	                                                   
 	 
-		                                                                                                                     
+		                                                                                                                       
 		                                                             
 
 		                                                                                  
@@ -1290,19 +1624,6 @@ int function FreeDM_GetScoreLimit()
 }
 
 #if CLIENT
-void function FreeDM_GamemodeInitClient()
-{
-	SetGameModeSuddenDeathAnnouncementSubtext( "#GAMEMODE_ANNOUNCEMENT_SUDDEN_DEATH_TDM" )
-	SURVIVAL_SetGameStateAssetOverrideCallback( FreeDM_OverrideGameState )
-
-	                                                           
-	ClGamemodeSurvival_Init()
-
-	AddCallback_GameStateEnter( eGameState.Playing, Client_OnGameStatePlaying )
-}
-#endif          
-
-#if CLIENT
 void function FreeDM_OnPlayerLifeStateChanged( entity player, int oldState, int newState )
 {
 
@@ -1310,14 +1631,112 @@ void function FreeDM_OnPlayerLifeStateChanged( entity player, int oldState, int 
 #endif
 
 #if CLIENT
+void function FreeDM_GamemodeInitClient()
+{
+	SetGameModeSuddenDeathAnnouncementSubtext( "#GAMEMODE_ANNOUNCEMENT_SUDDEN_DEATH_TDM" )
+	SURVIVAL_SetGameStateAssetOverrideCallback( FreeDM_OverrideGameState )
+
+	                                                           
+	ClGamemodeSurvival_Init()
+	AddCallback_GameStateEnter( eGameState.Playing, Client_OnGameStatePlaying )
+	AddCallback_GameStateEnter( eGameState.Prematch, Client_OnPrematchInit )
+	AddCallback_GameStateEnter( eGameState.WinnerDetermined, Client_OnWinnerDetermined )
+	AddCallback_GameStateEnter( eGameState.Resolution, Client_OnResolution )
+}
+#endif          
+
+#if CLIENT
+void function Client_OnPrematchInit( )
+{
+	file.introCountdownRUI = CreateFullscreenPostFXRui( $"ui/gun_game_intro.rpak" )
+	RuiSetFloat( file.introCountdownRUI, "gameStartTime", GetGameStartTime() )
+	float roundStartTime = GetCurrentPlaylistVarFloat( "freedm_prematch_intro_time", 0.0 )
+	RunUIScript("SetRespawnOverlayTime", Time(), Time() + roundStartTime)
+	RunUIScript("SetRespawnOverlaySubTextString", "#GAMEMODE_ROUND_STARTING")
+	RunUIScript("SetRespawnOverlayString",Localize( "#GAMESTATE_ROUND_N", GetRoundsPlayed() + 1))
+	thread _CountdownIntroSoundThread()
+}
+#endif          
+
+#if CLIENT
+void function _CountdownIntroSoundThread()
+{
+	                                              
+	float countdownTime = 3.0
+	wait GetGameStartTime() - Time() - countdownTime
+
+	                                                           
+	for( int i = 0; i < 3; ++i )
+	{
+		EmitSoundOnEntity( GetLocalViewPlayer(), GUNGAME_COUNTDOWN_SOUND )
+		wait 1.0
+	}
+}
+#endif          
+
+
+#if CLIENT
 void function Client_OnGameStatePlaying()
 {
 	HudTargetInfo_Enable( true )
-
 	if( file.displayScoreThread != null )
 		thread file.displayScoreThread()
 	else
 		Warning( "FreeDM displayScoreThread is null! No score HUD will be displayed" )
+
+	thread _DelayedDestroyCountdownRUI( )
+}
+#endif          
+
+#if CLIENT
+                                                                                             
+void function _DelayedDestroyCountdownRUI( )
+{
+	wait 1.0
+
+	if( file.introCountdownRUI != null )
+	{
+		RuiDestroyIfAlive( file.introCountdownRUI )
+		file.introCountdownRUI = null
+	}
+}
+#endif          
+
+#if CLIENT
+void function Client_OnWinnerDetermined( )
+{
+	entity localPlayer = GetLocalViewPlayer()
+	int myTeam = localPlayer.GetTeam()
+
+	if( myTeam == TEAM_SPECTATOR )
+		return
+
+	int winningTeam = GetWinningTeam()
+	if( winningTeam == myTeam )
+	{
+		SetChampionScreenSound( file.audioEvents[eFreeDMAudioEvents.Victory_Sound] )
+		EmitSoundOnEntity( localPlayer, file.audioEvents[eFreeDMAudioEvents.Victory_Music] )
+	}
+	else
+	{
+		SetChampionScreenSound( file.audioEvents[eFreeDMAudioEvents.Defeat_Sound] )
+		EmitSoundOnEntity( localPlayer, file.audioEvents[eFreeDMAudioEvents.Loss_Music] )
+	}
+
+	if( !AllianceProximity_IsUsingAlliances() )
+	{
+		int squadIndex = Squads_GetSquadUIIndex( winningTeam )
+		SetVictoryScreenTeamName( Localize( Squads_GetSquadNameLong( squadIndex ) ) )
+	}
+}
+#endif          
+
+#if CLIENT
+void function Client_OnResolution( )
+{
+	entity localPlayer = GetLocalViewPlayer()
+	if ( IsValid( localPlayer ) )
+		EmitSoundOnEntity( localPlayer, file.audioEvents[eFreeDMAudioEvents.Podium_Music] )
 }
 #endif          
 
@@ -1399,6 +1818,7 @@ void function FreeDM_BaseScoreboardSetup()
 	clGlobal.hideScoreboardFunc = HideScoreboardOrMap_Teams
 	Teams_AddCallback_ScoreboardData( FreeDM_GetScoreboardData )
 	Teams_AddCallback_Header( FreeDM_ScoreboardUpdateHeader )
+	                                                                                                                 
 	Teams_AddCallback_PlayerScores( FreeDM_GetPlayerScores )
 	Teams_AddCallback_SortScoreboardPlayers( FreeDM_SortPlayersByScore )
 }
@@ -1472,6 +1892,13 @@ void function FreeDM_ScoreboardUpdateHeader( var headerRui, var frameRui, int te
 #endif          
 
 #if CLIENT
+vector function FreeDM_ScoreboardGetTeamColor( int team )
+{
+	return < 0,0,0 >
+}
+#endif          
+
+#if CLIENT
 void function ServerCallback_FreeDM_AnnounceRoundWonLost(int winningTeam)
 {
 	entity localPlayer = GetLocalViewPlayer()
@@ -1483,6 +1910,16 @@ void function ServerCallback_FreeDM_AnnounceRoundWonLost(int winningTeam)
 		AnnouncementMessageSweep( localPlayer, Localize( "#GAMEMODE_ROUND_WIN"))
 	else
 		AnnouncementMessageSweep( localPlayer, Localize( "#GAMEMODE_ROUND_LOSS"))
+	thread FreeDM_DelayedShowScoreboard()
+}
+#endif          
+
+#if CLIENT
+void function FreeDM_DelayedShowScoreboard()
+{
+	wait FREEDM_ROUND_WIN_ANNOUNCMENT_TIME
+	                                                
+	                  
 }
 #endif          
 

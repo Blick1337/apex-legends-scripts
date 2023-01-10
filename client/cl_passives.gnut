@@ -53,9 +53,14 @@ void function OnInitWeaponStatusRuis_CLPassives( entity player )
                   
                                             
    
-                                       
-                                         
+                                  
+                                        
    
+       
+
+                                         
+                                                             
+                                     
        
 }
 
@@ -100,10 +105,16 @@ void function DestroyPassiveRuis( entity player, bool isValidPlayer = true )
                   
                                                                
    
+                           
                                 
-                                  
    
        
+                                     
+                                                                                   
+      
+                                                    
+      
+          
 }
 
 void function CreateValkJetPackRui( entity player )
@@ -140,20 +151,33 @@ void function CreateVantageTacticalRui( entity player )
       
 
                  
-                                                         
+                                                    
  
+                                    
+        
+
+                                 
+ 
+
+                                                          
+ 
+                         
+        
+
                                          
         
 
-                                      
+                                     
  
+      
 
-                                                           
+                                 
+                                                       
  
-                                           
+                                                  
         
 
-                                     
+                                              
  
       
 
@@ -228,10 +252,8 @@ void function CreateVantageTacticalRui( entity player )
                                       
                                                                  
                                         
-                           
                                                                                             
                                       
-                                 
 
                                   
                                         

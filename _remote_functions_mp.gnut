@@ -72,16 +72,16 @@ void function RemoteFunctions_Init_Begin()
 
 	Remote_RegisterClientFunction( "SCB_WeaponInspectHint" )
 	Remote_RegisterClientFunction( "SCB_AttemptWeaponInspect" )
-
-	Remote_RegisterClientFunction( "SCB_UpdatePlayerWeaponReactiveEffects", "entity", "int", 0, eReactiveEffectUpdateType.len() )
-
 	Remote_RegisterClientFunction( "ServerCallback_PlayMatchEndMusic" )
-
 
 	bool isOptInServer = Dev_CommandLineHasParm( "-optinserver" )
 	RegisterNetworkedVariable( "isOptInServer", SNDC_GLOBAL, SNVT_BOOL, isOptInServer )
 
 	Remote_RegisterClientFunction( "SCB_WattsonRechargeHint" )
+
+                            
+                                                                                                              
+       
 
 	  
 	RegisterNetworkedVariable( "gameStateChangeTime", SNDC_GLOBAL_NON_REWIND, SNVT_TIME, -1.0 )
@@ -112,19 +112,17 @@ void function RemoteFunctions_Init_Begin()
 
 	                                            
                           
-		RegisterNetworkedVariable( "characterIndex", SNDC_DEATH_BOX, SNVT_INT, -1 )
-		RegisterNetworkedVariable( "overrideRUIType", SNDC_DEATH_BOX, SNVT_INT, 0 )
-		RegisterNetworkedVariable( "skinIndex", SNDC_DEATH_BOX, SNVT_INT, -1 )
-		RegisterNetworkedVariable( "frameIndex", SNDC_DEATH_BOX, SNVT_INT, -1 )
-		RegisterNetworkedVariable( "stanceIndex", SNDC_DEATH_BOX, SNVT_INT, -1 )
-
-		                                                                                                                                                                        
-		RegisterNetworkedVariable( "firstBadgeIndex", SNDC_DEATH_BOX, SNVT_INT, -1 )
-		RegisterNetworkedVariable( "firstBadgeDataInt", SNDC_DEATH_BOX, SNVT_INT, -1 )
-		RegisterNetworkedVariable( "secondBadgeIndex", SNDC_DEATH_BOX, SNVT_INT, -1 )
-		RegisterNetworkedVariable( "secondBadgeDataInt", SNDC_DEATH_BOX, SNVT_INT, -1 )
-		RegisterNetworkedVariable( "thirdBadgeIndex", SNDC_DEATH_BOX, SNVT_INT, -1 )
-		RegisterNetworkedVariable( "thirdBadgeDataInt", SNDC_DEATH_BOX, SNVT_INT, -1 )
+		RegisterNetworkedVariable( "characterIndex", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
+		RegisterNetworkedVariable( "overrideRUIType", SNDC_DEATH_BOX, SNVT_BIG_INT, 0 )
+		RegisterNetworkedVariable( "skinIndex", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
+		RegisterNetworkedVariable( "frameIndex", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
+		RegisterNetworkedVariable( "stanceIndex", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
+		RegisterNetworkedVariable( "firstBadgeIndex", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
+		RegisterNetworkedVariable( "firstBadgeDataInt", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
+		RegisterNetworkedVariable( "secondBadgeIndex", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
+		RegisterNetworkedVariable( "secondBadgeDataInt", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
+		RegisterNetworkedVariable( "thirdBadgeIndex", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
+		RegisterNetworkedVariable( "thirdBadgeDataInt", SNDC_DEATH_BOX, SNVT_BIG_INT, -1 )
 
 		Remote_RegisterClientFunction( "ServerCallback_PlayLootRarityFXOnDeathboxDrop", "entity" )
        
@@ -262,6 +260,9 @@ void function RemoteFunctions_Init_Begin()
 			int defaultHealOption = GetCurrentPlaylistVarBool( "auto_heal_option", false ) ? -1 : 0
 			RegisterNetworkedVariable( "selectedHealthPickupType", SNDC_PLAYER_EXCLUSIVE, SNVT_INT, defaultHealOption )
 			Remote_RegisterClientFunction( "ServerCallback_TryUseConsumable", "entity", "int", 0, 128 )
+                                  
+			Remote_RegisterClientFunction( "ServerToClient_Valentines_UltAccelChargePartner" )
+         
 
 			RegisterNetworkedVariable( "TrainingEndTime", SNDC_PLAYER_EXCLUSIVE, SNVT_TIME, -1 )
 
@@ -340,6 +341,7 @@ void function RemoteFunctions_Init_Begin()
 
                       
                                                                                                        
+                                                                                                 
          
 
 			Remote_RegisterClientFunction( "ServerCallback_PlayerBootsOnGround" )
@@ -347,9 +349,8 @@ void function RemoteFunctions_Init_Begin()
 
 			Remote_RegisterClientFunction( "ServerCallback_AutoReloadComplete", "entity" )
 
-                         
 			Remote_RegisterClientFunction( "ServerCallback_SetLaserSightVMLaserEnabled", "entity" , "bool")
-      
+
 			Remote_RegisterUIFunction( "ServerCallback_OpenSurvivalExitMenu", "bool" )
 			Remote_RegisterUIFunction( "ServerToUI_CharacterLockRejected" )
 
@@ -402,6 +403,16 @@ void function RemoteFunctions_Init_Begin()
 
                                 
                                                                                         
+      
+
+                                 
+                                                                                                    
+                                                                                                          
+                                                                                                                                                   
+      
+
+                     
+                                                                                       
       
 
                         
@@ -528,7 +539,11 @@ void function RemoteFunctions_Init_Begin()
       
 
                                
-                                                 
+			ShGameMode_Valentines_S15_RegisterNetworking()
+      
+
+                                  
+			Sh_Survival_Hardcore_RegisterNetworking()
       
 
                       
@@ -546,6 +561,10 @@ void function RemoteFunctions_Init_Begin()
 
                        
                            
+      
+
+                                 
+                                      
       
 
                      
@@ -742,7 +761,9 @@ void function RemoteFunctions_Init_Begin()
 	Remote_RegisterServerFunction( "ClientCallback_SetClubIsPendingApproval", "bool" )
 
 	Remote_RegisterServerFunction( "ClientCallback_MarkBattlePassPopupAsSeen", "string", "int", INT_MIN, INT_MAX )
-
+                    
+                                                                                                                   
+      
 	Remote_RegisterServerFunction( "ClientCallback_MarkStoryEventDialoguePopupAsAttempted" )
 	Remote_RegisterServerFunction( "ClientCallback_MarkStoryEventDialoguePopupAsSeen", "bool", "string" )
 	Remote_RegisterServerFunction( "ClientCallback_MarkStoryEventChallengesPopupAsSeen", "bool", "string" )
@@ -781,6 +802,8 @@ void function RemoteFunctions_Init_Begin()
 	                
 	Remote_RegisterServerFunction( "ClientCallback_PlayerPerformPodiumScreenEmote", "int", INT_MIN, INT_MAX, "int", 0, INT_MAX )
 	Remote_RegisterClientFunction( "ServerCallback_PlayerPerformPodiumScreenEmote", "int", INT_MIN, INT_MAX, "int", 0, INT_MAX )
+	Remote_RegisterServerFunction( "ClientCallback_PlayerPerformPodiumScreenFlourish", "int", INT_MIN, INT_MAX )
+	Remote_RegisterClientFunction( "ServerCallback_PlayerPerformPodiumScreenFlourish", "int", INT_MIN, INT_MAX )
 
 	                
 	Remote_RegisterServerFunction( "ClientCallback_InitializeCraftingAtWorkbench", "int", INT_MIN, INT_MAX )
@@ -819,7 +842,7 @@ void function RemoteFunctions_Init_Begin()
 	Remote_RegisterServerFunction ( "ClientCallback_ToggleFavoriteChallenge", "int", INT_MIN, INT_MAX )
 
                                                
-                                                                                                                                                          
+                                                                                                                                                                                           
        
 
                    
@@ -845,6 +868,9 @@ void function RemoteFunctions_Init_Begin()
 
 	Remote_RegisterServerFunction( "StoryEvent_OnRadioVignetteFinishedLobbyKick" )
 	Remote_RegisterUIFunction( "StoryEvent_PlayRadioVignetteForChapter", "int", 0, 4 )
+
+	Remote_RegisterServerFunction( "FRC_ClientToServer_TryLeaveChallenge" )
+
 	Remote_RegisterClientFunction( "ServerCallback_FRC_SetChallengeKey", "string")
 	Remote_RegisterClientFunction( "ServerCallback_FRC_UpdateState", "int", 0, 4 )
 	Remote_RegisterClientFunction( "ServerCallback_FRC_UpdateOutofBounds", "bool", "float", 0.0, 10.0, 32 )
@@ -859,6 +885,9 @@ void function RemoteFunctions_Init_Begin()
 	  
 
 	Remote_RegisterClientFunction( "ServerToClient_UpdateItem", "entity" )
+
+	  
+	Remote_RegisterClientFunction( "ServertoClient_LTM_AnnouncementSplash")
 
                     
                                       

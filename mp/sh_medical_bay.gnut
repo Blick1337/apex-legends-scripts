@@ -931,7 +931,7 @@ void function MedBay_RuiTrack( var rui, entity ent )
 		                                          
 	 
 	    
-		                                                                                        
+		                                                                                            
  
 
                                                                        
@@ -1162,7 +1162,7 @@ void function ServerToClient_MedBayHealVisualsDisabled( entity player )
 			           
 	 
 
-	                                                                                
+	                                                                                    
 	           
  
 
@@ -1175,7 +1175,7 @@ void function ServerToClient_MedBayHealVisualsDisabled( entity player )
 			           
 	 
 
-	                                                                                 
+	                                                                                     
 	           
  
 

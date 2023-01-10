@@ -362,7 +362,7 @@ void function Sh_SkydiveLaunchers_Init()
 			     
         
 		        
-			                                                                     
+			                                                                         
 	 
 
 	                    
@@ -603,7 +603,8 @@ void function Sh_SkydiveLaunchers_Init()
 		 
 		                                                     
 		                                           
-		                                           
+		                                                                                                                                                     
+		                                                                                                  
 	 
 	                               
 	 
@@ -956,7 +957,7 @@ void function OnSkydiveLauncherCreated( entity trigger )
 				break
          
 			default:
-				Assert( 0, "Unhandled eSkydiveLauncherType on client: " + skydiveLauncherType )
+				Assert( false, "Unhandled eSkydiveLauncherType on client: " + skydiveLauncherType )
 
 		}
 

@@ -49,12 +49,23 @@ global const TRACKING_DIST_INDEX = 3
                                                      
                                                     
 
+                                                   
+                                                   
+                                                       
+                                                       
+
+                                               
+                                               
 
           
                                                                                                                                                                               
+                                                                              
+                                                                                                    
+                                                                                                 
 
                                                                         
-                                                                
+                                                               
+                                                                  
                                                                                        
                                                                          
                                                         
@@ -268,6 +279,7 @@ global enum eTrackingVisionNetworkedPOITypes
  
                                                          
                                                       
+                                                           
 
                                              
                                           
@@ -448,7 +460,7 @@ int function TrackingVision_GetPriorityForPOIType( int poiEventID )
 			return eTrackingPOIPriority.VERY_LOW
 
 		default:
-			Assert( 0, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
+			Assert( false, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
 			break
 	}
 	unreachable
@@ -626,7 +638,7 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
 			return < 0, 0, 8.0 >
 
 		default:
-			Assert( 0, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
+			Assert( false, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
 			break
 	}
 	unreachable
@@ -975,9 +987,16 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                                                                                                      
                  
     
-                                                                                                                                                                         
-                               
-                                               
+                                                                              
+                                                                              
+                                                                                                                                                     
+                                       
+     
+                                        
+                                                                                                                                                                          
+                                
+                                                
+     
     
    
   
@@ -1037,6 +1056,8 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                              
                 
 
+                                                             
+
                                        
                 
   
@@ -1046,6 +1067,8 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                                                                                                         
                                                                                           
                                                                                 
+
+                                                           
   
 
                     
@@ -1056,6 +1079,32 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                                                                      
        
             
+ 
+               
+
+          
+                                                                             
+ 
+                                                  
+                               
+
+                                                     
+                                                                             
+
+                                                                                        
+                                                                                                    
+                     
+                                                
+
+             
+                           
+   
+                       
+                    
+   
+  
+
+              
  
                
 
@@ -1187,20 +1236,7 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                               
        
 
-                                                                 
-  
-                            
-           
-
-                                               
-                                                                                               
-                                                                         
-                                                                                    
-                                                   
-                                    
-
-                                                                                                                                                                                
-  
+                                                                  
 
                                                                                                             
 
@@ -1295,6 +1331,9 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                                          
                                         
                               
+
+                         
+                                                                                                                                           
 
              
                                                
@@ -1446,20 +1485,62 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
      
                                                                               
 
-                                                    
-                                                                   
-
-                                                       
-
-
                 
                                           
 
-                                                                       
-                                                                                           
+                                          
+
+
+                                                 
+                                                                                             
+
+                          
+  
+                        
+         
+                         
+         
+                          
+         
+
+                        
+                   
+
+                                          
+                                
+
+                      
+                                             
+        
+
+                                                                          
+                                                             
+
+                                      
+                                                                           
+
                              
 
+         
+                                      
+    
+                                                      
+                                                            
+    
+        
+
+             
+
+                         
+         
+
+                               
+                                        
+                                      
+  
+
                                        
+
  
                 
 
@@ -1601,7 +1682,7 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
 
 
           
-                                                                     
+                                                                                                  
  
                           
                                 
@@ -1611,16 +1692,23 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                      
 
                                              
-                                               
-                                                   
                                                   
+                                               
+                                                    
+
+                                                  
+                     
+                                                   
 
                         
                                                            
                                                                                     
 
                                                                                                                                                                                  
-                                   
+                      
+                                    
+     
+                                                            
 
                                                                                        
   
@@ -1638,7 +1726,7 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                   
                                                                                                                                                                                                     
                                                   
-                                                                         
+                                                                           
    
   
 
@@ -1719,7 +1807,7 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
  
 
           
-                                                                                   
+                                                                                                            
  
                                
                                  
@@ -1744,7 +1832,7 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                           
                                           
 
-                                                          
+                                                                      
 
                               
                                                                  
@@ -1763,20 +1851,7 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                                                                                               
                                                        
 
-                                                                  
-   
-                             
-            
-
-                                                
-                                                                                                
-                                                                          
-                                                                                     
-                                                    
-                                     
-
-                                                                                                                                                                                 
-   
+                                                                               
 
 
                                                                                          
@@ -1809,12 +1884,95 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
       
 
           
-                                                                       
+                                                                                                                              
  
+
+                                                                 
+  
+                            
+           
+
+                                                
+                                                                                                
+                                                                             
+                                                                                      
+
+                                                   
+                                    
+
+                                                                                                                                                                                                         
+
                                                
-                                               
-                                                    
-                                                    
+                                                                                                   
+  
+
+ 
+               
+
+          
+                                                                                                                                         
+ 
+                               
+                                 
+
+                                                                                                 
+                                                 
+                            
+  
+                                                                                                
+        
+
+             
+  
+
+                                                 
+        
+
+                         
+  
+                                                                                    
+                                                            
+  
+     
+  
+                                                                                    
+  
+ 
+ 
+
+      
+
+          
+                                                                                     
+ 
+                         
+        
+
+                                                                                                                                                   
+                     
+                                                                                                                                                         
+                                    
+                                                                  
+
+
+                                                                                                                                
+                     
+
+             
+                     
+   
+               
+   
+  
+
+        
+
+ 
+      
+
+          
+                                                                                        
+ 
 
                                                   
 
@@ -1827,10 +1985,14 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
 
                                                                          
 
-                                                                    
-                                                                           
+                                                                     
+                                                                          
 
-                        
+                   
+    
+                                                                      
+    
+                             
     
                                                                              
                                       
@@ -1869,31 +2031,104 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                                                                         
  
 
-                                                                                                   
+                                                                                                                   
  
                                        
                          
         
 
                                               
-                                                                      
+                                                                                
  
 
-                                         
-                                                                                          
+                                                                                                           
  
-                                  
                                      
                           
         
 
                                                                                                                      
 
+                                             
+                                                      
+                                                    
+                                                        
+                                                         
+
+                                        
+                         
+        
+
+                                   
+                                            
+                                               
+                                                                                                                                             
+                                                 
+                                                      
+
+                                   
+                         
+                                                              
+                              
+
+                                                                    
+  
+                                                   
+   
+                                                                             
+                                                 
+
+                                                                                                             
+         
+
+                                
+                       
+   
+  
+
+                                                                             
+                           
+  
+                              
+                     
+   
+                           
+          
+
+                                                
+                                                                                                                              
+          
+
+          
+                                
+     
+                                                                                 
+                                                                  
+     
+         
+
+                                             
+   
+
+  
+
+ 
+
+                                                                                                       
+ 
+                         
+        
+                                     
+        
+
+                                                                                                                     
+
+                                  
                                             
 
                                                                   
-                                                                                                 
-                                                                                
+                                                                                                       
+                                                                                      
 
              
                                          
@@ -1908,11 +2143,15 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                     
                                       
   
+                          
+         
+
                                 
    
                
                                                                
    
+
              
   
 
@@ -1941,7 +2180,7 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
  
                                           
   
-                                                               
+                                                                     
   
  
 

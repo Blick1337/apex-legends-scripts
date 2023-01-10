@@ -34,6 +34,7 @@ global enum eLootAction
                   
                 
                
+                
        
 
 	_count
@@ -55,6 +56,10 @@ struct
 	table<int, LootActionData> lootActionData
 	table< entity, array<ThrottleData> > lastEquipData
 	bool attachSwapsOldItemToStowedIfBetter
+
+                        
+                                             
+                              
 } file
 
 void function SURVIVAL_LootActions_InitShared()
@@ -114,11 +119,14 @@ void function SURVIVAL_LootActions_InitShared()
 
                   
                                                            
-                                 
+                                  
                                     
 
                                                           
-                                
+                                 
+                                    
+
+                                                           
                                     
        
 
@@ -221,6 +229,14 @@ bool function PickupCustomItem( entity pickup, entity player, int pickupFlags, e
 				 
 			#endif              
 		}
+                     
+            
+                                      
+   
+                           
+   
+        
+        
 		return result
 	}
 
@@ -343,7 +359,9 @@ bool function TryEquipItem( int action, entity pickup, entity player, int pickup
  
                                                         
 
-                                                                                            
+                                                                           
+
+                                                                                                       
               
 
            
@@ -351,9 +369,9 @@ bool function TryEquipItem( int action, entity pickup, entity player, int pickup
                                           
                           
       
-                                                      
-                                     
-                                                            
+                                            
+                                
+                                                       
        
 
             
@@ -688,6 +706,8 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
 }
 
                        
+                                             
+                                           
                                                                                                                              
  
                                                 
@@ -695,12 +715,29 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
               
   
 
-                                                                          
+                                                
 
-                                                                                                                                                      
+                                                                 
   
               
-         
+  
+                                                                                                                              
+  
+                                                           
+   
+               
+   
+      
+   
+                                                                                                                                                         
+             
+                                              
+                   
+              
+   
+  
+     
+  
             
                                                    
                                              
@@ -709,6 +746,84 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
   
 
              
+ 
+                             
+
+                       
+                                            
+ 
+                                                                 
+ 
+                             
+
+                       
+                                                    
+ 
+                                                                                  
+ 
+                             
+
+                       
+                                                                                                               
+                                                                                                                                 
+                                                                                                                                                                                              
+ 
+                                                
+
+                          
+        
+
+                                                                 
+                                                          
+        
+
+                                                 
+
+                                
+
+                            
+                                 
+
+                                       
+                                                             
+    
+
+                     
+                             
+                                                
+
+                                                        
+  
+                        
+
+            
+                                                                                     
+                
+                                                                                                           
+                                                                                                              
+                            
+
+                                                                                                        
+                                  
+        
+
+                                      
+                                                                                          
+  
+
+ 
+                             
+
+                       
+                                                                        
+ 
+                          
+          
+
+                                                                
+                                                                         
+
+                                    
  
                              
 
@@ -831,6 +946,12 @@ bool function EquipEquipment( entity pickup, entity player, string equipSlot, en
 
 				                                                          
 				                                                        
+
+                               
+				                                                              
+          
+
+				                                                  
 			 
 
 			                                                

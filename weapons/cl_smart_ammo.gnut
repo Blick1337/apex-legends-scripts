@@ -9,7 +9,17 @@ global function SmartAmmo_ClearStatusWarning
 
 global function SmartAmmo_SetVerticalOffset
 
+global function GetLockon_Hud
+
+                           
+                                                       
+      
+
 const SMART_AMMO_VICTIM_LOCKED_SOUND = "Titan_Cockpit_TitanLocking_Warning"                                                                       
+
+                           
+                                       
+      
 
 
                                             
@@ -51,12 +61,17 @@ void function SmartAmmoClient_AddClient( entity player )
 	file.lockon_hud = rui
 }
 
+var function GetLockon_Hud()
+{
+	return file.lockon_hud
+}
+
 
 void function SmartAmmo_SetStatusWarning( string warningText, float duration = 0.0 )
 {
 	file.statusWarning = warningText
 
-	if ( duration )
+	if ( duration != 0.0 )
 		thread SmartAmmo_ClearStatusWarning( duration )
 }
 
@@ -158,7 +173,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
 			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
 		}
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.lockon_detected ) )
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.lockon_detected ) )
 		{
 			                           
 			RuiSetString( file.lockon_hud, "lockMessage", "#LOCKON_WARNING" )
@@ -172,20 +187,43 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
 
 			                              
-			if ( StatusEffect_GetSeverity( player, eStatusEffect.crypto_tt_scanned_visual ) )
+			if ( StatusEffect_HasSeverity( player, eStatusEffect.crypto_tt_scanned_visual ) )
 			{
 				RuiSetString( file.lockon_hud, "lockMessage", "HUD_SPOTTED_CRYPTO_TT" )
 				RuiSetFloat3( file.lockon_hud, "borderColor", < 0.21, 0.79, 0.34> )                    
 			}
+                      
+                                                                                                  
+    
+                                                                                
+                                                                                                
+                                                                                                                             
+    
+         
 		}
-		else if ( (StatusEffect_GetSeverity( player, eStatusEffect.camera_detected )
-			|| StatusEffect_GetSeverity( player, eStatusEffect.maphack_detected )
-			|| StatusEffect_GetSeverity( player, eStatusEffect.sonar_detected )
+                     
+                                                                                                         
+   
+                                                                                    
+                                                                    
+                                                   
+                                                    
+                                                    
+                                                   
+                                                   
+                                                       
+                                                                                               
+                                                                                                                                 
+   
+        
+		else if ( (StatusEffect_HasSeverity( player, eStatusEffect.camera_detected )
+			|| StatusEffect_HasSeverity( player, eStatusEffect.maphack_detected )
+			|| StatusEffect_HasSeverity( player, eStatusEffect.sonar_detected )
                  
   			                                                                         
                       
                         
-			|| StatusEffect_GetSeverity( player, eStatusEffect.mortar_ring_reveal ))
+			|| StatusEffect_HasSeverity( player, eStatusEffect.mortar_ring_reveal ) )
                              
                             
                                                                                                                              
@@ -201,25 +239,25 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			RuiSetFloat3( file.lockon_hud, "borderColor", <1, .36, .31> )                       
 			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
 
-			if ( StatusEffect_GetSeverity( player, eStatusEffect.spawnkilling_detected ) )
+			if ( StatusEffect_HasSeverity( player, eStatusEffect.spawnkilling_detected ) )
 				RuiSetString( file.lockon_hud, "lockMessage", "#SPAWNKILLING_DETECTED" )
-			else if ( StatusEffect_GetSeverity( player, eStatusEffect.damage_received_multiplier ) )
+			else if ( StatusEffect_HasSeverity( player, eStatusEffect.damage_received_multiplier ) )
 				RuiSetString( file.lockon_hud, "lockMessage", "#VULNERABLE_WARNING" )
-			else if ( StatusEffect_GetSeverity( player, eStatusEffect.maphack_detected ) )
+			else if ( StatusEffect_HasSeverity( player, eStatusEffect.maphack_detected ) )
 				RuiSetString( file.lockon_hud, "lockMessage", "#MAPHACK_WARNING" )
-			else if ( StatusEffect_GetSeverity( player, eStatusEffect.camera_detected ) )
+			else if ( StatusEffect_HasSeverity( player, eStatusEffect.camera_detected ) )
 			{
 				RuiSetString( file.lockon_hud, "lockMessage", "#CAMERA_WARNING" )
 				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_crypto" )
 				RuiSetFloat3( file.lockon_hud, "borderColor", <.21, .79, .34> )                   
 			}
-			else if ( StatusEffect_GetSeverity( player, eStatusEffect.mirage_detected ) )
+			else if ( StatusEffect_HasSeverity( player, eStatusEffect.mirage_detected ) )
 			 {
 				 RuiSetString( file.lockon_hud, "lockMessage", "#BAMBOOZLED_WARNING" )
 				 RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_mirage" )
 				 RuiSetFloat3( file.lockon_hud, "borderColor", <1, .98, .447> )                   
 			 }
-			else if ( StatusEffect_GetSeverity( player, eStatusEffect.seer_detected ) )
+			else if ( StatusEffect_HasSeverity( player, eStatusEffect.seer_detected ) )
 			{
 				RuiSetString( file.lockon_hud, "lockMessage", "#SEER_DETECTED_WARNING" )
 				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_seer" )
@@ -235,7 +273,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			   
 			                      
                            
-			else if ( StatusEffect_GetSeverity( player, eStatusEffect.mortar_ring_reveal ) )
+			else if ( StatusEffect_HasSeverity( player, eStatusEffect.mortar_ring_reveal ) )
 			{
 				RuiSetString( file.lockon_hud, "lockMessage", "#FUSE_MORTAR_DETECTED_WARNING" )
 				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_fuse" )
@@ -257,7 +295,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			RuiSetBool( file.lockon_hud, "eastLock", false )
 		}
                 
-                                                                                           
+                                                                                     
    
                                                                                   
                                                                                                                                           
@@ -269,7 +307,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                        
    
       
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.sonar_blocked ) )
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.sonar_blocked ) )
 		{
 			RuiSetString( file.lockon_hud, "lockMessage", "#SONAR_WARNING_BLOCKED" )
 			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
@@ -281,7 +319,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
 			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
 		}
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.placing_phase_tunnel ) > 0.0 )
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.placing_phase_tunnel ) )
 		{
 			                                                                        
 			                                                                                                                                                                         
@@ -297,7 +335,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			                                                                                                                                            
 			RuiSetFloat3( file.lockon_hud, "borderColor", <1, 0.846873462, 0.0722718611> )
 		}
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.tethered ) )
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.tethered ) )
 		{
 			RuiSetString( file.lockon_hud, "lockMessage", "#TETHER_WARNING" )
 			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
@@ -319,7 +357,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 		  	                                                
 		  	                                                
 		   
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.device_detected ) )
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.device_detected ) )
 		{
 			float detectWeight      = StatusEffect_GetSeverity( player, eStatusEffect.device_detected )
 			float deviceDetectCount = RoundToNearestInt( ((detectWeight) * 100) - 2 )
@@ -362,7 +400,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
 			RuiSetFloat3( file.lockon_hud, "borderColor", borderColor )
 		}
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.hunt_mode ) > 0.0 )
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.hunt_mode ) )
 		{
 			RuiSetString( file.lockon_hud, "lockMessage", "#HUNT_MODE_STATUS" )
 			RuiSetGameTime( file.lockon_hud, "lockEndTime", Time() + StatusEffect_GetTimeRemaining( player, eStatusEffect.hunt_mode ) )
@@ -377,7 +415,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			RuiSetFloat3( file.lockon_hud, "borderColor", <1, 0.846873462, 0.0722718611> )
 		}
                 
-                                                                                
+                                                                          
    
                                                                        
                                                                                                                                
@@ -391,7 +429,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
    
       
                 
-                                                                               
+                                                                         
    
                                                                       
                                                                                                                               
@@ -403,7 +441,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                        
                                                               
    
-                                                                             
+                                                                       
    
                                                                     
                                                                                                                             
@@ -416,7 +454,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                               
    
       
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.device_blocked ) )
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.device_blocked ) )
 		{
 			float blockWeight        = StatusEffect_GetSeverity( player, eStatusEffect.device_blocked )
 			float deviceBlockedCount = RoundToNearestInt( ((blockWeight) * 100) - 1 )
@@ -482,7 +520,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                   
    
       
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.revealed_by_ash ) )
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.revealed_by_ash ) )
 		{
 			RuiSetString( file.lockon_hud, "lockMessage", "#PAS_ASH_REVEALED" )
 			RuiSetBool( file.lockon_hud, "isVisible", true )
@@ -493,7 +531,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 			RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_ash" )
 			RuiSetFloat3( file.lockon_hud, "borderColor", <1.0, 0.0, 0.0> )
 		}
-		else if ( StatusEffect_GetSeverity( player, eStatusEffect.revealing_enemies ) )
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.revealing_enemies ) )
 		{
 			int playerCount = int( RoundToNearestInt ( ( StatusEffect_GetSeverity( player, eStatusEffect.revealing_enemies ) - 0.1 ) * 10.0 ) )
 			if ( playerCount > 1 )
@@ -529,7 +567,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
       
 
                  
-                                                    
+                                                      
     
                                                                          
                                                                                                                                      
@@ -541,8 +579,8 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                     
                                                                                                       
                                                                      
-    
-                                                           
+      
+                                                             
     
                                                                          
                                                                                                                                           
@@ -624,7 +662,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
      
       
                          
-		 else if ( StatusEffect_GetSeverity( player, eStatusEffect.mrb_carrier ) )
+		 else if ( StatusEffect_HasSeverity( player, eStatusEffect.mrb_carrier ) )
 		 {
 			 RuiSetString( file.lockon_hud, "lockMessage", "#CONTROL_MRB_HELD_WARNING" )
 
@@ -652,7 +690,7 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 	if ( lockedFraction > TARGET_SET_FRACTION && IsValid( highestLockSource ) )
 	{
 		float delay = SmartAmmo_GetWarningIndicatorDelay( activeLockingWeapon )
-		if ( delay )
+		if ( delay > 0 )
 		{
 			reqFracForDetection = delay
 		}
@@ -836,3 +874,33 @@ string function MakeLockedOnWarningDisplayString( array<entity> lockingEnemies, 
 
 	unreachable
 }
+                           
+                                                                                            
+ 
+                         
+        
+
+                          
+
+                                                                 
+ 
+
+                                                                                        
+ 
+                                            
+
+             
+                      
+   
+                                                 
+   
+  
+
+                                              
+                                                          
+
+                           
+
+       
+ 
+      

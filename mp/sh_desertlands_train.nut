@@ -1011,7 +1011,7 @@ void function TrainOnFullUpdate()
 		                                                                                                                            
 		                                                                                                                    
 		                                                                                           
-		                                                                                                                   
+		                                                                                                                       
 	 
  
 
@@ -1371,7 +1371,7 @@ void function TrainOnFullUpdate()
 			     
 
 		        
-			                                                                                      
+			                                                                                          
 	 
 
 	            

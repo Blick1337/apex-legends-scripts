@@ -110,30 +110,7 @@ void function MpWeapon_Mortar_Ring_Init()
 
 bool function OnWeaponAttemptOffhandSwitch_ability_mortar_ring( entity weapon )
 {
-	entity ownerPlayer = weapon.GetWeaponOwner()
-
-	                                                     
-	if ( Bleedout_IsBleedingOut( ownerPlayer ) )
-		return false
-
-	entity player = weapon.GetWeaponOwner()
-	if ( player.IsPhaseShifted() )
-		return false
-
-	                                                      
-	if ( player.IsZiplining() )
-		return false
-
-	                                          
-	if ( weapon == ownerPlayer.GetActiveWeapon( eActiveInventorySlot.mainHand ) )
-		return false
-
-	int ammoReq = weapon.GetWeaponSettingInt( eWeaponVar.ammo_min_to_fire )
-	int currAmmo = weapon.GetWeaponPrimaryClipCount()
-	if ( currAmmo >= ammoReq )
-		return true
-
-	return false
+	return true
 }
 
 void function OnWeaponActivate_ability_mortar_ring(entity weapon)

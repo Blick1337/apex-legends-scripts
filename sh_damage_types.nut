@@ -195,8 +195,8 @@ global enum eDamageSourceId
        
 
                      
-                     
-                         
+		melee_seer_heirloom
+		mp_weapon_seer_heirloom
        
 
                      
@@ -242,7 +242,6 @@ global enum eDamageSourceId
                         
                                     
                   
-                      
                        
        
              
@@ -465,6 +464,7 @@ global enum eDamageSourceId
                            
                           
                          
+                      
        
 
                
@@ -505,9 +505,6 @@ global enum eDamageSourceId
 		mp_weapon_3030
 		mp_weapon_dragon_lmg
 		mp_weapon_dragon_lmg_thermite
-                                
-                            
-       
                             
                         
        
@@ -536,7 +533,8 @@ global enum eDamageSourceId
        
 
                         
-                         
+                          
+                      
        
 
 	_count
@@ -739,8 +737,8 @@ void function DamageTypes_Init()
         
 
                       
-                                                                          
-                                                                             
+			[ eDamageSourceId.melee_seer_heirloom ] = "#DEATH_MELEE_SEER_HEIRLOOM",
+			[ eDamageSourceId.mp_weapon_seer_heirloom] = "#DEATH_MELEE_SEER_HEIRLOOM",
         
 
                       

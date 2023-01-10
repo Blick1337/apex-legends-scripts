@@ -303,6 +303,7 @@ void function MpWeaponFerroWall_Init()
 	#if SERVER
 		                                  
 		                                    
+		                                                                            
 	#endif         
 
 	#if CLIENT
@@ -439,7 +440,10 @@ void function OnWeaponDeactivate_weapon_ferro_wall( entity weapon )
 
 	#if SERVER
 		                       
+		 
 			                                                            
+			                         
+		 
 	#endif
 
 	bool serverOrPredicted = IsServer() || (InPrediction() && IsFirstTimePredicted())
@@ -452,18 +456,6 @@ void function OnWeaponDeactivate_weapon_ferro_wall( entity weapon )
 
 bool function OnWeaponAttemptOffhandSwitch_weapon_ferro_wall( entity weapon )
 {
-	int ammoReq  = weapon.GetAmmoPerShot()
-	int currAmmo = weapon.GetWeaponPrimaryClipCount()
-	if ( currAmmo < ammoReq )
-		return false
-
-	entity player = weapon.GetWeaponOwner()
-	if ( player.IsPhaseShifted() )
-		return false
-
-	if ( player.IsZiplining() )
-		return false
-
 	if( file.maxWallsPerGame == 0 || file.maxWallsPerPlayer == 0 )
 		return false
 
@@ -495,14 +487,17 @@ var function FerroWallAttack_Common( entity weapon, WeaponPrimaryAttackParams at
 	int deployMethod = GetPlaylistVarInt( GetCurrentPlaylistName(), "ferro_wall_deploy_type", eFerroWallDeployType.DEPLOY_OBJECT_PLACEMENT )
 	if( deployMethod == eFerroWallDeployType.DEPLOY_OBJECT_PLACEMENT )
 	{
-		if( weapon.ObjectPlacementHasValidSpot() )
+		
+		entity placementParent = weapon.GetObjectPlacementParent()
+		array<entity> ignoreArray = GetFerroWallIgnoreArray()
+		if( weapon.ObjectPlacementHasValidSpot() && ( !IsValid( placementParent ) || !ignoreArray.contains( placementParent ) ) )
 		{
 			targetOrigin = weapon.GetObjectPlacementOrigin()
 		}
 		else
 		{
-			TraceResults fwdTrace = TraceLine( ownerOrigin, ownerOrigin + FlattenNormalizeVec( ownerPlayer.GetViewVector() ) * FERRO_WALL_DEFAULT_FWD_DISTANCE, null, TRACE_MASK_NPCSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_NONE )
-			TraceResults downTrace = TraceLine( fwdTrace.endPos, fwdTrace.endPos + < 0, 0, -400 >, null, TRACE_MASK_NPCSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_NONE )
+			TraceResults fwdTrace = TraceLine( ownerOrigin, ownerOrigin + FlattenNormalizeVec( ownerPlayer.GetViewVector() ) * FERRO_WALL_DEFAULT_FWD_DISTANCE, ignoreArray, TRACE_MASK_NPCSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_NONE )
+			TraceResults downTrace = TraceLine( fwdTrace.endPos, fwdTrace.endPos + < 0, 0, -400 >, ignoreArray, TRACE_MASK_NPCSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_NONE )
 			if( downTrace.fraction == 1.0 )
 			{
 				#if CLIENT
@@ -667,7 +662,7 @@ vector function GetProjectileVelocity_weapon_ferro_wall( entity projectile, floa
 				 
 				                                                       
 				                                                                   
-				                                                        
+				                               
 				                                                                         
 				                   
 				                                                                                                                                                                                                                   
@@ -690,6 +685,19 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 }
 
 #if SERVER
+                                                                
+ 
+	                        
+		      
+
+	                                                                       
+	                                                                                                     
+	 
+		                                                       
+		                         
+	 
+ 
+
                                                                     
  
 	                                 
@@ -859,19 +867,23 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 	                   
 	                                                      
 	                                        
+	                                      
+	                                                      
 	                                                                      
 	                                                       
-	                                        
+	                                         
+	                                       
+	                                                       
 	                                                                       
 	                                                         
-	                                        
+	                                           
+	                                         
+	                                                         
 	                                                                          
 
 	                                      
 	 
-		                                            
-		                                         
-		                                   
+		                                                     
 
 		                                                    
 		                            
@@ -929,7 +941,7 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 				              
 
 			                                                                   
-			                                                       
+			                               
 			                                                                         
 			                                                         
 			                                              
@@ -1003,9 +1015,27 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 			 
 				      
 			 
+
+			                                                 
+			                                              
+			 
+				      
+			 
 		 
 		           
 	 
+ 
+
+                                                 
+ 
+	                                                         
+		             
+
+	                                     
+	                                                                                    
+		                
+
+	           
  
 
                                                                                                                                                                                                                                                                 
@@ -1025,6 +1055,8 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 	                         
 	                           
 	                                                       
+	                                                                                      
+	                                                    
 	                                         
 
 	                           
@@ -1144,7 +1176,7 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 	 
 		                             
 		 
-			                                                                                  
+			                                                                                          
 			                                       
 			                               
 		 
@@ -1201,13 +1233,13 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 	 
 		                             
 		 
-			                                                                                       
+			                                                                                               
 			                                       
 			                               
 		 
 
 		             
-			                                                                                           
+			                                                                                                   
 
 		                                                                                             
 		 
@@ -1351,7 +1383,7 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 
                                                                 
  
-	                                                                                                                                 
+	                                                                                                                                                   
 		                                                 
  
 
@@ -1368,6 +1400,9 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 		                           
 
 	                             
+	                     
+	                              
+	                            
 
 	            
 		                                 
@@ -1388,6 +1423,9 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 
 	                                  
 	 
+		                     
+			      
+
 		                                          
 		                                  
 		                                                                                   
@@ -1396,6 +1434,8 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 		                                                   
 		                                                               
 		                                                                               
+		                                                                
+		                                            
 
 		                                                                                   
 		                              
@@ -1404,6 +1444,7 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 
 		                          
 		 
+			                      
 			           
 			        
 		 
@@ -1414,105 +1455,14 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 			                     
 			 
 				                   
-				                                
-				 
-					                                                                                                                         
-					 
-						                                            
-					 
-					                                                                                                                       
-					 
-						              
-							                                                
-					 
-				 
-				                                                
-				 
-					              
-						                                                
-				 
-				    
-				 
-					                                                              
-					                 
-						                                            
-				 
 
-				                                    
-				 
-					                        
-					                                                                                             
-					                                              
-					                                                                                 
-					                 
-					                                 
-
-					                                 
-					 
-						              
-						 
-							                                                                             
-							                                                                           
-						 
-						    
-						 
-							                                                          
-						 
-					 
-					                                 
-					 
-						                                                                  
-						                                                                  
-						                                                               
-						                                                               
-						                                                                
-						                                                                
-						                                                             
-						                                                             
-
-						                                           
-						 
-							              
-							 
-								                                                                                     
-								                                                                                   
-							 
-							    
-							 
-								                                                                  
-							 
-						 
-						    
-						 
-							              
-							 
-								                                                                                  
-								                                                                                
-							 
-							    
-							 
-								                                                               
-							 
-						 
-					 
-
-				 
-				    
-				 
-					                                    
-				 
-
-				                                                                         
-				 
-					                              
-					                                                      
-				 
+				                                              
 			 
 
 			                                
 			 
 				                  
-				                                                                                             
+				                                                                                         
 				 
 					                                                                                              
 				 
@@ -1547,10 +1497,140 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
 					                                
 				 
 			 
+			    
+			 
+				                                                                                                                               
+				                                                     
+				                                                                     
+				 
+					                                               
+					                                
+					 
+						                  
+						                                                                                         
+						 
+							                                                                                              
+						 
+						    
+						 
+							                                      
+						 
+						                                                      
+					 
+				 
+			 
+			                                                           
 			                      
 		 
-
+		                 
+		                       
 		           
+	 
+ 
+
+                                                                                        
+ 
+	                                                                                   
+	                              
+	                                      
+	                        
+
+	                                
+	 
+		                                                                                                                     
+		 
+			                                            
+		 
+		                                                                                                                    
+		 
+			               
+				                                                
+		 
+	 
+	                                                
+	 
+		              
+			                                                
+	 
+	    
+	 
+		                                                              
+		                 
+			                                            
+	 
+
+	                                    
+	 
+		                   
+		 
+			                        
+			                                                                                             
+			                                              
+			                                                                                 
+			                 
+			                                 
+		 
+
+		                                 
+		 
+			              
+			 
+				                                                                             
+				                                                                           
+			 
+			    
+			 
+				                                                          
+			 
+		 
+		                                 
+		 
+			                                                                  
+			                                                                  
+			                                                               
+			                                                               
+			                                                                
+			                                                                
+			                                                             
+			                                                             
+
+			                                           
+			 
+				              
+				 
+					                                                                                     
+					                                                                                   
+				 
+				    
+				 
+					                                                                  
+				 
+			 
+			    
+			 
+				              
+				 
+					                                                                                  
+					                                                                                
+				 
+				    
+				 
+					                                                               
+				 
+			 
+		 
+
+	 
+	    
+	 
+		                    
+			                                    
+	 
+
+	                                                                         
+	 
+		                              
+		                                                      
 	 
  
 
@@ -1750,7 +1830,7 @@ void function FerroWallDarkVision_UpdatePlayerScreenVFX_Thread( entity player, i
 	EffectSetIsWithCockpit( file.darkVisionFXID, true )
 
 	                                                                                                                           
-	if (StatusEffect_GetSeverity( player, eStatusEffect.ferro_darkvision ) > 0 )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.ferro_darkvision ) )
 	{
 		int debuglimitFXID = GetParticleSystemIndex( FERRO_WALL_DEBUG_SPHERE_VISION_LIMIT_FX )
 		if ( !PlayerHasPassive( player, ePassives.PAS_LOCKDOWN ) )
@@ -2015,14 +2095,16 @@ void function WeaponActive_Client( entity ownerPlayer, entity weapon )
 		entity targetParent
 		vector startAngles = ZERO_VECTOR
 		vector ownerOrigin = ownerPlayer.EyePosition()
-		if( weapon.ObjectPlacementHasValidSpot() )
+		entity placementParent = weapon.GetObjectPlacementParent()
+		array<entity> ignoreArray = GetFerroWallIgnoreArray()
+		if( weapon.ObjectPlacementHasValidSpot() && ( !IsValid( placementParent ) || !ignoreArray.contains( placementParent ) ) )
 		{
 			targetOrigin = weapon.GetObjectPlacementOrigin()
 		}
 		else
 		{
-			TraceResults fwdTrace = TraceLine( ownerOrigin, ownerOrigin + FlattenNormalizeVec( ownerPlayer.GetViewVector() ) * FERRO_WALL_DEFAULT_FWD_DISTANCE, null, TRACE_MASK_NPCSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_NONE )
-			TraceResults downTrace = TraceLine( fwdTrace.endPos, fwdTrace.endPos + < 0, 0, -400 >, null, TRACE_MASK_NPCSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_NONE )
+			TraceResults fwdTrace = TraceLine( ownerOrigin, ownerOrigin + FlattenNormalizeVec( ownerPlayer.GetViewVector() ) * FERRO_WALL_DEFAULT_FWD_DISTANCE, ignoreArray, TRACE_MASK_NPCSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_NONE )
+			TraceResults downTrace = TraceLine( fwdTrace.endPos, fwdTrace.endPos + < 0, 0, -400 >, ignoreArray, TRACE_MASK_NPCSOLID_BRUSHONLY, TRACE_COLLISION_GROUP_NONE )
 			if( downTrace.fraction == 1.0 )
 			{
 				WaitFrame()
@@ -2062,8 +2144,7 @@ void function CreatePlacementWall( array< entity > proxies, vector pos, vector d
 
 	for ( int i = 0; i < numPillars; i++ )
 	{
-		array<entity> ignoreArray = GetPlayerArray()
-		ignoreArray.extend( GetAllResinShards() )
+		array<entity> ignoreArray = GetFerroWallIgnoreArray()
 
 		vector traceFwdEnd = traceStart + ( dir * traceStep )
 		TraceResults forwardTrace = TraceLine( traceStart, traceFwdEnd, ignoreArray, TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_BLOCK_WEAPONS )
@@ -2217,4 +2298,31 @@ void function FerroWallPassThroughFX( entity hitOwner, entity wall, vector hitPo
 			#endif
 		}
 	}
+}
+
+array<entity> function GetFerroWallIgnoreArray()
+{
+	array<entity> ignoreArray
+
+	ignoreArray.extend( GetPlayerArray() )
+	ignoreArray.extend( GetAllResinShards() )
+	ignoreArray.extend( GetNPCArray() )
+	ignoreArray.extend( GetEntArrayByScriptName( TROPHY_SYSTEM_NAME ) ) 					             
+	ignoreArray.extend( GetEntArrayByScriptName( TESLA_TRAP_NAME ) )						               
+	ignoreArray.extend( GetEntArrayByScriptName( DIRTY_BOMB_TARGETNAME ) )					              
+	ignoreArray.extend( GetEntArrayByScriptName( DEATH_TOTEM_TARGETNAME ) )					                
+	ignoreArray.extend( GetEntArrayByScriptName( BLACKHOLE_PROP_SCRIPTNAME ) )				              
+	ignoreArray.extend( GetEntArrayByScriptName( BLACK_MARKET_SCRIPTNAME ) )				                   
+	ignoreArray.extend( GetEntArrayByScriptName( BASE_WALL_SCRIPT_NAME ) )					              
+	ignoreArray.extend( GetEntArrayByScriptName( MOUNTED_TURRET_PLACEABLE_SCRIPT_NAME ) )	                
+	ignoreArray.extend( GetEntArrayByScriptName( ECHO_LOCATOR_SCRIPT_NAME ) )				          
+	ignoreArray.extend( GetEntArrayByScriptName( SHIELD_THROW_SCRIPTNAME ) )				                     
+	ignoreArray.extend( GetEntArrayByScriptName( MOBILE_SHIELD_SCRIPTNAME ) )				                            
+	ignoreArray.extend( GetEntArrayByScriptName( CRYPTO_DRONE_SCRIPTNAME ) )				               
+	ignoreArray.extend( GetEntArrayByScriptName( VANTAGE_COMPANION_SCRIPTNAME ) )			      
+	ignoreArray.extend( GetPlayerDecoyArray() )												               
+	ignoreArray.extend( GetEntArrayByScriptName( "LootRoller" ) )
+	ignoreArray.extend( GetAllDeathBoxes() )
+
+	return ignoreArray
 }

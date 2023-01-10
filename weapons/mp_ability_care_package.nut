@@ -64,7 +64,16 @@ var function OnWeaponPrimaryAttack_care_package_medic( entity weapon, WeaponPrim
 		                               
 
 		                                   
-		                                                       
+                              
+                                                                         
+    
+                                                                
+    
+       
+        
+			 
+				                                                       
+			 
 		                              
 		                                       
 		                                                                

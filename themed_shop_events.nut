@@ -28,7 +28,10 @@ global function ThemedShopEvent_GetTabBarSelectedCol
 global function ThemedShopEvent_GetTabTextSelectedCol
 global function ThemedShopEvent_GetTabGlowFocusedCol
 global function ThemedShopEvent_GetTabLeftSideImage
+global function ThemedShopEvent_GetTabCenterImage
 global function ThemedShopEvent_GetTabRightSideImage
+global function ThemedShopEvent_GetTabImageSelectedAlpha
+global function ThemedShopEvent_GetTabImageUnselectedAlpha
 global function ThemedShopEvent_GetTabCenterRui
 global function ThemedShopEvent_GetItemButtonBGImage
 global function ThemedShopEvent_GetItemGroupHeaderImage
@@ -240,10 +243,35 @@ asset function ThemedShopEvent_GetTabLeftSideImage( ItemFlavor event )
 #endif
 
 #if UI
+asset function ThemedShopEvent_GetTabCenterImage( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "centerImage" )
+}
+#endif
+
+#if UI
 asset function ThemedShopEvent_GetTabRightSideImage( ItemFlavor event )
 {
 	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
 	return GetGlobalSettingsAsset( ItemFlavor_GetAsset( event ), "rightSideImage" )
+}
+#endif
+
+
+#if UI
+float function ThemedShopEvent_GetTabImageSelectedAlpha( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsFloat( ItemFlavor_GetAsset( event ), "imageSelectedAlpha" )
+}
+#endif
+
+#if UI
+float function ThemedShopEvent_GetTabImageUnselectedAlpha( ItemFlavor event )
+{
+	Assert( ItemFlavor_GetType( event ) == eItemType.calevent_themedshop )
+	return GetGlobalSettingsFloat( ItemFlavor_GetAsset( event ), "imageUnselectedAlpha" )
 }
 #endif
 

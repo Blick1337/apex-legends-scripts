@@ -236,6 +236,14 @@ void function OnProjectileCollision_ability_silence( entity projectile, vector p
 	 
 		                                           
 		 
+			                       
+				                          
+
+			       
+			                    
+				                                                   
+			      
+
 			                                      
 			                                           
 			                                  
@@ -244,6 +252,12 @@ void function OnProjectileCollision_ability_silence( entity projectile, vector p
 			                  
 
 			                                                                                                               
+
+			       
+			                    
+				                                                           
+			      
+
 			                                            
 			 
 				                                                       
@@ -253,8 +267,14 @@ void function OnProjectileCollision_ability_silence( entity projectile, vector p
 				 
 					                           
 					 
-						                                                                    
-							                        
+						                                       
+						 
+							                                
+								                        
+
+							                                
+								                        
+						 
 
 						        
 					 

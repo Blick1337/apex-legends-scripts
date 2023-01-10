@@ -550,7 +550,7 @@ int function PhaseShift( entity ent, float warmupTime, float duration, int shift
 			                                                            
 		                         
 			                                                                       
-		                                                                                  
+		                                                                              
 			                                                              
 		    
 			                                                                 
@@ -610,7 +610,7 @@ int function PhaseShift( entity ent, float warmupTime, float duration, int shift
 	                             
 	                                    
 
-	           
+	              
 	 
 		                                   
 		                     
@@ -726,7 +726,7 @@ void function ClientPhaseShiftFirstPersonFXThread()
 					{
 						EmitSoundOnEntity( ourPlayer, SHIFTER_END_SOUND_1P_TITAN )
 					}
-					else if ( StatusEffect_GetSeverity( ourPlayer, eStatusEffect.phase_gate_tracking ) > 0 )
+					else if ( StatusEffect_HasSeverity( ourPlayer, eStatusEffect.phase_gate_tracking ) )
 					{
 						EmitSoundOnEntity( ourPlayer, GATE_END_SOUND_1P )
 					}

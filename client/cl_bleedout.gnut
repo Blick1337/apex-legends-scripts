@@ -59,6 +59,16 @@ string function PlayerBleedoutUseTextOverride( entity player )
 	entity localPlayer = GetLocalViewPlayer()
 	if ( IsFriendlyTeam( localPlayer.GetTeam(), player.GetTeam() ) )
 	{
+                                   
+                                                                      
+       
+                                                                                                                                                                                         
+        
+                                      
+        
+       
+        
+
 		if ( !Bleedout_PlayerCanRes( localPlayer ) )
 			return " "
 
@@ -293,11 +303,6 @@ void function ShowWoundedMarker( entity woundedPlayer, float endTime )
 			LootData lootData = EquipmentSlot_GetEquippedLootDataForSlot( woundedPlayer, "incapshield" )
 
 			RuiSetString( shieldRUI, "nameText", lootData.pickupString )
-
-                          
-                               
-                                                                          
-         
 
 			RuiSetBool( shieldRUI, "hasKOShield", true )
 			RuiSetInt( shieldRUI, "shieldTier", incapShieldTier )

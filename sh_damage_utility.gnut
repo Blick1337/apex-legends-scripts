@@ -173,7 +173,7 @@ string ornull function GetWeaponClassNameFromDamageInfoClone( ScriptDamageInfoCl
 	                                                                                                                                          
 	                         
 	 
-		                                                                 
+		                                                                                
 			           
 
 		                                               
@@ -207,7 +207,7 @@ string ornull function GetWeaponClassNameFromDamageInfoClone( ScriptDamageInfoCl
   		                                                                           
   		  	            
   	 
-                 
+                                
                                                           
               
       

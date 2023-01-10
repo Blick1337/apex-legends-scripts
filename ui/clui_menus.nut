@@ -134,7 +134,7 @@ array<int> function GetCharacterButtonRowSizes( int numButtons )
 	int remainingSlots = numButtons
 	int numShortRows = 0
 
-	while ( remainingSlots % fullRowSize )
+	while ( remainingSlots % fullRowSize > 0 )
 	{
 		numShortRows++
 		remainingSlots -= shortRowSize
@@ -178,7 +178,7 @@ array<int> function GetCharacterButtonRowSizes( int numButtons )
                                        
 void function LayoutCharacterButtons( array< array<var> > buttonRows )
 {
-	Assert( buttonRows.len() && buttonRows[0].len() )
+	Assert( buttonRows.len() > 0 && buttonRows[0].len() > 0 )
 	int buttonWidth        = Hud_GetWidth( buttonRows[0][0] )
 	int buttonHeight       = Hud_GetHeight( buttonRows[0][0] )
 	                                                          
@@ -375,7 +375,7 @@ string function LocalizeAndShortenNumber_Float( float number, int maxDisplayInte
 	string integralSuffixLocKey = ""
 
 	float integral = floor( number )
-	int digits = int( floor( log10( integral ) + 1 ) )
+	int digits = int( integral ) > 0 ? int( floor( log10( integral ) + 1 ) ) : 0
 
 	if ( digits > maxDisplayIntegral )
 	{
@@ -444,33 +444,69 @@ string function LocalizeAndShortenNumber_Float( float number, int maxDisplayInte
 		{
 			decimalString = integralString.slice( separatorPos, integralString.len() )
 			integralString = integralString.slice( 0, separatorPos )
+
+			maxDisplayDecimal = 3 - integralString.len()
 		}
 	}
 
+	bool roundUp = false
 	if( decimalString == "" )
 	{
-		float decimal = number % 1
+		float decimal = number % 1                                                                         
 		decimalString = string( decimal )
 		printf( "ShortenNumberDebug: decimalString = %s\n", decimalString )
 		if ( decimalString.find( "0." ) != -1 )
 			decimalString = decimalString.slice( 2 )
+	}
 
-		if ( decimalString.len() > maxDisplayDecimal )
-			decimalString = decimalString.slice( 0, maxDisplayDecimal )
+	if ( decimalString.len() > maxDisplayDecimal )
+	{
+		int lastDigit = int( decimalString.slice( maxDisplayDecimal, maxDisplayDecimal + 1 ) )
+		decimalString = decimalString.slice( 0, maxDisplayDecimal )
+		if ( lastDigit >= 5 )
+			roundUp = true
 	}
 
 	if( hideTrailingZeros )
 	{
+		int leadingZeros = decimalString.len() - string( int( decimalString ) ).len()
 		int decimalNumber = int(decimalString)
+
+		if ( roundUp )
+		{
+			if ( decimalString.len() == 0 )
+			{
+				integralString = string( int( integralString ) + 1 )                                                                                      
+			}
+			else
+			{
+				decimalNumber = decimalNumber + 1
+				if ( decimalNumber % int( pow( 10, maxDisplayDecimal ) ) == 0 )
+				{
+					integralString = string( int( integralString ) + 1 )                                                                                          
+					decimalNumber  = 0
+				}
+			}
+		}
+
 		while( decimalNumber % 10 == 0 && decimalNumber > 0 )
 		{
 			decimalNumber = decimalNumber / 10
 		}
 
 		if( decimalNumber > 0 )
+		{
 			decimalString = string( decimalNumber )
+			while ( leadingZeros != 0 && decimalString.len() <= maxDisplayDecimal )
+			{
+				decimalString = "0" + decimalString
+				leadingZeros--
+			}
+		}
 		else
+		{
 			decimalString = ""
+		}
 	}
 
 	string finalDisplayNumber = integralString

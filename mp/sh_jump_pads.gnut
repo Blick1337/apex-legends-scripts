@@ -943,6 +943,7 @@ void function StartGivePlayerDoubleJump(entity player)
 		                      
 		  
 			                                         
+		 	                                                          
 		  
 		                                
 		  
@@ -964,7 +965,7 @@ void function StartGivePlayerDoubleJump(entity player)
 	                                     
 	                          
 	 
-		                   
+		                       
 			                                                          
 		    
 			                                                    

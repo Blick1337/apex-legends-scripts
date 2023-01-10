@@ -11,6 +11,7 @@ global function GetBattlePassLevelForXP
 global function GetBattlePassXPForLevel
 global function GetPlayerBattlePassLevel
 global function GetBattlePassLevelRewards
+global function GetBattlePassPremiumRewards
 global function GetBattlePassBaseRewards
 global function GetBattlePassXPEventValue
 global function GetBattlePassXPEventCount
@@ -724,6 +725,66 @@ array<BattlePassReward> function GetBattlePassBaseRewards( ItemFlavor pass )
 	return GetBattlePassLevelRewards( pass, 0 )
 }
 
+array<BattlePassReward> function GetBattlePassPremiumRewards( ItemFlavor pass, int levelIndex, entity player = null )
+{
+	Assert( ItemFlavor_GetType( pass ) == eItemType.battlepass )
+	Assert( levelIndex >= 0, "Level must be >= 0" )
+
+	if ( ItemFlavor_GetType( pass ) != eItemType.battlepass || levelIndex < 0)
+		return []
+
+	var scheduleDT = BattlePass_GetScheduleDatatable( pass )
+
+	array<BattlePassReward> rewardList = []
+
+	int rowIndex = 0;
+	int currentLevel = 0;
+
+	int numRows = GetDataTableRowCount( scheduleDT )
+
+	while ( rowIndex < numRows )
+	{
+		if ( currentLevel > levelIndex )
+			break;
+
+		asset rewardAsset = GetDataTableAsset( scheduleDT, rowIndex, GetDataTableColumnByName( scheduleDT, "reward" ) )
+		int rewardQty     = GetDataTableInt( scheduleDT, rowIndex, GetDataTableColumnByName( scheduleDT, "rewardQty" ) )
+		bool premium 	  = GetDataTableBool( scheduleDT, rowIndex, GetDataTableColumnByName( scheduleDT, "premium" ) )
+		currentLevel = GetDataTableInt( scheduleDT, rowIndex, GetDataTableColumnByName( scheduleDT, "levelIndex" ) )
+
+		if ( premium )
+		{
+			if ( rewardAsset != $"" )
+			{
+				if ( IsValidItemFlavorSettingsAsset( rewardAsset ) )
+				{
+					BattlePassReward reward
+
+					reward.flav = GetItemFlavorByAsset( rewardAsset )
+					string overrideRefGUIDString = GetCurrentPlaylistVarString( format( "%s_level_%d_override_ref", ItemFlavor_GetGUIDString( pass ), levelIndex ), "" )
+					if ( overrideRefGUIDString != "" )
+						reward.flav = GetItemFlavorByGUID( ConvertItemFlavorGUIDStringToGUID( overrideRefGUIDString ) )
+
+					reward.quantity = rewardQty
+					int overrideQty = GetCurrentPlaylistVarInt( format( "%s_level_%d_override_qty", ItemFlavor_GetGUIDString( pass ), levelIndex ), -1 )
+					if ( overrideQty != -1 )
+						reward.quantity = overrideQty
+
+					SubstituteBattlePassRewardsForUserRestrictions( player, reward )
+
+					reward.level = levelIndex
+					reward.isPremium = premium
+
+					rewardList.append( reward )
+				}
+			}
+		}
+
+		rowIndex++
+	}
+
+	return rewardList
+}
 
 array<BattlePassReward> function GetBattlePassLevelRewards( ItemFlavor pass, int levelIndex, entity player = null )
 {
@@ -1395,6 +1456,9 @@ ItemFlavor function DEV_BattlePass( EHI playerEHI = EHI_null )
 	                                              
 	                                                 
 	                                            
+                    
+                                                
+      
 	                       
 
 	                                                 

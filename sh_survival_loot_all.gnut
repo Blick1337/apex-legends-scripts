@@ -56,6 +56,10 @@ global function DumpModdedKeyColors
 global function DiffKeyColors
 #endif
 
+#if DEV
+global function DEV_PrintDisabledLoot
+#endif     
+
                                            
 global function GetFXRarityColorForTier                             
 global function GetFXRarityColorForUnlockable                             
@@ -136,7 +140,8 @@ global enum eWeaponAttachmentType
 	SCOPE,
 	BARREL,
 	STOCK,
-	HOPUP
+	HOPUP,
+	_count
 }
 
 global enum eLootType
@@ -499,22 +504,22 @@ void function SURVIVAL_Loot_All_InitShared()
 					switch( type )
 					{
 						case 0:
-							data.ammoType = "bullet"
+							data.ammoType = BULLET_AMMO
 							break
 						case 1:
-							data.ammoType = "highcal"
+							data.ammoType = HIGHCAL_AMMO
 							break
 						case 2:
-							data.ammoType = "special"
+							data.ammoType = SPECIAL_AMMO
 							break
 						case 3:
-							data.ammoType = "shotgun"
+							data.ammoType = SHOTGUN_AMMO
 							break
 						case 4:
-							data.ammoType = "sniper"
+							data.ammoType = SNIPER_AMMO
 							break
 						case 5:
-							data.ammoType = "arrows"
+							data.ammoType = ARROWS_AMMO
 							break
 						default:
 							data.ammoType = ""
@@ -532,23 +537,23 @@ void function SURVIVAL_Loot_All_InitShared()
 					string type = GetWeaponInfoFileKeyField_GlobalString( data.baseWeapon, "secondary_ammo_pool_type" )
 					switch( type )
 					{
-						case "bullet":
-							data.secondaryAmmoType = "bullet"
+						case BULLET_AMMO:
+							data.secondaryAmmoType = BULLET_AMMO
 							break
-						case "highcal":
-							data.secondaryAmmoType = "highcal"
+						case HIGHCAL_AMMO:
+							data.secondaryAmmoType = HIGHCAL_AMMO
 							break
-						case "special":
-							data.secondaryAmmoType = "special"
+						case SPECIAL_AMMO:
+							data.secondaryAmmoType = SPECIAL_AMMO
 							break
-						case "shotgun":
-							data.secondaryAmmoType = "shotgun"
+						case SHOTGUN_AMMO:
+							data.secondaryAmmoType = SHOTGUN_AMMO
 							break
-						case "sniper":
-							data.secondaryAmmoType = "sniper"
+						case SNIPER_AMMO:
+							data.secondaryAmmoType = SNIPER_AMMO
 							break
-						case "arrows":
-							data.secondaryAmmoType = "arrows"
+						case ARROWS_AMMO:
+							data.secondaryAmmoType = ARROWS_AMMO
 							break
 						default:
 							data.secondaryAmmoType = ""
@@ -958,6 +963,16 @@ void function SURVIVAL_Loot_AddDisabledRef( string ref )
 	}
 }
 
+#if DEV
+void function DEV_PrintDisabledLoot()
+{
+	printf("Dumping Disabled Loot")
+	foreach ( string ref in file.disabledRefs )
+	{
+		printf( ref )
+	}
+}
+#endif     
 
 #if CLIENT
 vector function GetRarityColor( entity ent )

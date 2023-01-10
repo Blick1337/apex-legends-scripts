@@ -291,7 +291,7 @@ void function Death_Package_Init()
 
 	                                           
 
-	                         
+	                                        
 	 
 		                                                      
 		                                                     
@@ -354,12 +354,12 @@ void function Death_Package_Init()
 		                                         
 	 
 
-	                                                                                                        
+	                                                                                                                       
 		                         
 
-	                           
+	                                          
 		                                                   
-	                                     
+	                                                 
 		                                                     
 
 	                    
@@ -373,9 +373,9 @@ void function Death_Package_Init()
 		 
 		    
 		 
-			                                                                                    
+			                                                                                                   
 			 
-				                                              
+				                                                             
 				 
 					                                        
 				 
@@ -393,7 +393,7 @@ void function Death_Package_Init()
 		 
 	 
 
-	                                                                                         
+	                                                                                                        
 	 
 		                                                         
 		                                    
@@ -428,7 +428,7 @@ void function Death_Package_Init()
 		            
 
 	                   
-	                                                
+	                                                             
 	 
 		             
 	 
@@ -559,7 +559,7 @@ void function PrintDamageFlags( int flags )
 {
 	foreach ( int key, string value in damageFlagsToNames )
 	{
-		if ( flags & key )
+		if ( IsBitFlagSet( flags, key ) )
 			printt( "Damage Flag: " + value + " was set    (" + key + ")" )
 	}
 }
@@ -571,7 +571,7 @@ string function GetDescStringForDamageFlags( int flags )
 	int foundCount = 0
 	foreach ( int key, string value in damageFlagsToNames )
 	{
-		if ( !(flags & key) )
+		if ( !IsBitFlagSet( flags, key ) )
 			continue
 
 		if ( foundCount != 0 )

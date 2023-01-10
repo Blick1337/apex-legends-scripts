@@ -34,8 +34,10 @@ global function CodeCallback_OnWeaponDisable
 global function ClientCodeCallback_PartyUpdated
 global function ClientCodeCallback_PartyMemberAdded
 global function ClientCodeCallback_PartyMemberRemoved
+global function ClientCodeCallback_PartySpectateSlotAvailable
 global function ClientCodeCallback_UserInfoUpdated
 global function AddCallback_OnPartyUpdated
+global function AddCallbackAndCallNow_OnPartyUpdated
 global function RemoveCallback_OnPartyUpdated
 #endif
 
@@ -452,17 +454,17 @@ bool function CodeCallback_OnUseEntity( entity player, entity ent, int useInputF
 		callbackFunc( ent, player, useInputFlags )
 	}
 
-	if ( useInputFlags & USE_INPUT_DEFAULT )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_DEFAULT ) )
 		Signal( ent, "OnPlayerUse", { player = player } )
-	if ( useInputFlags & USE_INPUT_LONG )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 		Signal( ent, "OnPlayerUseLong", { player = player } )
-	if ( useInputFlags & USE_INPUT_ALT )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_ALT ) )
 		Signal( ent, "OnPlayerUseAlt", { player = player } )
 
 	#if CLIENT
 		if ( IsFirstTimePredicted() )
 		{
-			if ( useInputFlags & USE_INPUT_DEFAULT && ent.e.predictedUseSuccess )
+			if ( IsBitFlagSet( useInputFlags, USE_INPUT_DEFAULT ) && ent.e.predictedUseSuccess )
 				ent.e.predictedUseCount += 1
 		}
 	#endif          
@@ -577,7 +579,7 @@ void function CodeCallback_OnTurretCancelPressed( entity player )
                                                    
 void function CodeCallback_ForceScriptError( entity ent, string errorMsg )
 {
-	Assert( 0, errorMsg )
+	Assert( false, errorMsg )
 }
 
 
@@ -726,7 +728,7 @@ string function CodeCallback_CheckPassThroughAddsMods( entity player, entity hit
 	if ( !IsValid( player ) )
 		return ""
 
-	if ( StatusEffect_GetSeverity( hitEnt, eStatusEffect.pass_through_amps_weapon ) > 0 )
+	if ( StatusEffect_HasSeverity( hitEnt, eStatusEffect.pass_through_amps_weapon ) )
 	{
 		if ( passingEntOrWeapon.IsProjectile() )
 		{
@@ -815,6 +817,11 @@ void function ClientCodeCallback_PartyMemberRemoved()
 	printt( "ClientCodeCallback_PartyMemberRemoved" )
 }
 
+void function ClientCodeCallback_PartySpectateSlotAvailable()
+{
+	printt( "ClientCodeCallback_PartySpectateSlotAvailable" )
+}
+
 void function ClientCodeCallback_UserInfoUpdated( string hardware, string uid )
 {
 	printt( "ClientCodeCallback_UserInfoUpdated( " + hardware + ", " + uid + ")" )
@@ -828,6 +835,12 @@ void function AddCallback_OnPartyUpdated( void functionref() callbackFunc )
 	}
 
 	file.partyUpdatedCallbacks.append( callbackFunc )
+}
+
+void function AddCallbackAndCallNow_OnPartyUpdated( void functionref() callbackFunc )
+{
+	AddCallback_OnPartyUpdated( callbackFunc )
+	callbackFunc()
 }
 
 void function RemoveCallback_OnPartyUpdated( void functionref() callbackFunc )

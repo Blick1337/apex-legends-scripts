@@ -221,7 +221,7 @@ void function Chroma_StartMatchmaking()
 string function Chroma_GetActualBackground()
 {
 	entity player = GetLocalViewPlayer()
-	                                                                         
+	                                                                     
 	if ( file.bannerTransitionActive )
 		return "flags"
 	if ( file.inCharacterSelect )
@@ -296,7 +296,7 @@ void function Chroma_SkyDiveUpdate()
 
 	Chroma_SetBaseLayer( CHROMALOOP_SMOOTHNOISE, CHROMATRANS_FLAGS, {[0.0] = <0, 0, 0>}, 2.0 )
 
-	while ( 1 )
+	while ( true )
 	{
 		if ( file.chromaBackgroundName != "skydive" )
 			break

@@ -9,12 +9,12 @@ const float ADS_MOD_ZOOM_FRAC_REQUIRED = 0.5
 
 void function OnWeaponActivate_weapon_volt_smg( entity weapon )
 {
-	OnWeaponActivate_ReactiveKillEffects( weapon )
+
 }
 
 void function OnWeaponDeactivate_weapon_volt_smg( entity weapon )
 {
-	OnWeaponDeactivate_ReactiveKillEffects( weapon )
+
 }
 
 

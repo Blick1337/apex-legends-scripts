@@ -41,29 +41,29 @@ global const struct{ bool b } ___teststruct = {b = false,}
 
 const int binops = ((1 | 2) & ~3)
 
-#if 0
-	     
-		                      
-		               
-	      
-	                      
-	               
-         
-	     
-		                      
-		               
+#if false
 	         
+		                      
+		               
 	      
 	                      
 	               
-         
-	               
-	     
+             
+	         
+		                      
 		               
-		     
-		         
-		         
-		         
+	            
+	      
+	                      
+	               
+             
+	               
+	         
+		               
+		        
+		            
+		            
+		            
 		      
 		                      
 	      
@@ -158,7 +158,7 @@ void function ArithmeticOptimizationTest()
 {
 	float test4234 = sqrt( 2 )
 
-	if ( 1 && 2 )
+	if ( bool(1) && bool(2) )
 		;
 	else
 		Assert( false )
@@ -233,11 +233,11 @@ void function ArithmeticOptimizationTest()
 	int hello7 = -4 * -arithtestfunc1()
 	Assert( hello7 == 4 )
 
-	var hello8 = !!!arithtestfunc1()
+	var hello8 = !!!(bool(arithtestfunc1()))
 	Assert( hello8 == false )
-	var hello9 = !(!arithtestfunc1() && !arithtestfunc1())
-	Assert( hello9 == 1 )                               
-	var hello10 = !(!arithtestfunc1() || arithtestfunc1())
+	var hello9 = !(!(bool(arithtestfunc1())) && !(bool(arithtestfunc1())))
+	Assert( hello9 == bool(1) )                               
+	var hello10 = !(!(bool(arithtestfunc1())) || bool(arithtestfunc1()))
 	Assert( hello10 == false )
 
 	vector hello11 = Normalize( <1,2,3> )
@@ -471,7 +471,7 @@ void function TestFunctionTypes()
 void function TestOptimizations( array<entity> testEmptyTypedArray = [] )
 {
 	int something = 1
-	if ( something )
+	if ( something == 1 )
 	{
 	}
 	else
@@ -498,7 +498,7 @@ void function TestOptimizations( array<entity> testEmptyTypedArray = [] )
 	testEmptyArrayAssignment = []
 
 	int zero = 0
-	int notnottest = !!zero                                                                                    
+	int notnottest = int(!!(bool(zero)))                                                                                    
 }
 
 #if SERVER
@@ -516,7 +516,7 @@ void function TestOptimizations( array<entity> testEmptyTypedArray = [] )
  
 	      
 	                                     
-	                 
+	                     
 		                                                
 	                         
 	                       

@@ -76,6 +76,7 @@ global function GameMode_GetLoadoutSelectTime
 #if CLIENT
 global function GameMode_DoesModeDisplayIconsForAllFriendlyTeams
 global function GameMode_DoesModeDisplayIconsForAllTeams
+global function GameMode_OverrideCompletedResolutionCleanupFunc
 #endif
 
 global struct GamemodeSettings
@@ -162,6 +163,10 @@ const table<string, int> gameModesStringToIdMap = {
 struct
 {
 	table<string, GamemodeSettings> gameModeDefs
+
+	#if CLIENT
+		void functionref() completedResolutionCleanupFunc
+	#endif
 } file
 
 void function GameModes_Init()
@@ -197,24 +202,29 @@ void function GameModes_Init()
 #endif
 
                                   
-      
-                                                                                                                          
-      
+#if UI
+	AddCallback_UI_GameModeRulesDialog_PopulateTabsForMode( Survival_Hardcore_PopulateAboutText, GAMEMODE_SURVIVAL_HARDCORE )
+#endif
       
 
                          
       
                                                                                                                  
       
+      
 
                                
-      
-                                                                                                            
-      
+#if UI
+	AddCallback_UI_GameModeRulesDialog_PopulateTabsForMode( Date_Night_PopulateAboutText, GAMEMODE_DATE_NIGHT )
+#endif
       
 
+	#if CLIENT
+		RegisterSignal( "GameModes_CompletedResolutionCleanup" )
+		GameMode_OverrideCompletedResolutionCleanupFunc( GameModes_DefaultCompletedResolutionCleanupFunc )
+	#endif
 
-      
+
 
                        
 	gameMode = GAMEMODE_ARENAS
@@ -765,9 +775,27 @@ bool function GameMode_DoesModeDisplayIconsForAllFriendlyTeams( string mode )
        
 	return false
 }
+#endif          
 
+#if CLIENT
 bool function GameMode_DoesModeDisplayIconsForAllTeams( string mode )
 {
 	return false
 }
-#endif
+#endif          
+
+#if CLIENT
+                                                                                                                               
+void function GameModes_DefaultCompletedResolutionCleanupFunc()
+{
+	Signal( clGlobal.levelEnt, "GameModes_CompletedResolutionCleanup" )
+}
+#endif          
+
+#if CLIENT
+                                                                                                                                                                                  
+void function GameMode_OverrideCompletedResolutionCleanupFunc( void functionref() func )
+{
+	file.completedResolutionCleanupFunc = func
+}
+#endif          

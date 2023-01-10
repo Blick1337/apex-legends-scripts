@@ -958,7 +958,7 @@ bool function IsCodeDoor( entity door )
 
 	                                   
 
-	           
+	              
 	 
 		                                                                                   
 		                                                     
@@ -1144,6 +1144,8 @@ const asset BLOCKABLE_DOOR_DAMAGED_FX = $"P_door_damaged"
 const asset BLOCKABLE_DOOR_DESTRUCTION_FX = $"P_door_breach"
 
 const bool BLOCKABLE_DOOR_DEBUG = false
+
+const float GUARANTEED_KICK_OFFSET = 0.5
 
 
 enum eDoorFlags
@@ -1956,7 +1958,7 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 				                                                             
 			 
         
-		                                                                                     
+		                                                                                                         
 
 
                          
@@ -1991,7 +1993,7 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 	                                                                                                      
 	 
 		                                                                                                      
-		                                                                                      
+		                                                                                                          
 	 
 	                                                                             
 	 
@@ -2107,7 +2109,9 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 		                                                                         
 			                                          
 
-		                                                                                   
+		                                                        
+				                                                                                                                
+		                                                                            
 		 
 			                                                                        
 			 
@@ -2127,9 +2131,9 @@ vector arcCornerIn, float arcRadius, float arcStartAng, float arcEndAng )
 		                                                                                                                              
 		                             
 		                                                  
-		                                                                    
-			                                  
 		                                                                             
+			                                  
+		                                                                                      
 			                                           
 		                                                               
                   
@@ -2338,7 +2342,7 @@ void function SurvivalDoorSliding_Init()
 		                                                                                    
 	 
 
-	           
+	              
 	 
 		                                                                                                   
 
@@ -2513,7 +2517,7 @@ void function SurvivalDoorSliding_Init()
 	                                                                        
 	                                                              
 
-	                                                                                                   
+	                                                                                                            
 	 
 		                                     
 		      
@@ -2736,6 +2740,7 @@ void function CodeCallback_OnDoorInteraction( entity door, entity user, entity o
 
                                                                                              
  
+	                                                                                                                                                
 	                                              
  
 #endif         

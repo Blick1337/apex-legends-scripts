@@ -7,6 +7,7 @@ global function Character_IsCharacterOwnedByPlayer
 global function CharacterClass_GetSetFile
 global function CharacterClass_GetShippingStatus
 global function CharacterClass_GetIsShippingCharacter
+global function CharacterClass_GetRandomNonGRXCharacter
 global function CharacterClass_GetRole
 global function CharacterClass_GetSortOrdinal
 global function CharacterClass_GetMenuSmokeSkinIndex
@@ -68,6 +69,7 @@ global function GetItemFlavorByCharacterRef
 
 #if CLIENT || UI
 global function GetCharacterButtonOrder
+global function GetCharactersByRole
 #endif
 
 global function SortByMenuButtonIndex
@@ -124,8 +126,8 @@ const table<int, asset> CHARACTER_ROLE_ICONS = {
 
                                                         
                                        
-                                                                
                                                                       
+                                                                
                                                                     
                                                                 
                                                                    
@@ -253,6 +255,7 @@ struct FileStruct_LifetimeLevel
 	array< string > charactersWithStatsGUIDStrings                                                                                                                   
 	table<string, ItemFlavor> characterRefMap
 	table<ItemFlavor, int> characterFlavorSortOrdinalMap
+	array< ItemFlavor > nonGRXCharacters
 }
 FileStruct_LifetimeLevel& fileLevel
 
@@ -337,7 +340,20 @@ void function OnRegisterRootItemFlavors()
 	MakeItemFlavorSet( characterList, fileLevel.characterFlavorSortOrdinalMap )
 
 	entry.validItemFlavorList = characterList
-	entry.defaultItemFlavor = characterList.getrandom()
+
+	fileLevel.nonGRXCharacters = clone characterList
+	foreach ( ItemFlavor character in characterList )
+	{
+		if ( ItemFlavor_GetGRXMode( character ) != eItemFlavorGRXMode.NONE )
+			fileLevel.nonGRXCharacters.fastremovebyvalue( character )
+
+		if ( !CharacterClass_GetIsShippingCharacter( character ) )
+			fileLevel.nonGRXCharacters.fastremovebyvalue( character )
+
+		if ( !ItemFlavor_IsAvailableInPlaylist( character ) )
+			fileLevel.nonGRXCharacters.fastremovebyvalue( character )
+	}
+	entry.defaultItemFlavor = fileLevel.nonGRXCharacters.getrandom()
 
 	#if CLIENT
 		if ( IsLobby() )
@@ -455,13 +471,13 @@ string function ItemFlavor_GetCharacterRef( ItemFlavor flavor )
 	                                       
 	                                                     
 	 
-		                                                                
+		                                                                                                                                 
 			        
 
 		                                                                
 		                                                                      
 	 
-	                                                                                                                                                                                      
+	                                                                                                                                                                                                                    
 
 	                                                                                                                                                                      
 	                                                           
@@ -1053,6 +1069,19 @@ array<ItemFlavor> function GetCharacterButtonOrder( array<ItemFlavor> allCharact
 
 	return sortedCharacters
 }
+
+array<ItemFlavor> function GetCharactersByRole( array<ItemFlavor> allCharacters, int role )
+{
+	array<ItemFlavor> toReturn
+
+	foreach ( character in allCharacters )
+	{
+		if (CharacterClass_GetRole( character ) == role)
+			toReturn.append(character)
+	}
+
+	return toReturn
+}
 #endif                
 
 int function SortByMenuButtonIndex( ItemFlavor a, ItemFlavor b )
@@ -1129,6 +1158,13 @@ bool function WIP_CharacterClass_ShouldTrackStats( ItemFlavor character )
 
 	return GetGlobalSettingsBool( ItemFlavor_GetAsset( character ), "shouldTrackStatsInDev" )
 }
+
+#if SERVER || CLIENT || UI
+ItemFlavor function CharacterClass_GetRandomNonGRXCharacter()
+{
+	return ( fileLevel.nonGRXCharacters.getrandom() )
+}
+#endif
                    
                    
                    

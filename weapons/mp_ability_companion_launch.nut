@@ -210,20 +210,6 @@ void function OnWeaponActivate_companion_launch( entity weapon )
 		if ( InPrediction() )
 	#endif          
 			weapon.AddMod( FROM_PERCHED_MOD )
-
-	#if CLIENT
-		entity localClient = GetLocalClientPlayer()
-		entity localView = GetLocalViewPlayer()
-		if ( player == GetLocalViewPlayer() )
-		{
-			entity companionEnt = VantageCompanion_GetEnt( player )
-
-			if ( IsValid( companionEnt ) )
-			{
-				EmitSoundOnEntity( companionEnt, JET_DRIVE_DEPLOY_ECHO_VOICE )
-			}
-		}
-	#endif
 	}
 
 	thread CheckForHoldInput_Thread( player, weapon )
@@ -244,6 +230,23 @@ var function OnWeaponPrimaryAttack_companion_launch( entity weapon, WeaponPrimar
 	int companionState = player.GetPlayerNetInt( VANTAGE_COMPANION_STATE_NETINT )
 	if ( JET_DRIVE_DEBUG_DRAW_FLOW_PRINTS )
 		printt( "VANTAGE TAC: PRIMATK" )
+
+#if CLIENT
+	if ( companionState == eCompanionState.PERCHED )
+	{
+		entity localClient = GetLocalClientPlayer()
+		entity localView = GetLocalViewPlayer()
+		if ( player == GetLocalViewPlayer() )
+		{
+			entity companionEnt = VantageCompanion_GetEnt( player )
+
+			if ( IsValid( companionEnt ) )
+			{
+				EmitSoundOnEntity( companionEnt, JET_DRIVE_DEPLOY_ECHO_VOICE )
+			}
+		}
+	}
+#endif
 
 	if ( file.isButtonHeld[player] == true )                                     
 	{
@@ -273,7 +276,7 @@ var function OnWeaponPrimaryAttack_companion_launch( entity weapon, WeaponPrimar
 			entity mainHandWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 			if ( IsValid( mainHandWeapon) )
 			{
-				if ( ( mainHandWeapon.GetWeaponTypeFlags() & WPT_ULTIMATE) == 0 )
+				if ( !IsBitFlagSet( mainHandWeapon.GetWeaponTypeFlags(), WPT_ULTIMATE ) )
 					file.cachedLastWeaponName[player] <- mainHandWeapon.GetWeaponClassName()
 				
 				                                                                                                                                                       
@@ -291,6 +294,7 @@ var function OnWeaponPrimaryAttack_companion_launch( entity weapon, WeaponPrimar
 			#endif
 			weapon.DoDryfire()
 			                                                            
+			RemoveAllTacMods( weapon )
 			weapon.AddMod( FROM_PERCHED_MOD )
 			ammoUsed = 0                              
 		}
@@ -404,6 +408,7 @@ var function OnWeaponPrimaryAttackAnimEvent_companion_launch( entity weapon, Wea
 
 				                
 
+				                                                
 				                                                                                       
 
 				                                          
@@ -753,6 +758,7 @@ void function PreLaunch_Thread( entity player )
 
 	                                                           
 	                                                                      
+	                                                                    
 	                                           
 	                                                                  
 	                       
@@ -1104,6 +1110,9 @@ void function OnClientAnimEvent_companion_launch( entity weapon, string name )
 
 void function PlayJetDriveDoubleJumpWindowSound(  entity player, float timeout )
 {
+	if ( !IsValid(player) )
+		return
+
 	if ( InPrediction() && IsFirstTimePredicted() )
 	{
 		EmitSoundOnEntity(player, JET_DRIVE_JUMP_WINDOW_SOUND_1P )
@@ -1111,7 +1120,8 @@ void function PlayJetDriveDoubleJumpWindowSound(  entity player, float timeout )
 		OnThreadEnd(
 			function() : ( player)
 			{
-				StopSoundOnEntity( player, JET_DRIVE_JUMP_WINDOW_SOUND_1P )
+				if ( IsValid(player) )
+					StopSoundOnEntity( player, JET_DRIVE_JUMP_WINDOW_SOUND_1P )
 			}
 		)
 		while ( Time() < timeout )

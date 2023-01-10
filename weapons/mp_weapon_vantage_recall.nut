@@ -46,8 +46,6 @@ void function OnPassiveChangedVantageRecall( entity player, int passive, bool di
 
 bool function OnWeaponAttemptOffhandSwitch_ability_vantage_recall( entity weapon )
 {
-	#if SERVER
-	#endif
 	return true
 }
 

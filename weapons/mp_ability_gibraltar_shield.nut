@@ -111,13 +111,12 @@ void function GunShieldTogglePressed( entity player )
 
                                                                                                    
  
-	                              
-
 	              
 	 
 		                                                                     
 		                                                      
 	 
+
 	             
 	 
 		                                                                                         
@@ -238,12 +237,6 @@ bool function OnWeaponAttemptOffhandSwitch_ability_gibraltar_shield( entity weap
 	entity player = weapon.GetWeaponOwner()
 
 	if ( !IsValid( player ) )
-		return false
-
-	if ( !player.IsPlayer() )
-		return false
-
-	if ( player.IsZiplining() )
 		return false
 
 	entity mainWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
@@ -374,7 +367,7 @@ var function OnWeaponPrimaryAttack_ability_gibraltar_shield( entity weapon, Weap
 			                         
 			                                          
 
-			                                                                  
+			                                                                                 
 			 
 				                   
 			 

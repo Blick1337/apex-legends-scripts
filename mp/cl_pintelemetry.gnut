@@ -16,7 +16,8 @@ global function PIN_UIInteraction_Select
 global function PIN_ComicPageView
 global function PIN_QuestTextView
 global function PIN_StoryTrackerPageView
-
+global function PIN_Store_EventButton
+global function  PIN_Store_Message
 global function PIN_Club_Create
 global function PIN_Club_Leave
 global function PIN_Club_Remove
@@ -445,6 +446,37 @@ void function PIN_UIInteraction_Select( string menuName, string objectName, var 
 }
 #endif
 
+#if UI
+void function PIN_Store_EventButton ( string fromId )
+{
+	AddPINTelemetryEvent( "store_eventbutton",
+		PIN_StandardHeader(),
+		{
+			fromid = fromId.tolower()
+		}
+	)
+}
+
+void function PIN_Store_Message( string msgType, int status )
+{
+	string msg_status = PIN_GetMessageStatusText( status )
+	AddPINTelemetryEvent( "message",
+		PIN_StandardHeader(),
+		{
+			count = 1
+			custom =
+			{
+				msg_type = msgType
+			}
+			en = "message"
+			sdur = PIN_GetSessionDuration()
+			service = "aruba"
+			status = msg_status
+			type = "in_game"
+		}
+	)
+}
+#endif
 
 void function PIN_Customization( ItemFlavor ornull context, ItemFlavor itemFlavor, string customizeAction, int index = 0 )
 {

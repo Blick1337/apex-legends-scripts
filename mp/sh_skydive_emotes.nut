@@ -82,8 +82,8 @@ void function RegisterSkydiveEmotesForCharacter( ItemFlavor characterClass )
 		  		               
 		  	 
 		        
-		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		entry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
+		entry.associatedCharacterOrNull = characterClass
+		entry.networkTo                 = eLoadoutNetworking.PLAYER_EXCLUSIVE
 		fileLevel.loadoutCharacterSkydiveEmoteSlotMap[characterClass].append( entry )
 	}
 }

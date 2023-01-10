@@ -1258,7 +1258,7 @@ void function ServerCallback_ModeShadowRoyale_AnnouncementSplash( int messageInd
 			break
 
 		default:
-			Assert( 0, "Unhandled messageIndex: " + messageIndex )
+			Assert( false, "Unhandled messageIndex: " + messageIndex )
 	}
 
 	AnnouncementMessageSweepShadowRoyale( style, player, messageText, subText, titleColor, soundAlias, duration, icon, leftIcon, rightIcon )

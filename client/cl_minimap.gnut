@@ -142,6 +142,7 @@ struct {
 
 	var        fullmap_legendRui
 	array<var> fullmap_unitframesRui
+	array<var> fullmap_jipframesRui
 	var        fullmap_gamestateRui
 
 	array< void functionref( var ) > updateFullmapTracking_Callbacks
@@ -397,16 +398,29 @@ void function ClMinimap_Init()
 		file.fullmap_unitframesRui.append( RuiCreate( $"ui/unitframe_survival_v3.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, RUI_SORT_SCREENFADE - 2 ) )
 		file.fullmap_unitframesRui.append( RuiCreate( $"ui/unitframe_survival_v3.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, RUI_SORT_SCREENFADE - 2 ) )
 		file.fullmap_unitframesRui.append( RuiCreate( $"ui/unitframe_survival_v3.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, RUI_SORT_SCREENFADE - 2 ) )
+
+		file.fullmap_jipframesRui.append( RuiCreate( $"ui/unitframe_survival_jip.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, RUI_SORT_SCREENFADE - 2 ) )
+		file.fullmap_jipframesRui.append( RuiCreate( $"ui/unitframe_survival_jip.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, RUI_SORT_SCREENFADE - 2 ) )
+		file.fullmap_jipframesRui.append( RuiCreate( $"ui/unitframe_survival_jip.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, RUI_SORT_SCREENFADE - 2 ) )
 	#else
 		file.fullmap_unitframesRui.append( RuiCreate( $"ui/unitframe_survival_v3.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, 20 ) )
 		file.fullmap_unitframesRui.append( RuiCreate( $"ui/unitframe_survival_v3.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, 20 ) )
 		file.fullmap_unitframesRui.append( RuiCreate( $"ui/unitframe_survival_v3.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, 20 ) )
+
+		file.fullmap_jipframesRui.append( RuiCreate( $"ui/unitframe_survival_jip.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, 20 ) )
+		file.fullmap_jipframesRui.append( RuiCreate( $"ui/unitframe_survival_jip.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, 20 ) )
+		file.fullmap_jipframesRui.append( RuiCreate( $"ui/unitframe_survival_jip.rpak", clGlobal.topoFullscreenFullMap, FULLMAP_RUI_DRAW_LAYER, 20 ) )
 	#endif
 
 	foreach ( rui in file.fullmap_unitframesRui )
 	{
 		InitHUDRui( rui, false )
 		Scoreboard_AddRui( rui )
+	}
+
+	foreach ( rui in file.fullmap_jipframesRui )
+	{
+		InitHUDRui( rui, false )
 	}
 
 	asset fullmap_gamestateRuiAsset = GetFullmapGameStateAsset()
@@ -431,11 +445,13 @@ var function GetMinimapFrameRui()
 	return file.minimap_frame
 }
 
-var function GetMinimapYouRui(){
+var function GetMinimapYouRui()
+{
 	return file.minimap_you
 }
 
-array<var> function GetUnitFramesRui(){
+array<var> function GetUnitFramesRui()
+{
 	return file.fullmap_unitframesRui
 }
 
@@ -724,7 +740,7 @@ void function MinimapObjectThread( entity ent )
 						case eMinimapObject_prop_script.TROPHY_SYSTEM:
 						case eMinimapObject_prop_script.OBJECTIVE_AREA:
 						case eMinimapObject_prop_script.DIRTY_BOMB:
-                      
+                                     
                                                  
            
                                                    
@@ -1566,13 +1582,19 @@ void function Minimap_UpdateMinimapVisibility( entity player )
 	bool isVisible = true
 
 	int ceFlags = player.GetCinematicEventFlags()
-	if ( ceFlags & CE_FLAG_INTRO )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_INTRO ) )
 		isVisible = false
 	                                                    
 	  	                 
 
 	if ( MiniMapIsDisabled() )
 		isVisible = false
+
+                                  
+	if ( IsHardcoreSurvival() && ( PlayerMatchState_GetFor( player ) == ePlayerMatchState.NORMAL ) )
+		isVisible = false
+      
+
 
 	if ( Freelance_IsHubLevel() )
 		isVisible = false
@@ -1835,10 +1857,15 @@ void function UpdateFullmapRuiTracks()
       
 	}
 
+	bool gamestateIsPlaying = GamePlaying()
+
 	for ( int i = 1; i < file.fullmap_unitframesRui.len(); i++ )
 	{
 		var rui = file.fullmap_unitframesRui[i]
+		var jipRui = file.fullmap_jipframesRui[i]
+
 		RuiSetBool( rui, "isVisible", false )                                 
+		RuiSetBool( jipRui, "isVisible", false )
 
 		int slotIndex     = i - 1
 		entity teamMember = UnitFrame_GetOwnerByIndex( slotIndex )
@@ -1853,6 +1880,24 @@ void function UpdateFullmapRuiTracks()
 				RuiSetFloat( rui, "bleedoutEndTime", 0.0 )
 				RuiSetBool( rui, "isJumpmaster", false )
 				RuiSetInt( rui, "frameSlot", slotIndex )
+			}
+			else if( Survival_IsJIPEnabled() && !IsFiringRangeGameMode() )
+			{
+				RuiSetBool( jipRui, "isVisible", gamestateIsPlaying )
+				RuiSetInt( jipRui, "frameSlot", slotIndex )
+				RuiSetString( jipRui, "name", Localize( "#JIP_SEARCHING_FOR_SHORT" ) )
+
+				vector playerColor
+				if( GetCurrentPlaylistVarBool("has_squad_based_ui", false) )
+				{
+					entity player = GetLocalViewPlayer()
+					playerColor = SrgbToLinear( GetPlayerInfoColor(player ) / 255.0 )
+				}
+				else
+					playerColor = SrgbToLinear( GetKeyColor( COLORID_MEMBER_COLOR0, 1 + slotIndex ) / 255.0 )
+
+
+				RuiSetColorAlpha( jipRui, "customCharacterColor", playerColor, 1.0 )
 			}
 			continue
 		}
@@ -1873,7 +1918,6 @@ void function UpdateFullmapRuiTracks()
 	ScorebarInitTracking( viewPlayer, file.fullmap_gamestateRui )
 	SetCommonScoreRUIVars( file.fullmap_gamestateRui )
 
-	bool gamestateIsPlaying = GamePlaying()
 	RuiSetBool( file.fullmap_gamestateRui, "gamestateIsPlaying", gamestateIsPlaying )
 
 	if ( !IsPrivateMatch() )

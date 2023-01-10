@@ -385,7 +385,7 @@ void function ClGameStateThink_Prematch( entity player )
 	  	                                               
 
 	                                       
-	if ( !DEV_COUNTDOWNTIMER )
+	if ( DEV_COUNTDOWNTIMER == 0 )
 		return
 
 	float timeRemaining = ceil( GetGameStartTime() - Time() )
@@ -506,7 +506,7 @@ void function ClGameStateThink_Playing( entity player )
 	else
 		endTime = GetGameEndTime()
 
-	if ( !endTime )
+	if ( endTime == 0 )
 		return
 
 	if ( Time() > endTime )

@@ -19,6 +19,10 @@ global function AddCallback_CanOpenLootBin
 #endif
 
 #if SERVER
+                   
+                                                         
+      
+
                                   
                                   
 
@@ -36,6 +40,7 @@ global function AddCallback_CanOpenLootBin
                              
                                         
                                          
+                                      
 #endif
 
 #if SERVER && DEV
@@ -55,6 +60,7 @@ global function ServerToClient_LootBinOpening
 #endif
 
 
+global const string LOOT_BIN_DELAY_LOOT_SPAWNING_PLAYLIST_VAR = "survival_lootbin_delay_loot_spawning"
 
 #if SERVER || CLIENT
 global const string LOOT_BIN_MARKER_SCRIPTNAME = "survival_lootbin"
@@ -94,6 +100,9 @@ global typedef OnLootBinOpeningCallbackType void functionref( entity )
 
 	                                 
 	                                
+
+	                                
+	                               
 
 	                                                              
  
@@ -207,6 +216,11 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
         
 				                           
        
+
+                    
+                                                  
+                                   
+       
  
 #endif
 
@@ -291,6 +305,12 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 	                        
 		       
 	                                        
+	                                                        
+		      
+	                                                                           
+	                                                                                  
+	                                             
+		      
 	                                                                   
  
 #endif
@@ -459,7 +479,12 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
                                                                                                         
  
 	                                                                                                                                                                     
-	                                                                                                 
+	                                                                                                              
+		                                                                                                    
+		                                                        
+
+	                     
+		      
 
 	                                                         
 
@@ -473,15 +498,8 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 	                                                     
 		                                        
 
-	                                      
+	                                                       
 	                           
-
-                         
-		                                                                                             
-		 
-			                       
-		 
-                               
 
 	                                                                   
 	 
@@ -501,19 +519,33 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 
 
 #if SERVER
-                 
-                                                                                                                                                             
-     
-                                                                                                                              
-      
+                                                                                                                                                                               
  
 	                                                           
 
-	                                                                                                                            
+	                                                                    
+
+	                                                                                                      
+
+	                                                                                                     
+
+	                           
+
+	                                                                                        
+	                                                                                             
+	 
+		                                                                  
+		                                               
+	 
 
 	                                              
+	                                                  
 	 
-		                                          
+		                                    
+
+		                                             
+
+		                                                                                   
 			        
 
 		                                                                                                                                    
@@ -521,22 +553,52 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 		                                    
 		                            
 		                                    
+		                     
 
 		                                                            
-		                                                                    
-	 
+		                                            
 
-	                                      
-	                                 
-	                                
-	                   
+		                         
+
+		                                                
+		 
+			                                  
+
+			                                                                                                 
+
+			                                                                                       
+
+			                                                                       
+			                                       
+			 
+				                                         
+				 
+					                                    
+					     
+				 
+
+				                                                  
+			 
+
+		 
+	 
 
 	                                                                                                                                                     
+	                                                          
 	                                                   
 	 
+		                                                
+		 
+			                                                   
+
+			                     
+
+			               
+		 
+
 		                                                                                  
 
-		                                                                 
+		                                                                    
 
 		                                                        
                        
@@ -599,11 +661,8 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 				                   
 				                                   
 				                                                                                                                                                         
-                     
-                                      
-         
+
 				                                        
-          
 					                     
 				    
 					                       
@@ -625,33 +684,53 @@ void function AddCallback_OnLootBinOpening( OnLootBinOpeningCallbackType callbac
 		                                  
 	 
 
-	                                     
+	                                                                  
+
+	                          
  
 #endif
 
 
 #if SERVER
-                 
-                                                                                           
-     
-                                                                             
-      
+                                                                                                                        
  
+	                                                                                                               
+	 
+		                                                                                              
+		      
+	 
+
 	                                                                                                             
 	 
-		                                                                                                             
+		                                                                                                                               
 			        
 
 		                                                     
-                    
-                                                                                                                 
-        
-			                                                                                                    
-         
+			                                                                                                              
 		                                                              
 		  	                                                                                                   
 	 
  
+
+                                                                                                                          
+ 
+	                            
+	                                                                                                             
+	 
+		                                                                                                                               
+			        
+
+		                                                     
+			                                                                                                                                      
+
+		                                                
+		 
+			                        
+			           
+		 
+	 
+ 
+
 #endif
 
 
@@ -737,6 +816,12 @@ array<entity> function LootBin_GetSpawnedLoot( entity lootBin, bool includeRegul
 	                     
 		            
 
+                    
+                                                                                                       
+                                                                                          
+              
+       
+
 	           
  
 #endif
@@ -777,7 +862,7 @@ array<entity> function LootBin_GetSpawnedLoot( entity lootBin, bool includeRegul
 #if SERVER
                                                                                
  
-	                                               
+	                                                        
 		            
 
 	                              
@@ -800,7 +885,7 @@ array<entity> function LootBin_GetSpawnedLoot( entity lootBin, bool includeRegul
 	                     
 
 	                                                           
-	                                                                                                                                                               
+	                                                                                                                                         
 	 
 		                                                   
 	 
@@ -901,6 +986,29 @@ array<entity> function LootBin_GetSpawnedLoot( entity lootBin, bool includeRegul
 
 
 #if SERVER
+                                                                                    
+ 
+	                                                           
+
+	             
+	 
+		                                                                            
+			                 
+
+		                               
+	 
+
+	            
+	 
+		                                                                            
+			                 
+
+		                              
+	 
+ 
+#endif
+
+#if SERVER
                                                                                                          
  
 	                                                                                                        
@@ -939,15 +1047,29 @@ array<entity> function LootBin_GetSpawnedLoot( entity lootBin, bool includeRegul
 		                                                                 
 	 
 
-	                                                                               
+	                                     
 	                 
+	                        
 	                                   
+	                                       
 	                                           
-	                         
-	                                                                              
-	                                   
+	                           
 	 
-		                                                  
+		                                                                                               
+		                            
+		 
+			                                    
+				                           
+		 
+	 
+
+	                                  
+	                                                         
+	                        
+	                                                   
+	                                      
+	 
+		                                                             
 	 
  
 #endif
@@ -1195,8 +1317,15 @@ bool function CanAccessSecretCompartments( entity lootBin, entity player )
                      
 		bool canOpenCompartment = PlayerHasPassive( player, ePassives.PAS_MEDIC )
       
-                                                                                     
-                                
+                                                                                                             
+                         
+
+                                                                                                                                                         
+                            
+                                                                                                                                                    
+                            
+      
+                             
        
 
 	return canOpenCompartment
@@ -1385,6 +1514,7 @@ string function GetLootBinUseTextOverride( entity lootBin )
 #endif
 
 #if SERVER
+
                                          
  
 	                                                                  
@@ -1446,6 +1576,136 @@ string function GetLootBinUseTextOverride( entity lootBin )
 		                                                                   
 	 
  
+                   
+                      
+ 
+                         
+                           
+ 
+
+                                                         
+ 
+                                                                                                                  
+ 
+
+                                                        
+ 
+                                                                                            
+
+ 
+
+                                          
+ 
+                                                                                
+
+ 
+
+                                               
+ 
+                                                                   
+                         
+        
+
+                                                                         
+                           
+                          
+
+                                               
+                                                                  
+  
+                           
+  
+     
+  
+                                                                       
+                                 
+                                    
+  
+
+                                                                                     
+
+                                     
+  
+                                                                                
+                          
+           
+                                                  
+                                                          
+               
+  
+
+                                     
+  
+                                                                                        
+                          
+           
+                                                  
+                                                          
+               
+  
+ 
+
+                                                                                 
+ 
+                       
+                              
+                                     
+                         
+               
+
+                        
+                                 
+
+                                                                    
+                            
+  
+                                          
+                                      
+   
+                                                
+    
+                 
+                                                 
+     
+                                                                                                                              
+      
+             
+      
+     
+                                         
+     
+                                             
+                            
+        
+          
+     
+        
+     
+                                                
+                            
+        
+     
+    
+   
+
+                                             
+                               
+   
+                                                     
+    
+                                                   
+                                      
+    
+   
+  
+                                    
+                                  
+                                                 
+              
+ 
+
+      
+
 #endif
 
 

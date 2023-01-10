@@ -251,7 +251,7 @@ void function OnToolTipMenuThink( var menu )
 {
 	ToolTipMenuData menuData = file.menusWithToolTips[string(menu)]
 
-	if ( menuData.toolTipFlags & eToolTipFlag.HIDDEN )
+	if ( IsBitFlagSet( menuData.toolTipFlags, eToolTipFlag.HIDDEN ) )
 	{
 		s_hideElement = null
 		HideTooltipRui();
@@ -363,7 +363,7 @@ void function UpdateToolTipElement( var toolTipElement, var focusElement )
 		UpdateTooltipRui( ruiAsset )
 		ShowTooltipRui()
 
-		if ( dt.tooltipFlags & eToolTipFlag.CLIENT_UPDATE )
+		if ( IsBitFlagSet( dt.tooltipFlags, eToolTipFlag.CLIENT_UPDATE ) )
 		{
 			if ( IsFullyConnected() )
 				RunClientScript( "UpdateToolTipElement", toolTipElement, focusElement )
@@ -371,7 +371,7 @@ void function UpdateToolTipElement( var toolTipElement, var focusElement )
 		}
 	#endif
 
-	if ( dt.tooltipFlags & eToolTipFlag.HIDDEN )
+	if ( IsBitFlagSet( dt.tooltipFlags, eToolTipFlag.HIDDEN ) )
 	{
 		HideTooltipRui()
 		return
@@ -392,7 +392,7 @@ void function UpdateToolTipElement( var toolTipElement, var focusElement )
 	}
 
 	string commsPrompt = dt.commsPromptDefault
-	if ( (dt.tooltipFlags & eToolTipFlag.EMPTY_SLOT) || (dt.commsAction != eCommsAction.BLANK) && commsPrompt == "" )
+	if ( IsBitFlagSet( dt.tooltipFlags, eToolTipFlag.EMPTY_SLOT ) || ( dt.commsAction != eCommsAction.BLANK ) && commsPrompt == "" )
 		commsPrompt = IsControllerModeActive() ? "#PING_PROMPT_REQUEST_GAMEPAD" : "#PING_PROMPT_REQUEST"
 
 	var rui = GetTooltipRui()
@@ -444,7 +444,7 @@ void function UpdateToolTipElement( var toolTipElement, var focusElement )
 
 	if ( dt.tooltipStyle == eTooltipStyle.STORE_CONFIRM )
 	{
-		RuiSetFloat3( rui, "descTextAltColor", dt.storeTooltipData.tooltipAltDescColor)
+		RuiSetFloat3( rui, "descTextAltColor", dt.storeTooltipData.tooltipAltDescColor )
 	}
 }
 

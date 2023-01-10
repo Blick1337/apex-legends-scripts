@@ -102,8 +102,6 @@ void function OnWeaponActivate_care_package( entity weapon )
 
 #if CLIENT
 		SetCarePackageDeployed( false )
-		if ( !InPrediction() )                             
-			return
 
 		OnBeginPlacingCarePackage( weapon, ownerPlayer )
 #endif
@@ -248,7 +246,7 @@ void function DeployableCarePackagePlacement( entity weapon, entity player, asse
 		}
 	)
 
-                  
+                                 
                                            
                                
                                       

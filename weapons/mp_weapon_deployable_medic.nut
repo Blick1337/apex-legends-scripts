@@ -850,7 +850,7 @@ void function OnDeployableMedicPlanted( entity projectile )
 	                            
 		            
 
-	                                                                                
+	                                                                            
 		            
 
 	           
@@ -1096,7 +1096,7 @@ void function OnDeployableMedicPlanted( entity projectile )
 			                                                       
 			                                                             
 
-			                                      
+			                                          
 			 
 				                                               
 				                                                               

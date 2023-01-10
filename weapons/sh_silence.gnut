@@ -238,7 +238,7 @@ void function MpAbilitySharedSilence_Init()
 		                                      
 		                              
 		 
-			                                                                                                                                                       
+			                                                                                                                                               
 		 
 
 		                              
@@ -366,16 +366,16 @@ void function Silenced_WeaponStatusCheck( entity player, var rui, int slot )
 
 			if ( rui != null )
 			{
-				if ( StatusEffect_GetSeverity( player, eStatusEffect.silenced ) )
+				if ( StatusEffect_HasSeverity( player, eStatusEffect.silenced ) )
 				{
 					if ( !overwrite )
 						RuiSetString( rui, "hintText", "" )
 					RuiSetBool( rui, "isSilenced", true )
-					if ( StatusEffect_GetSeverity( player, eStatusEffect.silenced_seer_visuals ) )
+					if ( StatusEffect_HasSeverity( player, eStatusEffect.silenced_seer_visuals ) )
 					{
 						RuiSetInt( rui, "silenceOwner", eSilenceOwner.SEER )
 					}
-					else if ( StatusEffect_GetSeverity( player, eStatusEffect.silenced_rev_visuals ) )
+					else if ( StatusEffect_HasSeverity( player, eStatusEffect.silenced_rev_visuals ) )
 					{
 						RuiSetInt( rui, "silenceOwner", eSilenceOwner.REVENANT )
 					}

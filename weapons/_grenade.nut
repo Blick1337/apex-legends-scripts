@@ -555,7 +555,7 @@ void function HACK_DropGrenadeOnDeath( entity weapon, entity weaponOwner )
 		vector velocity    = weaponOwner.GetForwardVector() * forwardScale
 		velocity.z += weapon.GetWeaponSettingFloat( eWeaponVar.grenade_death_drop_velocity_extraUp )
 		vector angularVelocity = <0, 0, 0>
-		float fuseTime         = baseFuseTime ? baseFuseTime - elapsedTime : baseFuseTime
+		float fuseTime         = baseFuseTime != 0 ? baseFuseTime - elapsedTime : baseFuseTime
 
 		if ( weapon.GetWeaponPrimaryClipCountMax() > 0 )
 		{
@@ -656,7 +656,7 @@ void function Grenade_OnProjectileCollision( entity projectile, vector pos, vect
                                  
                                          
 
-                                                                                                     
+                                                                                                           
    
                                     
                            

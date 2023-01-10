@@ -381,7 +381,9 @@ void function ShGamemodeArenas_Init()
 	                                                        
 
 	                                           
-	                   
+
+	                                        
+		                   
 
 	                                                        
 
@@ -2254,7 +2256,8 @@ void function CLSurvivalArenas_OnPrematch()
 	SetSummaryDataDisplayStringsCallback( Arenas_PopulateSummaryDataStrings )
 }
 
-void function Threaded_ActivateBuyCountDown( float timeToStart ){
+void function Threaded_ActivateBuyCountDown( float timeToStart )
+{
 	wait( timeToStart )
 
 	var gamestateRui = ClGameState_GetRui()
@@ -2892,7 +2895,12 @@ void function PupulateGamestatePlayerData()
 		RuiTrackInt( file.arenasScoreRui, "roundNum", null, RUI_TRACK_SCRIPT_NETWORK_VAR_GLOBAL_INT, GetNetworkedVariableIndex( "roundsPlayed" ) )
 	#endif
 
-	int currentTeam = GetLocalViewPlayer().GetTeam()
+	int currentTeam = 0
+	if ( IsPrivateMatch() && GetLocalClientPlayer().IsObserver() )
+		currentTeam = TEAM_IMC
+	else
+		currentTeam = GetLocalViewPlayer().GetTeam()
+
 	int otherTeam = Arenas_GetOpposingTeam( currentTeam )
 
 	PopulateFightRui( file.arenasScoreRui )
@@ -2912,8 +2920,8 @@ void function PupulateGamestate_WaitForFullyConnected( entity player )
 	EndSignal( player, "Arenas_WaitFullyConnected" )
 
 	EHI playerEHI = ToEHI( player )
-	while ( !EHIHasValidScriptStruct( playerEHI ) )
-		WaitFrame()
+
+	WaitFrame()
 	LoadoutSlot_WaitForItemFlavor( playerEHI, Loadout_Character() )
 
 	PupulateGamestatePlayerData()
@@ -2945,7 +2953,12 @@ void function PopulateFightRui( var rui )
 	RuiSetInt( rui, "maxScore", GameMode_GetWinBy2MinScore( GameRules_GetGameMode() ) )
 
 	int teamNum = 1
-	int currentTeam = GetLocalViewPlayer().GetTeam()
+	int currentTeam = 0
+	if ( IsPrivateMatch() && GetLocalClientPlayer().IsObserver() )
+		currentTeam = TEAM_IMC
+	else
+		currentTeam = GetLocalViewPlayer().GetTeam()
+
 	int otherTeam = Arenas_GetOpposingTeam( currentTeam )
 	RuiSetBool( rui, "team" + teamNum + "MyTeam", true )
 	RuiSetInt( rui, "score" + teamNum, Arenas_GetTeamWins( currentTeam ) )

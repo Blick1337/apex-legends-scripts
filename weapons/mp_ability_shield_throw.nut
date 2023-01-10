@@ -177,11 +177,6 @@ void function OnWeaponActivate_ability_shield_throw( entity weapon )
 
 bool function OnWeaponAttemptOffhandSwitch_ability_shield_throw( entity weapon )
 {
-	if ( weapon.GetWeaponPrimaryClipCount() < weapon.GetAmmoPerShot() )
-		return false
-
-	entity owner = weapon.GetWeaponOwner()
-
 	#if SERVER
 		                                                                             
 		 

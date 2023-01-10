@@ -171,7 +171,7 @@ void function ControlGunRackPanels_OnUse( entity gunRackPanel, entity player, in
 {
 	if( ControlGunRackPanels_CostCheck( gunRackPanel, player ) && !GradeFlagsHas( gunRackPanel, eGradeFlags.IS_LOCKED ) )
 	{
-		if ( useInputFlags & USE_INPUT_LONG )
+		if ( IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 			thread ControlGunRackPanels_UseThink_Thread( gunRackPanel, player )
 	}
 	else

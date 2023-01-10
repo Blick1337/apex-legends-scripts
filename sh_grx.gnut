@@ -38,6 +38,7 @@ global function GRXPack_GetPackContents
 
 #if DEV
 global function DEV_GetItemFlavorByGRXRef
+global function DEV_IsValidGRXRef
 #endif
 #endif
 
@@ -805,9 +806,14 @@ ItemFlavor function GetItemFlavorByGRXIndex( int index )
 #if (SERVER || CLIENT || UI) && DEV
 ItemFlavor function DEV_GetItemFlavorByGRXRef( string grxRef )
 {
-	                                                        
-
 	return fileLevel.grxRefItemFlavorMap[ grxRef ]
+}
+#endif
+
+#if (SERVER || CLIENT || UI) && DEV
+bool function DEV_IsValidGRXRef( string grxRef )
+{
+	return (grxRef in fileLevel.grxRefItemFlavorMap)
 }
 #endif
 
@@ -1486,6 +1492,8 @@ void function GRX_PurchaseOffer( int opId, int queryGoal, GRXScriptOffer offer, 
 		bool useDiscountedPrice = false
 		if ( offer.originalPrice != null )                                                        
 			useDiscountedPrice = true
+
+		printt("gift offer - offer alias = ", offer.offerAlias, ", giftee hardware = ", friend.activePresence.hardware, ", giftee nuc pid = ", friend.activeNucleusId, ", giftee nuc id =", friend.eadpData.eaid )
 
 		GRX_GiftOffer( opId, offer.offerAlias , friend.activePresence.hardware, friend.activeNucleusId, friend.eadpData.eaid, GRX_GetCurrencyArrayFromBag( price ), useDiscountedPrice )
 		return
@@ -2250,14 +2258,24 @@ void function DEV_GRX_TestPurchase( string ref = "pack_cosmetic_rare", array<int
 
 
 #if DEV && SERVER
-                                                                                                               
+                                                                              
  
-	                                                              
-	                                                                
-	                                                                
-
 	                      
-	                                                                         
+
+	                            
+	                      
+		                 
+	    
+		                                                   
+
+	                                    
+	                                                
+	 
+		                                                 
+		                                                          
+	 
+
+	                                           
 	                           
 	                       
 	                             
@@ -4142,11 +4160,11 @@ void function HandleGRXOffersRefreshed( int offersState, array< GRXCraftingOffer
 		ifpi.isPurchasableAtAll = (ifpi.craftingOfferOrNull != null || ifpi.locationToDedicatedStoreOffersMap.len() > 0)
 	}
 
-	foreach ( void functionref() cb in fileLevel.onGRXOffersRefreshedCallbacks )
-		cb()
-
 	PlayerGRXScriptState scriptState = GetPlayerGRXScriptState( GetLocalClientPlayer() )
 	scriptState.areOffersReady = (offersState == GRX_OFFERSSTATE_READY)
+
+	foreach ( void functionref() cb in fileLevel.onGRXOffersRefreshedCallbacks )
+		cb()
 }
 
 GRXScriptOffer function GRX_ScriptOfferFromCraftingOffer( GRXScriptCraftingOffer craftOffer )

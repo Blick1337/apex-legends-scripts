@@ -21,6 +21,7 @@ global function CommsMenu_ExecuteSelection
 global function CommsMenu_GetCurrentCommsMenu
 global function CommsMenu_GetMenuRui
 global function CommsMenu_RefreshData
+global function CommsMenu_SetCurrentChoiceForCrafting
                         
                                            
       
@@ -98,13 +99,17 @@ global enum eChatPage
 
                 
 	CRAFTING,
-                   
+                                  
 	               
         
       
                       
            
       
+
+                
+              
+       
 
 	_count
 }
@@ -333,6 +338,7 @@ void function CommsMenu_OpenMenuForPingReply( entity player, entity wp )
 
 void function CommsMenu_OpenMenuTo( entity player, int chatPage, int commsMenuStyle, bool debounce = true )
 {
+	printf("CRAFTING TEST TEST TEST")
 	                             
 	CommsMenu_Shutdown( true )
 
@@ -441,6 +447,9 @@ enum eOptionType
                       
            
       
+                
+              
+       
 	_count
 }
 
@@ -557,6 +566,16 @@ CommsMenuOptionData function MakeOption_CraftItem( int itemIndex )
  
       
 
+               
+                                                                    
+ 
+                       
+                                         
+                             
+          
+ 
+      
+
 array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 {
 	array<CommsMenuOptionData> results
@@ -635,9 +654,12 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 			results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )
 			                                                                                      
                                
-                                                                       
-                                                                
-                                                             
+                                  
+     
+                                                                        
+                                                                  
+                                                               
+     
                                                                                          
          
 
@@ -647,7 +669,7 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 		case eChatPage.PING_MAIN_1:
 		{
                                
-                                                                          
+                                                                             
      
                                                              
                                                                       
@@ -658,7 +680,7 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
                                                                     
                                                                    
      
-                                                                                                                                                                                                            
+                                                                                                                                                                                                               
      
                                                                  
                                                                   
@@ -669,7 +691,18 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
                                                                   
                                                                     
      
-                                                                                                                                                                                                  
+                                                                                                                                                                                                               
+     
+                                                                 
+                                                                  
+                                                                 
+                                                                  
+                                                               
+                                                                   
+                                                                  
+                                                                    
+     
+                                                                                                                                                                                                     
      
                                                              
                                                                      
@@ -698,8 +731,11 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 			results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )
 			results.append( MakeOption_Ping( ePingType.I_GO ) )
                                
-                                                             
-                                                           
+                                  
+     
+                                                              
+                                                            
+     
          
 		}
 			break
@@ -779,7 +815,7 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 			int counter = 0
 			foreach( data in Crafting_GetCraftingDataArray() )
 			{
-				                   
+				                                  
 				                                                                  
 				 
 					                                         
@@ -802,7 +838,7 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
                                                
       
                                                                                                                                                          
-                                                                                       
+                                                             
        
                                                         
        
@@ -815,7 +851,7 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 			}
 			break
 		}
-		                   
+		                                  
 		                              
 		 
 			                
@@ -840,6 +876,17 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
                                    
     
                                                      
+    
+   
+        
+                 
+                              
+   
+                                                                           
+
+                                                            
+    
+                                                      
     
    
         
@@ -990,9 +1037,50 @@ string[2] function GetPromptsForMenuOption( int index )
                                                
                       
         
+                 
+                                
+                                                                                 
+                                                                                
+        
 	}
 
 	return promptTexts
+}
+
+LootData function GetLootdataForMenuOption( int index )
+{
+	LootData toReturn
+	if ( (index < 0) || (index >= s_currentMenuOptions.len()) )
+		return toReturn
+
+	entity player = GetLocalViewPlayer()
+	if ( !IsValid( player ) )
+		return toReturn
+
+	CommsMenuOptionData op = s_currentMenuOptions[index]
+
+                 
+	if (op.optionType == eOptionType.CRAFT )
+	{
+		array<string> validItems = Crafting_GetLootDataFromIndex( op.craftingIndex, player )
+
+		if ( validItems.len() > 0 )
+		{
+			if ( validItems[0] != "evo_points" )
+			{
+                   
+                                                                                                    
+       
+				 {
+
+					 toReturn = SURVIVAL_Loot_GetLootDataByRef( validItems[0] )
+				 }
+			}
+		}
+	}
+       
+
+	return toReturn
 }
 
 bool function ShouldPopulateRuiForIndex( int index )
@@ -1035,6 +1123,13 @@ var function GetRuiForMenuOption( var mainRui, int index )
 			                                       
 			asset weaponAsset = $"ui/comms_menu_icon_weapon_inspect.rpak"
 			return RuiCreateNested( mainRui, "iconHandle" + index, weaponAsset )
+
+                 
+                                
+                                                                   
+                                                                            
+        
+
 	}
 
 	return RuiCreateNested( mainRui, "iconHandle" + index, $"ui/comms_menu_icon_default.rpak" )
@@ -1109,6 +1204,13 @@ asset function GetIconForMenuOption( int index )
                              
    
                                                
+   
+        
+                 
+                                
+   
+                                                                       
+              
    
         
 	}
@@ -1373,7 +1475,7 @@ void function SetRuiOptionsForChatPage( var rui, int chatPage )
 			labelText = "#CRAFTING_WORKBENCH"
 			promptText = "#CRAFTING_USE"
 
-			                   
+			                                  
 			                                                                                       
 			 
 				                                                           
@@ -1387,7 +1489,7 @@ void function SetRuiOptionsForChatPage( var rui, int chatPage )
 			outerCircleColor = <25, 0, 15>
 			break
 
-			                   
+			                                  
 		                              
 			                                                                                                                                           
 			                                                                           
@@ -1415,6 +1517,16 @@ void function SetRuiOptionsForChatPage( var rui, int chatPage )
                              
                               
         
+        
+
+               
+                              
+                                 
+                                
+                        
+                                             
+        
+      
 	}
 
 	RuiSetString( rui, "labelText", labelText )
@@ -1442,8 +1554,16 @@ void function ShowCommsMenu( int chatPage )
 
 	int optionCount = options.len()
 
+	if ( optionCount <= 0 )
+	{
+		Warning( "Tried to open a comms menu with no options." )
+		return
+	}
+
 	for ( int idx = 0; idx < MAX_COMMS_MENU_OPTIONS; ++idx )
 	{
+
+		                               
 		RuiDestroyNestedIfAlive( rui, "iconHandle" + idx )
 
 		if ( idx >= s_currentMenuOptions.len() )
@@ -1476,7 +1596,7 @@ void function ShowCommsMenu( int chatPage )
 				countText = "%$models/weapons/attachments/infinity_symbol%"
 
                   
-				if ( StatusEffect_GetSeverity( GetLocalViewPlayer(), eStatusEffect.healing_denied ) )
+				if ( StatusEffect_HasSeverity( GetLocalViewPlayer(), eStatusEffect.healing_denied ) )
 				{
 					bool isBlocked = Consumable_IsShieldItem( options[idx].healType )
 					RuiSetBool( nestedRui, "isBlocked", isBlocked )
@@ -1521,13 +1641,22 @@ void function ShowCommsMenu( int chatPage )
 			int index = options[idx].craftingIndex
 			Crafting_PopulateItemRuiAtIndex( nestedRui, index )
 		}
-		                   
+		                                  
 		                                                
 		 
 			                                      
 			                                                   
 		 
 		        
+        
+                 
+                                                
+   
+                                                                                                   
+                                                 
+                                    
+                                             
+   
         
 	}
 
@@ -1612,6 +1741,8 @@ bool function CommsMenu_HandleKeyInput( int key )
 {
 	Assert( IsCommsMenuActive() )
 
+	if ( IsSpectating() )
+		return false
 
 	if ( PingSecondPageIsEnabled() )
 	{
@@ -1650,7 +1781,7 @@ bool function CommsMenu_HandleKeyInput( int key )
 				}
 			}
 		}
-		                   
+		                                  
 		                                                                                       
 		 
 			                                                           
@@ -1846,6 +1977,14 @@ void function ResetViewInput()
 
 	ResetMouseInput()
 }
+void function CommsMenu_SetCurrentChoiceForCrafting( int choice )
+{
+	if ( s_currentChatPage == eChatPage.CRAFTING )
+	{
+		SetCurrentChoice( choice )
+	}
+}
+
 void function SetCurrentChoice( int choice )
 {
 	if ( file.menuRui != null )
@@ -1907,7 +2046,81 @@ void function SetCurrentChoice( int choice )
 			}
 		}
 	}
+
+	RuiDestroyNestedIfAlive( file.menuRui, "compatibleWeaponsHandle" )
+	var nestedCompatibleWeaponsRui = RuiCreateNested( file.menuRui, "compatibleWeaponsHandle", $"ui/loot_pickup_tag_text_crafting.rpak" )
+
+	const int MAX_ATTACHMENT_TAGS = 6
+	const int NUM_OF_CATEGORIES_TO_BE_CONSIDERED_UNIVERSAL = 5                                                                                                                     
+	for ( int index = 0; index < MAX_ATTACHMENT_TAGS; index++ )
+	{
+		RuiSetString( nestedCompatibleWeaponsRui, "tagText" + (index + 1), "" )
+	}
+	RuiSetInt( nestedCompatibleWeaponsRui, "numTags", 0 )
+
+	LootData focusedItem = GetLootdataForMenuOption(choice)
+
+	if (focusedItem.index != -1 && focusedItem.lootType == eLootType.ATTACHMENT )
+	{
+		AttachmentTagData attachmentTagData = AttachmentTags( focusedItem.ref )
+		RuiSetInt( nestedCompatibleWeaponsRui, "numTags", attachmentTagData.attachmentTags.len() )
+
+		int tagIndex = 0
+		foreach ( int tagId in attachmentTagData.attachmentTags )
+		{
+			if ( tagIndex < MAX_ATTACHMENT_TAGS  )
+			{
+				if ( tagId in attachmentTagData.exceptionToTheRuleForThisWeaponClass )
+					RuiSetString( nestedCompatibleWeaponsRui, "tagText" + (tagIndex + 1), Localize( "#WEAPON_CLASS_HAS_EXCEPTION", Localize( GetStringForTagId( tagId ) ) ) )                                                                                       
+				else
+					RuiSetString( nestedCompatibleWeaponsRui, "tagText" + (tagIndex + 1), GetStringForTagId( tagId ) )
+
+				tagIndex++
+			}
+		}
+
+		foreach ( index, weaponRef in attachmentTagData.weaponRefs )
+		{
+			if ( tagIndex < MAX_ATTACHMENT_TAGS  )
+			{
+				string weaponName = GetWeaponInfoFileKeyField_GlobalString( weaponRef, "shortprintname" )
+				if ( index < attachmentTagData.weaponRefs.len() - 1 && tagIndex < MAX_ATTACHMENT_TAGS - 1 )
+					weaponName += ","
+
+				RuiSetString( nestedCompatibleWeaponsRui, "tagText" + (tagIndex + 1), weaponName )
+
+				tagIndex++
+			}
+		}
+
+		int exceptionIndex = 0
+		foreach ( int tagId in attachmentTagData.attachmentTags )
+		{
+			if ( tagIndex < MAX_ATTACHMENT_TAGS )
+			{
+				if ( tagId in attachmentTagData.exceptionToTheRuleForThisWeaponClass )
+				{
+					string exceptionName = GetWeaponInfoFileKeyField_GlobalString( attachmentTagData.exceptionToTheRuleForThisWeaponClass[tagId], "shortprintname" )
+					if ( exceptionIndex < attachmentTagData.exceptionToTheRuleForThisWeaponClass.len() - 1 && tagIndex < MAX_ATTACHMENT_TAGS - 1 )
+						exceptionName += ","
+
+					                                                                                                                                                         
+					                                                                                                                                                              
+					                      
+					  	            
+
+					RuiSetString( nestedCompatibleWeaponsRui, "tagText" + ( tagIndex + 1 ), Localize( "#EXCEPT_WEAPON", exceptionName ) )
+
+					tagIndex++
+					exceptionIndex++
+				}
+			}
+		}
+	}
+
+
 }
+
 bool function IsValidChoice( int choice )
 {
 	                                                               
@@ -1956,6 +2169,9 @@ bool function CommsMenu_HandleMoveInputControllerOnly( float x, float y )
 
 bool function CommsMenu_HandleViewInput( float x, float y )
 {
+	if ( IsSpectating() )
+		return false
+
 	                                              
 	{
 		float lockoutTime            = IsControllerModeActive() ? 0.0 : 0.01
@@ -2119,6 +2335,14 @@ bool function MakeCommMenuSelection( int choice, int wheelInputType )
                              
    
                                                                                   
+                                                                      
+              
+   
+       
+                
+                                
+   
+                                                                                      
                                                                       
               
    
@@ -2409,11 +2633,20 @@ bool function IsCommsMenuActive()
 
 bool function CommsMenu_CanUseMenu( entity player, int menuType = eChatPage.DEFAULT)
 {
-	if ( IsWatchingReplay() )
-		return false
+                 
+	if ( menuType == eChatPage.CRAFTING && IsSpectating() )
+	{
+		                      
+	}
+	else
+       
+	{
+		if ( IsWatchingReplay() )
+			return false
 
-	if ( !IsAlive( player ) )
-		return false
+		if ( !IsAlive( player ) )
+			return false
+	}
 
 	if ( IsScoreboardShown() )
 		return false
@@ -2501,7 +2734,7 @@ var function CommsMenu_GetMenuRui()
 			      
 
 		        
-			                                                             
+			                                                                 
 			      
 	 
 

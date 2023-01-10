@@ -13,6 +13,7 @@ global struct LootTypeData
 
 	int equipmentAction = eLootAction.NONE
 	int equipmentAltAction = eLootAction.DROP
+	int functionref( entity player ) equipmentCharacterActionFunc
 
 	int backpackAction = eLootAction.NONE
 	int backpackAltAction = eLootAction.DROP
@@ -49,6 +50,7 @@ void function SURVIVAL_LootTypes_InitShared()
 	lt.groundUseLongActionFunc = GroundLongAction_ForWeapons
                   
                                                      
+                                                                       
       
 		lt.groundAltActionFunc = GroundAltAction_None
        
@@ -255,7 +257,6 @@ void function RegisterCustomItemGroundAction( string lootRef, CustomItemGroundAc
 	Assert( !(lootRef in s_customItemGroundActionCallbacks) )
 	s_customItemGroundActionCallbacks[lootRef] <- func
 }
-
 
 LootActionStruct function GroundAction_ForCustomItem( entity player, LootRef lootRef )
 {
@@ -615,6 +616,16 @@ LootActionStruct function GroundAltAction_ForWeapons( entity player, LootRef loo
 
 	as.action = action
 	return as
+}
+
+int function EquipmentCharacterAction_ForWeapons( entity player )
+{
+                  
+                                           
+                                    
+       
+
+	return eLootAction.NONE
 }
 
 

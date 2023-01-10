@@ -946,6 +946,9 @@ void function ServerToClient_Ranked_UpdatePlayerPrevRankedScore ( entity player,
 	if ( score == SHARED_RANKED_INVALID_RANK_SCORE )
 		return
 
+	if ( !IsValid( player ))
+		return
+
 	EHI playerEHI = ToEHI( player )
 	Ranked_UpdateEHIRankScorePrevSeason( playerEHI, score )
 }
@@ -3848,6 +3851,13 @@ int function GetDemotionProtectionBuffer ( entity player )
 
 		                                                                                         
 
+		                                                                                                                    
+		                                                                                                                                                                              
+		 
+			                                                                                                        
+			        
+		 
+
 		                         
 		                                                                     
 		 
@@ -4022,7 +4032,10 @@ int function GetDemotionProtectionBuffer ( entity player )
 	                                                   
 	                                                        
 
-	                                    
+	                   
+	 
+		                                    
+	 
 
 	                                                                                                                                                              
 	                                                                                                

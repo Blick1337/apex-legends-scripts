@@ -292,13 +292,6 @@ void function OnWeaponTossPrep_WeaponWreckingBall( entity weapon, WeaponTossPrep
 
 bool function OnWeaponAttemptOffhandSwitch_ability_WreckingBall( entity weapon )
 {
-	if ( weapon.GetAmmoPerShot() < weapon.GetWeaponPrimaryClipCount() )
-		return false
-
-	entity player = weapon.GetWeaponOwner()
-	if ( player.IsPhaseShifted() )
-		return false
-
 	return true
 }
 
@@ -907,7 +900,7 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 		                                                            
 		                                                                                 
 
-		                                                                      
+		                                                                  
 		 
 			                                                                      
 			                                                                        
@@ -926,7 +919,7 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 
 		                                              
 
-		                                                                                                                                                   
+		                                                                                                                                               
 	 
 	                                                                          
 	 
@@ -998,7 +991,7 @@ void function OnWreckingBallDeployed( entity projectile, DeployableCollisionPara
 		                                                                                                       
 			                                                                
 
-		                                                                                             
+		                                                                                         
 		                                                   
 
 		                                              
@@ -1411,7 +1404,7 @@ void function WreckingBall_SpeedupHudThread( entity viewPlayer, int fxHandle, in
 		}
 	)
 
-	while ( StatusEffect_GetSeverity( viewPlayer, statusEffect ) > 0.0 )
+	while ( StatusEffect_HasSeverity( viewPlayer, statusEffect ) )
 		WaitFrame()
 }
 #endif         

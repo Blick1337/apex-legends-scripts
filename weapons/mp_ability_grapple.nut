@@ -174,7 +174,7 @@ void function DoGrappleImpactExplosion( entity player, entity grappleWeapon, ent
 	fireGrenadeParams.lagCompensated = true
 	fireGrenadeParams.useScriptOnDamage = true
 	entity nade = grappleWeapon.FireWeaponGrenade( fireGrenadeParams )
-	if ( !nade )
+	if ( !IsValid( nade ) || nade == null )
 		return
 
 	nade.SetImpactEffectTable( file.grappleExplodeImpactTable )
@@ -225,7 +225,11 @@ void function CodeCallback_OnGrappleAttach( entity player, entity hitent, vector
 
 		if ( grappleWeapon.HasMod( "survival_finite_ordnance" ) )
 		{
+                                    
+                                                                                    
+        
 			if ( GetCurrentPlaylistVarBool( "pathfinder_grapple_scaled_ammo_drain", true ) )
+         
 			{
 				thread GrappleDecreaseAmmo( player, grappleWeapon )
 			}
@@ -237,7 +241,7 @@ void function CodeCallback_OnGrappleAttach( entity player, entity hitent, vector
 		}
 
 		int flags = grappleWeapon.GetScriptFlags0()
-		if ( ! (flags & GRAPPLEFLAG_CHARGED) )
+		if ( !IsBitFlagSet( flags, GRAPPLEFLAG_CHARGED ) )
 			return
 
 		int expDamage = grappleWeapon.GetWeaponSettingInt( eWeaponVar.explosion_damage )
@@ -475,7 +479,7 @@ bool function CodeCallback_GrappleDetachFromNPC( entity player, entity npc )
 
 		                                                   
 		 
-			                                                                         
+			                                                                               
 			                  
 			                                                                           
 		 

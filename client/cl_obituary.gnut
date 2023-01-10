@@ -142,19 +142,19 @@ void function Obituary( entity attacker, string attackerClass, entity victim, in
 		if ( victim.IsPlayer() )
 		{
 			          
-			if ( !OBITUARY_ENABLED_PLAYERS )
+			if ( OBITUARY_ENABLED_PLAYERS == 0 )
 				return
 		}
 		else if ( victim.IsTitan() )
 		{
 			             
-			if ( !OBITUARY_ENABLED_NPC_TITANS )
+			if ( OBITUARY_ENABLED_NPC_TITANS == 0 )
 				return
 		}
 		else
 		{
 			      
-			if ( !OBITUARY_ENABLED_NPC )
+			if ( OBITUARY_ENABLED_NPC == 0 )
 				return
 		}
 	}
@@ -507,7 +507,9 @@ void function Obituary_Print_Control_Ping( string localizedPrint, bool isAllianc
 
 	UpdateObituaryQueue()
 }
+                              
 
+                        
                                                                                         
 void function Obituary_Print_Control_ObjectivePing( entity subjectEnt, string localizedPrint, vector altColor1 = <255,255,255>, vector altColor2 = <255,255,255>, vector altColor3 = <255,255,255>, vector backgroundColor = <255,255,255>, float backgroundAlpha = 0.0 )
 {
@@ -608,7 +610,9 @@ void function Obituary_Print_Control_ObjectivePing( entity subjectEnt, string lo
 
 	UpdateObituaryQueue()
 }
+                              
 
+                        
                                                                        
 int function Obituary_SortControlObjectivePingsByCount( entity objectivePingA, entity objectivePingB )
 {
@@ -623,7 +627,9 @@ int function Obituary_SortControlObjectivePingsByCount( entity objectivePingA, e
 
 	return 0
 }
+                              
 
+                        
                                                                                                 
 int function Obituary_SortObituaryQueueByObituaryType( ObituaryData obituaryA, ObituaryData obituaryB )
 {
@@ -642,7 +648,9 @@ int function Obituary_SortObituaryQueueByObituaryType( ObituaryData obituaryA, O
 
 	return 0
 }
+                              
 
+                        
                                                                                                                              
 bool function Obituary_IsObituaryDataForControlObjectivePing( ObituaryData obituary )
 {
@@ -661,7 +669,9 @@ bool function Obituary_IsObituaryDataForControlObjectivePing( ObituaryData obitu
 
 	return ControlObjectivePingObits.contains( obituary ) ? true : false
 }
+                              
 
+                        
                                                                                               
 entity function Obituary_GetControlObjectivePingFromObituaryDataOrNull( ObituaryData obituary )
 {
@@ -680,7 +690,9 @@ entity function Obituary_GetControlObjectivePingFromObituaryDataOrNull( Obituary
 
 	return null
 }
+                              
 
+                        
                                                                                             
 void function Obituary_CleanupControlObjectivePingData( ObituaryData obitData )
 {

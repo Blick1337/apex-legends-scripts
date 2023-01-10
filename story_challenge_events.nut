@@ -607,7 +607,7 @@ int function StoryEvent_GetChaptersProgress( entity player, ItemFlavor event )
 		int ornull requiredStartDateUnixTimeOrNull = DateTimeStringToUnixTimestamp( requiredStartDate )
 
 		if ( requiredStartDateUnixTimeOrNull == null )
-			Assert( 0, "Null value in playlist for setting 'requiredStartTime'" )
+			Assert( false, "Null value in playlist for setting 'requiredStartTime'" )
 
 		expect int( requiredStartDateUnixTimeOrNull )
 
@@ -661,7 +661,7 @@ int function StoryEvent_GetActiveChapter( entity player, ItemFlavor event )
 		int ornull requiredStartDateUnixTimeOrNull = DateTimeStringToUnixTimestamp( requiredStartDate )
 
 		if ( requiredStartDateUnixTimeOrNull == null )
-			Assert( 0, "Null value in playlist for setting 'requiredStartTime'" )
+			Assert( false, "Null value in playlist for setting 'requiredStartTime'" )
 
 		expect int( requiredStartDateUnixTimeOrNull )
 
@@ -684,7 +684,8 @@ int function StoryEvent_GetActiveChapter( entity player, ItemFlavor event )
 					if ( challengeFlavOrNull != null )
 					{
 						ItemFlavor challengeFlav = expect ItemFlavor( challengeFlavOrNull )
-						if( DoesPlayerHaveChallenge( player, challengeFlav ) ){
+						if( DoesPlayerHaveChallenge( player, challengeFlav ) )
+						{
 							if ( Challenge_IsComplete( player, challengeFlav ) )
 								completedChallenges++
 						}
@@ -739,7 +740,8 @@ bool function StoryChallengeEvent_IsPrologueCompleted( entity player, ItemFlavor
 	array chapters = StoryEvent_GetChapters( event )
 	int activeChapter = StoryEvent_GetActiveChapter( player, event )
 
-	if( chapters.len() > 0 ){
+	if( chapters.len() > 0 )
+	{
 		return StoryEvent_GetChapterPrologueCompleteBool( player,chapters[activeChapter])
 	}
 

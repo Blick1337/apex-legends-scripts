@@ -57,13 +57,5 @@ void function OnWeaponChargeEnd_ability_heal( entity weapon )
 
 bool function OnWeaponAttemptOffhandSwitch_ability_heal( entity weapon )
 {
-	entity player = weapon.GetWeaponOwner()
-
-	if ( !IsValid( player ) )
-		return false
-
-	if ( !player.IsPlayer() )
-		return false
-
 	return true
 }

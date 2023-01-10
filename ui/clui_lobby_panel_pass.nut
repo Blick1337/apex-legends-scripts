@@ -1441,7 +1441,7 @@ array<RewardGroup> function GetEmptyRewardGroups()
 		RewardGroup rewardGroup
 		rewardGroup.level = levelIdx
 		rewardGroup.rewards.append( emptyReward )
-		if ( levelIdx % 2 )
+		if ( levelIdx % 2 != 0 )
 		{
 			rewardGroup.rewards.append( emptyReward )
 		}
@@ -2627,7 +2627,7 @@ int function SortByAwardLevel( BattlePassReward a, BattlePassReward b )
 
 
 #if CLIENT
-void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int level, float scale, bool showLow, var loadscreenPreviewBox, bool shouldPlayAudioPreview, string sceneRefName, bool isNXHH = false, bool isThemedEvent = false )
+void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int level, float scale, bool showLow, var loadscreenPreviewBox, bool shouldPlayAudioPreview, string sceneRefName, bool isNXHH = false, bool isThemedEvent = false, bool isBattlepassMilestone = false, bool useMenuZoomOffset = true  )
 {
 	ItemFlavor flav = GetItemFlavorByGUID( itemFlavorGUID )
 	int itemType = ItemFlavor_GetType( flav )
@@ -2689,7 +2689,7 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 		}
 		else if ( itemType == eItemType.character_emote )
 		{
-			fileLevel.sceneRefOrigin += <0, 0, 6>
+			                                       
 			scale *= 0.58
 			showEmoteBase = false
 		}
@@ -2715,7 +2715,15 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 	{
 		if ( itemType == eItemType.emote_icon )
 		{
-			fileLevel.sceneRefOrigin += <15, 0, 30>
+			if( isNXHH )
+			{
+				fileLevel.sceneRefOrigin += <15, -50, 30>
+			}
+			else
+			{
+				fileLevel.sceneRefOrigin += <5, -50, 30>
+			}
+			
 		}
 	}
 #endif
@@ -2752,9 +2760,32 @@ void function UIToClient_ItemPresentation( SettingsAssetGUID itemFlavorGUID, int
 		
 	}
 
+                    
+                                                                  
+                             
+  
+                                                           
+
+                                                   
+   
+                                          
+                
+   
+                                                   
+   
+                                        
+   
+                                                 
+   
+                                        
+               
+   
+  
+      
+
 	fileLevel.sceneRefAngles = sceneRef.GetAngles()
 
-	ShowBattlepassItem( flav, level, scale, loadscreenPreviewBox, shouldPlayAudioPreview, showLow, showEmoteBase )
+	ShowBattlepassItem( flav, level, scale, loadscreenPreviewBox, shouldPlayAudioPreview, showLow, showEmoteBase, useMenuZoomOffset )
 
 	                                                                                
 	                                                                        
@@ -2771,7 +2802,7 @@ void function MoveLightsToSceneRef( entity sceneRef )
 	}
 }
 
-void function ShowBattlepassItem( ItemFlavor item, int level, float scale, var loadscreenPreviewBox, bool shouldPlayAudioPreview, bool showLow = false, bool showEmoteBase = true )
+void function ShowBattlepassItem( ItemFlavor item, int level, float scale, var loadscreenPreviewBox, bool shouldPlayAudioPreview, bool showLow = false, bool showEmoteBase = true, bool useMenuZoomOffset = true )
 {
 	fileLevel.loadscreenPreviewBox = loadscreenPreviewBox                                                                       
 
@@ -2855,7 +2886,7 @@ void function ShowBattlepassItem( ItemFlavor item, int level, float scale, var l
 			break
 
 		case eItemType.character_emote:
-			ShowBattlePassItem_Emote( item, scale, showEmoteBase )
+			ShowBattlePassItem_Emote( item, scale, showEmoteBase, useMenuZoomOffset )
 			break
 
 		case eItemType.quest_mission:
@@ -3286,7 +3317,7 @@ void function ShowBattlePassItem_EmoteIcon( ItemFlavor item, float scale, bool s
 }
 
 
-void function ShowBattlePassItem_Emote( ItemFlavor item, float scale, bool showBase = true )
+void function ShowBattlePassItem_Emote( ItemFlavor item, float scale, bool showBase = true, bool useMenuZoomOffset = true )
 {
 	ItemFlavor ornull char = CharacterQuip_GetCharacterFlavor( item )
 
@@ -3298,7 +3329,10 @@ void function ShowBattlePassItem_Emote( ItemFlavor item, float scale, bool showB
 	ItemFlavor skin = LoadoutSlot_GetItemFlavor( LocalClientEHI(), Loadout_CharacterSkin( char ) )
 
 	vector angles = fileLevel.sceneRefAngles
-	vector origin = fileLevel.sceneRefOrigin - CharacterClass_GetMenuZoomOffset( char )
+	vector origin = fileLevel.sceneRefOrigin
+
+	if( useMenuZoomOffset )
+		origin = origin - CharacterClass_GetMenuZoomOffset( char )
 
 	entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", origin, angles )
 	mover.MakeSafeForUIScriptHack()
@@ -3647,7 +3681,7 @@ void function ShowBattlePassItem_StarReward( ItemFlavor item, float scale )
 
 void function ShowBattlePassItem_Voucher( ItemFlavor item, float scale )
 {
-	if ( Voucher_GetEffectBattlepassStars( item ) )
+	if ( Voucher_GetEffectBattlepassStars( item ) > 0 )
 		ShowBattlePassItem_StarReward( item, scale )
 	else
 		ShowBattlePassItem_XPBoost( item, scale )

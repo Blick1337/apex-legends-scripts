@@ -105,7 +105,7 @@ table function GetRefPosition( entity reference )
 	int attach_id
 	attach_id = reference.LookupAttachment( "REF" )
 
-	if ( attach_id )
+	if ( attach_id != 0 )
 	{
 		position.origin <- reference.GetAttachmentOrigin( attach_id )
 		position.angles <- reference.GetAttachmentAngles( attach_id )

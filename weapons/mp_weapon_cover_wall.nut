@@ -263,8 +263,6 @@ void function OnWeaponDeactivate_weapon_cover_wall( entity weapon )
 bool function OnWeaponAttemptOffhandSwitch_weapon_cover_wall( entity weapon )
 {
 	entity player = weapon.GetWeaponOwner()
-	if ( player.IsZiplining() )
-		return false
 
 	entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 	entity ultWeapon = player.GetOffhandWeapon( OFFHAND_ULTIMATE )
@@ -970,9 +968,9 @@ void function PlaceWallWithoutHolstering( entity player )
 	                                                              
 
 	                                  
-	                                                           
+	                                                                                         
 	 
-		                                 
+		                                                
 		 
 			                                                                               
 
@@ -995,7 +993,7 @@ void function PlaceWallWithoutHolstering( entity player )
 			 
 		 
 
-		                             
+		                                            
 		 
 			                                                             
 			                                                         
@@ -1013,11 +1011,6 @@ void function PlaceWallWithoutHolstering( entity player )
 			                                                     
 		 
 	 
-
-                 
-		                               
-			                                                                            
-       
  
 
                                                                          
@@ -1065,7 +1058,7 @@ void function PlaceWallWithoutHolstering( entity player )
 		 
 	 
 
-	                                                          
+	                                                                    
 	 
 		                                                                                                                                 
 			                                                                                            
@@ -1074,7 +1067,7 @@ void function PlaceWallWithoutHolstering( entity player )
 
 	  	                      
 	          
-		                                   
+		                                             
 		 
 			                                   
 			                       
@@ -1134,7 +1127,7 @@ void function PlaceWallWithoutHolstering( entity player )
 	                  
 		      
 
-	                                                                   
+	                                                                                  
 	 
 		                                                                      
 			                  
@@ -1160,7 +1153,7 @@ void function PlaceWallWithoutHolstering( entity player )
 
 	  	                      
 	          
-		                                                                    
+		                                                                              
 		 
 			                                   
 			                       
@@ -1180,7 +1173,7 @@ void function PlaceWallWithoutHolstering( entity player )
 
 	                                       
 
-	                                                              
+	                                                                             
 	 
 		                                                                            
 			                                                                                                                                                                                                                 
@@ -1373,20 +1366,11 @@ void function CoverWall_OnUseWall( entity wallProxy, entity player, int useFlags
 {
 	if ( IsControllerModeActive() )
 	{
-		if ( ! ( useFlags & USE_INPUT_LONG ) )
+		if ( !IsBitFlagSet( useFlags, USE_INPUT_LONG ) )
 		{
 			thread IssueReloadCommand( player )
 		}
 	}
-}
-
-void function IssueReloadCommand( entity player )
-{
-	EndSignal( player, "OnDestroy" )
-
-	player.ClientCommand( "+reload" )
-	WaitFrame()
-	player.ClientCommand( "-reload" )
 }
 
 void function CoverWall_CreateHUDMarker( entity wall )

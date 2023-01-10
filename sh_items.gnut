@@ -10,8 +10,6 @@ global function IsValidItemFlavorGUID
 global function GetItemFlavorByGUID
 global function ConvertItemFlavorGUIDStringToGUID
 global function GetItemFlavorOrNullByGUID
-global function IsValidItemFlavorNetworkIndex
-global function GetItemFlavorByNetworkIndex
 global function IsValidItemFlavorSettingsAsset
 global function GetItemFlavorByAsset
 global function IsValidItemFlavorType
@@ -20,7 +18,6 @@ global function GetAllItemFlavors
 global function DEV_IsValidItemFlavorHumanReadableRef_Slow
 global function DEV_GetItemFlavorByHumanReadableRef_Slow
 #endif
-global function GetAllItemFlavorsNetworked
 global function GetAllItemFlavorsCosmetic
 global function GetAllLegendaryItems
 global function GetAllItemFlavorsOfType
@@ -33,7 +30,6 @@ global function DEV_ItemFlavor_GetCleanedAssetPath
 #endif
 global function ItemFlavor_GetHumanReadableRefForPIN_Slow
 global function ItemFlavor_GetCleanDownloadAssetPath_Slow
-global function ItemFlavor_GetNetworkIndex
 global function ItemFlavor_GetType
 global function ItemFlavor_GetAsset
 global function ItemFlavor_GetSettingsBlock
@@ -125,6 +121,16 @@ global function DEV_PrintAllGRXRefs
 #endif
 
 global const bool DEBUG_ITEM_FLAVOR_REGISTRATION = false
+
+global const string BULLET_AMMO = "bullet"
+global const string HIGHCAL_AMMO = "highcal"
+global const string SHOTGUN_AMMO = "shotgun"
+global const string SPECIAL_AMMO = "special"
+                     
+                                           
+      
+global const string ARROWS_AMMO = "arrows"
+global const string SNIPER_AMMO = "sniper"
 
                       
                       
@@ -265,7 +271,7 @@ table<int, int> itemTypeUICategoryMap = {
 	[eItemType.emote_icon] = eItemTypeUICategory.CHARACTER,
 	[eItemType.character_emote] = eItemTypeUICategory.CHARACTER
                 
-, [eItemType.sticker] = eItemTypeUICategory.CHARACTER
+, [eItemType.sticker] = eItemTypeUICategory.MISC_LOADOUT
       
                        
 , [eItemType.quest_comic] =eItemTypeUICategory.NON_EQUIPPABLE
@@ -334,11 +340,10 @@ global enum eItemFlavorPlaylistAvailability
 
 global struct ItemFlavor
 {
-	SettingsAssetGUID guid = -1                                                                               
+	SettingsAssetGUID guid      = ASSET_SETTINGS_UNIQUE_ID_INVALID                                                                               
 	int               typeIndex = -1                                                     
-	int               networkIndex = -1                                                                               
-	int               grxMode = -1                                        
-	int               grxIndex = -1                                                               
+	int               grxMode   = -1                                        
+	int               grxIndex  = -1                                                               
 
 	array<int> ornull grxOwnershipTargettedBy = null                                                                                                
 	table<string, string> ornull metaData = null                                                                                                                                                                                                                  
@@ -393,7 +398,6 @@ struct FileStruct_LifetimeLevel
 	#if DEV
 	array<ItemFlavor>                     itemFlavorListAll                                                                                        
 	#endif
-	array<ItemFlavor>					  itemFlavorListNetworked
 	array<ItemFlavor>					  itemFlavorListCosmetic
 	table<SettingsAssetGUID, ItemFlavor>  guidItemFlavorMap
 
@@ -421,8 +425,8 @@ struct
 
 global const array< string > HIDDEN_CHARACTER_REFS = [ "character_dummie", "character_random", "SAID01897196488", "SAID00996325304" ]
 
+global const string GUID_SAMPLE_STRING = "SAID00000000123"
 const string GUID_FORMAT_STRING = "SAID%011d"
-const string GUID_SAMPLE_STRING = "SAID00000000123"
 const string GUID_PREFIX = "SAID"
 
 const string PLAYLIST_AVAILABILITY_META_DATA_KEY = "playlist_availability"
@@ -654,23 +658,6 @@ ItemFlavor ornull function GetItemFlavorOrNullByGUID( SettingsAssetGUID guid, in
 }
 
 
-bool function IsValidItemFlavorNetworkIndex( int index, int validationBehavior = eValidation.DONT_ASSERT )
-{
-	bool good = fileLevel.itemFlavorListNetworked.isvalidindex( index - 1 )
-
-	Assert( good || validationBehavior != eValidation.ASSERT, "Unknown item flavor network index: " + index + " (valid range is 1-" + fileLevel.itemFlavorListNetworked.len() + ")" )
-	return good
-}
-
-
-ItemFlavor function GetItemFlavorByNetworkIndex( int index )
-{
-	Assert( IsValidItemFlavorNetworkIndex( index, eValidation.ASSERT ) )
-
-	return fileLevel.itemFlavorListNetworked[ index - 1 ]
-}
-
-
 bool function IsValidItemFlavorSettingsAsset( asset itemAsset, int validationBehavior = eValidation.DONT_ASSERT )
 {
 	if ( itemAsset == $"" )
@@ -719,12 +706,6 @@ array<ItemFlavor> function GetAllItemFlavors()
 }
 #endif
 
-array<ItemFlavor> function GetAllItemFlavorsNetworked()
-{
-	Assert( fileLevel.isItemRegistrationFinished )
-	return fileLevel.itemFlavorListNetworked                                       
-}
-
 array<ItemFlavor> function GetAllItemFlavorsCosmetic()
 {
 	Assert( fileLevel.isItemRegistrationFinished )
@@ -742,9 +723,9 @@ array<ItemFlavor> function GetAllItemFlavorsOfType( int typeIndex )
 
 bool function IsItemFlavorStructValid( ItemFlavor flavor, int validationBehavior = eValidation.DONT_ASSERT )
 {
-	Assert( validationBehavior != eValidation.ASSERT || flavor.networkIndex != -1, "ItemFlavor struct was not initialized!" )
+	Assert( validationBehavior != eValidation.ASSERT || flavor.guid != ASSET_SETTINGS_UNIQUE_ID_INVALID, "ItemFlavor struct was not initialized!" )
 	Assert( validationBehavior != eValidation.ASSERT || GetSettingsAssetForUniqueId( flavor.guid ) != $"", "ItemFlavor struct does not point to a valid Settings asset" )
-	return ( flavor.networkIndex != -1 && GetSettingsAssetForUniqueId( flavor.guid ) != $"" )
+	return ( flavor.guid != ASSET_SETTINGS_UNIQUE_ID_INVALID && GetSettingsAssetForUniqueId( flavor.guid ) != $"" )
 }
 
 
@@ -767,14 +748,6 @@ string function ItemFlavor_GetGUIDString( ItemFlavor flavor )
 string function ConvertAssetIDToGUIDString( int assetID )
 {
 	return format( GUID_FORMAT_STRING, assetID )
-}
-
-
-int function ItemFlavor_GetNetworkIndex( ItemFlavor flavor )
-{
-	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
-	Assert( IsItemFlavorTypeNetworked( ItemFlavor_GetType( flavor ) ) )
-	return flavor.networkIndex
 }
 
 
@@ -969,6 +942,9 @@ string function ItemFlavor_GetRewardShortDescription( ItemFlavor flav )
 
 		case eItemType.quest_comic:
 			return Localize( ItemFlavor_GetTypeName( flav ) )
+
+		case eItemType.melee_skin:
+			return Localize( "#itemtype_melee_skin_NAME" )
 	}
 
 	return ""
@@ -1244,7 +1220,7 @@ string function ItemQuality_GetQualityName( int quality )
                        
                        
                        
-#if 1
+#if true
 string function DEV_DescItemFlavor( ItemFlavor ornull flav, bool short = false )
 {
 	if ( flav == null )
@@ -1444,7 +1420,7 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 
 	string guidString = ConvertAssetIDToGUIDString( GetUniqueIdForSettingsAsset( settingsAsset ) )
 
-	Assert( RegexpFindAll( humanReadableRef, "\\W" ).len() == 0, "Weird characters in item flavor human readable ref: " + humanReadableRef + " (only alphanumeric and underscore allowed)" )
+	Assert( humanReadableRef == sanitize( humanReadableRef ), "Weird characters in item flavor human readable ref: " + humanReadableRef + " (only alphanumeric and underscore allowed)" )
 
 	ItemFlavor flavor
 
@@ -1519,17 +1495,6 @@ ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAs
 	Assert( !(flavor.guid in fileLevel.guidItemFlavorMap),
 		format( "Duplicate item GUID: %d (%s and %s)", flavor.guid, string(ItemFlavor_GetAsset( fileLevel.guidItemFlavorMap[flavor.guid] )), string(settingsAsset) ) )
 	fileLevel.guidItemFlavorMap[flavor.guid] <- flavor
-
-	Assert( IsItemFlavorTypeNetworked( flavor.typeIndex ) == GetGlobalSettingsBool( settingsAsset, "isNetworked" ), "Script has a different opinion about what's networked than code_root.rson does. This is REALLY bad." )
-	if ( GetGlobalSettingsBool( settingsAsset, "isNetworked" ) )
-	{
-		flavor.networkIndex = (1 + fileLevel.itemFlavorListNetworked.len())
-		fileLevel.itemFlavorListNetworked.append( flavor )
-	}
-	else
-	{
-		flavor.networkIndex = 0               
-	}
 
 	#if DEV
 		fileLevel.itemFlavorListAll.append( flavor )
@@ -2063,27 +2028,6 @@ array<ItemFlavor> function FilterItemFlavorsByType( array<ItemFlavor> list, int 
 	return results
 }
 
-bool function IsItemFlavorTypeNetworked( int typeFilter )
-{
-	switch( typeFilter )
-	{
-		case eItemType.character:
-		case eItemType.character_skin:
-		case eItemType.character_emote:
-		case eItemType.weapon_skin:
-		case eItemType.weapon_charm:
-                 
-		case eItemType.sticker:
-       
-			return true
-
-		default:
-			return false
-	}
-
-	unreachable
-}
-
 bool function IsItemFlavorTypeCosmetic( int typeFilter )
 {
 	                                                                            
@@ -2262,13 +2206,8 @@ bool function IsCalEvent( int itemType )
 		                                                             
 		                                                        
 		 
-			                                       
-			                                             
-				                                                             
-
 			       
 				                                        
-				             
 				                            
 			 
 		 

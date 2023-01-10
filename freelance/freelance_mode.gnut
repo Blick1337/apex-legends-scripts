@@ -1668,7 +1668,7 @@ int function CountPlayersAttachedTo( entity ent )
 	                             
 	                                  
 	                                     
-	          
+	              
 	 
 		                                         
 		                                                                                            
@@ -1684,7 +1684,7 @@ int function CountPlayersAttachedTo( entity ent )
  
 	                             
 	                                  
-	          
+	              
 	 
 		                                     
 		                                                                                             

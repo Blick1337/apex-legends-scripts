@@ -391,7 +391,7 @@ void function ExplosiveHoldDoor_OnUse( entity panel, entity player, int useInput
 
 		if ( !ExplosiveHold_IsOpen( panel ) )
 		{
-			if ( useInputFlags & USE_INPUT_LONG )
+			if ( IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 			{
 				if ( !ExplosiveHold_PlayerHasGrenadeInInventory( player ) )
 				{
@@ -1010,7 +1010,7 @@ bool function ExplosiveHold_IsOpen( entity explosiveHoldEnt )
 	bool isOpen = false
 
 	if ( IsValid( explosiveHold ) )
-		isOpen = StatusEffect_GetSeverity( explosiveHold, eStatusEffect.hold_is_open ) > 0.0
+		isOpen = StatusEffect_HasSeverity( explosiveHold, eStatusEffect.hold_is_open )
 
 	return isOpen
 }
@@ -1117,7 +1117,8 @@ entity function GetExplosiveHoldProxyForLoot( entity lootEnt )
 
                                                                 
  
-	                                                                                                      
+	                                                                                                     
+	 
 		                                
 			        
 

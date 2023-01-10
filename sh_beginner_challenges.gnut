@@ -1,0 +1,183 @@
+global function BeginnerChallenges_Init
+
+global function BeginnerChallenges_IsActive
+
+global function BeginnerChallenges_GetChallengeList
+global function BeginnerChallenges_GetNextChallenge
+global function BeginnerChallenges_GetChallengeByIndex
+global function BeginnerChallenges_GetChallengeIndex
+global function BeginnerChallenges_GetBeginnerChallengesCount
+global function BeginnerChallenges_PlayerHasCompletionBadge
+
+global function BeginnerChallenges_GetNextChallengeForPlayer
+global function BeginnerChallenges_GetNextChallengeIndexForPlayer
+global function BeginnerChallenges_GetPlayerCurrentChallengeIndex
+global function BeginnerChallenges_GetPlayerCompletedChallengeCount
+
+#if SERVER
+                                                               
+#endif
+
+const asset BEGINNER_CHALLENGES_REWARD_BADGE = $"settings/itemflav/gcard_badge/account/beginner_challenge.rpak"
+
+struct {
+	array< ItemFlavor > beginnerChallenges
+} file
+
+void function BeginnerChallenges_Init()
+{
+	AddCallback_RegisterRootItemFlavors( OnRegisterRootItemFlavors )
+}
+
+bool function BeginnerChallenges_IsActive()
+{
+	return GetCurrentPlaylistVarBool( "beginner_challenges_active", true )
+}
+
+
+void function OnRegisterRootItemFlavors()
+{
+	if( !BeginnerChallenges_IsActive() )
+		return
+
+	file.beginnerChallenges.clear()
+
+	foreach ( asset beginnerChallenge in GetBaseItemFlavorsFromArray( "beginnerChallenges" ) )
+	{
+		ItemFlavor newChallenge = expect ItemFlavor(RegisterChallengeFromAsset( beginnerChallenge ))
+
+		Assert( ItemFlavor_GetType( newChallenge ) == eItemType.challenge && Challenge_GetTimeSpanKind( newChallenge ) == eChallengeTimeSpanKind.BEGINNER )
+
+		file.beginnerChallenges.append( newChallenge )
+	}
+}
+
+array< ItemFlavor > function BeginnerChallenges_GetChallengeList()
+{
+	return file.beginnerChallenges
+}
+
+ItemFlavor ornull function BeginnerChallenges_GetNextChallenge( ItemFlavor challenge )
+{
+	Assert( file.beginnerChallenges.contains( challenge ) )
+
+	int challengeIndex = file.beginnerChallenges.find( challenge )
+	if ( challengeIndex == ( file.beginnerChallenges.len() - 1 ) )
+		return null
+
+	return file.beginnerChallenges[ challengeIndex + 1 ]
+}
+
+ItemFlavor function BeginnerChallenges_GetChallengeByIndex( int index )
+{
+	Assert( index >= 0 && index < file.beginnerChallenges.len() )
+	return file.beginnerChallenges[ index ]
+}
+
+int function BeginnerChallenges_GetChallengeIndex( ItemFlavor challenge )
+{
+	Assert( file.beginnerChallenges.contains( challenge ) )
+	return file.beginnerChallenges.find( challenge )
+}
+
+int function BeginnerChallenges_GetBeginnerChallengesCount()
+{
+	return file.beginnerChallenges.len()
+}
+
+ItemFlavor function BeginnerChallenges_GetCompletionBadgeItemFlavor()
+{
+	ItemFlavor beginnerChallengeBadge = GetItemFlavorByAsset( BEGINNER_CHALLENGES_REWARD_BADGE )
+
+	Assert( IsItemFlavorStructValid( beginnerChallengeBadge, eValidation.ASSERT ) )
+	Assert( ItemFlavor_GetGRXMode( beginnerChallengeBadge ) == eItemFlavorGRXMode.REGULAR )
+
+	return beginnerChallengeBadge
+}
+
+bool function BeginnerChallenges_PlayerHasCompletionBadge( entity player )
+{
+	Assert ( GRX_IsInventoryReady( player ) )
+
+	return GRX_IsItemOwnedByPlayer( BeginnerChallenges_GetCompletionBadgeItemFlavor(), player )
+}
+
+ItemFlavor ornull function BeginnerChallenges_GetNextChallengeForPlayer( entity player )
+{
+	Assert( IsValid( player ) )
+
+	int nextChallengeIndex = BeginnerChallenges_GetNextChallengeIndexForPlayer( player )
+	if( nextChallengeIndex < 0 )
+		return null
+
+	return file.beginnerChallenges[ nextChallengeIndex ]
+}
+
+int function BeginnerChallenges_GetNextChallengeIndexForPlayer( entity player )
+{
+	Assert( IsValid( player ) )
+
+	int challengeIndex = BeginnerChallenges_GetPlayerCurrentChallengeIndex( player )
+
+	if( challengeIndex < 0 )
+		return challengeIndex
+
+	if ( challengeIndex == ( file.beginnerChallenges.len() - 1 ) )
+		return -1
+
+	return challengeIndex + 1
+}
+
+int function BeginnerChallenges_GetPlayerCurrentChallengeIndex( entity player )
+{
+	Assert( IsValid( player ) )
+
+	for( int i = 0; i < file.beginnerChallenges.len(); ++i )
+	{
+		if ( !Challenge_IsAssigned( player, file.beginnerChallenges[i] ) )
+			continue
+
+		if( !Challenge_IsComplete(player, file.beginnerChallenges[i] ) )
+			return i;
+	}
+
+	return -1;
+}
+
+
+int function BeginnerChallenges_GetPlayerCompletedChallengeCount( entity player )
+{
+	Assert( IsValid( player ) )
+
+	int count = 0;
+	for( int i = 0; i < file.beginnerChallenges.len(); ++i )
+	{
+		if ( !Challenge_IsAssigned( player, file.beginnerChallenges[i] ) )
+			continue
+
+		if( Challenge_IsComplete(player, file.beginnerChallenges[i] ) )
+			count++;
+	}
+	return count;
+}
+
+#if SERVER
+                                                                              
+ 
+	                                                
+
+	                                    
+			                                                        
+			                                                                                                                    
+		      
+
+	                                                                              
+
+	                      
+	                                                          
+	                       
+	                                            
+
+	                                            
+ 
+#endif

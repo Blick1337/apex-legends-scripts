@@ -113,6 +113,9 @@ void function OnInspectKeyPressed( entity localPlayer )
 	if ( !weapon.Anim_HasActivity( "ACT_VM_WEAPON_INSPECT" ) )
 		return
 
+	if(IsPlayerInCryptoDroneCameraView(localPlayer ) )
+		return
+	
 	  
 		                                                                                                             
 		                                                    

@@ -8,6 +8,7 @@ global function DeactivateHeartbeatSensor
 global function GetHeartbeatSensorRange
 #if CLIENT
 global function InitializeHeartbeatSensorUI
+global function GeneratePlayersInViewInfo
 #endif         
 
 #if SERVER
@@ -126,6 +127,7 @@ void function PassiveHeartbeatSensor_Init()
 	PrecacheWeapon( "mp_ability_heartbeat_sensor" )
 	RegisterSignal( "DestroyHeartbeatSensor" )                                        
 	RegisterSignal( "EndHeartbeatSensorUI" )               
+	RegisterSignal( "DeactivateHeartbeatSensor" )
 
 	file.heartbeatSensorRange = GetHeartbeatSensorRange()
 	file.heartbeatSensorRangeSqr = pow( file.heartbeatSensorRange, 2 )
@@ -341,6 +343,7 @@ void function OnWeaponActivate_ability_heartbeat_sensor( entity weapon )
  
                                
                                  
+                                                 
 
                                                                      
                             
@@ -371,12 +374,9 @@ void function OnWeaponDeactivate_ability_heartbeat_sensor( entity weapon )
 
 bool function OnWeaponAttemptOffhandSwitch_ability_heartbeat_sensor( entity weapon )
 {
-	entity player = weapon.GetWeaponOwner()
+	entity player = weapon.GetOwner()
 
-	if ( !IsValid( player ) )
-		return false
-
-	if ( !player.IsPlayer() )
+	if( !IsValid( player ) )
 		return false
 
 	return PlayerHasPassive( player, ePassives.PAS_PARIAH )
@@ -411,7 +411,7 @@ void function HeartbeatSensorTogglePressed( entity player )
 	if ( !IsValid( activeWeapon ) )
 		return
 
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.silenced ) > 0 )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.silenced ) )
 		return
 
 	if ( activeWeapon.IsWeaponAdsButtonPressed() || activeWeapon.IsWeaponInAds() )
@@ -944,6 +944,8 @@ void function ShowHeartbeatSensorRange_Thread( entity player )
 
 void function DeactivateHeartbeatSensor( entity player, bool fromTac )
 {
+	player.Signal("DeactivateHeartbeatSensor")
+
 	#if SERVER
 		                                          
 	#endif         
@@ -1354,7 +1356,9 @@ void function DoVictimHeartbeat_Thread( entity player, entity victim, float watc
 
 				UpdateDataForHeartseekerRadarWaveformRadial( player, victim, false, false )
 				beatSoundTime = HEARTBEAT_SOUND_BAR_WAIT_TIME
-			}else if ( victim in file.waveformRadialValueTable ){
+			}
+			else if ( victim in file.waveformRadialValueTable )
+			{
 				delete file.waveformRadialValueTable[victim]
 			}
 		}
@@ -1517,7 +1521,7 @@ void function CL_HeartSeekerRUIThread( entity player, entity weapon )
 
 	while ( true )
 	{
-		bool isSilenced = ( StatusEffect_GetSeverity( player, eStatusEffect.silenced ) > 0 )
+		bool isSilenced = ( StatusEffect_HasSeverity( player, eStatusEffect.silenced ) )
 		RuiSetBool( file.heartbeatSensorRui, "isSilenced", isSilenced )
 
 		bool targetsInRange = false
@@ -1548,7 +1552,8 @@ void function CL_HeartSeekerRUIThread( entity player, entity weapon )
 				RuiSetBool( file.heartbeatSensorRui, "target" + (j + 1) + "Locked", false )
 			}
 		}
-		if(lastTargetsInRange != targetsInRange){
+		if(lastTargetsInRange != targetsInRange)
+		{
 			lastTargetsInRange = targetsInRange
 			Minimap_SetVisiblityConeColor((targetsInRange)?GetKeyColor( COLORID_HUD_SEER_IN_RANGE ): GetKeyColor( COLORID_HUD_SEER_DEFAULT ))
 		}

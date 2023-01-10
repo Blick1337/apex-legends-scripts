@@ -32,11 +32,10 @@ global function GetBinkFromBinkMap
 global function GetEmblemColor
 global function GetPlaylistRotationNextTime
 global function GetPlaylistRotationNextTimeFormatedString
-global function GetPlaylistsInCurrentRotationGroup
-global function GetPanelImageKeyForCurrentRotationGroup
-global function GetMapDisplayNameForCurrentRotationGroup
+global function GetPlaylistsInRotation
+global function GetPanelImageKeyForUISlot
+global function GetMapDisplayNameForUISlot
 global function GetCurrentPlaylistInUiSlot
-global function PlaylistHasRotationGroup
 global function GetDefaultPlaylist
 global function PartyHasPlaylistAccountLevelRequired
 
@@ -65,7 +64,7 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 	solo = $"rui/menu/gamemode/solo_iron_crown",
 	duos = $"rui/menu/gamemode/duos_v2",
                                 
-                                                         
+		duos_valentines = $"rui/menu/gamemode/duos_valentines",
        
 	trios = $"rui/menu/gamemode/trios",
 
@@ -171,6 +170,11 @@ global const table<string, asset> GAMEMODE_IMAGE_MAP = {
 		gungame_estates_night = $"rui/menu/gamemode/playlist_bg_gungame_estates_night",
 		gungame_the_wall = $"rui/menu/gamemode/playlist_bg_gungame_the_wall",
        
+                                   
+		hardcore_olympus = $"rui/menu/gamemode/playlist_bg_hardcore_olympus",
+		hardcore_divided_moon = $"rui/menu/gamemode/playlist_bg_hardcore_divided_moon",
+		hardcore_worlds_edge = $"rui/menu/gamemode/playlist_bg_hardcore_worlds_edge",
+       
 }
 
 global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
@@ -189,7 +193,7 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 	solo = $"rui/menu/gamemode/solo_iron_crown",
 	duos = $"rui/menu/gamemode/playlist_bg_sq_duos",
                                 
-                                                                        
+		duos_valentines = $"rui/menu/gamemode/playlist_bg_sq_duos_valentines",
        
 
 	trios = $"rui/menu/gamemode/playlist_bg_sq_trios",
@@ -295,6 +299,12 @@ global const table<string, asset> GAMEMODE_THUMBNAIL_IMAGE_MAP = {
 		gungame_fragment_east = $"rui/menu/gamemode/playlist_bg_sq_gungame_fragment_east",
 		gungame_estates_night = $"rui/menu/gamemode/playlist_bg_sq_gungame_estates_night",
 		gungame_the_wall = $"rui/menu/gamemode/playlist_bg_sq_gungame_the_wall",
+       
+
+                                   
+		hardcore_olympus = $"rui/menu/gamemode/playlist_bg_sq_hardcore_olympus",
+		hardcore_divided_moon = $"rui/menu/gamemode/playlist_bg_sq_hardcore_divided_moon",
+		hardcore_worlds_edge = $"rui/menu/gamemode/playlist_bg_sq_hardcore_worlds_edge",
        
 }
 
@@ -777,14 +787,21 @@ array<string> function GetPlaylistModNames()
 
 array<string> function GetVisiblePlaylistNames( bool isPrivateMatchQuery = false )
 {
-		bool doOptIn = false
-		#if UI
-			if ( ShouldDisplayOptInOptions() && IsOptInEnabled() )
-				doOptIn = true
-		#endif
+	bool shouldDisplayOptInOptions = false
+	bool shouldCache = true
+	#if UI
+		bool isOptInServer = ShouldDisplayOptInOptions()
+		if ( isOptInServer && IsOptInEnabled() )
+			shouldDisplayOptInOptions = true
 
-		if ( !doOptIn && ( ( GetUnixTimestamp() - file.lastCheckedTime ) < GetCurrentPlaylistVarInt( "visible_playlist_refresh_time_sec", 10 ) ) )
-			return file.cachedPlaylistNames
+		if ( isOptInServer )
+			shouldCache = false
+	#endif      
+
+	                                                          
+	int timeSinceLastChecked = ( GetUnixTimestamp() - file.lastCheckedTime )
+	if ( timeSinceLastChecked >= 0 && timeSinceLastChecked < GetCurrentPlaylistVarInt( "visible_playlist_refresh_time_sec", shouldCache ? 10 : 1 ) )
+		return file.cachedPlaylistNames
 
 	file.lastCheckedTime = GetUnixTimestamp()
 
@@ -792,12 +809,6 @@ array<string> function GetVisiblePlaylistNames( bool isPrivateMatchQuery = false
 		Warning( "Playlist count mismatch: cache (%d) != actual (%d)", file.cachedPlaylistArray.len(), GetPlaylistCount() )
 
 	string forcedVisiblePlaylistsString = GetConVarString( "match_visiblePlaylists" )
-	string playlistRotationGroup = GetPlaylistRotationGroup()
-	bool shouldDisplayOptInOptions = false
-	#if UI
-		if ( ShouldDisplayOptInOptions() && IsOptInEnabled() )
-			shouldDisplayOptInOptions = true
-	#endif      
 
 	array<string> forcedVisiblePlaylists = split( forcedVisiblePlaylistsString, WHITESPACE_CHARACTERS )
 
@@ -813,7 +824,8 @@ array<string> function GetVisiblePlaylistNames( bool isPrivateMatchQuery = false
 			continue
 		}
 
-		if ( !GetPlaylistVarBool( playlistData.name, "visible", false ) )
+		bool inActiveRotation = IsPlaylistInActiveRotation( playlistData.name )
+		if ( !GetPlaylistVarBool( playlistData.name, "visible", false ) && !inActiveRotation )
 			continue
 		if ( GetPlaylistVarBool( playlistData.name, "hub_only", false ) )
 			continue
@@ -822,16 +834,15 @@ array<string> function GetVisiblePlaylistNames( bool isPrivateMatchQuery = false
 		if ( GetPlaylistVarBool( playlistData.name, "private_match", false )  != isPrivateMatchQuery )
 			continue
 
-		string cachedPlaylistRotationGroup = GetPlaylistVarString( playlistData.name, "playlist_rotation_group", "" )
-		if ( cachedPlaylistRotationGroup != playlistRotationGroup && cachedPlaylistRotationGroup != "" )
-			continue
-
 		if ( GetPlaylistVarBool( playlistData.name, "opt_in_only", false ) )
 		{
 			if ( shouldDisplayOptInOptions )
 				optInList.append( playlistData.name )
 			continue
 		}
+		
+		if ( IsPlaylistBeingRotated( playlistData.name ) && !inActiveRotation )
+			continue
 
 		if ( Playlist_ShouldBeHiddenForScheduleBlocks( playlistData.name ) )
 			continue
@@ -965,7 +976,7 @@ const DEV_SecondsPerRotation = 3600
 #if SERVER || CLIENT || UI
 string function GetPlaylistRotationGroup()
 {
-	string rotationGroup = GetConVarString( "playlist_rotationGroup" )
+	string rotationGroup = GetDefaultPlaylistRotationGroup()
 	#if DEV
 		if ( rotationGroup == "" )
 		{
@@ -981,11 +992,9 @@ string function GetPlaylistRotationGroup()
 }
 #endif
 #if UI
-int function GetPlaylistRotationNextTime()
+int function GetPlaylistRotationNextTime( string rotationName = "" )
 {
-	                                                                                                                                                               
-	                                                                         
-	int nextTime = int( GetConVarString( "playlist_rotationNextTime" ) )
+	int nextTime = GetNamedPlaylistRotationNextTime( rotationName )
 
 	#if DEV
 		if ( nextTime == 0 )
@@ -996,12 +1005,14 @@ int function GetPlaylistRotationNextTime()
 }
 #endif
 #if UI
-string function GetPlaylistRotationNextTimeFormatedString( int seconds = -1 )
+string function GetPlaylistRotationNextTimeFormatedString( int seconds = -1, string rotationName = "" )
 {
-	DisplayTime dt = SecondsToDHMS( GetPlaylistRotationNextTime() - GetUnixTimestamp() - 1 )
+	DisplayTime dt
 
-	if(seconds > -1)
+	if( seconds > -1 )
 		dt = SecondsToDHMS( seconds - 1 )
+	else
+		dt = SecondsToDHMS( GetPlaylistRotationNextTime( rotationName ) - GetUnixTimestamp() - 1 )
 
 	string nextTimeStr
 
@@ -1032,18 +1043,16 @@ string function GetPlaylistRotationNextTimeFormatedString( int seconds = -1 )
 }
 #endif
 #if UI
-array<string> function GetPlaylistsInCurrentRotationGroup()
+array<string> function GetPlaylistsInRotation()
 {
-	string playlistRotationGroup = GetPlaylistRotationGroup()
 	array<string> visiblePlaylists = GetVisiblePlaylistNames()
-	array<string> list
 
+	array<string> list
 	for ( int i = 0; i < visiblePlaylists.len(); i++ )
 	{
 		string playlistName = visiblePlaylists[i]
-		string rotationGroup = GetPlaylistVarString( playlistName, "playlist_rotation_group", "" )
 
-		if ( rotationGroup == playlistRotationGroup )
+		if ( IsPlaylistInActiveRotation( playlistName ) )
 			list.append( playlistName )
 	}
 
@@ -1051,32 +1060,32 @@ array<string> function GetPlaylistsInCurrentRotationGroup()
 }
 #endif
 #if UI
-string function GetPanelImageKeyForCurrentRotationGroup()
+string function GetPanelImageKeyForUISlot( string uiSlot )
 {
-	array<string> list = GetPlaylistsInCurrentRotationGroup()
-	if ( !list.len() )
+	string playlist = GetCurrentPlaylistFromRotationAndUISlot( "", uiSlot )
+	if ( playlist == "" )
 		return ""
 
-	int mapIdx = GetPlaylistActiveMapRotationIndex( list[0] )
-	string panelImageKey = GetPlaylistMapVarString( list[0], mapIdx, "panel_image", "" )
+	int mapIdx = GetPlaylistActiveMapRotationIndex( playlist )
+	string panelImageKey = GetPlaylistMapVarString( playlist, mapIdx, "panel_image", "" )
 	return panelImageKey
 }
 #endif
 #if UI
-string function GetMapDisplayNameForCurrentRotationGroup()
+string function GetMapDisplayNameForUISlot( string uiSlot )
 {
-	array<string> list = GetPlaylistsInCurrentRotationGroup()
-	if ( !list.len() )
+	string playlist = GetCurrentPlaylistFromRotationAndUISlot( "", uiSlot )
+	if ( playlist == "" )
 		return ""
 
-	int mapIdx = GetPlaylistActiveMapRotationIndex( list[0] )
-	return GetPlaylistMapVarString( list[0], mapIdx, "map_name", "bug this!" )
+	int mapIdx = GetPlaylistActiveMapRotationIndex( playlist )
+	return GetPlaylistMapVarString( playlist, mapIdx, "map_name", "bug this!" )
 }
 #endif
 #if UI
 string function GetCurrentPlaylistInUiSlot( string uiSlot )
 {
-	array<string> playlistNames = GetPlaylistsInCurrentRotationGroup()
+	array<string> playlistNames = GetPlaylistsInRotation()
 	foreach( playlist in playlistNames )
 	{
 		if ( GetPlaylistVarString( playlist, "ui_slot", "" ) == uiSlot )
@@ -1084,13 +1093,6 @@ string function GetCurrentPlaylistInUiSlot( string uiSlot )
 	}
 
 	return ""
-}
-#endif
-#if UI
-bool function PlaylistHasRotationGroup( string playlistName )
-{
-	string rotationGroup = GetPlaylistVarString( playlistName, "playlist_rotation_group", "" )
-	return rotationGroup != ""
 }
 #endif
 #if UI

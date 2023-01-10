@@ -7,12 +7,12 @@ global function OnClientAnimEvent_weapon_dmr
 
 void function OnWeaponActivate_weapon_dmr( entity weapon )
 {
-	OnWeaponActivate_ReactiveKillEffects( weapon )
+
 }
 
 void function OnWeaponDeactivate_weapon_dmr( entity weapon )
 {
-	OnWeaponDeactivate_ReactiveKillEffects( weapon )
+
 }
 
 void function MpWeaponDmr_Init()

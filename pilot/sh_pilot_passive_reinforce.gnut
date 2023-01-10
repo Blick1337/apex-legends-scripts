@@ -3,6 +3,7 @@ global function IsReinforced
 #if SERVER
                              
                                    
+                                
 #endif
 #if CLIENT
 global function PassiveReinforce_BlockControllerHolster
@@ -55,6 +56,7 @@ const vector PASSIVE_REINFORCE_ENEMY_DOOR_COLOR = <255, 70, 10>
 const float PASSIVE_REINFORCE_DELAY_UNTIL_REINFORCEABLE = 3.0
 const int PASSIVE_REINFORCE_MAX_DOORWAYS = 2
 const bool PASSIVE_REINFORCE_IDLE_USES_AMBIENT_GENERIC = true
+global const int PASSIVE_REINFORCE_DOOR_KICK_MULTIPLIER = 2
 
 struct
 {
@@ -432,6 +434,8 @@ void function OnDoorDestroyed( entity ent )
 	                            
 
 	                                                                                                        
+	                               
+	                                        
 	                                 
 	                                                                      
 	                                
@@ -441,6 +445,8 @@ void function OnDoorDestroyed( entity ent )
 	                       
 	                                     
 	                                                      
+	                          
+	                                  
 	                                                                  
 	                                        
 	                                  
@@ -462,9 +468,9 @@ void function OnCodeDoorUsed( entity door, entity player, int useInputFlags )
 	if( player.p.isInExtendedUse )
 		return
 
-	if( ( useInputFlags & USE_INPUT_ALT ) && CanPlayerReinforce( player ) && IsReinforceable( door ) )
+	if( IsBitFlagSet( useInputFlags, USE_INPUT_ALT ) && CanPlayerReinforce( player ) && IsReinforceable( door ) )
 		DoExtendedUseForReinforce( door, player, useInputFlags )
-	                                                                                                                               
+	                                                                                                                                            
 	  	                                                 
 }
 
@@ -539,7 +545,7 @@ void function DoExtendedUseForReinforce( entity door, entity player, int useInpu
 	})()
 }
 
-void function BreakReinforcement( entity door, entity player, int useInputFlags )
+void function BreakReinforcement( entity door )
 {
 	#if SERVER
 		                       
@@ -572,7 +578,7 @@ bool function IsReinforced( entity ent )
 	if( !IsValid( ent ) )
 		return false
 
-	return ( StatusEffect_GetSeverity( ent, eStatusEffect.reinforced ) > 0.0 )
+	return ( StatusEffect_HasSeverity( ent, eStatusEffect.reinforced ) )
 }
 
 void function OnRebuiltDoorUsed( entity door, entity player, int useInputFlags )
@@ -580,22 +586,38 @@ void function OnRebuiltDoorUsed( entity door, entity player, int useInputFlags )
 	if( player.p.isInExtendedUse )
 		return
 
-	if( useInputFlags & USE_INPUT_ALT && CanPlayerReinforce( player ) && IsReinforceable( door ) )
+	if( IsBitFlagSet( useInputFlags, USE_INPUT_ALT ) && CanPlayerReinforce( player ) && IsReinforceable( door ) )
 		DoExtendedUseForReinforce( door, player, useInputFlags )
-	else if( useInputFlags & USE_INPUT_DEFAULT && IsReinforced( door ) &&  !IsEnemyTeam( player.GetTeam(), door.GetTeam() ) )
+	else if( IsBitFlagSet( useInputFlags, USE_INPUT_DEFAULT ) && IsReinforced( door ) &&  !IsEnemyTeam( player.GetTeam(), door.GetTeam() ) )
 	{
 	#if SERVER
-		                                                 
-		                                                              
-		                                                                                                                                             
-		 
-			                                                         
-		 
+		                        
 	#endif
 	}
+#if CLIENT
+	                                                                            
+	else if( IsBitFlagSet( useInputFlags, USE_INPUT_DEFAULT ) && ( !IsReinforced( door ) || IsEnemyTeam( player.GetTeam(), door.GetTeam() ) ) )
+	{
+
+			if ( IsControllerModeActive() )
+			{
+				thread IssueReloadCommand( player )
+			}
+
+	}
+#endif
 }
 
 #if SERVER
+                                             
+ 
+	                          
+	                                                              
+	                                                                                                                                             
+	 
+		                                  
+	 
+ 
                                             
  
 	                              
@@ -669,10 +691,10 @@ void function OnRebuiltDoorUsed( entity door, entity player, int useInputFlags )
 	                                     
 	 
 		                                                     
-		                                         
+		                              
 		                                                                  
 		                             
-			                                             
+			                                  
 	 
  
 
@@ -1281,7 +1303,7 @@ void function OnRebuiltDoorUsed( entity door, entity player, int useInputFlags )
 	 
 		                                                                                                                                
 
-		                                                                                        
+		                                                                                              
 		                                                          
 
 		                                                           

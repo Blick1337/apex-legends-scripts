@@ -681,7 +681,7 @@ bool function LootVaultPanel_CanUseFunction( entity playerUser, entity panel, in
 
 void function OnVaultPanelUse( entity panel, entity playerUser, int useInputFlags )
 {
-	if ( !(useInputFlags & USE_INPUT_LONG) )
+	if ( !IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 		return
 
 	UniqueVaultData data = GetUniqueVaultData( panel )

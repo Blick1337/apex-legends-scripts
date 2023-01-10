@@ -246,7 +246,8 @@ void function ServerCallback_ShowDeathScreen()
 }
 
 
-void function DeathScreenDelayedSwitchToTab( int tab, float delay ){
+void function DeathScreenDelayedSwitchToTab( int tab, float delay )
+{
 	wait( delay )
 	HideScoreboard()
 	if(file.isOpen && file.deathRecapDataUpdated)
@@ -1221,7 +1222,7 @@ void function UICallback_ShowSpectateTab( var headerElem )
 }
 
 
-void function UICallback_CloseDeathScreenMenu()
+void function UICallback_CloseDeathScreenMenu( bool clearRecap = true )
 {
 	printt( "DS: UICallback_CloseDeathScreenMenu" )
 
@@ -1240,7 +1241,7 @@ void function UICallback_CloseDeathScreenMenu()
 	file.deathScreenHeaderDataNestedRui = null
 
 	                         
-	if( file.clearDeathRecapOnClose )
+	if( file.clearDeathRecapOnClose && clearRecap )
 	{
 		file.deathRecapDataUpdated = false
 		file.deathRecapDamageBlocks.clear()
@@ -1371,20 +1372,22 @@ void function UICallback_TryPingRespawn()
 void function UICallback_OnResolutionChange()
 {
 	                                               
+	entity player = GetLocalClientPlayer()
+
 	  
 	                                                                                                                                                                                                                            
 	  
-	if( file.isOpen )
-		UICallback_CloseDeathScreenMenu()
+	if( IsAlive(player) && file.isOpen )
+	{
+		UICallback_CloseDeathScreenMenu( false )
+	}
 
-	entity player = GetLocalClientPlayer()
-	if ( !IsValid( player ) || IsAlive(player) )                                        
+	if ( !IsValid( player ) || IsAlive(player) )
 		return
-	  
+
 	int tabIndex = GetCurrentTabIndex()
 	if ( tabIndex == eDeathScreenPanel.NONE )
 		return                                                     
-
 
 	                                                                        
 
@@ -1946,7 +1949,7 @@ void function DeathRecapShow( var recapElem )
 	RuiSetBool( recapRui, "display", true )
 
 	bool knockdown
-	if ( file.deathRecapDamageBlocks[0].damageType & DF_KNOCKDOWN )
+	if ( IsBitFlagSet( file.deathRecapDamageBlocks[0].damageType, DF_KNOCKDOWN ) )
 		knockdown = true
 
 	                                                      

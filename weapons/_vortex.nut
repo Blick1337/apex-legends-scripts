@@ -1036,7 +1036,7 @@ int function Vortex_FireBackBullets( entity vortexWeapon, WeaponPrimaryAttackPar
 	if ( "shotgunPelletsToIgnore" in vortexWeapon.s )
 		bulletCount = int( ceil( bulletCount - vortexWeapon.s.shotgunPelletsToIgnore ) )
 
-	if ( bulletCount )
+	if ( bulletCount > 0 )
 	{
 		bulletCount = minint( bulletCount, MAX_BULLET_PER_SHOT )
 
@@ -1815,7 +1815,7 @@ bool function CodeCallback_OnVortexHitProjectile( entity weapon, entity vortexSp
 		switch ( damageSourceID )
 		{
 			case eDamageSourceId.mp_weapon_grenade_emp:
-				if ( StatusEffect_GetSeverity( vortexSphere, eStatusEffect.destroyed_by_emp ) )
+				if ( StatusEffect_HasSeverity( vortexSphere, eStatusEffect.destroyed_by_emp ) )
 					VortexSphereDrainHealthForDamage( vortexSphere, vortexSphere.GetHealth() )
 				break
 		}

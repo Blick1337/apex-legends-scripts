@@ -30,21 +30,8 @@ global const string GUNGAME_SQUAD_WEAPON_INDEX = "FreeDM_WeaponIndexSquad_"
 global const string GUNGAME_THROWING_KNIFE_WEAPON_NAME = "mp_weapon_throwingknife"
 const string GUNGAME_PLAYERSCORE = "GunGame_PlayerScore"
 const int GUNGAME_WEAPON_SKIP_NUM_DEATHS = 3
-const float GUNGAME_PREMATCH_TIME = 6.0
-const float GUNGAME_INTRO_MUSIC_TIME = 5.0
-const int GUNGAME_NEAR_ENDSCORE_DELTA = 5
-const float FREEDM_SCORE_VO_BC_DELAY = 6.0                                                                   
-
-const int GUNGAME_MUSIC_START_ON_KILLS_LEFT = 5
-const string GUNGAME_MUSIC_GAMEPLAY = "Music_GunGame_Gameplay"
-const string GUNGAME_MUSIC_VICTORY = "Music_GunGame_Victory"
-const string GUNGAME_MUSIC_LOSS = "Music_GunGame_Loss"
-const string GUNGAME_MUSIC_PODIUM = "Music_GunGame_Podium"
 
 #if CLIENT
-const string GUNGAME_VICTORY_SOUND = "UI_InGame_GunGame_Victory"
-const string GUNGAME_DEFEAT_SOUND = "UI_InGame_GunGame_Defeat"
-const string GUNGAME_COUNTDOWN_SOUND = "UI_InGame_GunGame_Countdown"
 const string GUNGAME_PROMOTION_SOUND = "UI_InGame_GunGame_Promotion"
 const string GUNGAME_DEMOTION_SOUND = "UI_InGame_GunGame_Demotion"
 const string GUNGAME_FINAL_WEAPON_SOUND = "UI_InGame_GunGame_Leader"
@@ -63,8 +50,6 @@ struct
 
 	                               
 	                                    
-
-	                  
 #endif
 
 #if CLIENT
@@ -78,7 +63,6 @@ struct
 	int        weaponPreviewNumber1 = 0
 	array<var> scorePipRUIs
 	array<entity> connectedSquadMembers
-	var        introCountdownRUI = null
 	var		   gamemodeRUI = null
 
 	bool hasPlayedFinalWeaponSound = false
@@ -107,8 +91,6 @@ void function GunGame_Init()
 	                                                          
 	                                              
 	                                                                                 
-	                                                                         
-	                                                                                     
 
 	                                                      
 #endif
@@ -135,10 +117,6 @@ void function GunGame_Init()
 
 #if CLIENT
 	AddCallback_LocalClientPlayerSpawned( Client_OnPlayerSpawned )
-	AddCallback_GameStateEnter( eGameState.Prematch, Client_OnPrematchInit )
-	AddCallback_GameStateEnter( eGameState.Playing, Client_OnPlaying )
-	AddCallback_GameStateEnter( eGameState.WinnerDetermined, Client_OnWinnerDetermined )
-	AddCallback_GameStateEnter( eGameState.Resolution, Client_OnResolution )
 	AddCallback_OnPlayerChangedTeam( Client_OnTeamChanged )
 	AddCallback_OnSelectedWeaponChanged( GunGame_OnSelectedWeaponChanged )
 
@@ -455,7 +433,6 @@ void function GunGame_Init()
 		 
 			                                                                    
 			                              
-			                           
 
 			                                                      
 			 
@@ -464,81 +441,10 @@ void function GunGame_Init()
 
 				                                     
 			 
-
-			                               
 		 
 
 		                       
 	 
- 
-
-                                                  
- 
-	                                     
-	                                   
-	                                         
-	                              
-	                    
-	                                                
-
-	                                                              
-	 
-		                                              
-		                              
-		 
-			                        
-			                  
-		 
-	 
-
-	                                                           
-	                                
-	 
-		                                                                  
-		                                                     
-		                                        
-			                                                                                 
-
-		      
-	 
-
-	                                                    
-	                       
-	                                           
-	 
-		                                    
-		                                                                                                                      
-	 
-	                                                                        
-	 
-		                                    
-		                                                                                                                          
-	 
-
-	                       
-		      
-
-	                                                                               
-	                             
-
-	                                                                                  
-	                                                              
-	 
-		                         
-		 
-			                                                                           
-		 
-		    
-		 
-			                                                                 
-			                            
-			 
-				                                                               
-				                                                                      
-			 
-		 
-	 
-
  
 
                       
@@ -767,45 +673,6 @@ void function GunGame_Init()
  
 	                                            
 		                      
-
-	                                                               
-	 
-		                                        
-		                      
-			                                    
-	 
-
-	                             
-
-	                   
- 
-
-                                    
- 
-	                                                                                                             
-
-	                
-
-	                                                               
-	 
-		                                        
-		                      
-			                                  
-	 
- 
-
-                                      
- 
-	                                                                                              
-	                                   
- 
-
-                                          
- 
-	                                                             
-
-	                                                               
-		                              
  
 
                             
@@ -814,60 +681,6 @@ void function GunGame_Init()
 	                                                                                              
 
 	                                     
- 
-
-                                 
- 
-	                                                
-	                                         
-	                                     
-	                                 
- 
-
-                                                    
- 
-	                                    
-	                     
-	                              
-
-	                                                              
-	 
-		                                              
-		                              
-		 
-			                        
-			                  
-		 
-	 
-
-	                                                                                                   
-	                                
-		      
-
-	                                                          
-	                                                             
-	                    
-	 
-		                                   
-		                                                         
-			                                                             
-
-		                                                         
-	 
- 
-
-                                                              
- 
-	                        
-	 
-		                
-		                 
-		                  
-		                  
-		                  
-	 
-
-	         
  
 
 #endif          
@@ -1005,76 +818,6 @@ void function GunGame_OnSelectedWeaponChanged( entity selectedWeapon )
 
 	printt("weapon Ult : " + isWeaponTypeUlt)
 	RuiSetBool( file.gamemodeRUI, "hasWeaponUltActive", isWeaponTypeUlt )
-}
-
-void function Client_OnPrematchInit( )
-{
-	file.introCountdownRUI = CreateFullscreenPostFXRui( $"ui/gun_game_intro.rpak" )
-	RuiSetFloat( file.introCountdownRUI, "gameStartTime", GetGameStartTime() )
-
-	thread _CountdownIntroSoundThread()
-}
-
-void function _CountdownIntroSoundThread()
-{
-	                                              
-	float countdownTime = 3.0
-	wait GetGameStartTime() - Time() - countdownTime
-
-	                                                           
-	for( int i = 0; i < 3; ++i )
-	{
-		EmitSoundOnEntity( GetLocalViewPlayer(), GUNGAME_COUNTDOWN_SOUND )
-		wait 1.0
-	}
-}
-
-void function Client_OnPlaying( )
-{
-	thread _DelayedDestroyCountdownRUI( )
-}
-
-                                                                                             
-void function _DelayedDestroyCountdownRUI( )
-{
-	wait 1.0
-
-	if( file.introCountdownRUI != null )
-	{
-		RuiDestroyIfAlive( file.introCountdownRUI )
-		file.introCountdownRUI = null
-	}
-}
-
-void function Client_OnWinnerDetermined( )
-{
-	entity localPlayer = GetLocalViewPlayer()
-	int myTeam = localPlayer.GetTeam()
-
-	if( myTeam == TEAM_SPECTATOR )
-		return
-
-	int winningTeam = GetWinningTeam()
-	if( winningTeam == myTeam )
-	{
-		SetChampionScreenSound( GUNGAME_VICTORY_SOUND )
-		EmitSoundOnEntity( localPlayer, GUNGAME_MUSIC_VICTORY )
-	}
-	else
-	{
-		SetChampionScreenSound( GUNGAME_DEFEAT_SOUND )
-		EmitSoundOnEntity( localPlayer, GUNGAME_MUSIC_LOSS )
-	}
-
-	int squadIndex = Squads_GetSquadUIIndex( winningTeam )
-	SetVictoryScreenTeamName( Localize( Squads_GetSquadNameLong( squadIndex ) ) )
-}
-
-void function Client_OnResolution( )
-{
-	entity localPlayer = GetLocalViewPlayer()
-	if ( IsValid( localPlayer ) )
-		EmitSoundOnEntity( localPlayer, GUNGAME_MUSIC_PODIUM )
 }
 
 void function CreateNestedScoreRUIs( var scoreRui )
@@ -1318,6 +1061,7 @@ void function GunGame_ScoreboardSetup()
 	clGlobal.hideScoreboardFunc = HideScoreboardOrMap_Teams
 	Teams_AddCallback_ScoreboardData( GunGame_GetScoreboardData )
 	Teams_AddCallback_Header( GunGame_ScoreboardUpdateHeader )
+	Teams_AddCallback_GetTeamColor( GunGame_ScoreboardGetTeamColor )
 	Teams_AddCallback_PlayerScores( GunGame_GetPlayerScores )
 	Teams_AddCallback_SortScoreboardPlayers( GunGame_SortPlayersByScore )
 }
@@ -1417,15 +1161,19 @@ void function GunGame_ScoreboardUpdateHeader( var headerRui, var frameRui, int t
 
 		RuiSetBool( headerRui, "isWinning", GunGame_IsTeamWinning(team) )
 		RuiSetImage( headerRui, "teamIcon", Squads_GetSquadIcon(squadIndex))
-		RuiSetColorAlpha( headerRui, "teamColor", Squads_GetSquadColor( squadIndex ) , 1.0 )
-
-		if( frameRui != null )
-			RuiSetColorAlpha( frameRui, "teamColor", Squads_GetSquadColor( squadIndex ) , 1.0 )
-
 	}
 
 }
 #endif          
+
+#if CLIENT
+vector function GunGame_ScoreboardGetTeamColor( int team )
+{
+	int squadIndex = Squads_GetSquadUIIndex( team )
+
+	return Squads_GetSquadColor( squadIndex )
+}
+#endif         
 
 bool function IsGunGameActive()
 {

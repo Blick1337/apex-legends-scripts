@@ -261,10 +261,10 @@ global enum eSurvivalCommentaryBucket
 	ARMORY_PANIC_BUTTON,
 	ARMORY_SUCCESS,
 	ARMORY_REDEPLOY,
+	ARMORY_OPENING,
       
 
                         
-	CONTROL_CARE_PACKAGE_DROPPING,
 	CONTROL_CAPTURE_BONUS_GENERIC,
 	CONTROL_CAPTURE_BONUS_A,
 	CONTROL_CAPTURE_BONUS_B,
@@ -288,7 +288,9 @@ global enum eSurvivalCommentaryBucket
 	CONTROL_MRB_TIMEDEVENT_MRB_CALLED_IN,
 	CONTROL_MRB_TIMEDEVENT_MRB_DEPLOYED,
 	CONTROL_MRB_TIMEDEVENT_MRB_EXPIRED,
-       
+      
+	                                                                                       
+	SPONSORED_CARE_PACKAGE_DROPPING,
 
                        
 	FREEDM_TEAM_HALFWAY,
@@ -567,7 +569,7 @@ void function RegisterConditionalAltDialogue( asset dt )
 			{
 				if ( condPlayer in file.condAltMap[baseEventName][speakingPlayer] )
 				{
-					Assert( 0, "Attempted to have duplicate conditional alt dialogue for event: \"" + baseEventName + "\" speaker: \"" + speakingPlayer +
+					Assert( false, "Attempted to have duplicate conditional alt dialogue for event: \"" + baseEventName + "\" speaker: \"" + speakingPlayer +
 							"\" and condPlayer: \"" + condPlayer + "\". Can only have one cond alt for each unique combination of speaker, condPlayer, and event." )
 				}
 				else
@@ -614,7 +616,7 @@ void function RegisterConditionalAltDialogue( asset dt )
 			{
 				if ( requireAddressee && baseNameToSpeakingPlayerToRequireAddressee[baseEventName][speakingPlayer] )
 				{
-					Assert( 0, "Tried to require an addressee for multiple different condPlayers for the same pairing of event and speaker. This is currently not supported by the system. Event: " + baseEventName + " Speaker: " + speakingPlayer )
+					Assert( false, "Tried to require an addressee for multiple different condPlayers for the same pairing of event and speaker. This is currently not supported by the system. Event: " + baseEventName + " Speaker: " + speakingPlayer )
 				}
 			}
 		}
@@ -803,7 +805,7 @@ string function PickCommentaryLineFromBucket( int bucket )
 
 		if ( ! ( bucket in file.commentaryTables[host] ) )
 		{
-			Assert( 0, "AI Host does not have line for bucket" )
+			Assert( false, "AI Host does not have line for bucket" )
 			return ""
 		}
 	}
@@ -854,7 +856,7 @@ void function SurvivalCommentary_SetHost( int mainHost )
 {
 	if ( ! ( mainHost in file.commentaryTables ) )
 	{
-		Assert( 0, "Invalid Host" )
+		Assert( false, "Invalid Host" )
 		return
 	}
 

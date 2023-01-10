@@ -34,6 +34,8 @@ const float ZIPLINE_DIST_MAX = 10000.0
 const ZIPLINE_STATION_EXPLOSION = $"p_impact_exp_small_full"
 const float ZIPLINE_REFUND_TIME = 3
 const float ZIPLINE_AUTO_DETACH_DISTANCE = 100.0
+const int ZIPLINE_MAX_IN_WORLD = 20
+const string ZIPLINE_START_SCRIPTNAME = "zipline_start"
 
 struct
 {
@@ -174,6 +176,18 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 	            
 		                                                                                       
 		 
+			                        
+			 
+				                                      
+				                                                
+
+				                          
+				 
+					                                                                        
+					                                            
+				 
+			 
+
 			                            
 			 
 				                                                                                        
@@ -202,15 +216,6 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 			                            
 			 
 				                    
-			 
-
-			                        
-			 
-				                          
-				 
-					                                                                        
-					                                            
-				 
 			 
 		 
 	 
@@ -282,6 +287,7 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 
 	                              
 	                            
+	                                                       
 
 	                                                                                                    
 	 
@@ -289,6 +295,8 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 	 
 
 	                                                                                     
+
+	                                                                      
  
 
                     

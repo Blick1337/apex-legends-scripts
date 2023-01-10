@@ -73,7 +73,6 @@ void function SV_CL_Init()
 	DeathHints_Init()
 	DamageTypes_Init()
 	WeaponUtility_Init()
-	WeaponReactiveEffects_Init()
 	PassivesShared_Init()
 	ShUtilityAll_Init()
 	Anim_Aliases_Init()
@@ -177,11 +176,18 @@ void function SV_CL_Init()
 	ShLobaPassiveEyeForQuality_LevelInit()
 	LobaTacticalTranslocation_LevelInit()
 	LobaUltimateBlackMarket_LevelInit()
+                    
+                           
+       
 
 	PassiveGrenadier_Init()
 
                  
 		PassiveReinforce_Init()
+       
+
+                                  
+                           
        
 
 	Clubs_Init()
@@ -230,7 +236,7 @@ void function SV_CL_Init()
        
 	ShSurvivalTraining_Init()
 	FiringRangeGameMode_Init()
-                    
+                                             
                    
        
 	ShFiringRangeStoryEvents_Init()
@@ -240,9 +246,11 @@ void function SV_CL_Init()
 	ShFRC_p2020_Init()
 	PanicButton_Init()
 	ShGas_Init()
+                                 
+                         
+       
                  
 		ShResin_Init()
-		MpAbilityUpswell_Init()
        
                     
                
@@ -348,6 +356,10 @@ void function SV_CL_Init()
                              
        
 
+                                   
+		Sh_Survival_Hardcore_Init()
+       
+
                               
                       
        
@@ -366,6 +378,14 @@ void function SV_CL_Init()
 
                   
                        
+       
+
+                
+                         
+                             
+       
+
+                                 
                          
        
 
@@ -434,6 +454,10 @@ void function SV_CL_Init()
 
 	PassiveHeartbeatSensor_Init()
 
+                                  
+                       
+       
+
                            
                                 
                                
@@ -473,7 +497,7 @@ void function SV_CL_Init()
        
 
                                 
-                            
+		Valentines_S15_Mode_Init()
        
 
                    
@@ -513,6 +537,10 @@ void function SV_CL_Init()
 
                      
                       
+       
+
+                       
+                   
        
 }
 
@@ -605,6 +633,7 @@ void function SV_CL_Init()
 	                
 	                    
 	                  
+	                       
 	                 
 	              
 	                    
@@ -622,9 +651,7 @@ void function SV_CL_Init()
        
 	                            
 
-                       
-		                         
-       
+	                         
 
                  
                          
@@ -949,6 +976,10 @@ void function Shared_Lobby_Init()
 			ClInitComicReaderMenu()
         
 	#endif
+
+                       
+                   
+       
 }
 
 #if SERVER

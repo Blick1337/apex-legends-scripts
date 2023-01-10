@@ -207,9 +207,14 @@ void function ShQuickchat_Init()
 		file.replyMap[ eCommsAction.REPLY_REVIVE_THANKS ] <- eCommsAction.REPLY_REVIVE_WELCOME
 
                                  
-                                                                                 
-                                                                                           
-                                                                                                
+			file.replyMap[eCommsAction.REPLY_LOVE_YOU] <- eCommsAction.REPLY_LOVE_YOU_MORE
+			file.replyMap[eCommsAction.REPLY_LOVE_YOU_MORE] <- eCommsAction.REPLY_NO_I_LOVE_YOU_MORE
+			file.replyMap[eCommsAction.REPLY_NO_I_LOVE_YOU_MORE] <- eCommsAction.REPLY_NO_I_LOVE_YOU_MORE
+
+			                                                         
+			file.altMap[eCommsAction.REPLY_LOVE_YOU] <- eCommsAction.REPLY_LOVE_YOU
+			file.altMap[eCommsAction.REPLY_LOVE_YOU_MORE] <- eCommsAction.REPLY_LOVE_YOU_MORE
+			file.altMap[eCommsAction.REPLY_NO_I_LOVE_YOU_MORE] <- eCommsAction.REPLY_NO_I_LOVE_YOU_MORE
         
 
 		file.altMap[ eCommsAction.REPLY_WELCOME ] <- eCommsAction.REPLY_WELCOME_ALT
@@ -377,6 +382,13 @@ array<string> function GetSubjectNamesForCommsAction( int commsAction, entity su
 			return [""]
 	}
 
+                    
+                                                                                                                                                 
+  
+                                                                 
+  
+       
+
 	if ( subjectEnt.IsPlayer() )
 		return [subjectEnt.GetPlayerName()]
 
@@ -507,14 +519,10 @@ array<string> function GetSubjectNamesForCommsAction( int commsAction, entity su
 		{
 			if ( commsAction == eCommsAction.PING_CONTROL_OBJECTIVE_ATTACK || commsAction == eCommsAction.PING_CONTROL_OBJECTIVE_DEFEND )
 			{
-				if ( IsValid( subjectEnt ) && IsValid( subjectEnt.GetOwner() ) && !subjectEnt.GetOwner().IsPlayer() )
+				entity owner = subjectEnt.GetOwner()
+				if ( IsValid( owner ) && IsPlayerWaypoint( owner ) && owner.GetWaypointType() == eWaypoint.CONTROL_OBJECTIVE )
 				{
-					int objectiveID = subjectEnt.GetOwner().GetWaypointInt( INT_OBJECTIVE_ID )
-					return [ Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID ) ]
-				}
-				else if ( IsValid( subjectEnt ) && IsValid( subjectEnt.GetOwner() ) && subjectEnt.GetOwner().IsPlayer() )
-				{
-					int objectiveID = subjectEnt.GetWaypointInt( INT_OBJECTIVE_ID )
+					int objectiveID = owner.GetWaypointInt( INT_OBJECTIVE_ID )
 					return [ Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID ) ]
 				}
 			}
@@ -660,7 +668,7 @@ bool function GetCommsActionIsFar( entity player, entity subjectEnt, vector subj
 {
 	const float FAR_DIST_THRESHOLD = 2048.0
 
-	if ( commsFlags & eCommsFlags.FORCE_FAR )
+	if ( IsBitFlagSet( commsFlags, eCommsFlags.FORCE_FAR ) )
 	{
 		printt( "Far [YES] <- eCommsFlags.FORCE_FAR" )
 		return true
@@ -758,7 +766,7 @@ bool function PlayerDeliveryShouldBeUrgent( entity player, vector subjectPos, in
 	const float TEAMMATE_NEAR_SUBJECT_POS = 1024.0
 	const float SUBJECT_NEAR_SPOTTED_ENEMY = 1024.0
 
-	if ( commsFlags & eCommsFlags.FORCE_URGENT )
+	if ( IsBitFlagSet( commsFlags, eCommsFlags.FORCE_URGENT ) )
 	{
 		printt( "Urgent [YES] <- eCommsFlags.FORCE_URGENT" )
 		return true
@@ -845,6 +853,11 @@ float function GetCooldownTimeForCommsAction( int commsAction )
                                                      
              
       
+                       
+                                                      
+                                                   
+             
+      
 	}
 
 	return 4.0
@@ -856,8 +869,8 @@ float function GetCooldownTimeForCommsAction( int commsAction )
 bool function ShouldMuteCommsActionForCooldown( entity player, int commsAction, entity subjectEnt )
 {
                                 
-                                                             
-               
+		if ( commsAction == eCommsAction.REPLY_NO_I_LOVE_YOU_MORE )
+			return false
        
 
 	if ( IsValid( subjectEnt ) && (subjectEnt.GetNetworkedClassName() == "prop_survival") && commsAction != eCommsAction.REPLY_LOOT_DIBS )
@@ -1035,8 +1048,23 @@ void function HandleBroadcastCommsAction( entity player, int commsAction, entity
 	RunQuickChatCallbacks( player, commsAction, subjectEnt )
 
 	string chatText = act.chatText
-	if ( chatText != "" && ! ( commsFlags & eCommsFlags.NO_TEXT ) )
+	if ( chatText != "" && !IsBitFlagSet( commsFlags, eCommsFlags.NO_TEXT ) )
 	{
+                                 
+			switch( commsAction )
+			{
+				case eCommsAction.REPLY_LOVE_YOU:
+				case eCommsAction.REPLY_LOVE_YOU_MORE:
+				case eCommsAction.REPLY_NO_I_LOVE_YOU_MORE:
+					if ( opt.isFirstPerson )
+						chatText += "_1P"
+					break
+
+				default:
+					break
+			}
+        
+
 		string playerName          = opt.isFirstPerson ? Localize( "#OBITUARY_YOU" ) : player.GetPlayerName()
 		vector playerColor         = GetChatTitleColorForPlayer( player )
 
@@ -1354,13 +1382,13 @@ void function PromptReplyWhenPrimaryFinishes( entity playerSpeakingPrimary, int 
 			break
                                
 
-                                        
-                                                    
-        
+		case eCommsAction.REPLY_LOVE_YOU_MORE:
+			locString = Localize( "#PING_SAY_LOVE_YOU_MORE" )
+			break
 
-                                             
-                                                         
-        
+		case eCommsAction.REPLY_NO_I_LOVE_YOU_MORE:
+			locString = Localize( "#PING_SAY_NO_I_LOVE_YOU_MORE" )
+			break
       
 
 		default:
@@ -1785,7 +1813,7 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
    
        
 
-	                                            
+	                                                           
 	 
 		                                                          
 
@@ -1796,7 +1824,7 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 		      
 	 
 
-	                                                           
+	                                                                          
 	 
 		                             
 

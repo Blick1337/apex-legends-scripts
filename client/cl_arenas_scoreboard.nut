@@ -18,6 +18,7 @@ void function Arenas_ScoreboardSetup()
 	Teams_AddCallback_ScoreboardData( Arenas_GetScoreboardData )
 	Teams_AddCallback_PlayerScores( Arenas_GetPlayerScores )
 	Teams_AddCallback_Header( Arenas_ScoreboardUpdateHeader )
+	Teams_AddCallback_GetTeamColor( Arenas_ScoreboardGetTeamColor )
 	Teams_AddCallback_SortScoreboardPlayers( Arenas_ScoreboardSortPlayers )
 }
 
@@ -141,19 +142,22 @@ void function Arenas_ScoreboardUpdateHeader( var headerRui, var frameRui, int te
 		RuiSetString( headerRui, "headerText", Localize( isFriendly ? "#ALLIES" : "#ENEMIES" ) )
 		RuiSetInt( headerRui, "roundsWon", Arenas_GetTeamWins( team ) )
 
-		vector color  = SrgbToLinear( GetKeyColor( COLORID_FRIENDLY ) / 255 )
-		if( !isFriendly )
-			color  = SrgbToLinear( GetKeyColor( COLORID_ENEMY ) / 255 )
-
-		RuiSetColorAlpha( headerRui, "teamColor", color, 1.0 )
 
 		int myTeamWins = Arenas_GetTeamWins( team )
 		int enemyTeamWins = Arenas_GetTeamWins (Arenas_GetOpposingTeam(team ) )
 		RuiSetBool( headerRui, "isWinning", ( myTeamWins > enemyTeamWins ) )
-
-		if( frameRui != null )
-			RuiSetColorAlpha( frameRui, "teamColor", color, 1.0 )
 	}
+}
+
+vector function Arenas_ScoreboardGetTeamColor( int team )
+{
+	bool isFriendly = team == GetLocalViewPlayer().GetTeam()
+
+	vector color  = SrgbToLinear( GetKeyColor( COLORID_FRIENDLY ) / 255 )
+	if( !isFriendly )
+		color  = SrgbToLinear( GetKeyColor( COLORID_ENEMY ) / 255 )
+
+	return color
 }
 
 array< entity > function Arenas_ScoreboardSortPlayers( array< entity > teamPlayers, ScoreboardData gameData )

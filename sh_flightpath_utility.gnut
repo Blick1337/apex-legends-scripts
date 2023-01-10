@@ -8,6 +8,7 @@ globalize_all_functions
 
 global const ANALYSIS_PREVIEW_TIME = 5.0
 const float DEFAULT_MIN_AIRDROP_DISTANCE = 3000.0
+global const float FLIGHTPATH_ELEVATION_VALIDATION_OFFSET = 7500.0
 
                        
                                                
@@ -409,7 +410,7 @@ float function FixYaw( float yaw )
 		                       
 	 
 
-	                       
+	                           
 		           
 
 	                            
@@ -460,7 +461,7 @@ float function FixYaw( float yaw )
 
 	                                     
 	 
-		                  
+		                      
 			        
 
 		                                                        
@@ -480,12 +481,12 @@ float function FixYaw( float yaw )
 	 
 
 
-	                   
+	                       
 	 
 		              
 		                                     
 		 
-			                  
+			                      
 				        
 
 			                                                        
@@ -499,7 +500,7 @@ float function FixYaw( float yaw )
 			 
 		 
 
-		                   
+		                       
 			      
 	 
 
@@ -625,7 +626,7 @@ float function FixYaw( float yaw )
                                                                                                
  
 	                       
-	               
+	                    
 	                        
 	                           
 
@@ -736,7 +737,7 @@ float function FixYaw( float yaw )
 			  	     
 
 		        
-			                                     
+			                                         
 			     
 	 
 
@@ -825,7 +826,7 @@ float function FixYaw( float yaw )
 			  			     
 
 		        
-			                                     
+			                                         
 			     
 	 
 
@@ -845,7 +846,7 @@ float function FixYaw( float yaw )
 	 
 		                                                               
 
-		                                                            
+		                                                                
 		                                        
 		                                             
 		                                           
@@ -1109,33 +1110,33 @@ bool function VerifyAirdropPoint( vector baseOrigin, float yaw, bool isCarePacka
 			DebugDrawCylinder( baseOrigin, < -90, 0, 0 >, maxs.x, maxs.z, <70, 70, 70>, false, DEBUG_DRAW_TIME )
 		}
 
-		if ( failCode )
+		if ( failCode != 0 )
 			printt( "dropPoint check faild at origin:", baseOrigin, "yaw:", yaw )
-		if ( failCode & 0x0001 )
+		if ( IsBitFlagSet( failCode, 0x0001 ) )
 			printt( "\t- Surface angle to steep. Slope angle:", DotToAngle( dot ) )
-		if ( failCode & 0x0002 )
+		if ( IsBitFlagSet( failCode, 0x0002 ) )
 			printt( "\t- Didn't land on the worldspawn entity. Ground Ent:", groundEnt )
-		if ( failCode & 0x0004 )
+		if ( IsBitFlagSet( failCode, 0x0004 ) )
 			printt( "\t- Didn't reach the ground. Dist from ground:", sqrt( distToNodeSqr ), distToNode )
-		if ( failCode & 0x0008 )
+		if ( IsBitFlagSet( failCode, 0x0008 ) )
 			printt( "\t- Door area was not clear." )
-		if ( failCode & 0x0010 )
+		if ( IsBitFlagSet( failCode, 0x0010 ) )
 			printt( "\t- Door opened towards a ledge." )
-		if ( failCode & 0x0020 )
+		if ( IsBitFlagSet( failCode, 0x0020 ) )
 			printt( "\t- Part of the Pod was sticking out over an ledge." )
-		if ( failCode & 0x0040 )
+		if ( IsBitFlagSet( failCode, 0x0040 ) )
 			printt( "\t- To close to an Airdrop Bad Place." )
-		if ( failCode & 0x0080 )
+		if ( IsBitFlagSet( failCode, 0x0080 ) )
 			printt( "\t- Part might have been on a narrow ridge or low wall etc." )
-		if ( failCode & 0x0100 )
+		if ( IsBitFlagSet( failCode, 0x0100 ) )
 			printt( "\t- Point was touching out of bound trigger." )
-		if ( failCode & 0x0200 )
+		if ( IsBitFlagSet( failCode, 0x0200 ) )
 			printt( "\t- Trace started in solid." )
-		if ( failCode & 0x0400 )
+		if ( IsBitFlagSet( failCode, 0x0400 ) )
 			printt( "\t- Trace passes through a hurt trigger." )
 	#endif                        
 
-	if ( failCode )
+	if ( failCode != 0 )
 		return false
 
 	                                                         
@@ -1270,7 +1271,7 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
   
 
                                 
-                                              
+                                                   
    
                                                             
                                     
@@ -1290,19 +1291,19 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
     
    
 
-                 
+                      
                                                                               
-                          
+                                         
                                           
-                          
+                                         
                                                                                
-                          
+                                         
                                           
-                          
+                                         
                                       
                                      
 
-                
+                     
               
 
                                                           
@@ -1366,7 +1367,7 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
 	 
 
 	                                                                                        
-	                                                                                                                        
+	                                                                                                                            
 
 	                                                                    
 
@@ -1680,7 +1681,7 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
 	 
 
 	                                                                                        
-	                                                                                                                        
+	                                                                                                                            
 
 	                                                                    
 
@@ -1694,7 +1695,52 @@ array<entity> function GetAirDropTraceIgnoreEntArray()
 		                                       
 	 
 
+	                                          
+	 
+		                                                                   
+
+		                                                                                
+	 
 	                       
+ 
+
+                                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                            
+                                                                   
+ 
+	                
+
+	                             
+
+	                                                                                                        
+	 
+		                                                                                                                                
+	 
+	                                                                                                           
+	 
+		                                                                                                                               
+	 
+	                                                                                                           
+	 
+		                                                                                                                               
+	 
+	                                                                                                   
+	 
+		                                                                                                                           
+	 
+	                                                                                                              
+	 
+		                                                                                                                                 
+	 
+	    
+		                         
+
+	                
+ 
+
+                                                  
+ 
+	                                                                                
  
 #endif         
 

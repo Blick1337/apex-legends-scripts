@@ -158,18 +158,6 @@ void function OnWeaponDeactivate_weapon_phase_breach( entity weapon )
 
 bool function OnWeaponAttemptOffhandSwitch_weapon_phase_breach( entity weapon )
 {
-	int ammoReq  = weapon.GetAmmoPerShot()
-	int currAmmo = weapon.GetWeaponPrimaryClipCount()
-	if ( currAmmo < ammoReq )
-		return false
-
-	entity player = weapon.GetWeaponOwner()
-	if ( player.IsPhaseShifted() )
-		return false
-
-	if ( player.IsZiplining() )
-		return false
-
 	return true
 }
 

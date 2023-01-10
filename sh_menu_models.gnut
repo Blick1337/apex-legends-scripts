@@ -237,6 +237,7 @@ struct
 		MenuModelData appliedStickerModelData
 		MenuModelData flatStickerModelData
 
+		int currentStickerObjectType = -1
 		int currentStickerInstance = -1
                       
 
@@ -975,7 +976,21 @@ void function InitPresentationData()
 
                 
 	{
-		PresentationDef pd = file.presentationData[ePresentationType.APPLIED_STICKER]
+		PresentationDef pd = file.presentationData[ePresentationType.APPLIED_STICKER_INJECTOR]
+		pd.modelData = file.appliedStickerModelData
+		pd.startFunc = StartPresentation_APPLIED_STICKER
+		pd.endFunc = EndPresentation_APPLIED_STICKER
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.APPLIED_STICKER_SMALL_CELL]
+		pd.modelData = file.appliedStickerModelData
+		pd.startFunc = StartPresentation_APPLIED_STICKER
+		pd.endFunc = EndPresentation_APPLIED_STICKER
+	}
+
+	{
+		PresentationDef pd = file.presentationData[ePresentationType.APPLIED_STICKER_LARGE_CELL]
 		pd.modelData = file.appliedStickerModelData
 		pd.startFunc = StartPresentation_APPLIED_STICKER
 		pd.endFunc = EndPresentation_APPLIED_STICKER
@@ -1377,10 +1392,6 @@ void function StartPresentation_APPLIED_STICKER()
 	entity objectModel = ModelData_GetModel( file.appliedStickerModelData )
 	if ( IsValid( objectModel ) )
 		objectModel.Show()
-
-	entity stickerModel = ModelData_GetSubModel( file.appliedStickerModelData )
-	if ( IsValid( stickerModel ) )
-		stickerModel.Show()
 }
 
 void function EndPresentation_APPLIED_STICKER()
@@ -1388,10 +1399,6 @@ void function EndPresentation_APPLIED_STICKER()
 	entity objectModel = ModelData_GetModel( file.appliedStickerModelData )
 	if ( IsValid( objectModel ) )
 		objectModel.Hide()
-
-	entity stickerModel = ModelData_GetSubModel( file.appliedStickerModelData )
-	if ( IsValid( stickerModel ) )
-		stickerModel.Hide()
 
 	                                                                                            
 	ModelData_GetMover( file.customizeWeapon ).SetOrigin( GetEntByScriptName( "customize_weapon_ref" ).GetOrigin() )
@@ -1405,10 +1412,6 @@ void function StartPresentation_FLAT_STICKER()
 	entity objectModel = ModelData_GetModel( file.flatStickerModelData )
 	if ( IsValid( objectModel ) )
 		objectModel.Show()
-
-	entity stickerModel = ModelData_GetSubModel( file.flatStickerModelData )
-	if ( IsValid( stickerModel ) )
-		stickerModel.Show()
 }
 
 void function EndPresentation_FLAT_STICKER()
@@ -1416,10 +1419,6 @@ void function EndPresentation_FLAT_STICKER()
 	entity objectModel = ModelData_GetModel( file.flatStickerModelData )
 	if ( IsValid( objectModel ) )
 		objectModel.Hide()
-
-	entity stickerModel = ModelData_GetSubModel( file.flatStickerModelData )
-	if ( IsValid( stickerModel ) )
-		stickerModel.Hide()
 
 	                                                                                            
 	ModelData_GetMover( file.customizeWeapon ).SetOrigin( GetEntByScriptName( "customize_weapon_ref" ).GetOrigin() )
@@ -1453,6 +1452,10 @@ void function EnableLobbyMenuCameraZoom()
 		entity characterModel = ModelData_GetModel( file.customizeCharacter )
 
 		ItemFlavor skinFlavor      = ModelData_GetSkinFlavor( file.customizeCharacter )
+
+		if( !IsItemFlavorStructValid( skinFlavor ) )
+			return
+
 		ItemFlavor characterFlavor = CharacterSkin_GetCharacterFlavor( skinFlavor )
 		vector offset              = CharacterClass_GetMenuZoomOffset( characterFlavor )
 
@@ -1463,6 +1466,11 @@ void function EnableLobbyMenuCameraZoom()
 	else if ( file.desiredPresentationType == ePresentationType.WEAPON_SKIN )
 	{
 		ItemFlavor skinFlavor     = ModelData_GetSkinFlavor( file.customizeWeapon )
+
+		if( !IsItemFlavorStructValid( skinFlavor ) )
+			return
+
+
 		ItemFlavor weaponFlavor   = WeaponSkin_GetWeaponFlavor( skinFlavor )
 		ItemFlavor categoryFlavor = WeaponItemFlavor_GetCategory( weaponFlavor )
 		vector menuZoomOffset     = WeaponCategoryFlavor_GetMenuZoomOffset( categoryFlavor )
@@ -1476,6 +1484,10 @@ void function EnableLobbyMenuCameraZoom()
 	{
 		entity model        = ModelData_GetModel( file.storeInspectModelData )
 		ItemFlavor itemFlav = ModelData_GetSkinFlavor( file.storeInspectModelData )
+
+		if( !IsItemFlavorStructValid( itemFlav ) )
+			return
+
 		int itemType        = ItemFlavor_GetType( itemFlav )
 		switch ( itemType )
 		{
@@ -1609,8 +1621,15 @@ void function InitMenuEntities()
 	model.SetAlive( true )
 
 	refEnt = GetEntByScriptName( "customize_character_ref" )
+                   
+                                                       
+      
 	ModelData_SetBaseOrigin( file.customizeCharacter, refEnt.GetOrigin() )
+                   
+                                                                 
+     
 	ModelData_SetBaseAngles( file.customizeCharacter, <0, -120, 0> )
+      
 	baseRotationDelta[0] = 0
 	baseRotationDelta[1] = 0
 	ModelData_SetBaseRotationDelta( file.customizeCharacter, baseRotationDelta )
@@ -1648,16 +1667,10 @@ void function InitMenuEntities()
 
                 
 	refEnt = GetEntByScriptName( "customize_weapon_ref" )                                                 
-	ModelData_SetBaseOrigin( file.appliedStickerModelData, refEnt.GetOrigin() + <4, 0, 0> )
-	                                                                                                                          
-	                                
-	                                  
-	                                
-	ModelData_SetBaseAngles( file.appliedStickerModelData, <-22.5, 180, -5> )
-	                                                                                       
+	ModelData_SetBaseOrigin( file.appliedStickerModelData, refEnt.GetOrigin() + <3.25, 0, 2.5> )
+	ModelData_SetBaseAngles( file.appliedStickerModelData, <0, 0, 0> )
 	model = CreateMenuModel( file.appliedStickerModelData, $"mdl/dev/empty_model.rmdl" )
 	ModelData_CreateMover( file.appliedStickerModelData )
-	TurntableUpdateEntityAngles( file.appliedStickerModelData )                                                                  
 
 	ModelData_SetBaseOrigin( file.flatStickerModelData, refEnt.GetOrigin() + <4, 0, 2> )
 	ModelData_SetBaseAngles( file.flatStickerModelData, <0, 255, 0> )
@@ -1665,10 +1678,10 @@ void function InitMenuEntities()
 	ModelData_CreateMover( file.flatStickerModelData )
                       
 
-	                                                            
-	                                                              
-	                                                                      
-	                                                                   
+	                                                                            
+	                                                                              
+	                                                                                      
+	                                                                                   
 
 	InitBattlePassLights()
 	InitLightingConfigs()
@@ -1754,16 +1767,16 @@ entity function CreateMenuSubModel( MenuModelData modelData, asset modelAsset )
 	return CreateMenuModel_( modelData, modelAsset, false )
 }
 
-void function UpdateMenuCharacterModel( entity player, int overrideCharacterFlavorNetworkIndex = -1 )
+void function UpdateMenuCharacterModel( entity player, int overrideCharacterFlavorGUID = -1 )
 {
 	if ( player != GetLocalClientPlayer() )
 		return
 
-	thread UpdateMenuCharacterModelInternal( overrideCharacterFlavorNetworkIndex )
+	thread UpdateMenuCharacterModelInternal( overrideCharacterFlavorGUID )
 }
 
                                                                                                                           
-void function UpdateMenuCharacterModelInternal( int overrideCharacterFlavorNetworkIndex )
+void function UpdateMenuCharacterModelInternal( int overrideCharacterFlavorGUID )
 {
 	Signal( file.signalDummy, "UpdateMenuCharacterModelInternal" )
 	EndSignal( file.signalDummy, "UpdateMenuCharacterModelInternal" )
@@ -1775,18 +1788,15 @@ void function UpdateMenuCharacterModelInternal( int overrideCharacterFlavorNetwo
 	LoadoutSlot_WaitForItemFlavor( playerEHI, Loadout_Character() )
 
 	ItemFlavor character
-	if ( overrideCharacterFlavorNetworkIndex == -1 )
+	if ( overrideCharacterFlavorGUID == -1 )
 		character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
 	else
-		character = GetItemFlavorByNetworkIndex( overrideCharacterFlavorNetworkIndex )
+		character = GetItemFlavorByGUID( overrideCharacterFlavorGUID )
 
 	#if DEV
 		if ( GetBugReproNum() == 1747 )                                                                                                                                   
 			character = GetItemFlavorByCharacterRef( "character_dummie"  )
 	#endif
-
-	if ( !IsItemFlavorUnlockedForLoadoutSlot( playerEHI, Loadout_Character(), character ) )
-		character = GetDefaultItemFlavorForLoadoutSlot( playerEHI, Loadout_Character() )
 
 	LoadoutSlot_WaitForItemFlavor( playerEHI, Loadout_CharacterSkin( character ) )
 
@@ -1815,18 +1825,18 @@ void function UpdateMenuCharacterModelInternal( int overrideCharacterFlavorNetwo
 	UpdateCharacterModelDisplay( file.customizeCharacter, doTransitionFX )
 }
 
-void function UIToClient_PreviewCharacterEmote( int index, int overrideCharacterFlavorNetworkIndex )
+void function UIToClient_PreviewCharacterEmote( int guid, int overrideCharacterFlavorGUID )
 {
-	UpdateMenuCharacterModel( GetLocalClientPlayer(), overrideCharacterFlavorNetworkIndex )
+	UpdateMenuCharacterModel( GetLocalClientPlayer(), overrideCharacterFlavorGUID )
 
-	ItemFlavor flav = GetItemFlavorByGUID( index )
+	ItemFlavor flav = GetItemFlavorByGUID( guid )
 
 	string anim3p     = CharacterQuip_GetAnim3p( flav )
 
 	entity model = ModelData_GetModel( file.customizeCharacter )
 	if ( model.Anim_HasActivity( anim3p ) || model.Anim_HasSequence( anim3p ) )
 	{
-		thread ModelPerformEmote( model, flav, ModelData_GetMover( file.customizeCharacter ), false )
+		thread ModelPerformEmote( model, flav, ModelData_GetMover( file.customizeCharacter ), false, true )
 	}
 
 	if ( clGlobal.previewMenuPilotModels.characterSkin != null && EffectDoesExist( file.baseFXHandle ) )
@@ -1867,6 +1877,10 @@ void function UIToClient_PreviewAppliedSticker( SettingsAssetGUID itemFlavorGUID
 {
 	ItemFlavor stickerItem = GetItemFlavorByGUID( itemFlavorGUID )
 
+	if ( file.currentStickerObjectType != stickerObjectType )
+		ModelData_ResetRotation( file.appliedStickerModelData )
+	file.currentStickerObjectType = stickerObjectType
+
 	entity objectEnt  = ModelData_GetModel( file.appliedStickerModelData )
 	asset objectAsset = GetStickerObjectModel( stickerObjectType )
 	objectEnt.SetSkin( 0 )
@@ -1874,24 +1888,18 @@ void function UIToClient_PreviewAppliedSticker( SettingsAssetGUID itemFlavorGUID
 	if ( stickerObjectType == eStickerObjectType.phoenix_kit )
 		objectEnt.SetSkin( 1 )
 
-	float objectScale = 1.5
+	vector localAngles = <-113, -177, -79>
+	float objectScale  = 1.5
 	string renderColor = "0 0 0 255"
-	
-	vector baseOrigin = ModelData_GetBaseOrigin( file.appliedStickerModelData )
-	
+
 	if ( stickerObjectType == eStickerObjectType.injector )
 	{
-		objectScale = 1.75
+		localAngles = <26, 175, 18>
+		objectScale = 2.5
 		renderColor = "255 255 255 255"
-		                                                                                                                                  
-		ModelData_GetMover( file.appliedStickerModelData ).SetOrigin( baseOrigin + <-4, -10, 0> )
 	}
-	else
-	{
-		ModelData_GetMover( file.appliedStickerModelData ).SetOrigin( baseOrigin )
-	}
-	
 
+	objectEnt.SetLocalAngles( localAngles )
 	objectEnt.SetModelScale( objectScale )
 	objectEnt.kv.rendercolor = renderColor
 
@@ -1914,22 +1922,22 @@ void function UIToClient_PreviewAppliedSticker( SettingsAssetGUID itemFlavorGUID
 }
                       
 
-void function UIToClient_PreviewCharacterSkin( int index, int overrideCharacterFlavorNetworkIndex )
+void function UIToClient_PreviewCharacterSkin( int guid, int overrideCharacterFlavorGUID )
 {
-	clGlobal.previewMenuPilotModels.characterSkin = GetItemFlavorByNetworkIndex( index )
+	clGlobal.previewMenuPilotModels.characterSkin = GetItemFlavorByGUID( guid )
 
 	if ( clGlobal.previewMenuPilotModels.characterSkin != null )
 		ModelData_SetSkinFlavor( file.customizeCharacter, expect ItemFlavor( clGlobal.previewMenuPilotModels.characterSkin ) )
 
-	UpdateMenuCharacterModel( GetLocalClientPlayer(), overrideCharacterFlavorNetworkIndex )
+	UpdateMenuCharacterModel( GetLocalClientPlayer(), overrideCharacterFlavorGUID )
 
 	if ( clGlobal.previewMenuPilotModels.characterSkin != null && EffectDoesExist( file.baseFXHandle ) )
 		EffectSetControlPointVector( file.baseFXHandle, 1, ItemFlavor_GetQualityColor( expect ItemFlavor( clGlobal.previewMenuPilotModels.characterSkin ) ) )
 }
 
-void function UIToClient_PreviewCharacterSkinFromCharacterSkinPanel( int index, int overrideCharacterFlavorNetworkIndex )
+void function UIToClient_PreviewCharacterSkinFromCharacterSkinPanel( int guid, int overrideCharacterFlavorGUID )
 {
-	UIToClient_PreviewCharacterSkin( index, overrideCharacterFlavorNetworkIndex )
+	UIToClient_PreviewCharacterSkin( guid, overrideCharacterFlavorGUID )
 	file.cameraZoomModelInitialized = true
 }
 
@@ -2019,14 +2027,6 @@ void function UpdateCharacterModelDisplay( MenuModelData modelData, bool doTrans
 	if ( characterSkin == null )
 		characterSkin = clGlobal.currentMenuPilotModels.characterSkin
 	CharacterSkin_Apply( model, expect ItemFlavor( characterSkin ) )
-
-	foreach ( entity child in model.GetChildren() )
-	{
-		if ( child.GetModelName() == BLOODHOUND_BIRD_MDL )
-		{
-			CharacterSkin_CheckBloodhoundRavenSkin ( child, model )
-		}
-	}
 
 	                                                                                    
 	                                                            
@@ -2408,7 +2408,7 @@ void function DisplayPartyMemberModelThread( PartyMemberDisplayThreadData data )
 	bool wasInMatch = PartyMemberInMatch( data.partyMemberInfo )
 	bool firstTime  = true
 
-	while ( 1 )
+	while ( true )
 	{
 		bool inMatch = PartyMemberInMatch( data.partyMemberInfo ) && !data.isReady
 
@@ -2455,16 +2455,16 @@ void function UIToClient_ResetWeaponRotation()
 }
 
 
-void function UIToClient_PreviewWeaponSkin( int skinFlavorIndex, int charmFlavorIndex, bool shouldHighlightWeapon )
+void function UIToClient_PreviewWeaponSkin( int skinFlavorGUID, int charmFlavorGUID, bool shouldHighlightWeapon )
 {
 	if ( !file.initializedMenuModels )                                                                        
 		return
 
-	ItemFlavor weaponSkin   = GetItemFlavorByNetworkIndex( skinFlavorIndex )
+	ItemFlavor weaponSkin   = GetItemFlavorByGUID( skinFlavorGUID )
 	ItemFlavor weaponFlavor = WeaponSkin_GetWeaponFlavor( weaponSkin )
 	ModelData_SetSkinFlavor( file.customizeWeapon, weaponSkin )
 
-	ItemFlavor charmFlavor = GetItemFlavorByNetworkIndex( charmFlavorIndex )
+	ItemFlavor charmFlavor = GetItemFlavorByGUID( charmFlavorGUID )
 
 	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
 	entity weaponMover = ModelData_GetMover( file.customizeWeapon )
@@ -3117,7 +3117,7 @@ void function UpdateStoreItemDisplay_StandingEmote( ItemFlavor item )
 	CharacterSkin_Apply( model, characterSkin )
 
 	if ( model.Anim_HasSequence( anim3p ) )
-		thread ModelPerformEmote( model, item, mover, false )
+		thread ModelPerformEmote( model, item, mover, false, true )
 }
 
                 

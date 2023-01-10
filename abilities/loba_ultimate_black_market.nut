@@ -174,13 +174,6 @@ void function OnWeaponRegenEnd_ability_black_market( entity weapon )
 #if SERVER || CLIENT
 bool function OnWeaponAttemptOffhandSwitch_ability_black_market( entity weapon )
 {
-	entity owner = weapon.GetWeaponOwner()
-	if ( owner.IsPhaseShifted() )
-		return false
-
-	if ( weapon.GetAmmoPerShot() < weapon.GetWeaponPrimaryClipCount() )
-		return false
-
 	return true
 }
 #endif
@@ -588,10 +581,6 @@ void function PlacementProxyThread( entity weapon, entity player )
 
 		                                             
 
-                  
-			                                         
-        
-
                      
                                        
         
@@ -700,6 +689,12 @@ void function PlacementProxyThread( entity weapon, entity player )
 	                  
 	                   
 
+	                                                                                                                             
+	                                                                                   
+	 
+		                                                                                                
+	 
+
 	           
 
 	                                                                      
@@ -730,11 +725,8 @@ void function PlacementProxyThread( entity weapon, entity player )
 
 	             
 	 
-                   
-                                                                                                                                                                     
-       
-		                                                                            
-        
+		                                                
+		                                                                                                                                                                   
 
 		        
 	 
@@ -801,13 +793,8 @@ void function BlackMarketRumbleOnReadyThread( entity ent )
 	                                              
 		      
 
-	                                                              
+	                                                                             
 		                                                                                                                                              
-
-                 
-		                            
-			                                                                            
-       
 
 	                                                              
 		                                                                                          
@@ -854,7 +841,7 @@ void function BlackMarketRumbleOnReadyThread( entity ent )
 	 
 
 
-	                                                                      
+	                                                                                   
 		                                                                              
 	 
 		                                                                                                                                
@@ -871,13 +858,13 @@ void function BlackMarketRumbleOnReadyThread( entity ent )
  
 	                                                            
 
-	                                                                        
+	                                                                                     
 		             
 
-	                                                                                          
+	                                                                                                       
 	                   
 	 
-		                                                                        
+		                                                                                     
 		 
 			                                    
 			                              
@@ -1269,10 +1256,10 @@ bool function BlackMarket_ShouldUseBlockReload( entity player, entity ent )
 #if SERVER || CLIENT
 void function OnBlackMarketUsed( entity blackMarket, entity player, int useInputFlags )
 {
-	if ( (useInputFlags & USE_INPUT_LONG) == 0 )
+	if ( !IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 		return
 
-	if ( ( useInputFlags & USE_INPUT_ALT ) == 1 )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_ALT ) )
 		return
 
 	#if CLIENT

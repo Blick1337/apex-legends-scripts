@@ -43,7 +43,7 @@ const float OFFHAND_ALERT_ICON_SCALE = 4.5
 const bool ALWAYS_SHOW_BOOST_MOBILITY_BAR = true
 
 
-struct HudVisibilityStatus
+global struct HudVisibilityStatus
 {
 	bool mainHud
 	bool permanentHud
@@ -211,7 +211,7 @@ void function UpdatePilotDamageAmpFX( entity player )
 		EffectStop( cockpit.s.pilotDamageAmpFXHandle, false, true )                                
 	}
 
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.damageAmpFXOnly ) > 0 )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.damageAmpFXOnly ) )
 	{
 		cockpit.s.pilotDamageAmpFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( $"P_core_DMG_boost_screen" ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	}
@@ -239,7 +239,7 @@ void function UpdateTitanDamageAmpFX( entity player )
 	}
 
 	entity soul = player.GetTitanSoul()
-	if ( IsValid( soul ) && (StatusEffect_GetSeverity( soul, eStatusEffect.damageAmpFXOnly ) + StatusEffect_GetSeverity( soul, eStatusEffect.titan_damage_amp )) > 0 )
+	if ( IsValid( soul ) && ( StatusEffect_GetSeverity( soul, eStatusEffect.damageAmpFXOnly ) + StatusEffect_GetSeverity( soul, eStatusEffect.titan_damage_amp ) ) > 0 )
 	{
 		cockpit.s.titanDamageAmpFXHandle = StartParticleEffectOnEntity( cockpit, GetParticleSystemIndex( $"P_core_DMG_boost_screen" ), FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 	}
@@ -378,7 +378,7 @@ bool function ShouldOnlyShowMinimap()
 
 void function UpdatePlayerStatusCounts()
 {
-	if ( !GetCurrentPlaylistVarInt( "hud_score_enabled", 1 ) )
+	if ( GetCurrentPlaylistVarInt( "hud_score_enabled", 1 ) == 0 )
 		return
 
 	clGlobal.levelEnt.Signal( "UpdatePlayerStatusCounts" )                                    
@@ -465,9 +465,9 @@ void function UpdateMainHudVisibility( entity player, float duration = 0.0 )
 	  	                    
 	  	 
 	  		              
-	  		                               
+	  		                                              
 	  			              
-	  		                                       
+	  		                                                      
 	  			              
 	  	 
 	  
@@ -806,7 +806,7 @@ void function TrackDoF( entity player )
 
 	float tick = 0.25
 
-	while ( 1 )
+	while ( true )
 	{
 		float playerDist    = Distance( player.CameraPosition(), player.GetOrigin() )
 		float distToCamNear = playerDist
@@ -865,10 +865,10 @@ bool function ShouldHaveFarDoF( entity player )
 {
 	int ceFlags = player.GetCinematicEventFlags()
 
-	if ( ceFlags & CE_FLAG_EMBARK )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_EMBARK ) )
 		return true
 
-	if ( ceFlags & CE_FLAG_EXECUTION )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_EXECUTION ) )
 		return true
 
 	return false
@@ -903,28 +903,28 @@ bool function ShouldMainHudBeVisible( entity player )
 {
 	int ceFlags = player.GetCinematicEventFlags()
 
-	if ( ceFlags & CE_FLAG_EMBARK )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_EMBARK ) )
 		return false
 
-	if ( ceFlags & CE_FLAG_DISEMBARK )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_DISEMBARK ) )
 		return false
 
-	if ( ceFlags & CE_FLAG_INTRO )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_INTRO ) )
 		return false
 
-	if ( ceFlags & CE_FLAG_CLASSIC_MP_SPAWNING )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_CLASSIC_MP_SPAWNING ) )
 		return false
 
-	if ( ceFlags & CE_FLAG_HIDE_MAIN_HUD )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_HIDE_MAIN_HUD ) )
 		return false
 
-	if ( ceFlags & CE_FLAG_HIDE_MAIN_HUD_INSTANT )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_HIDE_MAIN_HUD_INSTANT ) )
 		return false
 
-	if ( ceFlags & CE_FLAG_EOG_STAT_DISPLAY )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_EOG_STAT_DISPLAY ) )
 		return false
 
-	if ( ceFlags & CE_FLAG_TITAN_3P_CAM && !IsSpectating() )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_TITAN_3P_CAM ) && !IsSpectating() )
 		return false
 
 	if ( clGlobal.isSoloDialogMenuOpen )
@@ -1057,10 +1057,10 @@ bool function ShouldPermanentHudBeVisible( entity player )
 		int ceFlags = player.GetCinematicEventFlags()
 
 		                        
-		if ( ceFlags & CE_FLAG_TITAN_3P_CAM && !IsSpectating() )
+		if ( IsBitFlagSet( ceFlags, CE_FLAG_TITAN_3P_CAM ) && !IsSpectating() )
 			return false
 
-		if ( ceFlags & CE_FLAG_HIDE_PERMANENT_HUD )
+		if ( IsBitFlagSet( ceFlags, CE_FLAG_HIDE_PERMANENT_HUD ) )
 			return false
 	}
 

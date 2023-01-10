@@ -136,6 +136,9 @@ struct
 	bool 		cachedAimAssistOverride = false
 
 	table signalDummy = {}
+	array <var> buttonHints = []
+	bool buttonHintsCreated = false
+	bool buttonHintsHidden = true
 } file
 
 
@@ -170,8 +173,12 @@ void function PrivateMatch_Init()
 		AddOnSpectatorTargetChangedCallback( OnSpectatorTargetChanged )
 		AddFreeCamSpectateStartedCallback( OnSpectatorModeChanged )
 		AddFreeCamSpectateEndedCallback( OnSpectatorModeChanged )
-		RegisterConCommandTriggeredCallback( "toggle_observer_highlight", PrivateMatch_ToggleHighlights )
-		RegisterConCommandTriggeredCallback( "toggle_observer_ring_survey", PrivateMatch_ToggleSurveyRing )
+		RegisterConCommandTriggeredCallback( "toggle_obs_highlight", PrivateMatch_ToggleHighlights )
+		RegisterConCommandTriggeredCallback( "toggle_obs_ring_survey", PrivateMatch_ToggleSurveyRing )
+		AddCallback_GameStateEnter( eGameState.Playing, OnSpectatorStarted )
+		AddFirstPersonSpectateStartedCallback( OnFPSSpectatorStarted )
+		AddThirdPersonSpectateStartedCallback( OnTPSSpectatorStarted )
+		AddFreeCamSpectateStartedCallback( OnFreecamSpectatorStarted )
 	#endif
 		
 	#if CLIENT || SERVER
@@ -1378,6 +1385,95 @@ void function ObserverHighlightEnableChanged( entity observer, bool newValue )
 	}
 }
 
+void function OnSpectatorStarted()
+{
+	printt( "Spectator_OnSpectatorStarted" )
+
+	entity localClientPlayer = GetLocalClientPlayer()
+
+	                                          
+	if ( !file.buttonHintsCreated && localClientPlayer.GetTeam() == TEAM_SPECTATOR )
+	{
+		                    
+		file.buttonHints.push(CreateCockpitPostFXRui( $"ui/observer_panel_hints.rpak", 0 ) )
+		file.buttonHints.push(CreateCockpitPostFXRui( $"ui/observer_controller_hints.rpak",  0 ) )
+		file.buttonHints.push(CreateCockpitPostFXRui( $"ui/observer_keyboard_hints.rpak", 0 ) )
+		file.buttonHints.push(CreateCockpitPostFXRui( $"ui/observer_dpads_hints.rpak",  0 ) )
+		file.buttonHints.push(CreateCockpitPostFXRui( $"ui/observer_camera_controls_hints.rpak", 0 ) )
+
+		                                                                       
+		file.buttonHintsCreated = true
+
+		                                                                        
+		RegisterButtonPressedCallback( KEY_B, OnToggleButtonHintsVisibility )
+		RegisterConCommandTriggeredCallback( "toggle_observer_btn_hints", OnToggleButtonHintsVisibility )
+	}
+}
+
+void function OnFPSSpectatorStarted( entity player, entity currentTarget )
+{
+	printt( "Spectator_OnFPSSpectatorStarted" )
+
+	if (file.buttonHintsCreated)
+	{
+		for ( int i = 0; i < file.buttonHints.len(); i++ )
+		{
+			RuiSetBool( file.buttonHints[i], "isObserverMode", true )
+			RuiSetBool( file.buttonHints[i], "isFPS", true )
+		}
+	}
+}
+
+void function OnTPSSpectatorStarted( entity player, entity currentTarget )
+{
+	printt( "Spectator_OnTPSSpectatorStarted" )
+
+	if (file.buttonHintsCreated)
+	{
+		for ( int i = 0; i < file.buttonHints.len(); i++ )
+		{
+			RuiSetBool( file.buttonHints[i], "isObserverMode", true )
+			RuiSetBool( file.buttonHints[i], "isFPS", false )
+		}
+	}
+}
+
+void function OnFreecamSpectatorStarted( entity spectatingPlayer )
+{
+	printt( "Spectator_OnFreecamSpectatorStarted" )
+
+	if (file.buttonHintsCreated)
+	{
+		for ( int i = 0; i < file.buttonHints.len(); i++ )
+		{
+			RuiSetBool( file.buttonHints[i], "isObserverMode", false )
+		}
+	}
+}
+
+void function OnToggleButtonHintsVisibility( var button )
+{
+	printt("Spectator_OnToggleButtonHintsVisibility", file.buttonHintsHidden)
+
+	if (file.buttonHintsHidden)
+	{
+		for ( int i = 0; i < file.buttonHints.len(); i++ )
+		{
+			RuiSetBool( file.buttonHints[i], "isOpen", true )
+			RuiSetBool( file.buttonHints[i], "animateIn", true )
+		}
+	}
+	else
+	{
+		for ( int i = 0; i < file.buttonHints.len(); i++ )
+		{
+			RuiSetBool( file.buttonHints[i], "isOpen", false )
+			RuiSetBool( file.buttonHints[i], "animateOut", true )
+		}
+	}
+	file.buttonHintsHidden = !file.buttonHintsHidden
+}
+
                                                              
    
   	                                        
@@ -1409,7 +1505,17 @@ void function OnSpectatorTargetChanged( entity observer, entity prevTarget, enti
 	if ( observer.GetTeam() != TEAM_SPECTATOR )
 		return
 
-	if ( IsValid( newTarget ) && ( newTarget.IsPlayer() || newTarget.IsBot() ) && (newTarget != prevTarget) )
+	bool showTeamName = true
+                       
+	if (IsGunGameActive())
+		showTeamName = false
+      
+                      
+	if (WinterExpress_IsModeEnabled())
+		showTeamName = false
+      
+
+	if ( IsValid( newTarget ) && ( newTarget.IsPlayer() || newTarget.IsBot() ) && (newTarget != prevTarget) && showTeamName)
 	{
 		printf( "PrivateMatchObserver: Observer %s changed target to %s", observer.GetPINNucleusPid(), newTarget.GetPINNucleusPid() )
 		Remote_ServerCallFunction( "ClientCallback_PrivateMatchReportObserverTargetChanged" )
@@ -1482,9 +1588,17 @@ void function PrivateMatch_OnGameStateChanged( int newVal )
 	}
 	else if ( newVal == eGameState.Resolution )
 	{
+		                                                                                                                 
 		if ( GameRules_GetTeamName( GetWinningTeam() ) == "Unassigned" )
 		{
-			RunUIScript( "PrivateMatch_CreateMatchEndEarlyDialog")
+			                                                            
+			thread function() : ( )
+			{
+				WaitSignal( clGlobal.levelEnt, "GameModes_CompletedResolutionCleanup" )
+
+				if ( IsValid( GetLocalViewPlayer() ) )
+					RunUIScript( "PrivateMatch_CreateMatchEndEarlyDialog")
+			}()
 		}
 
 		                                                                     

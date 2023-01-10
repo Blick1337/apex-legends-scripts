@@ -429,7 +429,7 @@ string function NPCBleedoutUseTextOverride( entity npc )
                                                                                  
  
 	                                                        
-	                       
+	                                      
 	 
 		                                                                            
 		                            
@@ -758,15 +758,15 @@ string function NPCBleedoutUseTextOverride( entity npc )
 	                               
 	                 
 	                  
-		               
+		                  
 	                  
-		                
+		                   
 	                  
-		                
+		                   
 	                  
-		               
+		                  
 
-	                
+	                   
  
 
                                                            
@@ -779,11 +779,11 @@ string function NPCBleedoutUseTextOverride( entity npc )
 
                                                        
  
-	                                           
-	                                            
-	                                            
-	                                            
-	                                           
+	                                              
+	                                               
+	                                               
+	                                               
+	                                              
  
 
                                                                                 
@@ -927,21 +927,21 @@ string function NPCBleedoutUseTextOverride( entity npc )
                   
     
                      
-                                
-                                 
+                                   
+                                    
                                                                
      
                                     
         
                        
-                                
+                                   
                                                                
      
                                     
         
                    
-                                 
-                                 
+                                    
+                                    
                                                                
      
                                     
@@ -956,11 +956,11 @@ string function NPCBleedoutUseTextOverride( entity npc )
     
                  
                         
-                                 
+                                    
                                                             
         
                      
-                                 
+                                    
                                                             
         
 
@@ -1299,8 +1299,8 @@ string function NPCBleedoutUseTextOverride( entity npc )
 
 		                                                                            
 		 
-			                                                                 
-			                                                                  
+			                                                                        
+			                                                                         
 			                                              
 		 
 
@@ -1479,7 +1479,7 @@ string function NPCBleedoutUseTextOverride( entity npc )
 
                                                                                
   
-                                                                   
+                                                                                  
    
                                                     
                                 
@@ -1817,7 +1817,7 @@ string function NPCBleedoutUseTextOverride( entity npc )
  
    
                                                          
-                        
+                                       
   
                                                                               
                               
@@ -1987,7 +1987,7 @@ string function NPCBleedoutUseTextOverride( entity npc )
                                                       
         
           
-                                                                                           
+                                                                                               
         
   
 
@@ -2607,7 +2607,7 @@ string function NPCBleedoutUseTextOverride( entity npc )
 			                                
 	 
 
-	                                          
+	                                              
 	                                
  
 
@@ -2630,7 +2630,7 @@ string function NPCBleedoutUseTextOverride( entity npc )
 		      
 
 	                                                             
-	                                                       
+	                                                                    
 	                
 		      
 

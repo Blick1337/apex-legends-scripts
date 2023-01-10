@@ -794,10 +794,10 @@ void function OnClientAnimEvent_weapon_riot_drill( entity weapon, string name )
 	if ( !IsValid( weapon ) )
 		return
 
-	const float SHAKE_AMPLITUDE = 3.0
-	const float SHAKE_FREQUENCY = 50.0
-	const float SHAKE_DURATION = 0.35
-	const vector SHAKE_DIRECTION = < 0.0, 0.0, 0.0 >
+	const float SHAKE_AMPLITUDE = 2.0
+	const float SHAKE_FREQUENCY = 10.0
+	const float SHAKE_DURATION = 0.2
+	const vector SHAKE_DIRECTION = < 0.0, 0.0, 1.0 >
 
 	if ( name == "riot_drill_screen_shake" )
 		ClientScreenShake( SHAKE_AMPLITUDE, SHAKE_FREQUENCY, SHAKE_DURATION, SHAKE_DIRECTION )

@@ -237,8 +237,8 @@ void function OnMenuShow()
 	SetBlurEnabled( false )
 
 	RunClientScript( "UICallback_UpdatePlayerInfo", Hud_GetChild( fileVM.menu, "PlayerInfo" ) )
-	RunClientScript( "UICallback_UpdateTeammateInfo", Hud_GetChild( fileVM.menu, "TeammateInfo0" ) )
-	RunClientScript( "UICallback_UpdateTeammateInfo", Hud_GetChild( fileVM.menu, "TeammateInfo1" ) )
+	RunClientScript( "UICallback_UpdateTeammateInfo", Hud_GetChild( fileVM.menu, "TeammateInfo0" ), false )
+	RunClientScript( "UICallback_UpdateTeammateInfo", Hud_GetChild( fileVM.menu, "TeammateInfo1" ), false )
 
 #if NX_PROG
 	RunClientScript( "DeathBoxListPanel_UpdateAfterSwitching" )
@@ -303,7 +303,7 @@ void function UIToClient_SurvivalGroundListOpened( var menu )
 	}
 
 	entity deathBox = Survival_GetDeathBox()
-	Assert( IsValid( deathBox ) )
+
 	if ( !IsValid( deathBox ) )
 	{
 		RunUIScript( "CloseAllMenus" )
@@ -319,6 +319,14 @@ void function UIToClient_SurvivalGroundListOpened( var menu )
 	DeathBoxListPanel_SetScrollBarColorAlpha( fileLevel.listPanel, <1.0, 1.0, 1.0>, 1.0 )
 
 	bool isBlackMarket = (deathBox.GetNetworkedClassName() == "prop_loot_grabber")
+                    
+                               
+                      
+   
+                                                  
+                                    
+   
+       
 	if ( isBlackMarket )
 	{
 		EmitUISound( "Loba_Ultimate_BlackMarket_Open" )
@@ -396,6 +404,13 @@ void function UIToClient_SurvivalGroundListOpened( var menu )
 			headerOwnerText = Localize( "#DEATHBOX_OWNER_SUFFIX", deathBoxOwner.GetPlayerName() )
 		}
 	}
+                    
+                             
+  
+                                                             
+                                                               
+  
+       
 	else
 	{
 		string customOwnerName = deathBox.GetCustomOwnerName()
@@ -441,7 +456,14 @@ void function UIToClient_SurvivalGroundListOpened( var menu )
 	UIToClient_GroundlistOpened()
 
 	if ( deathBox.GetNetworkedClassName() == "prop_loot_grabber" )
-		BlackMarket_OnDeathBoxMenuOpened( deathBox )
+	{
+                     
+                                            
+        
+		{
+			BlackMarket_OnDeathBoxMenuOpened( deathBox )
+		}
+	}
 
 	WeaponStatusSetDeathBoxMenuOpen( true )
 }
@@ -455,7 +477,14 @@ void function UIToClient_SurvivalGroundListClosed()
 
 	entity deathBox = Survival_GetDeathBox()
 	if ( IsValid( deathBox ) && deathBox.GetNetworkedClassName() == "prop_loot_grabber" )
-		EmitUISound( "Loba_Ultimate_BlackMarket_Close" )
+	{
+                     
+                                            
+        
+		{
+			EmitUISound( "Loba_Ultimate_BlackMarket_Close" )
+		}
+	}
 
 	fileLevel.currentDeathBoxEEH = EncodedEHandle_null
 	DeathBoxListPanel_SetActive( fileLevel.listPanel, false )
@@ -633,6 +662,13 @@ void function UpdateSurvivalGroundList( SurvivalGroundListUpdateParams params )
 		delete fileLevel.deathBoxEntryDataByLootEnt[deletedLootEnt]
 	}
 
+	bool isBlackMarket = (deathBox.GetNetworkedClassName() == "prop_loot_grabber")
+                    
+                      
+   
+                                                      
+   
+       
 	                                                              
 	bool deathBoxBlocked = false
 	{
@@ -641,7 +677,7 @@ void function UpdateSurvivalGroundList( SurvivalGroundListUpdateParams params )
 		array<entity> mainWeapons = SURVIVAL_GetPrimaryWeaponsSorted( params.player )
 		specialStateSamenessKey += mainWeapons.join( "|" )
 
-		if ( deathBox.GetNetworkedClassName() == "prop_loot_grabber" && GetBlackMarketUseCount( deathBox, GetLocalClientPlayer() ) >= GetBlackMarketUseLimit() )
+		if ( isBlackMarket && GetBlackMarketUseCount( deathBox, GetLocalClientPlayer() ) >= GetBlackMarketUseLimit() )
 			deathBoxBlocked = true
 
 		specialStateSamenessKey += "|" + (deathBoxBlocked ? "blocked" : "usable")
@@ -667,7 +703,6 @@ void function UpdateSurvivalGroundList( SurvivalGroundListUpdateParams params )
 		bool isMainWeapon   = (entryData.lootFlav.lootType == eLootType.MAINWEAPON)
 		bool hasSpecialAmmo = (isMainWeapon && !GetWeaponInfoFileKeyField_GlobalBool( entryData.lootFlav.baseWeapon, "uses_ammo_pool" ))
 		bool isAmmo = (entryData.lootFlav.lootType == eLootType.AMMO)
-		bool isBlackMarket = (deathBox.GetNetworkedClassName() == "prop_loot_grabber")
 
 		foreach ( entity lootEnt in entryData.lootEnts )
 		{
@@ -774,6 +809,10 @@ void function UpdateSurvivalGroundList( SurvivalGroundListUpdateParams params )
 	var widgetRui             = Hud_GetRui( fileLevel.blackMarketWidget )
 	if ( params.isBlackMarket )
 	{
+                     
+                                          
+        
+
 		Hud_Show( fileLevel.blackMarketWidget )
 
 		int localPlayerUseCount = GetBlackMarketUseCount( deathBox, GetLocalViewPlayer() )
@@ -1196,7 +1235,17 @@ void function OnCategoryHeaderBind( DeathBoxListPanelData listPanelData, DeathBo
 	RuiSetColorAlpha( Hud_GetRui( category.allocatedHeaderPanel ), "categoryHeaderTextCol", fileLevel.categoryHeaderTextCol, 1.0 )
 
 	entity deathBox    = GetEntityFromEncodedEHandle( fileLevel.currentDeathBoxEEH )
-	bool isBlackMarket = (IsValid( deathBox ) && deathBox.GetNetworkedClassName() == "prop_loot_grabber")
+	bool isBlackMarket = false
+	if ( IsValid( deathBox ) && deathBox.GetNetworkedClassName() == "prop_loot_grabber")
+	{
+                     
+                                            
+        
+		{
+			isBlackMarket = true
+		}
+	}
+
 	RuiSetBool( Hud_GetRui( category.allocatedHeaderPanel ), "isBlackMarket", isBlackMarket )
 }
 #endif
@@ -1272,7 +1321,22 @@ void function PerformItemAction( DeathBoxListPanelItem item, bool isAltAction, b
 	  	      
 
 	entity deathBox    = GetEntityFromEncodedEHandle( fileLevel.currentDeathBoxEEH )
-	bool isBlackMarket = (IsValid( deathBox ) && deathBox.GetNetworkedClassName() == "prop_loot_grabber")
+	bool isBlackMarket = false
+	bool needExtendedUse = false
+	if ( IsValid( deathBox ) && deathBox.GetNetworkedClassName() == "prop_loot_grabber")
+	{
+		isBlackMarket = true
+                     
+                                           
+   
+                          
+   
+      
+        
+		{
+			needExtendedUse = true
+		}
+	}
 
 	int count = SURVIVAL_GetInventorySlotCountForPlayer( player, entryData.lootFlav )
 	if ( entryData.lootFlav.lootType == eLootType.AMMO && !isBlackMarket )
@@ -1297,7 +1361,7 @@ void function PerformItemAction( DeathBoxListPanelItem item, bool isAltAction, b
 	{
 		  
 	}
-	else if ( !fromExtendedUse && !isFromQuickSwap && (groundAction == eLootAction.SWAP || isBlackMarket) )
+	else if ( !fromExtendedUse && !isFromQuickSwap && (groundAction == eLootAction.SWAP || needExtendedUse) )
 	{
 		bool requiresButtonFocus = true
 		float duration = 0.4

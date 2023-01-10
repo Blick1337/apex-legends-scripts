@@ -35,7 +35,7 @@ void function OnProjectileCollision_weapon_grenade_emp( entity projectile, vecto
 	collisionParams.hitBox = hitBox
 	collisionParams.isCritical = isCritical
 
-	if ( hitEnt.IsPlayer() && StatusEffect_GetTimeRemaining(hitEnt, eStatusEffect.death_totem_recall) )
+	if ( hitEnt.IsPlayer() && StatusEffect_GetTimeRemaining(hitEnt, eStatusEffect.death_totem_recall) > 0.0 )
 	{
 		projectile.SetVelocity( <0,0,0> )
 		projectile.ClearParent()

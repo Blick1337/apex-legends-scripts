@@ -259,7 +259,7 @@ void function ServerCallback_PlaySquadConversation( int conversationIndex, int e
 		{
 			printt( "Soldier is " + expect string( soldier.GetNetworkedClassName() ) )
 		}
-		                                                             
+		                                                                 
 		return
 	}
 
@@ -298,7 +298,7 @@ void function ServerCallback_PlaySquadConversation( int conversationIndex, int e
 	}
 
 	                                                                                                 
-    if ( currentConversationPriority )
+    if ( currentConversationPriority != 0 )
 	{
 		CancelSquadConversation( squad )
 	}
@@ -620,7 +620,7 @@ table function RemoveChoicesFromElem( table elem )
 			                                                                   
 			Assert( IsArray( elem.choices ) )
 
-			if ( elem.choices.len() )
+			if ( elem.choices.len() > 0 )
 			{
 				_elem.alias <- elem.choices.getrandom()
 			}
@@ -1227,7 +1227,7 @@ table function GetAliases( entity guy, dialogue, radioDelayOverride = null )
 
 void function VerifyConversationAliases()
 {
-	if ( !GetDeveloperLevel() )
+	if ( GetDeveloperLevel() == 0 )
 		return
 
 	table e
@@ -1246,7 +1246,7 @@ void function VerifyConversationAliases()
 		}
 	}
 
-	if ( e.failed.len() )
+	if ( e.failed.len() > 0 )
 	{
 		local failed = []
 		foreach ( alias in e.failed )

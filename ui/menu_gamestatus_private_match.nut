@@ -99,9 +99,6 @@ struct
 {
 	var menu
 
-	var decorationRui
-	var menuHeaderRui
-
 	var teamRosterPanel
 	var postGameSummaryPanel
 	var inGameSummaryPanel
@@ -148,9 +145,6 @@ void function InitPrivateMatchGameStatusMenu( var menu )
 	file.adminPanel = Hud_GetChild( menu, "PrivateMatchAdminPanel" )
 
 	#if UI
-		file.menuHeaderRui = Hud_GetRui( Hud_GetChild( menu, "MenuHeader" ) )
-		RuiSetString( file.menuHeaderRui, "menuName", "#TOURNAMENT_MATCH_STATUS" )
-
 		AddMenuEventHandler( menu, eUIEvent.MENU_OPEN, OnOpenPrivateMatchGameStatusMenu )
 		AddMenuEventHandler( menu, eUIEvent.MENU_SHOW, OnShowPrivateMatchGameStatusMenu )
 		AddMenuEventHandler( menu, eUIEvent.MENU_HIDE, OnHidePrivateMatchGameStatusMenu )
@@ -519,6 +513,7 @@ TeamRosterStruct function CreateTeamPlacement( var panel )
 {
 	TeamRosterStruct teamPlacement
 	teamPlacement.framePanel = Hud_GetChild( panel, PRIVATE_MATCH_TEAM_FRAME_PANEL )
+	Hud_Hide( teamPlacement.framePanel )
 	teamPlacement.headerPanel = Hud_GetChild( panel, PRIVATE_MATCH_TEAM_HEADER_PANEL )
 	Hud_Hide( teamPlacement.headerPanel )
 	teamPlacement.listPanel = Hud_GetChild( panel, PRIVATE_MATCH_TEAM_BUTTON_PANEL )
@@ -617,6 +612,7 @@ void function PrivateMatch_RestoreDefaultPanels()
 		{
 			Hud_Hide( teamRoster.listPanel )
 			Hud_Hide( teamRoster.headerPanel )
+			Hud_Hide( teamRoster.framePanel )
 		}
 	}
 
@@ -831,6 +827,7 @@ void function PrivateMatch_GameStatus_TeamRoster_Update( int dirtyBit )
 
 		Hud_Show( teamRoster.listPanel )
 		Hud_Show( teamRoster.headerPanel )
+		Hud_Show( teamRoster.framePanel )
 
 		var headerRui = Hud_GetRui( teamRoster.headerPanel )
 		var frameRui = Hud_GetRui( teamRoster.framePanel )
@@ -866,6 +863,7 @@ void function PrivateMatch_GameStatus_TeamRoster_Update( int dirtyBit )
 		TeamRosterStruct teamRoster = file.teamRosters[ nextSlotIdx ]
 		Hud_Hide( teamRoster.listPanel )
 		Hud_Hide( teamRoster.headerPanel )
+		Hud_Hide( teamRoster.framePanel )
 	}
 }
 
@@ -1178,10 +1176,12 @@ void function TryInitializeGameStatusMenu()
 			tabdef.width = 240
 		}
 
-		if ( HasMatchAdminRole() )
 		{
 			TabDef tabdef = AddTab( file.menu, Hud_GetChild( file.menu, "PrivateMatchAdminPanel" ), "#TOURNAMENT_ADMIN_CONTROLS" )
 			tabdef.width = 300
+
+			tabdef.visible = false
+			tabdef.enabled = false
 		}        
 
 		SetTabDefsToSeasonal(tabData)
@@ -1201,12 +1201,11 @@ void function OnOpenPrivateMatchGameStatusMenu()
 
 	TryInitializeGameStatusMenu()
 
-	TabData tabData        = GetTabDataForPanel( file.menu )
-	TabDef rosterTab       = Tab_GetTabDefByBodyName( tabData, "PrivateMatchRosterPanel" )
-	TabDef overviewTab     = Tab_GetTabDefByBodyName( tabData, "PrivateMatchOverviewPanel" )
-	TabDef summaryTab      = Tab_GetTabDefByBodyName( tabData, "PrivateMatchSummaryPanel" )
-	if ( HasMatchAdminRole() )
-		TabDef adminTab       = Tab_GetTabDefByBodyName( tabData, "PrivateMatchAdminPanel" )
+	bool isAdmin = HasMatchAdminRole()
+	TabData tabData       = GetTabDataForPanel( file.menu )
+	TabDef adminTab       = Tab_GetTabDefByBodyName( tabData, "PrivateMatchAdminPanel" )
+	adminTab.visible 	  = isAdmin
+	adminTab.enabled  	  = isAdmin
 
 	UpdateMenuTabs()
 	

@@ -11,9 +11,11 @@ global function TimedEvents_Init
 	                                                 
 #endif
 
-#if DEV && SERVER
-	                                                  
-#endif                     
+                        
+	#if DEV && SERVER
+		                                                  
+	#endif                     
+                              
 
 
 
@@ -648,7 +650,7 @@ void function ManageTimedEventTracker( var gameStateRui, int gamestate )
 }
 #endif
 
-
+                        
 #if DEV && SERVER
                                                         
 
@@ -661,7 +663,11 @@ void function ManageTimedEventTracker( var gameStateRui, int gamestate )
 	       
 	      
  
+#endif                     
+                              
 
+                        
+#if DEV && SERVER
                                                                                                  
  
 	                                                                  
@@ -690,3 +696,4 @@ void function ManageTimedEventTracker( var gameStateRui, int gamestate )
 	                                                                                                  
  
 #endif                     
+                              

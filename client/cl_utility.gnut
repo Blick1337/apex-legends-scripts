@@ -1133,7 +1133,7 @@ bool function ShouldShowWeakpoints( entity ent )
 	entity soul = ent.GetTitanSoul()
 	if ( IsValid( soul ) )
 	{
-		if ( soul.GetShieldHealth() )
+		if ( soul.GetShieldHealth() > 0 )
 			return false
 
 		if ( soul.GetCritsPrevented() == true )
@@ -1142,9 +1142,9 @@ bool function ShouldShowWeakpoints( entity ent )
 		if ( soul.GetInvalidHealthBarEnt() )
 			return false
 	}
-	else if ( ent.GetShieldHealthMax() )
+	else if ( ent.GetShieldHealthMax() > 0 )
 	{
-		if ( soul.GetShieldHealth() )
+		if ( soul.GetShieldHealth() > 0 )
 			return false
 	}
 
@@ -1215,7 +1215,7 @@ void function AddOverheadIconThread( entity prop, var rui )
 	                                               
 	if ( prop.IsNPC() )
 	{
-		while ( 1 )
+		while ( true )
 		{
 			bool showIcon = !prop.IsCloaked( true )
 
@@ -1792,4 +1792,25 @@ void function GfxDesaturateOff()
 	{
 		GfxDesaturate( false )
 	}
+}
+
+void function IssueReloadCommand( entity player )
+{
+	EndSignal( player, "OnDestroy" )
+
+	player.ClientCommand( "+reload" )
+	WaitFrame()
+	player.ClientCommand( "-reload" )
+}
+
+array<var> function Client_GetPanelElementsByClassname( var panel, string className )
+{
+	array<var> allElements = GetElementsByClassname( GetParentMenu( panel ), className )
+	foreach ( element in clone allElements )
+	{
+		if ( Hud_GetParent( element ) != panel )
+			allElements.removebyvalue( element )
+	}
+
+	return allElements
 }

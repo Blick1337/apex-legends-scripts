@@ -422,7 +422,7 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
 
                                                                                 
 
-                                                                                 
+                                                                             
   
                                                              
    
@@ -448,7 +448,7 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
         
 
                                            
-                                                                      
+                                                                                     
     
                                                                           
                        
@@ -524,7 +524,8 @@ void function OnBubbleBunkerPlanted( entity projectile, DeployableCollisionParam
                                                                                        
                                                                                                                                                                                                                                    
                                                                                                                                                                                                                                       
-                                                             
+                                                                                           
+                               
                                                                
                                         
                                                         
@@ -771,5 +772,5 @@ bool function GibraltarIsInDome( entity player )
 
 bool function InDomeShield( entity player )
 {
-	return StatusEffect_GetSeverity( player, eStatusEffect.bubble_bunker ) > 0.0
+	return StatusEffect_HasSeverity( player, eStatusEffect.bubble_bunker )
 }

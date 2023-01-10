@@ -432,7 +432,7 @@ void function ChargePylon_SetButtonUsable( entity button )
 
 void function ChargePylon_OnUse( entity panel, entity user, int useInputFlags )
 {
-	if ( !(useInputFlags & USE_INPUT_LONG) )
+	if ( !IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 		return
 
 	ExtendedUseSettings settings
@@ -890,7 +890,7 @@ bool function ChargePylon_CanUse( entity user, entity button, int useFlags )
 			           
 	 
 
-	                                                                                        
+	                                                                                            
 	           
  
 
@@ -903,7 +903,7 @@ bool function ChargePylon_CanUse( entity user, entity button, int useFlags )
 
 	 
 
-	                                                                                       
+	                                                                                           
 	           
  
 
@@ -945,7 +945,7 @@ bool function ChargePylon_CanUse( entity user, entity button, int useFlags )
 	                                            
 		                                              
 	    
-		                                                                                           
+		                                                                                               
  
 
                                                            

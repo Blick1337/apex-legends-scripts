@@ -31,6 +31,9 @@ global function StatsCard_OnArenasRankedPeriodRegistered
 global function StatCard_GetAvailableSeasons
 global function StatCard_GetAvailableRankedPeriods
 global function StatCard_GetAvailableSeasonsAndRankedPeriods
+global function StatCard_ClearAvailableSeasonsCache
+global function StatCard_ClearAvailableRankedPeriodsCache
+global function StatCard_ClearAvailableSeasonsAndRankedPeriodsCache
 
 global enum eStatCardGameMode
 {
@@ -131,6 +134,10 @@ struct
 
 	table<string, int> GUIDToSeasonNumber
 	int currentGUIDToSeasonNumber = 1
+
+	table< int, array< ItemFlavor > > availableSeasonsCache
+	table< int, array< ItemFlavor > > availableRankedPeriodsCache
+	table< int, array< ItemFlavor > > availableSeasonsAndRankedPeriods
 } file
 
 const string NO_DATA_REF = "000"
@@ -1131,8 +1138,17 @@ float function CalculateStat( entity player, StatTemplate stat1, StatTemplate st
 	unreachable
 }
 
+void function StatCard_ClearAvailableSeasonsCache( int gameMode )
+{
+	if ( gameMode in file.availableSeasonsCache )
+		delete file.availableSeasonsCache[gameMode]
+}
+
 array< ItemFlavor > function StatCard_GetAvailableSeasons( int gameMode )
 {
+	if ( gameMode in file.availableSeasonsCache )
+		return clone file.availableSeasonsCache[gameMode]
+
 	array< ItemFlavor > seasons = GetAllSeasonFlavors()
 
 	foreach( ItemFlavor season in seasons )
@@ -1153,11 +1169,21 @@ array< ItemFlavor > function StatCard_GetAvailableSeasons( int gameMode )
         
 	}
 
+	file.availableSeasonsCache[gameMode] <- seasons
 	return seasons
+}
+
+void function StatCard_ClearAvailableRankedPeriodsCache( int gameMode )
+{
+	if ( gameMode in file.availableRankedPeriodsCache )
+		delete file.availableRankedPeriodsCache[gameMode]
 }
 
 array<ItemFlavor> function StatCard_GetAvailableRankedPeriods( int gameMode )
 {
+	if ( gameMode in file.availableRankedPeriodsCache )
+		return clone file.availableRankedPeriodsCache[gameMode]
+
                         
 		ItemFlavor season09CalEvent = GetItemFlavorByAsset( $"settings/itemflav/calevent/season09.rpak" )
        
@@ -1199,11 +1225,22 @@ array<ItemFlavor> function StatCard_GetAvailableRankedPeriods( int gameMode )
 			}
 		}
        
+
+	file.availableRankedPeriodsCache[gameMode] <- rankedPeriods
 	return rankedPeriods
+}
+
+void function StatCard_ClearAvailableSeasonsAndRankedPeriodsCache( int gameMode )
+{
+	if ( gameMode in file.availableSeasonsAndRankedPeriods )
+		delete file.availableSeasonsAndRankedPeriods[gameMode]
 }
 
 array< ItemFlavor > function StatCard_GetAvailableSeasonsAndRankedPeriods( int gameMode )
 {
+	if ( gameMode in file.availableSeasonsAndRankedPeriods )
+		return clone file.availableSeasonsAndRankedPeriods[gameMode]
+
 	                                                     
 	array< ItemFlavor > seasons = clone GetAllItemFlavorsOfType( eItemType.calevent_season )                                                                                                                             
                         
@@ -1262,6 +1299,8 @@ array< ItemFlavor > function StatCard_GetAvailableSeasonsAndRankedPeriods( int g
 		}
 	}
        
+
+	file.availableSeasonsAndRankedPeriods[gameMode] <- seasonsAndPeriods
 	return seasonsAndPeriods
 }
 

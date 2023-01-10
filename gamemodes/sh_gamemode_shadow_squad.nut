@@ -1565,10 +1565,10 @@ void function ShadowSquadThreatVision( entity player )
 	                  
 	                  
 	                                  
-	                                                                                                                                     
-	                                                                                                                                      
-	                                                                                                                                      
-	                                                                                                                                      
+	                                                                                                                                        
+	                                                                                                                                         
+	                                                                                                                                         
+	                                                                                                                                         
 
 	                               
 	                             
@@ -3264,7 +3264,7 @@ void function OnPlayerLifeStateChanged( entity player, int oldState, int newStat
 	 
 	    
 	 
-		                                                                    
+		                                                                        
 	 
 
 	                         
@@ -3831,7 +3831,7 @@ void function UpdatePlayerHUD( entity player )
 			                                                                
 			     
 		        
-			                                                           
+			                                                               
 	 
 
 	                                                                                
@@ -4258,22 +4258,22 @@ void function UpdatePlayerHUD( entity player )
 	  
 
 	  
-	               
+	                    
 		                                                          
-	                        
+	                                       
 		                                                                                             
-	                        
+	                                       
 		                                                              
-	                          
+	                                         
 		                                                                         
-	                        
+	                                       
 		                                                              
-	                        
+	                                       
 		                                                   
 	  
 
 
-	               
+	                    
 		            
 
 	                   
@@ -4726,7 +4726,7 @@ void function ServerCallback_ModeShadowSquad_AnnouncementSplash( int messageInde
 			break
 
 		default:
-			Assert( 0, "Unhandled messageIndex: " + messageIndex )
+			Assert( false, "Unhandled messageIndex: " + messageIndex )
 	}
 
 	AnnouncementMessageSweepShadowSquad( player, messageText, subText, titleColor, soundAlias, duration, icon, leftIcon, rightIcon )

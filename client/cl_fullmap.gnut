@@ -145,6 +145,7 @@ void function Fullmap_SetupScoreboard()
 
 	Teams_AddCallback_ScoreboardData( Survival_GetScoreboardData )
 	Teams_AddCallback_Header( Survival_ScoreboardUpdateHeader )
+	Teams_AddCallback_GetTeamColor( Survival_ScoreboardGetTeamColor )
 	Teams_AddCallback_PlayerScores( Survival_GetPlayerScores )
 	Teams_AddCallback_SortScoreboardPlayers( Survival_SortPlayersByScore )
 }
@@ -245,20 +246,37 @@ void function Survival_ScoreboardUpdateHeader( var headerRui, var frameRui, int 
 				int score = WinterExpress_GetTeamScore( uiTeam  )
 
 				RuiSetString( headerRui, "headerText", Localize( Squads_GetSquadName( squadIndex ) ) )
-				RuiSetColorAlpha( headerRui, "teamColor", Squads_GetSquadColor( squadIndex ), 1.0 )
 				RuiSetImage( headerRui, "teamIcon", Squads_GetSquadIcon(squadIndex))
 				RuiSetInt( headerRui, "score", score )
 				RuiSetBool( headerRui, "isWinning", WinterExpress_IsTeamWinning(uiTeam ) )
-
-				if( frameRui != null )
-					RuiSetColorAlpha( frameRui, "teamColor", Squads_GetSquadColor( squadIndex ), 1.0 )
-
 			}
          
         
 	}
 }
 #endif          
+
+#if CLIENT
+ vector function Survival_ScoreboardGetTeamColor( int team )
+ {
+	 bool isWinterExpress = false
+	 int teamIndex = Squads_GetSquadUIIndex( team )
+
+	 vector color  = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+
+                        
+		 isWinterExpress = WinterExpress_IsModeEnabled()
+        
+                     
+                         
+			 if( isWinterExpress )
+				 color =  Squads_GetSquadColor( teamIndex )
+         
+       
+
+	return color
+ }
+#endif         
 
 void function InitFullmap()
 {
@@ -900,7 +918,7 @@ FullmapDrawParams function GetFullmapDrawParams()
 {
 	UISize screenSize = GetScreenSize()
 
-	float mapSizeScale = GetCurrentPlaylistVarFloat( "fullmap_size_scale", 0.94 )
+	float mapSizeScale = GetCurrentPlaylistVarFloat( "fullmap_size_scale", 0.941 )
 	float posScaleX    = GetCurrentPlaylistVarFloat( "fullmap_pos_x", -0.5 )
 	float posScaleY    = GetCurrentPlaylistVarFloat( "fullmap_pos_y", -0.5                            )
 
@@ -1003,7 +1021,8 @@ void function UpdateMap_THREAD()
 		if ( IsSpectator( GetLocalClientPlayer() ) && file.updatePlayerTags == true)
 		{
 			array< entity > sortedPlayers = GetPlayerArray()
-			sortedPlayers.sort( int function(entity playerA, entity playerB){
+			sortedPlayers.sort( int function(entity playerA, entity playerB)
+			{
 				entity player = GetLocalViewPlayer()
 				if ( playerA.GetTeam() == playerB.GetTeam() && playerA.GetTeam() == player.GetTeam() )
 				{
@@ -1778,7 +1797,8 @@ void function OnSpectatorTagModeChanged( entity player, int newMode )
 	file.updatePlayerTags = true
 }
 
-void function SetCurrentZoom(float zoomFactor, vector zoomPos , bool adjustValues = true){
+void function SetCurrentZoom(float zoomFactor, vector zoomPos , bool adjustValues = true)
+{
 	if(adjustValues)
 	{	                                                        
 		vector normalized  = NormalizeWorldPos( zoomPos )

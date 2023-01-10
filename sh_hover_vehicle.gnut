@@ -748,9 +748,7 @@ array<entity> function HoverVehicle_GetExtendedPlayerArray( entity vehicle )
  
 	                            
 
-                        
-	                               
-                              
+	                                            
 	 
 		                                          
 	 

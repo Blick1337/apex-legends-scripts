@@ -118,7 +118,7 @@ void function AddCallback_ModifyDamageFlyoutForScriptName( string scriptName, ve
 {
 	if ( scriptName in file.modifyDamageFlyoutForScriptNameCallbacks )
 	{
-		Assert( 0, "Callback for " + scriptName + " already exists in modifyDamageFlyoutForScriptNameCallbacks" )
+		Assert( false, "Callback for " + scriptName + " already exists in modifyDamageFlyoutForScriptNameCallbacks" )
 		return
 	}
 
@@ -170,7 +170,7 @@ void function QueueMessageThink()
 
 	file.pendingEventQueue.sort( SortPendingEvents )
 
-	while ( file.pendingEventQueue.len() )
+	while ( file.pendingEventQueue.len() > 0 )
 	{
 		MessageData messageData = file.pendingEventQueue[0]
 		file.pendingEventQueue.remove( 0 )
@@ -259,6 +259,7 @@ void function DEV_DamageFlyout( entity victim )
 
 const GIBRALTAR_PASSIVE_ICON = $"rui/hud/character_abilities/gibraltar_passive_transparent"
 const RAMPART_AMPED_WALL_ICON = $"rui/hud/character_abilities/rampart_amped_wall_transparent"
+const DUMMY_SHIELD_ICON = $"rui/hud/loot/loot_armor_1"
 
 const STUN_GRENADE_ICON = $"rui/hud/character_abilities/fuse_stun_indicator" 
 const float STUN_GRENADE_ICON_TIMESCALE = 0.3
@@ -282,16 +283,16 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 	bool showStackingDamageText = (styleSetting == DAMAGE_TEXT_STYLE_STACKING_ONLY || styleSetting == DAMAGE_TEXT_STYLE_BOTH)
 	bool showFloatingDamageText = (styleSetting == DAMAGE_TEXT_STYLE_FLOATING_ONLY || styleSetting == DAMAGE_TEXT_STYLE_BOTH)
 
-	bool isShieldShot     = (damageType & DF_SHIELD_DAMAGE) ? true : false
-	bool isCritShot       = (damageType & DF_CRITICAL) ? true : false
-	bool isHeadShot       = (damageType & DF_HEADSHOT) ? true : false
-	bool isKillShot       = (damageType & DF_KILLSHOT) ? true : false
-	bool isKOShieldShot   = (damageType & DAMAGEFLAG_VICTIM_HAS_VORTEX) ? true : false
-	bool isKnockdownShot  = (damageType & DF_KNOCKDOWN) ? true : false
-	bool isShieldBreak    = (damageType & DF_SHIELD_BREAK) ? true : false
-	bool isShadowShot     = (damageType & DF_SHADOW_DAMAGE) ? true: false
-	bool isOvershieldShot = (damageType & DF_OVERSHIELD) ? true : false
-	bool isSourShot 	  = (damageType & DF_SOUR) ? true : false
+	bool isShieldShot     = bool(damageType & DF_SHIELD_DAMAGE) ? true : false
+	bool isCritShot       = bool(damageType & DF_CRITICAL) ? true : false
+	bool isHeadShot       = bool(damageType & DF_HEADSHOT) ? true : false
+	bool isKillShot       = bool(damageType & DF_KILLSHOT) ? true : false
+	bool isKOShieldShot   = bool(damageType & DAMAGEFLAG_VICTIM_HAS_VORTEX) ? true : false
+	bool isKnockdownShot  = bool(damageType & DF_KNOCKDOWN) ? true : false
+	bool isShieldBreak    = bool(damageType & DF_SHIELD_BREAK) ? true : false
+	bool isShadowShot     = bool(damageType & DF_SHADOW_DAMAGE) ? true: false
+	bool isOvershieldShot = bool(damageType & DF_OVERSHIELD) ? true : false
+	bool isSourShot 	  = bool(damageType & DF_SOUR) ? true : false
 	bool isStunned        = false                                                                    
 
 
@@ -302,11 +303,21 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 	bool overshield = false
 	float timeScale = 1.0 	
 	float shieldFrac = -1.0
-	if ( victim.IsPlayer() && (isShieldShot || isShieldBreak || hitType == eHitType.ARMOR) )
+	if ( isShieldShot || isShieldBreak || hitType == eHitType.ARMOR )
 	{
-		LootData shieldData = EquipmentSlot_GetEquippedLootDataForSlot( victim, "armor" )
-		shieldIcon = shieldData.hudIcon
-		shieldLevel = shieldData.tier                                             
+		if ( victim.IsPlayer() )
+		{
+			LootData shieldData = EquipmentSlot_GetEquippedLootDataForSlot( victim, "armor" )
+			shieldIcon = shieldData.hudIcon
+			shieldLevel = shieldData.tier                                             
+		}
+                           
+                                                          
+   
+                                 
+                                      
+   
+        
 	}
 
 	if ( victim.IsPlayer() && isShadowShot )
@@ -446,6 +457,11 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
                                                     
                                                              
 
+                                                                                       
+   
+                                                                 
+   
+
                    
                        
                                                             
@@ -533,7 +549,7 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 		float timeDelta = Time() - flyoutData.lastDamageFlyoutTime
 		if ( timeDelta == 0 && !initNewStackingDamageText )
 		{
-			if ( flyoutData.floatingDamageData.len() && flyoutData.floatingDamageData[0].creationTime == Time() )
+			if ( flyoutData.floatingDamageData.len() > 0 && flyoutData.floatingDamageData[0].creationTime == Time() )
 			{
 				RuiSetFloat( flyoutData.floatingDamageData[0].rui, "damageAmount", float( flyoutData.damageThisFrame ) )
 			}
@@ -587,6 +603,22 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 	flyoutData.lastDamageFlyoutDamage = int( flyoutData.lastDamageFlyoutDamage + damageAmount )
 }
 
+                         
+                                                                            
+ 
+                                            
+                                               
+
+                                                                                                                       
+                               
+                           
+  
+                                                                              
+                                                         
+             
+  
+ 
+      
 
 bool function ShouldShowProjectileHitDot( int damageType, entity weapon )
 {
@@ -625,15 +657,15 @@ bool function ShouldShowProjectileHitDot( int damageType, entity weapon )
 
 int function GetArmorLevelFromDamageFlags( int damageFlags )
 {
-	if ( damageFlags & DAMAGEFLAG_ARMOR1 )
+	if ( IsBitFlagSet(  damageFlags, DAMAGEFLAG_ARMOR1 ) )
 	{
 		return 1
 	}
-	else if ( damageFlags & DAMAGEFLAG_ARMOR2 )
+	else if ( IsBitFlagSet( damageFlags, DAMAGEFLAG_ARMOR2 ) )
 	{
 		return 2
 	}
-	else if ( damageFlags & DAMAGEFLAG_ARMOR3 )
+	else if ( IsBitFlagSet( damageFlags, DAMAGEFLAG_ARMOR3 ) )
 	{
 		return 3
 	}
@@ -649,7 +681,7 @@ void function ServerCallback_ScoreEvent( int scoreEventId, int unusedInt, int di
 
 	ScoreEvent scoreEvent = ScoreEvent_FromId( scoreEventId )
 
-	if ( displayType & eEventDisplayType.CENTER )
+	if ( IsBitFlagSet( displayType, eEventDisplayType.CENTER ) )
 	{
 		AddScoreEventMessage( scoreEvent, EncodedEHandleToEHI( associatedEntityHandle ), displayType, unusedInt, valueA, valueB )
 	}
@@ -670,11 +702,11 @@ void function AddScoreEventMessage( ScoreEvent scoreEvent, EHI associatedEHI, in
 	messageData.scoreEventId = ScoreEvent_GetEventId( scoreEvent )
 	messageData.scoreEventValue = pointValue
 	messageData.messageText = eventText
-	messageData.messageScale = (displayType & eEventDisplayType.BIG) ? 1.01 : 1.0
+	messageData.messageScale = IsBitFlagSet( displayType, eEventDisplayType.BIG ) ? 1.01 : 1.0
 	if ( ScoreEvent_GetEventName( scoreEvent ) == "Sur_DownedPilot" || ScoreEvent_GetEventName( scoreEvent ) == "Sur_DownedPilotAssist" )
 		messageData.messageScale = 1.5
 
-	if ( !(displayType & eEventDisplayType.BIG) )
+	if ( !IsBitFlagSet( displayType, eEventDisplayType.BIG ) )
 		return
 
 	file.pendingEventQueue.append( messageData )

@@ -110,8 +110,10 @@ void function ActivateSniperRecon( entity player )
 				&& !Bleedout_IsBleedingOut( player ) )
 		{
 			bool isCompatibleWeaponConfig = PassiveVantage_IsInCompatibleWeaponConfig( weapon )
-			float currentFOV              = weapon.GetWeaponZoomFOV()
-			if ( isCompatibleWeaponConfig && currentFOV <= PASSIVE_MAX_FOV )
+			float currentFOV              = weapon.GetWeaponZoomFOV()                                                    
+
+
+			if ( isCompatibleWeaponConfig )                                    
 			{
 				thread SniperRangeAutoSet_Start( player )
 				thread CL_SniperRecon_UI_Thread( player )
@@ -208,9 +210,9 @@ void function ScopeTrackingConditional( entity player, entity weapon, float trac
 		if ( IsValid( weapon )
 				&& fullyInAds
 				&& !Bleedout_IsBleedingOut( player )
-				&& !(StatusEffect_GetSeverity( player, eStatusEffect.silenced ) > 0)
+				&& !StatusEffect_HasSeverity( player, eStatusEffect.silenced )
 				&& !player.Player_IsSkywardLaunching()
-				&& !(StatusEffect_GetSeverity( player, eStatusEffect.is_boxing ))
+				&& !StatusEffect_HasSeverity( player, eStatusEffect.is_boxing )
 		)
 		{
 			bool isCompatibleWeaponConfig = PassiveVantage_IsInCompatibleWeaponConfig( weapon )
@@ -260,8 +262,8 @@ bool function PassiveVantage_isCompatibleOptic( string opticRef )
 bool function PassiveVantage_IsInCompatibleWeaponConfig( entity weapon )
 {
 	                               
-	if ( (weapon.GetWeaponTypeFlags() & WPT_ULTIMATE) > 0 ||
-					(weapon.GetWeaponTypeFlags() & WPT_VIEWHANDS) > 0 )
+	if ( IsBitFlagSet( weapon.GetWeaponTypeFlags(), WPT_ULTIMATE ) ||
+			IsBitFlagSet( weapon.GetWeaponTypeFlags(), WPT_VIEWHANDS ) )
 		return true
 
 	if ( weapon.GetWeaponClassName() == KRABER_WEAPON_NAME )

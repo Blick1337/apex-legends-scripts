@@ -828,7 +828,7 @@ void function ArcCannon_HideIdleEffect( entity weapon, float delay )
  
 	                                                                                                                                          
 
-	                                  
+	                                       
 		                                                                                                             
 
 	              

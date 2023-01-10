@@ -46,9 +46,7 @@ global function GetAttachmentPointName
 global const table<string, asset> emptyAttachmentSlotImages = {
 	barrel = $"rui/pilot_loadout/mods/empty_barrel"
 	barrel_stabilizer = $"rui/pilot_loadout/mods/empty_barrel_stabilizer"
-                         
 	laser_sight = $"rui/pilot_loadout/mods/empty_laser_sight"
-      
 	grip = $"rui/pilot_loadout/mods/empty_stock_tactical"
 	stock = $"rui/pilot_loadout/mods/empty_stock_tactical"
 	stock_tactical = $"rui/pilot_loadout/mods/empty_stock_tactical"
@@ -505,7 +503,7 @@ void function SURVIVAL_EquipmentSlot_InitShared()
                   
                                                                                      
                                
-                                                 
+                    
                                                  
                       
                                                                                          
@@ -594,10 +592,6 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 		LootData weaponData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalClientPlayer(), es.attachmentWeaponSlot )
 		string ammotype = weaponData.ammoType
 
-		                   
-		                                  
-		        
-
 		switch( es.attachmentPoint )
 		{
 			case "mag":
@@ -614,20 +608,20 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 
 				switch( ammotype )
 				{
-					case "bullet":
+					case BULLET_AMMO:
 						return eCommsAction.INVENTORY_NEED_ATTACHMENT_MAG_BULLET
-					case "arrows":
+					case ARROWS_AMMO:
 						return eCommsAction.BLANK
-					case "special":
+					case SPECIAL_AMMO:
 						return eCommsAction.INVENTORY_NEED_ATTACHMENT_MAG_SPECIAL
 
-					case "highcal":
+					case HIGHCAL_AMMO:
 						return eCommsAction.INVENTORY_NEED_ATTACHMENT_MAG_HIGHCAL
 
-					case "shotgun":
+					case SHOTGUN_AMMO:
 						return eCommsAction.INVENTORY_NEED_ATTACHMENT_MAG_SHOTGUN
 
-					case "sniper":
+					case SNIPER_AMMO:
 						return eCommsAction.INVENTORY_NEED_ATTACHMENT_MAG_SNIPER
 
 					default:
@@ -653,7 +647,7 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 				else if ( weaponData.lootTags.contains( "marksman" ) )
 					return eCommsAction.INVENTORY_NEED_ATTACHMENT_SIGHT_MARKSMAN
 
-				                    
+				                        
 				Warning( format( "%s() - Couldn't determine '%s' type for weapon '%s'.", FUNC_NAME(), es.attachmentPoint, weaponData.ref ) )
 				return eCommsAction.BLANK
 			}
@@ -681,17 +675,10 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 
 			case "barrel":
 			{
-                            
 				if ( weaponData.lootTags.contains( "pistol" ) )
 					return eCommsAction.INVENTORY_NEED_ATTACHMENT_LASERSIGHT_PISTOL
 				else if ( weaponData.lootTags.contains( "smg" ) )
 					return eCommsAction.INVENTORY_NEED_ATTACHMENT_LASERSIGHT_SMG
-        
-                                                   
-                                                                
-                                                     
-                                                             
-         
 				else if ( weaponData.lootTags.contains( "assault" ) )
 					return eCommsAction.INVENTORY_NEED_ATTACHMENT_BARREL_ASSAULT
 				else if ( weaponData.lootTags.contains( "lmg" ) )
@@ -796,12 +783,18 @@ int function FilledCommsAction_Gadget( string equipmentSlotRef, string itemRef )
 	{
 		switch ( lootData.ref )
 		{
-			case "mp_ability_mobile_respawn_beacon":
+			case MOBILE_RESPAWN_BEACON_WEAPON_REF:
 				commsAction = eCommsAction.INVENTORY_HAS_MOBILE_RESPAWN_BEACON
 				break
-			case "mp_ability_void_ring":
+			case VOID_RING_WEAPON_REF:
 				commsAction = eCommsAction.INVENTORY_HAS_VOID_RING
 				break
+                             
+                                    
+                                                             
+         
+      
+
                         
                                
                                                       
@@ -924,28 +917,28 @@ int function FilledCommsAction_Weapon( string equipmentSlotRef, string itemRef )
 		case "":
 			return eCommsAction.BLANK
 
-		case "bullet":
+		case BULLET_AMMO:
                             
 			if ( GetLocalClientPlayer().AmmoPool_GetCount( eAmmoPoolType.bullet ) <= 0 )
 				return eCommsAction.INVENTORY_NO_AMMO_BULLET
          
 			return eCommsAction.INVENTORY_NEED_AMMO_BULLET
 
-		case "special":
+		case SPECIAL_AMMO:
                             
 			if ( GetLocalClientPlayer().AmmoPool_GetCount( eAmmoPoolType.special ) <= 0 )
 				return eCommsAction.INVENTORY_NO_AMMO_SPECIAL
          
 			return eCommsAction.INVENTORY_NEED_AMMO_SPECIAL
 
-		case "highcal":
+		case HIGHCAL_AMMO:
                             
 			if ( GetLocalClientPlayer().AmmoPool_GetCount( eAmmoPoolType.highcal ) <= 0 )
 				return eCommsAction.INVENTORY_NO_AMMO_HIGHCAL
          
 			return eCommsAction.INVENTORY_NEED_AMMO_HIGHCAL
 
-		case "shotgun":
+		case SHOTGUN_AMMO:
                             
 			if ( GetLocalClientPlayer().AmmoPool_GetCount( eAmmoPoolType.shotgun ) <= 0 )
 				return eCommsAction.INVENTORY_NO_AMMO_SHOTGUN
@@ -953,16 +946,16 @@ int function FilledCommsAction_Weapon( string equipmentSlotRef, string itemRef )
 			return eCommsAction.INVENTORY_NEED_AMMO_SHOTGUN
 
                        
-                   
+                 
                                                     
         
-		case "sniper":
+		case SNIPER_AMMO:
                            
 			if ( GetLocalClientPlayer().AmmoPool_GetCount( eAmmoPoolType.sniper ) <= 0 )
 				return eCommsAction.INVENTORY_NO_AMMO_SNIPER
         
 			return eCommsAction.INVENTORY_NEED_AMMO_SNIPER
-		case "arrows":
+		case ARROWS_AMMO:
                             
 			if ( GetLocalClientPlayer().AmmoPool_GetCount( eAmmoPoolType.arrows ) <= 0 )
 				return eCommsAction.INVENTORY_NO_AMMO_ARROWS
@@ -1139,6 +1132,11 @@ LootData function EquipmentSlot_GetEquippedLootDataForSlot( entity player, strin
 
 int function EquipmentSlot_GetWeaponSlotForEquipmentSlot( string equipmentSlot )
 {
+                  
+                                                  
+                           
+       
+
 	EquipmentSlot es       = Survival_GetEquipmentSlotDataByRef( equipmentSlot )
 	EquipmentSlot esWeapon = Survival_GetEquipmentSlotDataByRef( es.attachmentWeaponSlot )
 

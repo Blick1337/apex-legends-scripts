@@ -242,7 +242,7 @@ void function PrivateMatch_TeamRosters_Update( table< int, array< entity > > tea
 			var button = Hud_GetChild( scrollPanel, ("GridButton" + playerIndex) )
 			if ( playerIndex < players.len() )
 			{
-				if ( players[playerIndex].GetPlayerNetInt( "readiness" ) & PRIVATEMATCH_ISPRELOADING_BIT )
+				if ( IsBitFlagSet( players[playerIndex].GetPlayerNetInt( "readiness" ), PRIVATEMATCH_ISPRELOADING_BIT ) )
 					preloadinglayerCount++
 
 				RosterButton_Init( button, players[playerIndex] )
@@ -544,7 +544,7 @@ void function StartMouseDrag( var button, RosterButtonData rosterButtonData )
 		}
 	)
 
-	while ( 1 )
+	while ( true )
 	{
 		if ( !IsValid( rosterButtonData.player ) )
 			Signal( clGlobal.signalDummy, "StopMouseDrag" )

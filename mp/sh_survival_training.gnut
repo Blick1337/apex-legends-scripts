@@ -697,7 +697,7 @@ void function QuitToLobbyDelayed( entity player, float time )
 			           
 
 		        
-			                                                     
+			                                                         
 	 
 
 	           
@@ -838,7 +838,7 @@ void function QuitToLobbyDelayed( entity player, float time )
 				     
 
 			        
-				                                                                                 
+				                                                                                     
 		 
 	 
 
@@ -863,7 +863,7 @@ void function QuitToLobbyDelayed( entity player, float time )
 			     
 
 		        
-			                                                                                 
+			                                                                                     
 	 
 	                                                                                                                 
  
@@ -1881,7 +1881,7 @@ void function Training_RespawnChamberOnUse( entity respawnChamber, entity player
 			      
 	#endif
 
-	if ( !(pickupFlags & USE_INPUT_LONG) )
+	if ( !IsBitFlagSet( pickupFlags, USE_INPUT_LONG ) )
 		return
 
 	printt( "Training_RespawnChamberOnUse" )

@@ -245,7 +245,7 @@ float function AreaSonarScan_GetConeFOV()
 		      
 
 		                                                                                                  
-		                                       
+		                                           
 		 
 			                                              
 			 
@@ -271,7 +271,7 @@ float function AreaSonarScan_GetConeFOV()
 
 		                                                                                                                                         
 		                                                                                                  
-		                                       
+		                                           
 		 
 			                                              
 			  		                                          
@@ -627,7 +627,7 @@ void function CreateViemodelSonarFlash( entity ent )
 
 	                                                                                                        
 	vector highlightColor = <1,0,0>
-	if ( StatusEffect_GetSeverity( ent, eStatusEffect.damage_received_multiplier ) > 0.0 )
+	if ( StatusEffect_HasSeverity( ent, eStatusEffect.damage_received_multiplier ) )
 		highlightColor = <1,0,0>
 
 	if ( IsValid( viewModelArm ) )

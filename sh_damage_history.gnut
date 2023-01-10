@@ -123,7 +123,7 @@ void function ClearRecentDamageHistory( entity player )
 		 
 	      
 
-	                                    
+	                                                   
 		                                                       
 
 	                                     
@@ -147,7 +147,7 @@ void function ClearRecentDamageHistory( entity player )
 	                                                    
 
 	                                                                                                                                                            
-	                                    
+	                                                   
 		                                                                                     
 	    
 		                                                          
@@ -155,7 +155,7 @@ void function ClearRecentDamageHistory( entity player )
 	                          
 	 
 		                                                       
-		                                
+		                                               
 			                                                                                                      
 		                                            
 	 
@@ -227,7 +227,7 @@ int function GetTimedOutDamageHistoryIndex( array<DamageHistoryStruct> events, f
 	 
 		                              
 			        
-		                                         
+		                                                      
 			        
 		                          
 			        
@@ -245,7 +245,7 @@ int function GetTimedOutDamageHistoryIndex( array<DamageHistoryStruct> events, f
  
 	                                                                       
 	 
-		                                        
+		                                                       
 			                       
 	 
 
@@ -527,7 +527,7 @@ AssistingPlayerStruct function GetLatestAssistingPlayerInfo( entity ent )
 
 	                            
 
-	                                         
+	                                             
 	 
 		                                                                                                      
 		                                                                   
@@ -541,7 +541,7 @@ AssistingPlayerStruct function GetLatestAssistingPlayerInfo( entity ent )
 			                       
 		                                                   
 		 
-			                                            
+			                                                         
 			 
 				                       
 			 
@@ -676,7 +676,7 @@ AssistingPlayerStruct function GetLatestAssistingPlayerInfo( entity ent )
 
                                                              
  
-	                                            
+	                                                
 
 	                                                           
 	                                                             
@@ -774,7 +774,7 @@ AssistingPlayerStruct function GetLatestAssistingPlayerInfo( entity ent )
 			                                            
 			 
 				                                                                                    
-				                                   
+				                                                  
 					                 
 				                        
 					                 
@@ -829,10 +829,10 @@ AssistingPlayerStruct function GetLatestAssistingPlayerInfo( entity ent )
 		 
 			                                               
 
-			                                         
+			                                                        
 				                                                                                                                                                                 
 			                                              
-			                                     
+			                                                    
 				                                                                                                                               
 			                  
 		 
@@ -1023,7 +1023,7 @@ AssistingPlayerStruct function GetLatestAssistingPlayerInfo( entity ent )
 	            
 	                                      
 	 
-		                   
+		                                  
 		 
 			                           
 			             

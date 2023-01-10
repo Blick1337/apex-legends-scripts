@@ -2,6 +2,16 @@
 global function TropicsStoryEvents_Init
 #endif
 
+                       
+       
+          
+                                                                 
+                                                   
+      
+      
+
+                                                                                      
+      
 
 struct
 {
@@ -31,6 +41,16 @@ struct
 void function TropicsStoryEvents_Init()
 {
 	AddCallback_EntitiesDidLoad( EntitiesDidLoad )
+
+                       
+           
+                                                                                                                    
+  
+                                       
+                                                                                                      
+  
+       
+      
 }
 #endif                    
 
@@ -39,4 +59,58 @@ void function EntitiesDidLoad()
 
 }
 
+                       
+          
+                                                                                                         
+ 
+                  
+                                                    
+ 
+
+                                                                
+ 
+                                               
+                                               
+                                               
+ 
+
+                                                         
+ 
+                                                                                                    
+                                           
+
+             
+                           
+   
+                             
+                      
+   
+  
+
+                    
+             
+  
+         
+                                          
+        
+         
+                                          
+        
+         
+                                          
+        
+          
+        
+  
+
+                     
+  
+                    
+        
+  
+
+                                         
+ 
+      
+      
 

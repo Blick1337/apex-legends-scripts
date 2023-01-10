@@ -498,7 +498,7 @@ void function _ThreadFlagSetOnFlag( string flagset, string flagwait, float delay
 {
 	FlagWait( flagwait )
 
-	if ( delay )
+	if ( delay > 0 )
 		wait delay
 
 	FlagSet( flagset )

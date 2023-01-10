@@ -170,7 +170,7 @@ array<DeathHintGroup> function GetHintGroupsWithWeighting( int source, array<str
 		}
 		hg.weight = groupWeights[ index ]
 
-		if ( hg.hints.len() )
+		if ( hg.hints.len() > 0 )
 			hintGroups.append( hg )
 	}
 
@@ -189,7 +189,7 @@ DeathHintGroup ornull function GetHintGroup_OrNull( int source, string className
 	}
 	hg.weight = 0
 
-	if ( !hg.hints.len() )
+	if ( hg.hints.len() == 0 )
 		return null
 
 	return hg
@@ -252,7 +252,7 @@ array<DeathHintGroup> function GetHintGroups( int source, string classname )
 
 	                                                                                              
 
-	                        
+	                            
 		            
 
 	                                                                                  

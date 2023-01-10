@@ -46,11 +46,14 @@ global function Survival_IsPlayerHealing
 global function PlayerIsMarkedAsCanBeRespawned
 
 global function IsSurvivalMode
+global function Survival_IsJIPEnabled
+global function Survival_IsJIPEnabledInPlaylist
 #endif
 
 #if SERVER
                                        
                                      
+                                      
 #endif
 
 #if UI
@@ -210,7 +213,7 @@ void function GamemodeSurvivalShared_Init()
 		Sh_RespawnBeacon_Init()
 
                      
-                               
+                          
         
 
 		MobileRespawnBeacon_Init()
@@ -283,6 +286,10 @@ void function GamemodeSurvivalShared_Init()
       
 #endif         
 
+#if SERVER
+	                                                                      
+#endif         
+
 }
 #endif
 
@@ -336,11 +343,6 @@ bool function Survival_PlayerCanDrop( entity player )
                             
 	if ( ExplosiveHold_IsPlayerPlantingGrenade( player ) )
 		return false
-      
-
-                 
-                                                                                   
-              
       
 
 	return true
@@ -505,7 +507,7 @@ int function Survival_TryUseHealthPack( entity player, int itemType )
 	if ( player.IsPhaseShifted() )
 		return eUseHealthKitResult.DENY_NONE
 
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.placing_phase_tunnel ) )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.placing_phase_tunnel ) )
 		return eUseHealthKitResult.DENY_NONE
 
 	if ( player.GetWeaponDisableFlags() == WEAPON_DISABLE_FLAGS_ALL )
@@ -536,12 +538,12 @@ int function Survival_TryUseHealthPack( entity player, int itemType )
 
 		HealthPickup pickup = SURVIVAL_Loot_GetHealthKitDataFromStruct( itemType )
 
-		if ( pickup.healAmount && !pickup.shieldAmount && pickup.healCap <= 100 )
+		if ( pickup.healAmount > 0 && pickup.shieldAmount == 0 && pickup.healCap <= 100 )
 		{
 			if ( !needHeal )
 				return eUseHealthKitResult.DENY_HEALTH_FULL
 		}
-		else if ( pickup.shieldAmount && !pickup.healAmount )
+		else if ( pickup.shieldAmount > 0 && pickup.healAmount == 0 )
 		{
 			if ( !needShield )
 				return player.GetShieldHealthMax() > 0 ? eUseHealthKitResult.DENY_SHIELD_FULL : eUseHealthKitResult.DENY_NO_SHIELDS
@@ -561,7 +563,7 @@ int function Survival_TryUseHealthPack( entity player, int itemType )
 			{
 				int targetHealth = int( currentHealth + pickup.healAmount )
 				int overHeal     = targetHealth - player.GetMaxHealth()
-				if ( overHeal && currentShields < player.GetShieldHealthMax() )
+				if ( overHeal > 0 && currentShields < player.GetShieldHealthMax() )
 					canShield = true
 			}
 
@@ -606,7 +608,9 @@ bool function Sur_CanUseZipline( entity player, entity zipline, vector ziplineCl
 	if ( player.IsGrapplingZipline() )
 		return true
 
-	if ( player.GetWeaponDisableFlags() == WEAPON_DISABLE_FLAGS_ALL )
+	bool allowZipAttachFromUpdraft = GetCurrentPlaylistVarBool( "updraft_zipline_attach", true ) && player.Player_IsSkydiveAnticipating() && player.Skydive_IsFromUpdraft()
+
+	if ( !allowZipAttachFromUpdraft && player.GetWeaponDisableFlags() == WEAPON_DISABLE_FLAGS_ALL )
 		return false
 
 	                                                                                                                                                        
@@ -703,10 +707,10 @@ TargetKitHealthAmounts function PredictHealthPackUse( entity player, HealthPicku
 
 		Assert( currentShields + shieldsToApply <= shieldHealthMax, "Bad math: " + currentShields + " + " + shieldsToApply + " > " + shieldHealthMax )
 
-		if ( healthToApply || itemData.healTime > 0 )                                     
+		if ( healthToApply != 0 || itemData.healTime > 0 )                                     
 			targetValues.targetHealth = (healthToApply + resourceHealthRemaining) / float( maxHealth )
 
-		if ( shieldsToApply && shieldHealthMax > 0 )
+		if ( shieldsToApply != 0 && shieldHealthMax > 0 )
 			targetValues.targetShields = shieldsToApply / float( shieldHealthMax )
 	}
 
@@ -872,3 +876,29 @@ bool function IsSquadDataPersistenceEmpty( entity player )
       
  
 #endif          
+
+#if SERVER
+                                                    
+ 
+	       
+		                                                                                                                                                                     
+	             
+
+	                                     
+ 
+#endif          
+
+#if SERVER || CLIENT
+bool function Survival_IsJIPEnabled()
+{
+	return GetConVarBool( "match_jip" ) && Survival_IsJIPEnabledInPlaylist()
+}
+#endif                    
+
+#if SERVER || CLIENT
+                                                    
+bool function Survival_IsJIPEnabledInPlaylist()
+{
+	return GetCurrentPlaylistVarBool( "match_jip", false )
+}
+#endif                    

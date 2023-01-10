@@ -93,11 +93,7 @@ void function OnPlayerCreated( entity player )
 	              
 	 
 		                                                   
-                    
-                                                                                     
-        
-			                                                                  
-         
+			                                                                                  
 		        
 	 
  

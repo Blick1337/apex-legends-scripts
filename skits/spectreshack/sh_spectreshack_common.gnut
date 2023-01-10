@@ -554,7 +554,7 @@ void function ServerCallback_SpectreShacksUpdateLootBinRarity( entity waypoint, 
 	{
 		foreach( rui in ruiLookupTable[waypoint] )
 		{
-			if( rui != null )
+			if( IsValid( rui ) )
 			{
 				RuiSetInt( rui, "lootbin1Rarity", bin1 )
 				RuiSetInt( rui, "lootbin2Rarity", bin2 )

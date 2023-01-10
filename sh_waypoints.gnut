@@ -66,8 +66,14 @@ global function GetPingedEntForLocWaypoint
                                        
                                          
                                             
+                     
+                                       
+      
                    
                                                  
+      
+                       
+                                                
       
 
                                                     
@@ -142,6 +148,10 @@ global enum eWaypoint
 	OBJECTIVE_ENT,
 	OBJECTIVE_POS,
 
+                      
+            
+       
+
                         
 		ARENAS_TEAM_ENT,
 		ARENAS_FIGHT_ENT,
@@ -163,7 +173,7 @@ global enum eWaypoint
 	WATTSON_TROPHY_TIMER,
 	WATTSON_TROPHY_LIFE,
 
-                  
+                                 
                     
        
 
@@ -304,17 +314,16 @@ void function Waypoint_NetNotify( entity wp, int waypointNotifyType )
 		                                    
 		                                                                                                       
 
-                          
-			                                                           
+		                              
+		                                                                        
+		 
+			               
+			                                     
 			 
-				               
-				                                     
-				 
-					                                                                                                                                        
-						                        
-				 
+				                                                                                                                                        
+					                        
 			 
-                                
+		 
 
 
 		                                    
@@ -330,7 +339,7 @@ void function Waypoint_NetNotify( entity wp, int waypointNotifyType )
 				break
 
 			default:
-				Assert( 0, ("Unhandled waypointNotifyType #" + waypointNotifyType) )
+				Assert( false, ("Unhandled waypointNotifyType #" + waypointNotifyType) )
 		}
 	#endif
 }
@@ -371,11 +380,11 @@ void function PlayerWaypoint_CreateCallback( entity wp )
 		case eWaypoint.PING_LOCATION:
 			if ( WaypointOwnerIsMuted( wp ) )
 				return
-			InstanceLocationPing( wp )
+			thread InstanceLocationPing_Thread( wp )
 			break
 
 		case eWaypoint.BASIC_LOCATION:
-			InstanceLocationPing( wp )
+			thread InstanceLocationPing_Thread( wp )
 			break
 
 		case eWaypoint.PING_LOOT:
@@ -407,6 +416,11 @@ void function PlayerWaypoint_CreateCallback( entity wp )
 		case eWaypoint.OBJECTIVE_POS:
 			InstanceWP_Objective( wp )
 			break
+                     
+                           
+                            
+        
+      
 
                       
 
@@ -427,7 +441,7 @@ void function PlayerWaypoint_CreateCallback( entity wp )
 
                         
 		case eWaypoint.CONTROL_OBJECTIVE:
-			Control_InstanceObjectivePing( wp )
+			thread Control_InstanceObjectivePing_Thread( wp )
 			break
       
 
@@ -624,6 +638,9 @@ bool function ShouldHighlightForPing( entity wp, entity pingedEnt )
                 
 		case ePingType.ABILITY_PIERCING_SPIKES:
 		case ePingType.ABILITY_DARK_VEIL:
+      
+                       
+                                            
       
 
 			return false
@@ -1222,6 +1239,28 @@ void function InstanceWP_Button( entity wp )
 	RuiSetFloat3( newRui, "offset", offset )
 }
 
+                     
+                                              
+ 
+                                                                        
+                                 
+
+                                                   
+
+                                               
+
+                                                                                           
+
+                                                                         
+                                                                      
+
+                                         
+                                                                        
+
+                                          
+                                                   
+ 
+                           
 
                       
                                                          
@@ -1413,6 +1452,22 @@ void function InstanceWP_WinterExpress_Train( entity wp )
 
 	         
  
+
+                     
+                                                                                                                       
+ 
+                                                                
+
+                                   
+                                  
+                                  
+                                      
+                                    
+
+          
+ 
+                           
+
 #endif          
 
 
@@ -1850,7 +1905,7 @@ const int RESPONSE_BITS_PER_ENTRY = 8
 
 		        
 			                              
-			                                                   
+			                                                       
 			     
 	 
 
@@ -1990,17 +2045,204 @@ var function AddLocationPingToFullmapInternal( asset icon, float iconSize, vecto
 	return rui
 }
 
-void function DeferInstanceLocationPingUntilLoadoutSlotReady( entity wp, entity owner )
+                   
+                                      
+ 
+                                                     
+                                         
+                              
+  
+                                         
+        
+  
+
+                             
+                                            
+                                                                           
+  
+                                                                                 
+        
+  
+
+                                                    
+                             
+  
+                                              
+        
+  
+
+                                                                                                                                                                
+                                                                    
+  
+                       
+         
+
+                                                                                                                               
+         
+  
+
+
+                                                      
+
+                                                                    
+                                                
+
+                                                                                                
+                                                                             
+                                                                   
+                                                                                                                  
+
+                                                                                                           
+
+
+                                                                      
+                                              
+                                                      
+                                              
+
+                                                           
+                                                    
+
+                                                                             
+
+
+                
+                 
+                           
+                                                                                                    
+  
+                                               
+                                                            
+                        
+                    
+                                                        
+   
+               
+                         
+   
+  
+     
+  
+                                                  
+  
+                                                 
+                                       
+                                            
+                                          
+
+                                     
+                                           
+                                             
+
+                                                                                   
+                                                                                                                         
+                                                                                                                 
+                                                                                                                     
+   
+                                                   
+
+                                                  
+
+                                                                      
+                                                                                   
+                                     
+                                      
+                                                                       
+
+
+                                                                                     
+  
+                                                                                                                 
+                                                      
+                                           
+  
+
+                                 
+
+                                                                                                                                        
+                                                                 
+                                                    
+  
+                          
+   
+                               
+   
+                                                     
+   
+                                                                  
+                                                                                                                                                                               
+                                
+   
+  
+
+                                                               
+                                                                                      
+
+                                                                     
+                                               
+                                            
+  
+                                           
+                                                                             
+      
+                                                                        
+  
+
+                           
+  
+                                     
+                                                                           
+  
+
+                        
+  
+                                              
+  
+
+                                                 
+
+   
+                                 
+
+   
+                                            
+                              
+
+                                                                                             
+                                                                                                              
+  
+                                                                                          
+                                                                                         
+                                                                                       
+                                                                                             
+                                    
+                                                                                                    
+                                                            
+                       
+                                               
+
+                                    
+                                                                                             
+                                                            
+                       
+                                               
+                                    
+  
+
+                              
+                                                                                                           
+ 
+      
+
+void function InstanceLocationPing_Thread( entity wp )
 {
+	Assert( IsNewThread(), "Must be threaded off" )
+
+	if ( !IsValid( wp ) )
+		return
+
 	EndSignal( wp, "OnDestroy" )
-	EndSignal( owner, "OnDestroy" )
 
-	LoadoutSlot_WaitForItemFlavor( ToEHI( owner ), Loadout_Character() )
-	thread InstanceLocationPing( wp )
-}
-
-void function InstanceLocationPing( entity wp )
-{
 	int wpType = wp.GetWaypointType()
 	Assert( wpType == eWaypoint.PING_LOCATION || wpType == eWaypoint.BASIC_LOCATION )
 
@@ -2011,13 +2253,39 @@ void function InstanceLocationPing( entity wp )
 		return
 	}
 
-	if ( viewPlayer.GetTeamMemberIndex() < 0 )
+	#if DEV
+		if ( viewPlayer.GetTeamMemberIndex() < 0 )
+			Warning( "%s(): team member index was invalid.", FUNC_NAME() )
+	#endif       
+
+	                                                                                                                                                           
+	while ( IsValid( viewPlayer ) && viewPlayer.GetTeamMemberIndex() < 0 )
 	{
-		Warning( "%s(): team member index was invalid.", FUNC_NAME() )
+		WaitFrame()
+		viewPlayer = GetLocalViewPlayer()
+	}
+
+	if ( !IsValid( viewPlayer ) )
+	{
+		Warning( "%s(): no view-player.", FUNC_NAME() )
 		return
 	}
 
 	int pingType    = Waypoint_GetPingTypeForWaypoint( wp )
+
+                    
+                   
+  
+                              
+                               
+                                   
+                             
+                                     
+                                            
+                    
+         
+  
+       
 
 	                                                                                                                                               
 	                                                                                                                                                               
@@ -2041,6 +2309,15 @@ void function InstanceLocationPing( entity wp )
 	printt( format( "New loc ping  -  wpent #%d, pingType #%d, ticketID #%d, target: '%s'", wp.GetEntIndex(), pingType, ticketID, string( pingedEnt ) ) )
 
 	entity owner = wp.GetOwner()
+
+	if ( !IsValid( owner ) )
+	{
+		printt( format( "New ping #%d has no owner.", ticketID ) )
+		return
+	}
+
+	EndSignal( owner, "OnDestroy" )
+
 	if ( (owner == viewPlayer) && Ping_TicketIDIsLocallyCanceled( ticketID ) )
 	{
 		printt( format( "New ping #%d has already been canceled locally.", ticketID ) )
@@ -2054,18 +2331,12 @@ void function InstanceLocationPing( entity wp )
 			return
 	}
 
-	if ( !IsValid( owner ) )
-	{
-		printt( format( "New ping #%d has no owner.", ticketID ) )
-		return
-	}
-
+	                                                                                                 
 	if ( owner.IsPlayer() && !LoadoutSlot_IsReady( ToEHI( owner ), Loadout_Character() ) )
 	{
-		                                                  
 		printf( "New ping #%d owners (%s) loadout slot wasn't ready.", ticketID, string( owner ) )
-		thread DeferInstanceLocationPingUntilLoadoutSlotReady( wp, owner )
-		return
+
+		LoadoutSlot_WaitForItemFlavor( ToEHI( owner ), Loadout_Character() )
 	}
 
 	                                                                                  
@@ -2085,16 +2356,13 @@ void function InstanceLocationPing( entity wp )
 	vector lineColor    = SrgbToLinear( Ping_LineColorForPing_Hud( pingType ) )
 	bool isSameTeam     = (owner.GetTeam() == viewPlayer.GetTeam())
 
-                         
-		                                                                                                                            
-		if ( Control_IsModeEnabled() && !isSameTeam )
-		{
-			int viewPlayerAlliance = AllianceProximity_GetAllianceFromTeam( viewPlayer.GetTeam() )
-			if ( viewPlayerAlliance != -1 )
-				isSameTeam = IsTeamInAlliance( owner.GetTeam(), viewPlayerAlliance )
-		}
-
-                               
+	                                                                                                                         
+	if ( AllianceProximity_IsUsingAlliances() && !isSameTeam )
+	{
+		int viewPlayerAlliance = AllianceProximity_GetAllianceFromTeam( viewPlayer.GetTeam() )
+		if ( viewPlayerAlliance != -1 )
+			isSameTeam = IsTeamInAlliance( owner.GetTeam(), viewPlayerAlliance )
+	}
 
 	int sortKeyAdd      = Ping_GetSortModifier( pingType, isSameTeam )
 
@@ -2251,8 +2519,6 @@ void function InstanceLocationPing( entity wp )
                                              
                                              
                                                 
-                                                    
-                                                  
                                              
                        
                       
@@ -2265,8 +2531,30 @@ void function InstanceLocationPing( entity wp )
 
                                                                
         
-      
+                                            
+                                       
+                                             
+                                                
+                                             
+                                                      
+                                              
 
+                                                               
+        
+      
+                       
+                                            
+                                       
+                                             
+                                             
+                                                
+                                                    
+                                                  
+                                                                                   
+
+                                                                                            
+        
+      
 		case ePingType.HOLOSPRAY_LIKE:
 			RuiSetFloat( rui, "iconSize", 56.0 )
 			RuiSetFloat( rui, "iconSizePinned", 72.0 )
@@ -2389,14 +2677,33 @@ void function InstanceLocationPing( entity wp )
 	}
 
 	                                                                                                                                                                          
-	                                                                                                         
-	if ( AllianceProximity_IsUsingAllianceProximity() && pingType != ePingType.CONTROL_OBJECTIVE_DEFEND && pingType != ePingType.CONTROL_OBJECTIVE_ATTACK )
+	if ( AllianceProximity_IsUsingAllianceProximity() )
 	{
-		thread AllianceProximity_ManageIconVisibility_Thread( wp, rui, false, true )
-		thread AllianceProximity_ManageIconVisibility_Thread( wp, wp.wp.ruiMinimap, false, false )
-		thread AllianceProximity_ManageIconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )
+                          
+			                                                                                                         
+			if ( pingType != ePingType.CONTROL_OBJECTIVE_DEFEND && pingType != ePingType.CONTROL_OBJECTIVE_ATTACK )
+                                
+			{
+				thread AllianceProximity_ManageIconVisibility_Thread( wp, rui, false, true )
+				thread AllianceProximity_ManageIconVisibility_Thread( wp, wp.wp.ruiMinimap, false, false )
+				thread AllianceProximity_ManageIconVisibility_Thread( wp, wp.wp.ruiFullmap, true, false )
+			}
 	}
 }
+
+                   
+                                                       
+ 
+                             
+
+            
+  
+                                                          
+                                           
+                                                                                                                                                                                                                    
+  
+ 
+      
 
 void function SetCommsWaypointSoundsEnabled( bool value )
 {
@@ -2457,16 +2764,13 @@ void function InstanceObjectivePing( entity wp )
 	vector lineColor    = SrgbToLinear( Ping_LineColorForPing_Hud( pingType ) )
 	bool isSameTeam     = (owner.GetTeam() == viewPlayer.GetTeam())
 
-                         
-		                                                                                                                            
-		if ( Control_IsModeEnabled() && !isSameTeam )
-		{
-			int viewPlayerAlliance = AllianceProximity_GetAllianceFromTeam( viewPlayer.GetTeam() )
-			if ( viewPlayerAlliance != -1 )
-				isSameTeam = IsTeamInAlliance( owner.GetTeam(), viewPlayerAlliance )
-		}
-
-                               
+	                                                                                                                         
+	if ( AllianceProximity_IsUsingAlliances() && !isSameTeam )
+	{
+		int viewPlayerAlliance = AllianceProximity_GetAllianceFromTeam( viewPlayer.GetTeam() )
+		if ( viewPlayerAlliance != -1 )
+			isSameTeam = IsTeamInAlliance( owner.GetTeam(), viewPlayerAlliance )
+	}
 
 	int sortKeyAdd      = Ping_GetSortModifier( pingType, isSameTeam )
 
@@ -2820,7 +3124,7 @@ array<entity> function Waypoints_GetActiveLootPings()
                                             
                                                
       
-                   
+                                  
                                      
         
 		                                    
@@ -2896,10 +3200,6 @@ array<entity> function Waypoints_GetActiveLootPings()
 		                                
                      
                               
-      
-                   
-                                     
-                                            
       
 			           
 	 
@@ -3000,7 +3300,7 @@ array<entity> function Waypoints_GetActiveLootPings()
              
        
 
-                  
+                                 
                                                  
              
        
@@ -3019,10 +3319,6 @@ array<entity> function Waypoints_GetActiveLootPings()
 		 
 			                              
 			                            
-                     
-                                      
-                                             
-        
 				        
 		 
 		                      
@@ -3085,15 +3381,14 @@ array<entity> function Waypoints_GetActiveLootPings()
 		                           
 		                                 
 		                                                                            
-                   
-                                     
-                                            
-      
 		                                      
 		                                
                         
                                             
                                                
+      
+                       
+                                            
       
 			              
 
@@ -3247,7 +3542,7 @@ array<entity> function Waypoints_GetActiveLootPings()
 			                                       
 				                             
 				     
-                    
+                                   
                                       
          
 			                        
@@ -3374,18 +3669,34 @@ array<entity> function Waypoints_GetActiveLootPings()
  
 
                    
-                                                                                                                  
+                                                                                                                                                     
  
-                                                                                                                                                                                        
+                                                                                                                                                                                                 
                                                  
                                                                                          
-                                                    
                                        
                                              
                                                                           
+               
+                                                     
                            
  
       
+
+                       
+                                                                                           
+ 
+                                                             
+
+                                                                                                                                                        
+                                                        
+                                             
+                                                   
+                                                         
+
+                                 
+ 
+                             
 
                                                                               
  
@@ -3793,7 +4104,6 @@ void function TogglePlayerWaypointMute( entity player )
 	                                                 
 	                   
 
-	                                                   
 	         
  
                               

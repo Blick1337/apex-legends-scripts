@@ -49,6 +49,23 @@ void function UICodeCallback_OperationModeChanged()
 	}
 
 	isNxSwitchingMode = false
+	
+	                                                                                    
+	if( activeMenu != null && ( uiGlobal.menuData[ activeMenu ].isPopup || uiGlobal.menuData[ activeMenu ].isDialog ) )
+	{
+		array<var> menuStack = MenuStack_GetCopy()
+		foreach ( index, currMenu in menuStack )
+		{
+			if (Hud_IsVisible( currMenu ))
+			{
+				if ( uiGlobal.menuData[ currMenu ].hideFunc != null )
+					uiGlobal.menuData[ currMenu ].hideFunc()
+
+				if ( uiGlobal.menuData[ currMenu ].showFunc != null )
+					uiGlobal.menuData[ currMenu ].showFunc()
+			}
+		}
+	}
 
 	printt( "UIScript: Switch Completed" )
 }

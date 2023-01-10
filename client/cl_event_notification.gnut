@@ -10,7 +10,8 @@ void function CLEventNotification_Init()
 
 void function ServerCallback_EventNotification( int eventID, int eHandle, var eventVal )
 {
-	entity ent = (eHandle ? GetEntityFromEncodedEHandle( eHandle ) : null)
+	entity ent = FromEHI(eHandle)
+
 	EventNotification( eventID, ent, eventVal )
 }
 
@@ -59,7 +60,7 @@ void function SetTimedEventNotification( float duration, string eventText )
 
 	player.Signal( "SetEventNotification" )
 
-	if ( duration && duration < 9999 )
+	if ( duration > 0 && duration < 9999 )
 		thread HideEventNotificationWithDelay( duration )
 }
 

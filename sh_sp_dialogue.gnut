@@ -755,7 +755,7 @@ void function RegisterDialogueLine( string name, string alias, int priority, str
 
                                                                                                                    
  
-	                                                      
+	                                                                     
 	 
 		                                   
 		                                                                                                                            
@@ -777,11 +777,11 @@ void function RegisterDialogueLine( string name, string alias, int priority, str
 		                        
 	 
 
-	                                                                
+	                                                                               
 	 
 		                                                                                                                                                                                          
 	 
-	                                                              
+	                                                                             
 	 
 		                                   
 		                                                                                                               
@@ -885,7 +885,7 @@ void function RegisterDialogueLine( string name, string alias, int priority, str
 	                                                                                          
 	                                               
 	 
-		                                                              
+		                                                                         
 		 
 			                                                                                                                   
 			      
@@ -1029,9 +1029,9 @@ QueueItem function QueueAndWait( int priority, QueueData queueData, int dialogue
 	queueItem.entHandle = entHandle
 	queueItem.debugRef = debugRef
 	queueItem.serialNum = s_queueItemNextNum
-	queueItem.shouldBlockLowerPriorityItems = dialogueFlags & eDialogueFlags.BLOCK_LOWER_PRIORITY_QUEUE_ITEMS ? true : false
+	queueItem.shouldBlockLowerPriorityItems = IsBitFlagSet( dialogueFlags, eDialogueFlags.BLOCK_LOWER_PRIORITY_QUEUE_ITEMS ) ? true : false
 
-	if ( dialogueFlags & eDialogueFlags.AMBIENT_DIALOGUE )
+	if ( IsBitFlagSet( dialogueFlags, eDialogueFlags.AMBIENT_DIALOGUE ) )
 		queueItem.groupID = 1
 
 	  
@@ -1296,7 +1296,7 @@ void function SCB_PlayDialogueAtPosition( int aliasID, int dialogueFlags, vector
 
 void function SCB_PlayDialogueOnEnvironmentSpeakers( int aliasID, int numSpeakers, int dialogueFlags, int responseID, entity responseSpeaker, int customQueueIdx )
 {
-	Assert( !(dialogueFlags & eDialogueFlags.USE_CUSTOM_QUEUE ) , "Environment speaker dialogue must NOT be called using the custom queue." )
+	Assert( !IsBitFlagSet( dialogueFlags, eDialogueFlags.USE_CUSTOM_QUEUE ) , "Environment speaker dialogue must NOT be called using the custom queue." )
 
 	if ( file.blockAnnouncer )
 		return
@@ -1380,7 +1380,7 @@ void function PlayDialogueOnCustomSpeakers_Common( int aliasID, int dialogueFlag
 		else
 			printf( "Custom Speakers %i debug: Entities have NOT loaded.", customQueueIdx )
 
-		Assert( 0, "Custom Speakers " + customQueueIdx + " haven't been registered. Use the function CustomSpeakers" + customQueueIdx + "ListInit to create the array of speakers to be used." )
+		Assert( false, "Custom Speakers " + customQueueIdx + " haven't been registered. Use the function CustomSpeakers" + customQueueIdx + "ListInit to create the array of speakers to be used." )
 	}
 
 	const float maxDistSqr = 10000.0 * 10000.0
@@ -1470,7 +1470,7 @@ void function PlayClientDialogue_Internal( int aliasID, int dialogueFlags, array
 	asset specificImage     = $""
 
                                  
-		if ( speakers.len() == 1 && IsValid( speakers[0] ) && speakers[0].IsPlayer() && !( dialogueFlags & eDialogueFlags.STOMP_CON_ALT ) )
+		if ( speakers.len() == 1 && IsValid( speakers[0] ) && speakers[0].IsPlayer() && !IsBitFlagSet( dialogueFlags, eDialogueFlags.STOMP_CON_ALT ) )
 		{
 			array<string> condAltDialogueAliases
 			array<entity> squadmates = GetPlayerArrayOfTeam_Alive( speakers[0].GetTeam() )
@@ -1483,7 +1483,8 @@ void function PlayClientDialogue_Internal( int aliasID, int dialogueFlags, array
 				string condAltAlias = GetConditionalAltDialogue( data.name, speakers[0], squadmate )
 				if ( condAltAlias != "" )
 				{
-					if ( ShouldForcePlayConditionalAlt( condAltAlias ) ){
+					if ( ShouldForcePlayConditionalAlt( condAltAlias ) )
+					{
 						condAltDialogueAliases = [ condAltAlias ]
 						break
 					}
@@ -1549,7 +1550,7 @@ void function PlayClientDialogue_Internal( int aliasID, int dialogueFlags, array
 
 	QueueData queueData = file.allQueues[ QUEUE_MAIN ]
 
-	if ( dialogueFlags & eDialogueFlags.USE_CUSTOM_QUEUE )
+	if ( IsBitFlagSet( dialogueFlags, eDialogueFlags.USE_CUSTOM_QUEUE ) )
 		queueData = file.allQueues[ customQueueIdx ]
 
 	QueueItem queueItem = QueueAndWait( data.priority, queueData, dialogueFlags, speakerEHandle, milesAlias )
@@ -1583,7 +1584,7 @@ void function PlayClientDialogue_Internal( int aliasID, int dialogueFlags, array
 		duration = GetSoundDuration( milesAlias )
 	}
 
-	if ( dialogueFlags & eDialogueFlags.SHORT_DELAY_AFTER_PLAYING )
+	if ( IsBitFlagSet( dialogueFlags, eDialogueFlags.SHORT_DELAY_AFTER_PLAYING ) )
 		extraWait = 0.40
 
 	var waveformRUI = null
@@ -1614,17 +1615,17 @@ void function PlayClientDialogue_Internal( int aliasID, int dialogueFlags, array
 	OnThreadEnd(
 		function() : ( player, aliasID, waveformRUI, queueItem, queueData, dialogueFlags )
 		{
-			if ( dialogueFlags & eDialogueFlags.MUTE_PLAYER_PING_DIALOGUE_FOR_DURATION )
+			if ( IsBitFlagSet( dialogueFlags, eDialogueFlags.MUTE_PLAYER_PING_DIALOGUE_FOR_DURATION ) )
 				SetCommsDialogueEnabled( true )
 
-			if ( dialogueFlags & eDialogueFlags.MUTE_PLAYER_PING_CHIMES_FOR_DURATION )
+			if ( IsBitFlagSet( dialogueFlags, eDialogueFlags.MUTE_PLAYER_PING_CHIMES_FOR_DURATION ) )
 				SetCommsWaypointSoundsEnabled( true )
 
-			if ( dialogueFlags & eDialogueFlags.BLOCK_ANNOUNCER )
+			if ( IsBitFlagSet( dialogueFlags, eDialogueFlags.BLOCK_ANNOUNCER ) )
 				file.blockAnnouncer = false
 
 			                                                    
-			if ( IsValid( player ) && !(dialogueFlags & eDialogueFlags.NO_ON_FINISHED_NOTIFY) )
+			if ( IsValid( player ) && !IsBitFlagSet( dialogueFlags, eDialogueFlags.NO_ON_FINISHED_NOTIFY ) )
 				Remote_ServerCallFunction( "ClientCallback_DialogueFinishedForID", aliasID )
 			if ( IsValid ( waveformRUI ) )
 			{
@@ -1642,13 +1643,13 @@ void function PlayClientDialogue_Internal( int aliasID, int dialogueFlags, array
 		}
 	)
 
-	if ( dialogueFlags & eDialogueFlags.MUTE_PLAYER_PING_DIALOGUE_FOR_DURATION )
+	if ( IsBitFlagSet( dialogueFlags, eDialogueFlags.MUTE_PLAYER_PING_DIALOGUE_FOR_DURATION ) )
 		SetCommsDialogueEnabled( false )
 
-	if ( dialogueFlags & eDialogueFlags.MUTE_PLAYER_PING_CHIMES_FOR_DURATION )
+	if ( IsBitFlagSet( dialogueFlags, eDialogueFlags.MUTE_PLAYER_PING_CHIMES_FOR_DURATION ) )
 		SetCommsWaypointSoundsEnabled( false )
 
-	if ( dialogueFlags & eDialogueFlags.BLOCK_ANNOUNCER )
+	if ( IsBitFlagSet( dialogueFlags, eDialogueFlags.BLOCK_ANNOUNCER ) )
 		file.blockAnnouncer = true
 
 	if ( !(milesAlias in FORBIDDEN_DIALOGUE_EVENT_NAMES) )

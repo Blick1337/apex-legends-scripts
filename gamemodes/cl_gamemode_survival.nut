@@ -27,9 +27,7 @@ global function ServerCallback_AnnounceDevRespawn
 
 global function ServerCallback_AutoReloadComplete
 
-                         
 global function ServerCallback_SetLaserSightVMLaserEnabled
-      
 
 global function CreateQuickchatFunction
 
@@ -116,6 +114,7 @@ global function SetChampionScreenSound
 global function SetChampionScreenRuiAssetExtraFunc
 
 global function InitSurvivalHealthBar
+global function ChangeHUDVisibilityWhenInCryptoDrone
 
 global function GetCompassRui
 global function GetPilotRui
@@ -143,6 +142,8 @@ global function GetVictorySquadFormationActivity
 global function ClientCodeCallback_OnTryCycleOrdnance
 
 global function SetSummaryDataDisplayStringsCallback
+
+global function Thread_UpdateHealthVisibility
 
                    
                                    
@@ -452,6 +453,7 @@ void function ClGamemodeSurvival_Init()
 	AddCallback_GameStateEnter( eGameState.Playing, OnGamestatePlaying )
 	AddCallback_GameStateEnter( eGameState.WinnerDetermined, Survival_ClearHints )
 	AddCallback_GameStateEnter( eGameState.Resolution, OnGamestateResolution )
+	AddCallback_GameStateEnter( eGameState.Playing, OnGameStatePlaying_CheckCryptoDrone )
 
 	{
 		GenericFullmapSetupStruct fullmapData
@@ -548,7 +550,7 @@ void function TrackSprint( entity player )
 	e[ "sprintingVisuals" ] <- false
 	int fxHandle
 
-	while ( 1 )
+	while ( true )
 	{
 		bool isSprint     = e[ "sprintingVisuals" ]
 		bool shouldSprint = ShouldShowSprintVisuals( player )
@@ -625,7 +627,7 @@ void function Cl_Survival_AddClient( entity player )
 	RuiSetBool( file.pilotRui, "useShields", true )
 
                      
-                                                                      
+                                                                           
    
                                                        
                                                                                                                                                  
@@ -1034,8 +1036,8 @@ void function ScorebarInitTracking( entity player, var statusRui )
 
 	UpdateKillLeaderOnGameStateRui( statusRui )
 
-	if  (GameSateHudIsDisabled())
-		RuiSetBool( statusRui, "isVisible", false )
+	                                                                                                                                       
+	  	                                           
 
                     
                                                                
@@ -1218,7 +1220,7 @@ void function UpdateDpadHud( entity player )
 	RuiSetBool( file.dpadMenuRui, "showGadgetButtonText", showGadgetButtonText )
 
                 
-		if ( StatusEffect_GetSeverity( player, eStatusEffect.is_boxing ) )
+		if ( StatusEffect_HasSeverity( player, eStatusEffect.is_boxing ) )
 		{
 			RuiSetBool( file.dpadMenuRui, "isBoxing", true )
 		}
@@ -2229,6 +2231,7 @@ void function SurvivalTitanHoverHint()
 void function Survival_WaitForPlayers()
 {
 	file.cameFromWaitingForPlayersState = true
+	RunUIScript("UI_ClearRespawnOverlay")
 	SetDpadMenuVisible()
 	SetMapSetting_FogEnabled( true )
 	Minimap_UpdateMinimapVisibility( GetLocalClientPlayer() )
@@ -2423,7 +2426,7 @@ void function Survival_RunCharacterSelection_Thread()
 	                                                                                                   
 	                                                                                                                                                                       
 	int introPodiumSequenceCount = GetCurrentPlaylistVarInt( "podium_intro_screen_count", 0 )
-	if ( introPodiumSequenceCount > 0 )
+	if ( introPodiumSequenceCount > 0 && IsValid( player ) )
 	{
 		float introPodiumDuration = GetCurrentPlaylistVarFloat( "podium_intro_screen_duration", DEFAULT_PODIUM_DURATION )
 		Assert( introPodiumDuration > 0.0, "Trying to trigger intro podium screens with no duration" )
@@ -2576,6 +2579,25 @@ void function SetDpadMenuHidden()
 	RuiSetBool( file.dpadMenuRui, "isVisible", false )
 }
 
+void function ChangeHUDVisibilityWhenInCryptoDrone( bool isInCryptoDrone = false )
+{
+	                                                                                                                             
+	RuiSetBool( GetCryptoAnimatedTacticalRui(), "isVisible", isInCryptoDrone ? false : GetHudDefaultVisibility() )
+	RuiSetBool( GetWeaponRui(), "isVisible", isInCryptoDrone ? false : GetHudDefaultVisibility() )
+	RuiSetBool( GetUltimateRui(), "isVisible", isInCryptoDrone ? false : GetHudDefaultVisibility() )
+	RuiSetBool( GetDpadMenuRui(), "isVisible", isInCryptoDrone ? false : GetHudDefaultVisibility() )
+}
+
+void function OnGameStatePlaying_CheckCryptoDrone()
+{
+	entity player = GetLocalClientPlayer()
+
+	                                                         
+	if (PlayerHasPassive( player, ePassives.PAS_CRYPTO ))
+	{
+		ChangeHUDVisibilityWhenInCryptoDrone(IsPlayerInCryptoDroneCameraView(player))
+	}
+}
 
 void function Survival_ClearHints()
 {
@@ -3037,9 +3059,10 @@ void function ShowChampionVictoryScreen( int winningTeam )
 		{
 			RuiSetString( rui, "topLineText", "WWWWWWWWWWWWWWWW" )
 		}
-		else if ( GetClubPartyBool() == true )
+		else if ( GetIsFullClubSquad() == true )
 		{
-			string clubName = Clubs_GetMyStoredClubName()
+			string clubName = ClubGetName();
+
 			if( clubName != CLUB_NAME_EMPTY && clubName != "" )
 			{
 				clubName = Localize( "#GAMEMODE_CLUB_ARE_THE", clubName.toupper() )
@@ -3052,12 +3075,8 @@ void function ShowChampionVictoryScreen( int winningTeam )
 	if ( s_championScreenExtraFunc != null )
 		s_championScreenExtraFunc( rui )
 
-                         
-		if ( !Control_IsModeEnabled() )
-       
-		{
-			EmitSoundOnEntity( GetLocalClientPlayer(), GetChampionScreenSound() )
-		}
+	if ( !Control_IsModeEnabled() )
+		EmitSoundOnEntity( GetLocalClientPlayer(), GetChampionScreenSound() )
 			
 	Chroma_VictoryScreen()
 }
@@ -3336,30 +3355,18 @@ array<entity> function GetTeamPlayers( bool friendly )
 	if ( IsLocalPlayerOnTeamSpectator() )
 		return []
 
-	entity localPlayer = GetLocalClientPlayer()
-	array<entity> friendlies = GetPlayerArrayOfTeam( localPlayer.GetTeam() )
+	int localPlayerTeam = GetLocalClientPlayer().GetTeam()
+	array<entity> friendlies = GetPlayerArrayOfTeam( localPlayerTeam )
 
-	int enemyTeam = GetOtherTeam( GetLocalClientPlayer().GetTeam() )
+	int enemyTeam = GetOtherTeam( localPlayerTeam )
 	array<entity> enemies = GetPlayerArrayOfTeam( enemyTeam )
 
-                         
-		if ( Control_IsModeEnabled() )
-		{
-			friendlies.clear()
-			enemies.clear()
-			foreach( matchPlayer in GetPlayerArray() )
-			{
-				if ( IsValid( matchPlayer ) && AllianceProximity_GetAllianceFromTeam( matchPlayer.GetTeam() ) == AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) )
-				{
-					friendlies.append( matchPlayer )
-				}
-				else if ( IsValid( matchPlayer ) )
-				{
-					enemies.append( matchPlayer )
-				}
-			}
-		}
-                               
+	if ( AllianceProximity_IsUsingAlliances() )
+	{
+		int friendlyAlliance = AllianceProximity_GetAllianceFromTeam( localPlayerTeam )
+		friendlies = AllianceProximity_GetAllPlayersInAlliance( friendlyAlliance, false )
+		enemies = AllianceProximity_GetAllPlayersInOtherAlliances( friendlyAlliance, false )
+	}
 
 	array<entity> teamPlayers = friendly ? friendlies : enemies
 	return teamPlayers
@@ -3370,18 +3377,16 @@ int function VictorySequence_GetPlayerTeamFromEHI( EHI playerEHI )
 	Assert( EHIHasValidScriptStruct( playerEHI ), "Tried to run VictorySequence_GetPlayerTeamFromEHI on an invalid EHI handle" )
 
 	int playerTeam
-                         
-		                                                                                                                            
-		                                                                                                                                      
-		if ( Control_IsModeEnabled() )
-		{
-			playerTeam = AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI )
-		}
-		else
-                               
-		{
-			playerTeam = EHI_GetTeam( playerEHI )
-		}
+
+	                                                                                                                                   
+	if ( AllianceProximity_IsUsingAlliances() )
+	{
+		playerTeam = AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI )
+	}
+	else
+	{
+		playerTeam = EHI_GetTeam( playerEHI )
+	}
 
 	return playerTeam
 }
@@ -4255,24 +4260,36 @@ VictoryCameraPackage function GetVictoryCameraPackage()
 		}
                        
 
-                         
+	int numAlliances = GetCurrentPlaylistVarInt( "max_alliances", 0 )
+	int numPlayers = GetCurrentPlaylistVarInt( "max_players", 0 )
 
-		if ( Control_IsModeEnabled() )
+	if ( numAlliances > 0 )
+	{
+		if ( numPlayers / numAlliances > 6)
 		{
+			                                                                   
 			victoryCameraPackage.camera_offset_start = <0, 480, 108>
-			victoryCameraPackage.camera_offset_end = <0, 350, 88>
+			victoryCameraPackage.camera_offset_end   = <0, 350, 88>
 			victoryCameraPackage.camera_focus_offset = <0, 0, 56>
-			victoryCameraPackage.camera_fov = 35.5
-
-			return victoryCameraPackage
+			victoryCameraPackage.camera_fov          = 35.5
 		}
-
-       
-
-	victoryCameraPackage.camera_offset_start = <0, 320, 68>
-	victoryCameraPackage.camera_offset_end = <0, 200, 48>
-	victoryCameraPackage.camera_focus_offset = <0, 0, 36>
-	victoryCameraPackage.camera_fov = 35.5
+		else
+		{
+			                                                       
+			victoryCameraPackage.camera_offset_start = <0, 320, -66>
+			victoryCameraPackage.camera_offset_end = <0, 280, 46>
+			victoryCameraPackage.camera_focus_offset = <0, 0, 26>
+			victoryCameraPackage.camera_fov = 35.5
+		}
+	}
+	else
+	{
+		                             
+		victoryCameraPackage.camera_offset_start = <0, 320, 68>
+		victoryCameraPackage.camera_offset_end = <0, 200, 48>
+		victoryCameraPackage.camera_focus_offset = <0, 0, 36>
+		victoryCameraPackage.camera_fov = 35.5
+	}
 
 	return victoryCameraPackage
 }
@@ -4331,7 +4348,6 @@ vector function GetVictorySquadFormationPosition( vector mainPosition, vector an
                        
 
                          
-
 		if ( Control_IsModeEnabled() )
 		{
 			int groupOffsetIndex = index / 3
@@ -4351,7 +4367,6 @@ vector function GetVictorySquadFormationPosition( vector mainPosition, vector an
 			vector offset = < finalOffsetSide, finalOffsetBack, -8 >
 			return OffsetPointRelativeToVector( mainPosition, offset, AnglesToForward( angles ) )
 		}
-
        
 
 	int countBack = (index + 1) / 2
@@ -4661,6 +4676,29 @@ void function UICallback_QueryPlayerCanBeRespawned()
 		}
 	}
 
+                   
+                                      
+
+                                                                                                                                         
+  
+                             
+           
+
+                                                                               
+           
+
+                                                                                       
+   
+                                  
+        
+   
+  
+
+                                              
+                                       
+                                                                                                                                                 
+      
+
 	RunUIScript( "ConfirmLeaveMatchDialog_SetPlayerCanBeRespawned", playerCanBeRespawned, penaltyMayBeActive, penaltyLength )
 }
 
@@ -4771,13 +4809,13 @@ void function ServerCallback_PromptTaunt()
 void function ServerCallback_PromptSayThanks( entity playerBeingAddressed )
 {
                                 
-                           
-                                                  
-   
-                                                                                                      
-                                                                                                                                                                                                       
-         
-   
+		                         
+		if ( Valentines_S15_ILoveYouEasterEggEnabled() )
+		{
+			if ( !ShouldMuteCommsActionForCooldown( GetLocalViewPlayer(), eCommsAction.REPLY_LOVE_YOU, null ) )
+				AddOnscreenPromptFunction( "quickchat", CreateQuickchatFunction( eCommsAction.REPLY_LOVE_YOU, playerBeingAddressed ), 6.0, Localize( "#PING_SAY_LOVE_YOU", playerBeingAddressed.GetPlayerName() ) )
+			return
+		}
        
 
 	if ( ShouldMuteCommsActionForCooldown( GetLocalViewPlayer(), eCommsAction.REPLY_THANKS, null ) )
@@ -4789,13 +4827,13 @@ void function ServerCallback_PromptSayThanks( entity playerBeingAddressed )
 void function ServerCallback_PromptSayThanksRevive( entity playerBeingAddressed )
 {
                                 
-                           
-                                                  
-   
-                                                                                                      
-                                                                                                                                                                                                       
-         
-   
+		                         
+		if ( Valentines_S15_ILoveYouEasterEggEnabled() )
+		{
+			if ( !ShouldMuteCommsActionForCooldown( GetLocalViewPlayer(), eCommsAction.REPLY_LOVE_YOU, null ) )
+				AddOnscreenPromptFunction( "quickchat", CreateQuickchatFunction( eCommsAction.REPLY_LOVE_YOU, playerBeingAddressed ), 6.0, Localize( "#PING_SAY_LOVE_YOU", playerBeingAddressed.GetPlayerName() ) )
+			return
+		}
        
 
 	if ( ShouldMuteCommsActionForCooldown( GetLocalViewPlayer(), eCommsAction.REPLY_THANKS, null ) )
@@ -4982,7 +5020,8 @@ void function ServerCallback_RefreshDeathBox()
 	{
 		ManageHighlightEntity( box )
                    
-                                         
+                                                       
+                                          
       
 	}
 }
@@ -5042,7 +5081,6 @@ void function ServerCallback_AutoReloadComplete( entity weapon )
 	}
 }
 
-                         
 void function ServerCallback_SetLaserSightVMLaserEnabled( entity weapon, bool enabled )
 {
 	if ( !IsValid( weapon ) )
@@ -5053,7 +5091,6 @@ void function ServerCallback_SetLaserSightVMLaserEnabled( entity weapon, bool en
 
 	weapon.SetTargetingLaserEnabled( enabled )
 }
-      
 
 bool function CircleAnnouncementsEnabled()
 {
@@ -5131,7 +5168,8 @@ var function GetCompassRui()
 	return file.compassRui
 }
 
-var function GetPilotRui(){
+var function GetPilotRui()
+{
 	return file.pilotRui
 }
 

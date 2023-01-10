@@ -447,8 +447,7 @@ void function TrackingVision_UpdateWaypointPOIDrawing( entity waypoint )
 			entity attachedEnt = waypoint.WaypointGetAttachedPOIEnt()
 			if ( IsValid( attachedEnt ) )
 			{
-				float statusEffectWeight = StatusEffect_GetSeverity( attachedEnt, eStatusEffect.sonar_detected )
-				if ( statusEffectWeight )
+				if ( StatusEffect_HasSeverity( attachedEnt, eStatusEffect.sonar_detected ) )
 					waypoint.WaypointSetAlwaysVisibleEndTime( Time() + TRACKING_VISION_DISCOVERY_PING_DURATION )
 			}
 		}
@@ -522,8 +521,7 @@ float function ClientCodeCallback_WaypointPOIGetTraceDistScale()
 		return 0.0
 
 	entity localViewPlayer = GetLocalViewPlayer()
-	float huntStatusSeverity = StatusEffect_GetSeverity( localViewPlayer, eStatusEffect.hunt_mode )
-	if ( huntStatusSeverity )
+	if ( StatusEffect_HasSeverity( localViewPlayer, eStatusEffect.hunt_mode ) )
 		return TRACKING_VISION_HUNT_MODE_DRAW_DIST_MULT
 
 	return 1.0
@@ -1111,7 +1109,7 @@ void function TrackingVisionCreatePOIBlueprint( entity waypoint, int poiEventID,
       
 
 		default:
-			Assert( 0, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
+			Assert( false, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
 			break
 	}
 }
@@ -1856,7 +1854,7 @@ void function TrackingVision_GetDrawInfo( entity waypoint, TrackingVisionDrawInf
 			break
 
 		default:
-			Assert( 0, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
+			Assert( false, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
 			break
 	}
 }
@@ -2028,7 +2026,7 @@ int function GetPingTypeFromPOIType( entity waypoint )
 			return (age > 30) ? ePingType.BLOODHOUND_POI_LOOTING : ePingType.BLOODHOUND_POI_LOOTING_RECENT
 
 		default:
-			Assert( 0, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
+			Assert( false, "Point of intrest event ID is not registered in eTrackingVisionNetworkedPOITypes" )
 			break
 	}
 
@@ -2131,6 +2129,8 @@ void function TrackingVision_CreateGenericTrackerMarker( entity waypoint )
 	}
 	RuiSetGameTime( rui, "iconCreationTime", Time() )
 	RuiSetFloat( rui, "duration", waypoint.WaypointGetLifetime() )
+	RuiSetFloat( rui, "iconHotClueDuration", Get_IconHotClueDuration() )
+	RuiSetFloat( rui, "iconHotClueDurationExt", Get_IconHotClueDurationExt() )
 
 	                                                                                                                                  
 	entity attachedEnt = waypoint.WaypointGetAttachedPOIEnt()
@@ -2145,8 +2145,7 @@ void function TrackingVision_CreateGenericTrackerMarker( entity waypoint )
 
 	float drawDist = waypoint.WaypointGetCheckDist()
 
-	float huntStatusSeverity = StatusEffect_GetSeverity( localViewPlayer, eStatusEffect.hunt_mode )
-	if ( huntStatusSeverity )
+	if ( StatusEffect_HasSeverity( localViewPlayer, eStatusEffect.hunt_mode ) )
 		drawDist *= TRACKING_VISION_HUNT_MODE_DRAW_DIST_MULT
 
 	RuiSetFloat( rui, "iconDrawDist", drawDist )
@@ -2200,4 +2199,15 @@ bool function ShouldShowTrackingVisionIcons()
 
 void function OnGameStatePrematch()
 {
+}
+const float ICON_HOT_CLUE_DURATION_DEFAULT = 90.0
+float function Get_IconHotClueDuration()
+{
+	return GetCurrentPlaylistVarFloat( "poi_lifetime", ICON_HOT_CLUE_DURATION_DEFAULT )
+}
+
+const float ICON_HOT_CLUE_DURATION_EXT_DEFAULT = 150.0
+float function Get_IconHotClueDurationExt()
+{
+	return GetCurrentPlaylistVarFloat( "trackingvision_clue_duration_ext", ICON_HOT_CLUE_DURATION_EXT_DEFAULT )
 }

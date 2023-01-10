@@ -19,11 +19,13 @@ global function CheckPlayerCanEmote
                                                
                                                        
                                                              
+                                                                
 #endif
 
 #if CLIENT
 global function RequestCharacterEmote
 global function ServerCallback_PlayerPerformPodiumScreenEmote
+global function ServerCallback_PlayerPerformPodiumScreenFlourish
 global function GetOptionTextForEmote
 global function ModelPerformEmote
 global function IsEmoteEnabledForPodiumScreen
@@ -51,13 +53,19 @@ const string SIGNAL_CL_PREV_CAMERA_ATTACHMENT 			= "ClPrevCameraAttachment"
 										             
 										               
 										           
-#endif
 
+                                     
+#endif
 
 const string SIGNAL_END_EMOTE_PERFORMANCE 			= "StopEmote"
 const string SIGNAL_END_EMOTE_ENDED 				= "EmoteEnded"
 global const string SIGNAL_STARTING_EMOTE 			= "StartingEmote"
 const string SIGNAL_EMOTE_COMPLETED_FULLY			= "EmoteCompleted"
+const string SIGNAL_EMOTE_FLOURISH					= "EmoteFlourish"
+
+#if CLIENT
+const string CLIENT_EMOTE_PROMPT_COMMAND = "+jump"
+#endif
 
 const string EMOTE_PIN_ACTION_BEGIN 				= "begin"
 const string EMOTE_PIN_ACTION_COMPLETE				= "complete"
@@ -71,7 +79,7 @@ const string EMOTE_PIN_ACTION_INTERRUPT 			= "interrupted"
 
                     
                                                      
-                                                                   
+                                                                     
                                            
                                       
       
@@ -201,6 +209,7 @@ void function ShEmotes_Init()
 {
 	RegisterNetworkedVariable( "canGroundEmote", SNDC_PLAYER_EXCLUSIVE, SNVT_BOOL, true )
 	RegisterNetworkedVariable( "isEmoting", SNDC_PLAYER_EXCLUSIVE, SNVT_BOOL, false )
+	RegisterNetworkedVariable( "emoteFlourishAvailable", SNDC_PLAYER_EXCLUSIVE, SNVT_BOOL, false )
 
 	if ( !AreEmotesEnabled() )
 		return
@@ -209,6 +218,7 @@ void function ShEmotes_Init()
 	RegisterSignal( SIGNAL_END_EMOTE_PERFORMANCE )
 	RegisterSignal( SIGNAL_STARTING_EMOTE )
 	RegisterSignal( SIGNAL_END_EMOTE_ENDED )
+	RegisterSignal( SIGNAL_EMOTE_FLOURISH )
 
 	AddCallback_OnItemFlavorRegistered( eItemType.character, OnItemFlavorRegistered_Character )
 
@@ -261,6 +271,7 @@ void function ShEmotes_Init()
 	InitAntiPeekSettings( nearDist, farDist, 2.0, testDistance, testFoV, testFriendlies, bonesToTry )
 
 	RegisterNetworkedVariableChangeCallback_bool( "isEmoting", Cl_OnPlayerEmoteStateChanged )
+	RegisterNetVarBoolChangeCallback( "emoteFlourishAvailable", ToggleFlourishPrompt )
 
 	AddCallback_OnVictoryCharacterModelSpawned( OnPodiumCharacterModelSpawned )
 	AddCallback_OnIntroPodiumCharacterModelSpawned( OnPodiumCharacterModelSpawned )
@@ -272,6 +283,7 @@ void function ShEmotes_Init()
 void function ShEmotes_Lobby_Init()
 {
 	RegisterSignal( SIGNAL_STARTING_EMOTE )
+	RegisterSignal( SIGNAL_EMOTE_FLOURISH )
 
 	#if CLIENT
 		RegisterSignal( "BaseEmoteMapInitialized" )
@@ -486,13 +498,13 @@ void function TryPromptPodiumScreenEmote( entity characterModel )
 
 	if ( CanLocalClientPerformPodiumScreenEmote() )
 	{
-		RegisterConCommandTriggeredCallback( "+jump", TryPerformPodiumScreenEmote )
+		RegisterConCommandTriggeredCallback( CLIENT_EMOTE_PROMPT_COMMAND, TryPerformPodiumScreenEmote )
 		RuiSetBool( GetPodiumSequenceRui(), "emoteAvailable", true )
 
 		OnThreadEnd(
 			function() : ()
 			{
-				DeregisterConCommandTriggeredCallback( "+jump", TryPerformPodiumScreenEmote )
+				DeregisterConCommandTriggeredCallback( CLIENT_EMOTE_PROMPT_COMMAND, TryPerformPodiumScreenEmote )
 			}
 		)
 
@@ -699,15 +711,97 @@ void function ServerCallback_PlayerPerformPodiumScreenEmote( int performingPlaye
 #endif          
 
 #if CLIENT
+void function PodiumPromptFlourish()
+{
+	EHI playerEHI = LocalClientEHI()
+	entity player = GetLocalClientPlayer()
+	entity characterModel = GetPodiumScreenCharacterModelForEHI( playerEHI )
+
+	if ( !player || !characterModel )
+		return
+
+	EndSignal( characterModel, SIGNAL_END_EMOTE_PERFORMANCE )
+	EndSignal( characterModel, SIGNAL_END_EMOTE_ENDED )
+	EndSignal( characterModel, SIGNAL_EMOTE_FLOURISH )
+	EndSignal( characterModel, "OnDestroy" )
+
+	OnThreadEnd(
+		function() : ( player )
+		{
+			DeregisterConCommandTriggeredCallback( CLIENT_EMOTE_PROMPT_COMMAND, RequestPodiumFlourish )
+			ToggleFlourishPrompt( player, false )
+		}
+	)
+
+	ToggleFlourishPrompt( player, true )
+	RegisterConCommandTriggeredCallback( CLIENT_EMOTE_PROMPT_COMMAND, RequestPodiumFlourish )
+
+	WaitForever()
+}
+
+void function RequestPodiumFlourish( entity player )
+{
+	if ( player != GetLocalClientPlayer() )
+		return
+
+	EHI playerEHI = LocalClientEHI()
+	entity spawnedCharacterModel = GetPodiumScreenCharacterModelForEHI( playerEHI )
+
+	                   
+	if ( spawnedCharacterModel )
+		Signal( spawnedCharacterModel, SIGNAL_EMOTE_FLOURISH )
+
+	                      
+	Remote_ServerCallFunction( "ClientCallback_PlayerPerformPodiumScreenFlourish", playerEHI )
+}
+#endif          
+
+#if SERVER
+                                                                                                               
+ 
+	                                                                                  
+
+	                           
+		      
+
+	                                                                     
+	 
+		                                         
+			        
+
+		                                                                                                                     
+	 
+ 
+#endif          
+
+#if CLIENT
+void function ServerCallback_PlayerPerformPodiumScreenFlourish( int performingPlayerEHI )
+{
+	entity characterModel = GetPodiumScreenCharacterModelForEHI( performingPlayerEHI )
+
+	if ( !IsValid( characterModel ) )
+		return
+
+	if ( ! ( characterModel in file.characterPodiumModelIsEmoting ) )
+		return
+
+	if ( !file.characterPodiumModelIsEmoting[ characterModel ] )
+		return
+
+	Signal( characterModel, SIGNAL_EMOTE_FLOURISH )
+}
+#endif          
+
+#if CLIENT
 string function GetOptionTextForEmote( ItemFlavor flavor )
 {
 	return Localize( ItemFlavor_GetShortName( flavor ) )
 }
 
-void function RequestCharacterEmote( entity player, int flavorNetworkIndex )
+void function RequestCharacterEmote( entity player, int flavorGUID )
 {
 	Assert ( file.emotesInitialized )
-	Remote_ServerCallFunction( CMD_REQUEST_EMOTE_START, flavorNetworkIndex )
+	Remote_ServerCallFunction( CMD_REQUEST_EMOTE_START, flavorGUID )
 }
 #endif          
 
@@ -748,6 +842,21 @@ void function Cl_OnPlayerEmoteStateChanged( entity player, bool playerIsEmoting 
 			player.StartAntiPeekTesting()
 			thread AntiPeekHintThink( player )
 		}
+	}
+}
+
+void function ToggleFlourishPrompt( entity player, bool show )
+{
+	if ( player != GetLocalViewPlayer() )
+		return
+
+	if ( show )
+	{
+		AddPlayerHint( 9999.0, 0.25, $"", "#FLOURISH_EMOTE_HINT" )
+	}
+	else
+	{
+		HidePlayerHint( "#FLOURISH_EMOTE_HINT" )
 	}
 }
 
@@ -865,7 +974,7 @@ bool function IsInFrontLockedFOV( entity player, entity ent, vector initialEyeAn
 
 	return true
 }
-#endif
+#endif          
 
                                                                                                              
   
@@ -925,7 +1034,7 @@ int function CheckPlayerCanEmote( entity player )
 		return eCanEmoteCheckReults.FAIL_GENERIC
 	if ( player.Player_IsSkywardLaunching() )
 		return eCanEmoteCheckReults.FAIL_GENERIC
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.placing_phase_tunnel ) )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.placing_phase_tunnel ) )
 		return eCanEmoteCheckReults.FAIL_GENERIC
 	if ( player.GetParent() != null )
 		return eCanEmoteCheckReults.FAIL_GENERIC
@@ -994,7 +1103,7 @@ bool function IsPlayerTooCloseToWall( entity player )
 }
 
 #if CLIENT
-void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bool oneShot = true )
+void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bool oneShot = true, bool autoFlourish = false )
 {
 	EndSignal( model, "OnDestroy" )
 	EndSignal( mover, "OnDestroy" )
@@ -1021,6 +1130,9 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 
 	string anim3p     = CharacterQuip_GetAnim3p( item )
 	string loopAnim3p = CharacterQuip_GetAnimLoop3p( item )
+
+	bool usesLoop = loopAnim3p != ""
+
 	waitthread PlayAnim( model, anim3p, mover )
 
 	float BASE_WAIT = 0.2
@@ -1028,13 +1140,57 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 
 	wait BASE_WAIT                                                                               
 
-	if ( loopAnim3p != "" )
-		waitthread PlayAnim( model, loopAnim3p, mover )
+	if ( usesLoop )
+	{
+		float loopTime = 0
+
+		loopTime = DEV_CharacterEmote_GetCustomAnimSequenceTime( loopAnim3p )
+		if ( loopTime < 0 )
+			loopTime = model.GetSequenceDuration( loopAnim3p )
+
+		while ( true )
+		{
+			string flourishSeq = ""
+			var flourishBlock = CharacterQuip_SelectWeightedAnimFlourish3p( item )
+
+			if ( flourishBlock )
+				flourishSeq = GetSettingsBlockString( flourishBlock, "sequence" )
+
+			if ( flourishSeq == "" )
+			{
+				                                             
+				waitthread PlayAnim( model, loopAnim3p, mover )
+				break
+			}
+
+			float flourishTime = DEV_CharacterEmote_GetCustomAnimSequenceTime( flourishSeq )
+			if ( flourishTime < 0 )
+				flourishTime = model.GetSequenceDuration( flourishSeq )
+
+			thread PlayAnim( model, loopAnim3p, mover )
+
+			if ( autoFlourish )
+			{
+				wait loopTime
+			}
+			else
+			{
+				thread PodiumPromptFlourish()
+				WaitSignal( model, SIGNAL_EMOTE_FLOURISH )
+			}
+
+			thread PlayAnim( model, flourishSeq, mover )
+			wait flourishTime
+
+			if ( !autoFlourish && GetSettingsBlockBool( flourishBlock, "flourishEndsLoop" ) )
+				break
+		}
+	}
 	else if ( !oneShot )
 	{
 		wait LOOP_WAIT - BASE_WAIT
 
-		while ( 1 )
+		while ( true )
 		{
 			waitthread PlayAnim( model, anim3p, mover )
 			wait LOOP_WAIT
@@ -1101,7 +1257,7 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	                                  
  
 
-                                                                                  
+                                                                          
  
 	                          
 		      
@@ -1109,10 +1265,10 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	                         
 		      
 
-	                                                           
+	                                           
 		      
 
-	                                                                     
+	                                                     
 	                                           
  
 
@@ -1304,7 +1460,9 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	                       
 		                                                                    
 	    
-		                                                                       
+	 
+		                                                                   
+	 
 
 	                                                  
 	                                                  
@@ -1394,17 +1552,83 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	           
  
 
-                                                                                                       
+                                                                                                               
  
 	                                                 
 	                                           
 	                                
 
-	             
+	                  
 
-	                                                                          
-	                            
-	                             
+	                                                      
+
+	              
+	 
+		           
+		                                                                          
+		                            
+		                             
+
+		                       
+
+		                                                                        
+
+		                    
+			                                                                 
+
+		                        
+			      
+
+		                                                                                
+		                       
+			                                                        
+
+		                                             
+
+		                                           
+
+		                                                                              
+		                            
+		                             
+
+		                 
+
+		                                                                
+			                            
+	 
+ 
+
+                                                                 
+ 
+	                                                          
+	                                                  
+	                                          
+	                                
+
+	            
+		                                     
+		 
+			                                                                                    
+
+			                                                        
+			                                             
+				                                                                                    
+
+			                                                          
+		 
+	 
+
+	                                                         
+
+	                                                                                       
+	                                                                                 
+
+	             
+ 
+
+                                              
+ 
+	                                       
  
 
                                                                                                         
@@ -1655,7 +1879,7 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
 				                                             
 		 
 		    
-			                                                                                                                                            
+			                                                                                                                                                
 	 
 	                                            
 		                                     
@@ -1664,7 +1888,7 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
  
 
                     
-                                                                                 
+                                                                                                                      
  
                                   
                                                          
@@ -1672,10 +1896,19 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
                                                                                                    
 
                                    
-                                                   
+                           
+
+                           
+                                      
+
+                             
+                                      
+
+                                   
+                                                                            
  
 
-                                                                       
+                                                                                                                
  
                                       
                                
@@ -1695,33 +1928,97 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
   
 
                                          
-                                                             
+                                                                          
 
-                                                                                                                            
+                                                                                                                               
 
                                 
   
+                                                                 
+
                                         
                                            
 
-                                            
-                                                                    
-                                                                  
-                                                                                                                         
+              
+                    
+                                                                   
+                                                                                       
+   
+                                                                            
+                                                            
+   
+      
+   
+                                                       
+   
+                                         
 
-                                                                                                    
+                  
+                                                                                                                            
+                                                                                                                            
+                                                                                                                            
+                                                                                                                            
+
+                    
+                      
+                       
+                     
+                        
+
+                                                                                                          
+
+                                  
+   
+                                                                              
+                                                                                 
+    
+                                                     
+                               
+         
+    
+                                                      
+   
 
                                                               
                                          
 
-                                 
+                            
+                                  
+      
+                              
   
      
   
-                                                                      
-                                                                                                    
+                                                                    
+                                                                                      
+                                                                            
                              
   
+ 
+
+                                                   
+ 
+                           
+              
+
+                         
+              
+
+                          
+                                                                                                                                                                         
+              
+
+            
+ 
+
+                                                                               
+ 
+                                                                            
+                                                                                    
+
+                                                               
+
+                                                                                                         
  
 
       

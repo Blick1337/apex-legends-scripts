@@ -560,6 +560,7 @@ void function MpAbilityArmoredLeap_Init()
 	RegisterSignal( "ArmoredLeap_AirLaunchComplete" )
 	RegisterSignal( "ArmoredLeap_GroundDiveComplete" )
 	RegisterSignal( "VisorMode_DeActivate" )
+	RegisterSignal( "StopConcurrentPlacementThread" )
 
 	                                                                                                                                       
 	RegisterSignal( "ArmoredLeap_StartPrepPhase" )
@@ -676,12 +677,9 @@ void function OnWeaponReadyToFire_ability_armored_leap( entity weapon )
 	thread ArmoredLeap_TargetPlacementTracking_Thread( player )
 
 	#if CLIENT
-		if ( !InPrediction() || IsFirstTimePredicted() )
+		if ( player == GetLocalViewPlayer() )
 		{
-			if ( player == GetLocalViewPlayer() )
-			{
-				thread ArmoredLeap_AR_Placement_Thread( weapon )
-			}
+			thread ArmoredLeap_AR_Placement_Thread( weapon )
 		}
 	#endif
 
@@ -2837,6 +2835,9 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 	if( !IsValid( player ) )
 		return
 
+	Signal(player, "StopConcurrentPlacementThread")
+	player.EndSignal("StopConcurrentPlacementThread")
+
 	player.EndSignal( "OnDeath" )
 	player.EndSignal( "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
@@ -4910,12 +4911,10 @@ array<entity> function GetAllyPlayerArray( entity owner )
 	int team = owner.GetTeam()
 	int alliance
 
-                         
-		if ( Control_IsModeEnabled()  )
-		{
-			alliance = AllianceProximity_GetAllianceFromTeam( team )
-		}
-       
+	if ( AllianceProximity_IsUsingAlliances()  )
+	{
+		alliance = AllianceProximity_GetAllianceFromTeam( team )
+	}
 
 	array<entity> playerArray = GetPlayerArray_Alive()
 	array<entity> validAllyArray
@@ -4936,13 +4935,11 @@ array<entity> function GetAllyPlayerArray( entity owner )
 		if( !IsFriendlyTeam( team, playerTeam ) )
 			continue
 
-                          
-			if ( Control_IsModeEnabled()  )
-			{
-				if ( !IsTeamInAlliance( playerTeam, alliance ) )
-					continue
-			}
-        
+		if ( AllianceProximity_IsUsingAlliances()  )
+		{
+			if ( !IsTeamInAlliance( playerTeam, alliance ) )
+				continue
+		}
 
 		validAllyArray.append( player )
 	}
@@ -6404,9 +6401,9 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 	                                                                               
 
 	                                  
-	                                                           
+	                                                                                         
 	 
-		                                 
+		                                                
 		 
 			                                 
 			 
@@ -6427,7 +6424,7 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 			 
 		 
 
-		                             
+		                                            
 		 
 			                                                             
 			                                                         
@@ -6477,7 +6474,7 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 			      
 
 		                	                                              
-		                                  
+		                                             
 		 
 			                                                                                                
 				                                                                                                                           
@@ -6863,7 +6860,7 @@ bool function IsCastleWallEnt( entity ent )
 		                        
 			      
 
-		                                                                                                                
+		                                                                                                            
 		 
 
 			                                   
@@ -6951,7 +6948,7 @@ bool function IsCastleWallEnt( entity ent )
 	                                                              
 	                  
 
-	                                                                           
+	                                                                         
 	 
 		                                                                                                                                            
 		                              
@@ -7285,20 +7282,11 @@ void function CastleWall_OnUseWall( entity wallProxy, entity player, int useFlag
 {
 	if ( IsControllerModeActive() )
 	{
-		if ( ! ( useFlags & USE_INPUT_LONG ) )
+		if ( !IsBitFlagSet( useFlags, USE_INPUT_LONG ) )
 		{
 			thread IssueReloadCommand( player )
 		}
 	}
-}
-
-void function IssueReloadCommand( entity player )
-{
-	EndSignal( player, "OnDestroy" )
-
-	player.ClientCommand( "+reload" )
-	WaitFrame()
-	player.ClientCommand( "-reload" )
 }
 
 void function TrackCastleWallEnergizedState_Thread( entity ent )

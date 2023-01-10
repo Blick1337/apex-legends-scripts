@@ -64,7 +64,6 @@ const string HACK_FLASH_FX_REF_56 = $"P_havok_leg_orng_lvl3_3P"
 void function OnWeaponActivate_Energy_AR( entity weapon )
 {
 	OnWeaponActivate_RUIColorSchemeOverrides( weapon )
-	OnWeaponActivate_ReactiveKillEffects( weapon )
 
 	#if SERVER
 		                                                                                    
@@ -75,5 +74,5 @@ void function OnWeaponActivate_Energy_AR( entity weapon )
 
 void function OnWeaponDeactivate_Energy_AR( entity weapon )
 {
-	OnWeaponDeactivate_ReactiveKillEffects( weapon )
+
 }

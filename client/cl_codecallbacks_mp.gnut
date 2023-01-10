@@ -155,7 +155,7 @@ void function ClientCodeCallback_OnCinematicEventFlagsChanged( entity player, in
 
 	foreach ( flag, callbackInfoArray in clGlobal.onCinematicEventFlagChangedCallback )
 	{
-		if ( !( changedFlag & flag ) )
+		if ( !IsBitFlagSet( changedFlag, flag ) )
 			continue
 
 		foreach ( callbackFunc in callbackInfoArray )
@@ -629,7 +629,8 @@ void function ClientCodeCallback_UIScriptResetComplete()
 		callbackFunc()
 }
 
-void function ClientCodeCallback_PerformSelfReport(){
+void function ClientCodeCallback_PerformSelfReport()
+{
 
 	int hardwareID = GetHardwareFromName(GetUnspoofedPlayerHardware())
 	string uid  = GetPlayerUID()

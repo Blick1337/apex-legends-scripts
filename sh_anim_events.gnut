@@ -333,7 +333,7 @@ void function ClientCodeCallback_HandleClientAnimEvent( entity eventCaller, stri
 					break
 
 				default:
-					Assert( 0, "No mapping exists for damageDef " + tokens[1] )
+					Assert( false, "No mapping exists for damageDef " + tokens[1] )
 					break
 			}
 

@@ -3,7 +3,7 @@ global function ShFiringRangeChallenges_Init
 global function FRC_RegisterChallenge
 global function FRC_IsEnabled
 #endif
-
+ 
 #if SERVER
 
                                  
@@ -11,6 +11,7 @@ global function FRC_IsEnabled
                                
                                      
                                               
+                                                    
        
                                            
              
@@ -36,14 +37,6 @@ const asset FRC_BORDER01_MDL = $"mdl/canyonlands/firingrange_perimetermarker_01.
 const asset FRC_BORDER02_MDL = $"mdl/canyonlands/firingrange_perimetermarker_02.rmdl"
 
 const string FRC_SCORE_NETWORK_VAR = "firingRangeChallengeScore"
-
-global enum eFiringRangeChallengeState
-{
-	FR_CHALLENGE_INACTIVE,
-	FR_CHALLENGE_PENDING,
-	FR_CHALLENGE_ACTIVE,
-	FR_CHALLENGE_POST
-}
 
 global enum eFiringRangeChallengeType
 {
@@ -721,7 +714,7 @@ void function EntitiesDidLoad()
 	                             
 	 
                          
-                                                                     
+                                                  
       
 			                                                 
 		                                    
@@ -797,7 +790,7 @@ void function EntitiesDidLoad()
                                                      
  
 	                                
-	                                                
+	                                        
 	                                       
  
 
@@ -864,6 +857,30 @@ void function EntitiesDidLoad()
 	 
  
 
+                                                                    
+ 
+	                        
+		      
+
+	                        
+		      
+
+	                        
+		      
+
+	                                 
+	                                                            
+		      
+
+	                                                                                     
+	                                                                            
+		      
+
+	                                                              
+		      
+
+	                                                                                   
+ 
 
                                                          
  
@@ -1019,17 +1036,21 @@ void function ServerCallback_FRC_UpdateState( int state )
 			Signal( player, "FRChallengeEnded" )
 			file.score = 0
 			EnableEmoteProjector ( true )
+			RunUIScript( "SetFiringRangeChallengeInProgress", false )
 			break
 		case eFiringRangeChallengeState.FR_CHALLENGE_PENDING:
 			thread FRC_CreatePendingChallengeUI()
 			EnableEmoteProjector ( false )
+			RunUIScript( "SetFiringRangeChallengeInProgress", true )
 			break
 		case eFiringRangeChallengeState.FR_CHALLENGE_ACTIVE:
 			thread FRC_StartChallengeTimer()
+			RunUIScript( "SetFiringRangeChallengeInProgress", true )
 			break
 		case eFiringRangeChallengeState.FR_CHALLENGE_POST:
 			                                          
 			                    
+			RunUIScript( "SetFiringRangeChallengeInProgress", false )
 			break
 	}
 
@@ -1213,7 +1234,7 @@ void function FiringRangeChallengeScoreUpdated( entity player, int newVal )
 void function OnFirstDrawCinematicFlagChanged( entity player )
 {
 	int ceFlags = player.GetCinematicEventFlags()
-	if ( ceFlags & CE_FLAG_HIDE_MAIN_HUD_INSTANT )
+	if ( IsBitFlagSet( ceFlags, CE_FLAG_HIDE_MAIN_HUD_INSTANT ) )
 	{
 		Crosshair_SetState( CROSSHAIR_STATE_HIDE_ALL )
 		ServerCallback_SetCommsDialogueEnabled( 0 )
@@ -1415,7 +1436,7 @@ bool function FRC_CanPickUpWeaponPlayerStatusCheck ( entity player )
 		return false
 	if ( player.Player_IsSkywardLaunching() )
 		return false
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.placing_phase_tunnel ) )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.placing_phase_tunnel ) )
 		return false
 	if ( player.GetParent() != null )
 		return false

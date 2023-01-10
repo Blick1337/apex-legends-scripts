@@ -58,6 +58,7 @@ global function GetOtherWeapon
 global function SURVIVAL_GetActionForGroundItem
 global function SURVIVAL_GetActionForEquipment
 global function SURVIVAL_GetAltActionForEquipment
+global function SURVIVAL_GetCharacterActionForEquipment
 global function SURVIVAL_GetActionForBackpackItem
 global function SURVIVAL_GetAltActionForBackpackItem
 global function SURVIVAL_GetActionForAttachment
@@ -284,8 +285,8 @@ global const string WEAPON_LOCKEDSET_MOD_BLUEPAINTBALL = "blue_paintball"
       
 
                                
-                                                            
-                                                        
+global const string WEAPON_LOCKEDSET_SUFFIX_CUPID = "_cupid"
+global const string WEAPON_LOCKEDSET_MOD_CUPID = "cupid"
       
 
 global const string WEAPON_LOCKEDSET_MOD_CRATE = "crate"
@@ -1077,11 +1078,11 @@ string function GetWeaponClassNameWithLockedSet( entity weapon )
        
 
                                 
-                                                    
-   
-                                          
-                
-   
+		if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_CUPID ) )
+		{
+			result += WEAPON_LOCKEDSET_SUFFIX_CUPID
+			return result
+		}
        
 
 	switch( weapon.GetWeaponLockedSet() )
@@ -1134,8 +1135,8 @@ bool function WeaponLootRefIsLockedSet( string ref )
        
 
                                 
-                                                       
-              
+		if ( ref.find( WEAPON_LOCKEDSET_SUFFIX_CUPID ) >= 0 )
+			return true
        
 
 	return false
@@ -1432,7 +1433,7 @@ int function SURVIVAL_Loot_GetHealthPickupTypeFromRef( string ref )
 		return kitType
 	}
 
-	Assert( 0, "Unknown Health Kit Ref: " + ref )
+	Assert( false, "Unknown Health Kit Ref: " + ref )
 	return eHealthPickupType.INVALID
 }
 
@@ -1536,7 +1537,7 @@ bool function SURVIVAL_Loot_RunConditionalCheck( string ref, entity player )
 array<string> function GetAttachPointsForAttachment( string attachmentName )
 {
 	if ( !IsValidAttachment( attachmentName ) )
-		Assert( 0, "Attachment " + attachmentName + " not defined in datatable/weapon_attachment_matrix.rpak" )
+		Assert( false, "Attachment " + attachmentName + " not defined in datatable/weapon_attachment_matrix.rpak" )
 
 	AttachmentData aData = GetAttachmentData( attachmentName )
 	return aData.attachPoints
@@ -1771,9 +1772,17 @@ int function SURVIVAL_CountItemsInInventory( entity player, string ref )
 }
 
 
-entity function SURVIVAL_GetLastActiveWeapon( entity player )
+entity function SURVIVAL_GetLastActiveWeapon( entity player, bool includeSling = false )
 {
-	array<entity> weapons = SURVIVAL_GetPrimaryWeaponsSorted( player )
+                  
+                       
+                    
+                                                                     
+      
+                                                       
+      
+		array<entity> weapons = SURVIVAL_GetPrimaryWeaponsSorted( player )
+       
 
 	entity weapon
 
@@ -1798,29 +1807,20 @@ string function SURVIVAL_GetStowedWeapon( entity player )
 	string equipmentSlotName
 	int activeWeaponSlot = SURVIVAL_GetActiveWeaponSlot( player )
 
-                  
-                                             
-   
-                                                
-   
-      
-       
-	{
-		int stowedWeaponSlot = EquipmentSlot_GetOtherWeaponSlotInt( activeWeaponSlot )
-		if ( stowedWeaponSlot == -1 )
-			return ""
+	int stowedWeaponSlot = EquipmentSlot_GetOtherWeaponSlotInt( activeWeaponSlot )
+	if ( stowedWeaponSlot == -1 )
+		return ""
 
-		equipmentSlotName = "main_weapon" + stowedWeaponSlot
-	}
+	equipmentSlotName = "main_weapon" + stowedWeaponSlot
 
 	                                                  
 	return EquipmentSlot_GetEquippedLootDataForSlot( player, equipmentSlotName ).ref
 }
 
 
-int function SURVIVAL_GetActiveWeaponSlot( entity player )
+int function SURVIVAL_GetActiveWeaponSlot( entity player, bool includeSling = false )
 {
-	entity activeWeapon = SURVIVAL_GetLastActiveWeapon( player )
+	entity activeWeapon = SURVIVAL_GetLastActiveWeapon( player, includeSling )
 	return GetSlotForWeapon( player, activeWeapon )
 }
 
@@ -2290,26 +2290,26 @@ void function SURVIVAL_Loot_UpdateHighlightForLoot( entity prop )
 			case eLootType.AMMO:
 				switch ( ref )
 				{
-					case "special":
+					case SPECIAL_AMMO:
 						highlight = "survival_item_ammo_energy"
 						break
 
-					case "highcal":
+					case HIGHCAL_AMMO:
 						highlight = "survival_item_ammo_b"
 						break
 
-					case "shotgun":
+					case SHOTGUN_AMMO:
 						highlight = "survival_item_ammo_shotgun"
 						break
 
                      
 
-                      
+                    
                                                 
            
       
 
-					case "sniper":
+					case SNIPER_AMMO:
 						highlight = "survival_item_ammo_sniper"
 						break
 
@@ -2333,7 +2333,7 @@ void function SURVIVAL_Loot_UpdateHighlightForLoot( entity prop )
 				highlight = "survival_item_epic_loba"
 		}
 
-                   
+                                  
                                                                                                                                                            
    
                                              
@@ -2412,7 +2412,7 @@ int function CompareHealData( KitHealData a, KitHealData b )
 	else if ( b.totalAppliedHeal > 0 && a.totalAppliedHeal == 0 )
 		return 1
 
-	if ( !a.possibleShieldAdd && !b.possibleShieldAdd )
+	if ( a.possibleShieldAdd == 0 && b.possibleShieldAdd == 0 )
 	{
 		if ( a.possibleHealthAdd > b.possibleHealthAdd )
 			return -1
@@ -2542,7 +2542,13 @@ array<entity> function SURVIVAL_GetPrimaryWeaponsSorted( entity player )
 
                                                     
                              
-                               
+  
+                                                                                      
+                                               
+                                   
+      
+                                
+  
 
                
  
@@ -2750,7 +2756,7 @@ array<string> function SURVIVAL_GetPrimaryWeaponRefs( entity player )
 
 string function SURVIVAL_GetWeaponBySlot( entity player, int slot )
 {
-	Assert( slot == WEAPON_INVENTORY_SLOT_PRIMARY_0 || slot == WEAPON_INVENTORY_SLOT_PRIMARY_1, "Invalid slot " + slot )
+	Assert( slot < WEAPON_INVENTORY_SLOT_PRIMARY_COUNT, "Invalid slot " + slot )
 
 	if ( IsValid( player.GetNormalWeapon( slot ) ) )
 		return player.GetNormalWeapon( slot ).GetWeaponClassName()
@@ -2769,10 +2775,13 @@ string function SURVIVAL_GetWeaponAttachmentForPoint( entity player, int weaponS
 }
 
 
-LootActionStruct function SURVIVAL_GetActionForEquipment( entity player, LootData lootData, bool isAltAction = false )
+LootActionStruct function SURVIVAL_GetActionForEquipment( entity player, LootData lootData, bool isAltAction = false, bool isCharacterAction = false )
 {
 	if ( isAltAction )
 		return SURVIVAL_GetAltActionForEquipment( player, lootData )
+
+	if( isCharacterAction )
+		return SURVIVAL_GetCharacterActionForEquipment( player, lootData )
 
 	LootTypeData lt = GetLootTypeData( lootData.lootType )
 
@@ -2793,6 +2802,18 @@ LootActionStruct function SURVIVAL_GetAltActionForEquipment( entity player, Loot
 	return as
 }
 
+LootActionStruct function SURVIVAL_GetCharacterActionForEquipment( entity player, LootData lootData )
+{
+	LootTypeData lt = GetLootTypeData( lootData.lootType )
+
+	LootActionStruct as
+	if( lt.equipmentCharacterActionFunc != null )
+		as.action = lt.equipmentCharacterActionFunc( player )
+	else
+		as.action = eLootAction.NONE
+
+	return as
+}
 
 LootActionStruct function SURVIVAL_GetActionForBackpackItem( entity player, LootData lootData, bool isAltAction = false )
 {
@@ -2992,11 +3013,20 @@ bool function SURVIVAL_PlayerCanUse_AnimatedInteraction( entity player, entity e
 	return true
 }
 
+const float TIME_BEFORE_AUTOPICKUP_CAN_BE_PICKED_UP = 3.0
 bool function SURVIVAL_CanPlayerPickup( entity player, entity pickup, int useInputFlags = 0 )
 {
 	#if SERVER
 		                                        
 			            
+
+		                                                                                                    
+		                                                                                                                  
+		                                                                                         
+		 
+			                                                                                                                                                                     
+				            
+		 
 	#endif
 
 	if ( !IsValid( pickup ) )
@@ -3057,7 +3087,7 @@ bool function PlayerCommonItemPickupCheck( entity player, int useInputFlags = 0 
 
 bool function IsPlayerBusyOrAnimating( entity player, int useInputFlags = 0 )
 {
-	bool isTouchUse = (useInputFlags & USE_INPUT_AUTO) != 0
+	bool isTouchUse = IsBitFlagSet( useInputFlags, USE_INPUT_AUTO )
 	if ( player.GetWeaponDisableFlags() == WEAPON_DISABLE_FLAGS_ALL && !isTouchUse )
 		return true
 
@@ -3376,7 +3406,7 @@ bool function IsAttachmentAnUpgrade( entity player, LootData lootData, int actio
 }
 
 
-LootActionStruct function SURVIVAL_GetActionForItem( entity player, int context, LootRef lootRef, bool isAltAction )
+LootActionStruct function SURVIVAL_GetActionForItem( entity player, int context, LootRef lootRef, bool isAltAction, bool isCharacterAction = false )
 {
 	LootActionStruct as
 	LootData actionLoot = lootRef.lootData
@@ -3386,26 +3416,25 @@ LootActionStruct function SURVIVAL_GetActionForItem( entity player, int context,
 	else if ( context == eLootContext.BACKPACK )
 		as = SURVIVAL_GetActionForBackpackItem( player, actionLoot, isAltAction )
 	else if ( context == eLootContext.EQUIPMENT )
-		as = SURVIVAL_GetActionForEquipment( player, actionLoot, isAltAction )
+		as = SURVIVAL_GetActionForEquipment( player, actionLoot, isAltAction, isCharacterAction )
 
 	return as
 }
 
 #if CLIENT
-LootActionStruct function SURVIVAL_BuildStringForAction( entity player, int context, LootRef lootRef, bool isAltAction, bool isInMenu )
+LootActionStruct function SURVIVAL_BuildStringForAction( entity player, int context, LootRef lootRef, bool isAltAction, bool isInMenu, bool isCharacterAction = false, string equipmentSlot = ""  )
 {
 	int action
 	LootData actionLoot = lootRef.lootData
 
-	                                                                                
 	string buttonString = isAltAction ? "%&use_alt%" : "%&use%"
 
 	if ( isInMenu )
 	{
-		buttonString = isAltAction ? "%[X_BUTTON|MOUSE2]%" : "%[A_BUTTON|MOUSE1]%"
+		buttonString = isAltAction ? "%[X_BUTTON|MOUSE2]%" : isCharacterAction ? "%[L_SHOULDER|q]%" : "%[A_BUTTON|MOUSE1]%"
 	}
 
-	LootActionStruct as = SURVIVAL_GetActionForItem( player, context, lootRef, isAltAction )
+	LootActionStruct as = SURVIVAL_GetActionForItem( player, context, lootRef, isAltAction, isCharacterAction )
 	action = as.action
 
 	if ( SURVIVAL_EquipmentPretendsToBeBlank( lootRef.lootData.ref ) )
@@ -3630,6 +3659,62 @@ LootActionStruct function SURVIVAL_BuildStringForAction( entity player, int cont
 			as.displayString = Localize( "#LOOT_ACTION", buttonString, actionString )
 			break
 
+                   
+                                  
+                                                   
+    
+                                                 
+                                                                              
+                                                                               
+
+                            
+     
+                             
+      
+                                                                                                                               
+       
+                                                      
+       
+          
+       
+                                                                                        
+                                                                                                                            
+        
+                                                       
+        
+           
+        
+                                                                       
+             
+        
+       
+      
+         
+                                                        
+     
+        
+     
+                                                       
+     
+    
+                                                                                
+    
+                                                                         
+     
+                                                               
+          
+     
+
+                                            
+                                                 
+        
+                                             
+    
+
+                                                                            
+        
+        
+
 		default:
 			as.displayString = Localize( "#LOOT_ACTION", buttonString, actionString )
 	}
@@ -3778,20 +3863,26 @@ string function GetWeaponToReplace( entity player )
          
 
                                   
-                                                               
-             
+				                                                           
+					        
          
 		 
 
-                   
+                                  
                                                  
+           
+        
+                     
+                                      
            
         
 
 		                                
 		                                
 		                                                           
-		                             
+		                                                  
+
+		                                         
 
 		     
 	 
@@ -4009,6 +4100,10 @@ void function Inventory_RegisterNetworking()
                                                                        
                                                                              
        
+
+	                                                                                                   
+	                                                
+		                            
  
 
                                                                                      
@@ -4245,7 +4340,7 @@ bool function SurvivalLoot_CanUseFunction( entity player, entity ent, int useFla
 	if ( Bleedout_IsBleedingOut( player ) )
 		return false
 
-	bool autoUse = (useFlags & USE_FLAG_AUTO) != 0
+	bool autoUse = IsBitFlagSet( useFlags, USE_FLAG_AUTO )
 
 	int lootIdx = ent.GetSurvivalInt()
 	bool foundLootData = false
@@ -4730,7 +4825,7 @@ int function SURVIVAL_GetCharacterShieldHealthMaxForArmor( entity player, LootDa
       
 
 			default:
-				Assert( 0, "Invalid armor tier: " + tier + ", data.ref: " + data.ref )
+				Assert( false, "Invalid armor tier: " + tier + ", data.ref: " + data.ref )
 				shieldMaxHealth += 0
 		}
 	}
@@ -4802,7 +4897,7 @@ int function EvolvingArmor_GetCharacterShieldHealthMaxForArmorTier( entity playe
       
 
 		default:
-			Assert( 0, "Evolving Armor: Invalid armor tier" )
+			Assert( false, "Evolving Armor: Invalid armor tier" )
 			shieldMaxHealth += 0
 	}
 
@@ -5446,16 +5541,17 @@ void function DeathBoxThink( entity ent, entity playerUser )
 
 bool function ShouldPickupDNAFromDeathBox( entity ent, entity player )
 {
+                    
+                                                                                                        
+              
+       
+
 	if ( ent.GetTeam() != TEAM_UNASSIGNED )
 	{
 		if ( ent.GetTeam() == player.GetTeam() && IsValid( ent.GetOwner() ) )
 			return true
 	}
 
-                   
-                                                  
-             
-      
 	return false
 }
 
@@ -5467,7 +5563,7 @@ void function OnDeathBoxUse( entity box, entity player, int useInputFlags )
         
        
 
-	if ( ShouldUseAltInteractForArmorSwap() && useInputFlags & USE_INPUT_ALT )
+	if ( ShouldUseAltInteractForArmorSwap() && IsBitFlagSet( useInputFlags, USE_INPUT_ALT ) )
 	{
 		entity ornull armorEnt = GetDeathboxArmorSwap( player, box )
 		if ( armorEnt != null )
@@ -5478,7 +5574,7 @@ void function OnDeathBoxUse( entity box, entity player, int useInputFlags )
 		return
 	}
 
-	if ( useInputFlags & USE_INPUT_LONG )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 	{
 		if ( ShouldPickupDNAFromDeathBox( box, player ) )
 			return
@@ -5604,15 +5700,15 @@ void function OnUseSurvivalPickup( entity pickup, entity player, int useInputFla
 
 	bool pickedUp = false
 
-	if ( useInputFlags & USE_INPUT_ALT )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_ALT ) )
 		pickedUp = Survival_PickupItem( pickup, player, PICKUP_FLAG_ALT )
-	else if ( useInputFlags & USE_INPUT_DEFAULT )
+	else if ( IsBitFlagSet( useInputFlags, USE_INPUT_DEFAULT ) )
 		pickedUp = Survival_PickupItem( pickup, player )
 
 	if ( pickedUp )
 		return
 
-	if ( useInputFlags & USE_INPUT_LONG )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 		pickedUp = Survival_PickupItem( pickup, player, PICKUP_FLAG_LONG )
 }
 
@@ -5728,8 +5824,8 @@ bool function SURVIVAL_Weapon_IsAttachmentLocked( string weaponName )
        
 
                                 
-                                                        
-              
+		if ( baseMods.contains( WEAPON_LOCKEDSET_MOD_CUPID ) )
+			return true
        
 
 	if ( lootTags.contains( WEAPON_LOCKEDSET_MOD_GOLD ) )
@@ -5811,7 +5907,7 @@ int function SURVIVAL_GetInventorySlotCountForPlayer( entity player, LootData da
 	else if ( data.lootType == eLootType.AMMO )
 	{
                      
-                                                                        
+                                                                                                                                                      
     
                                        
     
@@ -5823,13 +5919,11 @@ int function SURVIVAL_GetInventorySlotCountForPlayer( entity player, LootData da
 		{
 			result += Pas_GetWattsonUltAccelExtraCount()
 		}
-                      
 		if ( PlayerHasPassive( player, ePassives.PAS_EXTRA_MED_INV ) )
 		{
 			if ( data.ref == "health_pickup_health_large" || data.ref == "health_pickup_combo_large" || data.ref == "health_pickup_combo_full" )
 				result++
 		}
-      
 	}
 
 	return result
@@ -6087,7 +6181,7 @@ bool function IsPlayerCloseEnoughToDeathBoxToLoot( entity player, entity deathBo
 
 
 #if SERVER || CLIENT
-array<entity> function GetDeathBoxLootEnts( entity deathBox )
+array<entity> function GetDeathBoxLootEnts( entity deathBox, entity realmEntity = null )
 {
 	if ( deathBox.GetNetworkedClassName() == "prop_death_box" )
 	{
@@ -6096,9 +6190,10 @@ array<entity> function GetDeathBoxLootEnts( entity deathBox )
 	else if ( deathBox.GetNetworkedClassName() == "prop_loot_grabber" )
 	{
 		vector deathBoxOrigin = deathBox.GetOrigin()
-		float radius          = GetBlackMarketNearbyLootRadius()
+		float radius          = deathBox.GetLootGrabDist()
+		entity realmEnt		  = realmEntity == null ? deathBox : realmEntity
 
-		array<entity> lootEnts = GetSurvivalLootNearbyPos( deathBoxOrigin, radius, false, false, false, deathBox )
+		array<entity> lootEnts = GetSurvivalLootNearbyPos( deathBoxOrigin, radius, false, false, false, realmEnt )
 
 		#if SERVER
 			                                                                                                                                 
@@ -6126,6 +6221,13 @@ array<entity> function GetDeathBoxLootEnts( entity deathBox )
 		                          
 
 	                                                                          
+
+                    
+                                    
+  
+                                                                        
+  
+       
 	                                             
 	 
 		                             
@@ -6140,7 +6242,7 @@ array<entity> function GetDeathBoxLootEnts( entity deathBox )
 	                             
 	 
 		                                                                  
-		                                                           
+		                                                                        
 		                                                                                                                             
 		                                                                                                                                               
 		                                                     
@@ -6173,7 +6275,7 @@ array<entity> function GetDeathBoxLootEnts( entity deathBox )
 
 
 #if SERVER || CLIENT
-bool function IsLootEntAccessibleViaDeathBox( entity lootEnt, entity deathBox )
+bool function IsLootEntAccessibleViaDeathBox( entity lootEnt, entity deathBox, entity player )
 {
 	Assert( lootEnt.GetNetworkedClassName() == "prop_survival" )
 
@@ -6188,23 +6290,49 @@ bool function IsLootEntAccessibleViaDeathBox( entity lootEnt, entity deathBox )
 	else if ( deathBox.GetNetworkedClassName() == "prop_loot_grabber" )
 	{
 		vector deathBoxOrigin = deathBox.GetOrigin()
-		float radius          = GetBlackMarketNearbyLootRadius()
+		float radius          = deathBox.GetLootGrabDist()
 
-		if ( DistanceSqr( lootEnt.GetOrigin(), deathBoxOrigin ) <= radius * radius && lootEnt.DoesShareRealms( deathBox ) )
-			return true
+                     
+                                           
+   
+                            
+                
 
-		#if SERVER
-			                                                                                                                                 
-		#elseif CLIENT
-			array<entity> nearbyDeathBoxes = ArrayWithin( GetAllDeathBoxes(), deathBoxOrigin, radius )
-		#endif
-		foreach ( entity nearbyDeathBox in nearbyDeathBoxes )
+                                           
+               
+
+             
+                                                                                                                                     
+                 
+                                                                                              
+         
+                                                        
+    
+                                                                            
+                
+    
+
+               
+   
+      
+        
 		{
-			if ( IsLootEntAccessibleViaDeathBox( lootEnt, nearbyDeathBox ) )
+			if ( DistanceSqr( lootEnt.GetOrigin(), deathBoxOrigin ) <= radius * radius && lootEnt.DoesShareRealms( deathBox ) )
 				return true
-		}
 
-		return false
+			#if SERVER
+				                                                                                                                                 
+			#elseif CLIENT
+				array<entity> nearbyDeathBoxes = ArrayWithin( GetAllDeathBoxes(), deathBoxOrigin, radius )
+			#endif
+			foreach ( entity nearbyDeathBox in nearbyDeathBoxes )
+			{
+				if ( IsLootEntAccessibleViaDeathBox( lootEnt, nearbyDeathBox, player ) )
+					return true
+			}
+
+			return false
+		}
 	}
 
 	Assert( false, "Unhandled death box class: " + string(deathBox.GetNetworkedClassName()) )

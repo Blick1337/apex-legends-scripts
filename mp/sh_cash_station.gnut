@@ -361,7 +361,8 @@ void function CashStationSmallEntitySpawned( entity ent )
 		return
 	}
 
-	if ( CashStationWasUsed( ent ) ){
+	if ( CashStationWasUsed( ent ) )
+	{
 		return
 	}
 

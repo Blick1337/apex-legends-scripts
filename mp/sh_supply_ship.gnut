@@ -348,7 +348,7 @@ void function OnShipPanelSpawn( entity panel )
 
 void function OnShipPanelUse( entity panel, entity player, int useInputFlags )
 {
-	if ( useInputFlags & USE_INPUT_LONG )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 	{
 		thread ShipPanelUseThink( panel, player )
 	}

@@ -134,9 +134,6 @@ void function ShPersistentData_LevelInit_Begin()
 
 void function ShPersistentData_LevelInit_Finish()
 {
-	#if SERVER && DEV
-		                                                                        
-	#endif
 }
 
 
@@ -324,91 +321,21 @@ bool function DEV_ShouldIgnorePersistence()
 	          
  
 
-                                                                                                    
+                                                                       
  
-	                                                               
-	                                                                              
-	                                         
-
-	     
-		                                                                                
-		                                                                                           
-		                                                    
-
-		                                   
-		 
-			                                                                                                                                                              
-			           
-		 
-
-		                                                                                               
-		                      
-		                    
-		 
-			                             
-		 
-		    
-		 
-			                                                      
-			                                                                                     
-		 
-
-		                                                           
-		                      
-		 
-			                                                                                                                                 
-			                                                                                                                        
-			                                                                                                                                 
-			                                                                      
-			                  
-			 
-				                                                                                                                                                    
-				           
-			 
-			                                                                                 
-		 
-
-		                     
-		 
-			                                                                                                                             
-			                                                                                 
-
-			                                                                                                                 
-			                                 
-			                                      
-			                                  
-			                                      
-
-			                    
-			                                    
-			                                                       
-			                                   
-
-			                            
-			                                      
-			                       
-			                    
-
-			                                            
-		 
-	     
-		                     
-		 
-			                                                                                
-			                                                                                               
-			                    
-			                                                       
-			                                               
-			                                                         
-			                                          
-			                    
-		 
-	      
+	                                                                                
+	                                                                                               
+	                    
+	                                                       
+	                                               
+	                                                         
+	                                          
+	                    
  
 
                                                                                   
  
-	                                                                       
+	                                                         
  
 
                                                                                                                          

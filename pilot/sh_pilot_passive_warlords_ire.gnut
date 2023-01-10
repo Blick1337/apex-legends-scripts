@@ -69,7 +69,7 @@ void function PassiveWarlordsIre_OnPassiveChanged( entity player, int passive, b
 		      
 
 	                                                                       
-	                                                                                                                                       
+	                                                                                                                                                  
 
 	                                                        
 	                                                          
@@ -83,7 +83,7 @@ void function PassiveWarlordsIre_OnLocalPlayerDidDamage( entity attacker, entity
 		return
 
 	float highlightDuration = file.balance_warlordsIreHighlightDurationBase
-	highlightDuration += ( damageType & DF_EXPLOSION ) ? file.balance_warlordsIreHighlightDurationExplode : 0.0
+	highlightDuration += IsBitFlagSet( damageType, DF_EXPLOSION ) ? file.balance_warlordsIreHighlightDurationExplode : 0.0
 
 	if ( (target in file.playerHighlightEndTime) )
 		file.playerHighlightEndTime[ target ] <- ( Time() + highlightDuration )

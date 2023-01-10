@@ -642,7 +642,7 @@ int function SortFriendGroupStatus( Friend a, Friend b )
 #if UI
 bool function EADP_SocialEnabled()
 {
-	if ( EADP_SocialCanRun() == 0 )
+	if ( !EADP_SocialCanRun() )
 		return false
 
 	if ( GetConVarInt( "crossPlay_enabled" ) != 0 )

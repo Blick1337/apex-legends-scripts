@@ -542,6 +542,9 @@ void function ValkTacManageThreatIndicator()
 			arrow.EnableDraw()
 			mdl.EnableDraw()
 
+			arrow.kv.rendercolor = GetKeyColor( COLORID_HUD_INDICATOR_ARROW )
+			mdl.kv.rendercolor = GetKeyColor( COLORID_HUD_INDICATOR_GRENADE_MODEL )
+
 			arrow.DisableRenderWithViewModelsNoZoom()
 			arrow.EnableRenderWithCockpit()
 			arrow.EnableRenderWithHud()
@@ -925,7 +928,7 @@ int function ValkCanFireTactical( entity weapon )
 		return eCanFireTactical.NO_OTHER
 
 	entity owner = weapon.GetWeaponOwner()
-	if ( StatusEffect_GetSeverity( owner, eStatusEffect.skyward_embark ) > 0.0 )
+	if ( StatusEffect_HasSeverity( owner, eStatusEffect.skyward_embark ) )
 	{
 		return eCanFireTactical.NO_OTHER
 	}

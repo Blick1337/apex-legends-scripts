@@ -9,10 +9,10 @@ var function OnWeaponPrimaryAttack_cloak( entity weapon, WeaponPrimaryAttackPara
 
 	if ( IsValid( ownerPlayer ) && ownerPlayer.IsPlayer() )
 	{
-		if ( ownerPlayer.GetCinematicEventFlags() & CE_FLAG_CLASSIC_MP_SPAWNING )
+		if ( IsBitFlagSet( ownerPlayer.GetCinematicEventFlags(), CE_FLAG_CLASSIC_MP_SPAWNING ) )
 			return false
 
-		if ( ownerPlayer.GetCinematicEventFlags() & CE_FLAG_INTRO )
+		if ( IsBitFlagSet( ownerPlayer.GetCinematicEventFlags(), CE_FLAG_INTRO ) )
 			return false
 
 		if ( weapon.HasMod( "survival_finite_ordnance" ) )

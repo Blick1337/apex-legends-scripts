@@ -5,6 +5,7 @@ global function CharacterQuip_IsTheEmpty
 
 global function CharacterQuip_GetAnim3p
 global function CharacterQuip_GetAnimLoop3p
+global function CharacterQuip_SelectWeightedAnimFlourish3p
 global function CharacterQuip_GetCameraHeightOffset
 
 global function CharacterQuip_UseHoloProjector
@@ -133,8 +134,8 @@ void function RegisterEquippableQuipsForCharacter( ItemFlavor characterClass, ar
 			 
 		#endif
 
-		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		entry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
+		entry.associatedCharacterOrNull = characterClass
+		entry.networkTo                 = eLoadoutNetworking.PLAYER_EXCLUSIVE
 		                                                   
 		fileLevel.loadoutCharacterQuipsSlotListMap[characterClass].append( entry )
 	}
@@ -156,8 +157,8 @@ void function RegisterEquippableQuipsForCharacter( ItemFlavor characterClass, ar
 			return !IsLobby()
 		}
 
-		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		entry.networkTo = eLoadoutNetworking.PLAYER_EXCLUSIVE
+		entry.associatedCharacterOrNull = characterClass
+		entry.networkTo                 = eLoadoutNetworking.PLAYER_EXCLUSIVE
 		fileLevel.loadoutCharacterFavoredQuipMap[characterClass].append( entry )
 	}
 }
@@ -287,6 +288,50 @@ string function CharacterQuip_GetAnimLoop3p( ItemFlavor flavor )
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.character_emote )
 
 	return GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "anim3pLoop" )
+}
+
+var function CharacterQuip_SelectWeightedAnimFlourish3p( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.character_emote )
+
+	var flourishSettingsArray = GetSettingsBlockArray( GetSettingsBlockForAsset( ItemFlavor_GetAsset( flavor ) ), "flourishSequences" )
+	int flourishCount = GetSettingsArraySize( flourishSettingsArray )
+
+	if ( flourishCount <= 0 )
+		return null
+
+	int weighttotal = 0
+
+	foreach ( var flourishBlock in IterateSettingsArray( flourishSettingsArray ) )
+	{
+		int weight = GetSettingsBlockInt( flourishBlock, "weight" )
+		Assert( weight > 0, "CharacterQuip: flourish sequence: " + GetSettingsBlockString( flourishBlock, "sequence" ) + " present with invalid weight: + " + weight )
+		weighttotal += weight
+	}
+
+	if ( weighttotal <= 0 )
+	{
+		Warning( "CharacterQuip: weight total for flourish sequences was " + weighttotal + ". Check that weights are assigned on the sequences." )
+		return null
+	}
+
+	int randomValue = RandomInt( weighttotal )
+
+	foreach ( var flourishBlock in IterateSettingsArray( flourishSettingsArray ) )
+	{
+		int weight = GetSettingsBlockInt( flourishBlock, "weight" )
+		if ( randomValue >= weight )
+		{
+			randomValue -= weight
+		}
+		else
+		{
+			return flourishBlock
+		}
+	}
+
+	Warning( "CharacterQuip: Unable to select flourish - you should never see this" )
+	return null
 }
 
 float function CharacterQuip_GetCameraHeightOffset( ItemFlavor flavor )

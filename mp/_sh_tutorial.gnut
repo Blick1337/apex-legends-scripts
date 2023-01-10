@@ -335,7 +335,7 @@ void function ShTutorial_Init()
 
 	                                                       
 	 
-		                                        
+		                                                       
 			        
 
 		            
@@ -587,7 +587,7 @@ bool function IsTutorialInputCompleted( entity player, InputHint completedHint )
 		if ( inputHint != completedHint )
 			continue
 
-		if ( contextBitField & (1 << bitIndex) )
+		if ( IsBitFlagSet( contextBitField, (1 << bitIndex) ) )
 		{
 			return true
 		}

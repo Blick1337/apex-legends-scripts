@@ -6,8 +6,6 @@ void function OnWeaponActivate_Vinson( entity weapon )
 {
 	OnWeaponActivate_weapon_basic_bolt( weapon )
 
-	OnWeaponActivate_ReactiveKillEffects( weapon )
-
                        
 		#if SERVER
 			                                                                            
@@ -21,7 +19,7 @@ void function OnWeaponActivate_Vinson( entity weapon )
 
 void function OnWeaponDeactivate_Vinson( entity weapon )
 {
-	OnWeaponDeactivate_ReactiveKillEffects( weapon )
+
 }
 
 var function OnWeaponPrimaryAttack_Vinson( entity weapon, WeaponPrimaryAttackParams attackParams )

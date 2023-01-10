@@ -448,7 +448,7 @@ void function GenerateDeathFieldStageData()
 	file.deathFieldStageData.clear()
 
 	int i = 0
-	while ( 1 )
+	while ( true )
 	{
 		float radius = GetCurrentPlaylistVarFloat( "deathfield_radius_" + i, -1.0 )
 
@@ -1338,7 +1338,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
 				        
 
 			                                 
-			                                                                                                            
+			                                                                                                        
 				        
 
 			                                                                
@@ -1354,7 +1354,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
 			                                           
 				        
 
-			                                                                         
+			                                                                     
 				        
 
 			                                                         
@@ -1381,7 +1381,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
 			                                              
 				        
 
-			                                                                             
+			                                                                         
 				        
 
 			                                                      
@@ -1898,7 +1898,7 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
 	                                    
  
 
-                                                                        
+                                                                                           
  
 	                                                                  
 
@@ -3017,7 +3017,11 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
      
                                                 
  
-                                                        
+                                    
+        
+
+                                                                         
+                                                                                   
  
 
                                                 
@@ -3269,7 +3273,7 @@ void function Cl_DeathFieldThink( entity deathField )
 
 	bool playSoundInPrematch = GetCurrentPlaylistVarBool( "deathfield_play_sound_in_prematch", true )
 
-	while ( 1 )
+	while ( true )
 	{
 		entity clientPlayer = GetLocalClientPlayer()
 		if ( !file.trackingObserverDeathfield && clientPlayer.GetTeam() == TEAM_SPECTATOR && clientPlayer.GetObserverMode() == OBS_MODE_ROAMING )
@@ -3449,11 +3453,12 @@ void function  SurveyBeacon_ShowSquadInfo_Thread()
 {
 	var gamestateRui = ClGameState_GetRui()
 	float squadInfoShowtime = GetCurrentPlaylistVarFloat( "beacon_info_duration", 7.0 )
-	RuiSetBool( gamestateRui, "isVisible", true )
+	RuiSetFloat( gamestateRui, "scoreAlpha", 1 )
 	wait squadInfoShowtime
-	RuiSetBool( gamestateRui, "isVisible", false )
+	RuiSetFloat( gamestateRui, "scoreAlpha", 0 )
 }
 
+                    
 void function OnSurveyBeaconCreated( entity beacon )
 {
 	if ( !IsValid( beacon ) )
@@ -3469,11 +3474,21 @@ void function OnSurveyBeaconCreated( entity beacon )
 			SetCallback_CanUseEntityCallback( beacon, SurveyBeacon_CanUseFunction )
 		}
 
-		thread BeaconIconThink( beacon )
+                     
+                                         
+    
+                                                                         
+    
+                                                        
+    
+                                                                   
+    
+       
+			thread BeaconIconThink( beacon )
+        
 	}
 }
 
-                    
 void function BeaconIconThink( entity beacon )
 {
 	beacon.EndSignal( "OnDestroy" )
@@ -3890,7 +3905,7 @@ void function TrackDeathfieldDistance_Internal( entity cockpit, entity player )
 
 	ColorCorrection_SetExclusive( file.colorCorrection, true )
 
-	while ( 1 )
+	while ( true )
 	{
 		if ( player.GetTeam() == TEAM_SPECTATOR && player.GetObserverMode() != OBS_MODE_ROAMING )
 			return                                
@@ -3969,7 +3984,7 @@ bool function ShouldShowDeathFieldEffects( entity player )
 	if ( IsViewingSquadSummary() || IsViewingDeathRecap() )
 		shouldShow = false
 
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.ring_immunity ) >= 1 )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.ring_immunity ) )
 		shouldShow = false
 
 	                                                                                                                                                                       
@@ -4080,6 +4095,8 @@ void function DisplayHolsterWeaponHint()
                     
 void function ReconClassCharacter_PassiveChanged( entity player, int passive, bool didHave, bool nowHas )
 {
+	                                                                                                                                                                                                                                      
+	                                                                                                                                                                                                                                          
 	if ( nowHas != didHave )
 	{
 		string calloutLine, player1pAnim, player3pAnim, panelAnim
@@ -4109,29 +4126,36 @@ void function ReconClassCharacter_PassiveChanged( entity player, int passive, bo
 				if ( HasCryptoSword ( player ) )
 				{
 					calloutLine  = "bc_surveyBeaconScanCrypto"
-					player1pAnim = "crypto"
+					player1pAnim = "crypto_heirloom"
 					player3pAnim = "crypto"
+					                                  
 				}
 				else
 				{
 					calloutLine  = "bc_surveyBeaconScanCrypto"
+					                         
 					player3pAnim = "crypto"
+					                         
 				}
 				break
 			}
 			case ePassives.PAS_PARIAH:
 			{
-				if ( HasSeerBlades ( player ) )
-				{
-					calloutLine  = "bc_surveyBeaconScanSeer"
-					player1pAnim = "seer"
-					player3pAnim = "seer"
-				}
-				else
-				{
-					calloutLine  = "bc_surveyBeaconScanSeer"
-					player3pAnim = "seer"
-				}
+                        
+					if ( HasSeerBlades ( player ) )
+					{
+						calloutLine  = "bc_surveyBeaconScanSeer"
+						player1pAnim = "seer_heirloom"
+						                                
+						                                
+					}
+					else
+					{
+						calloutLine = "bc_surveyBeaconScanSeer"
+					}
+         
+                                            
+          
 				break
 			}
                
@@ -4139,6 +4163,7 @@ void function ReconClassCharacter_PassiveChanged( entity player, int passive, bo
 			{
 				calloutLine  = "bc_surveyBeaconScanVantage"
 				player1pAnim = "vantage"
+				                          
 				panelAnim    = "vantage"
 				break
 			}

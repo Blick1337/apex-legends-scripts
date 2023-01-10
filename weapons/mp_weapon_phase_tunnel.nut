@@ -287,18 +287,6 @@ void function OnWeaponDeactivate_weapon_phase_tunnel( entity weapon )
 
 bool function OnWeaponAttemptOffhandSwitch_weapon_phase_tunnel( entity weapon )
 {
-	int ammoReq  = weapon.GetAmmoPerShot()
-	int currAmmo = weapon.GetWeaponPrimaryClipCount()
-	if ( currAmmo < ammoReq )
-		return false
-
-	entity player = weapon.GetWeaponOwner()
-	if ( player.IsPhaseShifted() )
-		return false
-
-	if ( player.IsZiplining() )
-		return false
-
 	return true
 }
 
@@ -325,7 +313,7 @@ bool function OnWeaponChargeBegin_weapon_phase_tunnel( entity weapon )
 
 			#if SERVER
 				                                
-				                                                                                  
+				                                                                             
 					            
 
 				                                
@@ -388,7 +376,7 @@ void function OnWeaponChargeEnd_weapon_phase_tunnel( entity weapon )
 
 bool function PhaseTunnel_CanUseZipline( entity player, entity zipline, vector ziplineClosestPoint )
 {
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.placing_phase_tunnel ) )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.placing_phase_tunnel ) )
 		return false
 
 	return true
@@ -528,7 +516,7 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 	                                          
 
 	                                                                           
-	                                                             
+	                                                                     
 	 
 		                                                                         
 		      
@@ -848,7 +836,7 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 	                                                                       
 	 
 		                                                          
-		                                
+		                                    
 			           
 	 
 	    
@@ -1696,7 +1684,7 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 	                        
 	 
 		                                                        
-		                              
+		                                  
 			                                              
 
 		                        
@@ -1798,7 +1786,7 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
   
       
 
-	           
+	              
 	 
 		                        
 		 

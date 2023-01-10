@@ -257,7 +257,7 @@ void function ExtendedUse_TrackContinuousUse( entity player, entity useTarget, f
 
 		if ( GetCurrentPlaylistVarBool( "interrupted_stops_extended_use", true ) )
 		{
-			if ( StatusEffect_GetSeverity( player, eStatusEffect.interrupted ) > 0.0 )
+			if ( StatusEffect_HasSeverity( player, eStatusEffect.interrupted ) )
 			{
 				return
 			}

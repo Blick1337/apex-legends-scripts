@@ -85,6 +85,7 @@ global function DEV_GetValidItemFlavorsForLoadoutSlotForDev
 
 #if CLIENT
 global function ServerToClient_LoadoutSlotDidChange
+global function ServerToClient_LoadoutSlotSetFailed
 #endif
 
 #if UI
@@ -128,7 +129,6 @@ global typedef IntegerLoadoutSlotDidChangeFuncType void functionref( EHI playerE
 
 global enum eLoadoutNetworking
 {
-	SERVER_ONLY,                                                                                                                 
 	PLAYER_EXCLUSIVE,                                                                                               
 	PLAYER_GLOBAL,                                                                                                            
 }
@@ -231,13 +231,9 @@ global struct LoadoutEntry
 	string ornull networkVarName = ""
 
 	                                                                                             
-	LoadoutEntry_IsSlotLocked isSlotLocked = null                                                                                                                                                 
-	bool isAllowedToChangeDuringMatch = false                                          
-	table<LoadoutEntry, table<ItemFlavor, bool> > isActiveConditions = {}                                                                                                                                                                         
-	                                                                                                    
-	                                                                           
-	                                                            
-	                                                                             
+	LoadoutEntry_IsSlotLocked                     isSlotLocked = null                                                                                                                                                 
+	bool                                          isAllowedToChangeDuringMatch = false                                          
+	ItemFlavor ornull associatedCharacterOrNull = null                                            
 
 	ItemFlavor& defaultItemFlavor                                                             
 	ItemFlavor& favoriteItemFlavor                                                                                                                                                                            
@@ -249,19 +245,14 @@ global struct LoadoutEntry
 
 	LoadoutEntry_IsItemFlavorUnlockedFuncType     isItemFlavorUnlocked       = null                                                                                                               
 	array<ItemFlavorLoadoutSlotDidChangeFuncType> changeCallbacks_ItemFlavor = []                                                                                  
-	table<ItemFlavor, array<LoadoutEntry> >       dependentsByItemFlav       = {}                                                                                                                         
-
-	                                                                                                                                                                                      
-	table<ItemFlavor, int>                              _____INTERNAL_itemFlavorNetworkIndexMap = {}
-	table<SettingsAssetGUID, int>                       _____INTERNAL_itemFlavorGUIDNetworkIndexMap = {}
-	table<int, ItemFlavor>                              _____INTERNAL_networkIndexItemFlavorMap = {}
+	table<ItemFlavor, array<LoadoutEntry> >       dependentsByItemFlav       = {}                                                                                                                                           
 
 	#if SERVER
 		                                                                                                                                                
 	#endif
 
 	                                                   
-	array<IntegerLoadoutSlotDidChangeFuncType> changeCallbacks_Integer = []                                                                                                                                                
+	array<IntegerLoadoutSlotDidChangeFuncType> changeCallbacks_Integer = []                                                                                                                                                                 
 	                                      
 }
 
@@ -275,7 +266,9 @@ global const int NUM_TRACKER_LOADOUT_SLOTS = 3
                        
 const int SLOT_CONTENTS_SENTINEL_INVALID = -9999
 const int SLOT_CONTENTS_SENTINEL_NOTREADY = 0
-const int SLOT_CONTENTS_FIRST_VALID_ITEM = 2
+
+const int SLOT_CONTENTS_INTEGER_OFFSET = 2                                                                                                                                                                                                      
+                                                                                                                
 
 const int PERSISTENT_DATA_INVALID_SENTINEL = 0
 
@@ -285,17 +278,13 @@ struct LoadoutNetworkVarInfo
 	string                 fullNetworkVarName
 	int                    type = -1
 	array<LoadoutEntry>    usedByEntries = []
-
-	                                          
-	array<ItemFlavor>      possibleItemFlavorList = []                                                   
-	table<ItemFlavor, int> itemFlavorNetworkIndexMap = {}
 }
 
 struct FileStruct_LifetimeLevel
 {
-	bool                         isInitialized = false
-	array<LoadoutEntry>          loadoutSlotEntries = []
-	array<LoadoutEntry>          accountLoadoutSlotEntries = []
+	bool                isInitialized = false
+	array<LoadoutEntry> loadoutSlotEntries = []
+	array<LoadoutEntry> accountLoadoutSlotEntries = []
 
 	bool allowLoadoutSlotOverridesByPlaylist = false
 
@@ -368,6 +357,7 @@ void function ShLoadouts_LevelInit_Finish()
 {
 	#if SERVER || CLIENT
 		Remote_RegisterClientFunction( "ServerToClient_LoadoutSlotDidChange", "int", 0, INT_MAX, "int", 0, fileLevel.loadoutSlotEntries.len() )
+		Remote_RegisterClientFunction( "ServerToClient_LoadoutSlotSetFailed" )
 	#endif
 
 	foreach ( LoadoutEntry entry in fileLevel.loadoutSlotEntries )
@@ -415,7 +405,7 @@ void function ShLoadouts_LevelInit_Finish()
 		if ( entry.networkTo == eLoadoutNetworking.PLAYER_GLOBAL )
 		{
 			#if SERVER || CLIENT
-				int desiredNetworkVarType = (entry.type == eLoadoutEntryType.INTEGER ? SNVT_BIG_INT : SNVT_UNSIGNED_INT)
+				int desiredNetworkVarType = SNVT_BIG_INT
 			#endif
 
 			Assert( entry.networkVarName != "", "LoadoutEntry.networkVarName must be provided if networkTo is set." )
@@ -490,53 +480,14 @@ void function ShLoadouts_LevelInit_Finish()
 
 			entry.nvIndex = nvInfo.nvIndex
 			nvInfo.usedByEntries.append( entry )
-
-			if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
-			{
-				foreach ( int arrayIndex, ItemFlavor itemFlavor in entry.validItemFlavorList )
-				{
-					                                                                                                          
-
-					int networkIndex
-					if ( itemFlavor in nvInfo.itemFlavorNetworkIndexMap )
-					{
-						networkIndex = nvInfo.itemFlavorNetworkIndexMap[itemFlavor]
-					}
-					else
-					{
-						networkIndex = SLOT_CONTENTS_FIRST_VALID_ITEM + arrayIndex
-						Assert( networkIndex < 1000, "Too many possible items in loadout slot: " + entry.id )
-						nvInfo.possibleItemFlavorList.append( itemFlavor )
-						nvInfo.itemFlavorNetworkIndexMap[itemFlavor] <- networkIndex
-					}
-					entry._____INTERNAL_itemFlavorNetworkIndexMap[itemFlavor] <- networkIndex
-					entry._____INTERNAL_itemFlavorGUIDNetworkIndexMap[ItemFlavor_GetGUID( itemFlavor )] <- networkIndex
-					entry._____INTERNAL_networkIndexItemFlavorMap[networkIndex] <- itemFlavor
-				}
-			}
 		}
 		else
 		{
 			if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
 			{
-				foreach ( int arrayIndex, ItemFlavor itemFlavor in entry.validItemFlavorList )
-				{
-					                                                                                                        
-
-					int fakeNetworkIndex = SLOT_CONTENTS_FIRST_VALID_ITEM + arrayIndex
-					entry._____INTERNAL_itemFlavorNetworkIndexMap[itemFlavor] <- fakeNetworkIndex
-					entry._____INTERNAL_itemFlavorGUIDNetworkIndexMap[ItemFlavor_GetGUID( itemFlavor )] <- fakeNetworkIndex
-					entry._____INTERNAL_networkIndexItemFlavorMap[fakeNetworkIndex] <- itemFlavor
-				}
-
 				if ( entry.networkTo == eLoadoutNetworking.PLAYER_EXCLUSIVE )
 				{
 					Assert( entry.networkVarName == "", "LoadoutEntry.networkVarName should only be provided if networkTo is PLAYER_GLOBAL." )
-				}
-				else if ( entry.networkTo == eLoadoutNetworking.SERVER_ONLY )
-				{
-					Assert( entry.networkVarName == "", "LoadoutEntry.networkVarName should only be provided if networkTo is PLAYER_GLOBAL." )
-					                                                                                                                            
 				}
 				else Assert( false, "Invalid networkTo setting on loadout slot \"" + entry.id + "\": " + entry.networkTo )
 			}
@@ -546,34 +497,26 @@ void function ShLoadouts_LevelInit_Finish()
 		{
 			Assert( entry.validItemFlavorList.len() > 0, "No item flavors are registered that are valid for loadout slot '" + entry.id + "'" )
 
-			#if !ASSERTS
-				                                                          
-				entry._____INTERNAL_networkIndexItemFlavorMap[SLOT_CONTENTS_SENTINEL_INVALID] <- entry.defaultItemFlavor
-				entry._____INTERNAL_networkIndexItemFlavorMap[SLOT_CONTENTS_SENTINEL_NOTREADY] <- entry.defaultItemFlavor
-			#endif
-
 			for ( int favoriteIdx = 0; favoriteIdx < entry.maxFavoriteCount; favoriteIdx++ )
 			{
 				entry.favoritePdefKeys.append( format( "%s_fav%02d", entry.id, favoriteIdx ) )
 			}
 		}
 
-		                                                                               
-		foreach ( LoadoutEntry dependencyEntry, table<ItemFlavor, bool> flavorSet in entry.isActiveConditions )
+		if ( entry.associatedCharacterOrNull != null )
 		{
-			Assert( dependencyEntry.type == eLoadoutEntryType.ITEM_FLAVOR )
+			ItemFlavor ornull character = entry.associatedCharacterOrNull
+			expect ItemFlavor ( character )
+			LoadoutEntry characterEntry = Loadout_Character()
+			array< LoadoutEntry > dependentsForCharacter
+			if ( character in characterEntry.dependentsByItemFlav )
+				dependentsForCharacter = characterEntry.dependentsByItemFlav[ character ]
+			else
+				characterEntry.dependentsByItemFlav[ character ] <- dependentsForCharacter
 
-			foreach ( ItemFlavor flavor, bool unused in flavorSet )
-			{
-				array<LoadoutEntry> dependentsForFlavor
-				if ( flavor in dependencyEntry.dependentsByItemFlav )
-					dependentsForFlavor = dependencyEntry.dependentsByItemFlav[flavor]
-				else
-					dependencyEntry.dependentsByItemFlav[flavor] <- dependentsForFlavor
-
-				dependentsForFlavor.append( entry )
-			}
+			dependentsForCharacter.append( entry )
 		}
+
 	}
 
 	#if DEV
@@ -659,7 +602,10 @@ ItemFlavor function LoadoutSlot_GetItemFlavor( EHI playerEHI, LoadoutEntry entry
 	}
 
 
-	Assert( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY, "LoadoutSlot_GetItemFlavor used on a loadout slot that was not ready." )
+	                                                                                                                                        
+
+	if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_INVALID || slotContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY )
+		return entry.defaultItemFlavor
 
 	ItemFlavor flav = ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
 
@@ -681,7 +627,7 @@ ItemFlavor function LoadoutSlot_GetItemFlavor_ForValidation( EHI playerEHI, Load
 	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
 
 	int slotContentsIndex = GetLoadoutSlotContentsIndexFromPersistence( playerEHI, entry, eValidation.DONT_ASSERT )
-	if ( slotContentsIndex < SLOT_CONTENTS_FIRST_VALID_ITEM )
+	if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_INVALID || slotContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY )
 		return entry.defaultItemFlavor
 	return ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
 }
@@ -698,7 +644,7 @@ int function LoadoutSlot_GetInteger( EHI playerEHI, LoadoutEntry entry )
 	int slotContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, entry )
 	Assert( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY, "LoadoutSlot_GetItemFlavor used on a loadout slot that was not ready." )
 
-	return (slotContentsIndex - SLOT_CONTENTS_FIRST_VALID_ITEM)
+	return (slotContentsIndex - SLOT_CONTENTS_INTEGER_OFFSET)
 }
 
 array<ItemFlavor> function LoadoutSlot_GetFavorites( EHI playerEHI, LoadoutEntry entry )
@@ -957,7 +903,7 @@ void function RemoveCallback_ItemFlavorLoadoutSlotDidChange_SpecificPlayer( EHI 
 
 	                                                 
 
-	                                                                
+	                                                              
 	                                                                                                       
 
 	                                                                            
@@ -1050,7 +996,7 @@ void function RequestSetFavoredQuip( ItemFlavor quipToSet )
 		}
 	}
 
-	Assert( 0, "Attempted to set favored quip when no slots exist." )
+	Assert( false, "Attempted to set favored quip when no slots exist." )
 }
 
 void function RequestClearFavoredQuip( ItemFlavor quipToClear )
@@ -1109,7 +1055,7 @@ bool function IsItemFlavorValidForLoadoutSlot( EHI playerEHI, LoadoutEntry entry
 	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
 
 	                                              
-	return (itemFlavor in entry._____INTERNAL_itemFlavorNetworkIndexMap)
+	return ( entry.validItemFlavorList.contains( itemFlavor ) )
 }
 
 
@@ -1175,7 +1121,7 @@ string function DEV_DescribeLoadoutSlot( LoadoutEntry entry, int slotContentsInd
 	}
 	else if ( entry.type == eLoadoutEntryType.INTEGER )
 	{
-		out += string(slotContentsIndex - SLOT_CONTENTS_FIRST_VALID_ITEM)
+		out += string(slotContentsIndex - SLOT_CONTENTS_INTEGER_OFFSET)
 	}
 	return out
 }
@@ -1298,6 +1244,9 @@ ItemFlavor function GetRandomGoodItemFlavorForLoadoutSlot( EHI playerEHI, Loadou
 
 	foreach ( ItemFlavor flav in randomListCopy )
 	{
+		if ( ItemFlavor_GetType( flav ) == eItemType.character_execution && CharacterExecution_IsNotEquippable( flav ) )
+			continue
+
 		if ( onlyValidateGRX )
 		{
 			if ( IsItemFlavorGRXUnlockedForLoadoutSlot( playerEHI, flav ) )
@@ -1444,10 +1393,6 @@ void function ShLoadouts_OnPlayerEHICreated( EHI player, bool thisCallIsHappenin
 	                                                                   
 		                                                                
 
-	                                                    
-	                                                                                   
-	  	      
-
 	                          
 	                          
 
@@ -1497,14 +1442,9 @@ void function ShLoadouts_OnPlayerEHICreated( EHI player, bool thisCallIsHappenin
 		    
 			                                                 
 	 
-	                                                                                                                                                                    
+	                                                                                                                                                              
 	 
-		                                                                                                                                                      
-		                                                              
-		 
-			                                         
-				                                  
-		 
+		                                            
 	  
 
 	                                
@@ -1566,7 +1506,7 @@ bool function IsValidLoadoutSlotContentsIndex( LoadoutEntry entry, int slotConte
 		                          
 	#endif
 
-	if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR && slotContentsIndex in entry._____INTERNAL_networkIndexItemFlavorMap )
+	if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR && IsValidItemFlavorGUID( slotContentsIndex ) )
 	{
 		return true
 	}
@@ -1574,7 +1514,7 @@ bool function IsValidLoadoutSlotContentsIndex( LoadoutEntry entry, int slotConte
 
 	if ( entry.type == eLoadoutEntryType.INTEGER )
 	{
-		int value = slotContentsIndex - SLOT_CONTENTS_FIRST_VALID_ITEM
+		int value = slotContentsIndex - SLOT_CONTENTS_INTEGER_OFFSET
 		if ( value >= 0 && value <= INT_MAX )
 		{
 			return true
@@ -1595,10 +1535,10 @@ bool function IsValidLoadoutSlotContentsIndexForItemFlavor( LoadoutEntry entry, 
 
 	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
 
-	if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_INVALID || slotContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY || slotContentsIndex < SLOT_CONTENTS_FIRST_VALID_ITEM )
+	if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_INVALID || slotContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY )
 		return false
 
-	return (slotContentsIndex in entry._____INTERNAL_networkIndexItemFlavorMap)
+	return ( IsValidItemFlavorGUID( slotContentsIndex ) )
 }
 
 
@@ -1612,10 +1552,9 @@ ItemFlavor function ConvertLoadoutSlotContentsIndexToItemFlavor( LoadoutEntry en
 
 	Assert( slotContentsIndex != SLOT_CONTENTS_SENTINEL_INVALID, "Invalid loadout slot contents index " + slotContentsIndex + " for " + entry.id )
 	Assert( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY )
-	Assert( slotContentsIndex >= SLOT_CONTENTS_FIRST_VALID_ITEM )
-	Assert( slotContentsIndex in entry._____INTERNAL_networkIndexItemFlavorMap )
+	Assert( IsValidItemFlavorGUID( slotContentsIndex ) )
 
-	return entry._____INTERNAL_networkIndexItemFlavorMap[slotContentsIndex]
+	return GetItemFlavorByGUID( slotContentsIndex )
 }
 
 
@@ -1627,8 +1566,8 @@ int function ConvertItemFlavorToLoadoutSlotContentsIndex( LoadoutEntry entry, It
 
 	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
 
-	Assert( itemFlavor in entry._____INTERNAL_itemFlavorNetworkIndexMap )
-	return entry._____INTERNAL_itemFlavorNetworkIndexMap[itemFlavor]
+	Assert( entry.validItemFlavorList.contains( itemFlavor ) )
+	return ItemFlavor_GetGUID( itemFlavor )
 }
 
 
@@ -1664,8 +1603,6 @@ int function GetLoadoutSlotContentsIndexInternal( EHI playerEHI, LoadoutEntry en
 
 		int slotContentsIndex
 
-		                                                                                                                             
-
 		if ( entry.networkTo == eLoadoutNetworking.PLAYER_GLOBAL && playerEHI != LocalClientEHI() )
 		{
 			#if CLIENT
@@ -1695,7 +1632,7 @@ int function GetLoadoutSlotContentsIndexInternal( EHI playerEHI, LoadoutEntry en
 				}
 				else if ( entry.type == eLoadoutEntryType.INTEGER )
 				{
-					return SLOT_CONTENTS_FIRST_VALID_ITEM
+					return SLOT_CONTENTS_INTEGER_OFFSET
 				}
 			}
 			else                                                       
@@ -1725,7 +1662,7 @@ int function GetLoadoutSlotContentsIndexFromPersistence( EHI playerEHI, LoadoutE
 		}
 		else if ( entry.type == eLoadoutEntryType.INTEGER )
 		{
-			return SLOT_CONTENTS_FIRST_VALID_ITEM
+			return SLOT_CONTENTS_INTEGER_OFFSET
 		}
 	}
 #endif
@@ -1756,21 +1693,21 @@ int function GetLoadoutSlotContentsIndexFromPersistence( EHI playerEHI, LoadoutE
 			                                                                                                           
 			 
 				                
-					                                                                                                           
+					                
+						                                                                                   
+				      
 			 
 			                                                           
 			 
 				                                                                                                                                                             
 			 
-		#elseif CLIENT || UI
-			                                                                               
-		#endif
+		#endif              
 		return SLOT_CONTENTS_SENTINEL_INVALID
 	}
 
 	if ( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
 	{
-		if ( !(slotContentsIndex in entry._____INTERNAL_itemFlavorGUIDNetworkIndexMap) )
+		if ( !IsValidItemFlavorGUID( slotContentsIndex ) )
 		{
 			#if SERVER
 				                                                                                                           
@@ -1782,13 +1719,11 @@ int function GetLoadoutSlotContentsIndexFromPersistence( EHI playerEHI, LoadoutE
 				 
 					                                                                                                                                                             
 				 
-			#elseif CLIENT || UI
-				                                                                               
-			#endif
+			#endif              
 			return SLOT_CONTENTS_SENTINEL_INVALID
 		}
 
-		return entry._____INTERNAL_itemFlavorGUIDNetworkIndexMap[slotContentsIndex]
+		return slotContentsIndex
 	}
 	else if ( entry.type == eLoadoutEntryType.INTEGER )
 	{
@@ -2023,7 +1958,7 @@ int function GetLoadoutSlotContentsIndexFromCache( EHI playerEHI, LoadoutEntry e
 		 
 	      
 
-	                                                             
+	                                                           
 
 	                                      
 
@@ -2141,7 +2076,7 @@ void function RefreshLoadoutSlotInternal( EHI playerEHI, LoadoutEntry entry, tab
 	}
 	else if ( entry.type == eLoadoutEntryType.INTEGER )
 	{
-		int value = (slotContentsIndex - SLOT_CONTENTS_FIRST_VALID_ITEM)
+		int value = (slotContentsIndex - SLOT_CONTENTS_INTEGER_OFFSET)
 		if ( IsLoadoutSlotActive( playerEHI, entry ) )
 			CallIntegerLoadoutSlotDidChangeCallbacks( playerEHI, entry, value )
 	}
@@ -2157,6 +2092,14 @@ void function ServerToClient_LoadoutSlotDidChange( EHI playerEHI, int entryIndex
 	LoadoutEntry entry = fileLevel.loadoutSlotEntries[entryIndex]
 
 	RefreshLoadoutSlotInternal( playerEHI, entry, null )
+}
+#endif
+
+#if CLIENT
+void function ServerToClient_LoadoutSlotSetFailed()
+{
+	RunUIScript( "ClientToUI_PlayLootCeremonySound", "menu_deny" )
+	return
 }
 #endif
 
@@ -2278,7 +2221,7 @@ array<ItemFlavor> function GetLoadoutItemsSortedForMenu( LoadoutEntry entry, int
 
 		int itemType = ItemFlavor_GetType( a )
 
-		if ( ItemFlavor_IsTheFavoriteSentinel( equippedItem ) )
+		if ( IsItemFlavorStructValid( equippedItem ) && ItemFlavor_IsTheFavoriteSentinel( equippedItem ) )
 		{
 			array<ItemFlavor> favs = LoadoutSlot_GetFavorites( playerEHI, entry )
 			bool aInFavs           = favs.contains( a )
@@ -2358,20 +2301,12 @@ bool function IsLoadoutSlotActive( EHI playerEHI, LoadoutEntry entry, LoadoutEnt
 	#endif
 
 	                                                                                                             
-	foreach ( LoadoutEntry dependency, table<ItemFlavor, bool> flavorSet in entry.isActiveConditions )
+	if ( entry.associatedCharacterOrNull != null )
 	{
-		if ( dependency == entryToNotCheck )
-			continue
-
-		if ( !IsLoadoutSlotActive( playerEHI, dependency ) )
-				return false
-
-		int dependencyContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, dependency )
-		if ( dependencyContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY )
-			return false
-
-		ItemFlavor dependencyContents = ConvertLoadoutSlotContentsIndexToItemFlavor( dependency, dependencyContentsIndex )
-		if ( !(dependencyContents in flavorSet) )
+		ItemFlavor currentCharacter = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
+		ItemFlavor ornull associatedCharacter = entry.associatedCharacterOrNull
+		expect ItemFlavor ( associatedCharacter )
+		if ( currentCharacter != associatedCharacter )
 			return false
 	}
 
@@ -2390,9 +2325,6 @@ bool function IsLoadoutSlotCurrentlyNetworked( EHI playerEHI, LoadoutEntry entry
 			return false
 	#endif
 
-	if ( entry.networkTo == eLoadoutNetworking.SERVER_ONLY )
-		return false
-
 	return IsLoadoutSlotActive( playerEHI, entry, entryToNotCheck )
 }
 
@@ -2408,8 +2340,7 @@ bool function IsLoadoutSlotCurrentlyAccessible( EHI playerEHI, LoadoutEntry entr
 	#elseif CLIENT || UI
 		if ( playerEHI == LocalClientEHI() )
 		{
-			if ( entry.networkTo != eLoadoutNetworking.SERVER_ONLY )
-				return true
+			return true
 		}
 
 		if ( entry.networkTo != eLoadoutNetworking.PLAYER_GLOBAL )
@@ -2519,7 +2450,7 @@ bool function IsContentsIndexValidForLoadoutSlot( EHI playerEHI, LoadoutEntry en
 	                                                                                           
 
 	                                                                                
-	                                                                                
+	                                                                                                                                           
 	 
 		                        
 		                                                 
@@ -2577,7 +2508,8 @@ bool function IsContentsIndexValidForLoadoutSlot( EHI playerEHI, LoadoutEntry en
  
 	                                  
 
-	                                                                               
+	                                                       
+	                                               
 
 	                       
 	                          
@@ -2673,7 +2605,6 @@ bool function IsContentsIndexValidForLoadoutSlot( EHI playerEHI, LoadoutEntry en
 						                                                                                                           
 					                                                                                  
 					 
-						                                                                                                                    
 						        
 					 
 					    
@@ -2693,12 +2624,10 @@ bool function IsContentsIndexValidForLoadoutSlot( EHI playerEHI, LoadoutEntry en
       
 			    
 			 
-				                                                                   
-				                                                              
-				 
-					                                                                                               
-						                                                                                                        
-				 
+				                                   
+					                                                      
+				    
+					                                                                   
 			 
 
 			                                                                        
@@ -2719,12 +2648,12 @@ bool function IsContentsIndexValidForLoadoutSlot( EHI playerEHI, LoadoutEntry en
 			                         
 			 
 				                                                 
-				                                                             
+				                                                           
 			 
       
 			    
 			 
-				                                                     
+				                                                   
 			 
 
 			                                        
@@ -2855,7 +2784,6 @@ bool function IsLoadoutSlotLocked( EHI playerEHI, LoadoutEntry entry )
 	                                                                          
 	 
 		                                                                                    
-		                                                                                                                                                                          
 		                                                                                                                                                                   
 		      
 	 
@@ -2892,11 +2820,16 @@ bool function IsLoadoutSlotLocked( EHI playerEHI, LoadoutEntry entry )
 		      
 	 
 
+	                                                                      
+	 
+		                                                                              
+		      
+	 
+
 	                                                                                               
 	                                                                          
 	 
 		                                                                                    
-		                                                                                                                                                                         
 		                                                                                                                                                                  
 		      
 	 
@@ -3006,7 +2939,7 @@ void function DEV_LoadoutsDebug( LoadoutEntry entry )
 				        
 			 
 
-			                                                                     
+			                                                        
 				                                                  
 			    
 				                                                                                    

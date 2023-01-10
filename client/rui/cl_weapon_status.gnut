@@ -44,6 +44,8 @@ global function UpdateWeaponEnergizeRui
 global function OnPrimaryWeaponStatusUpdate_Energize
 global function ShouldShowChargeBar_Energize
 
+global function UpdateAmmoMinToFireForTacRui
+
 global enum eUltimateState
 {
 	CHARGING                              
@@ -432,13 +434,6 @@ void function ServerCallback_UpdateHudWeaponData( entity weaponFromServer )
 		return
 	}
       
-                 
-                                                                                                                                       
-  
-                                          
-        
-  
-      
 
 	entity weapon = player.GetSelectedWeapon( eActiveInventorySlot.mainHand )
 	if ( !IsValid( weapon ) )
@@ -590,10 +585,10 @@ void function UpdateHudDataForMainWeapons( entity player, entity selectedWeapon 
     
        
     
-                                                        
+                                              
 
-                                       
-                                                          
+                                  
+                                                     
     
    
   
@@ -691,10 +686,10 @@ void function UpdateHudDataForHMG( entity player, entity selectedWeapon, var rui
  
                                  
 
-                                                     
+                                           
 
-                                    
-                                                        
+                               
+                                                   
 
 
                                                 
@@ -872,11 +867,6 @@ void function UpdateRUIWeaponData( entity player, var rui, entity weapon, int ta
 							else
 								RuiSetBool( rui, "isPaintballWeapon", false )
             
-
-						ItemFlavor weaponSkin = GetItemFlavorByNetworkIndex( weapon.GetGrade() )
-						RuiSetString( rui, "skinName", ItemFlavor_GetLongName( weaponSkin ) )
-						if ( ItemFlavor_HasQuality( weaponSkin ) )
-							RuiSetInt( rui, "skinTier", ItemFlavor_GetQuality( weaponSkin ) + 1 )
 					}
 				}
 			}
@@ -970,8 +960,9 @@ void function Weapon_UpdateAltAmmoRui( var rui, entity player, entity weapon, bo
 			RuiSetFloat3( rui, "firingMode1Color", SrgbToLinear( GetAmmoColorByType( lightAmmoTypeRef ) ) )
 		}
 
-		if(hasAltAmmo){
-			if(useRuiTrack)
+		if( hasAltAmmo )
+		{
+			if( useRuiTrack )
 				RuiTrackInt( rui, "altMaxAmmo", player, RUI_TRACK_PLAYER_AMMO_POOL, altAmmoType)
 			else
 				RuiSetInt( rui, "altMaxAmmo", player.AmmoPool_GetCount( altAmmoType ) )
@@ -1052,16 +1043,6 @@ void function PrimaryWeapon_UpdateFireSelectHUD( entity weapon )
 		}
 		else if ( IsWeaponInAutomaticMode( weapon ) )
 		{
-                                  
-                                                                      
-     
-                                      
-                                                                                                                                     
-         
-                                                                                                          
-     
-        
-         
                            
                                                                                                         
      
@@ -1164,7 +1145,7 @@ void function PrimaryWeapon_UpdateFireSelectHUD( entity weapon )
 		{
 			weaponData = SURVIVAL_Loot_GetLootDataByRef( weapon.GetWeaponClassName() )
 		}
-		if ( weaponData.ammoType == "arrows" )
+		if ( weaponData.ammoType == ARROWS_AMMO )
 		{
 			SetWeaponToggleHUD( $"rui/hud/weapon_toggle/single_shot_bow", "#FIRE_MODE_SINGLE_ONLY", 1 )
 		}
@@ -1593,16 +1574,6 @@ void function UpdateFireSelectHint( entity player, entity weapon, string mod )
 	}
 	else if ( IsWeaponInAutomaticMode( weapon ) )
 	{
-                               
-                                                                    
-   
-                                    
-                           
-       
-                               
-   
-      
-      
 
                         
                                                                                                                  
@@ -1743,7 +1714,7 @@ void function WeaponStatusSetWeaponInspect( bool inspect )
 		additionalWeaponInspectRuis.append( GetVantageTacticalRui() )
        
                   
-                                                                 
+                                                            
        
 	foreach ( rui in additionalWeaponInspectRuis )
 	{
@@ -1839,9 +1810,9 @@ void function UpdateOffhandRuis( entity player )
 	if ( cryptoTacticalRui != null )
 		UpdateOffhandRuiVisibility( cryptoTacticalRui, "%offhand1%" )
                  
-                                                     
-                                    
-                                                                  
+                                           
+                               
+                                                             
       
 
 	if ( !player.IsTitan() )
@@ -2022,7 +1993,7 @@ void function TrackPlayerDebuffInfo( entity player, var rui )
 
 		                         
                  
-		if ( StatusEffect_GetSeverity( player, eStatusEffect.sonar_round_embedded ) )
+		if ( StatusEffect_HasSeverity( player, eStatusEffect.sonar_round_embedded ) )
 		{
 			debuffInfo debuff
 			debuff.timeRemaining = StatusEffect_GetTimeRemaining( player, eStatusEffect.sonar_round_embedded )
@@ -2032,7 +2003,7 @@ void function TrackPlayerDebuffInfo( entity player, var rui )
 		}
                       
                  
-		if( StatusEffect_GetSeverity( player, eStatusEffect.healing_denied ) )
+		if ( StatusEffect_HasSeverity( player, eStatusEffect.healing_denied ) )
 		{
 			debuffInfo debuff
 			debuff.timeRemaining = StatusEffect_GetTimeRemaining( player, eStatusEffect.healing_denied )
@@ -2042,7 +2013,7 @@ void function TrackPlayerDebuffInfo( entity player, var rui )
 		}
                       
 		                                          
-		if ( StatusEffect_GetSeverity( player, eStatusEffect.silenced_seer_visuals ) )
+		if ( StatusEffect_HasSeverity( player, eStatusEffect.silenced_seer_visuals ) )
 		{
 			debuffInfo debuff
 			debuff.timeRemaining = StatusEffect_GetTimeRemaining( player, eStatusEffect.silenced_seer_visuals )
@@ -2054,7 +2025,7 @@ void function TrackPlayerDebuffInfo( entity player, var rui )
 
 			debuffQueue.append( debuff )
 		}
-		if ( StatusEffect_GetSeverity( player, eStatusEffect.silenced_rev_visuals ) )
+		if ( StatusEffect_HasSeverity( player, eStatusEffect.silenced_rev_visuals ) )
 		{
 			debuffInfo debuff
 			debuff.timeRemaining = StatusEffect_GetTimeRemaining( player, eStatusEffect.silenced_rev_visuals )
@@ -2191,7 +2162,8 @@ var function GetTacticalRui()
 	return file.ability_center_hud
 }
 
-var function GetUltimateRui(){
+var function GetUltimateRui()
+{
 	return file.ability_left_hud
 }
 
@@ -2357,6 +2329,12 @@ void function DEV_TestUltimateStatesThread()
 	                           
   
 
+void function UpdateAmmoMinToFireForTacRui( entity weapon )
+{
+	if ( IsValid( weapon ) )
+		RuiSetInt( file.ability_center_hud , "ammoMinToFire", weapon.GetWeaponSettingInt( eWeaponVar.ammo_min_to_fire ) )
+}
+
 void function InitOffhandRui( var rui, entity player, entity weapon, int slot )
 {
 	Assert ( IsNewThread(), "Must be threaded off." )
@@ -2431,7 +2409,7 @@ void function InitOffhandRui( var rui, entity player, entity weapon, int slot )
 
 			RuiSetInt( rui, "segments", maxAmmoReady / (ammoPerShot * burstCount ) )
 
-			bool IsUltimateWeapon = weapon.GetWeaponTypeFlags() & WPT_ULTIMATE ? true : false
+			bool IsUltimateWeapon = IsBitFlagSet( weapon.GetWeaponTypeFlags(), WPT_ULTIMATE )
 			bool showingSegmentsOnUlts = GetCurrentPlaylistVarBool( "showing_segments_on_multi_ammo_ult", true )
 			if ( IsUltimateWeapon && !showingSegmentsOnUlts )
 				RuiSetInt( rui, "segments", 0 )
@@ -2583,9 +2561,9 @@ void function UpdateWeaponEnergizeRui( entity player, entity weapon, asset cross
 		entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 		if( IsValid ( activeWeapon ) )
 		{
-			bool IsPrimaryWeapon = activeWeapon.GetWeaponTypeFlags() & WPT_PRIMARY ? true : false
-			bool IsUltimateWeapon = activeWeapon.GetWeaponTypeFlags() & WPT_ULTIMATE ? true : false
-			if ( (IsPrimaryWeapon && !activeWeapon.IsEnergizeWeapon()) || IsUltimateWeapon )
+			bool IsPrimaryWeapon = IsBitFlagSet( activeWeapon.GetWeaponTypeFlags(), WPT_PRIMARY )
+			bool IsUltimateWeapon = IsBitFlagSet( activeWeapon.GetWeaponTypeFlags(), WPT_ULTIMATE )
+			if ( ( IsPrimaryWeapon && !activeWeapon.IsEnergizeWeapon() ) || IsUltimateWeapon )
 				break
 		}
 
@@ -2654,6 +2632,8 @@ void function UpdateWeaponEnergizeRui( entity player, entity weapon, asset cross
 		}
 		else if( energizeState == ENERGIZE_ENERGIZED )
 		{
+			float chargeFrac = max( weapon.GetEnergizedEndTime() - Time(), 0 ) / energizedDuration
+
 			if( energizeState != lastEnergizeState || curWeaponName != lastWeaponName )
 			{
 				RuiSetFloat( rui, "chargeBarTimeRemaining", -1.0 )
@@ -2675,7 +2655,21 @@ void function UpdateWeaponEnergizeRui( entity player, entity weapon, asset cross
 				RuiSetBool( rui, "showChargedAmmoOverride", true )
 			}
 
-			RuiSetFloat( rui, "chargeBarFrac", max( weapon.GetEnergizedEndTime() - Time(), 0 ) / energizedDuration )
+			if ( GetWeaponInfoFileKeyField_GlobalBool( weaponName, "can_energize_when_energized" ) && HasEnoughEnergizeConsumable( weapon, player ) )
+			{
+				if ( chargeFrac < GetWeaponInfoFileKeyField_GlobalFloat( weaponName, "energized_reenergize_prompt_frac" ) )
+				{
+					RuiSetString( rui, "chargeBarTextLeft", "" )
+					RuiSetString( rui, "chargeBarTextLeftLong", Localize( "#WPN_SENTINEL_REENERGIZE_HINT" ) )
+				}
+				else
+				{
+					RuiSetString( rui, "chargeBarTextLeft", Localize( GetWeaponInfoFileKeyField_GlobalString( weaponName, "energized_state_text" ) ) )
+					RuiSetString( rui, "chargeBarTextLeftLong", "" )
+				}
+			}
+
+			RuiSetFloat( rui, "chargeBarFrac", chargeFrac )
 		}
 
 		                       
@@ -2708,7 +2702,7 @@ void function OnPrimaryWeaponStatusUpdate_Energize( entity selectedWeapon, var w
 
 	                                                                                   
 	entity activeWeapon = GetLocalViewPlayer().GetActiveWeapon( eActiveInventorySlot.mainHand  )
-	bool switchToMeleeOrGrenade = selectedWeapon.GetWeaponTypeFlags() & ( WPT_VIEWHANDS | WPT_GRENADE ) ? true : false
+	bool switchToMeleeOrGrenade = IsBitFlagSet( selectedWeapon.GetWeaponTypeFlags(), ( WPT_VIEWHANDS | WPT_GRENADE ) )
 	if ( IsValid( activeWeapon ) && activeWeapon != selectedWeapon && activeWeapon.IsEnergizeWeapon() )
 	{
 		if ( !( activeWeapon.HasMod( "energized" ) && switchToMeleeOrGrenade ) )
@@ -2721,6 +2715,6 @@ bool function ShouldShowChargeBar_Energize( entity selectedWeapon, var weaponRui
 	                                                                                                        
 	                                                                                                                       
 	entity activeWeapon = GetLocalViewPlayer().GetActiveWeapon( eActiveInventorySlot.mainHand )
-	bool switchToMeleeOrGrenade = selectedWeapon.GetWeaponTypeFlags() & ( WPT_VIEWHANDS | WPT_GRENADE ) ? true : false
+	bool switchToMeleeOrGrenade = IsBitFlagSet( selectedWeapon.GetWeaponTypeFlags(), ( WPT_VIEWHANDS | WPT_GRENADE ) )
 	return IsValid( activeWeapon ) && activeWeapon.HasMod( "energized" ) && switchToMeleeOrGrenade
 }

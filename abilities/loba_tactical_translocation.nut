@@ -102,15 +102,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_translocation( entity weapon 
 {
 	entity owner = weapon.GetWeaponOwner()
 
-	if ( weapon == owner.GetActiveWeapon( eActiveInventorySlot.mainHand ) )
-		return false
-
 	if ( !IsPlayerTranslocationPermitted( owner ) )
-		return false
-
-	int ammoReq  = weapon.GetAmmoPerShot()
-	int currAmmo = weapon.GetWeaponPrimaryClipCount()
-	if ( currAmmo < ammoReq )
 		return false
 
 	return true
@@ -1161,7 +1153,7 @@ bool function IsPlayerTranslocationPermitted( entity player )
 	bool allowZiplineWhileDeployed = GetLobaTacticalAllowZiplineWhileDeployed()
 	bool isZiplining               = player.ContextAction_IsZipline()
 
-	if ( player.GetWeaponDisableFlags() & WEAPON_DISABLE_FLAGS_MAIN )
+	if ( IsBitFlagSet( player.GetWeaponDisableFlags(), WEAPON_DISABLE_FLAGS_MAIN ) )
 	{
 		if ( allowZiplineWhileDeployed && isZiplining )
 		{

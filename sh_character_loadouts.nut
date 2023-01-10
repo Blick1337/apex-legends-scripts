@@ -192,7 +192,7 @@ string function GetCharacterLoadoutRef( string characterRef )
 		int ornull unixTimeEventStart = DateTimeStringToUnixTimestamp( unixTimeEventStartString )
 		if ( unixTimeEventStart == null )
 		{
-			Assert( 0, format( "Bad format in playlist for setting 'character_loadouts_daily_cycle_start_date': '%s'", unixTimeEventStartString ) )
+			Assert( false, format( "Bad format in playlist for setting 'character_loadouts_daily_cycle_start_date': '%s'", unixTimeEventStartString ) )
 			return characterLoadoutRefInt.tostring()
 		}
 
@@ -554,9 +554,9 @@ void function Init_CharacterClassToLoadoutNameTable()
 		                             
 		                                                                            
 		                                         
-		                                         
+		                                                                      
 		 
-			                                                                                
+			                                                                     
 		 
 		    
 		 
@@ -567,9 +567,9 @@ void function Init_CharacterClassToLoadoutNameTable()
 		 
 
 		                                          
-		                                            
+		                                                                       
 		 
-			                                                                                    
+			                                                                       
 		 
 		    
 		 

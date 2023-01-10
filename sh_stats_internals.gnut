@@ -321,7 +321,7 @@ int function GetStat_Int( entity player, StatEntry entry, int when = eStatGetWhe
 
 	Assert( entry.type == eStatType.INT )
 	#if CLIENT || UI
-		if ( !(entry.flags & eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY) )
+		if ( !IsBitFlagSet( entry.flags, eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY ) )
 			Assert( when != eStatGetWhen.CURRENT || IsLobby(), format( "Cannot get current stats in client or UI VM during a match (they could be out of date): %s", entry.persistenceFullKey_Current ) )
 	#endif
 
@@ -405,7 +405,7 @@ int function GetStat_Int( entity player, StatEntry entry, int when = eStatGetWhe
 		 
 		                                                        
 		 
-			                                                                                                                                                                                                     
+			                                                                                                                                                                                                                    
 			                                                                                                   
 			                                                                                           
 		 
@@ -413,13 +413,13 @@ int function GetStat_Int( entity player, StatEntry entry, int when = eStatGetWhe
 	#elseif CLIENT || UI
 		if ( when == eStatGetWhen.CURRENT || when == eStatGetWhen.START_OF_CURRENT_MATCH )
 		{
-			if ( !(entry.flags & eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY) )
+			if ( !IsBitFlagSet( entry.flags, eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY ) )
 				Assert( when != eStatGetWhen.CURRENT || IsLobby() )
 			return expect int(player.GetPersistentVar( entry.persistenceFullKey_Current ))
 		}
 		else if ( when == eStatGetWhen.START_OF_PREVIOUS_MATCH )
 		{
-			Assert( entry.flags & eStatFlags.STORE_START_OF_PREVIOUS_MATCH, "Tried to get with eStatGetWhen.START_OF_PREVIOUS_MATCH on a stat that does not have eStatFlags.STORE_START_OF_PREVIOUS_MATCH set." )
+			Assert( IsBitFlagSet( entry.flags, eStatFlags.STORE_START_OF_PREVIOUS_MATCH ), "Tried to get with eStatGetWhen.START_OF_PREVIOUS_MATCH on a stat that does not have eStatFlags.STORE_START_OF_PREVIOUS_MATCH set." )
 			return expect int(player.GetPersistentVar( entry.persistenceFullKey_StartOfPreviousMatch ))
 		}
 		unreachable
@@ -773,6 +773,14 @@ string function GetStatTemplateDebugName( StatTemplate template )
 	                             
 		      
 
+	           
+		                                                                                                                        
+		 
+			                                                                                                                
+			      
+		 
+	      
+
 	                                     
 	                                                                                                 
 	                              
@@ -811,7 +819,7 @@ string function GetStatTemplateDebugName( StatTemplate template )
 	                                     
       
 	 
-		                                                                                                           
+		                                                                                                                          
 		 
 			                                                                     
 		 
@@ -829,6 +837,14 @@ string function GetStatTemplateDebugName( StatTemplate template )
  
 	                             
 		      
+
+	           
+		                                                                                                                        
+		 
+			                                                                                                          
+			      
+		 
+	      
 
 	                                     
 
@@ -866,7 +882,7 @@ string function GetStatTemplateDebugName( StatTemplate template )
 	                                     
       
 	 
-		                                                                                                           
+		                                                                                                                          
 		 
 			                                                                     
 		 
@@ -960,7 +976,7 @@ StatEntry function ResolveStatEntry( StatTemplate template, ... )
 		                                                                     
 		                                 
 		 
-			                                                                                                             
+			                                                                                                                 
 			                         
 		 
 	#endif
@@ -1355,7 +1371,7 @@ StatTemplate function RegisterCachedCalculatedStat_Int( StatEnumStruct ornull en
 			                                                                                                                                                           
 		 
 
-		                                                                                                             
+		                                                                                                                          
 		 
 			                                                                                          
 			                                                                                                                                                       

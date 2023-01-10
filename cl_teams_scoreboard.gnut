@@ -3,8 +3,10 @@ global function Teams_AddCallback_ScoreboardData
 global function Teams_AddCallback_PlayerScores
 global function Teams_AddCallback_SortScoreboardPlayers
 global function Teams_AddCallback_Header
+global function Teams_AddCallback_GetTeamColor
 global function Teams_PopulatePlayerRow
 global function Teams_PopulateHeaderRui
+global function Teams_GetMaxTeamSize
 
 global function UICallback_ScoreboardMenu_BindTeamHeader
 global function UICallback_ScoreboardMenu_BindTeamRow
@@ -68,6 +70,7 @@ struct {
 	array< string > functionref( entity ) Callback_PlayerScores
 	array< entity > functionref( array< entity >, ScoreboardData ) Callback_SortScoreboardPlayers
 	void functionref( var, var, int ) Callback_Header
+	vector functionref( int ) Callback_GetTeamColor
 } file
 
 void function Teams_RegisterSignals()
@@ -110,8 +113,15 @@ void function Teams_AddCallback_Header(  void functionref( var, var, int ) callb
 	file.Callback_Header = callbackFunc
 }
 
+void function Teams_AddCallback_GetTeamColor(  vector functionref( int ) callbackFunc )
+{
+	Assert( !IsValid( file.Callback_GetTeamColor ), "_GetTeamColor already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
+	file.Callback_GetTeamColor = callbackFunc
+}
+
          
-ScoreboardData function GetScoreboardData(){
+ScoreboardData function GetScoreboardData()
+{
 	if( IsValid(file.Callback_ScoreboardData) )
 	{
 		return file.Callback_ScoreboardData()
@@ -127,7 +137,8 @@ ScoreboardData function GetScoreboardData(){
 	unreachable
 }
 
-array<string> function GetPlayerScores( entity player ){
+array<string> function GetPlayerScores( entity player )
+{
 	if( IsValid(file.Callback_PlayerScores) )
 	{
 		return file.Callback_PlayerScores( player )
@@ -172,6 +183,22 @@ TeamsScoreboardPlayer function GetPlayer( int teamIndex, int row )
 	return data
 }
 
+int function ScoreboardMenu_GetTeamSize( int teamIndex )
+{
+	if ( (GetGameState() >= eGameState.WinnerDetermined) )
+	{
+		array<TeamsScoreboardPlayer> cachedTeamData = teamsScoreboardCachedData.teamsOfPlayers[teamIndex]
+		return cachedTeamData.len()
+	}
+	else
+	{
+		array<entity> teamPlayers = ScoreboardMenu_GetPlayersOnTeam( teamIndex )
+		return teamPlayers.len()
+	}
+
+	return 0
+}
+
 array<entity> function ScoreboardMenu_GetPlayersOnTeam( int teamIndex )
 {
 	array<entity> teamPlayers =  []
@@ -204,7 +231,7 @@ int function GetTeamCount()
 	unreachable
 }
 
-int function GetMaxTeamSize()
+int function Teams_GetMaxTeamSize()
 {
 	if( AllianceProximity_IsUsingAlliances() )
 		return AllianceProximity_GetMaxNumPlayersPerAlliance()
@@ -247,7 +274,7 @@ void function ClientCallback_Teams_SetScoreboardData( var panel )
 	else if( WinterExpress_IsModeEnabled() )
 		mode = 4
        
-	RunUIScript( "UI_SetScoreboardTeamData", panel, GetTeamCount(), GetMaxTeamSize(), localPlayerTeamIndex, mode )
+	RunUIScript( "UI_SetScoreboardTeamData", panel, GetTeamCount(), Teams_GetMaxTeamSize(), localPlayerTeamIndex, mode )
 
 }
 
@@ -282,7 +309,7 @@ void function Teams_OnWinnerDetermined()
 	teamsScoreboardCachedData.teamsOfPlayers.clear()                                       
 
 	int teamCount = GetTeamCount()
-	int maxTeamSize = GetMaxTeamSize()
+	int maxTeamSize = Teams_GetMaxTeamSize()
 
 	for( int i = 0; i < teamCount; i++ )
 	{
@@ -315,17 +342,7 @@ void function Thread_Teams_PopulateHeaderRui(var header, var frame, int teamInde
 		Teams_PopulateFrameRui( frameRui, teamIndex, data, rowWidth )
 
 		TeamsScoreboardPlayer playerData = GetPlayer( teamIndex, 0 )
-		int team = -1
-
-		if( AllianceProximity_IsUsingAlliances() )
-		{
-			team = teamIndex
-		}
-		else
-		{
-			team = teamIndex + 2
-		}
-
+		int team = Teams_NormalizeTeamIndex( teamIndex )
 
 		if( IsValid(file.Callback_Header) )
 			file.Callback_Header( headerRui, frameRui, team )
@@ -349,14 +366,36 @@ void function Teams_PopulateHeaderRui( var scoreHeaderRui, int teamIndex, Scoreb
 	RuiSetFloat( scoreHeaderRui, "rowWidth", rowWidth )
 	RuiSetInt( scoreHeaderRui, "gameState", GetGameState() )
 
-	vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
-	RuiSetColorAlpha( scoreHeaderRui, "teamColor", smokeColor, 1 )
+	vector teamColor
+	if( IsValid(file.Callback_GetTeamColor) )
+		teamColor = file.Callback_GetTeamColor( Teams_NormalizeTeamIndex( teamIndex ) )
+	else
+		teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+
+	RuiSetColorAlpha( scoreHeaderRui, "teamColor", teamColor, 1 )
 }
 
 void function Teams_PopulateFrameRui( var scoreFrameRui, int teamIndex, ScoreboardData data, float rowWidth )
 {
-	vector smokeColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
-	RuiSetColorAlpha( scoreFrameRui, "teamColor", smokeColor, 1 )
+	vector teamColor
+	if( IsValid(file.Callback_GetTeamColor) )
+		teamColor = file.Callback_GetTeamColor( Teams_NormalizeTeamIndex( teamIndex ) )
+	else
+		teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+
+	RuiSetColorAlpha( scoreFrameRui, "teamColor", teamColor, 1 )
+}
+
+int function Teams_NormalizeTeamIndex( int teamIndex )
+{
+	int team = -1
+
+	if( AllianceProximity_IsUsingAlliances() )
+		team = teamIndex
+	else
+		team = teamIndex + 2
+
+	return team
 }
 
         
@@ -447,6 +486,7 @@ void function Threaded_PopulateRowForPlayer( var panel, var button, int teamInde
 		if ( data.isValid )
 		{
 			Hud_SetLocked( button, false )
+			Hud_SetEnabled( button, true )
 			                                         
 
 			RunUIScript( "UI_ToggleReportTooltip", button, !data.isLocalPlayer )
@@ -457,11 +497,36 @@ void function Threaded_PopulateRowForPlayer( var panel, var button, int teamInde
 		}
 		else
 		{
+			int teamSize = ScoreboardMenu_GetTeamSize( teamIndex )
+			bool modeHasJIP = Survival_IsJIPEnabled()
 			RunUIScript( "UI_ToggleReportTooltip", button, false )
 			Hud_SetLocked( button, true )
-			RuiSetString( rui, "status", "" )
-			                                                          
-			RuiSetBool( rui, "isEmpty", true )
+			Hud_SetEnabled( button, false )
+			if( row == teamSize && modeHasJIP )
+			{
+				RuiSetString( rui, "status", Localize("#JIP_SEARCHING_FOR_PLAYER" ) )
+				RuiSetBool( rui, "isJIP", true )
+				RuiSetBool( rui, "isEmpty", false )
+				RuiSetImage( rui, "playerImage", $"rui/menu/buttons/lobby_character_select/portrait_selecting_tint" )
+
+				vector teamColor
+				if( IsValid(file.Callback_GetTeamColor) )
+					teamColor = file.Callback_GetTeamColor( Teams_NormalizeTeamIndex( teamIndex ) )
+				else
+					teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+
+				RuiSetColorAlpha( rui, "playerImageTint", teamColor, 1.0 )
+			}
+			else
+			{
+				RuiSetString( rui, "status", "" )
+				RuiSetBool( rui, "isEmpty", true )
+				RuiSetBool( rui, "isJIP", false )
+				RuiSetImage( rui, "playerImage", $"" )
+				RuiSetColorAlpha( rui, "playerImageTint", < 1.0, 1.0, 1.0 >, 1.0 )
+			}
+
+			RuiSetInt( rui, "respawnStatus", 0 )
 			RuiSetString( rui, "playerName", "" )
 			RuiSetBool( rui, "isFriendly", true )
 			RuiSetBool( rui, "isRatingLeader", false )
@@ -504,6 +569,7 @@ void function Teams_PopulatePlayerRow( var rui, TeamsScoreboardPlayer data, floa
 	RuiSetInt( rui, "bleedoutEndTime", data.bleedoutEndTime )
 	RuiSetColorAlpha( rui, "customCharacterColor", data.customCharacterColor, 1.0 )
 	RuiSetBool( rui, "useCustomCharacterColor", data.useCustomCharacterColor )
-
+	RuiSetBool( rui, "isJIP", false )
+	RuiSetColorAlpha( rui, "playerImageTint", < 1.0, 1.0, 1.0 >, 1.0 )
 	RuiSetColorAlpha( rui, "enemyBackgroundColor", data.enemyBackgroundColor, 1.0 )
 }

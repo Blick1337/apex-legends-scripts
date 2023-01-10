@@ -11,6 +11,10 @@ global function ServerToClient_DisplayCancelReviveHintForPlayer
 global function ServerToClient_RemoveCancelReviveHintForPlayer
 #endif
 
+                       
+                                      
+      
+
 const DEPLOYABLE_SHIELD_FX = $"P_drone_medic_shield"
 const DEPLOYABLE_SHIELD_HEALTH = 850
 
@@ -35,6 +39,10 @@ const asset DRONE_BEAM_EFFECT_DUD = $"P_drone_medic_shield_beam"
 const asset DRONE_MODEL = $"mdl/props/lifeline_drone/lifeline_drone.rmdl"
 const vector DRONE_MINS = <-9, -9, -10>
 const vector DRONE_MAXS = <9, 9, 10>
+
+                       
+                                       
+                             
 
 const string PASSIV_MEDIC_SHIELD_MOVER_SCRIPTNAME = "passive_medic_shield_mover"
 
@@ -167,11 +175,35 @@ void function PassiveMedic_Init()
 		                                                         
 	 
 
-	                                                                                                     
-	                    
-	                                    
-	                                                        
-	                             
+	                                                                                                         
+                        
+                                 
+   
+                                                                
+                                               
+                                            
+                                        
+                                       
+                                      
+                                                                  
+                                                                          
+                                                                
+                                
+                                  
+                               
+                                      
+                         
+                                                                                   
+   
+      
+                              
+		 
+			                    
+			                                    
+			                                                        
+			                             
+		 
+
 	                                                            
 
 	                                           
@@ -288,7 +320,12 @@ void function PassiveMedic_Init()
 	                                       
 
                              
-                                                                          
+                                                                        
+   
+                                                                               
+                                                                               
+   
+      
        
 		 
 			                                                                            
@@ -360,7 +397,7 @@ void function PassiveMedic_Init()
 
 		                            
 		 
-			                                                                                
+			                                                                             
 			 
 				                  
 					                                                        
@@ -368,6 +405,22 @@ void function PassiveMedic_Init()
 					                                                
 			 
 		 
+
+                             
+                                                                        
+   
+                                                                                                     
+                                                                                  
+
+               
+                       
+     
+                         
+                  
+     
+    
+   
+       
 
 	                                                   
  
@@ -391,7 +444,7 @@ void function PassiveMedic_Init()
 		                                   
 		 
 			                                       
-			                           
+			                                
 			                                                
 
 			                       
@@ -634,3 +687,10 @@ void function _DisplayCancelReviveHintForPlayer()
 	WaitForever()
 }
 #endif
+
+                       
+                                      
+ 
+                                                                      
+ 
+                             

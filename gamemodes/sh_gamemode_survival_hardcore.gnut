@@ -1,0 +1,127 @@
+global function Sh_Survival_Hardcore_Init
+global function IsHardcoreSurvival
+global function Sh_Survival_Hardcore_RegisterNetworking
+
+const string HUD_DISSAPPEAR_SFX = "HardcoreBR_HUD_Disappear_1P"
+
+
+
+#if SERVER
+                                            
+#endif
+
+#if CLIENT
+global function ServertoClient_HardcoreHideRui
+#endif
+
+
+
+struct
+{
+	var playerHud
+	var gamestateHud
+	var dpadmenuHud
+
+} file
+
+void function Sh_Survival_Hardcore_Init()
+{
+	if( !IsHardcoreSurvival() )
+		return
+
+
+	#if CLIENT
+	AddCallback_OnPlayerMatchStateChanged( OnPlayerMatchStateChanged )
+	SURVIVAL_SetGameStateAssetOverrideCallback( Hardcore_OverrideGameState )
+	AddCallback_OnPartyUpdated( HideSquadRui )
+	#endif
+
+#if SERVER
+	                                                                      
+#endif
+
+}
+
+void function Sh_Survival_Hardcore_RegisterNetworking()
+{
+	Remote_RegisterClientFunction( "ServertoClient_HardcoreHideRui" )
+}
+
+
+#if CLIENT
+void function OnPlayerMatchStateChanged( entity player, int newValue )
+{
+	if ( PlayerMatchState_GetFor( player ) == ePlayerMatchState.NORMAL )
+	{
+		Hardcore_HideClientHud(player)
+		EmitSoundOnEntity( player, HUD_DISSAPPEAR_SFX )
+	}
+
+}
+#endif
+
+#if CLIENT
+void function Hardcore_HideClientHud( entity player)
+{
+	Minimap_UpdateMinimapVisibility(player)
+	file.playerHud = GetPilotRui()
+	file.gamestateHud = ClGameState_GetRui()
+	file.dpadmenuHud = GetDpadMenuRui()
+	HideSquadRui()
+	RuiSetBool( file.playerHud, "isVisible", false )
+	thread Thread_UpdateHealthVisibility()
+	RuiSetFloat( file.gamestateHud, "scoreAlpha", 0 )
+	RuiSetBool( file.dpadmenuHud, "isVisible", false )
+}
+#endif
+
+#if CLIENT
+void function ServertoClient_HardcoreHideRui()
+{
+	Hardcore_HideClientHud(GetLocalViewPlayer())
+}
+#endif
+
+#if CLIENT
+void function HideSquadRui()
+{
+	table<entity, UnitFrameDef>       teamUnitFrames = GetTeamUnitFrames()
+	foreach ( player, unitFrame in teamUnitFrames )
+	{
+		RuiSetBool( unitFrame.rui, "isVisible", false )
+	}
+}
+#endif
+
+#if CLIENT
+void function Hardcore_OverrideGameState()
+{
+	ClGameState_RegisterGameStateAsset( $"ui/gamestate_survival_hardcore_mode.rpak" )
+	ClGameState_RegisterGameStateFullmapAsset( $"ui/gamestate_info_fullmap_hardcore_mode.rpak" )
+}
+#endif          
+
+
+         
+bool function IsHardcoreSurvival()
+{
+	return GetCurrentPlaylistVarBool( "is_hardcore_mode", false )
+}
+
+
+#if SERVER || CLIENT
+
+#endif
+
+
+#if CLIENT
+
+#endif
+
+#if SERVER
+                                                         
+ 
+	                                                                     
+ 
+#endif
+

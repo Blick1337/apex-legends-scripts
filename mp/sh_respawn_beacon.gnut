@@ -34,6 +34,7 @@ global function RespawnBeacon_ShouldUseBlockReload
                                        
                               
                                                                 
+                                                   
                    
                                         
       
@@ -222,6 +223,7 @@ void function Sh_RespawnBeacon_Init()
 		                                                             
 		                             
 		                                                
+		                                                 
 
 		                                          
 
@@ -271,7 +273,7 @@ void function Sh_RespawnBeacon_Init()
 		                                                          
 		 
 			                                                  
-			                                                            
+			                                                                          
 			                                            
 		 
 
@@ -604,7 +606,9 @@ void function RespawnEntitySpawned( entity ent )
 
 	                                                                                                 
 
-	                                                                                                        
+	                                                                                    
+
+	                                                                                                                            
  
 
                                                                                                                                                                                                                                                            
@@ -768,20 +772,13 @@ void function RespawnEntitySpawned( entity ent )
 	                                                                       
  
 
-                                                             
+                                                                              
  
 	                            
 
 	                              
                     
-                                                                                                                      
-
-              
-                       
-    
-                         
-                  
-     
+                                                     
        
 	             
 
@@ -792,10 +789,47 @@ void function RespawnEntitySpawned( entity ent )
 		 
 			                      
 		 
+
+                     
+                                                                        
+                                                                                    
+                                            
+   
+                              
+
+                                                         
+                                           
+    
+                                                                          
+     
+                                                                 
+           
+     
+    
+   
+        
 	 
 
 	             
  
+
+                   
+                                                                         
+ 
+                              
+                                                                                                                     
+
+             
+                      
+   
+                        
+                 
+   
+  
+
+              
+ 
+      
 
                                                                                        
  
@@ -837,7 +871,7 @@ bool function IsNotBusy( entity player, entity ent, int useFlags )
 	if ( ent.e.isBusy )
 		return false
 
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.interrupted ) > 0.0 )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.interrupted ) )
 		return false
 
 	return true
@@ -1002,7 +1036,7 @@ void function RespawnChamberOnUse( entity pickup, entity player, int pickupFlags
   
       
 
-	if ( !(pickupFlags & USE_INPUT_LONG) )
+	if ( !IsBitFlagSet( pickupFlags, USE_INPUT_LONG ) )
 		return
                    
                                                                                                                                                                 
@@ -1442,7 +1476,7 @@ void function ServerCallback_RespawnDNAHint()
 	                                                  
 
 	                                                                                                                                                            
-	                                                               
+	                                                                         
 	                                                             
 
                
@@ -1496,16 +1530,15 @@ void function ServerCallback_RespawnDNAHint()
 
                                                                           
  
-                    
-                                                                                  
-       
-
 	                             
 	                      
-                     
-                                  
-        
 		      
+
+                    
+                                                                                                            
+        
+       
+
 
 	            
 	           
@@ -2178,7 +2211,7 @@ void function ServerCallback_RespawnDNAHint()
 	                                  
  
 
-                                                                      
+                                                                                    
  
 	                                                               
 	 

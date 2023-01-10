@@ -207,15 +207,6 @@ void function OnWeaponActivate_void_ring( entity weapon )
 
 bool function OnWeaponAttemptOffhandSwitch_void_ring( entity weapon )
 {
-	int ammoReq = weapon.GetAmmoPerShot()
-	int currAmmo = weapon.GetWeaponPrimaryClipCount()
-	if ( currAmmo < ammoReq )
-		return false
-
-	entity player = weapon.GetWeaponOwner()
-	if ( player.IsPhaseShifted() )
-		return false
-
 	return true
 }
 
@@ -1191,14 +1182,14 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 		                        
 			        
 
-		                                                                       
+		                                                                     
 			                                                                
 
 		                                      
 		                                                                               
 		              
 		 
-			                                                                          
+			                                                                      
 				                                                                  
 			                                   
 		 
@@ -1212,14 +1203,14 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 		                       
 			        
 
-		                                                                      
+		                                                                    
 			                                                               
 
 		                                    
 		                                                                             
 		              
 		 
-			                                                                         
+			                                                                     
 				                                                                 
 		 
 	 
@@ -1241,14 +1232,14 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 		                                           
 			        
 
-		                                                                           
+		                                                                         
 			                                                                    
 
 		                                                                                                                       
 
 		              
 		 
-			                                                                              
+			                                                                          
 				                                                                      
 		 
 	 
@@ -1263,7 +1254,7 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 		                        
 			        
 
-		                                                                       
+		                                                                     
 			                                                                
 	 
 
@@ -1272,7 +1263,7 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 		                       
 			        
 
-		                                                                      
+		                                                                    
 			                                                               
 
 	 
@@ -1282,7 +1273,7 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 		                            
 			        
 
-		                                                                           
+		                                                                         
 			                                                                    
 	 
 
@@ -1416,12 +1407,12 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 					                                                           
 					                                    
 
-					                                                                       
+					                                                                   
 					 
 						                                                              
 					 
 
-					                                                                      
+					                                                                  
 						                                                             
 
 					                                                      
@@ -1466,7 +1457,7 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 			 
 				                                                                                                                                           
 				 
-					                                                                      
+					                                                                    
 					 
 						                                               
 						                            

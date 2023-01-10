@@ -70,6 +70,13 @@ void function MpAbilityHuntModeWeapon_Init()
 			                                                                                                              
 			                                                                                                       
 
+			                                          
+			                                                     
+
+                              
+                                                                                                                
+         
+
                                                 
                                                         
                                                                                     
@@ -115,6 +122,13 @@ void function MpAbilityHuntModeWeapon_Init()
 		                                                                       
 		                                                                                                              
 		                                                                                                       
+
+		                                          
+		                                                     
+
+                             
+                                                                                                               
+        
 
                                                                                
                       
@@ -273,7 +287,7 @@ void function EndThreadOn_HuntCommon( entity player )
 	                              
 	                                
 
-	           
+	              
 	 
 		                                      
 		           

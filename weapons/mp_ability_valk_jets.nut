@@ -460,7 +460,7 @@ void function Valk_DisableHudColorCorrection()
 	              
 	 
 		                                                                
-		                                                                     
+		                                                                  
 		 
 			              
 			 
@@ -526,7 +526,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_valk_jets( entity weapon )
 		primaryMelee.AddMod( "using_jets" )
 
 
-	if ( weaponOwner.IsZiplining() || weaponOwner.IsMantling() || weaponOwner.GetPlayerNetBool( "isHealing" ) )
+	if ( weaponOwner.GetPlayerNetBool( "isHealing" ) )
 		return false
 
 	float now = Time()

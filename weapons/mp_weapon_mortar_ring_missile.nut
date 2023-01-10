@@ -215,7 +215,7 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 	                                                                                             
 	                                   
 	 
-		                                                                                                                                                                            
+		                                                                                                                                                                      
 			        
 
 		                                         
@@ -787,7 +787,7 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 		           
 		                                                                                    
 		                                                                         
-		                                                                                                                                     
+		                                                                                                                                 
 		                                                                                                                        
 
                            
@@ -1094,7 +1094,7 @@ void function OnProjectileCollision_ability_mortar_ring_missile( entity projecti
 	                         
 		      
 
-	                                             
+	                                                 
 	 
 		                                                      
 		                                         
@@ -1314,6 +1314,9 @@ void function ThreatIndicatorThink( entity player, float damageRadius )
 		{
 			arrow.EnableDraw()
 			mdl.EnableDraw()
+
+			arrow.kv.rendercolor = GetKeyColor( COLORID_HUD_INDICATOR_ARROW )
+			mdl.kv.rendercolor = GetKeyColor( COLORID_HUD_INDICATOR_GRENADE_MODEL )
 
 			arrow.DisableRenderWithViewModelsNoZoom()
 			arrow.EnableRenderWithCockpit()

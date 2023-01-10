@@ -3,6 +3,7 @@ global function PlayerHasUnitFrame
 global function PlayerShouldHaveUnitFrame
 global function GetUnitFrame
 global function GetTeamUnitFrames
+global function GetTeamJIPUnitFrames
 global function OnInUseHealingKitTypeChanged
 global function OnPlayerEquippedWeaponChanged
 
@@ -24,6 +25,7 @@ global function OverwriteWithCustomUnitFrameInfo
 
 global function RefreshUnitframesForPlayer
 global function SquadMemberIndexSort
+global function ClientCodeCallback_OnMatchJipChanged
 
 #if DEV
 global function PrintUnitFrames
@@ -41,6 +43,7 @@ struct
 {
 	array<UnitFrameDef>				  RASUnitFrames
 	table<entity, UnitFrameDef>       teamUnitFrames
+	table<int, UnitFrameDef>     	  JIPUnitFrames
 	array< void functionref(int) >    Callbacks_OnTeamUnitFrameCreated
 	array< void functionref(int) >    Callbacks_OnTeamUnitFrameDestroyed
 
@@ -65,7 +68,10 @@ void function ClUnitFrames_Init()
 		CL_RecruitModeUnitFrames_Init()
 }
 
-
+void function ClientCodeCallback_OnMatchJipChanged()
+{
+	UpdateJIPUnitFrames()
+}
 void function OnPlayerCreated( entity player )
 {
 	OnPlayerTeamChanged( player, TEAM_UNASSIGNED, player.GetTeam() )                                                                                                                                                                                             
@@ -173,11 +179,14 @@ void function RefreshUnitframesForPlayer( entity player, int RASState = 0, bool 
 	  	                                                     
 	  		      
 
-	foreach ( teamPlayer in GetPlayerArrayOfTeam( playerTeam ) )
+	array<entity> teamPlayers = GetPlayerArrayOfTeam( playerTeam )
+	foreach ( teamPlayer in teamPlayers )
 	{
 		if ( PlayerShouldHaveUnitFrame( teamPlayer ) )
 			CreateTeamUnitFrame( teamPlayer )
 	}
+
+	UpdateJIPUnitFrames()
 
                        
                        
@@ -295,6 +304,90 @@ void function RefreshUnitframesForPlayer( entity player, int RASState = 0, bool 
       
 
 
+void function UpdateJIPUnitFrames()
+{
+	int maxTeamSize = GetMaxTeamSizeForPlaylist( GetCurrentPlaylistName() )
+
+	if(Survival_IsJIPEnabled())
+	{
+		int teamSize = (maxTeamSize - 1)
+		int teammatesMissing = teamSize - file.teamUnitFrames.len()                                                         
+		int teammatesCount = teamSize - teammatesMissing
+
+		                         
+		for( int i = teamSize; i > (teamSize - teammatesMissing) ; i-- )
+		{
+			CreateJIPUnitFrame( i - 1 )
+		}
+
+		                       
+		for( int i = 0; i < teammatesCount - 1; i++ )
+		{
+
+			DestroyJIPUnitFrame( i )
+		}
+	}
+	else
+	{
+		                       
+		for( int i = 0; i < maxTeamSize - 1; i++ )
+			DestroyJIPUnitFrame( i )
+	}
+}
+
+void function CreateJIPUnitFrame( int teammateNumber = 0)
+{
+	if ( GetCurrentPlaylistVarBool( "teammate_huds_enabled", true ) == false )
+		return
+
+	if ( GetGameState() < eGameState.Playing)
+		return
+
+	if ( teammateNumber in file.JIPUnitFrames )
+		return
+
+	asset unitFrameAsset = GetJIPUnitFrameAssetForGameMode()
+	var rui              = CreatePermanentCockpitPostFXRui( unitFrameAsset, HUD_Z_BASE )
+
+	UnitFrameDef unitFrame
+	unitFrame.rui = rui
+	unitFrame.index = teammateNumber
+
+	file.JIPUnitFrames[teammateNumber] <- unitFrame
+
+	SetUnitFramePosition( unitFrame )
+
+	RuiSetBool( rui, "isVisible", true )
+	RuiSetString( rui, "name", Localize( "#JIP_SEARCHING_FOR_SHORT" ) )
+
+	vector playerColor
+	if( GetCurrentPlaylistVarBool("has_squad_based_ui", false) )
+	{
+		entity player = GetLocalViewPlayer()
+		playerColor = SrgbToLinear( GetPlayerInfoColor(player ) / 255.0 )
+	}
+	else
+		playerColor = SrgbToLinear( GetKeyColor( COLORID_MEMBER_COLOR0, 1 + teammateNumber ) / 255.0 )
+
+
+	RuiSetColorAlpha( rui, "customCharacterColor", playerColor, 1.0 )
+}
+
+void function DestroyJIPUnitFrame( int teammateNumber = 0 )
+{
+	if ( file.JIPUnitFrames.len() == 0 )
+		return
+
+	if ( !( teammateNumber in file.JIPUnitFrames ) )
+		return
+
+	if ( file.JIPUnitFrames[teammateNumber].rui != null )
+		RuiDestroyIfAlive( file.JIPUnitFrames[teammateNumber].rui )
+
+	delete file.JIPUnitFrames[teammateNumber]
+}
+
+
 void function CreateTeamUnitFrame( entity player )
 {
 	if ( GetCurrentPlaylistVarBool( "teammate_huds_enabled", true ) == false )
@@ -394,6 +487,12 @@ asset function GetUnitFrameAssetForGameMode()
 }
 
 
+asset function GetJIPUnitFrameAssetForGameMode()
+{
+	return $"ui/unitframe_survival_jip.rpak"
+}
+
+
 void function SetUnitFrameOwner( UnitFrameDef unitFrame, entity ent, entity viewPlayer )
 {
 	thread SetUnitFrameDataFromOwner( unitFrame.rui, ent, viewPlayer )
@@ -409,6 +508,7 @@ void function SetUnitFrameDataFromOwner( var rui, entity ent, entity localPlayer
 	while ( !EHIHasValidScriptStruct( ToEHI( ent ) ) )
 		WaitFrame()                                      
 
+	WaitFrame()
 	ItemFlavor character = LoadoutSlot_WaitForItemFlavor( ToEHI( ent ), Loadout_Character() )
 	asset characterIcon  = CharacterClass_GetGalleryPortrait( character )
 
@@ -472,7 +572,7 @@ void function SetUnitFrameDataFromOwner( var rui, entity ent, entity localPlayer
 
                     
                                                      
-                                                                                  
+                                                                                                                              
 
                                                        
    
@@ -589,6 +689,7 @@ void function SetUnitFramePosition( UnitFrameDef unitFrame )
 
 void function DestroyTeamUnitFrame( entity player )
 {
+
 	if ( !PlayerHasUnitFrame( player ) )
 		return
 
@@ -606,6 +707,7 @@ void function DestroyTeamUnitFrame( entity player )
 	}
 
 	UpdateUnitFrameIndices()
+	UpdateJIPUnitFrames()
 }
 
 
@@ -852,7 +954,7 @@ void function  RefreshMinimalMicRui()
 
 void function  CreateMinimalMicRui()
 {
-	if (file.minimalMicRui != null)
+	if (file.minimalMicRui != null || GetGameState() != eGameState.Playing)
 		return
 
 	file.minimalMicRui = CreateFullscreenRui( $"ui/minimal_mic_hud.rpak", 3 )
@@ -865,6 +967,9 @@ void function  CreateMinimalMicRui()
 	for ( int index = 0 ; index < squadPlayers.len() ; index++ )
 	{
 		int ruiPlayerNumber = index + 1
+		if( ruiPlayerNumber > 4 )
+			break
+
 		if ( index < squadPlayers.len() )
 		{
 			entity player = squadPlayers[index]
@@ -900,4 +1005,9 @@ vector function GetUnitFrameColor( entity player )
 table<entity, UnitFrameDef> function GetTeamUnitFrames()
 {
 	return file.teamUnitFrames
+}
+
+table<int, UnitFrameDef> function GetTeamJIPUnitFrames()
+{
+	return file.JIPUnitFrames
 }

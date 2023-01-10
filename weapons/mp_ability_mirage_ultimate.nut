@@ -53,7 +53,7 @@ void function CancelHint_OnDestroy( entity player, int statusEffect, bool actual
 bool function OnWeaponAttemptOffhandSwitch_ability_mirage_ultimate( entity weapon )
 {
 	entity player = weapon.GetWeaponOwner()
-	if ( player.IsPhaseShifted() )
+	if ( !IsValid( player ) )
 		return false
 
 	if ( !PlayerCanUseDecoy( player ) )
@@ -203,6 +203,8 @@ bool function ShouldDoKaleidoscopeUltimate()
  
 	                                      
 
+	                             
+
 	                                                                                          
 	                                                                                                  
 	                                                          
@@ -217,7 +219,9 @@ bool function ShouldDoKaleidoscopeUltimate()
 		                                                                     
 
 		                                                                       
+		                                                                   
 
+		                                     
 		                                 
 		                              
 		                                                                                                          
@@ -233,6 +237,15 @@ bool function ShouldDoKaleidoscopeUltimate()
 				                                                     
 		   
 	 
+ 
+
+                                                                                       
+ 
+	                                          
+
+	             
+
+	                                            
  
 #endif              
 

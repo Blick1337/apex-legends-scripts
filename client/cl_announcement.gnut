@@ -22,10 +22,13 @@ global const int ANNOUNCEMENT_STYLE_GENERIC_WARNING = 12
 global const int ANNOUNCEMENT_STYLE_ROUND_WON = 13
 global const int ANNOUNCEMENT_STYLE_RATING_LEADER = 14
 
+const float ANNOUNCEMENT_DURATION =  16.0
+const ASSET_ANNOUNCEMENT_ICON = $"rui/hud/gametype_icons/ltm/ltm_logo"
 const int ANNOUNCEMENT_STYLE_DEFAULT = ANNOUNCEMENT_STYLE_BIG
 
 global const string SFX_HUD_ANNOUNCE_STANDARD = "HUD_center_announcement_standard_1P"
 global const string SFX_HUD_ANNOUNCE_QUICK = "HUD_center_announcement_no_animation_1P"
+global const string SFX_HUD_ANNOUNCE_LTM = "GlobalLTM_UI_SkydiveBanner_1P"
 
 global struct LevelUpData
 {
@@ -444,7 +447,7 @@ void function AnnouncementProcessQueue( entity player )
 	if ( clGlobal.isAnnouncementActive )
 		return
 
-	if ( !clGlobal.announcementQueue.len() )
+	if ( clGlobal.announcementQueue.len() == 0 )
 		return
 
 	AnnouncementData announcement = clGlobal.announcementQueue[0]
@@ -580,6 +583,8 @@ void function AnnouncementMessage_DisplayOnHud( AnnouncementData announcement )
 		case ANNOUNCEMENT_STYLE_KILL_LEADER:
 			customAnnouncement = true
 			rui = RuiCreate( $"ui/kill_leader_noti.rpak", clGlobal.topoFullScreen, RUI_DRAW_POSTEFFECTS, 0 )
+			if (IsValentinesS15())
+				rui = RuiCreate( $"ui/kill_leader_datenight_noti.rpak", clGlobal.topoFullScreen, RUI_DRAW_POSTEFFECTS, 0 )
 			RuiSetFloat( rui, "startTime", Time() )
 			RuiSetString( rui, "messageText", optionalTextArgs[0] )
 			RuiSetString( rui, "messageSubText", optionalTextArgs[1] )
@@ -635,7 +640,7 @@ void function AnnouncementMessage_DisplayOnHud( AnnouncementData announcement )
 			break
 			
 		default:
-			Assert( 0, "Unknown announcement style: " + announcement.announcementStyle )
+			Assert( false, "Unknown announcement style: " + announcement.announcementStyle )
 			break
 	}
 
@@ -693,4 +698,36 @@ void function HideNotificationInABit( var notificationBox, float delay )
 
 	EndSignal( clGlobal.signalDummy, "UIToClient_Notification" )
 	Hud_Hide( notificationBox )
+}
+
+void function ServertoClient_LTM_AnnouncementSplash()
+{
+	entity player = GetLocalViewPlayer()
+	if ( !IsValid( player ) )
+		return
+	string playlistName = GetCurrentPlaylistName()
+	asset emblemImage = ASSET_ANNOUNCEMENT_ICON
+	float duration                = ANNOUNCEMENT_DURATION
+	string messageText            = GetCurrentPlaylistVarString( "name", "#GAMEMODE_ANNOUNCE_NONE" )
+	string subText                = GetCurrentPlaylistVarString( "announce_desc", "#GAMEMODE_ANNOUNCE_SUBTEXT_NONE" )
+	vector titleColor             = <0, 0, 0>
+	asset icon                    = $""
+	asset leftIcon                = GetCurrentPlaylistVarAsset( "announce_emblem_left", emblemImage )
+	asset rightIcon               = GetCurrentPlaylistVarAsset( "announce_emblem_right", emblemImage)
+	string soundAlias             = SFX_HUD_ANNOUNCE_LTM
+	int style                     = ANNOUNCEMENT_STYLE_SWEEP
+	AnnouncementData announcement = Announcement_Create( messageText )
+	announcement.drawOverScreenFade = true
+	Announcement_SetSubText( announcement, subText )
+	Announcement_SetHideOnDeath( announcement, true )
+	Announcement_SetDuration( announcement, duration )
+	Announcement_SetPurge( announcement, true )
+	Announcement_SetStyle( announcement, style )
+	Announcement_SetSoundAlias( announcement, soundAlias )
+	Announcement_SetTitleColor( announcement, titleColor )
+	Announcement_SetIcon( announcement, icon )
+	Announcement_SetLeftIcon( announcement, leftIcon )
+	Announcement_SetRightIcon( announcement, rightIcon )
+	AnnouncementFromClass( player, announcement )
+
 }

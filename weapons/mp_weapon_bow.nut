@@ -6,6 +6,8 @@ global function OnProjectileCollision_weapon_bow
 global function OnWeaponChargeBegin_weapon_bow
 global function OnWeaponChargeEnd_weapon_bow
 global function OnWeaponChargeLevelIncreased_weapon_bow
+global function OnWeaponCustomActivityStart_weapon_bow
+global function OnWeaponCustomActivityEnd_weapon_bow
 
 #if CLIENT
 global function AttemptCancelCharge
@@ -20,9 +22,13 @@ global function WeaponBow_UpdateArrowColor
 #endif
 
                                
-          
-                                            
-      
+#if CLIENT
+global function ServerToClient_AddBowHealVFX
+#endif
+
+#if SERVER
+                                        
+#endif
       
 
 global function ArrowsCanBePickedUp
@@ -60,7 +66,6 @@ const string NEXT_ARROW_TYPE_SOUND = "weapon_mastiff_first_draw_mech_piece"
 const string ARROW_COLOR_STANDARD_SETTING = "arrows_standard_color"
 const string ARROW_COLOR_SHATTER_SETTING = "arrows_shatter_color"
 
-const string SINGLE_ARROW_LOOT_DATA_REF = "arrows"
 const asset SINGLE_ARROW_MODEL = $"mdl/weapons/bullets/w_arrow_projectile.rmdl"
 const asset SINGLE_ARROW_MODEL_PICKUP = $"mdl/weapons_r5/loot/_master/w_loot_wep_arrow_single.rmdl"
 const float ARROWS_STICK_CHANCE_DEFAULT = 1.0
@@ -76,18 +81,18 @@ const bool ARROWS_CAN_BE_PICKED_UP_DEFAULT = false
 const string SHATTER_ARROWS_DMG_MODS_BASE_STR = "arrows_shatter_dmg_lv"
 
                                
-                                                 
-                                                   
+const string VALENTINES_COLOR = "255 119 188 255"
+const vector VALENTINES_COLOR_VEC = <255, 119, 188>
 
-                                             
+const float VALENTINES_HEAL_DEBOUNCE_SEC = 10
 
-                                                         
-                                                         
-                                                      
-                                                         
+const SFX_RECEIVING_HEAL_1P = "DateNight_AOE_Bow_Healing_Success_1P"
+const SFX_GAVE_HEAL_1P = "DateNight_AOE_Success_Stinger_1P"
+const SFX_RECEIVING_HEAL_3P = "DateNight_AOE_Success_Stinger_3P"
 
-                                              
-                                              
+const VFX_COCKPIT_HEALTH = $"P_heal_loop_screen"
+const VFX_COCKPIT_SHIELDS = $"P_armor_FP_charging_CP"
+const VFX_PLAYER_HEALED_3P = $"P_armor_3P_loop_CP"                   
       
 
 const string FX_BOW_LIGHT_PREFIX = "fx_bow_light_"
@@ -144,12 +149,16 @@ struct
 
 	LootData& singleArrowLootData
 
+	#if CLIENT
+		bool inspectDOF
+	#endif
+
                                 
-            
-                          
-                      
-                         
-        
+		#if CLIENT
+			bool  isHealing = false
+			float healedEndTime
+			float thanksPromptTime
+		#endif
        
 } file
 
@@ -165,11 +174,9 @@ void function MpWeaponBow_Init()
 	PrecacheModel( SINGLE_ARROW_MODEL_PICKUP )
 
                                 
-                                            
-                                                
-            
-                                                                                     
-        
+		PrecacheParticleSystem( VFX_COCKPIT_HEALTH )
+		PrecacheParticleSystem( VFX_COCKPIT_SHIELDS )
+		PrecacheParticleSystem( VFX_PLAYER_HEALED_3P )
        
 
 	file.fxLightAssets1p = {}
@@ -192,7 +199,7 @@ void function MpWeaponBow_Init()
 	Remote_RegisterServerFunction( "Remote_CancelCharge", "entity" )
 
                                 
-                                                                 
+		Remote_RegisterClientFunction( "ServerToClient_AddBowHealVFX", "bool" )
        
 
 	#if CLIENT
@@ -211,6 +218,10 @@ void function MpWeaponBow_Init()
 	file.arrowsStickLifetimePlayer = GetPlaylistVarFloat( GetCurrentPlaylistName(), "arrows_stick_lifetime_player", ARROWS_STICK_LIFETIME_PLAYER_DEFAULT )
 	file.arrowsStickLifetimeWorld  = GetPlaylistVarFloat( GetCurrentPlaylistName(), "arrows_stick_lifetime_world", ARROWS_STICK_LIFETIME_WORLD_DEFAULT )
 	file.arrowsCanBePickedUp       = GetPlaylistVarBool( GetCurrentPlaylistName(), "arrows_can_be_picked_up", ARROWS_CAN_BE_PICKED_UP_DEFAULT )
+
+	#if CLIENT
+		file.inspectDOF = GetPlaylistVarBool( GetCurrentPlaylistName(), "bow_inspect_dof", true )
+	#endif
 	#if SERVER
 		                                                                      
 	#endif
@@ -254,7 +265,7 @@ void function OnWeaponActivate_weapon_bow( entity weapon )
 
 		                                                                                                                                      
 
-		file.singleArrowLootData = SURVIVAL_Loot_GetLootDataByRef( SINGLE_ARROW_LOOT_DATA_REF )
+		file.singleArrowLootData = SURVIVAL_Loot_GetLootDataByRef( ARROWS_AMMO )
 
 		if ( ArrowsCanBePickedUp() )
 			SetCallback_LootTypeExtraCanUseFunction( file.singleArrowLootData, StuckArrow_ExtraCanUseFunction )
@@ -281,10 +292,10 @@ void function OnWeaponActivate_weapon_bow( entity weapon )
 	thread MarksmansTempo_OnActivate( weapon, file.bowTempoSettings )
 
                                 
-            
-                          
-                                              
-        
+		#if SERVER
+		                        
+			                                           
+		#endif
        
 }
 
@@ -305,14 +316,14 @@ void function OnWeaponDeactivate_weapon_bow( entity weapon )
 	MarksmansTempo_OnDeactivate( weapon, file.bowTempoSettings )
 
                                 
-           
-                          
-   
-                                    
-                           
-                                                              
-   
-        
+	#if SERVER
+		                        
+		 
+			                                 
+			                        
+				                                                               
+		 
+		#endif
        
 }
 
@@ -400,6 +411,34 @@ var function OnWeaponPrimaryAttack_weapon_bow( entity weapon, WeaponPrimaryAttac
 	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 }
 
+
+void function OnWeaponCustomActivityStart_weapon_bow( entity weapon )
+{
+	#if CLIENT
+		if ( !file.inspectDOF )
+			return
+
+		                                                 
+		if ( weapon.GetWeaponActivity() == ACT_VM_WEAPON_INSPECT )
+		{
+			DoF_LerpNearDepth( 0.5, 6.4, 0.3 )
+		}
+	#endif
+}
+
+
+void function OnWeaponCustomActivityEnd_weapon_bow( entity weapon, int activity )
+{
+	#if CLIENT
+		if ( !file.inspectDOF )
+			return
+
+		if ( activity == ACT_VM_WEAPON_INSPECT )
+		{
+			DoF_LerpNearDepthToDefault( 0.3 )
+		}
+	#endif
+}
 
 void function ClearChargeAfterFrame( entity weapon )
 {
@@ -523,11 +562,11 @@ void function OnProjectileCollision_weapon_bow( entity projectile, vector pos, v
 			                                   
 
                                   
-                                                                
-     
-                                          
-     
-        
+				                                                            
+				 
+					                                     
+				 
+				    
          
 			                                                                 
 
@@ -580,7 +619,7 @@ void function OnProjectileCollision_weapon_bow( entity projectile, vector pos, v
 				                                                                                                                     
 				                        
 
-				                                          
+				                           
 
 				                     
 			 
@@ -595,11 +634,11 @@ void function OnProjectileCollision_weapon_bow( entity projectile, vector pos, v
 			                           
 
                                   
-                                                                
-     
-                                          
-     
-        
+				                                                            
+				 
+					                                     
+				 
+				    
          
 			                                     
 			                                                                                                       
@@ -660,7 +699,7 @@ bool function StuckArrow_ExtraCanUseFunction( entity player, entity arrow, int u
 	if ( !ArrowsCanBePickedUp() )
 		return false
 
-	if ( (useFlags & USE_FLAG_AUTO) != 0 )
+	if ( IsBitFlagSet( useFlags, USE_FLAG_AUTO) )
 	{
 		                                    
 		array<entity> weapons = player.GetMainWeapons()
@@ -733,11 +772,11 @@ bool function StuckArrow_ExtraCanUseFunction( entity player, entity arrow, int u
 void function WeaponBow_UpdateArrowColor( entity weapon, int shatterRoundsType )
 {
                                 
-                                                    
-   
-                                           
-         
-   
+		if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_CUPID ) )
+		{
+			weapon.kv.rendercolor = VALENTINES_COLOR
+			return
+		}
        
 
 	if ( shatterRoundsType == eShatterRoundsTypes.STANDARD )
@@ -886,11 +925,11 @@ void function PlayChargeFX( entity player, entity weapon )
 
 
                                 
-                                                    
-   
-                                                                 
-   
-      
+		if ( weapon.HasMod( WEAPON_LOCKEDSET_MOD_CUPID ) )
+		{
+			EffectSetControlPointVector( handle, 2, VALENTINES_COLOR_VEC )
+		}
+		else
        
 		EffectSetControlPointVector( handle, 2, file.arrowTypeColors[ weapon.GetScriptInt0() ] )
 	}
@@ -923,172 +962,198 @@ void function StopChargeFX( entity weapon )
 }
 
                                
-          
+#if SERVER
                                                             
  
-                            
-                                                            
-                       
-                      
-  
-                               
-   
-                                                    
-               
-   
-      
-   
-                                            
-                         
-   
-               
-  
+	                           
+	                                                           
+	                         
+	                        
 
-                                                                       
+	                                        
 
-                     
-  
-                              
-   
+	                     
+	 
+		                             
+		 
+			                                                 
+			            
+		 
+		    
+		 
+			                                         
+			                      
+		 
+		                   
+	 
+
+	                                                                      
+
+	                                    
+	 
+		                                                                 
+		                                                
+		                            
+		 
+			                                                             
+		 
+		    
+		 
+			                                                     
+		 
+		                  
+	 
+
+	                                  
+	 
+		                                               
+		                                                                                                  
+		                                                                      
+	 
+
+	                                  
+ 
+
                                                                 
-   
-      
-   
-                                                        
-   
-               
-  
-
-              
-  
-                                      
-                                                                      
-
-                                                                        
-                                                                          
-
-                                                                               
-  
-     
-  
-                                                                                
-  
  
+	                             
+	                               
 
-                                                  
+	                                                                                                                                                                                      
+	                                                                                    
+	                           
+	                                     
+	                                                 
+
+	            
+		                         
+		 
+			                          
+				                      
+		 
+	 
+
+	      
  
-                              
-                                
+#endif
 
-                       
-
-                            
-  
-                                                                                                                                                                                                    
-                                                                                                   
-  
-
-             
-                           
-   
-                             
-                          
-   
-  
-
-       
+#if SERVER
+                                                                                                                                                                    
  
-      
+	                                                                       
+	                                        
+		      
 
-          
-                                                                     
+	                         
+		      
+
+	                                                     
+		      
+
+	                                                   
+		      
+
+	                              
+	                         
+		      
+
+	                           
+		      
+
+	                                  
+		      
+
+	                                                   
+	                                               
+		      
+
+	                                                             
+		      
+
+	                                  
+	                                                                             
+		      
+
+	                                                                                                      
+	                                                              
+	                                         
+
+	                      
+		      
+
+	                                                         
+	                        
+
+	                                                 
+
+	                          
+		      
+
+	                                                           
+	 
+		                                                  
+	 
+
+	                                                  
+	              
+	 
+		                                                                                 
+	 
+
+	                  
+	 
+		                                                                                
+		                                                                     
+	 
  
-                               
-                          
-        
-
-                          
-        
-
-                                                   
-                                                    
-        
-
-                                                          
-                                 
-        
-
-                                                       
-
-                            
-        
-
-                                              
-        
-
-                                                                                                       
-                                                     
-                                          
-
-                       
-        
-
-                                       
-
-                                                  
-
-                           
-        
-
-                                                            
-                                      
- 
-      
+#endif
 
 
-          
-                                 
-                                             
- 
-                                        
-  
-                                                               
-                                           
-    
-                                
- 
+#if CLIENT
+const float HEAL_VFX_DURATION = 1
+void function ServerToClient_AddBowHealVFX( bool onlyShields )
+{
+	AddHealVFX( HEAL_VFX_DURATION, onlyShields )
+}
 
-                                          
- 
-                                         
+void function AddHealVFX( float duration, bool onlyShields )
+{
+	file.healedEndTime = (Time() + duration)
 
-                       
-                         
- 
+	if ( !file.isHealing )
+		thread HealVFX_Thread( onlyShields )
+}
 
-                              
- 
-                                     
+void function HealVFX_Thread( bool onlyShields )
+{
+	entity player = GetLocalViewPlayer()
 
-                              
-                                
+	player.EndSignal( "OnDeath" )
+	player.EndSignal( "OnDestroy" )
 
-                      
+	file.isHealing = true
 
-                                                          
-                                                                                                              
-                                         
-             
-                         
-   
-                         
-                                     
-                                       
-   
-  
+	int fxID         = onlyShields ? GetParticleSystemIndex( VFX_COCKPIT_SHIELDS ) : GetParticleSystemIndex( VFX_COCKPIT_HEALTH )
 
-                                       
-             
- 
-      
+	int fxHandle = StartParticleEffectOnEntity( player, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
+	EffectSetIsWithCockpit( fxHandle, true )
+	if ( onlyShields )
+	{
+		int armorTier      = EquipmentSlot_GetEquipmentTier( player, "armor" )
+		vector shieldColor = GetFXRarityColorForTier( armorTier )
+		EffectSetControlPointVector( fxHandle, 1, shieldColor )
+	}
+	OnThreadEnd(
+		function() : (fxHandle)
+		{
+			file.isHealing = false
+			if ( EffectDoesExist( fxHandle ) )
+				EffectStop( fxHandle, false, true )
+		}
+	)
+
+	while( (file.healedEndTime > Time()) )
+		WaitFrame()
+}
+#endif
       

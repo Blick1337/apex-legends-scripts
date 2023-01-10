@@ -122,10 +122,10 @@ global const GAMEMODE_WINTER_EXPRESS = "winter_express"
                                                     
       
                                   
-                                                             
+global const GAMEMODE_SURVIVAL_HARDCORE = "survival_hardcore"
       
                                
-                                                    
+global const GAMEMODE_DATE_NIGHT = "date_night_duos"
       
 
 
@@ -799,7 +799,9 @@ global enum ePresentationType
 	CLUB_DISCOVERY,
 	ARENAS_RANKED,
                 
-	APPLIED_STICKER,
+	APPLIED_STICKER_INJECTOR,
+	APPLIED_STICKER_SMALL_CELL,
+	APPLIED_STICKER_LARGE_CELL,
 	FLAT_STICKER,
                       
 
@@ -831,7 +833,9 @@ global enum ePlayerMovementEvents
 	BEGIN_WALLRUN,
 	END_WALLRUN,
 	BEGIN_WALLHANG,
-	END_WALLHANG
+	END_WALLHANG,
+	BEGIN_SLIDE,
+	END_SLIDE
 }
                                                                 
          
@@ -1191,12 +1195,10 @@ global enum eCommsAction
 	PING_ATTACHMENT_BARREL_STABILIZER_3,
 	PING_ATTACHMENT_BARREL_STABILIZER_4_FLASH_HIDER,
 	  
-                          
-		PING_ATTACHMENT_LASER_SIGHT_1,
-		PING_ATTACHMENT_LASER_SIGHT_2,
-		PING_ATTACHMENT_LASER_SIGHT_3,
-		PING_ATTACHMENT_LASER_SIGHT_4,
-       
+	PING_ATTACHMENT_LASER_SIGHT_1,
+	PING_ATTACHMENT_LASER_SIGHT_2,
+	PING_ATTACHMENT_LASER_SIGHT_3,
+	PING_ATTACHMENT_LASER_SIGHT_4,
 	  
 	PING_ATTACHMENT_HOPUP_TURBOCHARGER,
 	PING_ATTACHMENT_HOPUP_SELECTFIRE,
@@ -1349,6 +1351,9 @@ global enum eCommsAction
 		PING_DARK_VEIL,
 		PING_DARK_VEIL_ENEMY,
        
+                                               
+                              
+       
 	  
 	PING_ENEMY_NPC_SNIPER,
 	PING_ENEMY_NPC_SPECTRE,
@@ -1386,12 +1391,13 @@ global enum eCommsAction
 
 	PING_NEUTRAL_FENCE,
 	  
+	PING_LOOT_RESPAWN_MOBILE,
 	PING_RESPAWN_MOBILE,
                           
                          
        
 
-                  
+                                 
                          
        
 
@@ -1435,9 +1441,9 @@ global enum eCommsAction
 	REPLY_LOOT_UNDIBS,
 	REPLY_RESPAWN_YES,
                                 
-                
-                     
-                          
+	REPLY_LOVE_YOU,
+	REPLY_LOVE_YOU_MORE,
+	REPLY_NO_I_LOVE_YOU_MORE,
        
                  
 	PING_REPLICATOR_INCOMING,
@@ -1534,10 +1540,8 @@ global enum eCommsAction
 	INVENTORY_NEED_ATTACHMENT_BARREL_SNIPER,
 	INVENTORY_NEED_ATTACHMENT_BARREL_MARKSMAN,
 
-                          
-		INVENTORY_NEED_ATTACHMENT_LASERSIGHT_SMG
-		INVENTORY_NEED_ATTACHMENT_LASERSIGHT_PISTOL
-       
+	INVENTORY_NEED_ATTACHMENT_LASERSIGHT_SMG
+	INVENTORY_NEED_ATTACHMENT_LASERSIGHT_PISTOL
 
 	INVENTORY_NEED_WEAPONATTACHMENT_HOPUP,
 	INVENTORY_NEED_WEAPONATTACHMENT_HOPUP_MULTI_A,
@@ -1765,12 +1769,10 @@ global enum eCommsAction
 	FLAVOR_EQUIPMENT_BACKPACK_4,
 	FLAVOR_LOOT_DIBS,
 
-                          
-		FLAVOR_ATTACHMENT_LASER_SIGHT_1,
-		FLAVOR_ATTACHMENT_LASER_SIGHT_2,
-		FLAVOR_ATTACHMENT_LASER_SIGHT_3,
-		FLAVOR_ATTACHMENT_LASER_SIGHT_4,
-       
+	FLAVOR_ATTACHMENT_LASER_SIGHT_1,
+	FLAVOR_ATTACHMENT_LASER_SIGHT_2,
+	FLAVOR_ATTACHMENT_LASER_SIGHT_3,
+	FLAVOR_ATTACHMENT_LASER_SIGHT_4,
 
                                
                         
@@ -1905,7 +1907,9 @@ global enum eCommsAction
        
 
                               
+                             
                         
+                                 
        
 
                          
@@ -1921,6 +1925,18 @@ global enum eCommsAction
                     
                             
                                    
+                                   
+                                   
+                     
+                   
+                         
+                            
+                          
+       
+
+                        
+                                    
+                                 
        
 
 	_count
@@ -2128,6 +2144,9 @@ global const vector MEMBER_COLOR4 = <150, 95, 215>
                       
                                                      
                       
+global const string FIRING_RANGE_TARGET_FLIP_SCRIPTNAME = "fr_target_flip"
+global const string FIRING_RANGE_TARGET_FOLD_SCRIPTNAME = "fr_target_fold"
+
 global const string FIRING_RANGE_DUMMIE_SCRIPT_NAME = "npc_dummie"
 global const string FIRING_RANGE_COMBAT_DUMMIE_SCRIPT_NAME = "npc_dummie_combat"
 
@@ -2136,6 +2155,18 @@ global const string FIRING_RANGE_COMBAT_DUMMIE_SCRIPT_NAME = "npc_dummie_combat"
                                
 
                          
+                          
+ 
+                                              
+                                       
+                                         
+                                            
+                                       
+                                                                    
+                                           
+       
+ 
+
                                
  
        
@@ -2158,10 +2189,18 @@ global const string FIRING_RANGE_COMBAT_DUMMIE_SCRIPT_NAME = "npc_dummie_combat"
                       
                                                                                                      
                       
+
+global enum eFiringRangeChallengeState
+{
+	FR_CHALLENGE_INACTIVE,
+	FR_CHALLENGE_PENDING,
+	FR_CHALLENGE_ACTIVE,
+	FR_CHALLENGE_POST
+}
+
                    
                               
  
-           
            
                   
                 
@@ -2250,6 +2289,12 @@ global enum eDeployableFlags
 	_count				= 2
 }
                            
+
+global const float MAP_KILL_VOLUME_OFFSET_TROPIC_ISLAND = -2048.0
+global const float MAP_KILL_VOLUME_OFFSET_OLYMPUS = -28320.0
+global const float MAP_KILL_VOLUME_OFFSET_CANYONLANDS = -2048.0
+global const float MAP_KILL_VOLUME_OFFSET_DESERTLANDS = -22290.0
+global const float MAP_KILL_VOLUME_OFFSET_DIVIDED_MOON = -2400.0
 
 global const float DEPLOYABLE_COLLISION_DEFAULT_TRACE_LENGTH = 16
 global struct DeployableCollisionParams

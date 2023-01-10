@@ -803,6 +803,11 @@ global struct EadpPeopleData
 	string xbox_pid
 	string steam_pid
 	string switch_pid
+	int ea_has_played
+	int psn_has_played
+	int xbox_has_played
+	int steam_has_played
+	int switch_has_played
 	int friendCreationTime
 	array< EadpPresenceData > presences
 }
@@ -868,6 +873,7 @@ global enum eFriendStatus
 global struct Friend
 {
 	string id
+	string unspoofedid = ""
 	string hardware
 	string name = "Unknown"
 	string presence = ""

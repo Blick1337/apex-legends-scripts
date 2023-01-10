@@ -107,7 +107,7 @@ void function OnProjectileCollision_weapon_cluster_bomb_launcher( entity project
 	collisionParams.highDetailTrace = true
 	collisionParams.ignoreHullSize = true
 
-	if ( hitEnt.IsPlayer() && StatusEffect_GetTimeRemaining(hitEnt, eStatusEffect.death_totem_recall) )
+	if ( hitEnt.IsPlayer() && StatusEffect_GetTimeRemaining(hitEnt, eStatusEffect.death_totem_recall) > 0.0 )
 	{
 		projectile.SetVelocity( <0,0,0> )
 		projectile.ClearParent()

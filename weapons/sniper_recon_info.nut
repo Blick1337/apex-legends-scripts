@@ -643,7 +643,7 @@ void function CL_SniperRecon_UI_Thread( entity owner )
 		if ( IsValid( activeWeapon ) )
 			RuiSetBool( file.scopeRui, "isWeaponMelee", DoesWeaponTriggerMeleeAttack( activeWeapon ) )
 
-		bool isSilenced = StatusEffect_GetSeverity( owner, eStatusEffect.silenced ) > 0
+		bool isSilenced = StatusEffect_HasSeverity( owner, eStatusEffect.silenced )
 		bool isValidGameState =  GetGameState() >= eGameState.Playing && GetGameState() < eGameState.Resolution
 		bool isADS = owner.GetZoomFrac() > 0.99
 		RuiSetBool( file.scopeRui, "visible", !isSilenced && isValidGameState && isADS )

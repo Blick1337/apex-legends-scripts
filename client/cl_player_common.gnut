@@ -115,11 +115,11 @@ bool function PlayKillshotConfirmSound( entity attacker, entity victim, int dama
 	  	      
 	bool isBiologicalNPC = IsBiologicalNPC( victim )
 	string soundAlias = ""
-	if ( damageType & DF_GIB )
+	if ( IsBitFlagSet( damageType, DF_GIB ) )
 	{
 		                             
 	}
-	else if ( damageType & DF_SHOTGUN )
+	else if ( IsBitFlagSet( damageType, DF_SHOTGUN ) )
 	{
 		if ( victim.IsMechanical() )
 			soundAlias = "Android.Shotgun.BulletImpact_KillShot_1P_vs_3P"
@@ -128,7 +128,7 @@ bool function PlayKillshotConfirmSound( entity attacker, entity victim, int dama
 		else
 			soundAlias = "Flesh.Shotgun.BulletImpact_KillShot_1P_vs_3P"
 	}
-	else if ( (damageType & damageTypes.bullet) || (damageType & DF_BULLET) )
+	else if ( IsBitFlagSet( damageType, damageTypes.bullet ) || IsBitFlagSet( damageType, DF_BULLET ) )
 	{
 		if ( victim.IsMechanical() )
 			soundAlias = "Android.BulletImpact_KillShot_1P_vs_3P"                                                    
@@ -137,7 +137,7 @@ bool function PlayKillshotConfirmSound( entity attacker, entity victim, int dama
 		else
 			soundAlias = "Flesh.BulletImpact_KillShot_1P_vs_3P"                                                 
 	}
-	else if ( damageType & damageTypes.largeCaliber )
+	else if ( IsBitFlagSet( damageType, damageTypes.largeCaliber ) )
 	{
 		if ( victim.IsMechanical() )
 			soundAlias = "Android.Heavy.BulletImpact_KillShot_1P_vs_3P"                                            

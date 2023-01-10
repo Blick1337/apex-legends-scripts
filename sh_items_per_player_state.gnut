@@ -230,8 +230,11 @@ void function Newness_IfNecessaryMarkItemFlavorAsNoLongerNewAndInformServer( Ite
 		}
 	}
 
-	SettingsAssetGUID guid = ItemFlavor_GetGUID( flavor )
-	Remote_ServerCallFunction("ClientCallback_newness_clear", guid )
+	if ( IsValid( GetLocalClientPlayer() ) )
+	{
+		SettingsAssetGUID guid = ItemFlavor_GetGUID( flavor )
+		Remote_ServerCallFunction( "ClientCallback_newness_clear", guid )
+	}
 }
 
 array<ItemFlavor> function Newness_GetNewItemFlavorSet()

@@ -157,7 +157,7 @@ void function RumbleForTitanDamage( float damageAmount )
 
 bool function ShouldShowMeleeFlashForDamage( float damage, int damageType, int damageSourceId )
 {
-	if ( !(damageType & DF_MELEE) )
+	if ( !IsBitFlagSet( damageType, DF_MELEE ) )
 		return false
 
 	if ( damageSourceId == eDamageSourceId.prowler_melee )
@@ -215,24 +215,24 @@ void function DoDamageFlashForDamageRecieved( entity player, float damage, int d
 }
 
 
-void function ServerCallback_PlayerTookDamage( float damage, float x, float y, float z, int damageType, int damageSourceId, attackerEHandle )
+void function ServerCallback_PlayerTookDamage( float damage, float x, float y, float z, int damageType, int damageSourceId, int attackerEHandle )
 {
 	if ( IsWatchingThirdPersonKillReplay() )
 		return
 
-	entity attacker        = attackerEHandle ? GetHeavyWeightEntityFromEncodedEHandle( attackerEHandle ) : null
+	entity attacker        = attackerEHandle != 0 ? GetHeavyWeightEntityFromEncodedEHandle( attackerEHandle ) : null
 	entity localViewPlayer = GetLocalViewPlayer()
 	vector damageOrigin    = <x, y, z>
 
-	bool isHeadShot = (damageType & DF_HEADSHOT) ? true : false
-	bool isKillShot = ( (damageType & DF_KILLSHOT) && !(damageType & DF_SHADOW_DAMAGE) ) ? true : false
+	bool isHeadShot = IsBitFlagSet( damageType, DF_HEADSHOT ) ? true : false
+	bool isKillShot = ( IsBitFlagSet( damageType, DF_KILLSHOT) && !IsBitFlagSet( damageType, DF_SHADOW_DAMAGE ) ) ? true : false
 
 	if ( isHeadShot )
 		PlayVictimHeadshotConfirmation( isKillShot )
 
 	                                       
 	                                                      
-	if ( damageType & DF_MELEE )
+	if ( IsBitFlagSet( damageType, DF_MELEE ) )
 	{
 		vector joltDir = Normalize( localViewPlayer.CameraPosition() - damageOrigin )
 		localViewPlayer.CockpitJolt( joltDir * 100.0, 0.25 )
@@ -243,7 +243,7 @@ void function ServerCallback_PlayerTookDamage( float damage, float x, float y, f
 
 	if ( DebugVictimClientDamageFeedbackIsEnabled() && !IsWatchingReplay() )
 	{
-		bool isCritical = (damageType & DF_CRITICAL) ? true : false
+		bool isCritical = IsBitFlagSet( damageType, DF_CRITICAL ) ? true : false
 
 		DebugTookDamagePrint( localViewPlayer, attacker, damage, damageSourceId, isHeadShot, isKillShot, isCritical )
 	}
@@ -459,6 +459,9 @@ void function GrenadeArrowThink( entity player, entity grenade, float damageRadi
 {
 	EndSignal( grenade, "OnDeath" )                                           
 	EndSignal( grenade, "OnDestroy" )
+                        
+                                             
+       
 	EndSignal( player, "OnDeath" )
 
 	wait startDelay
@@ -627,8 +630,8 @@ void function GrenadeArrowThink( entity player, entity grenade, float damageRadi
 				{
 					vector traceOffset  = GetIndicatorTraceOffset( grenade )
 
-					var deferredResult = DeferredTraceLineHighDetail  ( grenade.GetOrigin() + traceOffset, GetRandomOriginWithinBounds( player ), grenade, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
-					TraceResults result = GetDeferredTraceResult(deferredResult)
+					array< entity > ignoreEntities = GetGrenadeIndicactorTraceIgnoreEntities( grenade )
+					TraceResults result = TraceLineHighDetail( grenade.GetOrigin() + traceOffset, GetRandomOriginWithinBounds( player ), ignoreEntities, TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE )
 
 					if ( result.fraction == 1.0 )
 						tracePassed = true
@@ -650,6 +653,9 @@ void function GrenadeArrowThink( entity player, entity grenade, float damageRadi
 		{
 			arrow.EnableDraw()
 			mdl.EnableDraw()
+
+			arrow.kv.rendercolor = GetKeyColor( COLORID_HUD_INDICATOR_ARROW )
+			mdl.kv.rendercolor = GetKeyColor( COLORID_HUD_INDICATOR_GRENADE_MODEL )
 
 			arrow.DisableRenderWithViewModelsNoZoom()
 			arrow.EnableRenderWithCockpit()
@@ -691,6 +697,14 @@ void function GrenadeArrowThink( entity player, entity grenade, float damageRadi
 
 		WaitFrame()
 	}
+}
+
+array< entity > function GetGrenadeIndicactorTraceIgnoreEntities( entity grenade )
+{
+	array< entity > ignoreEntities = [ grenade ]
+	ignoreEntities.extend( GetAllResinShards() )
+
+	return ignoreEntities
 }
 
 
@@ -756,6 +770,14 @@ asset function GetIndicatorModel( entity grenade )
               
                                                           
                                         
+       
+
+                        
+                                                
+  
+                                                            
+                                   
+  
        
 
 	if ( grenade instanceof C_PlayerWaypoint )

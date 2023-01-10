@@ -214,15 +214,6 @@ void function ChargeUpSound_Thread( entity weapon, entity weaponOwner )
 
 bool function OnWeaponAttemptOffhandSwitch_weapon_sonic_blast( entity weapon )
 {
-	int ammoReq  = weapon.GetAmmoPerShot()
-	int currAmmo = weapon.GetWeaponPrimaryClipCount()
-	if ( currAmmo < ammoReq )
-		return false
-
-	entity player = weapon.GetWeaponOwner()
-	if ( player.IsPhaseShifted() )
-		return false
-
 	return true
 }
 
@@ -633,7 +624,7 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
  
 	                                    
 
-	                                                                                                      
+	                                                                                                  
 	                                         
 
                       

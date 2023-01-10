@@ -596,7 +596,7 @@ void function DestroyAfterTime( int fxHandle, float time )
 	                                                                                              
 	                            
 	 
-		                                                                                                                                                                  
+		                                                                                                                                                                             
 		 
 			                                      
 			                                      
@@ -656,15 +656,15 @@ void function DestroyAfterTime( int fxHandle, float time )
                       
                                                                     
    
-                                                         
+                                                          
+                                                                    
+                                                              
    
       
-   
-                                                             
-   
-      
-		                                                          
                             
+		 
+			                                                          
+		 
  
 
                                                                                                              
@@ -673,7 +673,18 @@ void function DestroyAfterTime( int fxHandle, float time )
 		                                                                               
 
 	                                         
-	                                                                                        
+	         
+                      
+                                                                    
+   
+                                                                                  
+                            
+   
+      
+                            
+		 
+			                                                                                 
+		 
 	                          
 
 	                                                                                     
@@ -804,7 +815,16 @@ void function DestroyAfterTime( int fxHandle, float time )
 		 
 	 
 
-	        
+                      
+                                                                    
+   
+           
+   
+      
+                            
+		 
+			        
+		 
  
 
                                                                                           
@@ -850,6 +870,7 @@ void function DestroyAfterTime( int fxHandle, float time )
 	                                                             
 	                                                                    
 	                                   
+	                                                                                            
 
 	                                                     
 
@@ -904,6 +925,32 @@ void function DestroyAfterTime( int fxHandle, float time )
 		                               
 	  
 	                                                         
+ 
+
+                                                                                              
+ 
+	                             
+	 
+		                                
+			                                             
+
+		                                     
+			           
+
+                                
+		                                    
+			                        
+			 
+				                                               
+				                         
+				 
+					                                                 
+				 
+			 
+			            
+       
+	 
+	           
  
 
                                                                                        
@@ -993,14 +1040,9 @@ bool function PlayerCanUseDecoy( entity ownerPlayer )
 {
 	if ( !ownerPlayer.IsZiplining() )
 	{
-		if ( ownerPlayer.IsTraversing() )
-			return false
-
 		if ( ownerPlayer.ContextAction_IsActive() )                                                                                                     
 			return false
 	}
-
-	                                                                                                                                
 
 	return true
 }

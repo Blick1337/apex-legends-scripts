@@ -1200,13 +1200,13 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 				break
 			}
 		}
-		entry.validItemFlavorList = frameList
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.validItemFlavorList       = frameList
+		entry.isSlotLocked              = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		entry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
-		entry.networkVarName = "GladiatorCardFrame"
+		entry.associatedCharacterOrNull = characterClass
+		entry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
+		entry.networkVarName            = "GladiatorCardFrame"
 		#if CLIENT
 			AddCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer( entry, OnGladiatorCardSlotChanged )
 		#endif
@@ -1230,7 +1230,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		entry.isSlotLocked              = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.isActiveConditions        = { [Loadout_Character()] = { [characterClass] = true, }, }
+		entry.associatedCharacterOrNull = characterClass
 		entry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
 		entry.networkVarName            = "GladiatorCardStance"
 		#if CLIENT
@@ -1298,17 +1298,17 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		{
 			entry.defaultItemFlavor = entry.validItemFlavorList[ 0 ]
 		}
-		entry.isItemFlavorUnlocked = (bool function( EHI playerEHI, ItemFlavor badge, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false ) : ( characterClass, badgeIndex ) {
+		entry.isItemFlavorUnlocked      = (bool function( EHI playerEHI, ItemFlavor badge, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false ) : ( characterClass, badgeIndex ) {
 			if( !GetPlayerBadgeIsUnlocked( playerEHI, badge, characterClass ) )
 				return false
 			return IsItemFlavorGRXUnlockedForLoadoutSlot( playerEHI, badge, shouldIgnoreGRX, shouldIgnoreOtherSlots )
 		})
-		entry.isSlotLocked = bool function( EHI playerEHI ) {
+		entry.isSlotLocked              = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.isActiveConditions = { [Loadout_Character()] = { [characterClass] = true, }, }
-		entry.networkTo = eLoadoutNetworking.PLAYER_GLOBAL
-		entry.networkVarName = "GladiatorCardBadge" + badgeIndex
+		entry.associatedCharacterOrNull = characterClass
+		entry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
+		entry.networkVarName            = "GladiatorCardBadge" + badgeIndex
 		#if CLIENT
 			AddCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer( entry, OnGladiatorCardSlotChanged )
 		#endif
@@ -1351,7 +1351,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		#endif
 		tierEntry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_BADGE1_TIER + 2 * badgeIndex
 		                                            
-		tierEntry.isActiveConditions        = { [Loadout_Character()] = { [characterClass] = true, }, }
+		tierEntry.associatedCharacterOrNull = characterClass
 		tierEntry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
 		tierEntry.networkVarName            = "GladiatorCardBadge" + badgeIndex + "Tier"
 		#if CLIENT
@@ -1406,7 +1406,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		entry.isSlotLocked              = bool function( EHI playerEHI ) {
 			return !IsLobby()
 		}
-		entry.isActiveConditions        = { [Loadout_Character()] = { [characterClass] = true, }, }
+		entry.associatedCharacterOrNull = characterClass
 		entry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
 		entry.networkVarName            = "GladiatorCardTracker" + trackerIndex
 		#if CLIENT
@@ -1422,7 +1422,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		#endif
 		valueEntry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.BANNER_TRACKER1_VALUE + 2 * trackerIndex
 		                                             
-		valueEntry.isActiveConditions        = { [Loadout_Character()] = { [characterClass] = true, }, }
+		valueEntry.associatedCharacterOrNull = characterClass
 		valueEntry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
 		valueEntry.networkVarName            = "GladiatorCardTracker" + trackerIndex + "Value"
 		#if CLIENT
@@ -1450,7 +1450,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 #if CLIENT
 void function OnYouDied( entity attacker, float healthFrac, int damageSourceId, float recentHealthDamage )
 {
-	if ( GetGameState() != eGameState.Playing || !IsFiringRangeGameMode() )
+	if ( GetGameState() != eGameState.Playing && !IsFiringRangeGameMode() )
 		return
 
 	if ( !IsValid( attacker ) || !attacker.IsPlayer() )

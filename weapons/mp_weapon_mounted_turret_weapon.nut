@@ -345,6 +345,11 @@ void function OnWeaponReload_weapon_mounted_turret_weapon( entity weapon, int mi
 
 void function OnAnimEvent_weapon_mounted_turret_weapon( entity weapon, string eventName )
 {
+#if CLIENT
+	if ( !weapon.IsPredicted() )
+		return
+#endif
+
 	switch ( eventName )
 	{
 		case "rampart_turret_button_press":

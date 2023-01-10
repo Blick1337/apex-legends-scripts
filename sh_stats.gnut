@@ -53,6 +53,9 @@ global function CurrentModeIsSurvival
                                         
                                          
                                                      
+                           
+                                        
+                                
 
                                                
 
@@ -224,38 +227,40 @@ global function CurrentModeIsSurvival
                       
 
 global const array<string> STATS_ALTERNATE_MODE_REFS = [
-                       
 "arenas",
-      
 "winter_express",
 "shadowroyale",
-                        
 "control",
-                              
-                        
 "gungame",
-      
-                    
+                 
        
-      
+                       
+                               
+"hardcore_survival",
+                                     
+                       
+"date_night",
+                             
 ]
 
+const string STATS_MATCH_TYPE_NONE = "none"
 global const array<string> STATS_MATCH_TYPES = [
 "survival",                                        
-                       
 "arenas",
-      
 "winter_express",
 "shadowroyale",
-                        
 "control",
-                              
-                        
 "gungame",
-      
-                    
+                 
        
-      
+                       
+                               
+"hardcore_survival",
+                                     
+                       
+"date_night",
+                             
+STATS_MATCH_TYPE_NONE,
 ]
 
                                        
@@ -265,24 +270,24 @@ global enum eChallengeGameMode
 {
 	ANY,
 	BATTLE_ROYALE,
-                        
-		ARENAS,
-       
+	ARENAS,
 	NON_MODE,
-                         
-		CONTROL,
-       
+	CONTROL,
                   
 		EXCEPT_BR,
        
-                         
-		GUNGAME,
-       
+	GUNGAME,
 	WINTER_EXPRESS,
 	SHADOW_ROYALE,
-                     
+                  
        
-       
+                        
+                                
+		HARDCORE_BR,
+                                      
+                        
+		DATE_NIGHT,
+                              
 
 	EXPIRED,                                                             
 }
@@ -291,20 +296,20 @@ global enum eChallengeGameMode
                                                                          
 global const table<int, string> GAME_MODE_TO_STAT_REF_MAP =
 {
-                        
-		[eChallengeGameMode.ARENAS] = "arenas",
-       
-                         
-		[eChallengeGameMode.CONTROL] = "control",
-       
-                         
-		[eChallengeGameMode.GUNGAME] = "gungame",
-       
+	[eChallengeGameMode.ARENAS] = "arenas",
+	[eChallengeGameMode.CONTROL] = "control",
+	[eChallengeGameMode.GUNGAME] = "gungame",
 	[eChallengeGameMode.WINTER_EXPRESS] = "winter_express",
 	[eChallengeGameMode.SHADOW_ROYALE] = "shadowroyale",
-                     
+                  
                                      
-       
+                        
+                                
+		[eChallengeGameMode.HARDCORE_BR] = "hardcore_survival",
+                                      
+                        
+		[eChallengeGameMode.DATE_NIGHT] = "date_night",
+                              
 }
 
 #if SERVER || CLIENT || UI
@@ -439,26 +444,25 @@ global struct CareerStats
 	StatTemplate& all_modes_character_placements_win
                         
 
-                        
-		StatTemplate& arenas_badge_perfect_game                                                     
-		StatTemplate& arenas_badge_no_down_win                                             
+	               
+	StatTemplate& arenas_badge_perfect_game                                                     
+	StatTemplate& arenas_badge_no_down_win                                             
 
-		StatTemplate& arenas_cash_stations_captured
-		StatTemplate& arenas_rounds_won
+	StatTemplate& arenas_cash_stations_captured
+	StatTemplate& arenas_rounds_won
 
-		                                                                                                                                 
-		                                                                                                                                 
-		StatTemplate& arenas_character_win_streak_current_new
-		StatTemplate& arenas_character_win_streak_longest_new
-		StatTemplate& arenas_character_kills_max_single_game
-		StatTemplate& arenas_character_damage_done_max_single_game
-		StatTemplate& arenas_character_rounds_won
+	                                                                                                                                 
+	                                                                                                                                 
+	StatTemplate& arenas_character_win_streak_current_new
+	StatTemplate& arenas_character_win_streak_longest_new
+	StatTemplate& arenas_character_kills_max_single_game
+	StatTemplate& arenas_character_damage_done_max_single_game
+	StatTemplate& arenas_character_rounds_won
 
-		StatTemplate& arenas_skills_purchased
-		StatTemplate& arenas_ordnance_purchased
-		StatTemplate& arenas_heals_purchased
-		StatTemplate& arenas_weapons_upgraded
-       
+	StatTemplate& arenas_skills_purchased
+	StatTemplate& arenas_ordnance_purchased
+	StatTemplate& arenas_heals_purchased
+	StatTemplate& arenas_weapons_upgraded
 
 	                 
 	StatTemplate& games_played_any_mode
@@ -486,9 +490,7 @@ global struct CareerStats
 	StatTemplate& evoarmor_evolves_to_red
 	StatTemplate& arenas_win_with_5_kill_ko_assist
 	              
-                         
 	StatTemplate& kills_with_throwing_knife_gungame                                                                                                                                        
-       
 	              
 	StatTemplate& shield_restored
 	StatTemplate& mirror_legend_kills_any_mode
@@ -776,28 +778,25 @@ global struct CareerStats
 
 	StatTemplate& rankedperiod_character_damage_done_max_single_game
 
-                        
-		                
-		StatTemplate& arenas_rankedperiod_games_played
-		StatTemplate& arenas_rankedperiod_current_rank_score
-		StatTemplate& arenas_rankedperiod_gained_rank_score_only
-		StatTemplate& arenas_rankedperiod_badge_award_level
-
-		                        
-		StatTemplate& arenas_rankedperiod_placements_win
-		StatTemplate& arenas_rankedperiod_damage_done
-		StatTemplate& arenas_rankedperiod_damage_done_max_single_game
-		StatTemplate& arenas_rankedperiod_kills_max_single_game
-		StatTemplate& arenas_rankedperiod_kills
-		StatTemplate& arenas_rankedperiod_deaths
-		StatTemplate& arenas_rankedperiod_dooms
-		StatTemplate& arenas_rankedperiod_assists
-		                                                                                                                                     
-		                                                                                   
-		StatTemplate& arenas_rankedperiod_win_streak_current_new
-		StatTemplate& arenas_rankedperiod_win_streak_longest_new
-		StatTemplate& arenas_rankedperiod_revived_ally
-       
+	                
+	StatTemplate& arenas_rankedperiod_games_played
+	StatTemplate& arenas_rankedperiod_current_rank_score
+	StatTemplate& arenas_rankedperiod_gained_rank_score_only
+	StatTemplate& arenas_rankedperiod_badge_award_level
+	                        
+	StatTemplate& arenas_rankedperiod_placements_win
+	StatTemplate& arenas_rankedperiod_damage_done
+	StatTemplate& arenas_rankedperiod_damage_done_max_single_game
+	StatTemplate& arenas_rankedperiod_kills_max_single_game
+	StatTemplate& arenas_rankedperiod_kills
+	StatTemplate& arenas_rankedperiod_deaths
+	StatTemplate& arenas_rankedperiod_dooms
+	StatTemplate& arenas_rankedperiod_assists
+	                                                                                                                                     
+	                                                                                   
+	StatTemplate& arenas_rankedperiod_win_streak_current_new
+	StatTemplate& arenas_rankedperiod_win_streak_longest_new
+	StatTemplate& arenas_rankedperiod_revived_ally
 
 	       
 	StatTemplate& character_solo_dooms
@@ -982,39 +981,10 @@ global struct CareerStats
 	StatTemplate& s12e02_01_br_dooms
 	StatTemplate& s12e02_02_br_damage_done
 
-	                                       
-	                                     
-	                            
-	                            
-	                        
-	                                 
-	StatTemplate& s13e01_buffet_points
-	StatTemplate& s13e01_br_damage_done
-	StatTemplate& s13e01_control_rating
-	StatTemplate& s13e01_br_dooms
-	StatTemplate& s13e01_combined_badge_earned
-
-	                                       
-	                                
-	StatTemplate& s13e02_01_buffet_points
-	StatTemplate& s13e02_02_buffet_points
-
 	                   
 	StatTemplate& s13_flash_01_buffet_points
 
-	                                     
-	                                
-	                                    
-	                         
-	                                 
-                    
-	StatTemplate& s14e01_buffet_points
-    StatTemplate& s14e01_damage_done_any_mode
-    StatTemplate& s14e01_kills_or_assists_any_mode
-	StatTemplate& s14e01_gun_game_wins
-	StatTemplate& s14e01_combined_badge_earned
-      
-
+                                       
                                       
 	                                
 	                                   
@@ -1026,6 +996,36 @@ global struct CareerStats
     StatTemplate& s15e00_damage_done_any_mode
     StatTemplate& s15e00_kills_or_assists_any_mode
 	StatTemplate& s15e00_health_restored_any_mode
+      
+
+                                       
+                                      
+	                                
+	                                    
+	                         
+	                
+                    
+	StatTemplate& s15e01_buffet_points
+	StatTemplate& s15e01_damage_done_any_mode
+	StatTemplate& s15e01_kills_or_assists_any_mode
+	StatTemplate& s15e01_control_wins
+	StatTemplate& s15e01_combined_badge_earned
+      
+
+                                       
+                                             
+	                                
+	                                    
+	                                          
+	                
+                    
+	StatTemplate& s15lny_buffet_points
+	StatTemplate& s15lny_damage_done_any_mode
+	StatTemplate& s15lny_kills_or_assists_any_mode
+                               
+	StatTemplate& s15lny_hardcore_br_top_5
+      
+	StatTemplate& s15lny_combined_badge_earned
       
 
 	           
@@ -1048,7 +1048,7 @@ global struct CareerStats
 	                                                         
 	                                                           
 
-                        
+	                     
 	StatTemplate& gamemode_control_objectives_captured
 	StatTemplate& gamemode_control_personal_exp_points_earned
 	StatTemplate& gamemode_control_capture_bonuses_claimed_by_team
@@ -1060,7 +1060,19 @@ global struct CareerStats
 	StatTemplate& gamemode_control_killed_expleader
 	StatTemplate& gamemode_control_highest_exp_as_expleader
 	StatTemplate& gamemode_control_time_on_objective
-                              
+
+                            
+	               
+	                                 
+	                           
+	                   
+                           
+	StatTemplate& slide_count
+	StatTemplate& armor_upgaraded_count
+	StatTemplate& doors_broken_by_melee
+	StatTemplate& phoenix_kits_used
+	StatTemplate& beginner_distance_kill
+                                
 }
 
 global struct MatchStats
@@ -1153,6 +1165,11 @@ void function ShStats_LevelInit()
 		                                                              
 		                                                         
 		                                                                                
+                            
+		                                                                             
+		                                                          
+                                 
+
 	#endif
 
 }
@@ -1214,14 +1231,13 @@ void function RegisterAllStats()
 		allRankedPeriodRefs.append( ItemFlavor_GetGUIDString( rankedPeriod ) )
 	}
 
-                        
-		array<string> allArenasRankedPeriodRefs = []
-		array<ItemFlavor> allArenasRankedPeriods = GetAllRankedPeriodFlavorsByType( eItemType.calevent_arenas_ranked_period )
-		foreach ( ItemFlavor arenasRankedPeriod in allArenasRankedPeriods )
-		{
-			allArenasRankedPeriodRefs.append( ItemFlavor_GetGUIDString( arenasRankedPeriod ) )
-		}
-       
+	                   
+	array<string> allArenasRankedPeriodRefs = []
+	array<ItemFlavor> allArenasRankedPeriods = GetAllRankedPeriodFlavorsByType( eItemType.calevent_arenas_ranked_period )
+	foreach ( ItemFlavor arenasRankedPeriod in allArenasRankedPeriods )
+	{
+		allArenasRankedPeriodRefs.append( ItemFlavor_GetGUIDString( arenasRankedPeriod ) )
+	}
 
 	const int CHALLENGES_NEED = eStatFlags.STORE_START_OF_PREVIOUS_MATCH | eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY                                       
 	const int CHALLENGES_CALC_DEPENDS = eStatFlags.PERSISTENCE_WRITE_IMMEDIATELY
@@ -1418,24 +1434,23 @@ void function RegisterAllStats()
 	CAREER_STATS.modes_weaponcategory_dooms       = RegisterExpensiveCalculatedStat_Int( modes_weaponcategory_SES, "dooms", CHALLENGES_NEED,
 		SetupModesWeaponCategoryStatSumEntryFunc_Int, [temp_statTemplateReference], MODE_SPECIFIC )       
 
-                        
-		CAREER_STATS.arenas_badge_perfect_game = RegisterAccumulatedStat_Int( null, "arenas_badge_perfect_game", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED | CHALLENGES_NEED )                                                     
-		CAREER_STATS.arenas_badge_no_down_win = RegisterAccumulatedStat_Int( null, "arenas_badge_no_down_win", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )                                             
+	               
+	CAREER_STATS.arenas_badge_perfect_game = RegisterAccumulatedStat_Int( null, "arenas_badge_perfect_game", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED | CHALLENGES_NEED )                                                     
+	CAREER_STATS.arenas_badge_no_down_win = RegisterAccumulatedStat_Int( null, "arenas_badge_no_down_win", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )                                             
 
-		CAREER_STATS.arenas_rounds_won = RegisterAccumulatedStat_Int( null, "arenas_rounds_won", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
-		CAREER_STATS.arenas_cash_stations_captured = RegisterAccumulatedStat_Int( null, "arenas_cash_stations_captured", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
+	CAREER_STATS.arenas_rounds_won = RegisterAccumulatedStat_Int( null, "arenas_rounds_won", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
+	CAREER_STATS.arenas_cash_stations_captured = RegisterAccumulatedStat_Int( null, "arenas_cash_stations_captured", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
 
-		CAREER_STATS.arenas_character_win_streak_current_new = RegisterVariableStat_Int( character_SES, "arenas_character_win_streak_current_new", eChallengeGameMode.ARENAS )       
-		CAREER_STATS.arenas_character_win_streak_longest_new = RegisterAccumulatedStat_Int( character_SES, "arenas_character_win_streak_longest_new", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )       
-		CAREER_STATS.arenas_character_kills_max_single_game = RegisterAccumulatedStat_Int( character_SES, "arenas_character_kills_max_single_game", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )       
-		CAREER_STATS.arenas_character_damage_done_max_single_game = RegisterAccumulatedStat_Int( character_SES, "arenas_character_damage_done_max_single_game", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )       
-		CAREER_STATS.arenas_character_rounds_won = RegisterAccumulatedStat_Int( character_SES, "arenas_character_rounds_won", eChallengeGameMode.ARENAS, CHALLENGES_NEED )       
+	CAREER_STATS.arenas_character_win_streak_current_new = RegisterVariableStat_Int( character_SES, "arenas_character_win_streak_current_new", eChallengeGameMode.ARENAS )       
+	CAREER_STATS.arenas_character_win_streak_longest_new = RegisterAccumulatedStat_Int( character_SES, "arenas_character_win_streak_longest_new", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )       
+	CAREER_STATS.arenas_character_kills_max_single_game = RegisterAccumulatedStat_Int( character_SES, "arenas_character_kills_max_single_game", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )       
+	CAREER_STATS.arenas_character_damage_done_max_single_game = RegisterAccumulatedStat_Int( character_SES, "arenas_character_damage_done_max_single_game", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )       
+	CAREER_STATS.arenas_character_rounds_won = RegisterAccumulatedStat_Int( character_SES, "arenas_character_rounds_won", eChallengeGameMode.ARENAS, CHALLENGES_NEED )       
 
-		CAREER_STATS.arenas_skills_purchased = RegisterAccumulatedStat_Int( null, "arenas_skills_purchased", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
-		CAREER_STATS.arenas_ordnance_purchased = RegisterAccumulatedStat_Int( null, "arenas_ordnance_purchased", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
-		CAREER_STATS.arenas_heals_purchased = RegisterAccumulatedStat_Int( null, "arenas_heals_purchased", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
-		CAREER_STATS.arenas_weapons_upgraded = RegisterAccumulatedStat_Int( null, "arenas_weapons_upgraded", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
-       
+	CAREER_STATS.arenas_skills_purchased = RegisterAccumulatedStat_Int( null, "arenas_skills_purchased", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
+	CAREER_STATS.arenas_ordnance_purchased = RegisterAccumulatedStat_Int( null, "arenas_ordnance_purchased", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
+	CAREER_STATS.arenas_heals_purchased = RegisterAccumulatedStat_Int( null, "arenas_heals_purchased", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
+	CAREER_STATS.arenas_weapons_upgraded = RegisterAccumulatedStat_Int( null, "arenas_weapons_upgraded", eChallengeGameMode.ARENAS, CHALLENGES_NEED )
 
 	          
 	CAREER_STATS.crafting_items_crafted = RegisterAccumulatedStat_Int( null, "items_crafted", eChallengeGameMode.BATTLE_ROYALE, CHALLENGES_NEED )
@@ -1718,26 +1733,25 @@ void function RegisterAllStats()
 	StatEnumStruct rankedperiod_character_SES = RegisterStatEnumStruct( rankedperiod_SES, "characters", "eCharacterFlavor", allCharacterRefs )
 	CAREER_STATS.rankedperiod_character_damage_done_max_single_game = RegisterAccumulatedStat_Int( rankedperiod_character_SES, "character_damage_done_max_single_game", eChallengeGameMode.BATTLE_ROYALE )
 
-                        
-		StatEnumStruct arenasRankedperiod_SES = RegisterStatEnumStruct( null, "arenasrankedperiods", "eArenasRankedPeriodFlavor", allArenasRankedPeriodRefs )
-		CAREER_STATS.arenas_rankedperiod_games_played = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "games_played", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_current_rank_score = RegisterVariableStat_Int( arenasRankedperiod_SES, "current_rank_score", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )
-		CAREER_STATS.arenas_rankedperiod_badge_award_level = RegisterVariableStat_Int( arenasRankedperiod_SES, "badge_award_level", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )
-		CAREER_STATS.arenas_rankedperiod_gained_rank_score_only = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "gained_rank_score_only", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )
+	                      
+	StatEnumStruct arenasRankedperiod_SES = RegisterStatEnumStruct( null, "arenasrankedperiods", "eArenasRankedPeriodFlavor", allArenasRankedPeriodRefs )
+	CAREER_STATS.arenas_rankedperiod_games_played = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "games_played", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_current_rank_score = RegisterVariableStat_Int( arenasRankedperiod_SES, "current_rank_score", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )
+	CAREER_STATS.arenas_rankedperiod_badge_award_level = RegisterVariableStat_Int( arenasRankedperiod_SES, "badge_award_level", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )
+	CAREER_STATS.arenas_rankedperiod_gained_rank_score_only = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "gained_rank_score_only", eChallengeGameMode.ARENAS, BADGES_UNLOCK_NEED )
 
-		                    
-		CAREER_STATS.arenas_rankedperiod_placements_win = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "placements_win", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_damage_done = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "damage_done", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_damage_done_max_single_game = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "damage_done_max_single_game", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_kills = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "kills", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_deaths = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "deaths", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_dooms = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "dooms", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_assists = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "assists", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_kills_max_single_game = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "kills_max_single_game", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_win_streak_current_new = RegisterVariableStat_Int( arenasRankedperiod_SES, "win_streak_current_new", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_win_streak_longest_new = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "win_streak_longest_new", eChallengeGameMode.ARENAS )
-		CAREER_STATS.arenas_rankedperiod_revived_ally = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "revived_ally", eChallengeGameMode.ARENAS )
-       
+	                    
+	CAREER_STATS.arenas_rankedperiod_placements_win = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "placements_win", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_damage_done = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "damage_done", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_damage_done_max_single_game = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "damage_done_max_single_game", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_kills = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "kills", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_deaths = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "deaths", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_dooms = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "dooms", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_assists = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "assists", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_kills_max_single_game = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "kills_max_single_game", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_win_streak_current_new = RegisterVariableStat_Int( arenasRankedperiod_SES, "win_streak_current_new", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_win_streak_longest_new = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "win_streak_longest_new", eChallengeGameMode.ARENAS )
+	CAREER_STATS.arenas_rankedperiod_revived_ally = RegisterAccumulatedStat_Int( arenasRankedperiod_SES, "revived_ally", eChallengeGameMode.ARENAS )
 
 
 	CAREER_STATS.character_solo_dooms = RegisterAccumulatedStat_Int( character_SES, "solo_dooms", eChallengeGameMode.EXPIRED )       
@@ -1886,19 +1900,6 @@ void function RegisterAllStats()
 	CAREER_STATS.s12e02_01_br_dooms              = RegisterAccumulatedStat_Int( null, "s12e02_01_br_dooms", eChallengeGameMode.EXPIRED )
 	CAREER_STATS.s12e02_02_br_damage_done        = RegisterAccumulatedStat_Int( null, "s12e02_02_br_damage_done", eChallengeGameMode.EXPIRED )
 
-	                                       
-	                                     
-	CAREER_STATS.s13e01_buffet_points            = RegisterAccumulatedStat_Int( null, "s13e01_buffet_points", eChallengeGameMode.NON_MODE, CHALLENGES_NEED )
-	CAREER_STATS.s13e01_br_damage_done			 = RegisterAccumulatedStat_Int( null, "s13e01_br_damage_done", eChallengeGameMode.BATTLE_ROYALE, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
-	CAREER_STATS.s13e01_control_rating           = RegisterAccumulatedStat_Int( null, "s13e01_control_rating", eChallengeGameMode.CONTROL, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
-	CAREER_STATS.s13e01_br_dooms                 = RegisterAccumulatedStat_Int( null, "s13e01_br_dooms", eChallengeGameMode.BATTLE_ROYALE, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
-	CAREER_STATS.s13e01_combined_badge_earned    = RegisterExpensiveCalculatedStat_Int( null, "s13e01_combined_badge_earned", CHALLENGES_NEED | BADGES_UNLOCK_NEED, SetupGetAwakeningCombinedBadgeEarned, [], eChallengeGameMode.NON_MODE )
-
-	                                       
-	                                
-	CAREER_STATS.s13e02_01_buffet_points          = RegisterAccumulatedStat_Int( null, "s13e02_01_buffet_points", eChallengeGameMode.NON_MODE, CHALLENGES_NEED )
-	CAREER_STATS.s13e02_02_buffet_points          = RegisterAccumulatedStat_Int( null, "s13e02_02_buffet_points", eChallengeGameMode.NON_MODE, CHALLENGES_NEED )
-
 	                                                                                                                                                                                                                         
 	CAREER_STATS.s12e04_challenge_1            = RegisterAccumulatedStat_Int( null, "s12e04_challenge_1", eChallengeGameMode.NON_MODE, CHALLENGES_CALC_DEPENDS )
 	CAREER_STATS.s12e04_challenge_2            = RegisterAccumulatedStat_Int( null, "s12e04_challenge_2", eChallengeGameMode.NON_MODE, CHALLENGES_CALC_DEPENDS )
@@ -1906,15 +1907,6 @@ void function RegisterAllStats()
 
 	                   
 	CAREER_STATS.s13_flash_01_buffet_points    = RegisterAccumulatedStat_Int( null, "s13_flash_01_buffet_points", eChallengeGameMode.NON_MODE, CHALLENGES_NEED )
-
-	                                     
-                     
-	CAREER_STATS.s14e01_buffet_points                = RegisterAccumulatedStat_Int( null, "s14e01_buffet_points", eChallengeGameMode.NON_MODE, CHALLENGES_NEED )
-	CAREER_STATS.s14e01_damage_done_any_mode	     = RegisterAccumulatedStat_Int( null, "s14e01_damage_done_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
-    CAREER_STATS.s14e01_kills_or_assists_any_mode    = RegisterAccumulatedStat_Int( null, "s14e01_kills_or_assists_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
-    CAREER_STATS.s14e01_gun_game_wins                = RegisterAccumulatedStat_Int( null, "s14e01_gun_game_wins", eChallengeGameMode.GUNGAME, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
-    CAREER_STATS.s14e01_combined_badge_earned        = RegisterExpensiveCalculatedStat_Int( null, "s14e01_combined_badge_earned", CHALLENGES_NEED | BADGES_UNLOCK_NEED, SetupGetPredatorsCombinedBadgeEarned, [], eChallengeGameMode.NON_MODE )
-          
 
 	                                      
                      
@@ -1925,6 +1917,32 @@ void function RegisterAllStats()
     CAREER_STATS.s15e00_kills_or_assists_any_mode    = RegisterAccumulatedStat_Int( null, "s15e00_kills_or_assists_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
     CAREER_STATS.s15e00_health_restored_any_mode     = RegisterAccumulatedStat_Int( null, "s15e00_health_restored_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
           
+
+	                                      
+	                                
+	                                    
+	                           
+                     
+	CAREER_STATS.s15e01_buffet_points				= RegisterAccumulatedStat_Int( null, "s15e01_buffet_points", eChallengeGameMode.NON_MODE, CHALLENGES_NEED )
+	CAREER_STATS.s15e01_damage_done_any_mode		= RegisterAccumulatedStat_Int( null, "s15e01_damage_done_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
+	CAREER_STATS.s15e01_kills_or_assists_any_mode	= RegisterAccumulatedStat_Int( null, "s15e01_kills_or_assists_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
+	CAREER_STATS.s15e01_control_wins				= RegisterAccumulatedStat_Int( null, "s15e01_control_wins", eChallengeGameMode.CONTROL, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
+	CAREER_STATS.s15e01_combined_badge_earned       = RegisterExpensiveCalculatedStat_Int( null, "s15e01_combined_badge_earned", CHALLENGES_NEED | BADGES_UNLOCK_NEED, SetupGetSpellboundCombinedBadgeEarned, [], eChallengeGameMode.NON_MODE )
+       
+
+	                                             
+	                                
+	                                    
+	                                            
+                     
+	CAREER_STATS.s15lny_buffet_points				= RegisterAccumulatedStat_Int( null, "s15lny_buffet_points", eChallengeGameMode.NON_MODE, CHALLENGES_NEED )
+	CAREER_STATS.s15lny_damage_done_any_mode		= RegisterAccumulatedStat_Int( null, "s15lny_damage_done_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
+	CAREER_STATS.s15lny_kills_or_assists_any_mode	= RegisterAccumulatedStat_Int( null, "s15lny_kills_or_assists_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
+                                
+	CAREER_STATS.s15lny_hardcore_br_top_5			= RegisterAccumulatedStat_Int( null, "s15lny_hardcore_br_top_5", eChallengeGameMode.HARDCORE_BR, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
+	CAREER_STATS.s15lny_combined_badge_earned       = RegisterExpensiveCalculatedStat_Int( null, "s15lny_combined_badge_earned", CHALLENGES_NEED | BADGES_UNLOCK_NEED, SetupGetCelestialSunriseCombinedBadgeEarned, [], eChallengeGameMode.NON_MODE )
+       
+       
 
 	                      
 	CAREER_STATS.kills_with_red_weapons_any_mode = RegisterAccumulatedStat_Int( null, "kills_with_red_weapons_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED )            
@@ -1944,9 +1962,11 @@ void function RegisterAllStats()
 	CAREER_STATS.damage_done_ordnance_any_mode   = RegisterAccumulatedStat_Int( null, "damage_done_ordnance_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED )           
 	CAREER_STATS.evoarmor_evolves_to_red         = RegisterAccumulatedStat_Int( null, "evoarmor_evolves_to_red", eChallengeGameMode.BATTLE_ROYALE, CHALLENGES_NEED )           
 	CAREER_STATS.arenas_win_with_5_kill_ko_assist = RegisterAccumulatedStat_Int( null, "arenas_win_with_5_kill_ko_assist", eChallengeGameMode.ARENAS, CHALLENGES_NEED )           
-                         
+
+	                
 	CAREER_STATS.kills_with_throwing_knife_gungame = RegisterAccumulatedStat_Int( null, "kills_with_throwing_knife_gungame", eChallengeGameMode.GUNGAME, CHALLENGES_NEED )           
-       
+
+
 	CAREER_STATS.shield_restored = RegisterAccumulatedStat_Int( null, "shield_restored", eChallengeGameMode.BATTLE_ROYALE, CHALLENGES_NEED )           
 	CAREER_STATS.mirror_legend_kills_any_mode = RegisterAccumulatedStat_Int( null, "mirror_legend_kills_any_mode", eChallengeGameMode.ANY, CHALLENGES_NEED )           
 	CAREER_STATS.equipped_attachment = RegisterAccumulatedStat_Int( null, "equipped_attachment", eChallengeGameMode.BATTLE_ROYALE, CHALLENGES_NEED )           
@@ -1968,19 +1988,26 @@ void function RegisterAllStats()
 	                                                                                                                                           
 	                                                                                                                                               
 
-                         
-		CAREER_STATS.gamemode_control_objectives_captured = RegisterAccumulatedStat_Int( null, "gamemode_control_objectives_captured", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
-		CAREER_STATS.gamemode_control_personal_exp_points_earned = RegisterAccumulatedStat_Int( null, "gamemode_control_personal_exp_points_earned", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
-		CAREER_STATS.gamemode_control_capture_bonuses_claimed_by_team = RegisterAccumulatedStat_Int( null, "gamemode_control_capture_bonuses_claimed_by_team", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
-		CAREER_STATS.gamemode_control_killed_enemy_1_tier_higher = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_enemy_1_tier_higher", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
-		CAREER_STATS.gamemode_control_killed_enemy_2_tier_higher = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_enemy_2_tier_higher", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
-		CAREER_STATS.gamemode_control_killed_objective_attacker = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_objective_attacker", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
-		CAREER_STATS.gamemode_control_killed_objective_defender = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_objective_defender", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
-		CAREER_STATS.gamemode_control_became_expleader = RegisterAccumulatedStat_Int( null, "gamemode_control_became_expleader", eChallengeGameMode.CONTROL, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
-		CAREER_STATS.gamemode_control_killed_expleader = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_expleader", eChallengeGameMode.CONTROL, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
-		CAREER_STATS.gamemode_control_highest_exp_as_expleader = RegisterAccumulatedStat_Int( null, "gamemode_control_highest_exp_as_expleader", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
-		CAREER_STATS.gamemode_control_time_on_objective = RegisterAccumulatedStat_Int( null, "gamemode_control_time_on_objective", eChallengeGameMode.CONTROL, TRACKERS_NEED )
-                               
+	                     
+	CAREER_STATS.gamemode_control_objectives_captured = RegisterAccumulatedStat_Int( null, "gamemode_control_objectives_captured", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
+	CAREER_STATS.gamemode_control_personal_exp_points_earned = RegisterAccumulatedStat_Int( null, "gamemode_control_personal_exp_points_earned", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
+	CAREER_STATS.gamemode_control_capture_bonuses_claimed_by_team = RegisterAccumulatedStat_Int( null, "gamemode_control_capture_bonuses_claimed_by_team", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
+	CAREER_STATS.gamemode_control_killed_enemy_1_tier_higher = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_enemy_1_tier_higher", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
+	CAREER_STATS.gamemode_control_killed_enemy_2_tier_higher = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_enemy_2_tier_higher", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
+	CAREER_STATS.gamemode_control_killed_objective_attacker = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_objective_attacker", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
+	CAREER_STATS.gamemode_control_killed_objective_defender = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_objective_defender", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
+	CAREER_STATS.gamemode_control_became_expleader = RegisterAccumulatedStat_Int( null, "gamemode_control_became_expleader", eChallengeGameMode.CONTROL, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
+	CAREER_STATS.gamemode_control_killed_expleader = RegisterAccumulatedStat_Int( null, "gamemode_control_killed_expleader", eChallengeGameMode.CONTROL, CHALLENGES_NEED | BADGES_UNLOCK_NEED )
+	CAREER_STATS.gamemode_control_highest_exp_as_expleader = RegisterAccumulatedStat_Int( null, "gamemode_control_highest_exp_as_expleader", eChallengeGameMode.CONTROL, CHALLENGES_NEED )
+	CAREER_STATS.gamemode_control_time_on_objective = RegisterAccumulatedStat_Int( null, "gamemode_control_time_on_objective", eChallengeGameMode.CONTROL, TRACKERS_NEED )
+
+                            
+		CAREER_STATS.slide_count = RegisterAccumulatedStat_Int( null, "slide_count", eChallengeGameMode.ANY, CHALLENGES_NEED )
+		CAREER_STATS.armor_upgaraded_count = RegisterAccumulatedStat_Int( null, "armor_upgaraded_count", eChallengeGameMode.ANY, CHALLENGES_NEED )
+		CAREER_STATS.doors_broken_by_melee = RegisterAccumulatedStat_Int( null, "doors_broken_by_melee", eChallengeGameMode.ANY, CHALLENGES_NEED )
+		CAREER_STATS.phoenix_kits_used = RegisterAccumulatedStat_Int( null, "phoenix_kits_used", eChallengeGameMode.BATTLE_ROYALE, CHALLENGES_NEED )
+		CAREER_STATS.beginner_distance_kill = RegisterAccumulatedStat_Int( null, "beginner_distance_kill", eChallengeGameMode.BATTLE_ROYALE, CHALLENGES_NEED )
+                                 
 }
 #endif
 
@@ -2034,7 +2061,7 @@ bool function IsValidMapForStats()
  
 	                           
 
-	                             
+	                               
 		            
 
 	                                       
@@ -2043,12 +2070,14 @@ bool function IsValidMapForStats()
 	           
  
 
-                                   
+                                     
  
-	       
 	                                                         
 		            
-	      
+
+	                                                                                            
+	                                                                                             
+		            
 
 	                                       
 		            
@@ -2087,6 +2116,9 @@ bool function IsValidMapForStats()
 
                                                     
  
+	                                                         
+		            
+
 	                                            
 	                            
 		            
@@ -2457,11 +2489,13 @@ bool function IsValidMapForStats()
 
 			                                                
                        
-				                                                                                                                        
-				 
-					                                    
-						                                                                                       
-				 
+			                                                                                                                        
+			 
+                            
+				                                          
+					                                                                                      
+          
+			 
          
 
                           
@@ -2732,6 +2766,13 @@ bool function IsValidMapForStats()
 		 
 			                                                                                                                                             
 		 
+
+                      
+                                    
+		                                                                                                                                                
+			                                                                                                         
+        
+        
 	 
 
 	                                              
@@ -2759,6 +2800,11 @@ bool function IsValidMapForStats()
 	                                                                                            
 	                                                                                                                                                        
 		                                                                                        
+
+                           
+	                     
+		                                                         
+                                
 
  
 
@@ -2968,6 +3014,22 @@ bool function IsValidMapForStats()
        
  
 
+                           
+                                                                                            
+ 
+	                           
+
+	                                                            
+		      
+
+	               
+		      
+
+	                                               
+		                                                                                    
+ 
+                                
+
                                                                                                          
  
 	                             
@@ -3033,6 +3095,10 @@ bool function IsValidMapForStats()
 	                                                                            
 	                       
 		                                                                
+
+                            
+		                                                                                                         
+       
 
 	                                                                   
 	 
@@ -3132,6 +3198,16 @@ bool function IsValidMapForStats()
 	                                      
 	                                                                                   
  
+
+                           
+                                                           
+ 
+	                                                                 
+		      
+
+	                                                                              
+ 
+                                
 #endif
 
 
@@ -3151,6 +3227,13 @@ bool function IsValidMapForStats()
 		      
 
 	                                                                                                               
+ 
+
+                                                                                                            
+ 
+	                                                                                       
+	                                   
+		                                                           
  
 
                                                                                          
@@ -3205,16 +3288,24 @@ bool function IsValidMapForStats()
 
 	                                             
 
+	                                                                                     
+
+	                                                                 
+	                        
+	                                      
+	                                    
+                            
+		                                                        
+			                                                                                                             
+                                 
+
 	                                   
 		      
 
 	                                                                                   
 
-	                                                 
+	                    
 	 
-		                         
-			      
-
 		                                           
 		                                  
 		                                       
@@ -3263,13 +3354,7 @@ bool function IsValidMapForStats()
 			                                                                                                                                      
 		 
 
-		                                                                 
-		                        
-		                                      
-		                                    
-		                                                                                                                  
-		                                   
-			                                                                                                             
+		                                                                                                    
 
 		                                            
 		 
@@ -3305,7 +3390,7 @@ bool function IsValidMapForStats()
 		                               
 	 
 
-	                                        
+	                                                    
 
 	                                                                      
 
@@ -3321,7 +3406,7 @@ bool function IsValidMapForStats()
 	                                                            
 		                                                                                                  
 
-	                  
+	                            
 	 
 		                                                                               
 
@@ -3369,7 +3454,7 @@ bool function IsValidMapForStats()
 	                                       
 		      
 
-	                                        
+	                                                    
 
 	                                                                                              
 	                                                                        
@@ -3391,7 +3476,7 @@ bool function IsValidMapForStats()
 		 
        
 
-	                  
+	                            
 	 
 		                                                                         
 		                                                                                                       
@@ -3429,7 +3514,7 @@ bool function IsValidMapForStats()
 			                        
 			                                                                                        
 
-			                  
+			                            
 			 
 				                                                                               
 				                                                                                                                                        
@@ -3514,14 +3599,20 @@ bool function IsValidMapForStats()
 
 		                                                
                       
-			                                                                                                                        
+			                                                                                                                           
 				                                                                                                   
         
 
 		                                                
                       
-			                                                                                                                           
-				                                                                                                   
+		                                                                                                                        
+			                                                                                                   
+        
+
+		                                                
+                      
+		                                                                                                                        
+			                                                                                                   
         
 
 		                                                               
@@ -3540,7 +3631,7 @@ bool function IsValidMapForStats()
 		                                                                     
 	 
 
-	                   
+	                             
 		      
 
 	                 
@@ -3639,14 +3730,20 @@ bool function IsValidMapForStats()
 
 	                                                
                      
-		                                                                                                                        
+		                                                                                                                           
 			                                                                                                            
+       
+	
+	                                                
+                     
+	                                                                                                                        
+		                                                                                                            
        
 
 	                                                
                      
-		                                                                                                                           
-			                                                                                                            
+	                                                                                                                        
+		                                                                                                            
        
 
 	               
@@ -3658,7 +3755,7 @@ bool function IsValidMapForStats()
 		 
        
 
-	                             
+	                               
 		      
 
 	                                                                                   
@@ -3697,6 +3794,16 @@ bool function IsValidMapForStats()
 	                           
 		                                                    
  
+
+                            
+                                                                                                     
+ 
+	                                      
+		      
+	                                            
+			                                                                                        
+ 
+                                 
 
                                                           
  
@@ -3902,19 +4009,25 @@ bool function IsValidMapForStats()
 			                                                                                  
 
 			                                                                                              
-			                                                              
+			                                                                             
 				                                                                                                     
 
 			                                                
                        
-				                                                                                                                        
-					                                                                                                           
+			                                                                                                                           
+				                                                                                                           
          
 
 			                                                
                        
-				                                                                                                                           
-					                                                                                                           
+			                                                                                                                        
+				                                                                                                           
+         
+
+			                                                
+                       
+			                                                                                                                        
+				                                                                                                           
          
 
 			                                     
@@ -3938,7 +4051,7 @@ bool function IsValidMapForStats()
 
 			                                                   
 			                                                        
-					                                                                           
+					                                                                       
 			 
 				                                                     
 			 
@@ -4123,7 +4236,7 @@ bool function IsValidMapForStats()
 	                                                                 
 
 	                                                          
-	                                                       
+	                                                                                                           
 	 
 		                                       
 		                                                                  
@@ -4248,6 +4361,17 @@ bool function IsValidMapForStats()
 	  	             
 	   
  
+
+                           
+                                                                                                          
+ 
+	                                        
+		      
+
+	                                                                                                                              
+		                                                                                          
+ 
+                                     
 
                                                                                          
  
@@ -4374,7 +4498,7 @@ bool function IsValidMapForStats()
  
 	                                          
 
-	                                                                        
+	                                                                  
 		                                                                                                         
  
 
@@ -4400,7 +4524,7 @@ bool function IsValidMapForStats()
  
 	                                          
 
-	                                                                      
+	                                                                
 	                                                                                           
 		                                                                                                                    
  
@@ -4422,8 +4546,13 @@ bool function IsValidMapForStats()
  
 	                                          
 
-	                                                                        
+                         
+                                                                                
+      
+		                                                                        
+       
 		      
+
 
 	                                       
 		      
@@ -4748,7 +4877,7 @@ bool function IsValidMapForStats()
 
 	                                                           
 
-	                                                                          
+	                                                                      
 	 
 		        
 	 
@@ -4792,7 +4921,7 @@ bool function IsValidMapForStats()
 
 	                                                           
 
-	                                                                                 
+	                                                                             
 	 
 		        
 	 
@@ -6444,24 +6573,25 @@ StatCalcFuncInfo function SetupGetS12ACECombinedBadgeEarned( StatEntry calcEntry
  }
  #endif
 
+                                        
+                     
  #if (SERVER || CLIENT || UI)
- StatCalcFuncInfo function SetupGetAwakeningCombinedBadgeEarned( StatEntry calcEntry, array<StatTemplate> sourceTemplates )
+ StatCalcFuncInfo function SetupGetSpellboundCombinedBadgeEarned( StatEntry calcEntry, array<StatTemplate> sourceTemplates )
  {
 	 StatCalcFuncInfo info
 
-	                              
-	                                           
-	                                                        
-	    
+	                                  
+	                                     
+	                            
 
 	 info.calcFunc_Int = (int function ( entity player, array<StatEntry> sourceEntries, int when ) {
 		 int count = 0
 
-		 int control_rating    = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s13e01_control_rating ), when )
-		 int br_damage        = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s13e01_br_damage_done ), when )
-		 int br_knockdowns	 = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s13e01_br_dooms ), when )
+		 int damage_done    = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s15e01_damage_done_any_mode ), when )
+		 int kills_assists  = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s15e01_kills_or_assists_any_mode ), when )
+		 int control_wins	= GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s15e01_control_wins ), when )
 
-		 if ( control_rating >= 30000 && br_damage >= 10000 && br_knockdowns >= 100 )
+		 if ( damage_done >= 50000 && kills_assists >= 200 && control_wins >= 10 )
 			 count = 1
 
 		 return count
@@ -6470,35 +6600,36 @@ StatCalcFuncInfo function SetupGetS12ACECombinedBadgeEarned( StatEntry calcEntry
 	 return info
  }
  #endif
+       
 
-                    
-#if (SERVER || CLIENT || UI)
-StatCalcFuncInfo function SetupGetPredatorsCombinedBadgeEarned( StatEntry calcEntry, array<StatTemplate> sourceTemplates )
-{
- 	 StatCalcFuncInfo info
+                                        
+                                                    
+ #if (SERVER || CLIENT || UI)
+ StatCalcFuncInfo function SetupGetCelestialSunriseCombinedBadgeEarned( StatEntry calcEntry, array<StatTemplate> sourceTemplates )
+ {
+	 StatCalcFuncInfo info
 
- 	                                  
- 	                                        
- 	                              
- 	    
+	                                 
+	                                    
+	                                            
 
- 	 info.calcFunc_Int = (int function ( entity player, array<StatEntry> sourceEntries, int when ) {
- 		 int count = 0
+	 info.calcFunc_Int = (int function ( entity player, array<StatEntry> sourceEntries, int when ) {
+		 int count = 0
 
- 		 int damage_done    = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s14e01_damage_done_any_mode ), when )
- 		 int kills_assists  = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s14e01_kills_or_assists_any_mode ), when )
- 		 int gunrun_wins	= GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s14e01_gun_game_wins ), when )
+		 int damage_done    = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s15lny_damage_done_any_mode ), when )
+		 int kills_assists  = GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s15lny_kills_or_assists_any_mode ), when )
+		 int hcbr_top_5	= GetStat_Int( player, ResolveStatEntry( CAREER_STATS.s15lny_hardcore_br_top_5 ), when )
 
- 		 if ( damage_done >= 50000 && kills_assists >= 200 && gunrun_wins >= 10 )
- 			 count = 1
+		 if ( damage_done >= 35000 && kills_assists >= 50 && hcbr_top_5 >= 5 )
+			 count = 1
 
- 		 return count
- 	 })
+		 return count
+	 })
 
- 	 return info
-}
-#endif
-      
+	 return info
+ }
+ #endif
+       
 
 #if SERVER || CLIENT || UI
 StatCalcFuncInfo function SetupGetS08E04FinaleNotCompletedForStat( StatEntry calcEntry, array<StatTemplate> sourceTemplates )

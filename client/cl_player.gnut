@@ -27,6 +27,10 @@ global function StopLocal1PDeathSound
 
 global function ServerCallback_HideNextSpawnMessage
 
+global function ClientCodeCallback_GetPlayerDebugStateInfo
+global function ClientCodeCallback_GetPlayerDebugStateDynamicFields
+global function AddPlayerDebugStateDynamicField
+
 global function ClientCodeCallback_OnHealthChanged
 global function ClientCodeCallback_OnCrosshairCurrentTargetChanged
                                        
@@ -61,6 +65,7 @@ struct {
 
 	float lastBloodDecalTime = 0
 
+	array< string > playerDebugStateDynamicFields
 } file
 
 struct BloodDecalParams
@@ -346,7 +351,7 @@ void function ClientPlayerClassChanged( entity player, newClass )
 			break
 
 		default:
-			Assert( 0, "Unknown class \"" + newClass + "\"" )
+			Assert( false, "Unknown class \"" + newClass + "\"" )
 	}
 }
 
@@ -423,8 +428,12 @@ void function PlayerConnectedOrDisconnected( entity player, int state )
 	if ( IsLobby() || GetMapName() == "" )
 		                                                                          
 		return
-	if ( !GetLocalViewPlayer() )
+
+	entity localViewPlayer = GetLocalViewPlayer()
+
+	if ( !localViewPlayer )
 		return
+
 	if ( !ShouldShowObituaryLineForPlayer( player ) )
 		return
 
@@ -432,7 +441,13 @@ void function PlayerConnectedOrDisconnected( entity player, int state )
 	if ( state == 0 )
 		return
 
-	if ( player.GetTeam() == GetLocalViewPlayer().GetTeam() )
+	int playerTeam = player.GetTeam()
+	int localPlayerTeam = localViewPlayer.GetTeam()
+
+	                                                                                          
+	bool shouldShowObitForAllianceMembers = AllianceProximity_IsUsingAlliances() && AllianceProximity_GetAllianceFromTeam( playerTeam ) == AllianceProximity_GetAllianceFromTeam( localPlayerTeam ) && GetGameState() == eGameState.Playing
+
+	if ( playerTeam == localPlayerTeam || shouldShowObitForAllianceMembers )
 	{
 		string playerName = GetPlayerNameFromEHI( ToEHI( player ) )
 		vector playerNameColor = <255, 255, 255>
@@ -481,20 +496,20 @@ void function ClientCodeCallback_PlayerDidDamage( PlayerDidDamageParams params )
 	bool hitIneffective            = false
 	bool victimIsHeavyArmor        = victim.GetArmorType() == ARMOR_TYPE_HEAVY
 	bool victimHasShieldRemaining  = victim.GetShieldHealth() - damageAmount > 0
-	bool isShieldShot              = (damageType & DF_SHIELD_DAMAGE) && victimHasShieldRemaining ? true : false
-	bool isCritShot                = (damageType & DF_CRITICAL) ? true : false
-	bool isHeadShot                = (damageType & DF_HEADSHOT) ? true : false
-	bool isKillShot                = (damageType & DF_KILLSHOT) ? true : false
-	bool isMelee                   = (damageType & DF_MELEE) ? true : false
-	bool isExplosion               = (damageType & DF_EXPLOSION) ? true : false
-	bool isBullet                  = (damageType & DF_BULLET) ? true : false
-	bool isShotgun                 = (damageType & DF_SHOTGUN) ? true : false
-	bool isArmorShot               = (damageFlags & DAMAGEFLAG_VICTIM_ARMORED) && victimHasShieldRemaining ? true : false
-	bool isVortexHit               = (damageFlags & DAMAGEFLAG_VICTIM_HAS_VORTEX) ? true : false
-	bool isKnockdownShot           = (damageType & DF_KNOCKDOWN) ? true : false
-	bool isShieldBreak             = (damageType & DF_SHIELD_BREAK) ? true : false
-	bool isShadowShot              = (damageType & DF_SHADOW_DAMAGE) ? true : false
-	bool isOvershieldShot          = (damageType & DF_OVERSHIELD) ? true : false
+	bool isShieldShot              = bool(damageType & DF_SHIELD_DAMAGE) && victimHasShieldRemaining ? true : false
+	bool isCritShot                = bool(damageType & DF_CRITICAL) ? true : false
+	bool isHeadShot                = bool(damageType & DF_HEADSHOT) ? true : false
+	bool isKillShot                = bool(damageType & DF_KILLSHOT) ? true : false
+	bool isMelee                   = bool(damageType & DF_MELEE) ? true : false
+	bool isExplosion               = bool(damageType & DF_EXPLOSION) ? true : false
+	bool isBullet                  = bool(damageType & DF_BULLET) ? true : false
+	bool isShotgun                 = bool(damageType & DF_SHOTGUN) ? true : false
+	bool isArmorShot               = bool(damageFlags & DAMAGEFLAG_VICTIM_ARMORED) && victimHasShieldRemaining ? true : false
+	bool isVortexHit               = bool(damageFlags & DAMAGEFLAG_VICTIM_HAS_VORTEX) ? true : false
+	bool isKnockdownShot           = bool(damageType & DF_KNOCKDOWN) ? true : false
+	bool isShieldBreak             = bool(damageType & DF_SHIELD_BREAK) ? true : false
+	bool isShadowShot              = bool(damageType & DF_SHADOW_DAMAGE) ? true : false
+	bool isOvershieldShot          = bool(damageType & DF_OVERSHIELD) ? true : false
 
 	bool playKillSound = isKillShot
 
@@ -513,32 +528,32 @@ void function ClientCodeCallback_PlayerDidDamage( PlayerDidDamageParams params )
 			switch ( victim.GetNetworkedClassName() )
 			{
 				case "npc_super_spectre":
-					                                      
+					                                                 
 					  	                     
 
 				default:
-					if ( (damageType & DF_BULLET && damageType & DF_MAX_RANGE) )
+					if ( IsBitFlagSet( damageType, DF_BULLET ) && IsBitFlagSet( damageType, DF_MAX_RANGE ) )
 						hitIneffective = true
 					break
 			}
 		}
 	}
 
-	if ( damageType & DF_MAX_RANGE && damageType & DF_BULLET )
+	if ( IsBitFlagSet( damageType, DF_MAX_RANGE ) && IsBitFlagSet( damageType, DF_BULLET ) )
 	{
 		                                                          
 		playHitSound = false
 		hitIneffective = true
 	}
 
-	if ( damageType & DF_MELEE )
-		                                                          
+	if ( IsBitFlagSet( damageType, DF_MELEE ) )
 	{
+		                                                          
 		playHitSound = false
 		playKillSound = false
 	}
 
-	if ( damageType & DF_NO_HITBEEP )
+	if ( IsBitFlagSet( damageType, DF_NO_HITBEEP ) )
 	{
 		playHitSound = false
 		playKillSound = false
@@ -558,13 +573,13 @@ void function ClientCodeCallback_PlayerDidDamage( PlayerDidDamageParams params )
 	else if ( isArmorShot || isShieldShot )
 	{
 		int armorTier = 0
-		if ( damageFlags & DAMAGEFLAG_ARMOR1 )
+		if ( IsBitFlagSet( damageFlags, DAMAGEFLAG_ARMOR1 ) )
 			armorTier = 1
-		else if ( damageFlags & DAMAGEFLAG_ARMOR2 )
+		else if ( IsBitFlagSet( damageFlags, DAMAGEFLAG_ARMOR2 ) )
 			armorTier = 2
-		else if ( damageFlags & DAMAGEFLAG_ARMOR3 )
+		else if ( IsBitFlagSet( damageFlags, DAMAGEFLAG_ARMOR3 ) )
 			armorTier = 3
-		else if ( damageFlags & DAMAGEFLAG_ARMOR4 )
+		else if ( IsBitFlagSet( damageFlags, DAMAGEFLAG_ARMOR4 ) )
 			armorTier = 4
 
 		vector armorColor = GetFXRarityColorForTier( armorTier )
@@ -580,7 +595,7 @@ void function ClientCodeCallback_PlayerDidDamage( PlayerDidDamageParams params )
 		showCrosshairHitIndicator = false
 	}
 
-	                                     
+	                                                    
 	   
 	  	                    
 	  	                     
@@ -652,11 +667,11 @@ void function ClientCodeCallback_PlayerDidDamage( PlayerDidDamageParams params )
 
 void function PlayHitSound( entity victim, entity attacker, int damageFlags, bool isCritShot, bool isShieldShot, bool victimIsHeavyArmor, bool isKillShot, int hitType )
 {
-	if ( damageFlags & DAMAGEFLAG_VICTIM_INVINCIBLE )
+	if ( IsBitFlagSet( damageFlags, DAMAGEFLAG_VICTIM_INVINCIBLE ) )
 	{
 		EmitSoundOnEntity( attacker, "Player.HitbeepInvincible" )
 	}
-	else if ( damageFlags & DAMAGEFLAG_VICTIM_HAS_VORTEX )
+	else if ( IsBitFlagSet( damageFlags, DAMAGEFLAG_VICTIM_HAS_VORTEX ) )
 	{
 		EmitSoundOnEntity( attacker, "Player.HitbeepVortex" )
 	}
@@ -898,7 +913,7 @@ void function BloodSprayDecals_Think( entity player, entity victim, vector damag
 	  		                                             
 	   
 	  
-	                        
+	                            
 	  	      
 	  
 	                                         
@@ -1053,7 +1068,7 @@ string function BloodSprayDecals_Toggle()
 
 void function ServerCallback_OnEntityKilled( entity attacker, entity victim, int scriptDamageType, int damageSourceId )
 {
-	bool isHeadShot = (scriptDamageType & DF_HEADSHOT) > 0
+	bool isHeadShot = IsBitFlagSet( scriptDamageType, DF_HEADSHOT)
 
 	entity localClientPlayer = GetLocalClientPlayer()
 
@@ -1270,6 +1285,24 @@ void function ClientCodeCallback_OnCrosshairCurrentTargetChanged( entity player,
 		                             
 			                                                                                                   
 	}
+}
+
+
+string function ClientCodeCallback_GetPlayerDebugStateInfo( entity player, string fieldName )
+{
+	return "Not implemented"
+}
+
+
+array< string > function ClientCodeCallback_GetPlayerDebugStateDynamicFields()
+{
+	return file.playerDebugStateDynamicFields
+}
+
+
+void function AddPlayerDebugStateDynamicField( string fieldName )
+{
+	file.playerDebugStateDynamicFields.append( fieldName )
 }
 
 
@@ -1490,7 +1523,7 @@ void function TonemappingUpdateAfterWarpJump()
 
 	                                                                                           
 	float startTime = Time()
-	while ( 1 )
+	while ( true )
 	{
 		float time         = Time() - startTime
 		float factor       = GraphCapped( time, 0.0, EXPOSURE_RAMPDOWN_DURATION, 1.0, 0.0 )
@@ -1504,7 +1537,7 @@ void function TonemappingUpdateAfterWarpJump()
 
 	                                                         
 	startTime = Time()
-	while ( 1 )
+	while ( true )
 	{
 		float time   = Time() - startTime
 		float factor = GraphCapped( time, 0.0, MAX_RAMPDOWN_DURATION, 1.0, 0.0 )

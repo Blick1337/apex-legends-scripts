@@ -263,7 +263,7 @@ const int TASKLIST_WAYPOINT_INDEX = 0
 			         
 	 
 
-	                                                                                           
+	                                                                                               
 	                     
  
 
@@ -332,7 +332,7 @@ const int TASKLIST_WAYPOINT_INDEX = 0
 			                                                                                            
 		 
 		            
-		                                                       
+		                                                           
 		           
 	 
 
@@ -944,7 +944,7 @@ bool function PlayerIsMarkedAsInsideObjectiveIndex( entity player, int index )
 			          
 	 
 
-	           
+	               
 	         
  
 
@@ -1193,7 +1193,7 @@ const int SENTINEL_FLAG =						(1 << 30)
                                                                                     
  
 	                                               
-	                                                                                                                    
+	                                                                                                                           
 
 	                                                 
 	                                                
@@ -1280,7 +1280,7 @@ void function OnClientScriptInit( entity player )
 int function Waypoints_GetObjectiveIndexFor( entity wp )
 {
 	int fields = wp.GetWaypointObjectivePackedInt()
-	if ( (fields & SENTINEL_FLAG) == 0 )
+	if ( !IsBitFlagSet( fields, SENTINEL_FLAG ) )
 		return -1
 
 	int result = (fields & MAX_OBJECTIVE_MASK)

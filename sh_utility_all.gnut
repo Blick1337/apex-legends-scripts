@@ -725,6 +725,11 @@ bool function IsRingCollapseGameMode()
 	return GetCurrentPlaylistVarBool( "is_ring_collapse", false )
 }
 
+bool function IsFinishTheFightGameMode()
+{
+	return GetCurrentPlaylistVarBool( "is_finish_the_fight", false )
+}
+
 bool function IsACETakeOverGameMode()
 {
 	return GetCurrentPlaylistVarBool( "is_ace_takeover", false )
@@ -740,18 +745,10 @@ bool function HasBoundaryWall()
 	return GetCurrentPlaylistVarBool( "has_boundary_wall", false )
 }
 
-                        
 bool function Control_IsModeEnabled()
 {
-	#if UI
-		return GetCurrentPlaylistVarBool( "is_control_game", false )
-	#endif
-
-	#if CLIENT || SERVER
-		return GameRules_GetGameMode() == GAMEMODE_CONTROL
-	#endif
+	return GetCurrentPlaylistVarBool( "is_control_game", false )
 }
-                              
 
                       
 bool function WinterExpress_IsModeEnabled()
@@ -865,201 +862,6 @@ string function GetMapDisplayDesc( string mapname )
 }
 
 
-var function MakeRegexp( string patternString )
-{
-	return regexp( patternString )
-}
-
-
-bool function Regexp_DoesMatch( var pattern, string str )
-{
-	return expect bool(pattern.match( str ))
-}
-
-
-array<string> function Regexp_Match( var pattern, string str )
-{
-	var captureListOrNull = pattern.capture( str )
-
-	if ( captureListOrNull == null )
-		return []
-
-	array captureList = expect array( captureListOrNull )
-
-	array<string> captures = []
-	foreach ( var captureRawInfo in captureList )
-	{
-		table captureInfo = expect table( captureRawInfo )
-		captures.append( str.slice( captureInfo.begin, captureInfo.end ) )
-	}
-
-	return captures
-}
-
-
-bool function DoesMatchRegexp( string baseString, string patternString )
-{
-	return expect bool(regexp( patternString ).match( baseString ))
-}
-
-#if DEV
-string function DEV_RegexpReplace( string baseString, string patternString, string replaceString )
-{
-	var regexpReplaceSubstitutionPattern = regexp( "\\$(\\d+)" )                            
-
-	Assert( patternString.len() > 0, "cannot use RegexpReplace with an empty patternString" )
-
-	array<var> replaceStringPartList = []
-
-	int substitutionSearchIndex = 0
-	while( substitutionSearchIndex < replaceString.len() )
-	{
-		var substitutionCaptureListOrNull = regexpReplaceSubstitutionPattern.capture( replaceString, substitutionSearchIndex )
-
-		if ( substitutionCaptureListOrNull == null )
-			break
-
-		array substitutionCaptureList = expect array( substitutionCaptureListOrNull )
-
-		table matchInfo = expect table( substitutionCaptureList[0] )
-
-		string skipped = replaceString.slice( substitutionSearchIndex, matchInfo.begin )
-		if ( skipped.len() > 0 )
-		{
-			replaceStringPartList.append( replaceString.slice( substitutionSearchIndex, matchInfo.begin ) )
-		}
-
-		table numberCaptureInfo = expect table( substitutionCaptureList[1] )
-		replaceStringPartList.append( int( replaceString.slice( numberCaptureInfo.begin, numberCaptureInfo.end ) ) )
-
-		substitutionSearchIndex = expect int( matchInfo.end )
-	}
-
-	string replaceStringRemainder = replaceString.slice( substitutionSearchIndex )
-	if ( replaceStringRemainder.len() > 0 )
-	{
-		replaceStringPartList.append( replaceStringRemainder )
-	}
-
-	string newString = ""
-	var pattern      = regexp( patternString )
-
-	int searchIndex = 0
-	while( searchIndex < baseString.len() )
-	{
-		var captureListOrNull = pattern.capture( baseString, searchIndex )
-
-		if ( captureListOrNull == null )
-			break
-
-		array captureList = expect array( captureListOrNull )
-
-		table matchInfo = expect table( captureList[0] )
-
-		newString += baseString.slice( searchIndex, matchInfo.begin )
-
-		foreach ( var replaceStringPart in replaceStringPartList )
-		{
-			if ( type( replaceStringPart ) == "int" )
-			{
-				int captureIndex = expect int( replaceStringPart )
-
-				Assert( captureIndex < captureList.len(), "Invalid substituion in replacement string (saw $" + captureIndex + " but there's only " + captureList.len() + " captures)" )
-
-				table captureInfo = expect table( captureList[captureIndex] )
-				newString += baseString.slice( captureInfo.begin, captureInfo.end )
-			}
-			else
-			{
-				newString += expect string( replaceStringPart )
-			}
-		}
-
-		searchIndex = expect int( matchInfo.end )
-	}
-
-	newString += baseString.slice( searchIndex )
-
-	return newString
-}
-#endif
-
-
-string function RegexpReplaceFunc( string baseString, string patternString, string functionref( array<string> captures ) replaceFunc )
-{
-	Assert( patternString.len() > 0, "cannot use RegexpReplace with an empty patternString" )
-
-	string newString = ""
-	var pattern      = regexp( patternString )
-
-	int searchIndex = 0
-	while( searchIndex < baseString.len() )
-	{
-		var captureListOrNull = pattern.capture( baseString, searchIndex )
-
-		if ( captureListOrNull == null )
-			break
-
-		array captureList = expect array( captureListOrNull )
-
-		table matchInfo = expect table( captureList[0] )
-
-		newString += baseString.slice( searchIndex, matchInfo.begin )
-
-		array<string> captureStrList = []
-		foreach ( var captureInfoRaw in captureList )
-		{
-			table captureInfo = expect table( captureInfoRaw )
-			captureStrList.append( baseString.slice( captureInfo.begin, captureInfo.end ) )
-		}
-
-		newString += replaceFunc( captureStrList )
-
-		searchIndex = expect int( matchInfo.end )
-	}
-
-	newString += baseString.slice( searchIndex )
-
-	return newString
-}
-
-
-array<array<string> > function RegexpFindAll( string baseString, string patternString )
-{
-	array<array<string> > matches = []
-	var pattern                   = regexp( patternString )
-
-	int searchIndex = 0
-	while( searchIndex < baseString.len() )
-	{
-		var captureListOrNull = pattern.capture( baseString, searchIndex )
-
-		if ( captureListOrNull == null )
-			break
-
-		array captureList = expect array( captureListOrNull )
-
-		table matchInfo = expect table( captureList[0] )
-
-		array<string> captureStringList = []
-		foreach ( var captureRawInfo in captureList )
-		{
-			table captureInfo = expect table( captureRawInfo )
-			if( captureInfo.end < searchIndex )
-				captureStringList.append( "" )                                                                      
-			else
-				captureStringList.append( baseString.slice( captureInfo.begin, captureInfo.end ) )
-		}
-
-		searchIndex = expect int( matchInfo.end )
-
-		matches.append( captureStringList )
-	}
-
-	return matches
-}
-
-
 float function RoundToNearestInt( float value )
 {
 	return floor( value + 0.5 )
@@ -1082,6 +884,10 @@ float function RoundToNearestMultiplier( float value, float multiplier )
 	return neg ? -value : value
 }
 
+bool function IsBitFlagSet( int bitMask, int flag )
+{
+	return ( bitMask & flag ) != 0
+}
 
 int function HIWORD( int value )
 {
@@ -1890,7 +1696,7 @@ bool function AllegianceCheck( int req, entity entA, entity entB )
 	if ( req == eAllegiance.ENEMY_ONLY )
 		return IsEnemyTeam( entA.GetTeam(), entB.GetTeam() )
 
-	Assert( 0, ("Unhandled allegience req #:" + req) )
+	Assert( false, ("Unhandled allegience req #:" + req) )
 	return false
 }
 #endif       
@@ -1995,18 +1801,9 @@ string function GetEnumStringSlow( table enumTbl, int value )
 	return "<UNKNOWN ENUM VALUE: " + value + ">"
 }
 
-#if DEV
-string function DEV_EscapeString( string str, bool wrapInQuotes = true )
-{
-	string out = DEV_RegexpReplace( str, "[\\t\\n\\r\\\"\\\\]", "$0" )
-	if ( wrapInQuotes )
-		out = "\"" + out + "\""
-	return out
-}
-#endif
 
 #if DEV
-string function DEV_ArrayConcat( array<string> arr, string sep = ",", bool shouldQuote = true )
+string function DEV_ArrayConcat( array<string> arr, string sep = "," )
 {
 	string out   = ""
 	bool isFirst = true
@@ -2016,9 +1813,6 @@ string function DEV_ArrayConcat( array<string> arr, string sep = ",", bool shoul
 			isFirst = false
 		else
 			out += sep
-
-		if ( shouldQuote )
-			part = DEV_EscapeString( part )
 
 		out += part
 	}
@@ -2040,34 +1834,6 @@ int function SortByInventoryIndexAndCount( ConsumableInventoryItem a, Consumable
 		return 1
 
 	return 0
-}
-
-                                                                                     
-array<string> function RegexpFindAllSimple( string baseString, string patternString )
-{
-	array<string> matches = []
-	var pattern           = regexp( patternString )
-
-	int searchIndex = 0
-	while ( searchIndex < baseString.len() )
-	{
-		var captureListOrNull = pattern.capture( baseString, searchIndex )
-
-		if ( captureListOrNull == null )
-			break
-
-		array captureList = expect array( captureListOrNull )
-		table matchInfo   = expect table( captureList[0] )
-
-		Assert( captureList.len() == 2, "Your RegExp is too advanced. Use RegexpFindAll instead." )
-
-		table captureInfo = expect table( captureList[1] )
-		matches.append( baseString.slice( captureInfo.begin, captureInfo.end ) )
-
-		searchIndex = expect int( matchInfo.end )
-	}
-
-	return matches
 }
 
 
@@ -2511,41 +2277,38 @@ vector function LinearToSrgb( vector inputColor )
   	                                                                                                                                                                                                                                    
 
 #if SERVER || CLIENT || UI
-var unixTimestampStringPattern = null
-var datetimeStringPattern = null
+int function ConvertStringToInt( string str )
+{
+	Assert( str.isnumeric() )
+	return int( str )
+}
+
 int ornull function DateTimeStringToUnixTimestamp( string str )
 {
-	                             
-
 	str = strip( str )
-	array<string> captures
 
 	                 
-	                                           
-	unixTimestampStringPattern = MakeRegexp( "^\\d+$" )
-	captures = Regexp_Match( unixTimestampStringPattern, str )
-	Assert( captures.len() == 0 || captures.len() == 1 )
-	if ( captures.len() == 1 )
-		return int(captures[0])
+	if ( str.isnumeric() )
+		return int( str )
 
 	                                       
-	                                      
-	datetimeStringPattern = MakeRegexp( "^(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d) (\\d\\d):(\\d\\d):(\\d\\d) ([\\+\\-])(\\d\\d):(\\d\\d)$" )
-	captures = Regexp_Match( datetimeStringPattern, str )
-	Assert( captures.len() == 0 || captures.len() == 10 )
-	if ( captures.len() == 0 )
+	string datetimeStringPattern = "2020-12-28 10:00:00 -08:00"
+
+	if ( str.len() != datetimeStringPattern.len() )
 		return null
 
 	TimeParts parts
-	parts.year = int(captures[1])
-	parts.month = int(captures[2])
-	parts.day = int(captures[3])
-	parts.hour = int(captures[4])
-	parts.minute = int(captures[5])
-	parts.second = int(captures[6])
-	int timezoneOffsetHours = (captures[7] == "+" ? 1 : -1) * int(captures[8])
-	Assert( int(captures[9]) == 0 )                                    
-	return GetUnixTimeFromParts( parts, timezoneOffsetHours )
+	parts.year = ConvertStringToInt(str.slice(0, 4))
+	parts.month = ConvertStringToInt(str.slice(5, 7))
+	parts.day = ConvertStringToInt(str.slice(8, 10))
+	parts.hour = ConvertStringToInt(str.slice(11, 13))
+	parts.minute = ConvertStringToInt(str.slice(14, 16))
+	parts.second = ConvertStringToInt(str.slice(17, 19))
+	int timezoneOffsetHours = ( str.slice(20, 21) == "-" ? -1 : 1 ) * ConvertStringToInt( str.slice(21, 23) )
+
+	                                                                                                                                                                                                                                                           
+
+	return GetUnixTimeFromParts( parts, timezoneOffsetHours )                                 
 }
 #endif
 
@@ -3770,7 +3533,7 @@ array<entity> function RandomOrientedGridDistribution(
 						if ( horizTargetHighEndStart < maxWidth )
 							newHorizTargetChoices.append( RandomFloatRange( maxWidth, horizTargetHighEndStart ) )
 
-						if ( !newHorizTargetChoices.len() )
+						if ( newHorizTargetChoices.len() == 0 )
 						{
 							newHorizTargetChoices.append( RandomFloatRange( minWidth, maxWidth ) )
 							Warning( "Warning! Had to select random horiz axis location for next loot tick spawn. minDesiredHorizDistributionDist (" + minDesiredHorizSpacing + ") too large, or loot bin area too narrow (" + ( maxWidth - minWidth ) + ")" )
@@ -3889,3 +3652,14 @@ float function InchesToMeters( float inches )
 }
 
 #endif                    
+
+
+#if SERVER
+                                                   
+ 
+	                                                                   
+	 
+		                                                                           
+	 
+ 
+#endif

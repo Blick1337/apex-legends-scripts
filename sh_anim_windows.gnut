@@ -19,6 +19,7 @@ global function ClientCodeCallback_AnimWindowStop
                 
                 
 global const asset BLOODHOUND_BIRD_MDL = $"mdl/creatures/bird/bird.rmdl"
+global const string BLOODHOUND_BIRD_KEY = "set_bloodhound_raven_skin"
 
 const bool SCRIPT_ANIM_WINDOWS_DEBUG = false
 
@@ -56,6 +57,7 @@ void function ShAnimWindows_LevelInit()
 
 	#if CLIENT
 		RegisterAnimWindowScriptCallback( "add_glad_card_rui", AddGladCardRUIToProp )
+		RegisterAnimWindowScriptCallback ( BLOODHOUND_BIRD_KEY, AnimWindow_SetBloodhoundRavenPropSkin )
 	#endif
 
 	#if SERVER || CLIENT
@@ -248,6 +250,7 @@ void function AnimWindow_CreateProp_Start( ScriptAnimWindow window, var settings
 		                           
 	#elseif CLIENT
 		entity prop = CreateClientSidePropDynamic( window.ent.GetOrigin(), window.ent.GetAngles(), model )
+		prop.SetParent( window.ent )
 		                                                        
 		prop.MakeSafeForUIScriptHack()
 
@@ -369,9 +372,6 @@ void function SetModelOnPropByScriptKey( entity propEnt, string key, entity pare
 	{
 		case "bloodhound_raven":
 			propEnt.SetModel( BLOODHOUND_BIRD_MDL )
-			#if CLIENT
-				CharacterSkin_CheckBloodhoundRavenSkin ( propEnt, parentEnt )
-			#endif
 			break
 		case "lifeline_drone":
 			propEnt.SetModel( LIFELINE_DRONE_MDL )
@@ -405,7 +405,7 @@ void function AnimWindow_PlaySound_Start( ScriptAnimWindow window, var settingsB
 	string soundEventName = GetSettingsBlockString( settingsBlock, "soundEventName" )
 
 	#if SERVER
-		                                  
+		                                      
 	#elseif CLIENT
 		entity viewPlayer = GetLocalViewPlayer()
 		if ( IsValid( viewPlayer ) && !viewPlayer.DoesShareRealms( window.ent ) )
@@ -432,7 +432,7 @@ void function AnimWindow_PlaySound_Transition( ScriptAnimWindow window, var sett
 void function AnimWindow_PlaySound_Stop( ScriptAnimWindow window, var settingsBlock )
 {
 	#if SERVER
-		                  
+		                      
 	#elseif CLIENT
 		entity viewPlayer = GetLocalViewPlayer()
 		if ( windowSoundHandleMap[window.stringID] )
@@ -1045,6 +1045,24 @@ void function AnimWindow_LifelineDroneCommonFX_Stop( ScriptAnimWindow window, va
 	#endif
 }
 
+                                     
+                                     
+                                     
+                                     
+                                     
+
+#if CLIENT
+void function AnimWindow_SetBloodhoundRavenPropSkin ( ScriptAnimWindow window, var settingsBlock, entity prop )
+{
+	if ( IsValid( prop ) )
+	{
+		if ( prop.GetModelName() == BLOODHOUND_BIRD_MDL && window.ent.GetSkin() == 22 )
+		{
+			prop.SetSkin ( 2 )
+		}
+	}
+}
+#endif
 
                       
                       

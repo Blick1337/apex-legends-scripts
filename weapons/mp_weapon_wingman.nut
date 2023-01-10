@@ -22,12 +22,10 @@ void function OnWeaponActivate_weapon_wingman( entity weapon )
 			#endif
 		}
 
-	OnWeaponActivate_ReactiveKillEffects( weapon )
 }
 
 void function OnWeaponDeactivate_weapon_wingman( entity weapon )
 {
-	OnWeaponDeactivate_ReactiveKillEffects( weapon )
 	OnWeaponDeactivate_Smart_Reload ( weapon )
 }
 

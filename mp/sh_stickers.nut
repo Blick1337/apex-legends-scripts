@@ -9,6 +9,7 @@ global function GetStickerObjectModel
 #if UI
 global function GetAllStickerObjectTypes
 global function GetStickerObjectName
+global function GetStickerPresentationType
 global function CreateNestedRuiForSticker
 #endif      
 
@@ -249,6 +250,26 @@ string function GetStickerObjectName( int stickerObjectType )
 }
 
 
+int function GetStickerPresentationType( int stickerObjectType )
+{
+	switch ( stickerObjectType )
+	{
+		case eStickerObjectType.injector:
+			return ePresentationType.APPLIED_STICKER_INJECTOR
+
+		case eStickerObjectType.shield_cell:
+			return ePresentationType.APPLIED_STICKER_SMALL_CELL
+
+		case eStickerObjectType.shield_battery:
+		case eStickerObjectType.phoenix_kit:
+			return ePresentationType.APPLIED_STICKER_LARGE_CELL
+	}
+
+	Assert( false, "Unsupported stickerObjectType value " + stickerObjectType + " passed to GetStickerPresentationType()" )
+	unreachable
+}
+
+
 var function CreateNestedRuiForSticker( var baseRui, ItemFlavor stickerItem )
 {
 	var nestedRui = RuiCreateNested( baseRui, "badge", $"ui/comms_menu_icon_default.rpak" )
@@ -341,7 +362,6 @@ float function Sticker_GetDecalScale( ItemFlavor stickerItem, int stickerObjectT
 	                                                        
 	                                                                
 
-	                                                                 
 	                                                                       
 	                                   
 

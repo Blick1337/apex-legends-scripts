@@ -466,7 +466,7 @@ void function ShowGhostedModelWhenClose( entity panel )
         
 void function OnTreasureButtonUse( entity panel, entity player, int useInputFlags )
 {
-	if ( useInputFlags & USE_INPUT_LONG )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 	{
 		thread TreasureButtonUseThink( panel, player )
 	}

@@ -20,6 +20,9 @@ global function Pas_GetWattsonUltAccelExtraCount
 
                                
                                              
+
+                               
+                                
 #endif
 
 #if (SERVER || CLIENT) && DEV
@@ -44,6 +47,11 @@ const string MIRAGE_DECOY_DROP_MOVER_SCRIPTNAME 		= "mirage_decoy_drop_mover"
       
 #endif
 
+#if CLIENT
+                     
+                                                
+                           
+#endif   
 
             
 #if CLIENT
@@ -61,6 +69,7 @@ global enum ePassives
 	INVALID = -1,
 
 	                                                                                            
+	PAS_NONE,
 	PAS_ADRENALINE,
 	PAS_ADS_SHIELD,
 	PAS_FAST_HEAL,
@@ -118,6 +127,7 @@ global enum ePassives
        
                 
               
+                   
        
                  
                      
@@ -130,7 +140,6 @@ global enum ePassives
        
                   
                    
-                     
        
                 
                     
@@ -161,9 +170,7 @@ global enum ePassives
 	PAS_FORTIFIED,
 	PAS_LOWPROFILE,
 	PAS_INFINITE_HEAL,
-                       
-		PAS_EXTRA_MED_INV
-       
+	PAS_EXTRA_MED_INV
 
 	PAS_NOVA,
 	PAS_PARIAH,
@@ -189,6 +196,9 @@ global enum ePassives
                         
                       
        
+                                 
+                     
+       
 
 
 	_count,
@@ -206,9 +216,7 @@ global const table<int, string> PASSIVE_NAME_MAP = {
 	[ePassives.PAS_GUARDIAN_ANGEL] = "#PAS_GUARDIAN_ANGEL",
 	[ePassives.PAS_FORTIFIED] = "#PAS_FORTIFIED",
 	[ePassives.PAS_LOWPROFILE] = "#PAS_LOW_PROFILE",
-                      
 	[ePassives.PAS_EXTRA_MED_INV] = "#PAS_EXTRA_MED_INV",
-      
 }
 
 global const table<int, string> PASSIVE_DESCRIPTION_SHORT_MAP = {
@@ -220,9 +228,7 @@ global const table<int, string> PASSIVE_DESCRIPTION_SHORT_MAP = {
 	[ePassives.PAS_GUARDIAN_ANGEL] = "#PAS_GUARDIAN_ANGEL_DESC",
 	[ePassives.PAS_FORTIFIED] = "#PAS_FORTIFIED_DESC",
 	[ePassives.PAS_LOWPROFILE] = "#PAS_LOW_PROFILE_DESC",
-                      
 	[ePassives.PAS_EXTRA_MED_INV] = "#PAS_EXTRA_MED_INV_DESC",
-      
 }
 #endif	              
 
@@ -601,6 +607,9 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
                                        
                                          
 
+                                                                                
+                                                                                  
+
                                                      
   
  
@@ -610,8 +619,9 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
                                                                                  
             
 
-                                                                                                                       
-                                                                                                                         
+                                
+                                                                                                    
+                                                                                                      
  
                            
 
@@ -646,6 +656,19 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
  
 #endif
 
+#if CLIENT
+                     
+                                                
+ 
+                                     
+
+                     
+  
+                                                                                        
+  
+ 
+                           
+#endif          
 
 #if SERVER
                                                   
@@ -980,6 +1003,26 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
 		                                         
 	 
  
+
+                                              
+ 
+	                                         
+	 
+		                                          
+	 
+
+	                               
+ 
+
+                                               
+ 
+	                               
+	                                                                  
+	                                         
+		                                          
+ 
+
+
 #endif
 
                
@@ -1011,6 +1054,8 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
  
                    
                                                                    
+                                                               
+                                                       
                                 
   
                                                
@@ -1018,7 +1063,7 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
 
                           
    
-                                                                                            
+                                                                                  
                 
    
   

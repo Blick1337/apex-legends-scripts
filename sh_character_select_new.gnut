@@ -112,6 +112,9 @@ const int MAX_TEAM_FOCUS_INDEX = 3
 const float READY_ANIM_MIN_DURATION = 4.0
 global const int CHAMPION_SQAUD_SMOKE_SKIN_INDEX = 9
 global const int CHAMPION_SQAUD_BACKGROUND_SKIN_INDEX = 9
+                             
+                                               
+      
 
 global enum eNewCharacterSelectMenuState
 {
@@ -143,7 +146,7 @@ global function IsCharacterReselectEnabled
 global function ServerToClient_SetClubPartyBool
 global function UIToClient_SetClubName
 global function ServerToClient_SetChampionClubSquadName
-global function GetClubPartyBool
+global function GetIsFullClubSquad
 #endif
 
 #if UI
@@ -183,6 +186,7 @@ struct FileLevelStruct
 {
 	#if (UI || CLIENT)
 		bool isBrowseMode = false
+		bool isJiP = false
 		bool browseModeShowLockedCharacters = false
 		float isBrowseModeStartTime
 	#endif                  
@@ -205,11 +209,18 @@ struct FileLevelStruct
 		var        whiteFlash
 		var        portraitsPanel
 		var        detailsPanel
+		var		   jipRuiPanel
 		var        detailsRui
 		var        buttonHintPanel
 		var        buttonHintRui
 		array<var> characterButtons
+		array<var> roleButtons_Assault
+		array<var> roleButtons_Skirmisher
+		array<var> roleButtons_Recon
+		array<var> roleButtons_Defense
+		array<var> roleButtons_Support
 		array<var> characterButtonRuis
+		array<ItemFlavor> allCharacters
 		int        colorCorrection
 
 		int localClientLockstepIndex
@@ -236,8 +247,12 @@ struct FileLevelStruct
 
 		var                              backgroundRuiTopo
 		var                              backgroundRui
+                   
+                            
+      
 		var                              countdownRui
 		var								 mapModeDetailsRui
+		var								 jipRui
 		array<var>                       ruiPlayerBarRuis
 		array<var>                		 gCardRuiHandles
 		array<var>						 squadLineupRuiHandles
@@ -258,6 +273,9 @@ struct FileLevelStruct
 		int               desiredMenuState = eNewCharacterSelectMenuState.PICKING
 		table             signalDummy
 		float             lockSequenceAnimTime = 0.0
+                               
+                                                      
+        
 
 		table<int, string> connectedPlayerNames
 
@@ -441,9 +459,10 @@ bool function CharacterSelectSkinSelectionIsEnabled()
   	                                                                                                                                                                                                                
 
 #if CLIENT
-void function OpenCharacterSelectNewMenu( bool isBrowseMode = false, bool browseModeShowLockedCharacters = false )
+void function OpenCharacterSelectNewMenu( bool isBrowseMode = false, bool browseModeShowLockedCharacters = false, bool isJiP = false )
 {
 	fileLevel.isBrowseMode = isBrowseMode
+	fileLevel.isJiP = isJiP
 	fileLevel.isBrowseModeStartTime = Time()
 	fileLevel.browseModeShowLockedCharacters = browseModeShowLockedCharacters
 
@@ -530,6 +549,9 @@ void function PanAwayCharacterSelect()
       
 
 	RuiSetFloat( fileLevel.backgroundRui, "gcardsStartTime", Time() )
+                   
+                                                                   
+      
 	RuiSetFloat( fileLevel.mapModeDetailsRui, "gcardsStartTime", Time() )
 	fileLevel.detailsPanelVisible = false
 
@@ -824,8 +846,8 @@ void function DoSquadCardsPresentation( string endTime, bool showTitleFrame )
 		if ( file.clubName != "" && file.clubName != CLUB_NAME_EMPTY )
 			RuiSetString( borderRui, "headerText", file.clubName )
                                 
-                             
-                                                                                 
+		else if (IsValentinesS15())
+			RuiSetString( borderRui, "headerText", "#SQUAD_HEADER_YOUR_SQUAD_DATE_NIGHT" )
                                      
 		else
 			RuiSetString( borderRui, "headerText", "#SQUAD_HEADER_YOUR_SQUAD" )
@@ -1018,6 +1040,10 @@ void function DoMVPSquadCardsPresentation( string endTime )
 
 void function DoChampionSquadCardsPresentation( string endTime )
 {
+                       
+	if( IsArenaMode() && IsPrivateMatch() && GetLocalClientPlayer().IsObserver() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR )
+		return
+      
 	printt( "CHARACTER SELECT: DoChampionSquadCardsPresentation" )
 
 	bool shouldHideCharacterSelectRoom = GetCurrentPlaylistVarBool( "survival_hide_character_select_room", false )
@@ -1104,8 +1130,8 @@ void function DoChampionSquadCardsPresentation( string endTime )
       
 
                                
-                            
-                                                               
+	else if (IsValentinesS15())
+		topHeader = "#GLADIATOR_CARD_INTRO_CHAMPION_SQUAD_DATE_NIGHT"
       
 	else
 		topHeader = "#GLADIATOR_CARD_INTRO_CHAMPION_SQUAD"
@@ -1233,15 +1259,15 @@ void function UI_RunCharacterSelect( bool isBrowseMode, bool menuEntsExist )
 		SetBlurEnabled( true )
 
 	var portraitsPanel = Hud_GetChild( fileForever.menu, "PortraitsPanel" )
-	for ( int i = 0; i < NUM_CHARACTER_SELECT_BUTTONS; i++ )
-	{
-		                 
-		var button = Hud_GetChild( portraitsPanel, "Button" + i )
-		ToolTipData td
-		td.tooltipFlags = eToolTipFlag.CLIENT_UPDATE
-		td.tooltipStyle = eTooltipStyle.DEFAULT
-		Hud_SetToolTipData( button, td )
-	}
+	                                                          
+	   
+	  	                 
+	  	                                                         
+	  	              
+	  	                                            
+	  	                                       
+	  	                                
+	   
 
 	RunClientScript( "_OpenCharacterSelectNewMenu", fileForever.menu )
 
@@ -1293,6 +1319,10 @@ void function _OpenCharacterSelectNewMenu( var menu )
 
 	if( IsCharacterReselectEnabled() )
 		Remote_ServerCallFunction( REMOTE_SERVERCALL_ON_RESELECT_MENU_OPEN )
+
+                             
+                                                
+      
 
 	UpdateMenuButtons()
 	thread UpdateSceneThink()
@@ -1350,18 +1380,65 @@ void function UpdateMenuElementHandles( var menu )
 	fileLevel.whiteFlash = Hud_GetChild( menu, "WhiteFlash" )
 	fileLevel.portraitsPanel = Hud_GetChild( menu, "PortraitsPanel" )
 	fileLevel.detailsPanel = Hud_GetChild( menu, "DetailsRuiPanel" )
+	fileLevel.jipRuiPanel = Hud_GetChild( menu, "JiPRuiPanel" )
 	fileLevel.buttonHintPanel = Hud_GetChild( menu, "ButtonHintRuiPanel" )
 
 	fileLevel.characterButtons = []
 	fileLevel.characterButtonRuis = []
+	fileLevel.allCharacters = []
 	fileLevel.detailsRui = Hud_GetRui( fileLevel.detailsPanel )
 	fileLevel.buttonHintRui = Hud_GetRui( fileLevel.buttonHintPanel )
+	fileLevel.roleButtons_Assault = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "AssaultCharacterRoleButtonClass" )
+	fileLevel.roleButtons_Skirmisher = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "SkirmisherCharacterRoleButtonClass" )
+	fileLevel.roleButtons_Recon = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "ReconCharacterRoleButtonClass" )
+	fileLevel.roleButtons_Defense = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "DefenseCharacterRoleButtonClass" )
+	fileLevel.roleButtons_Support = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "SupportCharacterRoleButtonClass" )
 
+	array<ItemFlavor> shippingCharacters
+	array<ItemFlavor> unlockedCharacters
+	array<ItemFlavor> lockedCharacters
+	array<ItemFlavor> disabledCharacters
+
+	bool allCharactersUnlocked = GetCurrentPlaylistVarBool( "all_characters_unlocked", false )
+
+	foreach( ItemFlavor itemFlav in GetAllCharacters() )
+	{
+		if ( !ItemFlavor_ShouldBeVisible( itemFlav, null, GetConVarInt( "mtx_svEdition" ) ) )
+			continue
+
+		bool isAvailable = IsItemFlavorUnlockedForLoadoutSlot( LocalClientEHI(), Loadout_Character(), itemFlav, true )
+		bool isOwned     = Character_IsCharacterOwnedByPlayer( itemFlav, GetLocalClientPlayer() )
+
+		if ( !isAvailable || CharacterSelect_CustomIsCharacterLockedForPlayer( itemFlav, GetLocalClientPlayer() ) )
+		{
+			disabledCharacters.append( itemFlav )
+		}
+		else
+		{
+			if ( isOwned )
+				shippingCharacters.append( itemFlav )
+			else if( allCharactersUnlocked )
+				unlockedCharacters.append( itemFlav )
+			else
+				lockedCharacters.append( itemFlav )
+		}
+	}
+	fileLevel.allCharacters.extend( shippingCharacters )
+	fileLevel.allCharacters.extend( unlockedCharacters )
+	fileLevel.allCharacters.extend( lockedCharacters )
+	fileLevel.allCharacters.extend( disabledCharacters )
+
+                    
 	for ( int i = 0; i < NUM_CHARACTER_SELECT_BUTTONS; i++ )
 	{
 		                 
 		var button = Hud_GetChild( fileLevel.portraitsPanel, "Button" + i )
 		fileLevel.characterButtons.append( button )
+
+		ToolTipData td
+		td.tooltipFlags = eToolTipFlag.CLIENT_UPDATE
+		td.tooltipStyle = eTooltipStyle.DEFAULT
+		Hud_SetToolTipData( button, td )
 
 		var buttonRui = Hud_GetRui( button )
 		fileLevel.characterButtonRuis.append( buttonRui )
@@ -1389,6 +1466,67 @@ void function UpdateMenuElementHandles( var menu )
 
 		Hud_SetVisible( button, false )
 	}
+     
+
+                                                                                                                       
+
+                                                                                                      
+  
+                                                                         
+  
+
+                                                                                                         
+  
+                                                                            
+  
+
+                                                                                                    
+  
+                                                                       
+  
+
+                                                                                                      
+  
+                                                                         
+  
+
+                                                                                                      
+  
+                                                                         
+  
+
+                                                             
+  
+                                            
+                                      
+                                                   
+
+                
+                                              
+                                         
+                                  
+
+                         
+                                                           
+   
+                                                                                                  
+                                                            
+   
+                                                                    
+                                                                                
+
+                                                           
+   
+                                                                                                      
+                                                            
+   
+                                                                       
+                                                                               
+
+                                 
+  
+
+      
 }
 
 void function CharacterSelect_UpdateMenuButtons()
@@ -1402,6 +1540,21 @@ void function CharacterSelect_UpdateMenuButtons()
 	}
 #endif
 }
+
+                   
+                                                                                 
+ 
+                               
+
+                               
+                                     
+                                                                                          
+                                                                                                     
+                                                                                           
+                                                                                         
+                                                                                                                                                                                                                              
+ 
+      
 
 void function UpdateMenuButtons()
 {
@@ -1484,33 +1637,75 @@ void function UpdateMenuButtons()
 		fileLevel.buttonIndexCharacterMap[ index ] <- character
 		fileLevel.buttonIndexUsed.append( index )
 
+                    
 		                              
 		var buttonRui = fileLevel.characterButtonRuis[index]
 		RuiSetImage( buttonRui, "portraitImage", CharacterClass_GetGalleryPortrait( character ) )
-                     
-                                                                                                       
-       
-			RuiSetImage( buttonRui, "portraitBackground", CharacterClass_GetGalleryPortraitBackground( character ) )
-        
+		RuiSetImage( buttonRui, "portraitBackground", CharacterClass_GetGalleryPortraitBackground( character ) )
 		RuiSetString( buttonRui, "portraitName", Localize( ItemFlavor_GetLongName( character ) ) )
 		RuiSetImage( buttonRui, "roleImage", CharacterClass_GetCharacterRoleImage( character ) )
 		RuiSetColorAlpha( buttonRui, "baseNameBackgroundColor", SrgbToLinear( (fileLevel.characterSkins.len() > 0) ? CharacterSkin_GetCharacterSelectLabelColorOverride( fileLevel.characterSkins[index] ) : <1.0, 1.0, 1.0> ), 1.0 )
+      
 	}
 
-	                                                                         
-	array< array<var> > buttonRows                                                                        
+                   
+
+                         
+                                                                                                      
+  
+                                                   
+                                                  
+  
+
+                                                                                                         
+  
+                                                      
+                                                  
+  
+
+                                                                                                    
+  
+                                                 
+                                                  
+  
+
+                                                                                                      
+  
+                                                   
+                                                  
+  
+
+                                                                                                      
+  
+                                                   
+                                                  
+  
 
                     
-                              
-                                                          
-       
-                                                                                   
-        
-      
-		buttonRows = GetCharacterButtonRows( characterButtons )
-       
+                                                                                                       
+                                                                                                             
+
+                                                                                                                                  
+                                                        
+
+                                                                                                   
+                                                                                                       
+                                                                                                        
+
+                                                                                                                           
+                                                     
+
+                                                                                                                               
+                                                     
+                    
+     
+
+	                                                                         
+	array< array<var> > buttonRows
+	buttonRows = GetCharacterButtonRows( characterButtons )
 
 	LayoutCharacterButtons( buttonRows )
+      
 	UpdateButtonStates()
 }
 #endif         
@@ -1559,6 +1754,9 @@ void function CloseCharacterSelectMenuAtTime( float closeTimeStamp )
 
 void function CloseCharacterSelectNewMenu()
 {
+	if( !fileLevel.menuIsOpen )
+		return
+
 	Signal( fileLevel.signalDummy, "CharacterSelectClosing" )
 
 	RunUIScript( "UI_CloseCharacterSelect" )
@@ -1665,9 +1863,13 @@ void function CreateCharacterSelectClientEnts()
 
 	entity targetPilot = GetEntByScriptName( CHARACTER_ENT_NAME )
 
+                   
+                                                                                                                     
+     
 	fileLevel.camera = CreateClientSidePointCamera( cameraOrigin, targetCamera.GetAngles(), CAMERA_FOV )
+      
 
-	fileLevel.characterNode = CreateScriptRef( targetPilot.GetOrigin(), targetPilot.GetAngles() )
+	fileLevel.characterNode = CreateScriptRef( targetPilot.GetOrigin(), targetPilot.GetAngles()  )                                              
 #if NX_PROG || PC_PROG_NX_UI
 	fileLevel.nxCharacterNode = CreateScriptRef( targetPilot.GetOrigin() + <-4,0,0>, targetPilot.GetAngles() )
 #endif	
@@ -1690,7 +1892,11 @@ void function CreateCharacterSelectClientEnts()
 		if ( IsValid( fileLevel.backgroundModelGeo ) )
 			fileLevel.backgroundModelGeo.Destroy()
 
-		fileLevel.backgroundModelGeo = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), BACKGROUND_GEO_MODEL )
+                   
+                                                                                                                                                                        
+     
+	fileLevel.backgroundModelGeo = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), BACKGROUND_GEO_MODEL )
+      
 		fileLevel.backgroundModelGeo.kv.solid = 0
 		fileLevel.backgroundModelGeo.kv.disableshadows = 1
 		fileLevel.backgroundModelGeo.kv.fadedist = -1
@@ -1699,7 +1905,11 @@ void function CreateCharacterSelectClientEnts()
 		if ( IsValid( fileLevel.backgroundModelSmoke ) )
 				fileLevel.backgroundModelSmoke.Destroy()
 
-		fileLevel.backgroundModelSmoke = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), BACKGROUND_SMOKE_MODEL )
+                   
+                                                                                                                                                                            
+     
+	fileLevel.backgroundModelSmoke = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), BACKGROUND_SMOKE_MODEL )
+      
 		fileLevel.backgroundModelSmoke.kv.solid = 0
 		fileLevel.backgroundModelSmoke.kv.disableshadows = 1
 		fileLevel.backgroundModelSmoke.kv.fadedist = -1
@@ -1731,7 +1941,12 @@ void function CreateCharacterSelectClientEnts()
 	vector backgroundRuiAngles = targetPilot.GetAngles()
 
 	fileLevel.backgroundRuiTopo = CreateRUITopology_Worldspace( backgroundRuiOrigin, backgroundRuiAngles * -1, RUI_NAME_PLATE_WIDTH, RUI_NAME_PLATE_HEIGHT )
+                   
+                                                                                                                                 
+                                                                                                   
+     
 	fileLevel.backgroundRui = RuiCreate( $"ui/character_select_name_plate_new.rpak", fileLevel.backgroundRuiTopo, RUI_DRAW_WORLD, 0 )
+      
 
 	foreach ( func in file.Callbacks_CustomizeBackgroundRui )
 		func( fileLevel.backgroundRui )
@@ -1884,6 +2099,13 @@ void function DeleteMenuEntities()
 		RuiDestroyIfAlive( fileLevel.backgroundRui )
 		fileLevel.backgroundRui = null
 	}
+                   
+                                        
+  
+                                               
+                                 
+  
+      
 	if ( fileLevel.backgroundRuiTopo != null )
 	{
 		RuiTopology_Destroy( fileLevel.backgroundRuiTopo )
@@ -2092,6 +2314,12 @@ void function OnLoadoutButton_Activate( var button )
 	if ( playerWithThisCharacterLocked != null )
 		return
 
+
+                             
+                                                        
+        
+      
+
 	                         
 	if ( skinOrNull != null )
 		RequestSetItemFlavorLoadoutSlot( LocalClientEHI(), Loadout_CharacterSkin( character ), expect ItemFlavor( skinOrNull ) )
@@ -2155,6 +2383,11 @@ void function Client_TryUnlockCharacter()
 	float timeRemaining = GetGlobalNetTime( CHARACTER_SELECT_NETVAR_LOCK_STEP_END_TIME ) - Time()
 	if ( timeRemaining <= 0.0 )                                                                                                                                    
 		return
+
+                              
+                         
+                                                                                
+       
 
 	UnlockCharacter()
 }
@@ -2698,6 +2931,8 @@ void function UpdateButtonStates()
 		}
 	}
 
+	Hud_SetVisible( fileLevel.jipRuiPanel, fileLevel.isJiP )
+
 	                       
 	if ( fileLevel.detailsPanelVisible )
 	{
@@ -2725,15 +2960,18 @@ void function UpdateButtonStates()
 		{
 			UpdateCharacterDetailsMenu( fileLevel.detailsRui, expect ItemFlavor( detailsCharacter ), false )
 			Hud_SetVisible( fileLevel.detailsPanel, true )
+			Hud_SetVisible( fileLevel.jipRuiPanel, false )
 		}
 		else if ( !fileLevel.isBrowseMode )
 		{
 			Hud_SetVisible( fileLevel.detailsPanel, false )
+			Hud_SetVisible( fileLevel.jipRuiPanel, fileLevel.isJiP )
 		}
 	}
 	else
 	{
 		Hud_SetVisible( fileLevel.detailsPanel, false )
+		Hud_SetVisible( fileLevel.jipRuiPanel, fileLevel.isJiP )
 	}
 
 	                     
@@ -3284,11 +3522,10 @@ void function ServerToClient_SetClubPartyBool( bool isClubSquad )
 }
 
 
-bool function GetClubPartyBool()
+bool function GetIsFullClubSquad()
 {
 	return file.isFullClubSquad
 }
-
 
 void function UIToClient_SetClubName( string clubName )
 {
@@ -3812,7 +4049,7 @@ entity ornull function GetLastPickingPlayer()
 	if ( validPlayer != null )
 		return validPlayer
 
-	Assert( 0, "GetLastPickingPlayer wasn't able to get the last picking player on local client team" )
+	Assert( false, "GetLastPickingPlayer wasn't able to get the last picking player on local client team" )
 
 	entity invalidPlayer
 	return invalidPlayer
@@ -3991,6 +4228,7 @@ void function UpdateCharacterDetailsMenu( var detailsRui, ItemFlavor character, 
 	RuiSetString( detailsRui, "rolePerkDesc", roleDesc )
 
 	RuiSetBool( detailsRui, "isTempUnlocked", GetCurrentPlaylistVarBool( "all_characters_unlocked", false ) )
+	RuiSetBool( detailsRui, "isJiP", fileLevel.isJiP )
 }
 
 void function FadeInOut (float fadeOutDuration , float blackoutDuration, float fadeInDuration)

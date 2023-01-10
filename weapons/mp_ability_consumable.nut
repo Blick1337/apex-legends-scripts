@@ -39,6 +39,9 @@ global function Consumable_SetClientTypeOnly
 global function DoHealScreenFX
 
 global function ServerCallback_TryUseConsumable
+                               
+global function ServerToClient_Valentines_UltAccelChargePartner
+      
 
                         
                                                      
@@ -189,6 +192,7 @@ struct
 		bool healCompletedSuccessfully
 		int  clientSelectedConsumableType
 		int  healScreenFxHandle
+		int  ultAccelScreenFxHandle
 	#endif          
 
 } file
@@ -207,8 +211,11 @@ global const string CONSUMABLE_WEAPON_NAME = "mp_ability_consumable"
       
       
 
+const string SHOW_ULT_ACCEL_FX_PLAYLIST_VAR = "ult_accel_vfx_enable"
+
 const float HEAL_CHATTER_DEBOUNCE = 10.0
 const RESTORE_HEALTH_COCKPIT_FX = $"P_heal_loop_screen"
+const asset VFX_ULT_ACCEL_POP = $"P_UltAcc_screenSpace"
 global const vector HEALTH_RGB = < 114, 245, 250 >
 
                                                                                               
@@ -221,6 +228,7 @@ void function Consumable_Init()
 	RegisterWeaponForUse( CONSUMABLE_WEAPON_NAME )
 	RegisterSignal( "ConsumableDestroyRui" )
 
+	PrecacheParticleSystem( VFX_ULT_ACCEL_POP )
 
 	Remote_RegisterServerFunction( "ClientCallback_SetSelectedConsumableTypeNetInt", "int", INT_MIN, INT_MAX )
 	Remote_RegisterServerFunction( "ClientCallback_SetNextHealModType", "string" )
@@ -523,7 +531,8 @@ void function OnWeaponActivate_Consumable( entity weapon )
 		                                                 
 
 		                                                
-		                           
+		                            
+
 
 		                                                                 
 		 
@@ -729,7 +738,7 @@ void function OnWeaponDeactivate_Consumable( entity weapon )
 
 		                             
 		 
-			                          
+			                           
 
 			                                      
 				                                                            
@@ -738,10 +747,17 @@ void function OnWeaponDeactivate_Consumable( entity weapon )
 				                                                            
 
                                   
-                            
-     
-                                                          
-     
+				                        
+				 
+					                          
+					 
+						                                                         
+					 
+					    
+					 
+						                                                          
+					 
+				 
                                        
 
 			                                          
@@ -1139,6 +1155,14 @@ var function OnWeaponPrimaryAttack_Consumable( entity weapon, WeaponPrimaryAttac
 		{
 			thread DoHealScreenFX( player )
 		}
+		else if ( info.ultimateAmount > 0 )
+		{
+			if ( GetCurrentPlaylistVarBool( SHOW_ULT_ACCEL_FX_PLAYLIST_VAR, false ) )
+			{
+				thread DoUltAccelScreenFX( player )
+			}
+		}
+
 		Chroma_ConsumableSucceeded( info )
 	#endif
 
@@ -1296,7 +1320,7 @@ ConsumableInfo function GetConsumableInfoFromRef( string ref )
 			return info
 	}
 
-	Assert( 0, "Unknown ref \"" + ref + "\" used in mp_ability_consumable." )
+	Assert( false, "Unknown ref \"" + ref + "\" used in mp_ability_consumable." )
 	unreachable
 }
 
@@ -1452,6 +1476,34 @@ void function DoHealScreenFX( entity player )
 	WaitFrame()
 }
 
+
+void function DoUltAccelScreenFX( entity player )
+{
+	EndSignal( player, "OnDeath", "OnDestroy" )
+
+	if ( player != GetLocalViewPlayer() )
+		return
+
+	entity cockpit = player.GetCockpit()
+	if ( !IsValid( cockpit ) )
+		return
+
+	if ( EffectDoesExist( file.ultAccelScreenFxHandle ) )
+		return
+
+	int fxID = GetParticleSystemIndex( VFX_ULT_ACCEL_POP )
+	file.ultAccelScreenFxHandle = StartParticleEffectOnEntity( cockpit, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
+	EffectSetIsWithCockpit( file.ultAccelScreenFxHandle, true )
+	EffectSetControlPointVector( file.ultAccelScreenFxHandle, 1, <255, 208, 56> )
+
+	OnThreadEnd( function() {
+		if ( EffectDoesExist( file.ultAccelScreenFxHandle ) )
+			EffectStop( file.ultAccelScreenFxHandle, false, true )
+	} )
+
+	wait 2
+}
+
 void function PlayConsumableUseChroma( entity weapon, ConsumableInfo info )
 {
 	EndSignal( weapon.GetOwner(), "EndChroma" )
@@ -1525,7 +1577,7 @@ bool function ShouldDisplayConsumableSwitchHint( entity player )
 		return false
 
                 
-	return (PlayerHasHealthKits( player ) && player.GetHealth() < player.GetMaxHealth()) || (PlayerHasShieldKits( player ) && player.GetShieldHealth() < player.GetShieldHealthMax() && StatusEffect_GetSeverity( player, eStatusEffect.healing_denied ) <= 0)
+	return (PlayerHasHealthKits( player ) && player.GetHealth() < player.GetMaxHealth()) || (PlayerHasShieldKits( player ) && player.GetShieldHealth() < player.GetShieldHealthMax() && !StatusEffect_HasSeverity( player, eStatusEffect.healing_denied ))
       
                                                                                                                                                                                   
        
@@ -1588,6 +1640,14 @@ void function Consumable_OnGamestateEnterResolution()
 	foreach( player in livingPlayer )
 		Signal( player, "ConsumableDestroyRui" )
 }
+
+                               
+void function ServerToClient_Valentines_UltAccelChargePartner()
+{
+	thread DoUltAccelScreenFX( GetLocalViewPlayer() )
+}
+      
+
 #endif          
 
                                                                                                                                    
@@ -1626,10 +1686,10 @@ void function Consumable_OnGamestateEnterResolution()
 	                                             
 
                                 
-                          
-   
-                                                                              
-   
+		                        
+		 
+			                                                                           
+		 
                                      
 
 	                                          	                                                                                     
@@ -1760,44 +1820,75 @@ void function Consumable_OnGamestateEnterResolution()
 	 
 
                                
-                         
-  
-                                                                
-   
-                                                  
+	                        
+	 
+		                                                              
+		 
+			                                               
 
-                            
-    
-                                                                                    
-                                                                                        
+			                         
+			 
+				                                                                                
+				                                                                                    
 
-                                           
-                                                 
-                                                       
-                                                             
+				                                       
+				                                             
+				                                                   
+				                                                         
 
-                                                                                               
-                                                                                                             
+				                                                                                           
+				                                                                                                         
 
-                                                 
-     
-                                                                
-      
-                              
-       
-                                                                                                
-       
-                              
-       
-                                                                                                                    
-       
+				                                             
+				 
+					                                                           
+					 
+						                        
+						 
+							                                                                                         
+						 
+						                        
+						 
+							                                                                                                             
+						 
 
-                                                                                        
-      
-     
-    
-   
-  
+						                                                       
+						 
+							                                                                  
+							                                             
+							 
+								                                                                                        
+								                                                                                   
+								                                                                                           
+							 
+						 
+						                                 
+						 
+							                                                               
+							                        
+							 
+								                                                                                     
+								                                                                                   
+								                                                                                           
+							 
+						 
+						    
+						 
+							                                                              
+							                        
+							 
+								                                                                                    
+								                                                                                   
+								                                                                                           
+							 
+						 
+
+						                                                                                  
+					 
+				 
+			 
+		 
+	 
                                     
 
 	                                         
@@ -1838,37 +1929,44 @@ void function Consumable_OnGamestateEnterResolution()
 
 
                                
-                         
-  
-                                                 
+	                        
+	 
+		                                               
 
-                           
-   
-                                                                         
-                                                                    
-                                                                       
-                                                                                                                      
-                                                                   
+		                         
+		 
+			                                                                      
+			                                                                 
+			                                                                    
+			                                                                                                                   
+			                                                                
 
-                           
-                                          
-                        
-                                           
-                        
-                                                                                                                   
-                        
+			                        
+			                                       
+				                    
+			                                        
+				                    
+			                                                                                                                
+				                    
 
-                      
-    
-                                                                            
+			                                                               
 
-                                                                                  
-                                                              
+			                   
+			 
+				                                                                        
 
-                                                                                      
-    
-   
-  
+				                                                                              
+					                                                         
+
+				                                                                                     
+				                                                                                   
+				                                                                                           
+
+				                                                                                        
+				                                                                                  
+			 
+		 
+	 
                                     
  
 
@@ -1913,7 +2011,7 @@ void function Consumable_OnGamestateEnterResolution()
 			      
 
 		        
-			                                                          
+			                                                              
 			      
 	 
  
@@ -2052,7 +2150,7 @@ int function CompareHealData( PotentialHealData a, PotentialHealData b )
 	else if ( b.totalAppliedHeal > 0 && a.totalAppliedHeal == 0 )
 		return 1
 
-	if ( !a.possibleShieldAdd && !b.possibleShieldAdd )
+	if ( a.possibleShieldAdd == 0 && b.possibleShieldAdd == 0 )
 	{
 		if ( a.possibleHealthAdd > b.possibleHealthAdd )
 			return -1
@@ -2188,10 +2286,10 @@ int function TryUseConsumable( entity player, int consumableType )
 	if ( player.IsPhaseShifted() )
 		return eUseConsumableResult.DENY_NONE
 
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.placing_phase_tunnel ) )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.placing_phase_tunnel ) )
 		return eUseConsumableResult.DENY_NONE
                
-	if ( StatusEffect_GetSeverity( player, eStatusEffect.healing_denied ) )
+	if ( StatusEffect_HasSeverity( player, eStatusEffect.healing_denied ) )
 	{
 		if ( consumableType == eConsumableType.SHIELD_LARGE || consumableType == eConsumableType.SHIELD_SMALL )
 		{
@@ -2244,17 +2342,17 @@ int function TryUseConsumable( entity player, int consumableType )
 
 
                                  
-                           
-    
-                                                   
-                             
-     
-                                                    
-                                                          
-                                                                                
-                                                                                         
-     
-    
+			if ( IsValentinesS15() )
+			{
+				entity partner = ValentinesGetPartner( player )
+				if ( IsValid( partner ) )
+				{
+					int partnerCurrentHealth  = partner.GetHealth()
+					int partnerCurrentShields = partner.GetShieldHealth()
+					needHeal      = needHeal || (partnerCurrentHealth < partner.GetMaxHealth())
+					needShield    = needShield || (partnerCurrentShields < partner.GetShieldHealthMax())
+				}
+			}
                                       
 
 		ConsumableInfo info = file.consumableTypeToInfo[ consumableType ]
@@ -2274,12 +2372,12 @@ int function TryUseConsumable( entity player, int consumableType )
 				return eUseConsumableResult.DENY_NO_SHIELD_KIT
 		}
 
-		if ( info.healAmount && !info.shieldAmount && info.healCap <= 100 )
+		if ( info.healAmount > 0 && info.shieldAmount == 0 && info.healCap <= 100 )
 		{
 			if ( !needHeal )
 				return eUseConsumableResult.DENY_HEALTH_FULL
 		}
-		else if ( info.shieldAmount && !info.healAmount )
+		else if ( info.shieldAmount > 0 && info.healAmount == 0 )
 		{
 			if ( !needShield )
 				return maxShields > 0 ? eUseConsumableResult.DENY_SHIELD_FULL : eUseConsumableResult.DENY_NO_SHIELDS
@@ -2296,7 +2394,7 @@ int function TryUseConsumable( entity player, int consumableType )
 			{
 				int targetHealth = int( currentHealth + info.healAmount )
 				int overHeal     = targetHealth - maxHealth
-				if ( overHeal && currentShields < maxShields )
+				if ( overHeal != 0 && currentShields < maxShields )
 					canShield = true
 			}
 
@@ -2376,7 +2474,7 @@ TargetKitHealthAmounts function Consumable_PredictConsumableUse( entity player, 
 		int healthToApply = minint( int( healAmount ), missingHealth )
 		Assert( virtualHealth + healthToApply <= maxHealth, "Bad math: " + virtualHealth + " + " + healthToApply + " > max health of " + maxHealth )
 
-		if ( healthToApply || kitInfo.healTime > 0 )                                     
+		if ( healthToApply != 0 || kitInfo.healTime > 0 )                                     
 			targetValues.targetHealth = (healthToApply + resourceHealthRemaining) / float( maxHealth )
 	}
 

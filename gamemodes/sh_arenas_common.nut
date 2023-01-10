@@ -120,7 +120,7 @@ void function Arenas_PopulateTeamRuis( var rui, int team, array<entity> teamPlay
 		RuiSetString( rui, "teamName_" + side, clubName )
 	}
 
-	if ( side == "L" )
+	if ( side == "L" && !( IsPrivateMatch() && GetLocalClientPlayer().IsObserver() ) )
 	{
 		                                                                                
 		entity player = GetLocalViewPlayer()

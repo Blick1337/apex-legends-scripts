@@ -558,9 +558,9 @@ void function SPACEELEVATOR_TriggerEnter( entity trigger, entity ent )
 		return
 
 #if SERVER
-	                                                                                                             
+	                                                           
 	 
-		                                                                            
+		                                                                        
 		 
 			                                
 			 
@@ -613,8 +613,11 @@ void function SPACEELEVATOR_TriggerEnter( entity trigger, entity ent )
 
 	                                         
 
+	                                                                 
+
+	                                           
 	            
-		                                    
+		                                                       
 		 
 			                                
 			 
@@ -632,6 +635,10 @@ void function SPACEELEVATOR_TriggerEnter( entity trigger, entity ent )
 				                                                            
 				 
 					                                                       
+				 
+				    
+				 
+					                                     
 				 
 			 
 		 
@@ -682,8 +689,6 @@ void function SPACEELEVATOR_TriggerEnter( entity trigger, entity ent )
 			                                                                                                     
 		 
 		                                
-		                                   
-
 
 		           
 	 
@@ -856,7 +861,7 @@ void function SPACEELEVATOR_InTriggerThread( entity trigger, entity player )
 		{
 			if ( IsValid( player ) )
 			{
-				if ( StatusEffect_GetSeverity( player, eStatusEffect.in_space_elevator ) > 0 )
+				if ( StatusEffect_HasSeverity( player, eStatusEffect.in_space_elevator ) )
 				{
 					ApplyElevatorEffects( player, trigger, player3PSpaceElevatorFXArray, data, false )
 				}
@@ -901,7 +906,7 @@ void function SPACEELEVATOR_InTriggerThread( entity trigger, entity player )
 				DebugDrawSphere( player.GetOrigin(), 11, <75, 0, 150>, true, TICK_RATE )
 			}
 
-			if ( StatusEffect_GetSeverity( player, eStatusEffect.in_space_elevator ) <= 0 )
+			if ( !StatusEffect_HasSeverity( player, eStatusEffect.in_space_elevator ) )
 			{
 				ApplyElevatorEffects( player, trigger, player3PSpaceElevatorFXArray, data, true )
 				#if SERVER
@@ -1096,7 +1101,7 @@ void function  SpaceElevator_1PFX_Thread( entity player, int fxHandle )
 			break
 
 		                                                                                       
-		bool shouldBeOn = StatusEffect_GetSeverity( player, eStatusEffect.in_black_hole_field ) == 0
+		bool shouldBeOn = !StatusEffect_HasSeverity( player, eStatusEffect.in_black_hole_field )
 		if ( !wasOn && shouldBeOn )
 		{
 			EffectWake( fxHandle )
@@ -1154,7 +1159,7 @@ void function CL_SpaceElevatorProgressRUIThread( entity player, entity base )
 	                                                                             
 
 	float progress = 0.0
-	while ( IsValid( base ) && StatusEffect_GetSeverity( player, eStatusEffect.in_space_elevator ) > 0 )
+	while ( IsValid( base ) && StatusEffect_HasSeverity( player, eStatusEffect.in_space_elevator ) )
 	{
 		                                
 		vector playerPos       = player.GetOrigin()

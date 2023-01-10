@@ -21,10 +21,10 @@ const NIGHTRUN_MOVER_SCRIPTNAME = "nightrun_mover"
 	                           
       
 
-                      
+                               
                                                
                                                         
-                                 
+                                     
 
 
 
@@ -1200,7 +1200,7 @@ void function OnDoorSpawn( entity door )
 			     
 
 		        
-			                                                                                           
+			                                                                                               
 	 
 
 	                         
@@ -2172,7 +2172,7 @@ bool function IsHardMode()
 			     
 
 		        
-			                                       
+			                                           
 	 
 
 	          
@@ -3646,7 +3646,7 @@ bool function IsHardMode()
 		              
 			     
 		        
-			                                                                          
+			                                                                              
 	 
 
 
@@ -3935,7 +3935,7 @@ bool function IsHardMode()
 			                                  
 			     
 		        
-			                                            
+			                                                
 	 
 
 	                                       
@@ -3961,7 +3961,7 @@ bool function IsHardMode()
 			                              
 			     
 		        
-			                                            
+			                                                
 	 
 
 	           
@@ -4512,7 +4512,7 @@ bool function IsHardMode()
 	                                                                         
 		                                                                                                            
 	    
-		                                                            
+		                                                                
 
 	                                                                                 
 	                                                                               
@@ -4683,7 +4683,7 @@ bool function IsHardMode()
 	 
 	    
 	 
-		                                                            
+		                                                                
 	 
 
 	                                                                                       
@@ -4910,7 +4910,7 @@ bool function IsHardMode()
 	                                                               
 		                                                           
 	    
-		                                                               
+		                                                                   
 
 	                                                                                              
 	                         
@@ -4958,7 +4958,7 @@ string function GetUsePromptsForModel( entity panel )
 		case GetObjectiveAsset_Model( "MODEL_DEATH_TOTEM" ):
 			return "#FREELANCE_DEATH_TOTEM_USESTRING"
 		default:
-			Assert( 0, "Unhandled modelAsset " + modelAsset )
+			Assert( false, "Unhandled modelAsset " + modelAsset )
 	}
 
 	unreachable
@@ -5020,7 +5020,7 @@ string function GetUsePromptsLongForModel( entity panel )
 		case GetObjectiveAsset_Model( "MODEL_DEATH_TOTEM" ):
 			return "#FREELANCE_DEATH_TOTEM_LONG_USESTRING"
 		default:
-			Assert( 0, "Unhandled modelAsset " + modelAsset )
+			Assert( false, "Unhandled modelAsset " + modelAsset )
 	}
 
 	unreachable
@@ -5033,7 +5033,7 @@ string function GetUsePromptsLongForModel( entity panel )
         
 void function OnGenericPanelUse( entity panel, entity player, int useInputFlags )
 {
-	if ( useInputFlags & USE_INPUT_LONG )
+	if ( IsBitFlagSet( useInputFlags, USE_INPUT_LONG ) )
 	{
 		thread GenericPanelUseThink( panel, player )
 	}
