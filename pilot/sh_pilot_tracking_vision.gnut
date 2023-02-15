@@ -1,17 +1,21 @@
 global function TrackingVision_GetPriorityForPOIType
 global function TrackingVision_GetOffsetForPOI
                                               
-          
+#if SERVER
                                                 
                                                        
                                               
                                                   
                                                   
-      
-          
-                                                                   
-      
-                                      
+#endif
+#if CLIENT
+global function TrackingVision_DisplayEnemyDirection_ServerCallback
+global function ServerToClient_ActivateWhiteRavenIconRUI
+global function ServerToClient_ActivateWhiteRavenPerchedFX
+global function ServerToClient_DeactivateWhiteRavenPerchedFX
+global function GetWhiteRavenPingTarget
+#endif
+global function Sh_TrackingVision_Init
       
 
 const vector TRACKING_ICON_OFFSET = <0,0,16>
@@ -22,53 +26,84 @@ global const TRACKING_DIST_INDEX = 3
 
                                               
          
-                                            
-                                                
-                                                 
+const bool DEBUG_WHITE_RAVEN_DRAW 			= false
+const bool DEBUG_WHITE_RAVEN_SPAWN_DRAW 	= false
+const bool DEBUG_WHITE_RAVEN_FLIGHT_DRAW 	= false
 
                    
-                                                
+const bool WHITE_RAVEN_PERCH_AT_TARGET 		= false
+const bool WHITE_RAVEN_USE_OFFSET_BIRDCALL_AUDIO = false
 
-                                                                                         
-                                                                                    
+global const string TRACKING_VISION_BIRD_SCRIPTNAME 			= "bloodhound_tracking_white_raven"
+global const string TRACKING_VISION_BIRD_PING_SCRIPTNAME 		= "bloodhound_tracking_white_raven_ping_blocker"
+const string TRACKING_VISION_BIRD_MOVER_SCRIPTNAME 				= "bloodhound_tracking_mover"
 
-                                                                                                                    
-                                                                                                                             
-                                                                                                                                     
-                                                      
-                                                          
-                                                       
-                                                 
+global const float WHITE_RAVEN_MAX_ENEMY_DETECTION_RANGE	= 40000	                                                   
+const float WHITE_RAVEN_CLOSE_ENEMY_DISTANCE 				= 7000 		                                                                   
+const float WHITE_RAVEN_CLOSE_BREADCRUMB_DISTANCE 			= 2000 		                                                                       
 
-                                                            
-                                                         
-                                                   
+const float WHITE_RAVEN_PERCH_MIN_SPAWN_RANGE 				= 1800
+const float WHITE_RAVEN_PERCH_MAX_SPAWN_RANGE 				= 3000
+const float WHITE_RAVEN_PERCH_OFF_SPAWN_HEIGHT				= 200
 
-                                                      
-                                                      
-                                                     
-                                                    
+const float WHITE_RAVEN_NATURAL_SPAWN_TIME 					= 15.0
+const float WHITE_RAVEN_DEATHBOX_DISCOVERY_RANGE 			= 5000
+const float WHITE_RAVEN_FLY_AHEAD_DISTANCE 					= 150.0
+const float WHITE_RAVEN_FLY_AHEAD_TIME						= 1.0
 
-                                                   
-                                                   
-                                                       
-                                                       
+const float WHITE_RAVEN_FLIGHT_SPAWN_HEIGHT_OFFSET 			= 60.0
+const float WHITE_RAVEN_FLIGHT_SPAWN_DIST_OFFSET			= 10.0
+const float WHITE_RAVEN_FLIGHT_HEIGHT_MIN 					= 150.0
+const float WHITE_RAVEN_PING_DIST_MAX						= 7500.0
 
-                                               
-                                               
+const float WHITE_RAVEN_BIRD_LIFETIME_LONG 					= 60.0
+const float WHITE_RAVEN_BIRD_LIFETIME_SHORT					= 30.0
+const float WHITE_RAVEN_BIRD_REFRESH_TIME 					= 30.0
+const float WHITE_RAVEN_REFRESH_DISTANCE 					= WHITE_RAVEN_PERCH_MAX_SPAWN_RANGE + 1000
+
+const bool WHITE_RAVEN_GIVES_TAC_CHARGE 					= true
+const bool WHITE_RAVEN_GIVES_ULT_CHARGE 					= true
+const float WHITE_RAVEN_TACTICAL_REFUND_FRAC 				= 0.25
+const float WHITE_RAVEN_ULTIMATE_REFUND_FRAC 				= 0.25
+
+const float WHITE_RAVEN_FLIGHT_TIME 						= 7.5
+const float WHITE_RAVEN_PING_DELAY 							= 5.0
+const float WHITE_RAVEN_PING_OFFSET_HEIGHT_MAX 				= 500
+
+const float WHITE_RAVEN_BASE_SPEED							= 450
+const float WHITE_RAVEN_MAX_SPEED 							= 800
+const float WHITE_RAVEN_INIT_HEIGHT_OFFSET					= 200
+const int	WHITE_RAVEN_DEFAULT_MAX_PATH_LENGTH				= 200
+const float WHITE_RAVEN_MIN_HEIGHT							= 50
+const float WHITE_RAVEN_PATHFIND_MAX_LENGTH_RATIO			= 5.0      
+const float WHITE_RAVEN_PATHFIND_MAX_TIME_DIFF				= 5.0      
+
+const float WHITE_RAVEN_MAX_SPEED_RANGE 					= 25 * METERS_TO_INCHES	                                      
+const float WHITE_RAVEN_BASE_SPEED_RANGE					= 15 * METERS_TO_INCHES	                                        
+const float WHITE_RAVEN_SLOW_SPEED_RANGE					= 8 * METERS_TO_INCHES	  
+
+const float WHITE_RAVEN_ANG_ACCEL_MAX_SPEED 				= 360
+const float WHITE_RAVEN_ANG_ACCEL_LOW_SPEED 				= 180
+const float WHITE_RAVEN_LOW_SPEED_THRESHOLD 				= 75
+
+const float WHITE_RAVEN_ETHEREAL_AUDIO_RANGE 				= 700
 
           
-                                                                                                                                                                              
-                                                                              
-                                                                                                    
-                                                                                                 
+const string WHITE_RAVEN_FLY_SFX							= "EvidenceMarker_Raven_FlyAway_Interact"					                                                                      
+const string WHITE_RAVEN_FLY_ULTIMATE_SFX					= "EvidenceMarker_Raven_FlyAway_Ult"
+const string WHITE_RAVEN_FLY_IN_SFX							= "EvidenceMarker_Raven_FlyIn"
+const string WHITE_RAVEN_AMBIENT_CAW_SFX					= "EvidenceMarker_Raven_Stationary"
+const string WHITE_RAVEN_AMBIENT_ETHEREAL_SFX				= "EvidenceMarker_Raven_Stationary_EtherealLoop"
+const string WHITE_RAVEN_AMBIENT_ETHEREAL_DISSIPATE_SFX		= "EvidenceMarker_Raven_FlyAway_Stinger"
+const string BLOODHOUND_DIAG_FOLLOW_RAVEN_1P				= "diag_mp_bloodhound_bc_passiveInteract_1p"                                                     
+const string BLOODHOUND_DIAG_FOLLOW_RAVEN_3P				= "diag_mp_bloodhound_bc_passiveInteract_3p"                                                   
 
-                                                                        
-                                                               
-                                                                  
-                                                                                       
-                                                                         
-                                                        
+const asset TRACKING_VISION_BIRD_DISSOLVE 					= $"P_aether_raven_death"
+const asset TRACKING_VISION_BIRD_TRAIL						= $"p_wRaven_trail"
+const asset TRACKING_VISION_BIRD_PERCH_MIST					= $"P_wRaven_pillar"
+const asset TRACKING_VISION_WHITE_RAVEN_ICON 				= $"rui/hud/poi_icons/poi_white_raven"
+const asset TRACKING_VISION_DIRECTION_ICON 					= $"vgui/HUD/pc_arrow_dn"
+const float TRACKING_VISION_DIRECTION_LIFETIME 				= 5.0
       
 
                                                                            
@@ -161,10 +196,6 @@ global enum eTrackingVisionNetworkedPOITypes
                
                             
       
-                                              
-                              
-                                        
-      
 	PLAYER_ABILITY_PHASE_GATE,
                
                               
@@ -242,57 +273,68 @@ global enum eTrackingVisionNetworkedPOITypes
   	    
    
                                               
-                     
- 
-                      
-                        
-                         
-              
-                 
-                
-                    
-                              
- 
+struct WhiteRavenInfo
+{
+	bool whiteRavenActive
+	entity whiteRavenFlight
+	entity whiteRavenPerched
+	entity target
+	vector targetPos
+	vector perchPos
+	float perchInitTime
+	array<entity> wRavenTrailPOIs
+}
 
-                
- 
-                
-                
- 
+struct PerchInfo
+{
+	bool validPerch
+	vector perchPos
+}
 
-                                 
- 
-     
-       
-          
- 
+global enum eWhiteRavenTargetType
+{
+	POI,
+	ENEMY,
+	DEATHBOX,
+}
 
-      
- 
-                                                     
-                                                   
-      
+struct
+{
+	table< entity, WhiteRavenInfo > whiteRavenPlayerData
+	table< entity, entity >	closestWhiteRavenTargetEnt
+	table< entity, CompanionData > companionData
+	#if CLIENT
+	table< entity, bool > whiteRavenPingActive
+	#endif
+} file
       
 
                                               
-                                      
- 
-                                                         
-                                                      
-                                                           
+void function Sh_TrackingVision_Init()
+{
+	PrecacheParticleSystem ( TRACKING_VISION_BIRD_DISSOLVE )
+	PrecacheParticleSystem ( TRACKING_VISION_BIRD_TRAIL )
+	PrecacheParticleSystem ( TRACKING_VISION_BIRD_PERCH_MIST )
 
-                                             
-                                          
-                                          
-                            
-                                             
+	RegisterSignal( "OnEnd_WhiteRavenTracking" )
+	RegisterSignal( "OnReset_SpawnTracking" )
+	RegisterSignal( "OnActivate_WhiteRaven" )
+	RegisterSignal( "BirdFly" )
+	RegisterSignal( "WhiteRaven_OnEndClientHUD")
 
-                                                                                        
+	AddCallback_OnPassiveChanged( ePassives.PAS_TRACKING_VISION, Bloodhound_PassiveToggle )
+	#if CLIENT
+	AddCallback_OnPingCreatedByAnyPlayer( OnPingCreatedByAnyPlayer_WhiteRaven )
+	#endif
 
-          
-                                                                        
-      
- 
+	Remote_RegisterClientFunction( "ServerToClient_ActivateWhiteRavenIconRUI", "entity", "entity" )
+	Remote_RegisterClientFunction( "ServerToClient_ActivateWhiteRavenPerchedFX", "entity", "entity" )
+	Remote_RegisterClientFunction( "ServerToClient_DeactivateWhiteRavenPerchedFX", "entity", "entity" )
+
+#if CLIENT
+	AddCreateCallback( "prop_script", TrackingVision_OnBirdPointerCreated )
+#endif
+}
       
 
 int function TrackingVision_GetPriorityForPOIType( int poiEventID )
@@ -319,10 +361,6 @@ int function TrackingVision_GetPriorityForPOIType( int poiEventID )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_TURRET:
                
                                                                    
-      
-                                              
-                                                                     
-                                                                               
       
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_PHASE_GATE:
                
@@ -568,12 +606,6 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                
                                                                    
       
-
-                                              
-                                                                     
-                                                                               
-      
-
 		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_ABILITY_VOID_RING:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_PICKUP_GADGET:
 		case eTrackingVisionNetworkedPOITypes.PLAYER_LOOT_EXCHANGE_GADGET:
@@ -648,1558 +680,2318 @@ vector function TrackingVision_GetOffsetForPOI( int poiEventID )
                                                                                                             
                                                                                                             
 
-                                                                                               
- 
-                          
-        
-   
-               
-  
-                                              
-  
+void function Bloodhound_PassiveToggle( entity player, int passive, bool didHave, bool nowHas )
+{
+	if ( !IsAlive( player ) )
+		return
+	  
+	if ( didHave )
+	{
+		Signal( player, "OnEnd_WhiteRavenTracking" )
+	}
 
-              
-  
-            
-                                                                 
-        
-  
- 
+	if ( nowHas )
+	{
+		#if SERVER
+			                                                              
+		#endif
+	}
+}
 
-          
+#if SERVER
                                                                             
  
-                               
-                                 
-                                                
-                                             
+	                              
+	                                
+	                                               
+	                                            
 
-             
-                         
-   
-   
-  
+	            
+		                       
+		 
+		 
+	 
 
-                                    
+	                                   
 
-               
-  
-                          
-         
+	              
+	 
+		                        
+			      
 
-                                                   
-   
-                                                                                
-    
-                                                                                  
-          
-    
+		                                                 
+		 
+			                                                                   
+			                          
+			 
+				                                                                                                                   
+				      
+			 
+		 
 
-                                                                      
-                             
-    
-                                                                                                                       
-          
-    
-   
+		                                                  
+		                                                        
 
-                                                    
-                                                          
+		                                                    
+		                                    
+		  
+		                                      
+		   
+		  	                          
+		  		        
+		  
+		  	                                                          
+		  	                                                      
+		  	 
+		  		                                  
+		  		 
+		  			                                                                                    
+		  			     
+		  		 
+		  	 
+		   
 
-                                                      
-                                      
-    
-                                        
-     
-                               
-              
-    
-                                                               
-                                                           
-      
-                                        
-       
-                                                                                           
-            
-       
-      
-     
-
-                                         
-  
+		                                       
+	 
  
-      
+#endif
 
-          
+#if SERVER
                                                                 
  
-                         
-              
+	                        
+		            
 
-                                                                  
-              
-                                        
-              
-                                       
-              
-                                                                                
-              
+	                                                                 
+		            
+	                                       
+		            
+	                                      
+		            
+	                                                                               
+		            
 
-                                 
-                                       
-                    
-                                                                   
+	         					                  
+	              				                    
+	                   
+	                          	                                       
 
-        
-                                   
-  
-                                                                                                 
-                                                                                               
-                                                                                                    
-  
-       
+	       
+	                                  
+	 
+		                                                                                               
+		                                                                                             
+		                                                                                                  
+	 
+	      
 
-                                                           
-                                          
-                                                          
-               
+	                                                          
+	                                         
+		                                                        
+			            
 
-                               
-                                                                    
-                            
-  
-                          
-           
+	                              
+	                                                                   
+	                           
+	 
+		                        
+			        
 
-                              
+		           		               
 
-                       
-           
+		                     
+			        
 
-         
-                                     
-    
-                                                     
-                                                                                
-    
-        
+		       
+			                                  
+			 
+				                                                 
+				                                                                            
+			 
+		      
 
-                                                            
-                                                             
-               
-  
+		                                                          
+		                                                           
+			            
+	 
 
 
-                                                           
-                                                                 
+	                                                          
+	                                                                
 
-                               
-  
-                         
-           
+	                              
+	 
+		                       
+			        
 
-                                                              
-                                                        
-   
-          
-                                      
-     
-                                                                 
-                                                                                  
-     
-         
+		                                                            
+		                                                      
+		 
+			       
+				                                  
+				 
+					                                                            
+					                                                                             
+				 
+			      
 
-               
-   
-  
+			            
+		 
+	 
 
-            
+	           
  
-               
+#endif         
 
-          
+#if SERVER
 
                                                                        
  
-                                       
-                             
+	              				                    
+	               				         
 
-                                                      
-                                                      
-                                                     
+	                       
+	                                     
+	                        
+	                                                 
+	                                            
 
-                        
-                                      
-                         
-                                                  
-                                             
+	                        
 
-                         
+	                                
+	                      
+	                                                                                                      
 
-                                 
-                       
-                                                                                                       
+	                                                  
+	                                    
+	 
+		                          
+			        
 
-                                                   
-                                     
-  
-                            
-           
+		                                            
+		                                                                                      
+			        
 
-                                              
-                                                                                        
-           
+		                                                    
+		                                                                    
+			        
 
-                                                      
-                                                                      
-           
+		                                     
+		 
+			                               
+			                          
+		 
+	 
 
-                                       
-   
-                                  
-                             
-   
-  
+	                                
+	 
+		                                      
+		                  
+	 
 
-                                 
-  
-                                        
-                    
-  
+	                  
+	 
+		                                 
+		 
 
-                   
-  
-                                   
-   
+			                                                        
 
-                                                           
+			                                        
+			                                                                                                                                 
 
-                                           
-                                                                                                                                    
+			                                                                                                                                                                                        
+			                                                                                   
+			 
+				                              
+				                  
+				     
+			 
 
-                                                                                                                                                                                           
-                                                                                      
-    
-                                  
-                      
-         
-    
+			                                                                                 
+			 
+				                                                  
+				                                                                           
 
-                                                                                    
-    
-                                                      
-                                                                               
+				                                                                                                                                                                           
+				                                                                                   
+				 
+					                              
+					                  
+					     
+				 
+			 
 
-                                                                                                                                                                               
-                                                                                       
-     
-                                   
-                       
-          
-     
-    
+			                                                
 
-                                                   
-
-   
-  
+		 
+	 
 
 
-                  
-                                                                             
+	                           
 
-                          
-                                   
-                              
+	                 
+	 
+		                                                           
 
-                 
+		                                                   
+			                   
+	 
+
+	                   
+	                                  
+	                                         
+
+	                
  
-      
+#endif
 
-          
+#if SERVER
                                                                                               
  
-                                 
-                                       
-                    
-                                                                   
+	         					                  
+	              				                    
+	                   
+	                          	                                       
 
-                                                           
-                                                                 
+	                                                          
+	                                                                
 
-                               
-  
-                         
-           
+	                              
+	 
+		                       
+			        
 
-                                                              
-                                                                            
-           
+		                                                            
+		                                                                          
+			        
 
-                                           
-           
+		                                         
+			        
 
-                      
-                                     
-  
+		                    
+		                                   
+	 
 
-                    
+	                   
  
-      
+#endif
 
-          
-                                                               
- 
-                                                     
-                                                         
-
-                               
-                                             
-
-                                                                         
-                                              
-
-                                  
-                            
-                                                                                                                                     
-                                  
-  
-                               
-                                   
-  
-
-                                   
-                                                                                                                                     
-                                                                                         
-                                           
-
-                                                     
-                                                                                                                                                  
-                                                 
-  
-                                                                                        
-                                                                                        
-
-                                                                                                                                             
-                                                             
-   
-                                      
-                                                                                                                     
-                 
-    
+#if SERVER
                                                                               
-                                                                              
-                                                                                                                                                     
-                                       
-     
-                                        
-                                                                                                                                                                          
-                                
-                                                
-     
-    
-   
-  
-
-                                                                                     
-                          
-                              
-                                 
-  
-         
-                                     
-    
-                                                                    
-    
-        
-
-                      
-                           
-   
-                      
-                
-   
-  
-
-        
-                                    
-   
-                                                                        
-   
-       
-
-               
  
-      
+	                                              	     
+	                                             	          
+
+	                              
+	                                            
+
+	                                                                        
+	                                             
+
+	                                                                                                  
+	                                                                                                           
+	                                                                                                                                 
+	                              
+	 
+		                                                                  
+		                                                                                                                                    
+		                                 
+			                       
+	 
+
+	                                 
+	                           
+	                                                                                                                         
+	                                 
+	 
+		                                                           
+		 
+			                             
+			                                 
+		 
+	 
+
+	                                  
+	                                                                                                                         
+	                                                                                        
+	 
+		                                                         
+			                                         
+	 
+
+	                                                    
+	                                                                                                                                                 
+	                                                
+	 
+		                                                                                      
+		                                                                                      
+
+		                                                                                                                                
+		                                                                                                                       
+		 
+			                                   
+			                                                                                                                  
+			              
+			 
+				                                                                          
+				                                                                          
+				                                                                                                                                      
+				                                   
+				 
+					                                                          
+						                                          
+				 
+			 
+		 
+	 
+
+	                                                                                    
+	              	          
+	                             
+	                                
+	 
+		       
+			                                  
+			 
+				                                                                 
+			 
+		      
+
+		                    
+		                         
+		 
+			                   
+			             
+		 
+	 
+
+	       
+		                                  
+		 
+			                          
+				                                                                   
+			    
+				                                                                     
+		 
+	      
+
+	              
+ 
+#endif
+
+bool function TrackingVision_IsValidRavenHull( vector hullPos )
+{
+	const vector WHITE_RAVEN_PERCH_HULL_MINS = <-10,-10, 0>
+	const vector WHITE_RAVEN_PERCH_HULL_MAXS = < 10, 10, 20>
+
+	array<entity> ignoreArray = GetPlayerArray()
+
+	vector hullOffset = <0,0,5>                                                                                            
+	hullPos = hullPos + hullOffset
+
+	#if DEV
+		if( DEBUG_WHITE_RAVEN_SPAWN_DRAW )
+		{
+			DebugDrawBox( hullPos, WHITE_RAVEN_PERCH_HULL_MINS, WHITE_RAVEN_PERCH_HULL_MAXS, COLOR_RED, 1, 15 )
+		}
+	#endif
+
+	TraceResults hullTrace = TraceHull( hullPos, hullPos + hullOffset, WHITE_RAVEN_PERCH_HULL_MINS, WHITE_RAVEN_PERCH_HULL_MAXS, ignoreArray, TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_NONE )
+	if( hullTrace.fraction < 1 )
+		return false
+
+	return true
+}
 
 
 
-          
+#if SERVER
                                                                                                                              
  
-                         
-             
+	                        
+		           
 
-                                                                            
-                                                                                                                                     
-                  
-                        
-                                  
-                                                              
-                                                                                                      
+	                                                                           
+	                                                                                                                                    
+	                 
+	                       
+	                                 
+	                                                     
+	                                   	                                                                 
 
-                                                   
-                             
-                                
-                                    
-                                                                             
-                             
-                
+	                                                  
+	                            
+	                               
+	                                   
+	                                                                            
+	                            
+	               
 
-                                                             
+	                                                                                                                                                              
+	                         
+	                                                 
+	                                                                                                                                                              
+	                                                                            
+	                                    
+	                                              
+	                                
 
-                                       
-                
-  
-                                                                                                         
-                  
-                                  
-                                                                                                                        
-                                                                                          
-                                                                                
+	                                                            
 
-                                                           
-  
+	                                      
 
-                    
-                                     
+	                                                                                                 
 
-        
-                             
-                                                                                     
-       
-            
+	               
+	 
+		                                                                                                       
+		                
+		                                
+		                                                                                                                      
+		                                                                                        
+		                                                                              
+
+		                                                                                                   
+	 
+
+	                   
+	                                    
+
+	       
+	                            
+		                                                                                   
+	      
+	           
  
-               
+#endif         
 
-          
-                                                                             
- 
-                                                  
-                               
 
-                                                     
-                                                                             
-
-                                                                                        
-                                                                                                    
-                     
-                                                
-
-             
-                           
-   
-                       
-                    
-   
-  
-
-              
- 
-               
-
-          
+#if SERVER
                                                                                                                                    
  
-                              
-                                       
-                                       
-                                      
+	                             
+	                                      
+	                                      
+	                                     
 
-                                                           
-                                     
+	                                                               
+	                       			          
 
-                             
-                                       
+	                            
+		                      		             
 
-                      
+	                     
  
-               
+#endif         
 
 
-          
-                                                                                      
- 
-                         
-        
-
-                                          
-                                                                            
- 
-
-                                                                                             
- 
-                               
-                                 
-                                             
-                                                
-
-             
-                         
-   
-                                            
-    
-                                                                     
-
-                                                        
-                                                       
-                               
-                         
-
-                              
-                        
-
-                                                                             
-                                               
-    
-   
-  
-
-                              
-                                               
-                                                     
-
-              
-                 
-
-
-                                              
-  
-                                                                     
-                             
-         
-
-                                
-  
-
-                                                 
-  
-                                                     
-                        
-         
-
-                                
-  
-
-                                                                                                       
-                                                     
-    
-                          
-                                                                    
-                                      
-   
-                                                      
-                                        
-     
-                               
-              
-   
-                                                               
-                                       
-              
-   
-                                          
-      
-                                     
-                                
-      
-     
-   
-                                
-                                             
-    
-
-                                     
-                                
-                                          
-                                                                                       
-                                                                     
-                                       
-
-                                                                                      
-
-                                                                                        
-                                                      
-
-        
-                              
-                                              
-       
-
-                                                                  
-
+#if SERVER
                                                                                                             
+ 
+	                        
+		      
 
-                                                                                         
+	                                         
+	                                                                                    
+ 
 
-                         
-        
+                                                                                                           
+ 
+	                              
+	                                
+	                                            
+	                                               
 
-                                    
-                                
+	            
+		                       
+		 
+			                                         
+			 
+				                                                                 
 
-                                  
-                                                                                                                             
-     
-  
-                                           
-                                                                
-  
+				                  	                                 
+				                	                                  
+				                           
+					                    
+
+				                          
+					                   
+
+				                                                                         
+					                                          
+			 
+		 
+	 
+
+	                             
+	                                              
+		                                                   
+
+	             
+	                
+
+
+	                                             
+	 
+		                                                                   
+		                           
+			      
+
+		                              
+	 
+
+	                                                
+	 
+		                                                   
+		                      
+			      
+
+		                              
+	 
+
+	                                                                                                      
+	                                                    
+	   
+	  	                      
+	  	                                                                
+	  	                                  
+	  
+	  	                                                  
+	  	                                    
+	  	 
+	  		                          
+	  			        
+	  
+	  		                                                          
+	  		                                  
+	  			        
+	  
+	  		                                     
+	  		 
+	  			                               
+	  			                          
+	  		 
+	  	 
+	  
+	  	       				                 
+	  	         			                             
+	   
+
+	                                    
+	                               
+	           			                                                   
+	                  	                                                                   
+	                                                                    
+	                 	                    
+
+	                                                                                     
+
+	                                                                                       
+	                                                     
+
+	       
+		                            
+			                                           
+	      
+
+	                                                                 
+
+	                                                                                                           
+
+	                                                                                                 
+
+	                        
+		      
+
+	                                   
+	                               
+
+	                                 
+		                                                                                                                           
+	    
+	 
+		                                         
+		                                                              
+	 
 
  
 
                                                                                                                  
  
-                               
-                                 
-                                             
-                                                
+	                              
+	                                
+	                                            
+	                                               
 
-                       
-        
-                                    
-                                
+	                      
+		      
+	                                   
+	                               
 
-                             
-                                                                                    
-                                                                                            
+	                            
+	                                                                                   
+	                                                                                           
 
-                                               
-  
-                                                                                                            
-                                                       
-  
+	                                              
+	 
+		                                                                                                          
+		                                                     
+	 
 
-                                                                               
+	                                                                              
 
  
-               
+#endif         
 
 
-          
-                                                                                                                  
- 
-                               
-                                 
-                               
-                                             
-                                                
-
-                                                                         
-                                  
-                  
-
-                 
-                                              
-     
-                               
-
-        
-                              
-   
-                                                         
-                                                          
-   
-       
-
-
-                                
-                                                                                               
-                            
-                                      
-                        
-                   
-                                                       
-
-                                
-
-                        
-
-           
-                                                                
-                                                                                                                                            
-                                                         
-                                        
-                              
-
-                         
-                                                                                                                                           
-
-             
-                                               
-   
-                         
-                  
-
-                          
-                   
-
-                           
-    
-                       
-                     
-    
-
-   
-  
-                       
-                           
-
-                                               
-                                           
-                                            
-
-                 
-  
-                                                                     
-                                                                                                   
-
-                                                                                 
-
-                                                                         
-                                                                               
-
-         
-                                      
-    
-                                          
-                                                                
+#if SERVER
                                                                  
-    
-        
+ 
+	                                                           
 
-                                 
+	                   				                        
+	                           		                                
+	                        		                                     
+	                          		                                       
+	                       			                                    
+	                         		                                          
 
+	                 
+ 
+#endif
 
-                                                                             
-                        
-         
-                         
-         
-                          
-         
+const float UPDATE_RATE = 1.0
 
-         
-                                      
-    
-                                   
-                                                                
-                                                                 
-    
-        
+#if SERVER
+                                                                                                                                        
+ 
+	                              
+	                                
+	                              
+	                                            
+	                                               
 
-                                 
-                                           
-                                      
-                                        
+	                        
+		      
 
-                                                                                                                  
-                                                                                                                      
+	                                                                        
+	                                 
+	                 
+	                           
 
-                         
-                                                              
+	                
+		                                            
+	    
+		                             
 
-
-                    
-                                            
-   
-                         
-          
-                          
-          
-                           
-          
-
-                                           
-                                   
-                                 
-
-                                                                     
-                                                              
-
-                                       
-                                                                            
-
-          
-                                       
-     
-                                                       
-                                                             
-     
-         
-
-              
-
-                          
-          
-
-                                
-                                         
-                                       
-                                                                                                      
-
-          
-                                       
-     
-                                                 
-                                                                                                                                 
-                                                                                                                                      
-     
-         
-
-   
-  
+	       
+		                            
+		 
+			                                                      
+			                                                       
+		 
+	      
 
 
-                       
-        
-                        
-        
-                         
-        
+	                               
+	                                                                                              
+	                           
+	                                     
+	                       
+	                  
+	                                                      
 
-                                                                    
-        
-                                     
-                                         
-       
+	                                                                         
+
+	                               
+
+	                       
+
+	          
+	                                                               
+	                                                                                                                                           
+	                                                        
+	                                       
+	                             
+
+	                        
+	             
+	 
+		                                                                           
+	 
+	    
+		                                                                  
+
+	                                                   
+	                                                                        
+
+	            
+		                                             
+		 
+			                      
+				              
+
+			                       
+			 
+				                                       
+				               
+			 
+
+			                        
+			 
+				                   
+					                
+			 
+
+		 
+	 
+	                      
+	                          
+
+	                  		                          
+	               			                        
+	                      	                    
+
+	                                           
+
+	                          
+	 
+		                                                                   
+		                                                                                 
+
+		                                    
+		                               
+		                                                                                            
+		                                                                                                   
+		                                            
+
+		                                                                                                                                           
+		                                                                
+		 
+			                                                      
+			                                                                                                                             
+			 
+				                                                  
+				                                                                                                                                               
+
+				                                                                                                                                          
+			 
+			                                                                          
+				                            
+		 
+
+		                                                                       
+		                                                                             
+
+		       
+			                                   
+			 
+				                                      
+				                                                          
+				                                                           
+			 
+		      
+
+		                               
 
 
-                              
-                                       
-                                     
+		                                                                           
+		                      
+			      
+		                       
+			      
+		                        
+			      
+
+		       
+			                                   
+			 
+				                               
+				                                                            
+				                                                             
+			 
+		      
+
+		        				                   
+		           				                          
+		        				                        
+		               			                    
+
+		             			                                                                                                
+		               			                                                                                                  
+
+		                		     
+		               			                                          
 
 
-                 
-                                                                              
-     
-                                                                              
+		                  
+		                                          
+		 
+			                      
+				      
+			                       
+				      
+			                        
+				      
 
-                
-                                          
+			                                        
+			                                
+			        			                   
 
-                                          
+			                   	                                              
+			                                                           
+
+			               	                    
+			                                                                         
+
+			       
+				                                   
+				 
+					                                                  
+					                                                        
+				 
+			      
+
+			           
+
+			                       
+				      
+
+			        		                   
+			          		                          
+			               	                    
+			       			                                                                                         
+
+			       
+				                                   
+				 
+					                                            
+					                                                                                                                            
+					                                                                                                                                 
+				 
+			      
+
+		 
+	 
 
 
-                                                 
-                                                                                             
+	                      
+		      
+	                       
+		      
+	                        
+		      
 
-                          
-  
-                        
-         
-                         
-         
-                          
-         
+	                                                                   
+	       
+		                                   
+			                                      
+	      
 
-                        
-                   
+	                                 
+	                                                                     
 
-                                          
-                                
+	        		                   
+	          		                          
+	               	                    
 
-                      
-                                             
-        
+	                                                                                
+	                                                                       
 
-                                                                          
-                                                             
+	                                       
+	 
+		                                                                 
+	 
 
-                                      
-                                                                           
 
-                             
+	       
+		                                   
+		 
+			                                                                  
+			                                                                    
+		 
+	      
 
-         
-                                      
-    
-                                                      
-                                                            
-    
-        
+	               
+		                                                                            
+	    
+		                                                                            
 
-             
+	               
+		                                                      
 
-                         
-         
+	                                                          
+	                                                                                                                 
 
-                               
-                                        
-                                      
-  
+	                           
+	                               
+	 
+		                                                                           
+	 
+	    
+	 
+		                                                                                                       
+	 
 
-                                       
+	                                      
 
  
-                
+#endif          
 
-          
+#if SERVER
+                                                                                                          
+ 
+
+	                      
+		      
+	                       
+		      
+	                        
+		      
+
+	                              
+	                                
+	                                            
+	                                               
+	                              
+	                               
+
+	                                                
+	                     								                                                               
+
+	                                                                                                       
+	                         
+	 
+		                      
+			      
+		                       
+			      
+		                        
+			      
+
+
+		                      
+			                
+
+		                                        
+		               			                   
+
+		                    
+		                                           
+			     
+
+		                   	                                                    
+		                                                           
+
+		                      	                    
+		                                                                         
+
+		                           
+
+		       
+			                                   
+			 
+				                                                  
+				                                                        
+			 
+		      
+
+		           
+
+		                       
+			      
+
+		        		                   
+		               	                    
+
+	 
+
+ 
+
+#endif         
+
+#if SERVER
+                                                                                                                                                                              
+ 
+
+	                      
+		      
+	                       
+		      
+	                        
+		      
+
+	                              
+	                                
+	                                            
+	                                               
+	                              
+	                               
+
+	                             
+	                                                        
+
+	                                  
+	                         
+	                            
+
+	                                                                                
+
+	                                  
+	                                                  
+
+	                                                     
+	                                                                         
+	                                                
+
+	                                       
+	                                                                                                              
+
+	                                                                                     
+	                                                                                               
+	                                                                                          
+
+	                                  
+	                                                                                                                    
+
+	                                               
+
+	                                                                                                                                                                                        
+	                                                      
+	 
+		                                                                                                                                            
+		                                                                                                                           
+		                                                      
+			                                                                                                                                                                                                 
+	 
+
+	                                                                    
+	                                                              
+	                                                                                          
+
+
+	                                   
+
+	                                                                
+	                                
+
+	                                                                  
+		      
+
+	                                  
+
+	                                                
+	              	                                  
+	               	                                         
+	                         
+	 
+		                       
+			      
+		                        
+			      
+		                         
+			      
+
+		                           
+		                                              
+		                                               
+		                            
+
+		                                      
+		                                                                                  
+		                                              
+
+		                                                                         
+		                                               
+		 
+			                      
+		 
+
+		                              
+		                
+		               
+		                                                 
+		 
+			                                                                                           
+		 
+		    
+		 
+			                              
+		 
+
+		                      
+		               			                     
+		                   	                        
+
+		                                              
+		 
+			                                                                                                                                                
+		 
+		                                                   
+		 
+			                  
+			                                                  
+			 
+				                                
+				                                                      
+				                      
+				 
+					                                                                                                                                      
+				 
+				    
+				 
+					                                                                                             
+				 
+				                                                                                                                                                                                           
+
+				                                                                                       
+				                              
+				 
+					                                                                                                                
+					                                        
+					                                                                                                           
+				 
+			 
+			    
+			 
+				                                                                                                           
+			 
+		 
+
+		                       
+		                        
+		 
+			                                   
+			                                                                             
+		 
+
+
+		                                                
+		                                          
+		                                                                                       
+		                                                      
+		 
+			                                    
+		 
+
+		                    	                          
+		                  		                                        
+		                      	                          
+
+		                                                                                                                                           
+		                              
+
+		                  
+		                          
+		 
+			                                                                 
+		 
+
+		                                                                      
+		                                                                                 
+
+		                                                                                
+
+		                      
+		                                                                    
+
+		                                       
+		                                                     
+		 
+			                             
+		 
+		                                    
+
+		                
+	 
+
+ 
+#endif         
+
+#if SERVER
                                                                                               
  
-                                          
-                                            
-                                             
-                                                
+	                                         
+	                                           
+	                                            
+	                                               
 
-        
-                              
-                        
-       
+	       
+		                            
+			                     
+	      
 
-             
-                               
-   
-          
-                                
-                                   
-         
+	                                  
 
-                                           
-                  
+	            
+		                                       
+		 
+			       
+				                            
+					                              
+			      
 
-                                            
-                                            
+			                      
+			 
+				                                                           
+				                       
+					                                                                                                                
+			 
 
-                          
-    
-                                             
-                                                                  
-    
-   
-  
+			                                        
+				              
 
-                                          
-  
-                                                            
-                                                              
-  
+			                                         
+				                                        
 
-                      
+			                       
+			 
+				                                         
+				                                                              
+			 
+		 
+	 
 
-                    
-                                     
+	                                         
+	 
+		                                                          
+		                                                            
+	 
 
-                         
-                        
+	                     
 
-                        
-                                            
-                            
-                        
-                        
+	                   
+	                                    
 
-                                 
-  
-                          
-         
+	                      
+	                                                                     
 
-                        
-         
+	                        
+	                       
 
-                                      
-                                      
-                                                     
+	                       
+	                                           
+	                  	        
+	                       
+	                       
+	                     
 
-                               
-                                                                                               
-                                                                                                             
-                 
-         
+	                                
+	 
+		                        
+			      
 
-                                                 
-   
-                                                        
-          
-                                
-     
-                                                                                
-                                                                                                
-     
-         
-   
+		                      
+			      
 
-                                              
-   
-                                                                     
-                                                                     
+		              		                    
+		                 	                  
+		                                                   
 
-                                                
-                        
+		                             
+		                                                                                             
+		                                                                                                           
+		               
+			      
 
-                  
-                                                                                                                                          
+		                                               
+		 
+			                                                     
+			       
+				                            
+				 
+					                                                                           
+					                                                                                           
+				 
+			      
+		 
 
-                                               
-                                                                                                                                            
-                                                                                                                           
+		                                            
+		 
+			                		                                                
+			               			                                                
 
-                     
-                                                                                            
-                                                                                                                                      
-                                                             
+			                                             
+				                    
 
-                                                                                                       
-                                                                                                
-                                 
-                                                              
-                               
+			                                            
+			                                                                                                                                         
+			                                                                                                                        
 
-          
-                                
-     
-                                                               
-     
-         
+			                  
+			                                           
+			 
+				                                                                                         
+				                                                                                                                                   
+				                                                          
 
-                                                                                      
+				                                                                                                    
+				             			                                                                             
+				                              
+				                                                           
+					                           
 
-                                                                  
-   
+				       
+					                            
+					 
+						                                                          
+					 
+				      
+
+				                                                                                   
+			 
+			    
+			 
+				                
+					                                                                          
+
+				                 
+			 
 
 
-                   
+			                                                               
+		 
 
-             
-  
+		                 
 
-                   
-                                                       
+		           
+	 
 
-                                       
+	                  
+	                                                      
+
+	                                      
  
-      
+#endif
 
+#if SERVER
+                                                                
+ 
+	                          
 
-          
+	                                                                                                     
+	                                                     
+	                                                                                                             
+
+	                                                                     
+	                               
+	 
+		                                                                   
+		                                       
+		                                                                 
+
+		                               
+		 
+				              
+		 
+	 
+
+	                                                      
+	              
+ 
+#endif
+
+#if SERVER
                                                                                                   
  
-                          
-                                
-                                              
+	                         
+	                               
+	                          	                  
 
-                                      
-                                     
+	                                     
+	                                    
 
-                                             
-                                                  
-                                               
-                                                    
+	                                  				      
+	                                        		       
+	                                    			       
 
-                                                  
-                     
-                                                   
+	                                                 
+	                    
+		                                                 
 
-                        
-                                                           
-                                                                                    
+	                       
+	                                                          
+	                                                                                   
 
-                                                                                                                                                                                 
-                      
-                                    
-     
-                                                            
+	                                                                                                                                                                                
+	                     
+		                                  
+	    
+		                                                          
 
-                                                                                       
-  
-                                 
-                                                                                                                                                                                                   
-                                                 
-                                                                        
-  
-                                        
-  
+	                                                                                      
+	 
+		                               
+		                                                                                                                                                                                                 
+		                                               
+			                                                                     
+	 
+	                                       
+	 
 
-                                                                                                                                        
-                                                          
-   
-                                  
-                                                                                                                                                                                                    
-                                                  
-                                                                           
-   
-  
+		                                                                                                                                      
+		                                                        
+		 
+			                               
+			                                                                                                                                                                                                 
+			                                               
+				                                                                       
+		 
+	 
 
-                    
+	                   
  
-                
+#endif          
 
 
-          
+#if SERVER
                                                 
  
-                   
-                                                                   
-                                                                                                                                            
-                                                         
-                                        
+	                  
+	                                                                  
+	                                                                                                                                           
+	                                                        
+	                                       
 
-                             
-                                        
-                                             
-                                                       
-  
-                                                                               
-                                 
-             
-  
+	                            
+	                                       
+	                                            
+	                                                      
+	 
+		                                                                             
+		                               
+		           
+	 
 
-                      
-                
+	                     
+		              
  
-      
+#endif
 
 
+bool function TrackingVision_CanUseBirdPointerEntityCallback( entity player, entity bird, int useFlags )
+{
 
+	if ( !PlayerHasPassive( player, ePassives.PAS_TRACKING_VISION ) )
+		return false
+	if ( Bleedout_IsBleedingOut( player ) )
+		return false
+	if ( player.ContextAction_IsActive() )
+		return false
+	if ( player.Player_IsSkywardLaunching() || player.Player_IsSkywardFollowing() )
+		return false
+	if ( !PlayerCommonItemPickupCheck( player ) )
+		return false
+	if ( !IsFriendlyTeam( player.GetTeam(), bird.GetTeam() ) )
+		return false
 
-                                                                                                        
- 
+	return true
+}
 
-                                                                  
-              
-                                        
-              
-                                       
-              
-                                                                                
-              
-                                              
-              
-                                                           
-              
-
-            
- 
-
-                                                                                          
- 
+void function TrackingVision_OnBirdPointerUsed( entity bird, entity player, int useFlags )
+{
 
                        
                      
         
       
-          
-                                                  
-        
-      
+#if CLIENT
+	if ( !InPrediction() || !IsFirstTimePredicted() )
+		return
+#endif
 
-          
-                                           
-  
-         
-                               
-                                 
-        
-                                                                
-  
-      
+#if SERVER
+	                                          
+	 
+		       
+			                            
+				                             
+		      
+		                                                              
+	 
+#endif
+
+}
+
+#if SERVER
+                                                                                                                                          
+ 
+	                              
+	                                
+	                                            
+	                                               
+
+	            
+		                             
+		 
+			                       
+			 
+				                                                                          
+					                                        
+			 
+		 
+	 
+
+	                     		                                                           
+	                        
+	                                                                                                     
+
+	                                      
+	                                         
+		                                        
+
+	                                                                          
+
+	                             
+	                                                                
+
+	                           
+	 
+		       
+			                            
+			 
+				                                                          
+				                                                                                    
+			 
+		      
+
+
+		                                                                                                            
+		                                                     
+
+		                                                                             
+
+
+		                                                                                              
+
+		                        
+			      
+
+		                                 
+			                                                                                                                           
+		    
+		 
+			                                         
+			                                                              
+		 
+
+	 
+	    
+	 
+		       
+			                            
+			 
+				                                    
+			 
+		      
+
+		                                      
+	 
 
  
+#endif
 
-          
-                                                                                                            
- 
-                               
-                                 
-                                             
-                                                
+vector function TrackingVision_GetWhiteRavenPingPos( entity player, vector perchPos )
+{
+	if( !IsValid( player ) )
+		return perchPos
 
-             
-                               
-   
-                          
-    
-                                                                              
-                                             
-    
-   
-  
+	                   
+	vector playerOrigin 		= player.GetOrigin()
+	vector dirToPerch			= Normalize( FlattenVec( perchPos - playerOrigin ) )
+	vector pingPos 				= playerOrigin + dirToPerch * WHITE_RAVEN_PING_DIST_MAX
+	float distToPerchPos 		= Distance2D( playerOrigin, perchPos )
 
-                                                                                   
-                         
+	if( distToPerchPos <  WHITE_RAVEN_PING_DIST_MAX )
+		pingPos = perchPos
 
-                                       
-                                          
-                                          
+	                              
+	float pingOffset = 0
+	TraceResults pingDownTrace = TraceLine( pingPos, pingPos + <0.0, 0.0, -300>, GetPlayerArray(), TRACE_MASK_SOLID, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
+	if( pingDownTrace.fraction < 0.98 )
+		pingOffset = GraphCapped( pingDownTrace.fraction, 0, 1, WHITE_RAVEN_PING_OFFSET_HEIGHT_MAX, 0 )
 
-                                                                      
+	return pingPos + <0,0,pingOffset>
+}
 
-                              
-                                                                 
-
-                            
-  
-         
-                               
-    
-                                                              
-                                                                                        
-    
-        
-
-
-                                                                                                              
-                                                       
-
-                                                                               
-
-
-                                                                                         
-
-                          
-         
-
-                                   
+#if SERVER
                                                                                                                               
-      
-   
-                                            
-                                                                 
-   
-
-  
-     
-  
-         
-                               
-    
-                                        
-    
-        
-
-                                        
-  
-
- 
-      
-
-          
-                                                                                                                              
  
 
-                                                                 
-  
-                            
-           
+	                                                                
+	 
+		                          
+			        
 
-                                                
-                                                                                                
-                                                                             
-                                                                                      
+		                                                                                         
 
-                                                   
-                                    
+		                                                                                                                                                                                                       
 
-                                                                                                                                                                                                         
-
-                                               
-                                                                                                   
-  
+		                                             
+		                                                                                                 
+	 
 
  
-               
+#endif         
 
-          
+#if SERVER
                                                                                                                                          
  
-                               
-                                 
+	                              
+	                                
+	                                            
 
-                                                                                                 
-                                                 
-                            
-  
-                                                                                                
-        
+	                                                                                                
+	                                                
+	                           
+	 
+		                                                                                              
+			     
 
-             
-  
+		           
+	 
 
-                                                 
-        
+	                                                
+		      
 
-                         
-  
-                                                                                    
-                                                            
-  
-     
-  
-                                                                                    
-  
+	                        
+	 
+		                                                                                  
+		                                                          
+	 
+	    
+	 
+		                                                                                  
+	 
+	
  
- 
 
-      
+#endif
 
-          
+#if SERVER
                                                                                      
  
-                         
-        
+	                        
+		      
 
-                                                                                                                                                   
-                     
-                                                                                                                                                         
-                                    
-                                                                  
+	                                           
 
+	                                                                                                                       
+	                                                   
+	                    
+	                                                 
 
-                                                                                                                                
-                     
+	            
+		                   
+		 
+			            
+		 
+	 
 
-             
-                     
-   
-               
-   
-  
-
-        
+	       
 
  
-      
+#endif
 
-          
-                                                                                        
+#if SERVER
+                                                                                             
  
 
-                                                  
+	                                                 
 
-                        
-  
+	                       
+	 
+		                               
+		                                  
+		 
+			                                                                   
+
+			                                                                      
+
+			                     	                                            
+			                                                                       
+
+			                     
+			 
+				                                                                  
+			 
+			                          
+			 
+				                                                                         
+				                                  
+				                                                                                                   
+			 
+		 
+
+		                               
+		                                  
+		 
+			                                                              
+
+			                                                                 
+
+			                     	                                       
+			                                                                  
+
+			                     
+			 
+				                                                                         
+				                                  
+				                                                                                              
+			 
+		 
+	 
+ 
+#endif
+
+#if CLIENT
+void function TrackingVision_OnBirdPointerCreated( entity ent )
+{
+	if ( ent.GetScriptName() != TRACKING_VISION_BIRD_SCRIPTNAME )
+		return
+
+	ClearCallback_CanUseEntityCallback( ent )
+	SetCallback_CanUseEntityCallback( ent, TrackingVision_CanUseBirdPointerEntityCallback )
+}
+
+void function TrackingVision_DisplayEnemyDirection_ServerCallback( vector enemyPos, vector pingPos, vector angles )
+{
+	entity player = GetLocalClientPlayer()
+	if( !IsValid( player ) )
+		return
+
+	Signal( player, "WhiteRaven_OnEndClientHUD" )
+	thread TrackingVision_DisplayEnemyDirection_Thread( enemyPos, pingPos, angles )
+}
+
+void function TrackingVision_DisplayEnemyDirection_Thread( vector enemyPos, vector pingPos, vector angles )
+{
+	entity player = GetLocalViewPlayer()
+	if ( !IsValid( player ) )
+		return
+
+	EndSignal( player, "WhiteRaven_OnEndClientHUD" )                                                                    
+
+	const int	TRACKING_VISION_CHEVRON_MAX				= 6
+	const float TRACKING_VISION_CHEVRON_INIT_DELAY		= 1.5
+	const float TRACKING_VISION_CHEVRON_MIN_DIST		= 500
+	const float TRACKING_VISION_CHEVRON_INTERVAL_DIST	= 750
+	const float TRACKING_VISION_CHEVRON_INTERVAL_TIME	= 0.25
+
+	wait TRACKING_VISION_CHEVRON_INIT_DELAY
+	if( !IsValid( player ) )
+		return
+
+	vector pPos 		= player.GetOrigin()
+	vector pDir			= Normalize( pPos - pingPos )
+	float lineDist		= Distance2D( pPos, enemyPos )
+	vector firstPoint 	= pingPos + pDir * TRACKING_VISION_CHEVRON_INTERVAL_DIST * 3                                                             
+	vector lineDir		= Normalize( pPos - firstPoint )
+	bool allowChevrons 	= DotProduct( pDir, lineDir ) > 0
+
+	                                  
+	array<vector> linePoints
+	linePoints.append( firstPoint )                              
+	vector lastPoint = firstPoint
+
+	if ( lineDist > TRACKING_VISION_CHEVRON_MIN_DIST && allowChevrons )
+	{
+		for (int i=0; i<TRACKING_VISION_CHEVRON_MAX; i++)
+		{
+			vector newPoint = lastPoint + pDir * TRACKING_VISION_CHEVRON_INTERVAL_DIST
+			vector pointDir	= Normalize( pPos - newPoint )
+
+			if ( Distance2D( newPoint, pPos) < TRACKING_VISION_CHEVRON_MIN_DIST  || DotProduct( pDir, pointDir ) < 0 )
+				break
+
+			linePoints.append( newPoint )
+			lastPoint = newPoint
+		}
+	}
+
+	                                                                            
+	if( linePoints.len() > 0 )
+	{
+		int count = linePoints.len()
+		while ( count > 0 )
+		{
+			if( !IsValid( player ) )
+				return
+
+			vector nextChevronPos = linePoints[ count-1 ]
+			thread TrackingVision_CreateChevron_Thread( player, nextChevronPos, angles )                                               
+			count--
+
+			#if DEV
+				if( DEBUG_WHITE_RAVEN_DRAW )
+				{
+					printt( "Count is:   " + count + "   | New Position is: " + nextChevronPos )
+					DebugDrawSphere( nextChevronPos , 25, COLOR_RED, true, 10.0 )
+				}
+			#endif
+
+			wait TRACKING_VISION_CHEVRON_INTERVAL_TIME
+		}
+
+	}
+
+}
+
+void function TrackingVision_CreateChevron_Thread( entity player, vector nextChevronPos, vector angles)
+{
+	if( !IsValid( player ) )
+		return
+	if( GetLocalViewPlayer() != player )
+		return
+
+	EndSignal( player, "WhiteRaven_OnEndClientHUD" )                                                                    
+
+	const float BASE_ICON_SCALE = 1.5
+	asset icon = TRACKING_VISION_DIRECTION_ICON
                                  
-                                    
-   
-                                                                      
+	vector iconColor = GetKeyColor( COLORID_ENEMY ) * ( 1.0 / 255.0 )
+	var minimapRui = Minimap_AddIconAtPosition( nextChevronPos, angles, icon, BASE_ICON_SCALE, iconColor )
+	
+#if NX_PROG || PC_PROG_NX_UI
+	var fullmapRui = FullMap_AddIconAtPos( nextChevronPos, angles + <0, -90, 0>, icon, 24.0, iconColor )
+#else
+	var fullmapRui = FullMap_AddIconAtPos( nextChevronPos, angles + <0, -90, 0>, icon, 6.0, iconColor )
+#endif
 
-                                                                         
+	OnThreadEnd(
+		function() : ( minimapRui, fullmapRui )
+		{
+			Minimap_CommonCleanup( minimapRui )
+			Fullmap_RemoveRui( fullmapRui )
+			RuiDestroy( fullmapRui )
+		}
+	)
 
-                                                                     
-                                                                          
+	float minimapIconEndTime = Time() + TRACKING_VISION_DIRECTION_LIFETIME
+	float scale = BASE_ICON_SCALE * 3.0
+	while ( Time() < minimapIconEndTime )
+	{
+		if( !IsValid( player ) )
+			return
 
-                   
-    
-                                                                      
-    
-                             
-    
-                                                                             
-                                      
-                                                                                                       
-    
-   
+		if ( scale > BASE_ICON_SCALE )
+		{
+			scale -= 0.1
+			RuiSetFloat2( minimapRui, "iconScale", < scale, scale, 0 > )
+		}
 
-                                 
-                                    
-   
-                                                                 
+		WaitFrame()
+	}
 
-                                                                    
+	wait TRACKING_VISION_DIRECTION_LIFETIME
+}
 
-                                                                
-                                                                     
+#endif
 
-                        
-    
-                                                                             
-                                      
-                                                                                                  
-    
-   
-  
- 
-      
-
-          
-                                                               
- 
-                                                                      
-        
-
-                                          
-                                                                                        
- 
-
-                                                                                                                   
- 
-                                       
-                         
-        
-
-                                              
-                                                                                
- 
-
-                                                                                                           
- 
-                                     
-                          
-        
-
-                                                                                                                     
-
-                                             
-                                                      
-                                                    
-                                                        
-                                                         
-
-                                        
-                         
-        
-
-                                   
-                                            
-                                               
-                                                                                                                                             
-                                                 
-                                                      
-
-                                   
-                         
-                                                              
-                              
-
-                                                                    
-  
-                                                   
-   
-                                                                             
-                                                 
-
-                                                                                                             
-         
-
-                                
-                       
-   
-  
-
-                                                                             
-                           
-  
-                              
-                     
-   
-                           
-          
-
-                                                
-                                                                                                                              
-          
-
-          
-                                
-     
-                                                                                 
-                                                                  
-     
-         
-
-                                             
-   
-
-  
-
- 
-
-                                                                                                       
- 
-                         
-        
-                                     
-        
-
-                                                                                                                     
-
-                                  
-                                            
-
-                                                                  
-                                                                                                       
-                                                                                      
-
-             
-                                         
-   
-                                      
-                                  
-                           
-   
-  
-
-                                                                       
-                                    
-                                      
-  
-                          
-         
-
-                                
-   
-               
-                                                               
-   
-
-             
-  
-
-                                        
- 
-
-      
-
-          
+#if SERVER
                                                                         
  
-                      
-              
+	                     
+		            
 
-                                                     
-              
+	                                                    
+		            
 
-                                                                      
-              
+	                                                             
+		            
 
-            
+	           
 
  
 
-                                                                             
+                                                                                                   
  
-                                          
-  
-                                                                     
-  
+	                                         
+	 
+		                                                                                                   
+	 
  
 
                                                                  
  
-                         
-              
+	                        
+		            
 
-                                           
-  
-                                                                   
-                                                                                    
-              
-  
+	                                          
+	 
+		                                                                 
+		                                                                                  
+			           
+	 
 
-             
+	            
  
-      
+#endif
 
+#if CLIENT
+void function ServerToClient_ActivateWhiteRavenIconRUI( entity player, entity bird )
+{
+	if ( player != GetLocalClientPlayer() )
+		return
+
+	thread TrackingVision_WhiteRavenIconRUI_Thread( player, bird )
+}
+#endif          
+
+#if CLIENT
+void function TrackingVision_WhiteRavenIconRUI_Thread( entity player, entity bird )
+{
+	if ( player != GetLocalClientPlayer() )
+		return
+
+	if( !IsValid( player ) )
+		return
+
+	if( !IsValid( bird ) )
+		return
+
+	EndSignal( player, "OnDeath" )
+	EndSignal( player, "OnDestroy" )
+	EndSignal( bird, "OnDestroy" )
+
+	float wpOffset = 25
+	vector pos = bird.GetOrigin() + <0,0,wpOffset>
+
+	array< var > ruiArray
+
+	OnThreadEnd(
+		function() : ( ruiArray )
+		{
+			foreach ( rui in ruiArray )
+			{
+				if( rui != null )
+					RuiDestroyIfAlive( rui )
+			}
+		}
+	)
+
+	const float WHITE_RAVEN_RUI_TIME_UNTIL_OLD 	= 150
+	const float WHITE_RAVEN_RUI_LOST_LOS_BUFFER = 1.0
+	bool shouldUseStartTime = true
+	bool shouldLockTime 	= false
+	float startTime 		= Time()
+	float lockTime 			= Time() + WHITE_RAVEN_RUI_TIME_UNTIL_OLD
+	float bufferTime 		= Time() + WHITE_RAVEN_RUI_LOST_LOS_BUFFER
+	vector lastKnownPos = pos
+
+	bool shouldHide = false
+
+	while ( true )
+	{
+		if ( !IsValid( player ) )
+			return
+		if ( !IsValid( bird ) )
+			return
+
+		pos = bird.GetOrigin() + <0,0,wpOffset>
+		bool birdMoved = pos != lastKnownPos
+		vector playerEyePos = player.EyePosition()
+
+		if( Time() > lockTime )
+			shouldLockTime = true
+
+		TraceResults losResults = TraceLine( playerEyePos, pos, [player], TRACE_MASK_VISIBLE, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
+
+		if( player in file.whiteRavenPingActive )
+			shouldHide = file.whiteRavenPingActive[player]
+
+		                                                                      
+		                                                                                                
+		if ( shouldHide )
+		{
+			if( ruiArray.len() > 0 )
+			{
+				foreach( rui in ruiArray )
+				{
+					if( rui != null )
+					{
+						ruiArray.fastremovebyvalue(rui)
+						RuiDestroyIfAlive( rui )
+
+						shouldUseStartTime = true
+					}
+				}
+			}
+		}
+		else if( ruiArray.len() == 0 )                                        
+		{
+			if( losResults.fraction > 0.95 || birdMoved )
+			{
+				var rui = TrackingVision_CreateWhiteRavenRUI( player, bird, wpOffset )
+				ruiArray.append(rui)
+
+				if( shouldUseStartTime )                                                                
+				{
+					RuiSetGameTime( rui, "startTime", startTime )
+					shouldUseStartTime = false
+				}
+				else if( shouldLockTime )                                                         
+				{
+					RuiSetGameTime( rui, "startTime", Time() - WHITE_RAVEN_RUI_TIME_UNTIL_OLD )
+				}
+			}
+		}
+		else                                                      
+		{
+			if( losResults.fraction < 0.95 && !birdMoved)
+			{
+				                                                       
+				if( Time() > bufferTime )
+				{
+					                                                              
+					foreach( rui in ruiArray )
+					{
+						if( rui != null )
+						{
+							ruiArray.fastremovebyvalue(rui)
+							RuiDestroyIfAlive( rui )
+
+							shouldUseStartTime = true
+						}
+					}
+				}
+			}
+			else
+			{
+				                                                                                                      
+				bool inViewFocus = TrackingVision_GetIsBirdInViewFocus( player, pos )
+				foreach( rui in ruiArray)
+				{
+					RuiSetBool( rui, "inViewFocus", inViewFocus )                                                                            
+
+					if( birdMoved )                                                                    
+					{
+						RuiSetGameTime( rui, "startTime", Time() )
+					}
+					else if( shouldLockTime )
+					{
+						RuiSetGameTime( rui, "startTime", Time() - WHITE_RAVEN_RUI_TIME_UNTIL_OLD )
+					}
+				}
+
+				bufferTime = Time() + 2.0
+			}
+		}
+
+		lastKnownPos = pos
+		WaitFrame()
+	}
+
+}
+#endif         
+
+#if CLIENT
+var function TrackingVision_CreateWhiteRavenRUI( entity player, entity bird, float wpOffset )
+{
+	float drawDist 		= WHITE_RAVEN_MAX_ENEMY_DETECTION_RANGE
+	string displayText 	= "#GEAR_TRACKING_VISION_OBJECT_BIRD_POINTER"
+	asset icon 			= $"rui/hud/poi_icons/poi_white_raven"
+
+	vector pos 			= bird.GetOrigin() + <0,0,wpOffset>
+
+	var rui = CreateTransientFullscreenRui( $"ui/tracking_vision_object_icons.rpak", RuiCalculateDistanceSortKey( player.EyePosition(), pos ) )
+
+	                      
+	RuiSetGameTime( rui, "startTime", Time() )
+	RuiSetGameTime( rui, "iconCreationTime", Time() )
+	RuiSetFloat( rui, "duration", 30 )
+	RuiSetFloat( rui, "iconHotClueDuration", 90 )
+	RuiSetFloat( rui, "iconHotClueDurationExt", 150 )
+	RuiTrackFloat3( rui, "pos", bird, RUI_TRACK_OVERHEAD_FOLLOW )
+	RuiKeepSortKeyUpdated( rui, true, "pos" )
+	RuiSetInt( rui, "teamRelation", 0 )
+	RuiSetFloat( rui, "iconDrawDist", drawDist )
+	RuiSetString( rui, "objectText", displayText )
+	RuiSetImage( rui, "iconImage", icon )
+	RuiSetBool( rui, "highlightWaypoint", true )                 
+
+
+	                              
+	bool inViewFocus = TrackingVision_GetIsBirdInViewFocus( player, pos )
+	RuiSetBool( rui, "inViewFocus", inViewFocus )
+
+	return rui
+}
+#endif
+
+bool function TrackingVision_GetIsBirdInViewFocus( entity player, vector pos )                
+{
+	bool inViewFocus = false
+	vector playerEyePos = player.EyePosition()
+	vector playerEyeDir = player.GetViewVector()
+
+	vector dir = Normalize(playerEyeDir)
+	vector dirToTarget = Normalize( pos - playerEyePos )
+
+	float dotRangeToTarget = DotProduct( dir, dirToTarget )
+
+	if( dotRangeToTarget > 0.995 )
+	{
+		TraceResults losResults = TraceLine( playerEyePos, pos, [player], TRACE_MASK_VISIBLE, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
+		if( losResults.fraction > 0.95 )
+			inViewFocus = true
+	}
+
+	return inViewFocus
+}
+
+#if CLIENT
+void function ServerToClient_ActivateWhiteRavenPerchedFX( entity player, entity bird )
+{
+	if ( player != GetLocalClientPlayer() )
+		return
+
+	thread TrackingVision_SpawnCLPerchedFX_Thread( player, bird )
+}
+#endif          
+
+#if CLIENT
+void function ServerToClient_DeactivateWhiteRavenPerchedFX( entity player, entity bird )
+{
+	if ( player != GetLocalClientPlayer() )
+		return
+
+	if( IsValid( bird ) )
+		Signal( bird, "BirdFly" )
+}
+#endif          
+
+#if CLIENT
+void function TrackingVision_SpawnCLPerchedFX_Thread( entity player, entity bird )
+{
+	if ( player != GetLocalClientPlayer() )
+		return
+
+	EndSignal( player, "OnDeath" )
+	EndSignal( player, "OnDestroy" )
+
+	if( !IsValid( bird ) || bird == null )
+		return
+
+	EndSignal( bird, "OnDestroy" )
+	EndSignal( bird, "BirdFly" )
+
+	int attachmentID = bird.LookupAttachment( "ORIGIN" )
+	vector birdPos 	 = bird.GetOrigin()
+	vector newAngles = RotateAnglesAboutAxis( bird.GetAngles(), bird.GetRightVector(), 90 )
+
+	int fxid         = GetParticleSystemIndex( TRACKING_VISION_BIRD_PERCH_MIST )
+	int fxHandle 	 = StartParticleEffectInWorldWithHandle( fxid, birdPos, newAngles )
+
+	OnThreadEnd(
+		function() : ( fxHandle )
+		{
+			if ( EffectDoesExist( fxHandle ) )
+				EffectStop( fxHandle, false, true )
+		}
+	)
+
+	bool sfxOn = false
+
+	while( true )
+	{
+
+		if( !IsValid( bird ) || !IsValid( player ) )
+			break
+
+		bool inEtherealRange = Distance( bird.GetOrigin(), player.GetOrigin() ) < WHITE_RAVEN_ETHEREAL_AUDIO_RANGE
+
+		                                                                                                                                                         
+		if( inEtherealRange && !sfxOn )
+		{
+			EmitSoundOnEntity( bird, WHITE_RAVEN_AMBIENT_ETHEREAL_SFX )
+			sfxOn = true
+		}
+		else if( !inEtherealRange && sfxOn )
+		{
+			StopSoundOnEntity( bird, WHITE_RAVEN_AMBIENT_ETHEREAL_SFX )
+			sfxOn = false
+		}
+
+		WaitFrame()
+	}
+}
+#endif         
+
+#if CLIENT
+entity function GetWhiteRavenPingTarget( entity player )
+{
+	entity whiteRaven
+
+	array<entity> potentialTargets = GetEntArrayByScriptName( TRACKING_VISION_BIRD_SCRIPTNAME )
+
+	foreach( ent in potentialTargets )
+	{
+		if( !IsValid(ent) )
+			continue
+
+		if( ent.GetOwner() == player )
+		{
+			if ( TrackingVision_GetIsBirdInViewFocus( player, ent.GetOrigin() ) )
+				whiteRaven = ent
+		}
+	}
+
+	return whiteRaven
+}
+#endif
+
+#if CLIENT
+void function OnPingCreatedByAnyPlayer_WhiteRaven( entity pingingPlayer, int pingType, entity focusEnt, vector pingLoc, entity wayPoint )
+{
+	if ( pingingPlayer != GetLocalClientPlayer() || !(IsValid( pingingPlayer) ) )
+		return
+
+	if( ! PlayerHasPassive( pingingPlayer, ePassives.PAS_TRACKING_VISION ) )
+		return
+
+	if( pingType != ePingType.BLOODHOUND_WHITE_RAVEN )
+		return
+
+	file.whiteRavenPingActive[pingingPlayer] <- true
+
+	thread TrackingVision_TrackWhiteRavenPing_Thread( pingingPlayer, focusEnt, wayPoint )
+
+}
+
+void function TrackingVision_TrackWhiteRavenPing_Thread( entity player, entity bird, entity waypoint )
+{
+	if ( player != GetLocalClientPlayer() )
+		return
+
+	EndSignal( player, "OnDeath" )
+	EndSignal( player, "OnDestroy" )
+
+	OnThreadEnd(
+		function() : ( player )
+		{
+			if ( IsValid( player ) )
+			{
+				if ( player in file.whiteRavenPingActive )
+				{
+					file.whiteRavenPingActive[ player ] <- false
+				}
+			}
+		}
+	)
+
+	if( !IsValid( bird ) || bird == null )
+		return
+	EndSignal( bird, "OnDestroy" )
+
+	while( true )
+	{
+		if( !IsValid( waypoint ) )
+			return
+		WaitFrame()
+	}
+}
+#endif
 
       
 

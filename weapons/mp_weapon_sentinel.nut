@@ -100,10 +100,7 @@ void function OnWeaponDeactivate_weapon_sentinel( entity weapon )
 		return
 
 	weapon.Signal( SENTINEL_DEACTIVATE_SIGNAL )
-
-	if ( IsServer() || ( IsClient() && InPrediction() && IsFirstTimePredicted()) )
-		weapon.SetWeaponChargeFraction( 0.0 )
-
+	
 	MarksmansTempo_OnDeactivate( weapon, file.sentinelTempoSettings )
 }
 

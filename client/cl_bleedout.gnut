@@ -125,12 +125,17 @@ void function BLEEDOUT_RevivePlayerHealerChanged( entity playerToRes, entity pla
 
 		if ( IsValid( file.oldPlayerHealer ) )
 		{
+			if ( file.oldPlayerHealer.IsPlayer() )
+				file.oldPlayerHealer.SetSingle3PWeaponClonesVisibility( true, WEAPON_INVENTORY_SLOT_PRIMARY_2 )
 			file.oldPlayerHealer.Signal( "Bleedout_StopFirstAid" )
 			file.oldPlayerHealer = null
 		}
 		return
 	}
 
+	if ( playerHealer.IsPlayer() )
+		playerHealer.SetSingle3PWeaponClonesVisibility( false, WEAPON_INVENTORY_SLOT_PRIMARY_2 )
+	
 	if ( IsValid( playerHealer ) && IsValid( file.oldPlayerHealer ) && (playerHealer != file.oldPlayerHealer) )
 	{
 		file.oldPlayerHealer.Signal( "Bleedout_StopFirstAid" )

@@ -193,42 +193,50 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 				RuiSetFloat3( file.lockon_hud, "borderColor", < 0.21, 0.79, 0.34> )                    
 			}
                       
-                                                                                                  
-    
-                                                                                
-                                                                                                
-                                                                                                                             
-    
+			else if ( StatusEffect_HasSeverity( player, eStatusEffect.perk_survey_beacon_scanned_visual ) )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#SURVEY_ENEMY_SCANNED_HINT" )
+				RuiSetFloat3( file.lockon_hud, "borderColor", < 0.58, 0.34, 0.71> )                         
+				AddPlayerHint( .1, .1, $"rui/hud/gametype_icons/survival/survey_beacon_only_pathfinder", "#SURVEY_ENEMY_VIEW_MAP_HINT"  )
+			}
+         
+                        
+			else if ( StatusEffect_HasSeverity( player, eStatusEffect.mirage_detected ) )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#BAMBOOZLED_WARNING" )
+				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/menu/buttons/battlepass/character_skin_mirage" )
+				RuiSetFloat3( file.lockon_hud, "borderColor", <1, .98, .447> )                   
+			}
          
 		}
                      
-                                                                                                         
-   
-                                                                                    
-                                                                    
-                                                   
-                                                    
-                                                    
-                                                   
-                                                   
-                                                       
-                                                                                               
-                                                                                                                                 
-   
+		else if ( StatusEffect_HasSeverity( player, eStatusEffect.perk_survey_beacon_enemies_scanned_visual ) )
+		{
+			RuiSetString( file.lockon_hud, "lockMessage", "#SURVEY_ENEMY_ALLY_SCANNED_HINT" )
+			RuiSetGameTime( file.lockon_hud, "lockEndTime", RUI_BADGAMETIME )
+			RuiSetBool( file.lockon_hud, "isVisible", true )
+			RuiSetBool( file.lockon_hud, "northLock", false )
+			RuiSetBool( file.lockon_hud, "southLock", false )
+			RuiSetBool( file.lockon_hud, "westLock", false )
+			RuiSetBool( file.lockon_hud, "eastLock", false )
+			RuiSetImage( file.lockon_hud, "characterIcon", $"" )
+			RuiSetFloat3( file.lockon_hud, "borderColor", < 0.58, 0.34, 0.71> )                         
+			AddPlayerHint( .1, .1, $"rui/hud/gametype_icons/survival/survey_beacon_only_pathfinder", "#SURVEY_ENEMY_ALLY_VIEW_MAP_HINT"  )
+		}
         
 		else if ( (StatusEffect_HasSeverity( player, eStatusEffect.camera_detected )
 			|| StatusEffect_HasSeverity( player, eStatusEffect.maphack_detected )
 			|| StatusEffect_HasSeverity( player, eStatusEffect.sonar_detected )
-                 
-  			                                                                         
-                      
+               
+			|| StatusEffect_HasSeverity( player, eStatusEffect.sonar_round_embedded )
+                    
                         
 			|| StatusEffect_HasSeverity( player, eStatusEffect.mortar_ring_reveal ) )
                              
-                            
-                                                                                                                             
-                                                                                                          
-                                 
+                                                           
+			                                                                                                                          
+			|| ( !GetSonicBlastDoesSonarScan() && StatusEffect_HasSeverity( player, eStatusEffect.seer_detected ) )
+                                                                
                        
                                                                                                                              
                                                                   
@@ -265,13 +273,13 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
 				vector scaledColor = <color.x/255.0, color.y/255.0, color.z/255.0>
 				RuiSetFloat3( file.lockon_hud, "borderColor", scaledColor )
 			}
-			                 
-			                                                                                    
-			   
-			  	                                                                             
-			  	                                                                                     
-			   
-			                      
+                  
+			else if ( StatusEffect_HasSeverity( player, eStatusEffect.sonar_round_embedded ) )
+			{
+				RuiSetString( file.lockon_hud, "lockMessage", "#VANTAGE_SNIPER_ULT_WARNING" )
+				RuiSetImage( file.lockon_hud, "characterIcon", $"rui/hud/character_abilities/vantage_gun_mark" )
+			}
+                       
                            
 			else if ( StatusEffect_HasSeverity( player, eStatusEffect.mortar_ring_reveal ) )
 			{
@@ -580,6 +588,20 @@ void function SmartAmmo_LockedOntoWarningHUD_Update()
                                                                                                       
                                                                      
       
+                                                   
+    
+                                                                       
+                                                         
+
+                                                    
+                                                     
+                                                     
+                                                    
+                                                    
+                                                                                               
+                                                             
+                                                        
+    
                                                              
     
                                                                          

@@ -102,7 +102,7 @@ global struct ClientEntityStruct
        
 
                     
-                                  
+	bool munitionsDropSpawned = false
        
 
 	bool                       eyeForQuality_isScanned
@@ -118,9 +118,9 @@ global struct ClientEntityStruct
 	int deathBoxMenu_lastSeenClipCount
 
 
-	EncodedEHandle ornull gladCardPropOwnerPlayerEEH = null
 	ItemFlavor ornull     animWindowCosmeticItemFlavor = null
 	ItemFlavor ornull     animWindowSkinItemFlavor = null
+	ItemFlavor ornull     animWindowMeleeSkinItemFlavor = null
                         
                           
        
@@ -154,7 +154,7 @@ global struct ClientPlayerStruct
 	int smartCoreKills = 0
 
                     
-                                     
+		array<int> activePerks
        
 
 	entity previousWeapon
@@ -217,13 +217,13 @@ global struct ClientPlayerStruct
        
 
                           
-                                     
-                                    
-                                            
+		table< int, bool > FRSettings_Bools
+		table< int, int >  FRSettings_Ints
+		table< int, bool > FRDummieBehaviors_Bools
 
-                                      
-                                                    
-                           
+		table< int, string > FRSettings_Strs
+		table< int, string > FRDummieBehaviorSettings_Strs
+		string frSettings_AllStrs
        
 
                     
@@ -283,11 +283,6 @@ global struct ClientWeaponStruct
                  
                                  
        
-
-                  
-                                         
-       
-
 
 	array<WeaponMissileMultipleTargetData>   valkTac_targetData
 	float                      valkUltStartTime

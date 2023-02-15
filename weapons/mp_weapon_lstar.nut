@@ -79,6 +79,14 @@ void function OnWeaponCooldown_weapon_lstar( entity weapon, bool isFirstTimeCool
 		{
 			weapon.EmitWeaponSound_1p3p( LSTAR_BURNOUT_SOUND_1P, LSTAR_BURNOUT_SOUND_3P )
 			weapon.PlayWeaponEffect( LSTAR_BURNOUT_EFFECT_1P, LSTAR_BURNOUT_EFFECT_3P, "vent_spinner" )
+
+#if SERVER
+                       
+                                          
+                           
+                                                      
+       
+#endif
 		}
 	}
 }

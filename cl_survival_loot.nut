@@ -963,7 +963,17 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 	RuiSetBool( rui, "isFocused", true )
 
 	RuiSetImage( rui, "iconImage", data.hudIcon )
+
+	bool useCustomLootColor = false
+	if( data.ref == "expired_banners" )
+	{
+		useCustomLootColor = true
+		RuiSetFloat3( rui, "customLootColor", SrgbToLinear( GetKeyColor( COLORID_HUD_HEAL_COLOR ) / 255.0 ) )
+	}
+
 	RuiSetInt( rui, "lootTier", data.tier )
+	RuiSetBool( rui, "useCustomLootColor", useCustomLootColor )
+
 
 	vector iconScale = data.lootType == eLootType.MAINWEAPON ? <2.0, 1.0, 0.0> : <1.0, 1.0, 0.0>
 	RuiSetFloat2( rui, "iconScale", iconScale )
@@ -975,7 +985,7 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 	#endif
 	RuiSetString( rui, "subText", SURVIVAL_Loot_GetDesc( data, player ) )
 
-	RuiSetBool( rui, "canPing", ShouldShowButtonHints() && IsPingEnabledForPlayer( player ) && IsValid( lootRef.lootEnt ) )
+	RuiSetBool( rui, "canPing", IsPingEnabledForPlayer( player ) && IsValid( lootRef.lootEnt ) )
 
 	string passiveName = data.passive != ePassives.INVALID ? PASSIVE_NAME_MAP[data.passive] : ""
 	string passiveDesc = data.passive != ePassives.INVALID ? PASSIVE_DESCRIPTION_SHORT_MAP[data.passive] : ""
@@ -1368,7 +1378,7 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 							if ( exceptionIndex < attachmentTagData.exceptionToTheRuleForThisWeaponClass.len() - 1 && tagIndex < MAX_ATTACHMENT_TAGS - 1 )
 								exceptionName += ","
 
-							                                                                                                                                                         
+							                                                                                                                                                   
 							                                                                                                                                                              
 							if ( tagIndex == 2 )
 								tagIndex = 3
@@ -1388,8 +1398,8 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 		array<entity> weapons = SURVIVAL_GetPrimaryWeaponsSorted( player )
 
                            
-                                                                                             
-                                                                 
+			if ( IsFiringRangeGameMode() && GetCurrentPlaylistVarBool( "has_infinite_clips", false ) )
+				RuiSetString( rui, "subText", "#INFINITE_CLIPS_IN_SETTINGS" )
         
 
 		array<string> weaponNames
@@ -1418,12 +1428,12 @@ void function UpdateLootRuiWithData( entity player, var rui, LootData data, int 
 				{
 					LootData weaponData = SURVIVAL_Loot_GetLootDataByRef( weaponRef )
                              
-                                                                                               
-                                                   
+					if ( IsFiringRangeGameMode() && GetCurrentPlaylistVarBool( "has_infinite_clips", false ) )
+						RuiSetImage( rui, "attachWeapon1Icon",  $"" )
+					else
+						RuiSetImage( rui, "attachWeapon1Icon", weaponData.hudIcon )
          
-                                                                 
-         
-					RuiSetImage( rui, "attachWeapon1Icon", weaponData.hudIcon )
+                                                                
           
 
 					RuiSetBool( rui, "hasAttach1", true )
@@ -1541,6 +1551,11 @@ bool function ShouldLootHintBeVisible( entity prop )
                 
    
                               
+
+                         
+		if ( Control_IsModeEnabled() && IsScoreboardShown() )
+			return false
+       
 
 	entity player = GetLocalViewPlayer()
 
@@ -1858,11 +1873,11 @@ void function TrackLootToPing( entity player )
 				}
 			}
                       
-                                          
-    
-               
-            
-    
+			if( Perks_UpdateHighlightedPerkIcon() )
+			{
+				WaitFrame()
+				continue
+			}
 
          
 

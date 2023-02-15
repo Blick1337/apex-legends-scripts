@@ -1452,9 +1452,13 @@ void function WreckingBall_SpeedupHudThread( entity viewPlayer, int fxHandle, in
 
                                                                               
  
-	                                                            
+	                                                                         
+                 
+		                                                       
+       
+
+	                   
 	 
-		                                                         
 		                              
 		                     
 		 

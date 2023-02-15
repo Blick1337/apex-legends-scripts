@@ -28,7 +28,6 @@ const float DURATION_WAIT_FOR_PLAYERS_NEARBY = 30.0
 
 const string WAYPOINTTYPE_COOLDOWN = "waypointType_MarvinCooldown"
 const string WAYPOINTTYPE_SCREEN = "waypointType_MarvinScreen"
-const string WAYPOINTTYPE_DISPERSE_LOOT_FX = "waypointType_MarvinLootFx"
 
 const float SLOT_MACHINE_CYCLE_LENGTH = 0.3
 
@@ -179,7 +178,6 @@ void function ShLootMarvin_Init()
 
 		Waypoints_RegisterCustomType( WAYPOINTTYPE_COOLDOWN, InstanceMarvinCooldownCreatedWP )
 		Waypoints_RegisterCustomType( WAYPOINTTYPE_SCREEN, InstanceMarvinScreenCreatedWP )
-		Waypoints_RegisterCustomType( WAYPOINTTYPE_DISPERSE_LOOT_FX, InstanceDisperseLootFxCreatedWP )
 
 		AddCreateCallback( "npc_marvin", ClOnMarvinSpawned )
 	#endif
@@ -1145,7 +1143,7 @@ bool function DoesPlayerHaveMarvinArmInInventory( entity player )
 	 
 
 	                                                     
-	                                                                      
+	                                                                    
 
 	                                                                                              
 	                       
@@ -1187,35 +1185,25 @@ bool function DoesPlayerHaveMarvinArmInInventory( entity player )
 
 
 #if SERVER
-                                                                                   
+                                                                                 
  
-	                                                                          
-	                                         
-	                                                  
+	                                       
+
+	                                                                      
+	                                                               
+
+	                                                                                 
+	                                                                                                                           
+
+	                                                          
+	                                                       
 
 	      
 
-	                    
+	                         
+		                  
  
-#endif
 
-
-#if CLIENT
-void function InstanceDisperseLootFxCreatedWP( entity wp )
-{
-	entity marvin  = wp.GetWaypointEntity( 0 )
-	int lootRarity = wp.GetWaypointInt( 0 ) + 1
-
-	int particleIdx    = GetParticleSystemIndex( VFX_LOT_MARVIN_DISPERSE )
-	int vfxAttachIdx   = marvin.LookupAttachment( "SCREEN_CENTER" )
-	int fxHandle       = StartParticleEffectOnEntity( marvin, particleIdx, FX_PATTACH_POINT_FOLLOW, vfxAttachIdx )
-	vector rarityColor = GetFXRarityColorForTier( lootRarity )
-	EffectSetControlPointVector( fxHandle, 1, rarityColor )
-}
-#endif
-
-
-#if SERVER
                                                                      
  
 	                              

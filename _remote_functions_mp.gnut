@@ -16,8 +16,8 @@ void function RemoteFunctions_Init_Begin()
 	Remote_BeginRegisteringFunctions()
 
                         
-		if ( !IsLobby() && IsArenaMode() )
-			ExpandBudgetForNetworkedVariableCategory( SNDC_PLAYER_EXCLUSIVE )
+                                    
+                                                                    
        
 
 	switch ( GetMapName() )
@@ -58,6 +58,10 @@ void function RemoteFunctions_Init_Begin()
 	Remote_RegisterClientFunction( "ServerCallback_SonarPulseConeFromEntityMultiple", "entity", "int", 0, 30, "float", 0.0, 10.0, 8, "float", 0.0, 32000.0, 8, "vector", -1.0, 1.0, 32, "float", -360.0, 360.0, 8, "int", 0, 128, "float", 0.0, 32000.0, 32, "bool", "bool" )
 
 	Remote_RegisterClientFunction( "ServerCallback_SetSonarHighlightDrawDist_AllianceProximity", "entity", "int", 0, ABSOLUTE_MAX_TEAMS + 1 )
+
+                          
+		Remote_RegisterClientFunction( "FR_DynamicStats_OnDummieKilled" )
+       
 
                          
 		Remote_RegisterClientFunction( "ServerCallback_ControlScoreEvent", "int", INT_MIN, INT_MAX, "bool", "int", 0, INT_MAX, "int", INT_MIN, INT_MAX )
@@ -167,7 +171,7 @@ void function RemoteFunctions_Init_Begin()
 			RegisterNetworkedVariable( "hasShipKeycard", SNDC_PLAYER_GLOBAL, SNVT_BOOL, false )
       
                        
-		case GAMEMODE_ARENAS:
+                       
       
                         
 		case GAMEMODE_CONTROL:
@@ -340,8 +344,8 @@ void function RemoteFunctions_Init_Begin()
 			RegisterNetworkedVariable( "skydiveFollowPlayer", SNDC_PLAYER_EXCLUSIVE, SNVT_ENTITY )
 
                       
-                                                                                                       
-                                                                                                 
+			RegisterNetworkedVariable( EXPIRED_BANNER_RECOVERY_NETVAR, SNDC_PLAYER_EXCLUSIVE, SNVT_BOOL, false )
+			RegisterNetworkedVariable( DEATH_BOX_BANNER_EXPIRED_NETVAR, SNDC_DEATH_BOX, SNVT_BOOL, false )
          
 
 			Remote_RegisterClientFunction( "ServerCallback_PlayerBootsOnGround" )
@@ -412,7 +416,8 @@ void function RemoteFunctions_Init_Begin()
       
 
                      
-                                                                                       
+			Remote_RegisterClientFunction( "ServerToClient_ShowCloakHintText" )                 
+			Remote_RegisterClientFunction( "ServerToClient_ShowHolopilotDestroyedText" )                 
       
 
                         
@@ -428,29 +433,41 @@ void function RemoteFunctions_Init_Begin()
 
 			                                                                                        
 
-			                                          
-			if ( IsArenaMode() || IsRankedGame() || Control_IsModeEnabled() )
-			{
+			bool shouldRegisterFullTeamVar = IsRankedGame()
+                           
+				if( Control_IsModeEnabled() ) shouldRegisterFullTeamVar = true
+         
+                          
+                                                        
+         
+
+			                                                             
+			if ( shouldRegisterFullTeamVar )
 				RegisterNetworkedVariable( "rankedDidPlayerEverHaveAFullTeam", SNDC_PLAYER_GLOBAL, SNVT_BOOL, false )
 
-				if ( IsRankedGame() || IsArenasRankedGame() )
-				{
-					                                       
-					if( IsRankedGame() )
-						RegisterNetworkedVariable( "kill_participation", SNDC_PLAYER_GLOBAL, SNVT_INT, 0 )
+			bool shouldRegisterRankedVars = IsRankedGame()
+                          
+                                                                               
+         
 
-					RegisterNetworkedVariable( "inMatchRankScoreProgress", SNDC_PLAYER_EXCLUSIVE, SNVT_BIG_INT, -1 )
-					RegisterNetworkedVariable( "rankedKillAssistMultiplier", SNDC_PLAYER_EXCLUSIVE, SNVT_FLOAT_RANGE, 0.0, 0.0, 10.0 )
-					RegisterNetworkedVariable( "nv_currentRankedScore", SNDC_PLAYER_GLOBAL, SNVT_BIG_INT, -1 )
-					RegisterNetworkedVariable( "nv_currentRankedLadderPosition", SNDC_PLAYER_GLOBAL, SNVT_BIG_INT, -1 )
+			                                          
+			if ( shouldRegisterRankedVars )
+			{
+				                                       
+				if( IsRankedGame() )
+					RegisterNetworkedVariable( "kill_participation", SNDC_PLAYER_GLOBAL, SNVT_INT, 0 )
 
-					#if CLIENT
-						ShRanked_RegisterNetworkFunctions()
-                             
-							ShArenasRanked_RegisterNetworkFunctions()
-            
-					#endif
-				}
+				RegisterNetworkedVariable( "inMatchRankScoreProgress", SNDC_PLAYER_EXCLUSIVE, SNVT_BIG_INT, -1 )
+				RegisterNetworkedVariable( "rankedKillAssistMultiplier", SNDC_PLAYER_EXCLUSIVE, SNVT_FLOAT_RANGE, 0.0, 0.0, 10.0 )
+				RegisterNetworkedVariable( "nv_currentRankedScore", SNDC_PLAYER_GLOBAL, SNVT_BIG_INT, -1 )
+				RegisterNetworkedVariable( "nv_currentRankedLadderPosition", SNDC_PLAYER_GLOBAL, SNVT_BIG_INT, -1 )
+
+				#if CLIENT
+					ShRanked_RegisterNetworkFunctions()
+                            
+                                               
+           
+				#endif
 			}
 
 			if ( FreelanceSystemsAreEnabled() )
@@ -483,7 +500,7 @@ void function RemoteFunctions_Init_Begin()
 
 
                        
-			ShArenas_RegisterNetworking()
+                                
       
 
                      
@@ -525,6 +542,7 @@ void function RemoteFunctions_Init_Begin()
 
 		LoadoutSelection_RegisterNetworking()
 		AirdropExtravaganza_RegisterNetworking()
+		GamemodeUtility_RegisterNetworking()
 
                              
                                                   
@@ -546,6 +564,10 @@ void function RemoteFunctions_Init_Begin()
 			Sh_Survival_Hardcore_RegisterNetworking()
       
 
+                         
+                                   
+      
+
                       
                                   
       
@@ -558,13 +580,12 @@ void function RemoteFunctions_Init_Begin()
                 
 			Crafting_RegisterNetworking()
       
+                    
+                                   
+      
 
                        
                            
-      
-
-                                 
-                                      
       
 
                      
@@ -762,7 +783,7 @@ void function RemoteFunctions_Init_Begin()
 
 	Remote_RegisterServerFunction( "ClientCallback_MarkBattlePassPopupAsSeen", "string", "int", INT_MIN, INT_MAX )
                     
-                                                                                                                   
+	Remote_RegisterServerFunction( "ClientCallback_MarkBattlePassMilestoneAsSeen", "string", "int", INT_MIN, INT_MAX )
       
 	Remote_RegisterServerFunction( "ClientCallback_MarkStoryEventDialoguePopupAsAttempted" )
 	Remote_RegisterServerFunction( "ClientCallback_MarkStoryEventDialoguePopupAsSeen", "bool", "string" )
@@ -833,6 +854,9 @@ void function RemoteFunctions_Init_Begin()
 	                       
 	Remote_RegisterClientFunction( "ServerCallback_WatchForSyncedMeleeCancelPeriod", "float", 0.0, 10.0 )
 	Remote_RegisterClientFunction( "ServerCallback_SyncedMeleeDone" )
+                        
+                                                                                    
+      
 
 	Remote_RegisterClientFunction( "ServerCallback_DisplayJumpPadHint" )
 	Remote_RegisterClientFunction( "ServerCallback_HideJumpPadHint" )
@@ -842,7 +866,7 @@ void function RemoteFunctions_Init_Begin()
 	Remote_RegisterServerFunction ( "ClientCallback_ToggleFavoriteChallenge", "int", INT_MIN, INT_MAX )
 
                                                
-                                                                                                                                                                                           
+		Remote_RegisterClientFunction( "TrackingVision_DisplayEnemyDirection_ServerCallback", "vector", -FLT_MAX, FLT_MAX, 32, "vector", -FLT_MAX, FLT_MAX, 32, "vector", -FLT_MAX, FLT_MAX, 32 )
        
 
                    

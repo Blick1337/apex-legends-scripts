@@ -1,6 +1,3 @@
-  
-                                                                                                                
-
 global function ShCalEvent_LevelInit
 global function GetAllSeasonFlavors
 global function IsSeasonFlavor
@@ -19,6 +16,8 @@ global function SharedRankedPeriod_GetFirstSplitEndUnixTime
 global function SharedRankedPeriod_HasSplits
 global function SharedRankedPeriod_IsFirstSplitActive
 global function SharedRankedPeriod_IsSecondSplitActive
+global function GetCurrentStatSeasonRefOrNull
+global function GetCurrentStatRankedPeriodRefOrNullByType
 
 global function CalEvent_IsRevealed
 global function CalEvent_IsVisible
@@ -75,27 +74,13 @@ global struct SeasonData
 #endif
 
 
-
                        
                        
                        
                        
                        
-
 global int UNIX_TIME_FALLBACK_1970 = 1
 global int UNIX_TIME_FALLBACK_2038 = 2145916800                                                                           
-
-
-
-                            
-                     
-   
-  	               
-  	              
-  	               
-  	             
-   
-        
 
 
 #if SERVER || CLIENT || UI
@@ -131,13 +116,11 @@ FileStruct_LifetimeLevel& fileLevel
 #endif
 
 
-
                          
                          
                          
                          
                          
-
 #if SERVER || CLIENT || UI
 void function ShCalEvent_LevelInit()
 {
@@ -159,7 +142,7 @@ void function ShCalEvent_LevelInit()
 	#if UI
 		                                                                                                                                                         
 		AddCallback_OnItemFlavorRegistered( eItemType.calevent_rankedperiod, StatsCard_OnRankedPeriodRegistered )
-                         
+                       
 			AddCallback_OnItemFlavorRegistered( eItemType.calevent_arenas_ranked_period, StatsCard_OnArenasRankedPeriodRegistered )
         
 		AddCallback_OnItemFlavorRegistered( eItemType.calevent_season, StatsCard_OnSeasonRegistered )
@@ -452,7 +435,7 @@ bool function IsAnyRankedPeriodFlavor( ItemFlavor rankedPeriod )
 	switch( itemType )
 	{
 		case eItemType.calevent_rankedperiod:
-                         
+                       
 			case eItemType.calevent_arenas_ranked_period:
         
 			return true
@@ -957,6 +940,30 @@ int function GetNextEventStartUnixTime()
 }
 #endif
 
+
+#if SERVER || CLIENT || UI
+string ornull function GetCurrentStatSeasonRefOrNull()
+{
+	ItemFlavor ornull season = GetActiveSeason( GetUnixTimestamp() )                                               
+	if ( season == null )
+		return null
+	return ItemFlavor_GetGUIDString( expect ItemFlavor(season) )
+}
+#endif
+
+
+#if SERVER || CLIENT || UI
+string ornull function GetCurrentStatRankedPeriodRefOrNullByType( int itemType )
+{
+	ItemFlavor ornull rankedPeriod = GetActiveRankedPeriodByType( GetUnixTimestamp(), itemType )
+	if ( rankedPeriod == null )
+		return null
+	return ItemFlavor_GetGUIDString( expect ItemFlavor(rankedPeriod) )
+}
+
+#endif
+
+
 #if SERVER || CLIENT || UI
 bool function IsValidItemFlavorCalEventRef( string ref, int eventType, int validationBehavior = eValidation.DONT_ASSERT )
 {
@@ -1039,7 +1046,7 @@ ItemFlavor ornull function GetCalEventBeingProcessed()
 			                                                                   
 			                                                                          
 		 
-                         
+                       
 		                                                                                    
 		 
 			                                                                         
@@ -1049,7 +1056,7 @@ ItemFlavor ornull function GetCalEventBeingProcessed()
 	 
 
 	                                                                                                           
-                        
+                      
 		                                                                                                                                    
        
  

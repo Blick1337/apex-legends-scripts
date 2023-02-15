@@ -114,9 +114,9 @@ void function Sh_InitToolTips()
 	file.tooltipInfos[ style ].hasActionText = true
 
                        
-	style = eTooltipStyle.ARENAS_SHOP_WEAPON
-	file.tooltipInfos[ style ].ruiAsset = $"ui/arenas_weapon_tooltip.rpak"
-	file.tooltipInfos[ style ].hasActionText = false
+                                         
+                                                                       
+                                                 
       
 
 	style = eTooltipStyle.CLUB_MEMBER

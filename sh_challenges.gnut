@@ -157,7 +157,7 @@ enum eChallengeCategory
 	FAVORITES,
 }
 
-                                                                                             
+                                                                                       
 
 const table<int, string> GAME_MODE_NAME =
 {
@@ -304,7 +304,7 @@ struct ChallengeSortStruct
 #endif
 
                         
-                                                                
+const string CHALLENGE_REROLL_SOUND = "UI_Menu_Challenge_ReRoll"
       
 
                  
@@ -312,7 +312,7 @@ global const int PRIMARY_CHALLENGE_INDEX = 0
 global const int ALT_CHALLENGE_INDEX = 1
       
 
-                                                         
+                                                   
 global const bool BOTS_HAVE_CHALLENGES = false
 
                        
@@ -758,7 +758,7 @@ void function OnChallengeRegistered( ItemFlavor challenge )
 	                                                                                      
 	                                   
 	                                         
-	                                                                                  
+	                                                                                             
 	                                        
                   
 	                                                                       
@@ -789,7 +789,7 @@ void function OnChallengeRegistered( ItemFlavor challenge )
 
 	                                                                                   
 
-	                                                                               
+	                                                                                          
 	                                                          
 	 
 		                                                                                
@@ -1015,23 +1015,6 @@ void function UpdateLobbyChallengeMenu()
 	Hud_Show( challengeCatergorySelection )
 	Hud_Show( challengeCatergoryRight )
 	Hud_Show( challengesBlur )
-
-	                                                  
-	  
-	                                
-	                                                                                             
-	   
-	 	                                                  
-	 	 
-	 		                                                      
-	 		 
-	 			                        
-	 			     
-	 		 
-	 	 
-	  
-	                                                      
-          
 }
 
 bool function ShouldChallengeCountTowardsNewness( ItemFlavor challenge )
@@ -1578,6 +1561,10 @@ void function UpdateChallengeCategorySelection( var rui, bool longName = false, 
 	RuiSetInt( rui, "selectionID", newSelectionIndex )                         
 	RuiSetString( rui, "selectionText", category )                                            
 
+	#if CLIENT
+		RuiSetBool( rui, "isObserver", GetLocalClientPlayer().IsObserver() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR )
+	#endif
+
 	#if UI
 		int currCat = GetChallengeDisplayCategory( hideStories )
 		if ( IsEventCategory( currCat ) )
@@ -1585,7 +1572,7 @@ void function UpdateChallengeCategorySelection( var rui, bool longName = false, 
 			int timestamp                  = GetUnixTimestamp()
 			ItemFlavor ornull currentEvent = GetActiveBuffetEventForCategory( timestamp, currCat )
 
-			                                                                                                                                
+			                                                                                                                          
 			if ( currentEvent == null )
 			{
 				RuiSetGameTime( rui, "expireTime", RUI_BADGAMETIME )
@@ -1608,7 +1595,7 @@ void function UpdateChallengeCategorySelection( var rui, bool longName = false, 
 			int timestamp                  = GetUnixTimestamp()
 			ItemFlavor ornull currentEvent = GetActiveStoryEventForCategory( timestamp, currCat )
 
-			                                                                                                                                
+			                                                                                                                          
 			if ( currentEvent == null )
 			{
 				RuiSetGameTime( rui, "expireTime", RUI_BADGAMETIME )
@@ -2182,8 +2169,6 @@ array<ItemFlavor> function GetPinnedChallenges()
 			               
 		 
 
-		                                                                   
-
 		                                                                                                                    
 		                                                                                                                            
 		 
@@ -2477,13 +2462,22 @@ bool function Challenge_IsChallengesStateInititated( entity player )
 			                                                                                                       
 			                                                             
 
+			                                                                                           
+			                  
+			                                           
+			 
+				                                                  
+					            
+			 
+			                                                    
+
 			                      
-			                                  
+			                                                    
 			 
 				                                            
 				                
 			 
-			                                       
+			                                                           
 			 
 				                                            
 				                
@@ -2811,7 +2805,7 @@ bool function Challenge_IsChallengesStateInititated( entity player )
 
 		                                                       
 		 
-			                                                                                                                     
+			                                                                                                               
 			                                                                                                                                           
 			 
 				        
@@ -3751,7 +3745,7 @@ void function PrintChallengePersistence( entity player )
 #if DEV
 void function DEV_PrintAllChallenges( bool assigned = false, bool currentBPOnly = true )
 {
-	                                                                             
+	                                             
 	array<ItemFlavor> allChallenges = GetAllChallenges()
 	string challengeDump = ""
 
@@ -4590,7 +4584,7 @@ void function UpdateChallengeTags( var panel )
 
 	foreach(int gameMode, string name in GAME_MODE_NAME)
 	{
-		if(gameMode != eChallengeGameMode.ANY && gameMode != eChallengeGameMode.NON_MODE && gameMode != eChallengeGameMode.CONTROL && modeNumber < MaxShownModeTags)
+		if( (gameMode == eChallengeGameMode.BATTLE_ROYALE || gameMode == eChallengeGameMode.EXCEPT_BR ) && modeNumber < MaxShownModeTags )
 		{
 			RuiSetString( rui, "challengeModeTag" + modeNumber, name )
 			RuiSetFloat3( rui, "challengeModeTagColor" + modeNumber, GAME_MODE_TAG_COLOR[gameMode] )
@@ -5277,14 +5271,7 @@ void function MaybeAddChallengeClickEventToButton( var menu, var button, ItemFla
 
 			if ( !IsDialog( GetActiveMenu() ) )
 			{
-				if ( !Reroll_ShouldDoGameModeSplit( challenge ) )
-				{
-					OpenPurchaseRerollDialog( challenge, button, menu )
-				}
-				else
-				{
-					OpenRerollDialog( challenge, button, menu )
-				}
+				OpenPurchaseRerollDialog( challenge, button, menu )
 			}
 		})
 
@@ -5490,10 +5477,6 @@ bool function DoesPlayerHaveChallenge( entity player, ItemFlavor flavor )
 	      
 
 	                                                                                                   
-                  
-	                                                    
-	                                                                                                            
-       
 	                                            
 	                        
 
@@ -5529,7 +5512,7 @@ bool function DoesPlayerHaveChallenge( entity player, ItemFlavor flavor )
 		 
 			                            
 
-			                                                            
+			                                                  
                     
 				                                                        
          
@@ -6303,7 +6286,6 @@ int function Challenge_GetCurrentTier( entity player, ItemFlavor flavor )
 	PlayerChallengesState pcs = GetPlayerChallengesState( player )
 	Assert( flavor in pcs.challengeStateMap, "Called Challenge_GetCurrentTier for challenge " + string(ItemFlavor_GetAsset( flavor )) + " but it was not assigned to the player " + string(player) )
 
-	                            
 	if ( !Challenge_IsAssigned( player, flavor ) )
 	{
 		                                                                                                                                                                                     
@@ -6590,7 +6572,6 @@ int function Challenge_GetProgressValue( entity player, ItemFlavor challengeFlav
 	PlayerChallengesState pcs = GetPlayerChallengesState( player )
 	Assert( challengeFlav in pcs.challengeStateMap, "Called Challenge_GetActiveTier for challenge " + string(ItemFlavor_GetAsset( challengeFlav )) + " but it was not assigned to the player " + player )
 
-	                            
 	if ( !Challenge_IsAssigned( player, challengeFlav ) )
 	{
 		                                                                                                                                                                                     

@@ -608,6 +608,7 @@ var function OnWeaponPrimaryAttack_valk_cluster_missile( entity weapon, WeaponPr
 			                                           
 			                                                                  
 			                                                                                   
+			                                                                                                                     
 		#endif
 
 	}
@@ -763,10 +764,10 @@ var function OnWeaponPrimaryAttack_valk_cluster_missile( entity weapon, WeaponPr
 	        
 
                         
-		if ( weapon.HasMod( "arenas_tac_max" ) )
-		{
-			return weapon.GetAmmoPerShot()
-		}
+                                          
+   
+                                 
+   
        
 
 	                                                                                       

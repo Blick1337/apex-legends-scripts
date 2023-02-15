@@ -130,6 +130,10 @@ global const HIGHLIGHT_COLOR_OBJECTIVE = <0.9, 0.63, 0.09>
 const HIGHLIGHT_COLOR_FOCUSED_LOOT = <0, 1.0, 0>
 const HIGHLIGHT_COLOR_PINGED_LOOT = <0, 1.0, 0>
 
+                       
+                                                     
+                             
+
 global const HIGHLIGHT_OUTLINE_NONE = 0
 const HIGHLIGHT_OUTLINE_CUSTOM_COLOR = 101                                
 const HIGHLIGHT_OUTLINE_CUSTOM_COLOR_OCCLUDED = 145                                        
@@ -996,6 +1000,16 @@ void function Highlight_Init()
 		HighlightContext_SetDrawFunc( highlight, eHighlightDrawFunc.LOS )
 		HighlightContext_SetADSFade( highlight, false )
 		HighlightContext_SetFarFadeDistance( highlight, HIGHLIGHT_LOS_FAR_FADE_DIST )
+                              
+
+                        
+                                                              
+                                                                          
+                                            
+                                                                            
+                                                                      
+                                                 
+                                                               
                               
 
 	  
@@ -2299,7 +2313,9 @@ int function GetHighlightContextForEnt( entity viewPlayer, entity ent )
 	int entTeam = ent.GetTeam()
 
 	bool viewPlayerEmoting = viewPlayer == ent && viewPlayer.ContextAction_IsEmoting()
-	bool wantsFriendlyHighlight = (!viewPlayerEmoting) || viewPlayer.IsDrivingVehicle()
+	bool isDoor = IsCodeDoor( ent )
+	bool wantsFriendlyHighlight = !isDoor && ( (!viewPlayerEmoting) || viewPlayer.IsDrivingVehicle() )
+
 
                       
                                              
@@ -2359,7 +2375,7 @@ int function GetHighlightContextForEnt( entity viewPlayer, entity ent )
 			if ( viewTeam == TEAM_SPECTATOR && IsValid( viewPlayer.GetObserverTarget() ) )
 				viewTarget = viewPlayer.GetObserverTarget()
 
-			if ( !ent.IsPlayer() && IsFriendlyTeam( viewTarget.GetTeam(), entTeam) )                                                           
+			if ( !ent.IsPlayer() && !isDoor && IsFriendlyTeam( viewTarget.GetTeam(), entTeam) )                                                           
 				return HIGHLIGHT_CONTEXT_FRIENDLY
 
                         

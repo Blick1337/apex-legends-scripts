@@ -49,7 +49,7 @@ const string MIRAGE_DECOY_DROP_MOVER_SCRIPTNAME 		= "mirage_decoy_drop_mover"
 
 #if CLIENT
                      
-                                                
+global function ServerToClient_ShowCloakHintText
                            
 #endif   
 
@@ -285,10 +285,10 @@ void function PassivesShared_Init()
 		                                          
 		                                                                           
                        
-                                                                     
-    
-                                                                   
-    
+			                                                                 
+			 
+				                                                               
+			 
                              
 	 
 	                                                                            
@@ -316,6 +316,7 @@ void function PassivesShared_Init()
                                                                                        
         
 
+		                                                                                  
 		                                                                    
 		                                                                 
 	#endif
@@ -411,6 +412,9 @@ void function OnRegisterRootItemFlavors()
 #if SERVER || CLIENT
 bool function PlayerHasPassive( entity player, int passive )
 {
+	if( !IsValid( player ) )
+		return false
+
 	return player.HasPassive( passive )
 }
 #endif
@@ -602,26 +606,26 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
                      
                                                                      
  
-                                                                                                     
-  
-                                       
-                                         
+	                                                                                                    
+	 
+			                                    
+			                                      
 
-                                                                                
-                                                                                  
+			                                                                             
+			                                                                               
 
-                                                     
-  
+			                                                  
+	 
  
 
                                                                        
  
-                                                                                 
-            
+	                                                                                
+	           
 
-                                
-                                                                                                    
-                                                                                                      
+	                               
+	                                                                                                   
+	                                                                                                     
  
                            
 
@@ -658,15 +662,15 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
 
 #if CLIENT
                      
-                                                
- 
-                                     
+void function ServerToClient_ShowCloakHintText()
+{
+	entity player = GetLocalViewPlayer()
 
-                     
-  
-                                                                                        
-  
- 
+	if (IsValid(player))
+	{
+		AnnouncementMessageRight( player, "#CLOAK_UNARMED_WARNING" )
+	}
+}
                            
 #endif          
 
@@ -1090,6 +1094,25 @@ void function ClientCodeCallback_OnPassiveChanged( entity player, int passiveIdx
       
 
 #if SERVER
+                                                                                             
+ 
+	                         
+		      
+
+	                                        
+		      
+
+	             
+	 
+		                                                         
+	 
+
+	                   
+	 
+		                                                         
+	 
+ 
+
                                                                                       
  
 	                                                              

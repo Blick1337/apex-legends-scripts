@@ -59,6 +59,7 @@ global function ServerCallback_VehicleOccupancyChange
 #endif
 
 const asset HOVER_VEHICLE_MODEL = $"mdl/vehicle/olympus_hovercraft/olympus_hovercraft_v2.rmdl"
+global const string HOVER_VEHICLE_SCRIPTNAME = "hover_vehicle"
 
               
 const asset FX_VEHICLE_DAMAGE_SMOKE_WHITE = $"xo_health_smoke_white"
@@ -386,6 +387,7 @@ bool function EntIsHoverVehicle( entity ent )
 	                                   
 	                                       
 	                                       
+	                                                 
 	                            
 	                                   
 	                        
@@ -649,6 +651,10 @@ void function Client_OnVehicleCreated( entity vehicle )
 	                                            
 	SetCallback_CanUseEntityCallback( vehicle, VehicleCanUseEntityCallback )
 	HoverVehicle_SetEffects( vehicle )
+
+	if(	!HoverVehiclesAreEnabled())
+		return
+
 	SetMapFeatureItem( 1000, "#HOVER_VEHICLE", "#HOVER_VEHICLE_DESC", HOVER_VEHICLE_SPAWNPOINT_ICON )
 }
 #endif

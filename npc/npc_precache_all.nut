@@ -39,9 +39,4 @@ void function NPCPrecache_AllNPCTypes()
                           
 		NPCPrecache_Spider_Jungle()
        
-
-                          
-                                 
-       
-
 }

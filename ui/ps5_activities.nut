@@ -95,7 +95,7 @@ global function UICodeCallback_ShouldEnableActivities
 
 bool function UICodeCallback_ShouldEnableActivities()
 {
-	return IsTrainingCompleted() || IsExemptFromTraining()
+	return HasLocalPlayerCompletedTraining() || IsLocalPlayerExemptFromTraining()
 }
 #endif
 

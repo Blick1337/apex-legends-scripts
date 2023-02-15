@@ -496,11 +496,11 @@ void function SURVIVAL_Loot_All_InitShared()
 				data.hudIcon = GetWeaponInfoFileKeyFieldAsset_Global( data.baseWeapon, "hud_icon" )
 				data.craftingIcon = GetWeaponInfoFileKeyFieldAsset_Global( data.baseWeapon, "crafting_icon" )
 				data.model = GetWeaponInfoFileKeyFieldAsset_Global( data.baseWeapon, "playermodel" )
-				if ( GetWeaponInfoFileKeyField_Global( data.baseWeapon, "ammo_pool_type" ) != null && GetWeaponInfoFileKeyField_Global( data.baseWeapon, "uses_ammo_pool" ) != false )
+				if ( IsWeaponKeyFieldDefined( data.baseWeapon, "ammo_pool_type" ) && GetWeaponInfoFileKeyField_Global( data.baseWeapon, "uses_ammo_pool" ) != false )
 				{
 					                                           
 					                                                                                           
-					int type = GetWeaponInfoFileKeyField_GlobalInt( data.baseWeapon, "ammo_pool_type" )
+					int type = GetWeaponInfoFileKeyField_WithMods_GlobalInt( data.baseWeapon, data.baseMods, "ammo_pool_type" )
 					switch( type )
 					{
 						case 0:
@@ -532,7 +532,7 @@ void function SURVIVAL_Loot_All_InitShared()
 					data.ammoType = ""
 				}
 
-				if ( GetWeaponInfoFileKeyField_Global( data.baseWeapon, "secondary_ammo_pool_type" ) != null )
+				if ( IsWeaponKeyFieldDefined( data.baseWeapon, "secondary_ammo_pool_type" ) )
 				{
 					string type = GetWeaponInfoFileKeyField_GlobalString( data.baseWeapon, "secondary_ammo_pool_type" )
 					switch( type )

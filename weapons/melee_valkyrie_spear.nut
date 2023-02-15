@@ -19,15 +19,6 @@ const asset VALK_FX_ATTACK_DLIGHT_3P = $"P_valk_spear_thruster_burst_dlight_3P"
 const asset VALK_IDLE_EXHAUST_FP = $"P_valk_spear_thruster_idle"
 const asset VALK_IDLE_EXHAUST_3P = $"P_valk_spear_thruster_idle_3P"
 
-#if SERVER
-                                                
-                                                 
-#endif              
-
-#if CLIENT
-global function OnClientAnimEvent_ValkMelee
-#endif              
-
 void function MeleeValkyrieSpear_Init()
 {
 	PrecacheParticleSystem( VALK_FX_ATTACK_SWIPE_FP )
@@ -44,6 +35,8 @@ void function MeleeValkyrieSpear_Init()
 
 	PrecacheParticleSystem( VALK_FX_ATTACK_DLIGHT_FP )
 	PrecacheParticleSystem( VALK_FX_ATTACK_DLIGHT_3P )
+
+	PrecacheImpactEffectTable( "melee_spear_blunt" )
 }
 
                                                                               
@@ -71,11 +64,6 @@ void function OnWeaponActivate_melee_valkyrie_spear( entity weapon )
 	weapon.PlayWeaponEffect( VALK_FX_ATTACK_SWIPE_FP, VALK_FX_ATTACK_SWIPE_TOP_3P, "fx_r_thruster_bot" )
 
 	weapon.PlayWeaponEffect( VALK_FX_ATTACK_DLIGHT_FP, VALK_FX_ATTACK_DLIGHT_3P, "fx_r_thruster_bot" )
-
-
-
-	float tmp = 1.00
-
 }
 
 void function OnWeaponDeactivate_melee_valkyrie_spear( entity weapon )
@@ -89,54 +77,4 @@ void function OnWeaponDeactivate_melee_valkyrie_spear( entity weapon )
 	weapon.StopWeaponEffect( VALK_FX_ATTACK_DLIGHT_FP, VALK_FX_ATTACK_DLIGHT_3P )
 
 	weapon.StopWeaponEffect( VALK_IDLE_EXHAUST_FP, VALK_IDLE_EXHAUST_3P )
-
-
-	float tmp = 1.00
-}
-
-#if SERVER
-                                                               
- 
-	                                           
- 
-
-                                                                
- 
-	                                          
- 
-#endif              
-
-#if CLIENT
-void function OnClientAnimEvent_ValkMelee( entity weapon, string name )
-{
-	if ( !IsValid( weapon ) )
-		return
-	
-	if ( !InPrediction() )
-		return
-	
-	if ( name == "valk_melee_spear" )
-		UpdateSpearHelmet_Internal( weapon, false )
-	else if ( name == "valk_melee_helmet" )
-		UpdateSpearHelmet_Internal( weapon, true )
-}
-#endif              
-
-void function UpdateSpearHelmet_Internal( entity weapon, bool usingHelmet )
-{
-	if ( usingHelmet )
-	{
-		if ( weapon.HasMod( "proto_door_kick_impact_table" ) )
-			weapon.RemoveMod( "proto_door_kick_impact_table" )
-			
-		weapon.AddMod( "melee_valk_helmet" )
-	}
-	else
-	{
-		if ( weapon.HasMod( "melee_valk_helmet" ) )
-			weapon.RemoveMod( "melee_valk_helmet" )
-		
-		if ( weapon.HasMod( "proto_door_kick" ) && !weapon.HasMod( "proto_door_kick_impact_table" ) )
-			weapon.AddMod( "proto_door_kick_impact_table" )
-	}
 }

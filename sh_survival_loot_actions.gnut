@@ -136,6 +136,13 @@ void function SURVIVAL_LootActions_InitShared()
 	Assert( file.lootActionData.len() == eLootAction._count )
 
 	file.attachSwapsOldItemToStowedIfBetter = GetCurrentPlaylistVarBool( "attach_swaps_old_item_to_stowed_if_better", true )
+
+                        
+            
+                                                      
+                                      
+                  
+                              
 }
 
 
@@ -230,12 +237,12 @@ bool function PickupCustomItem( entity pickup, entity player, int pickupFlags, e
 			#endif              
 		}
                      
-            
-                                      
-   
-                           
-   
-        
+		#if SERVER
+		                                    
+		 
+			                        
+		 
+		#endif
         
 		return result
 	}
@@ -706,8 +713,6 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
 }
 
                        
-                                             
-                                           
                                                                                                                              
  
                                                 
@@ -729,8 +734,8 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
    
       
    
-                                                                                                                                                         
              
+                                                                                                                                                                                           
                                               
                    
               
@@ -739,7 +744,15 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
      
   
             
-                                                   
+                                                                     
+    
+                                                                             
+    
+       
+    
+                                                    
+    
+
                                              
                   
              
@@ -764,6 +777,28 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
                              
 
                        
+                                                            
+ 
+                                                                                         
+ 
+                             
+
+                       
+                                                        
+ 
+                                                                                     
+ 
+                             
+
+                       
+                                                                         
+ 
+                                                                                                       
+ 
+                             
+
+                       
+          
                                                                                                                
                                                                                                                                  
                                                                                                                                                                                               
@@ -777,12 +812,23 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
                                                           
         
 
+                                                                                                                                                          
+                                                                                                                                                              
+                                                                                                                                                          
+
+                                                 
+                                                                                        
+        
+
                                                  
 
                                 
 
                             
+  
                                  
+                                       
+  
 
                                        
                                                              
@@ -790,18 +836,20 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
 
                      
                              
-                                                
+                                                                                                                                         
 
                                                         
   
                         
 
-            
+                                                                    
+   
+                                                                                                                         
+   
+      
+   
                                                                                      
-                
-                                                                                                           
-                                                                                                              
-                            
+   
 
                                                                                                         
                                   
@@ -812,6 +860,20 @@ bool function PickupBackpackItem( entity pickup, entity player, int pickupFlags,
   
 
  
+                
+                             
+
+                       
+          
+                                                              
+                                                               
+ 
+                         
+                                    
+
+           
+ 
+                
                              
 
                        
@@ -870,7 +932,7 @@ bool function GiveMainWeapon_Internal( entity pickup, entity player, bool dropCu
        
 		{
 			array<entity> primaryWeapons = SURVIVAL_GetPrimaryWeapons( player )
-			if ( !dropCurrentWeapon && primaryWeapons.len() > 1 )
+			if ( !dropCurrentWeapon && primaryWeapons.len() > 1 && InventoryHasSingleAkimboWeapon( player, pickup.GetWeaponName() ) == -1 )
 				return false
 		}
 
@@ -990,6 +1052,13 @@ bool function EquipEquipment( entity pickup, entity player, string equipSlot, en
 		                                                                 
 			                                                                                           
 	#endif
+
+                          
+                                                   
+   
+                                      
+   
+                                 
 
 	return true
 }

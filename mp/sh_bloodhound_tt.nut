@@ -130,7 +130,7 @@ struct RewardPanelData
  
 
 
-                
+                       
  
 	                 
 	          
@@ -162,11 +162,11 @@ struct
 		array<RewardPanelData> panelDatas
 
 		#if SERVER
-			                           
-			                                            
+			                                  
+			                                                   
 			                           
 			                                 
-			   				                    
+			                                           
 
 			                                             
 			                                             
@@ -187,6 +187,9 @@ struct
 			                                          
 			                                           
 			                                         
+
+			                                        
+
 		#elseif CLIENT
 			StoryPropUsabilityData& clientStoryPropData
 		#endif
@@ -414,7 +417,7 @@ void function Bloodhound_TT_RegisterNetworking()
 	                         
 	                                                                                       
 	 
-		              
+		                     
 		                                                                                                         
 		                                
 
@@ -850,7 +853,7 @@ void function SCB_BloodTT_SetCustomSpeakerIdx( int speakerIdx )
 
                                                                              
  
-	                                                
+	                                                       
 
 	                                                    
 
@@ -868,7 +871,7 @@ void function SCB_BloodTT_SetCustomSpeakerIdx( int speakerIdx )
 
                                                             
  
-	                                                
+	                                                       
 
 	                                                       
 
@@ -935,11 +938,12 @@ void function SCB_BloodTT_SetCustomSpeakerIdx( int speakerIdx )
 
                                                                         
  
-	                                            
+	                                                   
 
 	               
 	                                                                                                                   
 	                        
+	                                 
 
 	                                 
 	                                                        
@@ -977,6 +981,16 @@ void function SCB_BloodTT_SetCustomSpeakerIdx( int speakerIdx )
  
 	                    
 	                                               
+
+	                                 
+                            
+                             
+       
+
+	                                                                                   
+	 
+		                                                                                       
+	 
 
 	                                                 
 	 
@@ -1018,6 +1032,28 @@ void function SCB_BloodTT_SetCustomSpeakerIdx( int speakerIdx )
 	                    
  
 
+                                                                                               
+ 
+	           
+ 
+
+                                          
+ 
+	                        
+
+	                                     
+	                                                                                            
+	                                                                                                
+	                                                                                            
+	                                                                                                   
+	                                                                                                            
+	                                                                                    
+	                                                                                             
+	                                                
+	                                       
+
+	             
+ 
 
                                            
  

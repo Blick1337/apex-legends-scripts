@@ -58,6 +58,7 @@ global function ItemFlavor_GetQuality
 global function ItemFlavor_GetQualityColor
 global function ItemFlavor_GetQualityName
 global function ItemFlavor_IsCurrency
+global function ItemFlavor_IsBattlepass
 global function ItemFlavor_GetAccountPackType
 global function IterateSettingsAssetArray
 global function IterateSettingsArray
@@ -155,7 +156,7 @@ global enum eItemType
 	calevent_themedshop
 	calevent_buffet
 	calevent_rankedperiod
-                        
+                      
 		calevent_arenas_ranked_period
        
 	calevent_login
@@ -200,11 +201,14 @@ global enum eItemType
 	loadscreen
 	skydive_emote
 	skydive_trail
-                 
-		sticker
-       
+	sticker
                        
                
+       
+
+                    
+		character_class
+		character_perk
        
 
 	            
@@ -269,10 +273,8 @@ table<int, int> itemTypeUICategoryMap = {
 	[eItemType.calevent_skustore] = eItemTypeUICategory.CAL_EVENT,
 	[eItemType.challenge] = eItemTypeUICategory.CAL_EVENT,
 	[eItemType.emote_icon] = eItemTypeUICategory.CHARACTER,
-	[eItemType.character_emote] = eItemTypeUICategory.CHARACTER
-                
-, [eItemType.sticker] = eItemTypeUICategory.MISC_LOADOUT
-      
+	[eItemType.character_emote] = eItemTypeUICategory.CHARACTER,
+	[eItemType.sticker] = eItemTypeUICategory.MISC_LOADOUT
                        
 , [eItemType.quest_comic] =eItemTypeUICategory.NON_EQUIPPABLE
       
@@ -302,10 +304,8 @@ table<int, string> itemTypeNameMap = {
 	[eItemType.battlepass_purchased_xp] = "#itemtype_battlepass_purchased_xp_NAME",
 	[eItemType.skydive_emote] = "#itemtype_skydive_emote_NAME",
 	[eItemType.emote_icon] = "#itemtype_character_emote_icon_NAME",
-	[eItemType.character_emote] = "#itemtype_character_emote_NAME"
-                
-, [eItemType.sticker] = "#itemtype_sticker_NAME"
-      
+	[eItemType.character_emote] = "#itemtype_character_emote_NAME",
+	[eItemType.sticker] = "#itemtype_sticker_NAME"
                        
 , [eItemType.quest_comic] = "#itemtype_quest_comic_NAME"
       
@@ -486,15 +486,15 @@ bool function IsItemFlavorRegistrationFinished()
                           
                           
                           
-                                                             
-        
-                      
-                                                                                                
-                    
-                                                                                                                                                      
-                                                                                        
 string function GetCleanAssetPathForItemFlavor( ItemFlavor flavor )
 {
+	                                                   
+	        
+	                      
+	                                                                                                
+	                    
+	                                                                                                                                                      
+	                                                                                        
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 	string assetPath = string(ItemFlavor_GetAsset( flavor ))
 	assetPath = assetPath.slice( ITEM_FLAV_PREFIX.len(), assetPath.len() - ITEM_FLAV_SUFFIX.len() )
@@ -702,14 +702,14 @@ array< ItemFlavor > function GetAllLegendaryItems()
 array<ItemFlavor> function GetAllItemFlavors()
 {
 	Assert( fileLevel.isItemRegistrationFinished )
-	return fileLevel.itemFlavorListAll                                       
+	return fileLevel.itemFlavorListAll
 }
 #endif
 
 array<ItemFlavor> function GetAllItemFlavorsCosmetic()
 {
 	Assert( fileLevel.isItemRegistrationFinished )
-	return fileLevel.itemFlavorListCosmetic                                       
+	return fileLevel.itemFlavorListCosmetic
 }
 
 array<ItemFlavor> function GetAllItemFlavorsOfType( int typeIndex )
@@ -831,6 +831,13 @@ string function ItemFlavor_GetLongDescription( ItemFlavor flavor )
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 
 	string localizationKey = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "localizationKey_DESCRIPTION_LONG" )
+
+                    
+	                                                                   
+	if( localizationKey == "#GEAR_SURVEY_LONGDESC" && S16_PathfinderSkirmisherPassiveActive() )
+		localizationKey =  "#GEAR_SURVEY_LONGDESC_NEW"
+       
+
 	#if DEV
 		if ( localizationKey != "" && localizationKey.slice( 0, 1 ) != "#" )
 			localizationKey = format( "%s !UNLOCALIZED!", localizationKey )
@@ -846,6 +853,13 @@ string function ItemFlavor_GetShortDescription( ItemFlavor flavor )
 	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
 
 	string localizationKey = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "localizationKey_DESCRIPTION_SHORT" )
+
+                    
+	                                                                   
+	if( localizationKey == "#GEAR_SURVEY_DESC" && S16_PathfinderSkirmisherPassiveActive() )
+		localizationKey =  "#GEAR_SURVEY_DESC_NEW"
+       
+
 	#if DEV
 		if ( localizationKey != "" && localizationKey.slice( 0, 1 ) != "#" )
 			localizationKey = format( "%s !UNLOCALIZED!", localizationKey )
@@ -927,9 +941,7 @@ string function ItemFlavor_GetRewardShortDescription( ItemFlavor flav )
 			return Localize( "#REWARD_SKYDIVE_EMOTE", Localize( ItemFlavor_GetLongName( ref ) ) )
 
 		case eItemType.weapon_charm:
-                
 		case eItemType.sticker:
-                      
 			return Localize( ItemFlavor_GetTypeName( flav ) )
 
 		                                                         
@@ -988,9 +1000,9 @@ int function ItemFlavor_GetAccountPackType( ItemFlavor pack )
 }
 
 
-                                                                                                           
 int function GetPlaylistAvailabilityByRef( array< string > refs )
 {
+	                                                                                                     
 	foreach ( ref in refs )
 	{
 		if ( HIDDEN_CHARACTER_REFS.len() > 0 && HIDDEN_CHARACTER_REFS.contains( ref ) )
@@ -998,7 +1010,7 @@ int function GetPlaylistAvailabilityByRef( array< string > refs )
 
 		string playlistVar = GetCurrentPlaylistVarString( ref, "none" ).tolower()
 
-		                                                                                                                                 
+		                                                                                                                       
 		if ( refs.len() == 1 && playlistVar == "none" )
 			return eItemFlavorPlaylistAvailability.NONE
 
@@ -1191,6 +1203,25 @@ bool function ItemFlavor_IsCurrency( ItemFlavor flavor )
 	return false
 }
 
+bool function ItemFlavor_IsBattlepass( ItemFlavor flavor )
+{
+	Assert( IsItemFlavorStructValid( flavor, eValidation.ASSERT ) )
+
+	ItemFlavor ornull activeBattlePass = GetActiveBattlePass()
+
+	if ( activeBattlePass == null )
+		return false
+
+	expect ItemFlavor( activeBattlePass )
+
+	if ( flavor == BattlePass_GetBundlePurchasePack( activeBattlePass ) ||
+			flavor == BattlePass_GetBasicPurchasePack( activeBattlePass ) )
+	{
+		return true
+	}
+
+	return false
+}
 
 string function ItemQuality_GetQualityName( int quality )
 {
@@ -1392,7 +1423,6 @@ void function MakeItemFlavorSet( array<ItemFlavor> list, table<ItemFlavor, int> 
 const string itemSettingsPathPattern = "^settings/itemflav/([^.]+)\\.rpak$"
 ItemFlavor ornull function RegisterItemFlavorFromSettingsAsset( asset settingsAsset )
 {
-	                                                                  
 	#if DEV
 		fileLevel.DEV_hasItemRegistrationStarted = true
 	#endif
@@ -1954,9 +1984,7 @@ bool function IsItemFlavorTypeEquippable( ItemFlavor item )
 		case eItemType.loadscreen:
 		case eItemType.skydive_trail:
 		case eItemType.skydive_emote:
-                
 		case eItemType.sticker:
-                      
 			return true
 	}
 
@@ -2030,7 +2058,7 @@ array<ItemFlavor> function FilterItemFlavorsByType( array<ItemFlavor> list, int 
 
 bool function IsItemFlavorTypeCosmetic( int typeFilter )
 {
-	                                                                            
+	                                                                  
 	return typeFilter > eItemType.grx_sentinel && typeFilter < eItemType.__loot_start
 }
 

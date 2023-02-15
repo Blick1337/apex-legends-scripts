@@ -28,6 +28,7 @@ global function IsDoorLocked
                                
                                  
                                          
+                           
 #endif
 #if SERVER
                                        
@@ -48,8 +49,9 @@ global function GetAllPropDoors
 
 global function CodeCallback_OnDoorInteraction
 
-enum eDoorType
+global enum eDoorType
 {
+	UNKNOWN = -1,
 	MODEL,
 	MOVER,
 	PLAIN,
@@ -73,7 +75,7 @@ struct DoorData
 
 struct
 {
-	#if SERVER && DEV
+	#if SERVER
 		                           
 	#endif
 
@@ -600,9 +602,17 @@ bool function DoorsAreEnabled()
 	                       
 	                                          
 
-	       
-		                               
-	      
+	                               
+ 
+
+                                       
+ 
+	                            
+		                          
+	                              
+		                     
+
+	                        
  
 #endif
 
@@ -2595,6 +2605,11 @@ void function CodeCallback_OnDoorInteraction( entity door, entity user, entity o
 		 
 			                                                        
 			                                
+
+			                                   
+			 
+				                                                           
+			 
 		 
 	#endif
 }

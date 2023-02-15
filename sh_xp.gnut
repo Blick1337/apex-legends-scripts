@@ -33,6 +33,7 @@ global function UpdateXPEvents
 
 global function CreateNestedAccountDisplayBadge
 global function GetAccountBadgeRuiAssetAsString
+global function GetAccountBadgeRuiAssetAsAsset
 #endif
 
 global function GetNextAccountLevel
@@ -383,6 +384,18 @@ string function GetAccountBadgeRuiAssetAsString( int levelIndex )
 
 	return badgeRuiAsset
 }
+
+asset function GetAccountBadgeRuiAssetAsAsset( int levelIndex )
+{
+	asset badgeRuiAsset
+	if ( levelIndex <= ACCOUNT_LEVEL_RUI_SWITCH_0_BASE || GetCurrentPlaylistVarInt( "account_progression_version", 3 ) == 2 )
+		badgeRuiAsset = $"ui/gcard_badge_account_t1.rpak"
+	else
+		badgeRuiAsset = $"ui/gcard_badge_account_p1.rpak"
+
+	return badgeRuiAsset
+}
+
 #endif     
 
 #if SERVER && DEV

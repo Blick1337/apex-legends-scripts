@@ -1,0 +1,146 @@
+global function Sh_MunitionsDrop_Init
+
+
+global function ShouldDoMunitionsDropFromEnt
+global function CanDoMunitionsDrop
+global function CallInMunitionsDrop
+
+#if CLIENT
+global function ServerCallback_SetMunutionsSpawned
+#endif          
+
+const bool DEBUG_DROP_POINTS = false
+
+
+struct
+{
+
+} file
+
+void function Sh_MunitionsDrop_Init()
+{
+
+                                 
+                                                                                 
+       
+
+}
+
+
+                          
+                                                      
+#if CLIENT
+void function ServerCallback_SetMunutionsSpawned( entity ent )
+{
+	entity player = GetLocalViewPlayer()
+
+	if ( !IsValid( player ) )
+		return
+
+	if ( !IsValid( ent ) )
+		return
+
+	ent.e.munitionsDropSpawned = true
+}
+#endif
+
+bool function CanDoMunitionsDrop( entity player )
+{
+	if( !IsValid( player ) )
+		return false
+
+                                
+                                                                             
+  
+                                                                 
+               
+  
+      
+
+	if( !Perks_DoesPlayerHavePerk( player, ePerkIndex.MUNITIONS_DROP ) )
+		return false
+
+	return true
+}
+
+bool function ShouldDoMunitionsDropFromEnt( entity ent, entity player )
+{
+	                                                            
+	if( ent.e.munitionsDropSpawned )
+		return false
+
+	if( !CanDoMunitionsDrop( player ) )
+		return false
+
+	return true
+}
+
+void function CallInMunitionsDrop( entity player, entity ent )
+{
+	#if SERVER
+		                                                                
+		                                                                
+
+		                       
+		                      
+		                     
+
+		                                  
+
+		                                                                                   
+		                                 
+		 
+			                                                                 
+			                                           
+			                          
+				                                  
+		 
+
+		                    
+
+		                                                                                  
+		                                
+		 
+			                                                                 
+			                                           
+			                          
+				                               
+		 
+
+		                  
+
+		                         
+		                
+		                                                       
+		                                               
+		                        
+		 
+			                                    
+			                                   
+			                
+			 
+				                                   
+				            
+			 
+		 
+
+
+		                                                                                           
+		                      
+
+		                                   
+		                                                       
+		                         
+		                                                                
+
+		                                                                                               
+
+		                           
+
+		                                 
+	#else
+
+		SetCarePackageDeployed( true )
+
+	#endif
+}

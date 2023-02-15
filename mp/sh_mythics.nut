@@ -310,15 +310,16 @@ int function Mythics_GetNumTiersUnlockedForSkin( entity player, ItemFlavor skin 
 	if ( !IsValid( player ) )
 		return 0
 
-	ItemFlavor MythicChallenge = Mythics_GetChallengeForSkin( skin )
-
-	if ( !DoesPlayerHaveChallenge( player, MythicChallenge ) )
+	ItemFlavor character = Mythics_GetCharacterForSkin( skin )
+	array< int > allSkinGUIDs = fileLevel.charactersGUIDToMythicSkinGUIDs[ ItemFlavor_GetGUID( character ) ]
+	int ownedCount = 0
+	foreach ( int skinGUID in allSkinGUIDs )
 	{
-		print("Checked mythic skin tier but player does not have challenge")
-		return 0
+		if ( GRX_IsItemOwnedByPlayer( GetItemFlavorByGUID( skinGUID ), player ) )
+			ownedCount++
 	}
 
-	return 1 + Challenge_GetCurrentTier( player, MythicChallenge )
+	return ownedCount
 }
 
 asset function Mythics_GetStoreImageForCharacter( ItemFlavor character, int tier )

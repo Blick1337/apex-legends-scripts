@@ -490,7 +490,7 @@ LootActionStruct function GroundAction_ForWeapons( entity player, LootRef lootRe
 	as.displayString = ""
 
 	int action
-	if ( SURVIVAL_CountPrimaryWeapons( player ) > 1 )
+	if ( SURVIVAL_CountPrimaryWeapons( player ) > 1 && InventoryHasSingleAkimboWeapon( player, lootRef.lootData.ref ) == -1 )
 	{
 		action = eLootAction.SWAP
 

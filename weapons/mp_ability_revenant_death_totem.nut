@@ -3,6 +3,7 @@ global function DeathTotem_PlayerCanRecall
 global function OnWeaponAttemptOffhandSwitch_ability_revenant_death_totem
 global function OnWeaponActivate_ability_revenant_death_totem
 global function OnWeaponDeactivate_ability_revenant_death_totem
+global function DoesPlayerHaveDeathProtection
                          
 global function OnWeaponPrimaryAttack_ability_revenant_death_totem
 const string ABILITY_USED_MOD = "ability_used_mod"
@@ -770,6 +771,9 @@ void function DeathTotem_DisableWallClimbWhileDeployingTotem( entity ownerPlayer
 
 	                                
 		                         
+
+	                                   
+		                       
 
 	                                           
 
@@ -1790,6 +1794,10 @@ void function OnWeaponDeactivate_ability_revenant_death_totem( entity weapon )
  
 #endif
 
+bool function DoesPlayerHaveDeathProtection( entity player )
+{
+	return StatusEffect_HasSeverity( player, eStatusEffect.death_totem_visual_effect )
+}
 
                                                                                                             
 DeathTotemPlacementInfo function CalculateDeathTotemPosition( entity weaponOwner, entity totemProxy )

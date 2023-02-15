@@ -5,11 +5,13 @@ global function EnablePrivateMatchSpectCharSelectMenu
 global function IsPrivateMatchSpectCharSelectMenuOpen
 global function OpenPrivateMatchSpectCharSelectMenu
 global function ClosePrivateMatchSpectCharSelectMenu
+global function PrivateMatchSpectCharSelectMenu_HideScoreboard
 #endif
 
 #if CLIENT
 global function PrivateMatch_PopulateSpectCharSelectMenu
 global function PrivateMatch_SpectCharSelect_ConfigurePlayerButton
+global function DisablePrivateMatchSpectCharSelectMenu
 #endif
 
 struct TeamRosterStruct
@@ -28,6 +30,7 @@ struct
 
 	var 		decorationRui
 	var 		menuHeaderRui
+	var 		backgroundRui
 
 	bool 		enableMenu = false
 	bool 		disableNavigateBack = false
@@ -50,7 +53,6 @@ struct
 void function InitPrivateMatchSpectCharSelectMenu( var newMenuArg )
 {
 	file.menu = newMenuArg
-
 	file.whiteFlash = Hud_GetChild( newMenuArg, "WhiteFlash" )
 
 	#if UI
@@ -69,23 +71,30 @@ void function InitPrivateMatchSpectCharSelectMenu( var newMenuArg )
 		} )
 
 	#elseif CLIENT
-		int maxTeams = PrivateMatch_GetMaxTeamsForSelectedGamemode()
-		const int MAX_TEAM_HEADERS = 20
-		for ( int index; index < MAX_TEAM_HEADERS; index++ )
+		if ( !GetPlaylistVarBool( GetCurrentPlaylistName(), "custom_match_scoreboard_test", true ) )
 		{
-			string team          = "Team"
-			string indexName     = index < 10 ? "0" + string( index ) : string( index )
-			string teamIndexName = team + indexName
-			var teamPanel = Hud_GetChild( newMenuArg, teamIndexName )
+			int maxTeams = PrivateMatch_GetMaxTeamsForSelectedGamemode()
+			const int MAX_TEAM_HEADERS = 20
+			for ( int index; index < MAX_TEAM_HEADERS; index++ )
+			{
+				string team          = "Team"
+				string indexName     = index < 10 ? "0" + string( index ) : string( index )
+				string teamIndexName = team + indexName
+				var teamPanel = Hud_GetChild( newMenuArg, teamIndexName )
 
-			if ( index < maxTeams )
-			{
-				file.teamRosters[TEAM_MULTITEAM_FIRST + index] <- CreateTeamPlacement( TEAM_MULTITEAM_FIRST + index, teamPanel )
-				Hud_Show( teamPanel )
+				if ( index < maxTeams )
+				{
+					file.teamRosters[TEAM_MULTITEAM_FIRST + index] <- CreateTeamPlacement( TEAM_MULTITEAM_FIRST + index, teamPanel )
+					Hud_Show( teamPanel )
+				}
+				else
+				{
+					Hud_Hide( teamPanel )
+				}
 			}
-			else
+			if ( !file.isInitialized )
 			{
-				Hud_Hide( teamPanel )
+				AddCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer( Loadout_Character(), PrivateMatch_OnPlayerChangedCharacterClass )
 			}
 		}
 
@@ -93,7 +102,6 @@ void function InitPrivateMatchSpectCharSelectMenu( var newMenuArg )
 		{
 			AddCallback_OnPlayerMatchStateChanged( OnPlayerMatchStateChanged )
 			AddCallback_GameStateEnter( eGameState.PickLoadout, OnGameStateEnter_PickLoadout )
-			AddCallback_ItemFlavorLoadoutSlotDidChange_AnyPlayer( Loadout_Character(), PrivateMatch_OnPlayerChangedCharacterClass )
 		}
 
 	#endif
@@ -101,8 +109,74 @@ void function InitPrivateMatchSpectCharSelectMenu( var newMenuArg )
 	file.isInitialized = true
 }
 
-#if CLIENT
+#if UI
+void function OnOpenPrivateMatchSpectCharSelectMenu()
+{
+	if ( !IsFullyConnected() )
+	{
+		CloseActiveMenu()
+		return
+	}
+	                         
+	if ( !GetPlaylistVarBool( GetCurrentPlaylistName(), "custom_match_scoreboard_test", true ) )
+	{
+		RunClientScript( "PrivateMatch_PopulateSpectCharSelectMenu", file.menu )
+		HidePanel( Hud_GetChild( file.menu, "PrivateMatchScoreboardPanel" ) )
+	}
+	else
+		ShowPanel( Hud_GetChild( file.menu, "PrivateMatchScoreboardPanel" ) )
+}
+#endif     
 
+#if UI
+void function OnShowPrivateMatchSpectCharSelectMenu()
+{
+	UI_SetScoreboardAnimateIn( Hud_GetChild( file.menu, "PrivateMatchScoreboardPanel" ), 0.25 )
+
+	var header = Hud_GetChild( file.menu, "MenuHeader" )
+	var headerRui = Hud_GetRui( header )
+	RuiSetWallTimeWithNow( headerRui, "animateStartTime" )
+	RuiSetInt( headerRui, "animationDirection", 1 )
+
+	SetMenuReceivesCommands( file.menu, PROTO_Survival_DoInventoryMenusUseCommands() && !IsControllerModeActive() )
+}
+#endif     
+
+#if UI
+void function OnHidePrivateMatchSpectCharSelectMenu()
+{
+	                                             
+}
+#endif     
+
+#if UI
+void function OnClosePrivateMatchSpectCharSelectMenu()
+{
+
+}
+#endif     
+
+#if UI
+void function PrivateMatchSpectCharSelectMenu_HideScoreboard()
+{
+	var header = Hud_GetChild( file.menu, "MenuHeader" )
+	var headerRui = Hud_GetRui( header )
+	RuiSetWallTimeWithNow( headerRui, "animateStartTime" )
+	RuiSetInt( headerRui, "animationDirection", -1 )
+
+	UI_SetScoreboardAnimateOut( Hud_GetChild( file.menu, "PrivateMatchScoreboardPanel" ), 0.25 )
+
+	thread function() : ()
+	{
+		wait 0.25
+		RunClientScript( "DisablePrivateMatchSpectCharSelectMenu" )
+	}()
+
+}
+#endif
+
+#if CLIENT
+                                 
 void function PrivateMatch_OnPlayerChangedCharacterClass( EHI playerEHI, ItemFlavor character )
 {
 	if ( file.enableMenu == false )
@@ -115,7 +189,10 @@ void function PrivateMatch_OnPlayerChangedCharacterClass( EHI playerEHI, ItemFla
 	if( player in file.buttonPlayerMap )
 		PrivateMatch_SpectCharSelect_ConfigurePlayerButton( file.buttonPlayerMap[player], player )
 }
+#endif         
 
+#if CLIENT
+                                 
 void function SpecOnLockStepPickIndexChanged()
 {
 	if ( file.enableMenu == false )
@@ -133,7 +210,10 @@ void function SpecOnLockStepPickIndexChanged()
 
 	UpdateFooterRui()
 }
+#endif         
 
+#if CLIENT
+                                 
 TeamRosterStruct function CreateTeamPlacement( int teamIndex, var panel )
 {
 	TeamRosterStruct teamPlacement
@@ -146,14 +226,30 @@ TeamRosterStruct function CreateTeamPlacement( int teamIndex, var panel )
 
 	return teamPlacement
 }
+#endif         
 
+#if CLIENT
+                                 
 void function PrivateMatch_PopulateSpectCharSelectMenu( var menu )
 {
 	FooterRui()
 	                                                  
 	thread OnPrivateMatchSpectCharSelectMenuThink()
 }
+#endif         
 
+#if CLIENT
+void function PrivateMatch_PopulateFooter( var menu )
+{
+	file.maxTeamSize =  GetMaxTeamSizeForPlaylist( GetCurrentPlaylistName() )
+
+	FooterRui()
+	thread PrivateMatch_PopulateFooterThink()
+}
+#endif         
+
+#if CLIENT
+                                 
 void function PrivateMatch_SpectCharSelect_TeamRoster_Configure( TeamRosterStruct teamRoster, string teamName )
 {
 	var buttonPanel = teamRoster.listPanel
@@ -179,7 +275,10 @@ void function PrivateMatch_SpectCharSelect_TeamRoster_Configure( TeamRosterStruc
 		HudElem_SetRuiArg( button, "portraitText", "-" )
 	}
 }
+#endif         
 
+#if CLIENT
+                                 
 int function SortPlayers( entity a, entity b )
 {
 	int aStepIndex = a.GetPlayerNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_PLAYER_INDEX )
@@ -193,7 +292,10 @@ int function SortPlayers( entity a, entity b )
 
 	return 0
 }
+#endif         
 
+#if CLIENT
+                                 
 void function PrivateMatch_SpectCharSelect_TeamRoster_Update()
 {
 	if ( file.teamRosters.len() == 0 )
@@ -263,7 +365,10 @@ void function PrivateMatch_SpectCharSelect_TeamRoster_Update()
 		}
 	}
 }
+#endif         
 
+#if CLIENT
+                                 
 void function PrivateMatch_SpectCharSelect_ConfigurePlayerButton( var button, entity player )
 {
 	if ( !IsValid( player ) || player == null )
@@ -278,7 +383,7 @@ void function PrivateMatch_SpectCharSelect_ConfigurePlayerButton( var button, en
 	playerName = player.GetPlayerNameWithClanTag()
 	RuiSetString( buttonRui, "buttonText", playerName )
 
-	asset characterPortrait = $"white"
+	asset characterPortrait = $""
 	bool loadoutReady = LoadoutSlot_IsReady( ToEHI( player ), Loadout_Character() )
 	if ( loadoutReady && player.GetPlayerNetBool( CHARACTER_SELECT_NETVAR_HAS_LOCKED_IN_CHARACTER ) )
 	{
@@ -314,12 +419,16 @@ void function PrivateMatch_SpectCharSelect_ConfigurePlayerButton( var button, en
 
 	RuiSetString( buttonRui, "portraitText", "-" )
 }
+#endif         
 
+#if CLIENT
 void function OnGameStateEnter_PickLoadout()
 {
 	thread TryEnablePrivateMatchSpectCharSelectMenu( GetLocalClientPlayer() )
 }
+#endif         
 
+#if CLIENT
 void function OnPlayerMatchStateChanged( entity player, int newState )
 {
 	if ( player.GetTeam() != TEAM_SPECTATOR )
@@ -336,7 +445,9 @@ void function OnPlayerMatchStateChanged( entity player, int newState )
 		DisablePrivateMatchSpectCharSelectMenu()
 	}
 }
+#endif         
 
+#if CLIENT
 void function DisablePrivateMatchSpectCharSelectMenu()
 {
 	file.enableMenu = false
@@ -354,7 +465,9 @@ void function DisablePrivateMatchSpectCharSelectMenu()
 		RuiDestroyIfAlive( rui )
 	file.progressBarRuis = []
 }
+#endif         
 
+#if CLIENT
 void function TryEnablePrivateMatchSpectCharSelectMenu( entity player )
 {
 	FlagWait( "ClientInitComplete" )
@@ -378,22 +491,63 @@ void function TryEnablePrivateMatchSpectCharSelectMenu( entity player )
 
 	RunUIScript( "EnablePrivateMatchSpectCharSelectMenu", true )
 	file.enableMenu = true
-	PrivateMatch_PopulateSpectCharSelectMenu( file.menu )
+
+	if ( !GetPlaylistVarBool( GetCurrentPlaylistName(), "custom_match_scoreboard_test", true ) )
+		PrivateMatch_PopulateSpectCharSelectMenu( file.menu )
+	else
+		PrivateMatch_PopulateFooter( file.menu )
+
+	if( file.backgroundRui == null )
+		file.backgroundRui = CreateCockpitRui( $"ui/screen_blur.rpak", -1)
+
+	RuiSetResolutionToScreenSize( file.backgroundRui )
+	RuiSetFloat( file.backgroundRui, "darkenAlpha", 0.8 )
 
 	thread FlashScreenWhite()
 
 	float gameStartTime = GetGlobalNetTime( "pickLoadoutGamestateEndTime" )
 	thread CloseCharacterSelectMenuAtTime( gameStartTime )
 
-	while( Time() < GetGlobalNetTime( "championSquadPresentationStartTime" ) )
+	bool isShowingAllSquadsGladCardIntro = GetCurrentPlaylistVarBool( "survival_enable_all_squads_intro", false )
+	bool isShowingSquadGladCardIntro = GetCurrentPlaylistVarBool( "survival_enable_squad_intro", true )
+	bool isShowingChampGladCardIntro = GetCurrentPlaylistVarBool( "survival_enable_gladiator_intros", true )
+	bool isShowingMVPGladCardIntro = GetCurrentPlaylistVarBool( "survival_enable_mvp_intros", false )
+
+
+	while( Time() < GetGlobalNetTime( "allSquadsPresentationStartTime" ) )
 		WaitFrame()
 
-	DisablePrivateMatchSpectCharSelectMenu()
+	RunUIScript( "PrivateMatchSpectCharSelectMenu_HideScoreboard" )
 
-	if ( GetCurrentPlaylistVarInt( "survival_enable_gladiator_intros", 1 ) == 1 )
-		thread DoChampionSquadCardsPresentation("pickLoadoutGamestateEndTime")
+                     
+		                                                             
+		                                                   
+		if ( isShowingAllSquadsGladCardIntro )
+		{
+			waitthread DoAllSquadsCardsPresentation("squadPresentationStartTime")
+		}
+       
+
+                     
+		if ( isShowingMVPGladCardIntro )
+		{
+			waitthread DoMVPSquadCardsPresentation( "championSquadPresentationStartTime" )
+		}
+       
+
+	if ( isShowingChampGladCardIntro )
+	{
+		waitthread DoChampionSquadCardsPresentation( "pickLoadoutGamestateEndTime" )
+	}
+
+	if( file.backgroundRui != null )
+		RuiDestroy( file.backgroundRui )
+
+	TryStartIntroPodiumSequence()
 }
+#endif         
 
+#if CLIENT
 void function FlashScreenWhite( float holdTime = 0.5, float fadeOutDuration = 1.5 )
 {
 	if ( !IsValid( file.whiteFlash ) )
@@ -422,7 +576,9 @@ void function FlashScreenWhite( float holdTime = 0.5, float fadeOutDuration = 1.
 
 	wait fadeOutDuration
 }
+#endif         
 
+#if CLIENT
 void function CloseCharacterSelectMenuAtTime( float closeTimeStamp )
 {
 	while ( Time() < closeTimeStamp - SCREEN_COVER_TRANSITION_OUT_DURATION - 0.1 )
@@ -432,7 +588,10 @@ void function CloseCharacterSelectMenuAtTime( float closeTimeStamp )
 
 	FlashGameWindow()
 }
+#endif         
 
+#if CLIENT
+                                 
 void function OnPrivateMatchSpectCharSelectMenuThink()
 {
 	file.lockStepIndex = GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX )
@@ -457,7 +616,32 @@ void function OnPrivateMatchSpectCharSelectMenuThink()
 		WaitFrame()
 	}
 }
+#endif         
 
+#if CLIENT
+void function PrivateMatch_PopulateFooterThink()
+{
+	file.lockStepIndex = GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX )
+
+	while ( true )
+	{
+		if ( GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX ) != file.lockStepIndex )
+		{
+			file.lockStepIndex = GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX )
+
+			if ( file.enableMenu != false )
+				UpdateFooterRui()
+
+		}
+		if( !file.enableMenu )
+			return
+
+		WaitFrame()
+	}
+}
+#endif         
+
+#if CLIENT
 void function UpdateFooterRui()
 {
 	for ( int i = 0 ; i < file.progressBarRuis.len() ; i++ )
@@ -479,7 +663,9 @@ void function UpdateFooterRui()
 		}
 	}
 }
+#endif         
 
+#if CLIENT
 void function FooterRui()
 {
 	if( file.progressBarRuis.len() > 0 )
@@ -489,7 +675,7 @@ void function FooterRui()
 
 	for ( int i = 0 ; i < MAX_TEAM_PLAYERS ; i++ )
 	{
-		var rui = CreateFullscreenRui( $"ui/private_match_character_select_progress_bar.rpak", 300 )
+		var rui = CreateFullscreenPostFXRui( $"ui/private_match_character_select_progress_bar.rpak", RUI_SORT_SCREENFADE )
 
 		UISize screenSize = GetScreenSize()
 		float aspectRatio = float( screenSize.width ) / float( screenSize.height )
@@ -497,7 +683,7 @@ void function FooterRui()
 
 		RuiSetInt( rui, "playerIndex", i )
 
-		UISize virtualSize = GetScreenSize()                                      
+		UISize virtualSize = GetScreenSize()
 		RuiSetFloat2( rui, "virtualRes", <1080.0 * aspectRatio, 1080.0, 0> )
 		
 		file.progressBarRuis.append( rui )
@@ -507,35 +693,8 @@ void function FooterRui()
 #endif         
 
 
+
 #if UI
-void function OnOpenPrivateMatchSpectCharSelectMenu()
-{
-	if ( !IsFullyConnected() )
-	{
-		CloseActiveMenu()
-		return
-	}
-	
-	RunClientScript( "PrivateMatch_PopulateSpectCharSelectMenu", file.menu )
-}
-
-
-void function OnShowPrivateMatchSpectCharSelectMenu()
-{
-	SetMenuReceivesCommands( file.menu, PROTO_Survival_DoInventoryMenusUseCommands() && !IsControllerModeActive() )
-}
-
-void function OnHidePrivateMatchSpectCharSelectMenu()
-{
-	                                             
-}
-
-
-void function OnClosePrivateMatchSpectCharSelectMenu()
-{
-}
-
-
 void function EnablePrivateMatchSpectCharSelectMenu( bool doEnable )
 {
 	file.enableMenu = doEnable
@@ -544,13 +703,16 @@ void function EnablePrivateMatchSpectCharSelectMenu( bool doEnable )
 		AdvanceMenu( file.menu )
 	}
 }
+#endif     
 
-
+#if UI
 bool function IsPrivateMatchSpectCharSelectMenuOpen()
 {
 	return GetActiveMenu() == file.menu
 }
+#endif     
 
+#if UI
 void function OpenPrivateMatchSpectCharSelectMenu( var button )
 {
 	if ( !IsPrivateMatch() )
@@ -562,7 +724,9 @@ void function OpenPrivateMatchSpectCharSelectMenu( var button )
 	CloseAllMenus()
 	AdvanceMenu( file.menu )
 }
+#endif     
 
+#if UI
 void function ClosePrivateMatchSpectCharSelectMenu()
 {
 	if ( GetActiveMenu() == file.menu )

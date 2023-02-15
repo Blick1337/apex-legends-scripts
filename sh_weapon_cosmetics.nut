@@ -195,7 +195,7 @@ void function OnItemFlavorRegistered_LootMainWeapon( ItemFlavor weaponFlavor )
 		}
 		charmEntry.networkTo            = eLoadoutNetworking.PLAYER_EXCLUSIVE
 		charmEntry.isItemFlavorUnlocked = bool function( EHI playerEHI, ItemFlavor flavor, bool shouldIgnoreGRX = false, bool shouldIgnoreOtherSlots = false ) : ( weaponFlavor ) {
-			if ( !shouldIgnoreOtherSlots )                                                                              
+			if ( !shouldIgnoreOtherSlots )                                                                                        
 			{
 				ItemFlavor ornull flavorCurrentWeaponEquippedTo = GetWeaponThatCharmIsCurrentlyEquippedToForPlayer( playerEHI, flavor )
 				if ( flavorCurrentWeaponEquippedTo != null && flavorCurrentWeaponEquippedTo != weaponFlavor )
@@ -653,13 +653,16 @@ void function WeaponCosmetics_Apply( entity ent, ItemFlavor ornull skinOrNull, I
 		ItemFlavor skin = expect ItemFlavor( skinOrNull )
 		Assert( ItemFlavor_GetType( skin ) == eItemType.weapon_skin )
 
+		if( ent.IsWeaponX() )
+			ent.ClearReactiveEffects()
+
 		ent.e.skinItemFlavorGUID = ItemFlavor_GetGUID( skin )
 		ent.SetSkin( 0 )                                                                                                                                                         
 
 		#if SERVER
 			                                                                                                                                                                                                    
 			                                                                                                
-			                                                                                                                                            
+			                                                                                                                                  
 			                                               
 				                                                                         
 
@@ -687,6 +690,9 @@ void function WeaponCosmetics_Apply( entity ent, ItemFlavor ornull skinOrNull, I
 
 		ent.SetSkin( skinIndex )
 		ent.SetCamo( camoIndex )
+
+		if( ent.IsWeaponX() )
+			ent.UpdateReactiveEffects()
 	}
 
 	if ( charmOrNull != null )

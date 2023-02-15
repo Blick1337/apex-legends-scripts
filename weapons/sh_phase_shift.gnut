@@ -204,7 +204,12 @@ int function PhaseShift( entity ent, float warmupTime, float duration, int shift
       
 			case PHASETYPE_BREACH:
 			case PHASETYPE_TUNNEL:
-				ent.SetSeeOtherNonShifters( false )
+                           
+                                                                 
+                                       
+        
+          
+					ent.SetSeeOtherNonShifters( false )
 				StatusEffect_AddTimed( ent, eStatusEffect.speed_boost, 0.05, duration, 0.25 )
 			break
 			case PHASETYPE_DASH:

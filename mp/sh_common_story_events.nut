@@ -50,7 +50,11 @@ void function ClCommonStoryEvents_Init()
 #if SERVER || CLIENT
 void function EntitiesDidLoad()
 {
-
+                        
+	#if SERVER
+		                           
+	#endif
+       
 }
 #endif
 

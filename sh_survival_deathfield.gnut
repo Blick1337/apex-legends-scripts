@@ -1,8 +1,8 @@
 global function Sh_ArenaDeathField_Init
 
                     
-global function SurveyBeacon_IsSurveyBeacon
-global function SurveyBeacon_GetBeaconIcon
+                                           
+                                          
       
 
 global function TeamShouldSeeBeaconMarker
@@ -18,6 +18,9 @@ global function TeamShouldSeeBeaconMarker
                                                 
                                                 
                                                    
+                                                     
+                                                  
+                                 
 #endif
 
 #if SERVER
@@ -109,7 +112,7 @@ global function AddCallback_OnSurvivalDeathFieldStageChanged
 global function RemoveCallback_OnSurvivalDeathFieldStageChanged
 
                     
-global function ReconClassCharacter_PassiveChanged
+                                                  
       
 
 global function HasActiveSurveyZone
@@ -204,17 +207,17 @@ global struct DeathFieldStageData
 #endif
 
                     
-struct SurveyBeaconData
-{
-	int passiveSource
-	bool functionref( entity, entity  ) canUseFunc
-	void functionref( entity, entity ) successFunc
-	string calloutLine
+                       
+ 
+                  
+                                               
+                                               
+                   
 
-	#if SERVER
-	                    
-	#endif
-}
+           
+                     
+       
+ 
       
 
 struct
@@ -243,7 +246,7 @@ struct
 	#endif
 
                      
-		table< entity, SurveyBeaconData > surveyBeaconData
+                                                    
        
 
 	array<DeathFieldStageData> deathFieldStageData
@@ -290,13 +293,13 @@ void function Sh_ArenaDeathField_Init()
 	PrecacheParticleSystem( $"P_ring_radCP1_opaCP2_1k_x_100k" )
 
                      
-		AddCallback_OnPassiveChanged( ePassives.PAS_PATHFINDER, ReconClassCharacter_PassiveChanged )
-		AddCallback_OnPassiveChanged( ePassives.PAS_TRACKING_VISION, ReconClassCharacter_PassiveChanged )
-		AddCallback_OnPassiveChanged( ePassives.PAS_CRYPTO, ReconClassCharacter_PassiveChanged )
-		AddCallback_OnPassiveChanged( ePassives.PAS_VALK, ReconClassCharacter_PassiveChanged )
-		AddCallback_OnPassiveChanged( ePassives.PAS_PARIAH, ReconClassCharacter_PassiveChanged )
+                                                                                              
+                                                                                                   
+                                                                                          
+                                                                                        
+                                                                                          
                  
-			AddCallback_OnPassiveChanged( ePassives.PAS_VANTAGE, ReconClassCharacter_PassiveChanged )
+                                                                                            
         
        
 
@@ -423,23 +426,23 @@ void function Sh_ArenaDeathField_Init()
                     
                                              
  
-	                                                                                                               
-	                                                                                                              
+                                                                                                                
+                                                                                                               
  
 
                                                                     
  
-	                                                                 
+                                                                  
  
       
 #endif
 
 #if CLIENT
                     
-void function SurveyBeacon_AddSurveyBeaconMinimapPackage()
-{
-	RegisterMinimapPackage( "prop_script", eMinimapObject_prop_script.SURVEY_BEACON, MINIMAP_OBJECT_RUI, MinimapPackage_SurveyBeacon, FULLMAP_OBJECT_RUI, FullmapPackage_SurveyBeacon )
-}
+                                                          
+ 
+                                                                                                                                                                                    
+ 
       
 #endif
 
@@ -572,20 +575,20 @@ bool function TeamShouldSeeBeaconMarker( int team, entity beacon )
 }
 
                     
-asset function SurveyBeacon_GetBeaconIcon( entity beacon )
-{
-	return $"rui/hud/gametype_icons/survival/survey_beacon_only_pathfinder"
-}
+                                                          
+ 
+                                                                        
+ 
 
-bool function SurveyBeacon_IsSurveyBeacon( entity beacon )
-{
-	return beacon.GetScriptName() == SURVEY_BEACON_SCRIPTNAME
-}
+                                                          
+ 
+                                                          
+ 
 
-bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull beacon )
-{
-	return player in file.surveyBeaconData || player.GetTeam() == TEAM_SPECTATOR
-}
+                                                                                       
+ 
+                                                                             
+ 
       
 
 
@@ -1983,6 +1986,69 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
 	 
  
 
+                                                    
+ 
+	                                                                                            
+
+	                                         
+ 
+
+                      
+ 
+	                 
+	                     
+	                             
+	                           
+	                             
+ 
+                                             
+                                                                           
+ 
+	                                          
+		                                        
+
+	                                               
+		                                  
+
+	                                                                                  
+	                                                                           
+
+	                                  
+	 
+		                                                                    
+		                                      
+	 
+
+	                                                                                             
+	                                                     
+	                                                                                                        
+	                                                                    
+
+	                                                                         
+	                                                                
+	                                                                                                       
+
+	                                                
+	 
+		                                                                     
+		                                       
+	 
+
+	                                                
+	 
+		                                                                        
+		                                          
+	 
+
+	                                                            
+	                              
+ 
+
+                                           
+ 
+	                                                                                                                                                          
+ 
+
             
 
                                            
@@ -2591,10 +2657,10 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
                     
                                                                                     
  
-	                                           
-		      
+                                            
+        
 
-	                                                             
+                                                              
  
       
 
@@ -2668,59 +2734,22 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
                     
                                                                  
  
-	                           
+                            
 
-	                                                                
+                                                                 
 
-	                        
-		                                                            
+                         
+                                                              
 
-	                                              
+                                               
 
-	                                                                                                                                  
+                                                                                                                                   
 
-	                                                
-	                                                           
-	 
-		                                                                  
-		                               
-		 
-			                                         
-			 
-				                                     
-				                                  
-			 
-			                                              
-			 
-				                                     
-				                                  
-			 
-			                                              
-			 
-				                                     
-				                                  
-			 
-			                                              
-			 
-				                                     
-				                                  
-			 
-			                                              
-			 
-				                                     
-				                                  
-			 
-			                                              
-			 
-				           
-			 
-			    
-			 
-				                                  
-			 
-			                                                                                       
-		 
-	 
+                                                 
+                                                            
+  
+                                            
+  
  
       
 
@@ -2888,6 +2917,10 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
 
 	                                           
 
+                    
+		                                                                                                
+       
+
 	                                       
  
 
@@ -2919,114 +2952,117 @@ bool function PlayerShouldSeeSurveyBeaconMarkers( entity player, entity ornull b
                     
                                                 
  
-	                              
-	                                
-	                                   
-	             
-	                                       
-	 
-		                                                     
+                               
+                                 
+                                    
+              
+                                        
+  
+                                                       
 
-		                                    
-		 
-			                                                          
-			 
-				             
-				                                     
-				                                                   
-				 
-					                                                                                       
-					 
-						       
-					 
-				 
+                                      
+   
+                                                             
+    
+                 
+                                         
+                                                       
+     
+                                                                                            
+      
+             
+      
+     
 
-				                                        
-				 
-					                                   
-					                              
-					     
-				 
-				    
-				 
-					                                      
-					                              
-				 
-			 
-		 
+                                            
+     
+                                        
+                                   
+          
+     
+        
+     
+                                           
+                                   
+     
+    
+   
 
-		                                              
-		                             
-		 
-			                                                  
-			 
-				                                                     
-			 
-		 
-	 
-	    
-	 
-		                                                      
-		                                             
-		                          
-	 
+                                                
+                               
+   
+                                                     
+    
+                                                         
+    
+   
+  
+     
+  
+                                                        
+                                               
+                            
+  
 
-	                                                            
+                                                             
 
-	                            
-	                                        
-		                
+                             
+                                         
+                  
 
-	                          
+                           
 
-	                                                              
-	 
-		                                                               
-		 
-			                                  
-			                                 
-		 
-	 
+                                                               
+  
+                                                                 
+   
+                                     
+                                    
+   
+  
 
-	                                        
+                                         
 
-	                                        
-	 
-		                                        
-		                         
-		                             
-		 
-			                                             
-			                                                           
-				                            
-		 
+                                         
+  
+                                          
+                           
+                               
+   
+                                                
+                                                              
+                                
+   
 
-		                                     
-		 
-			                               
-			                                       
-		 
+                                       
+   
+                                  
+                                          
+   
 
-		                                   
-	 
+                                     
+  
 
-	                                        
+                                         
 
-	                                                        
+                                                         
  
      
                                                 
  
-                                    
-        
+	                                   
+		      
 
-                                                                         
-                                                                                   
+	                                         
+		      
+
+	                                                                        
+	                                                                                  
  
 
                                                 
  
-                                         
+	                                        
  
       
 
@@ -3172,6 +3208,14 @@ void function OnPropScriptCreated( entity prop )
 	{
 		file.surveyMinimapEnts.append( prop )
 		AddEntityDestroyedCallback( prop, SurveyZoneCleanupOnDestroy )
+
+		entity owner = prop.GetOwner()
+		entity localPlayer = GetLocalViewPlayer()
+		if( IsValid( owner ) && owner.GetTeam() == localPlayer.GetTeam() )
+		{
+			string playerName  = localPlayer == owner ? Localize( "#OBITUARY_YOU" ) : owner.GetPlayerName()
+			Obituary_Print_Localized( Localize( "#PLAYER_REVEALED_NEXT_RING", playerName ) )
+		}
 	}
 
 	if ( prop.GetTargetName() == "deathField" )
@@ -3441,7 +3485,6 @@ void function ServerCallback_SurveyBeaconNotifications( entity beacon, int notif
 	bool showSquadInfo =  GetCurrentPlaylistVarBool( "beacon_show_squad_info", false )
 	if (showSquadInfo)
 		SurveyBeacon_ShowSquadInfo()
-
 }
 
 void function SurveyBeacon_ShowSquadInfo()
@@ -3459,20 +3502,20 @@ void function  SurveyBeacon_ShowSquadInfo_Thread()
 }
 
                     
-void function OnSurveyBeaconCreated( entity beacon )
-{
-	if ( !IsValid( beacon ) )
-		return
+                                                    
+ 
+                          
+        
 
-	if ( SurveyBeacon_IsSurveyBeacon( beacon ) )
-	{
-		string modelName = beacon.GetModelName()
-		if ( modelName == SURVEY_BEACON_MODEL || modelName == NEXT_ZONE_SURVEY_BEACON_MODEL )
-		{
-			CreateCallback_Panel( beacon )
-			ClearCallback_CanUseEntityCallback( beacon )
-			SetCallback_CanUseEntityCallback( beacon, SurveyBeacon_CanUseFunction )
-		}
+                                             
+  
+                                          
+                                                                                       
+   
+                                 
+                                               
+                                                                          
+   
 
                      
                                          
@@ -3484,50 +3527,50 @@ void function OnSurveyBeaconCreated( entity beacon )
                                                                    
     
        
-			thread BeaconIconThink( beacon )
+                                   
         
-	}
-}
+  
+ 
 
-void function BeaconIconThink( entity beacon )
-{
-	beacon.EndSignal( "OnDestroy" )
+                                              
+ 
+                                
 
-	table<string, var> e
-	e[ "rui" ] <- null
+                     
+                   
 
-	OnThreadEnd(
-		function() : ( e )
-		{
-			if ( e["rui"] != null )
-				RuiDestroy( e ["rui"] )
-		}
-	)
+             
+                    
+   
+                          
+                           
+   
+  
 
-	while ( IsValid( beacon ) )
-	{
-		bool shouldBeVisible = TeamShouldSeeBeaconMarker( GetLocalViewPlayer().GetTeam(), beacon )
+                            
+  
+                                                                                            
 
-		if ( shouldBeVisible )
-		{
-			if ( e[ "rui" ] == null )
-			{
-				var rui = SurveyBeacon_CreateHUDMarker( SurveyBeacon_GetBeaconIcon( beacon ), beacon )
-				e[ "rui" ] = rui
-			}
-		}
-		else
-		{
-			if ( e[ "rui" ] != null )
-			{
-				RuiDestroy( e ["rui"] )
-				e[ "rui" ] = null
-			}
-		}
+                        
+   
+                            
+    
+                                                                                          
+                    
+    
+   
+      
+   
+                            
+    
+                           
+                     
+    
+   
 
-		clGlobal.levelEnt.WaitSignal( "UpdateSurveyBeaconVisibility" )
-	}
-}
+                                                                
+  
+ 
       
 
 void function ServerCallback_UpdateSurveyBeaconHUDVisibility()
@@ -3550,17 +3593,17 @@ void function OnViewPlayerChanged( entity viewPlayer )
 }
 
                     
-var function SurveyBeacon_CreateHUDMarker( asset beaconImage, entity minimapObj )
-{
-	entity localViewPlayer = GetLocalViewPlayer()
-	vector pos             = minimapObj.GetOrigin() + (minimapObj.GetUpVector() * 96)
-	var rui                = CreateFullscreenRui( $"ui/survey_beacon_marker_icon.rpak", RuiCalculateDistanceSortKey( localViewPlayer.EyePosition(), pos ) )
-	RuiSetImage( rui, "beaconImage", beaconImage )
-	RuiSetGameTime( rui, "startTime", Time() )
-	RuiSetFloat3( rui, "pos", pos )
-	RuiKeepSortKeyUpdated( rui, true, "pos" )
-	return rui
-}
+                                                                                 
+ 
+                                              
+                                                                                  
+                                                                                                                                                        
+                                               
+                                           
+                                
+                                          
+           
+ 
       
 
 #if DEV
@@ -3715,78 +3758,80 @@ float function Cl_SURVIVAL_GetDeathFieldCurrentRadius()
       
 
                     
-bool function SurveyBeacon_CanUseFunction( entity player, entity beacon, int useFlags )
-{
+                                                                                       
+ 
 
-	if ( GetGameState() < eGameState.Playing )
-		return false
+                                           
+              
 
-	if ( !PlayerShouldSeeSurveyBeaconMarkers( player, beacon ) )
-	{
-		#if CLIENT
-			ShowSurveyBeaconTeamHint( player, beacon )
-		#endif         
+                                                             
+  
+            
+                                             
+                 
 
-		return false
-	}
+              
+  
 
-	SurveyBeaconData data = file.surveyBeaconData[ player ]
-	if ( data.canUseFunc != null )
-	{
-		if ( !data.canUseFunc( player, beacon ) )
-		{
-			return false
-		}
-	}
+                                                        
+                               
+  
+                                           
+   
+               
+   
+  
 
-	if ( !ControlPanel_CanUseFunction( player, beacon, useFlags ) )
-		return false
+                                                                
+              
 
-	return true
-}
+            
+ 
 
-bool function Recon_CanUseBeacon( entity player, entity beacon )
-{
-	if ( HasActiveSurveyZone( player ) )
-	{
-		#if CLIENT
-			AddPlayerHint( 0.1, 0, SurveyBeacon_GetBeaconIcon( beacon ), "#SURVEY_ALREADY_ACTIVE" )
-		#endif         
-		return false
-	}
+                                                                
+ 
+                                     
+  
+            
+                                                                                          
+                 
+              
+  
 
-	return true
-}
+            
+ 
 
-#if CLIENT
-entity function GetTeamSurveyBeaconUser( int team )
-{
-	array<entity> teamArray = GetPlayerArrayOfTeam_AliveConnected( team )
-	foreach ( teamMember in teamArray )
-	{
-		if ( PlayerHasPassive( teamMember, ePassives.PAS_PATHFINDER ) )
-			return teamMember
-	}
-	return null
-}
+          
+                                                   
+ 
+                                                                      
+                                    
+  
+                                                                 
+                    
+  
+            
+ 
 
 
-void function ShowSurveyBeaconTeamHint( entity player, entity beacon )
-{
-	entity beaconUser = GetTeamSurveyBeaconUser( player.GetTeam() )
-	if ( !IsValid( beaconUser ) )
-		return
+                                                                      
+ 
+                                                                
+                              
+        
 
-	if ( HasActiveSurveyZone( beaconUser ) )
-		AddPlayerHint( 0.1, 0, SurveyBeacon_GetBeaconIcon( beacon ), "#SURVEY_ALREADY_ACTIVE" )
-	else
-		AddPlayerHint( 0.1, 0, SurveyBeacon_GetBeaconIcon( beacon ), "#SURVEY_TEAM_MESSAGE" )
-}
-#endif         
+                                         
+                                                                                         
+     
+                                                                                       
+ 
+               
                          
 
 bool function HasActiveSurveyZone( entity player )
 {
+	if( !IsValid( player ) )
+		return false
 	foreach ( surveyZone in file.surveyMinimapEnts )
 	{
 		entity owner = surveyZone.GetOwner()
@@ -4093,195 +4138,197 @@ void function DisplayHolsterWeaponHint()
       
 
                     
-void function ReconClassCharacter_PassiveChanged( entity player, int passive, bool didHave, bool nowHas )
-{
-	                                                                                                                                                                                                                                      
-	                                                                                                                                                                                                                                          
-	if ( nowHas != didHave )
-	{
-		string calloutLine, player1pAnim, player3pAnim, panelAnim
+                                                                                                         
+ 
+                                                                                                                                                                                                                                       
+                                                                                                                                                                                                                                           
+                         
+  
+                                                           
 
-		switch ( passive )
-		{
-			case ePassives.PAS_PATHFINDER:
-			{
-				calloutLine  = "bc_pathfinder_passive"
-				player1pAnim = "pathfinder"
-				player3pAnim = "pathfinder"
-				panelAnim    = "pathfinder"
-				break
-			}
-			case ePassives.PAS_VALK:
-			{
-				calloutLine  = "bc_surveyBeaconScanValkyrie"
-				break
-			}
-			case ePassives.PAS_TRACKING_VISION:
-			{
-				calloutLine  = "bc_surveyBeaconScanBloodhound"
-				break
-			}
-			case ePassives.PAS_CRYPTO:
-			{
-				if ( HasCryptoSword ( player ) )
-				{
-					calloutLine  = "bc_surveyBeaconScanCrypto"
-					player1pAnim = "crypto_heirloom"
-					player3pAnim = "crypto"
-					                                  
-				}
-				else
-				{
-					calloutLine  = "bc_surveyBeaconScanCrypto"
-					                         
-					player3pAnim = "crypto"
-					                         
-				}
-				break
-			}
-			case ePassives.PAS_PARIAH:
-			{
+                    
+   
+                                 
+    
+                                          
+                               
+                               
+                               
+         
+    
+                           
+    
+                                                
+         
+    
+                                      
+    
+                                                  
+         
+    
+                             
+    
+                                    
+     
+                                               
+                                     
+                            
+                                       
+     
+        
+     
+                                               
+                              
+                            
+                              
+     
+         
+    
+                             
+    
                         
-					if ( HasSeerBlades ( player ) )
-					{
-						calloutLine  = "bc_surveyBeaconScanSeer"
-						player1pAnim = "seer_heirloom"
-						                                
-						                                
-					}
-					else
-					{
-						calloutLine = "bc_surveyBeaconScanSeer"
-					}
+                                    
+      
+                                              
+                                    
+                                      
+                                    
+      
+         
+      
+                                             
+                           
+                                      
+      
          
                                             
           
-				break
-			}
+         
+    
                
-			case ePassives.PAS_VANTAGE:
-			{
-				calloutLine  = "bc_surveyBeaconScanVantage"
-				player1pAnim = "vantage"
-				                          
-				panelAnim    = "vantage"
-				break
-			}
+                              
+    
+                                               
+                            
+                              
+                            
+         
+    
       
-			default:
-				break
-		}
+           
+         
+   
 
-		RegisterSurveyBeaconData( player, passive, nowHas, calloutLine, player1pAnim, player3pAnim, panelAnim )
-	}
-}
+                                                                                                         
+  
+ 
 
-bool function HasCryptoSword( entity player )
-{
+                                             
+ 
 
-	string meleeSkinName
+                     
 
-	#if SERVER
-		                                                     
-	#elseif CLIENT
-		entity meleeWeapon = player.GetNormalWeapon( WEAPON_INVENTORY_SLOT_PRIMARY_2 )
-		if ( meleeWeapon != null )
-			meleeSkinName = meleeWeapon.GetWeaponClassName()
-	#endif
+           
+                                                       
+               
+                                                                                
+                            
+                                                   
+       
 
-	printt ("IsCryptoSword() " + meleeSkinName)
+                                            
 
-	if ( meleeSkinName == "mp_weapon_crypto_heirloom_primary" )
-		return true
+                                                            
+             
 
-	return false
-}
+             
+ 
 
-bool function HasSeerBlades( entity player )
-{
+                                            
+ 
 
-	string meleeSkinName
+                     
 
-	#if SERVER
-		                                                     
-	#elseif CLIENT
-		entity meleeWeapon = player.GetNormalWeapon( WEAPON_INVENTORY_SLOT_PRIMARY_2 )
-		if ( meleeWeapon != null )
-			meleeSkinName = meleeWeapon.GetWeaponClassName()
-	#endif
+           
+                                                       
+               
+                                                                                
+                            
+                                                   
+       
 
-	printt ("IsSeerBlades() " + meleeSkinName)
+                                           
 
-	if ( meleeSkinName == "mp_weapon_seer_heirloom_primary" )
-		return true
+                                                          
+             
 
-	return false
-}
+             
+ 
 
-void function RegisterSurveyBeaconData( entity player, int passive, bool nowHas, string calloutLine, string player1pAnim, string player3pAnim, string panelAnim )
-{
-	if ( nowHas )
-	{
-		SurveyBeaconData data = SurveyBeacon_RegisterPlayer( player, passive, calloutLine )
-		data.canUseFunc = Recon_CanUseBeacon
+                                                                                                                                                                 
+ 
+              
+  
+                                                                                     
+                                      
 
-		#if SERVER
-			                                      
-			                                                                      
-		#endif
-	}
-	else
-	{
-		SurveyBeacon_DeregisterPlayer( player, passive )
-	}
-}
+            
+                                         
+                                                                         
+        
+  
+     
+  
+                                                  
+  
+ 
 
 
-#if SERVER
+          
                                                                                                                    
  
-	                         
-		                   
+                          
+                     
 
-	                         
-		                      
+                          
+                        
 
-	                      
-		                
+                       
+                  
 
-	                                                                          
-	                                                                        
-	                                                                        
+                                                                           
+                                                                         
+                                                                         
 
-	                                                                  
-	                                                                
-	                                                                
+                                                                   
+                                                                 
+                                                                 
 
-	                                                                           
-	                                                                         
-	                                                                         
+                                                                            
+                                                                          
+                                                                          
  
-#endif
+      
 
-void function SurveyBeacon_DeregisterPlayer( entity player, int passive )
-{
-	if ( !( player in file.surveyBeaconData ) )
-		return
+                                                                         
+ 
+                                            
+        
 
-	if ( file.surveyBeaconData[ player ].passiveSource == passive )
-		delete file.surveyBeaconData[ player ]
-}
+                                                                
+                                        
+ 
 
-SurveyBeaconData function SurveyBeacon_RegisterPlayer( entity player, int passive, string calloutLine = "" )
-{
-	SurveyBeaconData data
-	data.calloutLine = calloutLine
-	data.passiveSource = passive
+                                                                                                            
+ 
+                      
+                               
+                             
 
-	file.surveyBeaconData[ player ] <- data
+                                        
 
-	return data
-}
+            
+ 
       
 
 #if CLIENT
@@ -4302,29 +4349,29 @@ int function Survival_GetNumDeathfieldStages()
 }
 
                     
-#if SERVER
+          
                                                                                         
  
-	                                           
-		            
+                                            
+              
 
-	 
-		                                                                                           
-		                                                                                         
-		                                                                                       
+  
+                                                                                             
+                                                                                           
+                                                                                         
 
-		                                                                                           
-		                                                                                         
-		                                                                                       
+                                                                                             
+                                                                                           
+                                                                                         
 
-		                                                                                         
-		                                                                                       
-		                                                                                     
-	 
+                                                                                           
+                                                                                         
+                                                                                       
+  
 
-	           
+            
  
-#endif
+      
       
 
 #if CLIENT

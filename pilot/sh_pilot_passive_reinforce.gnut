@@ -1,5 +1,6 @@
 global function PassiveReinforce_Init
 global function IsReinforced
+global function IsRebuiltDoor
 #if SERVER
                              
                                    
@@ -400,6 +401,14 @@ bool function IsRebuildableDoor( entity door )
 {
 	if( IsValid( door ) )
 		return ( door.GetTargetName() == PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME && !IsReinforced( door ) )
+
+	return false
+}
+
+bool function IsRebuiltDoor( entity door )
+{
+	if( IsValid( door ) )
+		return ( door.GetTargetName() == PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME && IsReinforced( door ) )
 
 	return false
 }
@@ -967,9 +976,9 @@ void function OnRebuiltDoorUsed( entity door, entity player, int useInputFlags )
  
 	                                                
 
-	                             
-	                             
-	                               
+	                              
+	                                      
+	                                
 
 	                                                                                                                                                                                                                       
 	                                                                                   
@@ -1085,10 +1094,10 @@ void function OnRebuiltDoorUsed( entity door, entity player, int useInputFlags )
  
 	                                                
 
-	                               
-	                             
-	                             
-	                               
+	                                
+	                              
+	                                      
+	                                
 
 	                                                                                                                                                                                                                         
 	                                                                                   

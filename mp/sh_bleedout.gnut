@@ -630,9 +630,9 @@ int function BleedoutState_GetPlayerBleedoutState( entity player )
 void function OnPingCreatedByAnyPlayer_TrackCrosshairTarget( entity pingingPlayer, int pingType, entity focusEnt, vector pingLoc, entity wayPoint )
 {
                     
-                                                                                                                                                                                                                                    
+		if ( pingType != ePingType.BLEEDOUT && pingType != ePingType.RESPAWN_BANNER && pingType != ePingType.CAREPACKAGE_INSIGHT && pingType != ePingType.CAREPACKAGE_INSIGHT_FUTURE )
       
-		if ( pingType != ePingType.BLEEDOUT && pingType != ePingType.RESPAWN_BANNER )
+                                                                               
        
 			return
 

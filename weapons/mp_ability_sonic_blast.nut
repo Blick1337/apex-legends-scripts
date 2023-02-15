@@ -7,8 +7,8 @@ global function OnWeaponTossCancel_weapon_sonic_blast
 global function MpAbilitySonicBlast_Init
 global function GetSonicBlastSilenceDuration
 global function GetSonicBlastRange
-                            
-                                          
+                                                           
+global function GetSonicBlastDoesSonarScan
                                  
 
 const asset SONIC_BLAST_FX_IMPACT = $"P_wpn_foa_kickup_dust"
@@ -98,9 +98,11 @@ struct
 	float sonicBlastTubeLength
 	bool sonicBlastDoesDamage
 	bool sonicBlastInterrupts
+                                                           
+	bool sonicBlastDoesFullSonarScan
+      
                             
                         
-                                 
                                     
                                          
                                   
@@ -132,15 +134,17 @@ void function MpAbilitySonicBlast_Init()
 	file.sonicBlastInterrupts = GetSonicBlastInterrupts()
 	file.sonicBlastTubeLength = file.sonicBlastRadius * 4.175                                                                                                                                                            
 	file.sonicBlastDamage = GetSonicBlastDamage()
-                            
-                                                                
+                                                            
+	file.sonicBlastDoesFullSonarScan = GetSonicBlastDoesSonarScan()
+       
+                             
                                                                           
                                                                               
                                                   
                                                                         
  
                                       
-                                 
+                                  
 
 	RegisterSignal( "SonicBlastReleased" )
 	RegisterSignal( "SonicBlastCancelled" )
@@ -305,9 +309,9 @@ void function OnWeaponTossPrep_weapon_sonic_blast( entity weapon, WeaponTossPrep
 
 	                                                                                
                                
-                                               
+	                                                      
      
-	                                                                                               
+                                                                                                
       
 
 	                                                                            
@@ -346,9 +350,9 @@ void function DoHeartbeatSensorUI_Thread( entity player, entity weapon )
 	float pulloutTime = weapon.GetWeaponSettingFloat( eWeaponVar.toss_pullout_time )
 
                                
-                                               
+	wait HEARTBEAT_SENSOR_INITIAL_ACTIVATION_DELAY_DEFAULT
      
-	wait pulloutTime * 1.1                                                                         
+                                                                                                
       
 
 	InitializeHeartbeatSensorUI( player )
@@ -361,7 +365,9 @@ void function DoHeartbeatSensorUI_Thread( entity player, entity weapon )
 		if ( weaponActivity != ACT_VM_TOSS_PREP_PULLOUT &&
 				weaponActivity != ACT_TRANSITION &&
 				weaponActivity != ACT_VM_TOSS_HOLD &&
-				weaponActivity != ACT_VM_TOSS_HOLD_SPRINTING )
+				weaponActivity != ACT_VM_TOSS_HOLD_SPRINTING &&
+				weaponActivity != ACT_TRANSITION &&
+				weaponActivity != ACT_VM_ONEHANDED_TOSS_HOLD )
 			return
 
 		WaitFrame()
@@ -633,7 +639,7 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
        
 
                  
-		                                                          
+		                                                                    
 			      
        
 
@@ -723,29 +729,33 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 	                     
 	                        
 	                                 
-                            
-                         
+                                                            
+	                        
+                             
                                                                                
+       
 
-                                        
-  
-                                                                  
-  
-     
-  
+	                                       
+	 
+		                                                                
+	 
+	    
+	 
+                              
                                                                                                                             
                                             
    
                                                                                     
                                                                                                               
    
+        
 
-                                                                                                                                                                                      
-                                 
-                                                            
-  
+		                                                                                                                                                                                    
+		                               
+		                                                          
+	 
                                 
-	                                                                
+                                                                 
       
 
 	                      
@@ -763,20 +773,20 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 
 			                      
 			 
-                               
-                                           
-     
-                                               
-     
-        
-     
-                                
-      
-                             
-      
-     
+                                                              
+				                                       
+				 
+					                                          
+				 
+				    
+				 
+					                           
+					 
+						                       
+					 
+				 
                                    
-				                                          
+                                              
          
 			 
 		 
@@ -790,25 +800,27 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 		 
 			                      
 			 
-                                
-                                           
-     
-                                               
-     
-         
-     
+                                                               
+				                                       
+				 
+					                                          
+				 
+				     
+				 
+                                 
                                                
       
                                             
       
-     
-                                
-      
-                                                              
-      
-     
+           
+					
+					                           
+					 
+						                                                        
+					 
+				 
          
-				                                          
+                                              
           
 
 				                       
@@ -818,13 +830,14 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
 		 
 			                       
 			 
-                                
-                                           
-     
-                                                                     
-     
-        
-     
+                                                               
+				                                       
+				 
+					                                                                
+				 
+				    
+				 
+                                 
                                                
       
                                             
@@ -836,11 +849,12 @@ var function OnWeaponTossReleaseAnimEvent_weapon_sonic_blast( entity weapon, Wea
                                                                                              
        
       
-     
-                                                               
-     
+           
+					
+					                                                          
+				 
          
-				                                                                
+                                                                    
           
 
 				                      
@@ -947,8 +961,10 @@ bool function ShouldBlastHitVictim( vector startPos, vector blastVector, vector 
 			if ( !IsFriendlyTeam( victim.GetTeam(), weaponOwnerTeam ) )
 			{
 				                                                                                                                                                                                    
-				vector projection = GetClosestPointOnLineSegment( startPos, blastVector, victim.EyePosition() )
-				float distance = Distance( projection, victim.EyePosition() )
+				vector eyePosition = IsPlayerInCryptoDroneCameraView( victim ) ? victim.GetAttachmentOrigin( victim.LookupAttachment( "HEADFOCUS" ) ) : victim.EyePosition()
+
+				vector projection = GetClosestPointOnLineSegment( startPos, blastVector, eyePosition )
+				float distance = Distance( projection, eyePosition )
 
 				bool passedDistanceCheck = ( distance <= file.sonicBlastRadius )
 
@@ -1305,12 +1321,14 @@ int function GetSonicBlastDamage()
 {
 	return GetCurrentPlaylistVarInt( "seer_tac_damage", SONIC_BLAST_DAMAGE_AMOUNT )
 }
-                            
-                                          
- 
-                                                                      
- 
+                                                           
+bool function GetSonicBlastDoesSonarScan()
+{
+	return GetCurrentPlaylistVarBool( "seer_tac_does_sonar_scan", false )
+}
+      
 
+                            
                                                  
  
                                                                              

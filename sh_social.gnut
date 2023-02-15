@@ -199,56 +199,15 @@ bool function IsInParty( string id )
 
 
 #if UI
-int function GetOnlineFriendCount( )
+int function GetOnlineFriendCount()
 {
-   if( file.lastOnlineFriendCountTime +  ONLINE_FRIEND_COUNT_QUERRY_INTERVAL  > UITime() )
-   {
-		int count = 0
-		array<string> countedIds
-
-		CommunityFriendsWithPresence friendsData = GetFriendInfoAndPresence()
-		if ( friendsData.isValid )
-		{
-			foreach ( friend in friendsData.friends )
-			{
-				if ( !friend.online )
-					continue
-
-				countedIds.append( friend.id )
-				count++
-			}
-		}
-
-		if ( EADP_SocialEnabled() )
-		{
-			EadpPeopleList eadpFriendsData = EADP_GetFriendsList()
-
-			if ( eadpFriendsData.isValid )
-			{
-				foreach ( eadpFriend in eadpFriendsData.people )
-				{
-					if ( eadpFriend.presences.len() == 0 )
-						continue
-
-					foreach ( presence in eadpFriend.presences )
-					{
-						if ( !presence.online )
-							continue
-
-						if ( countedIds.contains( presence.firstPartyId ) )
-							continue
-
-						count++
-						break                                          
-					}
-				}
-			}
-		}
-		file.lastOnlineFriendCount = count;
-		file.lastOnlineFriendCountTime = UITime()
+	if( file.lastOnlineFriendCountTime +  ONLINE_FRIEND_COUNT_QUERRY_INTERVAL  < UITime() )
+	{
+		file.lastOnlineFriendCount = GetUniqueOnlineFriendCount();
+		file.lastOnlineFriendCountTime = UITime();
 	}
 
-	return  file.lastOnlineFriendCount
+	return file.lastOnlineFriendCount;
 }
 #endif
 
@@ -414,6 +373,9 @@ void function Dev_SetFillerFriends( int count )
 		                                                
 		                                                                                                               
 
+		                                      
+		                                                                                                               
+
 		                                                   
 		 
 			                                                                                                       
@@ -432,7 +394,7 @@ void function Dev_SetFillerFriends( int count )
 			                                                                                                               
 		 
 	 
-	                                                                                                
+	                                                                                                               
 	 
 		                                                      
 		 
@@ -536,6 +498,11 @@ ItemFlavor function GetItemFlavorForCommunityUserInfo( CommunityUserInfo userInf
 			case eItemType.gladiator_card_intro_quip :
 			{
 				entry = Loadout_CharacterIntroQuip( character )
+				break
+			}
+			case eItemType.melee_skin :
+			{
+				entry = Loadout_MeleeSkin( character )
 				break
 			}
 

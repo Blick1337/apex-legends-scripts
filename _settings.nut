@@ -177,7 +177,7 @@ global const PREMATCH_COUNTDOWN_SOUND = "Menu_Timer_LobbyCountdown_Tick"
 global const WAITING_FOR_PLAYERS_COUNTDOWN_SOUND = "UI_Survival_Intro_WaitinForPlayers_Countdown"
 
                        
-global const ARENAS_WAITING_FOR_PLAYERS_COUNTDOWN_SOUND = "ui_arenas_intro_waitinforplayers_countdown"
+                                                                                                      
       
 
                                                                      

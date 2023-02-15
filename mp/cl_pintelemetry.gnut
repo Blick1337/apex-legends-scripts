@@ -17,7 +17,7 @@ global function PIN_ComicPageView
 global function PIN_QuestTextView
 global function PIN_StoryTrackerPageView
 global function PIN_Store_EventButton
-global function  PIN_Store_Message
+global function PIN_Store_Message
 global function PIN_Club_Create
 global function PIN_Club_Leave
 global function PIN_Club_Remove
@@ -29,6 +29,8 @@ global function PIN_Club_Promote
 global function PIN_Club_Demote
 global function PIN_Club_Search
 global function PIN_Club_Setting
+global function PIN_BattlepassPurchase
+global function PIN_BattlepassMilestonePageView
 
 global function SetCurrentHubForPIN
 global function SetCurrentTabForPIN
@@ -551,6 +553,14 @@ void function PIN_Customization( ItemFlavor ornull context, ItemFlavor itemFlavo
 			if ( context != null )
 				customizeClass = ItemFlavor_GetHumanReadableRefForPIN_Slow( expect ItemFlavor( context ) )
 			break
+
+#if UI
+		case eItemType.sticker:
+			int consumable = ConsumableStickersPanel_GetCurrentConsumable()
+			customizeType = "sticker"
+			customizeTarget = IsValidEnumValue( "eStickerObjectType", consumable ) ? GetEnumString( "eStickerObjectType", consumable ) : "unknown"
+			break
+#endif      
 	}
 
 	if ( indexToUse <= 0 )
@@ -856,6 +866,50 @@ void function PIN_Club_DeclineInvite( ClubHeader clubHeader )
 			custom = {
 			lobby_session_id = PIN_GetSessionId()
 		}
+		}
+	)
+}
+
+void function PIN_BattlepassPurchase( string currentID, bool isBundle )
+{
+	AddPINTelemetryEvent( "battlepass_purchase",
+		PIN_StandardHeader(),
+		{
+			pgid = currentID.tolower()
+			isBundle = isBundle ? "bundle" : "tier"
+		}
+	)
+}
+
+void function PIN_BattlepassMilestonePageView( string currentID, float openDuration, int currentMilestone, bool hasPurchased, array<string> rewardClicked )
+{
+	const float VALID_VIEW_DURATION = 3.0
+
+	if ( openDuration < VALID_VIEW_DURATION )
+		return
+
+	table<string, int> rewardTable = { }
+
+	for( int i = 0; i < rewardClicked.len(); i++ )
+	{
+		string rewardString = rewardClicked[i]
+
+		int colonPos = rewardString.find( ":", 0 )
+		string rewardName = rewardString.slice( 0, colonPos )
+		int rewardCount = rewardString.slice( colonPos + 1, rewardString.len() ).tointeger()
+
+		rewardTable[rewardName] <- rewardCount;
+	}
+
+	AddPINTelemetryEvent( "battlepass_milestone_menu_view",
+		PIN_StandardHeader(),
+		{
+			pgid = currentID.tolower()
+			pgdur = openDuration
+			milestone_level = currentMilestone
+			hasPurchased = hasPurchased
+
+			rewardIndex = rewardTable
 		}
 	)
 }

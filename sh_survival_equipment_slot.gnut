@@ -146,7 +146,7 @@ global struct EquipmentSlot
 
 	int                                                                            emptyCommsAction = eCommsAction.BLANK
 	int functionref( string equipmentSlot, string equipmentRef, EquipmentSlot es ) emptyCommsActionFunc
-	int functionref( string equipmentSlotRef, string itemRef )                     filledCommsActionFunc
+	int functionref( string equipmentSlotRef, string itemRef, EquipmentSlot es )   filledCommsActionFunc
 	int                                                                            weaponSlot = -1
 	string                                                                         attachmentPoint
 	string                                                                         nextWeaponSlot = ""
@@ -326,6 +326,9 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 	e.title = "#INVENTORY_SLOT_SIGHT"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_sight"
+                                      
+		e.filledCommsActionFunc = FilledCommsAction_Equipment
+       
 	e.attachmentPoint = "sight"
 	e.attachmentWeaponSlot = "main_weapon0"
 	#if SERVER || CLIENT
@@ -424,6 +427,9 @@ void function SURVIVAL_EquipmentSlot_InitShared()
 	e.title = "#INVENTORY_SLOT_SIGHT"
 	e.emptyCommsActionFunc = EmptyCommsAction_AttachmentForParent
 	e.emptyImage = $"rui/pilot_loadout/mods/empty_sight"
+                                      
+		e.filledCommsActionFunc = FilledCommsAction_Equipment
+       
 	e.attachmentPoint = "sight"
 	e.attachmentWeaponSlot = "main_weapon1"
 	#if SERVER || CLIENT
@@ -647,7 +653,6 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 				else if ( weaponData.lootTags.contains( "marksman" ) )
 					return eCommsAction.INVENTORY_NEED_ATTACHMENT_SIGHT_MARKSMAN
 
-				                        
 				Warning( format( "%s() - Couldn't determine '%s' type for weapon '%s'.", FUNC_NAME(), es.attachmentPoint, weaponData.ref ) )
 				return eCommsAction.BLANK
 			}
@@ -774,7 +779,7 @@ int function EmptyCommsAction_AttachmentForParent( string equipmentSlot, string 
 	return eCommsAction.QUICKCHAT_READY
 }
 
-int function FilledCommsAction_Gadget( string equipmentSlotRef, string itemRef )
+int function FilledCommsAction_Gadget( string equipmentSlotRef, string itemRef, EquipmentSlot es )
 {
 	int commsAction 	= eCommsAction.BLANK
 	LootData lootData 	= SURVIVAL_Loot_GetLootDataByRef( itemRef )
@@ -819,8 +824,9 @@ int function FilledCommsAction_Gadget( string equipmentSlotRef, string itemRef )
 }
 
                                      
-int function FilledCommsAction_Equipment( string equipmentSlotRef, string itemRef )
+int function FilledCommsAction_Equipment( string equipmentSlotRef, string itemRef, EquipmentSlot es )
 {
+	#if CLIENT
 	int maxTier 		= eLootTier.LEGENDARY
 	int commsAction 	= eCommsAction.BLANK
 	LootData lootData 	= SURVIVAL_Loot_GetLootDataByRef( itemRef )
@@ -862,6 +868,27 @@ int function FilledCommsAction_Equipment( string equipmentSlotRef, string itemRe
 			case "laser_sight":
 				commsAction = eCommsAction.INVENTORY_NEED_BETTER_ATTACHMENT_LASERSIGHT
 				break
+			case "sight":
+			{
+				LootData weaponData = EquipmentSlot_GetEquippedLootDataForSlot( GetLocalClientPlayer(), es.attachmentWeaponSlot )
+				if ( weaponData.lootTags.contains( "pistol" ) )
+					return eCommsAction.INVENTORY_NEED_ATTACHMENT_SIGHT_PISTOL
+				else if ( weaponData.lootTags.contains( "smg" ) )
+					return eCommsAction.INVENTORY_NEED_ATTACHMENT_SIGHT_SMG
+				else if ( weaponData.lootTags.contains( "assault" ) )
+					return eCommsAction.INVENTORY_NEED_ATTACHMENT_SIGHT_ASSAULT
+				else if ( weaponData.lootTags.contains( "lmg" ) )
+					return eCommsAction.INVENTORY_NEED_ATTACHMENT_SIGHT_LMG
+				else if ( weaponData.lootTags.contains( "shotgun" ) )
+					return eCommsAction.INVENTORY_NEED_ATTACHMENT_SIGHT_SHOTGUN
+				else if ( weaponData.lootTags.contains( "sniper" ) )
+					return eCommsAction.INVENTORY_NEED_ATTACHMENT_SIGHT_SNIPER
+				else if ( weaponData.lootTags.contains( "marksman" ) )
+					return eCommsAction.INVENTORY_NEED_ATTACHMENT_SIGHT_MARKSMAN
+
+				Warning( format( "%s() - Couldn't determine '%s' type for weapon '%s'.", FUNC_NAME(), es.attachmentPoint, weaponData.ref ) )
+				break
+			}
 		}
 
 	}
@@ -887,12 +914,13 @@ int function FilledCommsAction_Equipment( string equipmentSlotRef, string itemRe
 
 	if ( lootData.tier < maxTier )
 		return commsAction
+	#endif         
 
 	return eCommsAction.BLANK
 }
       
 
-int function FilledCommsAction_Weapon( string equipmentSlotRef, string itemRef )
+int function FilledCommsAction_Weapon( string equipmentSlotRef, string itemRef, EquipmentSlot es )
 {
 	#if CLIENT
 	LootData lootData = SURVIVAL_Loot_GetLootDataByRef( itemRef )
@@ -990,7 +1018,7 @@ int function Survival_GetCommsActionForEquipmentSlot( string equipmentSlot, stri
 	else
 	{
 		if ( es.filledCommsActionFunc != null )
-			return es.filledCommsActionFunc( equipmentSlot, equipmentRef )
+			return es.filledCommsActionFunc( equipmentSlot, equipmentRef, es )
 	}
 
 	return eCommsAction.BLANK

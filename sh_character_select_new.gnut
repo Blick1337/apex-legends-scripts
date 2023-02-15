@@ -39,6 +39,8 @@ global function UI_InitCharacterSelectNewMenu
 global function UI_RunCharacterSelect
 global function UI_CloseCharacterSelect
 global function ClientToUI_UpdateSquadMute
+global function UI_ResetRoleTabs
+global function UI_ClearUIShelves
 #endif
 
 global function CharacterSelectSkinSelectionIsEnabled
@@ -83,6 +85,7 @@ global function AddCallback_OnCharacterSelectBackgroundCreated
 global function AddCallback_OnCharacterSelectModelChanged
 global function AddCallback_OnCharacterSelectUpdateLights
 global function CharacterSelect_UpdateMenuButtons
+global function CharacterSelect_UpdateFilterState
 global function CharacterSelect_RestorePlayerView
 global function CharacterSelect_ClearMenuAndRestoreView
 global function UpdateBackgroundViaFunc
@@ -90,6 +93,7 @@ global function OverrideCharacterSelectCamera
 global function RestoreCharacterSelectCamera
 global function PanAwayCharacterSelect
 global function FadeInOut
+global function CharacterSelect_UpdateFilterIndex
 
 const string CAMERA_ENT_NAME = "target_char_sel_camera_new"
 const string CHARACTER_ENT_NAME = "target_char_sel_pilot_new"
@@ -131,6 +135,8 @@ global function IsCharacterReselectEnabled
 #endif
 
 #if SERVER
+                                                        
+                                                   
                                             
                                                           
                                                            
@@ -203,16 +209,34 @@ struct FileLevelStruct
 	#if CLIENT
 		bool lightEntsExist = false
 
-		bool detailsPanelVisible = false
-
-		var        menu
-		var        whiteFlash
-		var        portraitsPanel
-		var        detailsPanel
-		var		   jipRuiPanel
-		var        detailsRui
-		var        buttonHintPanel
-		var        buttonHintRui
+		var menu
+		var whiteFlash
+		var portraitsPanel
+		var calloutRuiPanel
+		var buttonHintPanel
+		var buttonHintRui
+		                     
+		var topLegendRowAnchor
+		var botLegendRowAnchor
+		         
+		var assaultShelf
+		var skirmisherShelf
+		var reconShelf
+		var supportShelf
+		var controllerShelf
+		var assaultShelfRUI
+		var	skirmisherShelfRUI
+		var	reconShelfRUI
+		var	supportShelfRUI
+		var	controllerShelfRUI
+		             
+		var tabButton_All
+		var tabButton_Assault
+		var tabButton_Skirmisher
+		var tabButton_Recon
+		var tabButton_Support
+		var tabButton_Defense
+		         
 		array<var> characterButtons
 		array<var> roleButtons_Assault
 		array<var> roleButtons_Skirmisher
@@ -220,8 +244,10 @@ struct FileLevelStruct
 		array<var> roleButtons_Defense
 		array<var> roleButtons_Support
 		array<var> characterButtonRuis
+
 		array<ItemFlavor> allCharacters
 		int        colorCorrection
+		int			filterTabIndex
 
 		int localClientLockstepIndex
 
@@ -236,7 +262,6 @@ struct FileLevelStruct
 		entity rimLightL
 		entity rimLightR
 #if NX_PROG || PC_PROG_NX_UI
-		entity nxCharacterNode
 		int  buttonIdxToUpdate
 		bool operationModeChanged
 #endif
@@ -248,7 +273,7 @@ struct FileLevelStruct
 		var                              backgroundRuiTopo
 		var                              backgroundRui
                    
-                            
+		var								 scrollingBGRui
       
 		var                              countdownRui
 		var								 mapModeDetailsRui
@@ -281,6 +306,7 @@ struct FileLevelStruct
 
 		table<var, void functionref( var button )> buttonEventHandlersAdded_Click
 		table<var, void functionref( var button )> buttonEventHandlersAdded_Focus
+		table<var, void functionref( var button )> buttonEventHandlersAdded_Unfocus
 
 		bool menuEntsReady = false
 		bool menuIsOpen = false
@@ -345,6 +371,40 @@ void function UI_InitCharacterSelectNewMenu( var newMenuArg )
 
 	ToolTips_AddMenu( newMenuArg )
 
+                    
+		{
+			TabDef tabDef = AddTab( fileForever.menu, null, "#MENU_ALL", $"rui/menu/character_select/utility/filter_role_all" )
+			SetTabBaseWidth( tabDef, 80 )
+		}
+		{
+			TabDef tabDef = AddTab( fileForever.menu, null, "#ROLE_ASSAULT", $"rui/menu/character_select/utility/role_offense"  )
+			SetTabBaseWidth( tabDef, 80 )
+		}
+		{
+			TabDef tabDef = AddTab( fileForever.menu, null, "#ROLE_SKIRMISHER", $"rui/menu/character_select/utility/role_skirmisher"  )
+			SetTabBaseWidth( tabDef, 80 )
+		}
+		{
+			TabDef tabDef = AddTab( fileForever.menu, null, "#ROLE_RECON", $"rui/menu/character_select/utility/role_recon"  )
+			SetTabBaseWidth( tabDef, 80 )
+		}
+		{
+			TabDef tabDef = AddTab( fileForever.menu, null, "#ROLE_SUPPORT", $"rui/menu/character_select/utility/role_support"  )
+			SetTabBaseWidth( tabDef, 80 )
+		}
+		{
+			TabDef tabDef = AddTab( fileForever.menu, null, "#ROLE_CONTROLLER", $"rui/menu/character_select/utility/role_defense"  )
+			SetTabBaseWidth( tabDef, 80 )
+		}
+
+		TabData tabData = GetTabDataForPanel( fileForever.menu )
+		tabData.centerTabs = true
+		tabData.selectedExtraWidth = 35
+		SetTabDefsToSeasonal(tabData)
+		SetTabBackground( tabData, Hud_GetChild( fileForever.menu, "TabsBackground" ), eTabBackground.STANDARD )
+		AddCallback_OnTabChanged( Characters_OnTabChanged )
+       
+
 	#if PC_PROG
 		AddMenuFooterOption( fileForever.menu, RIGHT, KEY_ENTER, true, "", "", UI_OnLoadoutButton_Enter )
 	#endif
@@ -389,6 +449,21 @@ void function ClientToUI_UpdateSquadMute( bool muteState )
 {
 
 }
+
+                   
+void function Characters_OnTabChanged()
+{
+	if ( GetActiveMenu() != fileForever.menu )
+		return
+
+	TabData tabData = GetTabDataForPanel( fileForever.menu )
+	RunClientScript("CharacterSelect_UpdateFilterIndex", tabData.activeTabIdx)
+	                                                       
+	RunClientScript( "CharacterSelect_UpdateFilterState")
+	                                                
+}
+      
+
 #endif
 
 #if SERVER || CLIENT
@@ -468,7 +543,7 @@ void function OpenCharacterSelectNewMenu( bool isBrowseMode = false, bool browse
 
 	fileLevel.menuEntsExist = DoMenuEntsExist()
 	fileLevel.lightEntsExist = DoMenuLightsExist()
-	fileLevel.detailsPanelVisible = isBrowseMode && !browseModeShowLockedCharacters
+	                                                                                 
 
 	foreach( func in file.Callbacks_OnCharacterDetailsToggled )
 		func( isBrowseMode && !browseModeShowLockedCharacters )
@@ -550,10 +625,9 @@ void function PanAwayCharacterSelect()
 
 	RuiSetFloat( fileLevel.backgroundRui, "gcardsStartTime", Time() )
                    
-                                                                   
+	RuiSetFloat( fileLevel.scrollingBGRui, "gcardsStartTime", Time() )
       
 	RuiSetFloat( fileLevel.mapModeDetailsRui, "gcardsStartTime", Time() )
-	fileLevel.detailsPanelVisible = false
 
 	foreach( func in file.Callbacks_OnCharacterDetailsToggled )
 		func(false)
@@ -564,17 +638,18 @@ void function PanAwayCharacterSelect()
 	fileLevel.characterNodeMover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", GetEntByScriptName( CAMERA_ENT_NAME ).GetOrigin(), GetEntByScriptName( CAMERA_ENT_NAME ).GetAngles() )
 
 	entity charNode = fileLevel.characterNode
-#if NX_PROG || PC_PROG_NX_UI
-	if( IsNxHandheldMode() )
-	{
-		charNode = fileLevel.nxCharacterNode
-	}
-#endif
 
 	charNode.SetParent( fileLevel.characterNodeMover, "", true )
-	fileLevel.characterNodeMover.NonPhysicsRotateTo( fileLevel.characterNodeMover.GetAngles() + <0, 135, 0>, outroSceneChangeDuration, 1.0, 1.0 )
+
+
+	ScreenFade( GetLocalClientPlayer(), 0, 0, 0, 255, 0.5, 0, FFADE_OUT | FFADE_PURGE )
+	wait 0.5
+
+	fileLevel.characterNodeMover.NonPhysicsRotateTo( fileLevel.characterNodeMover.GetAngles() + <0, 135, 0>, 0.1, 0, 0 )
 
 	EmitSoundOnEntity( GetLocalClientPlayer(), "UI_Survival_Intro_LegendPanLeft" )
+
+	ScreenFade( GetLocalClientPlayer(), 0, 0, 0, 255, outroSceneChangeDuration, 0, FFADE_IN | FFADE_PURGE )
 
 	wait (outroSceneChangeDuration / 3.0)
 
@@ -671,6 +746,7 @@ void function DoAllSquadsCardsPresentation( string endTime )
 	{
 		int squadIndex = i + TEAM_IMC
 		int uiSquadIndex = Squads_GetSquadUIIndex(squadIndex)
+		int reorderedIndex    = Squads_GetReorderedTeamsUIId( squadIndex )
 
 		array<entity> players = GetPlayerArrayOfTeam( squadIndex )
 		ArrayRemoveInvalid( players )
@@ -683,11 +759,11 @@ void function DoAllSquadsCardsPresentation( string endTime )
 		RuiSetString(squadLineupsRui, "squadName", Squads_GetSquadNameLong(uiSquadIndex ))
 		RuiSetColorAlpha( squadLineupsRui, "squadColor", Squads_GetSquadColor(uiSquadIndex), 1.0 )
 
-		if (uiSquadIndex < 1)
+		if ( reorderedIndex < 1 && !IsLocalPlayerOnTeamSpectator() )
 			RuiSetBool(squadLineupsRui, "isPlayerSquad", true)
 
 		RuiSetInt(squadLineupsRui, "totalSquads" , totalSquads)
-		RuiSetInt(squadLineupsRui, "currentSquadIndex" , uiSquadIndex)
+		RuiSetInt(squadLineupsRui, "currentSquadIndex" , reorderedIndex )
 
 		foreach (int playerIndex, entity player in players )
 		{
@@ -865,9 +941,12 @@ void function DoSquadCardsPresentation( string endTime, bool showTitleFrame )
 		int playerTeam   = teammates[0].GetTeam()
 		int uiSquadIndex = Squads_GetSquadUIIndex( playerTeam )
 
+		vector squadColor = Squads_GetSquadColor(uiSquadIndex)
+
 		RuiSetImage( borderRui, "squadIcon", Squads_GetSquadIcon(uiSquadIndex ))
 		RuiSetString(borderRui, "squadName", Squads_GetSquadNameLong(uiSquadIndex ))
-		RuiSetColorAlpha( borderRui, "squadColor", Squads_GetSquadColor(uiSquadIndex), 1.0)
+		RuiSetColorAlpha( borderRui, "squadColor", squadColor, 1.0)
+		RuiSetColorAlpha( borderRui, "headerColor", squadColor, 1.0 )
 	}
 
 	for ( int index = 0 ; index < 4 ; index++ )
@@ -998,6 +1077,9 @@ void function DoMVPSquadCardsPresentation( string endTime )
 
 	for (int i = 0 ; i < MVPPlayer.len(); i++)
 	{
+		if( i > 2 )                                                 
+			break
+
 		int playerTeam   = MVPPlayer[i].GetTeam()
 		int uiSquadIndex = Squads_GetSquadUIIndex( playerTeam )
 
@@ -1041,8 +1123,8 @@ void function DoMVPSquadCardsPresentation( string endTime )
 void function DoChampionSquadCardsPresentation( string endTime )
 {
                        
-	if( IsArenaMode() && IsPrivateMatch() && GetLocalClientPlayer().IsObserver() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR )
-		return
+                                                                                                                                     
+        
       
 	printt( "CHARACTER SELECT: DoChampionSquadCardsPresentation" )
 
@@ -1058,15 +1140,15 @@ void function DoChampionSquadCardsPresentation( string endTime )
 	int championSquad2EHI = EHI_null
 
                        
-	if( IsArenaMode() )
-	{
-		                                                              
-		array<entity> otherTeam = GetPlayerArrayOfTeam( GetOtherTeam( GetLocalViewPlayer().GetTeam() ) )
-		if( otherTeam.len() > 0 ) championEHI 		= ToEHI( otherTeam[0] )
-		if( otherTeam.len() > 1 ) championSquad1EHI = ToEHI( otherTeam[1] )
-		if( otherTeam.len() > 2 ) championSquad2EHI = ToEHI( otherTeam[2] )
-	}
-	else
+                    
+  
+                                                                
+                                                                                                  
+                                                                 
+                                                                     
+                                                                     
+  
+     
       
 	{
 		championEHI			= GetGlobalNetInt( "championEEH" )
@@ -1079,8 +1161,8 @@ void function DoChampionSquadCardsPresentation( string endTime )
 
 	bool shouldPlayChampionVO = true
                        
-	if( IsArenaMode() )
-		shouldPlayChampionVO = false
+                    
+                              
       
                                                                                  
                                               
@@ -1125,8 +1207,8 @@ void function DoChampionSquadCardsPresentation( string endTime )
 	else if ( file.championClubName != CLUB_NAME_EMPTY )
 		topHeader = file.championClubName
                        
-	else if( IsArenaMode() )
-		topHeader = "#PL_ENEMY_SQUAD"
+                         
+                               
       
 
                                
@@ -1166,8 +1248,8 @@ void function DoChampionSquadCardsPresentation( string endTime )
 
 	bool showBottomText = !IsRankedGame()
                        
-	if( IsArenaMode() )
-		showBottomText = false                                                                             
+                    
+                                                                                                     
       
 
 	RuiSetBool( rui, "showBottomText", showBottomText )
@@ -1273,6 +1355,12 @@ void function UI_RunCharacterSelect( bool isBrowseMode, bool menuEntsExist )
 
 	FlashGameWindow()
 	AdvanceMenu( fileForever.menu )
+
+	TabData tabData = GetTabDataForPanel( fileForever.menu )
+	if ( GetLastMenuNavDirection() == MENU_NAV_FORWARD )
+	{
+		ActivateTab( tabData, 0 )
+	}
 }
 #endif
 
@@ -1376,23 +1464,37 @@ void function _OpenCharacterSelectNewMenu( var menu )
 
 void function UpdateMenuElementHandles( var menu )
 {
-	fileLevel.menu = menu
-	fileLevel.whiteFlash = Hud_GetChild( menu, "WhiteFlash" )
-	fileLevel.portraitsPanel = Hud_GetChild( menu, "PortraitsPanel" )
-	fileLevel.detailsPanel = Hud_GetChild( menu, "DetailsRuiPanel" )
-	fileLevel.jipRuiPanel = Hud_GetChild( menu, "JiPRuiPanel" )
+	fileLevel.menu            = menu
+	fileLevel.whiteFlash      = Hud_GetChild( menu, "WhiteFlash" )
+	fileLevel.portraitsPanel  = Hud_GetChild( menu, "PortraitsPanel" )
+	fileLevel.calloutRuiPanel = Hud_GetChild( menu, "calloutRuiPanel" )
 	fileLevel.buttonHintPanel = Hud_GetChild( menu, "ButtonHintRuiPanel" )
 
 	fileLevel.characterButtons = []
 	fileLevel.characterButtonRuis = []
 	fileLevel.allCharacters = []
-	fileLevel.detailsRui = Hud_GetRui( fileLevel.detailsPanel )
 	fileLevel.buttonHintRui = Hud_GetRui( fileLevel.buttonHintPanel )
 	fileLevel.roleButtons_Assault = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "AssaultCharacterRoleButtonClass" )
 	fileLevel.roleButtons_Skirmisher = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "SkirmisherCharacterRoleButtonClass" )
 	fileLevel.roleButtons_Recon = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "ReconCharacterRoleButtonClass" )
 	fileLevel.roleButtons_Defense = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "DefenseCharacterRoleButtonClass" )
 	fileLevel.roleButtons_Support = Client_GetPanelElementsByClassname( fileLevel.portraitsPanel, "SupportCharacterRoleButtonClass" )
+	fileLevel.topLegendRowAnchor = Hud_GetChild( fileLevel.portraitsPanel, "Top_List_Anchor" )
+	fileLevel.botLegendRowAnchor =  Hud_GetChild( fileLevel.portraitsPanel, "Bot_List_Anchor" )
+	fileLevel.assaultShelf = Hud_GetChild( fileLevel.portraitsPanel, "assaultShelf" )
+	fileLevel.skirmisherShelf = Hud_GetChild( fileLevel.portraitsPanel, "SkirmisherShelf" )
+	fileLevel.reconShelf = Hud_GetChild( fileLevel.portraitsPanel, "reconShelf" )
+	fileLevel.supportShelf = Hud_GetChild( fileLevel.portraitsPanel, "supportShelf" )
+	fileLevel.controllerShelf = Hud_GetChild( fileLevel.portraitsPanel, "controllerShelf" )
+
+	var tabsCommon = Hud_GetChild( fileLevel.menu, "TabsCommon" )
+
+	fileLevel.tabButton_All = Hud_GetChild( tabsCommon, "Tab0" )
+	fileLevel.tabButton_Assault = Hud_GetChild( tabsCommon, "Tab1" )
+	fileLevel.tabButton_Skirmisher = Hud_GetChild( tabsCommon, "Tab2" )
+	fileLevel.tabButton_Recon = Hud_GetChild( tabsCommon, "Tab3" )
+	fileLevel.tabButton_Support = Hud_GetChild( tabsCommon, "Tab4" )
+	fileLevel.tabButton_Defense = Hud_GetChild( tabsCommon, "Tab5" )
 
 	array<ItemFlavor> shippingCharacters
 	array<ItemFlavor> unlockedCharacters
@@ -1429,82 +1531,19 @@ void function UpdateMenuElementHandles( var menu )
 	fileLevel.allCharacters.extend( disabledCharacters )
 
                     
-	for ( int i = 0; i < NUM_CHARACTER_SELECT_BUTTONS; i++ )
-	{
-		                 
-		var button = Hud_GetChild( fileLevel.portraitsPanel, "Button" + i )
-		fileLevel.characterButtons.append( button )
-
-		ToolTipData td
-		td.tooltipFlags = eToolTipFlag.CLIENT_UPDATE
-		td.tooltipStyle = eTooltipStyle.DEFAULT
-		Hud_SetToolTipData( button, td )
-
-		var buttonRui = Hud_GetRui( button )
-		fileLevel.characterButtonRuis.append( buttonRui )
-
-		                       
-		if ( button in fileLevel.buttonEventHandlersAdded_Click )
-		{
-			Hud_RemoveEventHandler( button, UIE_CLICK, fileLevel.buttonEventHandlersAdded_Click[ button ] )
-			delete fileLevel.buttonEventHandlersAdded_Click[ button ]
-		}
-		Hud_AddEventHandler( button, UIE_CLICK, OnLoadoutButton_Activate )
-		fileLevel.buttonEventHandlersAdded_Click[ button ] <- OnLoadoutButton_Activate
-
-		if ( button in fileLevel.buttonEventHandlersAdded_Focus )
-		{
-			Hud_RemoveEventHandler( button, UIE_GET_FOCUS, fileLevel.buttonEventHandlersAdded_Focus[ button ] )
-			delete fileLevel.buttonEventHandlersAdded_Focus[ button ]
-		}
-		Hud_AddEventHandler( button, UIE_GET_FOCUS, OnLoadoutButton_Focused )
-		fileLevel.buttonEventHandlersAdded_Focus[ button ] <- OnLoadoutButton_Focused
-
-		                                                                             
-
-		                                                                          
-
-		Hud_SetVisible( button, false )
-	}
-     
-
-                                                                                                                       
-
-                                                                                                      
+                                                         
   
-                                                                         
-  
-
-                                                                                                         
-  
-                                                                            
-  
-
-                                                                                                    
-  
-                                                                       
-  
-
-                                                                                                      
-  
-                                                                         
-  
-
-                                                                                                      
-  
-                                                                         
-  
-
-                                                             
-  
-                                            
-                                      
-                                                   
+                   
+                                                                     
+                                             
 
                 
                                               
                                          
                                   
+
+                                      
+                                                   
 
                          
                                                            
@@ -1525,6 +1564,104 @@ void function UpdateMenuElementHandles( var menu )
 
                                  
   
+     
+
+	array<ItemFlavor> orderedCharacters = GetCharacterButtonOrder( fileLevel.allCharacters, NUM_CHARACTER_SELECT_BUTTONS )
+
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.OFFENSE ) )
+	{
+		fileLevel.characterButtons.append(fileLevel.roleButtons_Assault[index])
+	}
+
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.SKIRMISHER ) )
+	{
+		fileLevel.characterButtons.append(fileLevel.roleButtons_Skirmisher[index])
+	}
+
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.RECON ) )
+	{
+		fileLevel.characterButtons.append(fileLevel.roleButtons_Recon[index])
+	}
+
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.DEFENSE ) )
+	{
+		fileLevel.characterButtons.append(fileLevel.roleButtons_Defense[index])
+	}
+
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.SUPPORT ) )
+	{
+		fileLevel.characterButtons.append(fileLevel.roleButtons_Support[index])
+	}
+
+	if ( fileLevel.assaultShelf != null )
+	{
+		Hud_SetVisible( fileLevel.assaultShelf , true )
+	}
+
+	if ( fileLevel.skirmisherShelf != null )
+	{
+		Hud_SetVisible( fileLevel.skirmisherShelf , true )
+	}
+
+	if ( fileLevel.reconShelf != null )
+	{
+		Hud_SetVisible( fileLevel.reconShelf , true )
+	}
+
+	if ( fileLevel.supportShelf != null )
+	{
+		Hud_SetVisible( fileLevel.supportShelf , true )
+	}
+
+	if ( fileLevel.controllerShelf != null )
+	{
+		Hud_SetVisible( fileLevel.controllerShelf , true )
+	}
+
+	for ( int i = 0; i < fileLevel.characterButtons.len(); i++ )
+	{
+		var button = fileLevel.characterButtons[i]
+		var buttonRui = Hud_GetRui( button )
+		fileLevel.characterButtonRuis.append( buttonRui )
+
+		ToolTipData td
+		td.tooltipFlags = eToolTipFlag.CLIENT_UPDATE
+		td.tooltipStyle = eTooltipStyle.DEFAULT
+		Hud_SetToolTipData( button, td )
+
+		                       
+		if ( button in fileLevel.buttonEventHandlersAdded_Click )
+		{
+			Hud_RemoveEventHandler( button, UIE_CLICK, fileLevel.buttonEventHandlersAdded_Click[ button ] )
+			delete fileLevel.buttonEventHandlersAdded_Click[ button ]
+		}
+		Hud_AddEventHandler( button, UIE_CLICK, OnLoadoutButton_Activate )
+		fileLevel.buttonEventHandlersAdded_Click[ button ] <- OnLoadoutButton_Activate
+
+		if ( button in fileLevel.buttonEventHandlersAdded_Focus )
+		{
+			Hud_RemoveEventHandler( button, UIE_GET_FOCUS, fileLevel.buttonEventHandlersAdded_Focus[ button ] )
+			delete fileLevel.buttonEventHandlersAdded_Focus[ button ]
+		}
+		Hud_AddEventHandler( button, UIE_GET_FOCUS, OnLoadoutButton_Focused )
+		fileLevel.buttonEventHandlersAdded_Focus[ button ] <- OnLoadoutButton_Focused
+
+		if ( button in fileLevel.buttonEventHandlersAdded_Unfocus )
+		{
+			Hud_RemoveEventHandler( button, UIE_LOSE_FOCUS, fileLevel.buttonEventHandlersAdded_Unfocus[ button ] )
+			delete fileLevel.buttonEventHandlersAdded_Unfocus[ button ]
+		}
+		Hud_AddEventHandler( button, UIE_LOSE_FOCUS, OnLoadoutButton_LostFocus )
+		fileLevel.buttonEventHandlersAdded_Unfocus[ button ] <- OnLoadoutButton_LostFocus
+
+		Hud_SetVisible( button, false )
+	}
+
+	thread function() : ()
+	{
+		WaitFrame()
+		Hud_SetFocused( fileLevel.roleButtons_Assault[0] )
+	}()
 
       
 }
@@ -1533,27 +1670,105 @@ void function CharacterSelect_UpdateMenuButtons()
 {
     UpdateMenuButtons()
 #if NX_PROG || PC_PROG_NX_UI
-	if( fileLevel.detailsPanelVisible )
-	{
-		fileLevel.operationModeChanged = true
-		UpdateForFocusOnButtonIndex( fileLevel.buttonIdxToUpdate )
-	}
+	fileLevel.operationModeChanged = true
+	UpdateForFocusOnButtonIndex( fileLevel.buttonIdxToUpdate )
 #endif
 }
 
                    
-                                                                                 
- 
-                               
+void function CharacterButton_Init( var button, ItemFlavor character, int index )
+{
+	Hud_SetVisible( button, true )
 
-                               
-                                     
-                                                                                          
-                                                                                                     
-                                                                                           
-                                                                                         
-                                                                                                                                                                                                                              
- 
+	                              
+	var buttonRui = Hud_GetRui( button )
+	RuiSetImage( buttonRui, "portraitImage", CharacterClass_GetGalleryPortrait( character ) )
+	RuiSetImage( buttonRui, "portraitBackground", CharacterClass_GetGalleryRoleBackground( character ) )
+	RuiSetString( buttonRui, "portraitName", Localize( ItemFlavor_GetLongName( character ) ) )
+	RuiSetImage( buttonRui, "roleImage", CharacterClass_GetCharacterRoleImage( character ) )
+	RuiSetColorAlpha( buttonRui, "baseNameBackgroundColor", SrgbToLinear( (fileLevel.characterSkins.len() > 0) ? CharacterSkin_GetCharacterSelectLabelColorOverride( fileLevel.characterSkins[index] ) : <1.0, 1.0, 1.0> ), 1.0 )
+}
+
+void function CharacterSelect_UpdateFilterState()
+{
+
+	bool assaultFiltered    = true
+	bool skirmisherFiltered = true
+	bool reconFiltered      = true
+	bool supportFiltered    = true
+	bool controlerFiltered  = true
+
+	switch ( fileLevel.filterTabIndex )
+	{
+		case 0:
+			assaultFiltered = false
+			skirmisherFiltered = false
+			reconFiltered = false
+			supportFiltered = false
+			controlerFiltered = false
+			break;
+		case 1:
+			assaultFiltered = false
+			break;
+		case 2:
+			skirmisherFiltered = false
+			break;
+		case 3:
+			reconFiltered = false
+			break;
+		case 4:
+			supportFiltered = false
+			break;
+		case 5:
+			controlerFiltered = false
+			break;
+		default:
+			assaultFiltered = true
+			skirmisherFiltered = true
+			reconFiltered = true
+			supportFiltered = true
+			controlerFiltered = true
+			break;
+	}
+
+	                        
+	foreach ( index, button in fileLevel.roleButtons_Assault )
+	{
+		var buttonRui = Hud_GetRui(button)
+		RuiSetBool(buttonRui, "isFiltered", assaultFiltered)
+	}
+
+	foreach ( index, button in fileLevel.roleButtons_Skirmisher )
+	{
+		var buttonRui = Hud_GetRui(button)
+		RuiSetBool(buttonRui, "isFiltered", skirmisherFiltered)
+	}
+
+	foreach ( index, button in fileLevel.roleButtons_Recon )
+	{
+		var buttonRui = Hud_GetRui(button)
+		RuiSetBool(buttonRui, "isFiltered", reconFiltered)
+	}
+
+	foreach ( index, button in fileLevel.roleButtons_Support )
+	{
+		var buttonRui = Hud_GetRui(button)
+		RuiSetBool(buttonRui, "isFiltered", supportFiltered)
+	}
+
+	foreach ( index, button in fileLevel.roleButtons_Defense )
+	{
+		var buttonRui = Hud_GetRui(button)
+		RuiSetBool(buttonRui, "isFiltered", controlerFiltered)
+	}
+
+	RuiSetBool(fileLevel.assaultShelfRUI, "isFiltered", assaultFiltered)
+	RuiSetBool(fileLevel.skirmisherShelfRUI, "isFiltered", skirmisherFiltered)
+	RuiSetBool(fileLevel.reconShelfRUI, "isFiltered", reconFiltered)
+	RuiSetBool(fileLevel.supportShelfRUI, "isFiltered", supportFiltered)
+	RuiSetBool(fileLevel.controllerShelfRUI, "isFiltered", controlerFiltered)
+
+}
       
 
 void function UpdateMenuButtons()
@@ -1638,79 +1853,291 @@ void function UpdateMenuButtons()
 		fileLevel.buttonIndexUsed.append( index )
 
                     
-		                              
-		var buttonRui = fileLevel.characterButtonRuis[index]
-		RuiSetImage( buttonRui, "portraitImage", CharacterClass_GetGalleryPortrait( character ) )
-		RuiSetImage( buttonRui, "portraitBackground", CharacterClass_GetGalleryPortraitBackground( character ) )
-		RuiSetString( buttonRui, "portraitName", Localize( ItemFlavor_GetLongName( character ) ) )
-		RuiSetImage( buttonRui, "roleImage", CharacterClass_GetCharacterRoleImage( character ) )
-		RuiSetColorAlpha( buttonRui, "baseNameBackgroundColor", SrgbToLinear( (fileLevel.characterSkins.len() > 0) ? CharacterSkin_GetCharacterSelectLabelColorOverride( fileLevel.characterSkins[index] ) : <1.0, 1.0, 1.0> ), 1.0 )
+                                
+                                                      
+                                                                                           
+                                                                                                          
+                                                                                            
+                                                                                          
+                                                                                                                                                                                                                               
       
 	}
 
                    
 
-                         
-                                                                                                      
-  
-                                                   
-                                                  
-  
+	int listGap = 90
+	int buttonGap = 6
+	int buttonWidth = 77
 
-                                                                                                         
-  
-                                                      
-                                                  
-  
+	UISize screenSize = GetScreenSize()
 
-                                                                                                    
-  
-                                                 
-                                                  
-  
+	float screenSizeXFrac =  screenSize.width / 1920.0
+	float screenSizeYFrac =  screenSize.height / 1080.0
 
-                                                                                                      
-  
-                                                   
-                                                  
-  
+	float scaleFrac = min(screenSizeXFrac, screenSizeYFrac)
 
-                                                                                                      
-  
-                                                   
-                                                  
-  
+	int assaultLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.OFFENSE ).len()
+	int skirmisherLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.SKIRMISHER ).len()
+	int reconLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.RECON ).len()
+	int supportLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.SUPPORT ).len()
+	int defenderLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.DEFENSE ).len()
 
-                    
-                                                                                                       
-                                                                                                             
+	                        
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.OFFENSE ) )
+	{
+		var button = fileLevel.roleButtons_Assault[index]
+		CharacterButton_Init( button, character, index )
+		int offset = (buttonWidth * index) + (buttonGap * index)
+		Hud_SetX( button, offset * scaleFrac)
+	}
 
-                                                                                                                                  
-                                                        
+	int topListOffset1 = (assaultLegendsAmount * buttonWidth) + ( (assaultLegendsAmount - 1) * buttonGap) + listGap
 
-                                                                                                   
-                                                                                                       
-                                                                                                        
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.SKIRMISHER ) )
+	{
+		var button = fileLevel.roleButtons_Skirmisher[index]
+		CharacterButton_Init( button, character, index )
+		int offset = topListOffset1 + (buttonWidth * index) + (buttonGap * index)
+		Hud_SetX( button, offset * scaleFrac)
+	}
 
-                                                                                                                           
-                                                     
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.RECON ) )
+	{
+		var button = fileLevel.roleButtons_Recon[index]
+		CharacterButton_Init( button, character, index )
+		int offset = (buttonWidth * index) + (buttonGap * index)
+		Hud_SetX( button, offset * scaleFrac)
+	}
 
-                                                                                                                               
-                                                     
-                    
+	int botListOffset1 = (reconLegendsAmount * buttonWidth) + ( (reconLegendsAmount - 1) * buttonGap) + listGap
+
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.SUPPORT ) )
+	{
+		var button = fileLevel.roleButtons_Support[index]
+		CharacterButton_Init( button, character, index )
+		int offset = botListOffset1 + (buttonWidth * index) + (buttonGap * index)
+		Hud_SetX( button, offset * scaleFrac)
+	}
+
+	int botListOffset2 = botListOffset1 + (supportLegendsAmount * buttonWidth) + ( (supportLegendsAmount - 1) * buttonGap) + listGap
+
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.DEFENSE ) )
+	{
+		var button = fileLevel.roleButtons_Defense[index]
+		CharacterButton_Init( button, character, index )
+		int offset = botListOffset2 + (buttonWidth * index) + (buttonGap * index)
+		Hud_SetX( button, offset * scaleFrac)
+	}
+
+	int topListFullWidth = (assaultLegendsAmount * buttonWidth) + ( (assaultLegendsAmount - 1) * buttonGap) + listGap + (skirmisherLegendsAmount * buttonWidth) + ( (skirmisherLegendsAmount - 1) * buttonGap)
+	int botListFullWidth = botListOffset2 + (defenderLegendsAmount * buttonWidth) + ( (defenderLegendsAmount - 1) * buttonGap)
+
+	Hud_SetX( fileLevel.topLegendRowAnchor, -(topListFullWidth/2) * scaleFrac)
+	Hud_SetX( fileLevel.botLegendRowAnchor, -(botListFullWidth/2) * scaleFrac)
+
+	RuiSetFloat( fileLevel.assaultShelfRUI, "shelfWidth", float((assaultLegendsAmount * buttonWidth) + ( (assaultLegendsAmount - 1) * buttonGap)))
+	RuiSetColorAlpha( fileLevel.assaultShelfRUI, "shelfColor", SrgbToLinear(CharacterClass_GetRoleColor(1)), 1.0)
+	RuiSetString( fileLevel.assaultShelfRUI, "roleString", "#ROLE_ASSAULT" )
+	RuiSetImage( fileLevel.assaultShelfRUI, "roleIcon", $"rui/menu/character_select/utility/role_offense" )
+
+	RuiSetFloat( fileLevel.skirmisherShelfRUI, "shelfWidth", float((skirmisherLegendsAmount * buttonWidth) + ( (skirmisherLegendsAmount - 1) * buttonGap)))
+	RuiSetColorAlpha( fileLevel.skirmisherShelfRUI, "shelfColor", SrgbToLinear(CharacterClass_GetRoleColor(2)), 1.0)
+	RuiSetString( fileLevel.skirmisherShelfRUI, "roleString", "#ROLE_SKIRMISHER" )
+	RuiSetImage( fileLevel.skirmisherShelfRUI, "roleIcon", $"rui/menu/character_select/utility/role_skirmisher" )
+
+	RuiSetFloat( fileLevel.reconShelfRUI, "shelfWidth", float((reconLegendsAmount * buttonWidth) + ( (reconLegendsAmount - 1) * buttonGap)))
+	RuiSetColorAlpha( fileLevel.reconShelfRUI, "shelfColor", SrgbToLinear(CharacterClass_GetRoleColor(3)), 1.0)
+	RuiSetString( fileLevel.reconShelfRUI, "roleString", "#ROLE_RECON" )
+	RuiSetImage( fileLevel.reconShelfRUI, "roleIcon", $"rui/menu/character_select/utility/role_recon" )
+
+	RuiSetFloat( fileLevel.supportShelfRUI, "shelfWidth", float((supportLegendsAmount * buttonWidth) + ( (supportLegendsAmount - 1) * buttonGap)))
+	RuiSetColorAlpha( fileLevel.supportShelfRUI, "shelfColor", SrgbToLinear(CharacterClass_GetRoleColor(5)), 1.0)
+	RuiSetString( fileLevel.supportShelfRUI, "roleString", "#ROLE_SUPPORT" )
+	RuiSetImage( fileLevel.supportShelfRUI, "roleIcon", $"rui/menu/character_select/utility/role_support" )
+
+	RuiSetFloat( fileLevel.controllerShelfRUI, "shelfWidth", float((defenderLegendsAmount * buttonWidth) + ( (defenderLegendsAmount - 1) * buttonGap)))
+	RuiSetColorAlpha( fileLevel.controllerShelfRUI, "shelfColor", SrgbToLinear(CharacterClass_GetRoleColor(4)), 1.0)
+	RuiSetString( fileLevel.controllerShelfRUI, "roleString", "#ROLE_CONTROLLER" )
+	RuiSetImage( fileLevel.controllerShelfRUI, "roleIcon", $"rui/menu/character_select/utility/role_defense" )
+
+	Hud_SetX( fileLevel.assaultShelf, (-buttonWidth/2) * scaleFrac)
+	Hud_SetX( fileLevel.skirmisherShelf, (topListOffset1 -buttonWidth/2) * scaleFrac)
+	Hud_SetX( fileLevel.reconShelf, (-buttonWidth/2) * scaleFrac)
+	Hud_SetX( fileLevel.supportShelf, (botListOffset1 -buttonWidth/2) * scaleFrac)
+	Hud_SetX( fileLevel.controllerShelf, (botListOffset2 -buttonWidth/2) * scaleFrac)
+
+	CharacterSelect_UpdateFilterState()
+	SetPerkLayoutNav (orderedCharacters)
+
+	                   
      
 
-	                                                                         
-	array< array<var> > buttonRows
-	buttonRows = GetCharacterButtonRows( characterButtons )
+                                                                          
+                               
+                                                        
 
-	LayoutCharacterButtons( buttonRows )
+                                     
       
 	UpdateButtonStates()
+}
+
+void function SetPerkLayoutNav (array<ItemFlavor> orderedCharacters)
+{
+	int assaultLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.OFFENSE ).len()
+	int skirmisherLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.SKIRMISHER ).len()
+	int reconLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.RECON ).len()
+	int supportLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.SUPPORT ).len()
+	int defenderLegendsAmount = GetCharactersByRole( orderedCharacters, eCharacterClassRole.DEFENSE ).len()
+
+	                        
+
+	                                   
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.OFFENSE ) )
+	{
+		var button = fileLevel.roleButtons_Assault[index]
+
+		            
+		if (index < assaultLegendsAmount -1)
+			Hud_SetNavRight(button, fileLevel.roleButtons_Assault[index + 1])
+		else
+			Hud_SetNavRight(button, fileLevel.roleButtons_Skirmisher[0])
+
+		           
+		if (index != 0)
+			Hud_SetNavLeft(button, fileLevel.roleButtons_Assault[index - 1])
+
+		          
+		if ( index <= reconLegendsAmount - 1 )
+			Hud_SetNavDown(button, fileLevel.roleButtons_Recon[0])
+		else
+			Hud_SetNavDown(button, fileLevel.roleButtons_Support[0])
+	}
+
+	                                      
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.SKIRMISHER ) )
+	{
+		var button = fileLevel.roleButtons_Skirmisher[index]
+
+		            
+		if (index < skirmisherLegendsAmount -1)
+			Hud_SetNavRight(button, fileLevel.roleButtons_Skirmisher[index + 1])
+
+		           
+		if (index != 0)
+			Hud_SetNavLeft(button, fileLevel.roleButtons_Skirmisher[index - 1])
+		else
+			Hud_SetNavLeft(button, fileLevel.roleButtons_Assault[assaultLegendsAmount -1])
+
+		          
+		if ( index >= skirmisherLegendsAmount - defenderLegendsAmount )
+			Hud_SetNavDown(button, fileLevel.roleButtons_Defense[0])
+		else
+			Hud_SetNavDown(button, fileLevel.roleButtons_Support[supportLegendsAmount - 1])
+	}
+
+	                                 
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.RECON ) )
+	{
+		var button = fileLevel.roleButtons_Recon[index]
+		         
+		if (reconLegendsAmount <= assaultLegendsAmount)
+			Hud_SetNavUp(button, fileLevel.roleButtons_Assault[0])
+		else
+			Hud_SetNavUp(button, fileLevel.roleButtons_Assault[assaultLegendsAmount - 1])
+
+		            
+		if (index < reconLegendsAmount -1)
+			Hud_SetNavRight(button, fileLevel.roleButtons_Recon[index + 1])
+		else
+			Hud_SetNavRight(button, fileLevel.roleButtons_Support[0])
+
+		           
+		if (index != 0)
+			Hud_SetNavLeft(button, fileLevel.roleButtons_Recon[index - 1])
+	}
+
+	                                   
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.SUPPORT ) )
+	{
+		var button = fileLevel.roleButtons_Support[index]
+		        
+		if (index <= (supportLegendsAmount-1)/2)
+			Hud_SetNavUp(button, fileLevel.roleButtons_Assault[assaultLegendsAmount -1])
+		else
+			Hud_SetNavUp(button, fileLevel.roleButtons_Skirmisher[0])
+
+		            
+		if (index < supportLegendsAmount -1)
+			Hud_SetNavRight(button, fileLevel.roleButtons_Support[index + 1])
+		else
+			Hud_SetNavRight(button, fileLevel.roleButtons_Defense[0])
+
+		           
+		if (index != 0)
+			Hud_SetNavLeft(button, fileLevel.roleButtons_Support[index - 1])
+		else
+			Hud_SetNavLeft(button, fileLevel.roleButtons_Recon[reconLegendsAmount -1])
+	}
+
+	                                     
+	foreach ( index, character in GetCharactersByRole( orderedCharacters, eCharacterClassRole.DEFENSE ) )
+	{
+		var button = fileLevel.roleButtons_Defense[index]
+		         
+		if (defenderLegendsAmount <= skirmisherLegendsAmount)
+			Hud_SetNavUp(button, fileLevel.roleButtons_Skirmisher[skirmisherLegendsAmount - 1])
+		else
+			Hud_SetNavUp(button, fileLevel.roleButtons_Skirmisher[0])
+
+		            
+		if (index < defenderLegendsAmount -1)
+			Hud_SetNavRight(button, fileLevel.roleButtons_Defense[index + 1])
+
+		           
+		if (index != 0)
+			Hud_SetNavLeft(button, fileLevel.roleButtons_Defense[index - 1])
+		else
+			Hud_SetNavLeft(button, fileLevel.roleButtons_Support[supportLegendsAmount -1])
+	}
+}
+
+void function CharacterSelect_UpdateFilterIndex(int newIndex)
+{
+	fileLevel.filterTabIndex = newIndex
 }
 #endif         
 
 #if UI
+void function UI_ClearUIShelves()
+{
+	var portraitsPanel = Hud_GetChild( GetMenu( "CharacterSelectMenuNew" ), "PortraitsPanel" )
+
+	Hud_SetVisible( Hud_GetChild( portraitsPanel, "assaultShelf" ) , false )
+	Hud_SetVisible( Hud_GetChild( portraitsPanel, "SkirmisherShelf" ) , false )
+	Hud_SetVisible( Hud_GetChild( portraitsPanel, "reconShelf" ) , false )
+	Hud_SetVisible( Hud_GetChild( portraitsPanel, "supportShelf" ) , false )
+	Hud_SetVisible( Hud_GetChild( portraitsPanel, "controllerShelf" ) , false )
+
+}
+
+void function UI_ResetRoleTabs()
+{
+	TabData tabData = GetTabDataForPanel( fileForever.menu )
+	foreach( tabIndex, tabDef in tabData.tabDefs )
+	{
+		if(tabData.activeTabIdx != tabIndex)
+		{
+			SetTabBaseWidth( tabDef, 80 )	
+		}
+		else
+		{
+			SetTabBaseWidth( tabDef, 115 )	
+		}
+		
+	}
+
+}
+
 void function UI_OnCharacterSelectMenu_NavBack()
 {
 	                                                
@@ -1732,7 +2159,6 @@ void function UI_CloseCharacterSelect()
 		MenuStack_Remove( fileForever.menu )
 }
 #endif     
-
 #if CLIENT
 
 const float CHARACTER_SELECT_FADE_HOLD_TIME = 1.0
@@ -1864,15 +2290,12 @@ void function CreateCharacterSelectClientEnts()
 	entity targetPilot = GetEntByScriptName( CHARACTER_ENT_NAME )
 
                    
-                                                                                                                     
+	fileLevel.camera = CreateClientSidePointCamera( cameraOrigin, targetCamera.GetAngles() + <0, 8.751, 0>, CAMERA_FOV )
      
-	fileLevel.camera = CreateClientSidePointCamera( cameraOrigin, targetCamera.GetAngles(), CAMERA_FOV )
+                                                                                                     
       
 
 	fileLevel.characterNode = CreateScriptRef( targetPilot.GetOrigin(), targetPilot.GetAngles()  )                                              
-#if NX_PROG || PC_PROG_NX_UI
-	fileLevel.nxCharacterNode = CreateScriptRef( targetPilot.GetOrigin() + <-4,0,0>, targetPilot.GetAngles() )
-#endif	
 
 	asset defaultModel = GetGlobalSettingsAsset( DEFAULT_PILOT_SETTINGS, "bodyModel" )
 	CreateNewCharacterModel( defaultModel )
@@ -1892,11 +2315,12 @@ void function CreateCharacterSelectClientEnts()
 		if ( IsValid( fileLevel.backgroundModelGeo ) )
 			fileLevel.backgroundModelGeo.Destroy()
 
+		vector targetBackgroundAngles = targetBackground.GetAngles()
                    
-                                                                                                                                                                        
-     
-	fileLevel.backgroundModelGeo = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), BACKGROUND_GEO_MODEL )
+		targetBackgroundAngles = targetBackgroundAngles + <0, 17.502, 0>
       
+
+		fileLevel.backgroundModelGeo = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackgroundAngles, BACKGROUND_GEO_MODEL )
 		fileLevel.backgroundModelGeo.kv.solid = 0
 		fileLevel.backgroundModelGeo.kv.disableshadows = 1
 		fileLevel.backgroundModelGeo.kv.fadedist = -1
@@ -1905,11 +2329,7 @@ void function CreateCharacterSelectClientEnts()
 		if ( IsValid( fileLevel.backgroundModelSmoke ) )
 				fileLevel.backgroundModelSmoke.Destroy()
 
-                   
-                                                                                                                                                                            
-     
-	fileLevel.backgroundModelSmoke = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), BACKGROUND_SMOKE_MODEL )
-      
+		fileLevel.backgroundModelSmoke = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackgroundAngles, BACKGROUND_SMOKE_MODEL )
 		fileLevel.backgroundModelSmoke.kv.solid = 0
 		fileLevel.backgroundModelSmoke.kv.disableshadows = 1
 		fileLevel.backgroundModelSmoke.kv.fadedist = -1
@@ -1938,14 +2358,23 @@ void function CreateCharacterSelectClientEnts()
 
 	                        
 	vector backgroundRuiOrigin = cameraOrigin + (targetCamera.GetForwardVector() * 200)
-	vector backgroundRuiAngles = targetPilot.GetAngles()
+                   
+	vector backgroundRuiAngles = targetPilot.GetAngles() + <0, -8.751, 0>                                                                                                                                                   
+     
+                                                     
+      
 
 	fileLevel.backgroundRuiTopo = CreateRUITopology_Worldspace( backgroundRuiOrigin, backgroundRuiAngles * -1, RUI_NAME_PLATE_WIDTH, RUI_NAME_PLATE_HEIGHT )
                    
-                                                                                                                                 
-                                                                                                   
+	fileLevel.scrollingBGRui = RuiCreate( $"ui/character_select_scrolling_bg.rpak", fileLevel.backgroundRuiTopo, RUI_DRAW_WORLD, 0 )
+	fileLevel.backgroundRui = CreateFullscreenRui( $"ui/character_select_class_name_plate.rpak", 300 )
+	fileLevel.assaultShelfRUI = Hud_GetRui(Hud_GetChild( fileLevel.portraitsPanel, "assaultShelf" ))
+	fileLevel.skirmisherShelfRUI = Hud_GetRui(Hud_GetChild( fileLevel.portraitsPanel, "SkirmisherShelf" ))
+	fileLevel.reconShelfRUI = Hud_GetRui(Hud_GetChild( fileLevel.portraitsPanel, "reconShelf" ))
+	fileLevel.supportShelfRUI = Hud_GetRui(Hud_GetChild( fileLevel.portraitsPanel, "supportShelf" ))
+	fileLevel.controllerShelfRUI = Hud_GetRui(Hud_GetChild( fileLevel.portraitsPanel, "controllerShelf" ))
      
-	fileLevel.backgroundRui = RuiCreate( $"ui/character_select_name_plate_new.rpak", fileLevel.backgroundRuiTopo, RUI_DRAW_WORLD, 0 )
+                                                                                                                                  
       
 
 	foreach ( func in file.Callbacks_CustomizeBackgroundRui )
@@ -2024,7 +2453,12 @@ void function FooterRui()
 
 	for ( int i = 0 ; i < NUM_PLAYERS ; i++ )
 	{
-		var rui = CreateFullscreenRui( $"ui/character_select_footer_bars.rpak", 300 )
+
+                   
+		var rui = CreateFullscreenRui( $"ui/character_select_perk_footer_bars.rpak", 300 )
+     
+                                                                               
+      
 
 		UISize screenSize = GetScreenSize()
 		float aspectRatio = float( screenSize.width ) / float( screenSize.height )
@@ -2078,10 +2512,7 @@ void function DeleteMenuEntities()
 		fileLevel.backgroundModelGeo.Destroy()
 	if ( IsValid( fileLevel.lightRigModel ) )
 		fileLevel.lightRigModel.Destroy()
-#if NX_PROG || PC_PROG_NX_UI
-	if( IsValid( fileLevel.nxCharacterNode ) )
-		fileLevel.nxCharacterNode.Destroy()
-#endif
+
 	                  
 	foreach( var rui in fileLevel.ruiPlayerBarRuis )
 		RuiDestroyIfAlive( rui )
@@ -2100,11 +2531,37 @@ void function DeleteMenuEntities()
 		fileLevel.backgroundRui = null
 	}
                    
-                                        
-  
-                                               
-                                 
-  
+	if ( fileLevel.scrollingBGRui != null )
+	{
+		RuiDestroyIfAlive( fileLevel.scrollingBGRui )
+		fileLevel.scrollingBGRui = null
+	}
+
+	RunUIScript("UI_ClearUIShelves")
+	                                       
+	   
+	  	                                                
+	   
+	  
+	                                          
+	   
+	  	                                                   
+	   
+	  
+	                                     
+	   
+	  	                                              
+	   
+	  
+	                                       
+	   
+	  	                                                
+	   
+	  
+	                                          
+	   
+	  	                                                   
+	   
       
 	if ( fileLevel.backgroundRuiTopo != null )
 	{
@@ -2223,9 +2680,6 @@ void function UpdateForFocusOnButtonIndex( int buttonIndex )
 	ItemFlavor character = fileLevel.buttonIndexCharacterMap[buttonIndex]
 	ItemFlavor ornull skin = GetCharacterSkinOrNullForButtonIndex( buttonIndex )
 
-	UpdateCharacterDetailsMenu( fileLevel.detailsRui, character, false )
-	Hud_SetVisible( fileLevel.detailsPanel, fileLevel.detailsPanelVisible )
-
 	foreach( func in file.Callbacks_OnCharacterFocused )
 		func( character )
 
@@ -2262,7 +2716,43 @@ void function OnLoadoutButton_Focused( var button )
 		fileLevel.currentCharacterIndex = index
 		UpdateForFocusOnButtonIndex( index )
 	}
+                   
+	if (!GetLocalClientPlayer().GetPlayerNetBool( CHARACTER_SELECT_NETVAR_HAS_LOCKED_IN_CHARACTER ))
+	{
+#if NX_PROG || PC_PROG_NX_UI		
+		if ( IsNxHandheldMode() )
+		{
+			Hud_SetZ( button, 700 )
+			Hud_ScaleOverTime( button, 1.85, 1.85,0.1, INTERPOLATOR_DEACCEL )
+		}
+		else
+		{
+			Hud_ScaleOverTime( button, 1.15, 1.15,0.1, INTERPOLATOR_DEACCEL )
+		}
+#else
+		Hud_ScaleOverTime( button, 1.15, 1.15,0.1, INTERPOLATOR_DEACCEL )
+#endif
+	}
+		
+      
 }
+
+                   
+void function OnLoadoutButton_LostFocus( var button )
+{
+	if ( fileLevel.isBrowseMode && ((Time() - fileLevel.isBrowseModeStartTime) < 0.1) )
+		return
+
+	                            
+		Hud_ReturnToBaseScaleOverTime( button, 0.1, INTERPOLATOR_DEACCEL )
+#if NX_PROG || PC_PROG_NX_UI
+		if ( IsNxHandheldMode() )	
+		{
+			Hud_SetZ( button, 1 )
+		}
+#endif
+}
+      
 
 void function DoBrowseModeCharacterSelectEffects()
 {
@@ -2303,6 +2793,8 @@ void function OnLoadoutButton_Activate( var button )
 		ItemFlavor currentSkin = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_CharacterSkin( currentCharacter ) )
 		if ( (character == currentCharacter) && ((skinOrNull == null) || (skinOrNull == currentSkin)) )
 		{
+			if ( IsFiringRangeGameMode() )
+				Remote_ServerCallFunction( "ClientToServer_FiringRange_ResetHealthOnSameCharacterSelect" )
 			EmitSoundOnEntity( player, "ui_menu_back" )
 			CloseCharacterSelectNewMenu()
 			return
@@ -2373,11 +2865,17 @@ void function Client_TryUnlockCharacter()
 {
 	                                             
 	if ( !GetLocalClientPlayer().GetPlayerNetBool( CHARACTER_SELECT_NETVAR_HAS_LOCKED_IN_CHARACTER ) )
+	{
+		RunUIScript( "OpenSystemMenu" )
 		return
+	}
 
 	                                  
 	if ( GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX ) != fileLevel.localClientLockstepIndex )
+	{
+		RunUIScript( "OpenSystemMenu" )
 		return
+	}
 
 	                                                    
 	float timeRemaining = GetGlobalNetTime( CHARACTER_SELECT_NETVAR_LOCK_STEP_END_TIME ) - Time()
@@ -2401,25 +2899,21 @@ void function UnlockCharacter()
 
 void function OnLoadoutButton_RightClick()
 {
-	if ( fileLevel.isBrowseMode && !fileLevel.browseModeShowLockedCharacters )
+	if ( !GetCurrentPlaylistVarBool( "all_characters_unlocked", false ) )
 	{
 		UpdateButtonStates()
 		return
 	}
 
-	if ( GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX ) < 0 )
+	if( fileLevel.desiredCharacterOrNull == null )
 		return
+	ItemFlavor ornull character = fileLevel.desiredCharacterOrNull
 
-	if ( Time() >= GetGlobalNetTime( "allSquadsPresentationStartTime" ) + 1.0 && !fileLevel.browseModeShowLockedCharacters )
-		return
+	expect ItemFlavor( character )
+	RunUIScript( "ClientToUI_OpenCharacterSkillsDialog", ItemFlavor_GetGUID( character )  )
 
-	if ( !fileLevel.detailsPanelVisible )
-		EmitSoundOnEntity( GetLocalClientPlayer(), "UI_Menu_Legend_Details" )
-	fileLevel.detailsPanelVisible = !fileLevel.detailsPanelVisible
 	UpdateButtonStates()
 
-	foreach( func in file.Callbacks_OnCharacterDetailsToggled )
-		func( fileLevel.detailsPanelVisible )
 }
 #endif         
 
@@ -2841,7 +3335,6 @@ void function UpdateButtonStates()
 
 		                          
 		RuiSetBool( playerRui, "isSelecting", currentLockStepIndex == i )
-		RuiSetBool( playerRui, "showingCharacterDetails", fileLevel.detailsPanelVisible )
 		RuiSetFloat( playerRui, "gcardsStartTime", GetGlobalNetTime( "allSquadsPresentationStartTime" ) )
 
 		if ( i == currentLockStepIndex )
@@ -2878,11 +3371,14 @@ void function UpdateButtonStates()
 				asset lockedPortrait = CharacterClass_GetCharacterLockedPortrait( character )
 				if ( lockedPortrait == $"" )
 					lockedPortrait = CharacterClass_GetCharacterSelectPortrait( character )
+				asset lockedClassIcon = CharacterClass_GetRoleIcon(CharacterClass_GetRole( character ) )
+
 				RuiSetBool( playerRui, "lockedCharacter", true )
 				RuiSetString( playerRui, "characterName", ItemFlavor_GetLongName( character ) )
 				RuiSetString( playerRui, "playerName", player.GetPlayerNameWithClanTag() )
 				RuiTrackInt( playerRui, "micStatus", player, RUI_TRACK_MIC_STATUS )
 				RuiSetImage( playerRui, "lockedPortraitImage", lockedPortrait )
+				RuiSetImage( playerRui, "lockedClassIcon", lockedClassIcon )
 				RuiSetBool( playerRui, "statusTextVisible", true )
 				RuiSetBool( playerRui, "isDisconnected", false )
 				RuiSetBool( playerRui, "isJumpmaster", isJumpmaster )
@@ -2895,6 +3391,7 @@ void function UpdateButtonStates()
 				RuiSetString( playerRui, "playerName", player.GetPlayerNameWithClanTag() )
 				RuiTrackInt( playerRui, "micStatus", player, RUI_TRACK_MIC_STATUS )
 				RuiSetImage( playerRui, "lockedPortraitImage", $"" )
+				RuiSetImage( playerRui, "lockedClassIcon", $"" )
 				RuiSetBool( playerRui, "statusTextVisible", true )
 				RuiSetBool( playerRui, "isDisconnected", false )
 				RuiSetBool( playerRui, "isJumpmaster", isJumpmaster )
@@ -2905,6 +3402,7 @@ void function UpdateButtonStates()
 			                                       
 			RuiSetBool( playerRui, "lockedCharacter", false )
 			RuiSetImage( playerRui, "lockedPortraitImage", $"" )
+			RuiSetImage( playerRui, "lockedClassIcon", $"" )
 			RuiSetInt( playerRui, "playerTeamColorIndex", -1 )
 
 			if ( i in fileLevel.connectedPlayerNames )
@@ -2931,51 +3429,28 @@ void function UpdateButtonStates()
 		}
 	}
 
-	Hud_SetVisible( fileLevel.jipRuiPanel, fileLevel.isJiP )
+	bool isTempUnlocked = GetCurrentPlaylistVarBool( "all_characters_unlocked", false )
 
-	                       
-	if ( fileLevel.detailsPanelVisible )
+	Hud_SetVisible( fileLevel.calloutRuiPanel, isTempUnlocked || fileLevel.isJiP )
+	var calloutRui = Hud_GetRui( fileLevel.calloutRuiPanel )
+
+	if( fileLevel.isJiP )
 	{
-		Hud_SetVisible( fileLevel.detailsPanel, true )
-
-		ItemFlavor ornull detailsCharacter = null
-
-		                                       
-		for ( int i = 0 ; i < fileLevel.characterButtons.len() ; i++ )
-		{
-			var button = fileLevel.characterButtons[i]
-
-			if ( !Hud_IsFocused( button ) )
-				continue
-
-			detailsCharacter = fileLevel.buttonIndexCharacterMap[ i ]
-			break
-		}
-
-		                                                                 
-		if ( detailsCharacter == null )
-			detailsCharacter = fileLevel.desiredCharacterOrNull
-
-		if ( detailsCharacter != null )
-		{
-			UpdateCharacterDetailsMenu( fileLevel.detailsRui, expect ItemFlavor( detailsCharacter ), false )
-			Hud_SetVisible( fileLevel.detailsPanel, true )
-			Hud_SetVisible( fileLevel.jipRuiPanel, false )
-		}
-		else if ( !fileLevel.isBrowseMode )
-		{
-			Hud_SetVisible( fileLevel.detailsPanel, false )
-			Hud_SetVisible( fileLevel.jipRuiPanel, fileLevel.isJiP )
-		}
+		RuiSetString( calloutRui, "title", "#CONTROL_RESPAWN_LATE_JOIN_PLAYER_TITLE" )
+		RuiSetString( calloutRui, "desc", "#CONTROL_RESPAWN_LATE_JOIN_PLAYER_DESC" )
+	}
+	else if( isTempUnlocked )
+	{
+		RuiSetString( calloutRui, "title", "#ALL_LEGENDS_AVAILABLE_FIRING_RANGE" )
+		RuiSetString( calloutRui, "desc", "" )
 	}
 	else
 	{
-		Hud_SetVisible( fileLevel.detailsPanel, false )
-		Hud_SetVisible( fileLevel.jipRuiPanel, fileLevel.isJiP )
+		RuiSetString( calloutRui, "title", "" )
+		RuiSetString( calloutRui, "desc", "" )
 	}
 
 	                     
-	RuiSetBool( fileLevel.buttonHintRui, "showingCharacterDetails", fileLevel.detailsPanelVisible )
 
 	string topString    = ""
 	string bottomString = ""
@@ -2990,10 +3465,6 @@ void function UpdateButtonStates()
 				bottomString = Localize( "#CHAR_SEL_BUTTON_HINT_CANEL_DETAILS" )
 			else
 				bottomString = Localize( "#CHAR_SEL_BUTTON_HINT_SELECT_DETAILS" )
-		}
-		else
-		{
-			bottomString = Localize( "#CHAR_SEL_BUTTON_HINT_DETAILS" )
 		}
 	}
 	else if ( SquadMuteLegendSelectEnabled() )
@@ -3017,6 +3488,11 @@ void function UpdateButtonStates()
        
                      
         
+	}
+	else if( isTempUnlocked )
+	{
+		topString = Localize( "#CHAR_SEL_BUTTON_HINT_SELECT_DETAILS" )                              
+		bottomString = Localize( "#CHAR_SEL_BUTTON_HINT_DETAILS" )
 	}
 
 	string finalString = Localize( "#CHAR_SEL_BUTTON_HINT_N_N", topString, bottomString )
@@ -3114,6 +3590,9 @@ void function UpdateSceneThink()
 			fileLevel.operationModeChanged = false
 			shouldUpdateModel = true
 			shouldUpdateAnim = true
+                   
+			RunUIScript("UI_ResetRoleTabs")
+      
 		}
 #endif
 
@@ -3309,7 +3788,19 @@ void function UpdatePlayerModel( ItemFlavor character, ItemFlavor ornull charact
 	RuiSetString( fileLevel.backgroundRui, "footnoteString", Localize( ItemFlavor_GetShortDescription( character ) ) )
 	RuiSetFloat( fileLevel.backgroundRui, "startTime", Time() )
                    
-                                                            
+	RuiSetString( fileLevel.scrollingBGRui, "nameString", Localize( ItemFlavor_GetLongName( character ) ) )
+	RuiSetString( fileLevel.scrollingBGRui, "footnoteString", Localize( ItemFlavor_GetShortDescription( character ) ) )
+	RuiSetFloat( fileLevel.scrollingBGRui, "startTime", Time() )
+	RuiSetBool ( fileLevel.backgroundRui, "higherTitle", true )
+	RuiSetBool ( fileLevel.backgroundRui, "showPerkInfo", GetCurrentPlaylistVarBool( "charSelect_show_perk_info", false ) )
+	RuiSetBool ( fileLevel.backgroundRui, "showLegendInfo", false )
+	RuiSetString( fileLevel.backgroundRui, "classNameString", Localize( CharacterClass_GetRoleTitle (CharacterClass_GetRole( character )).toupper() ) )
+	RuiSetString( fileLevel.backgroundRui, "classFootnoteString", Localize( CharacterClass_GetRoleSubtitle (CharacterClass_GetRole( character )).toupper() ) )
+	RuiSetString( fileLevel.backgroundRui, "perkDescriptionString1", Localize( CharacterClass_GetRolePerkShortDescriptionAtIndex(CharacterClass_GetRole( character ), 0).toupper() ))
+	RuiSetString( fileLevel.backgroundRui, "perkDescriptionString2", Localize( CharacterClass_GetRolePerkShortDescriptionAtIndex(CharacterClass_GetRole( character ), 1).toupper() ))
+	RuiSetImage( fileLevel.backgroundRui, "classIconImage", CharacterClass_GetRoleIcon(CharacterClass_GetRole( character ) ) )
+	RuiSetImage( fileLevel.backgroundRui, "perkIconImage1", CharacterClass_GetRolePerkIconAtIndex(CharacterClass_GetRole( character ), 0 ) )
+	RuiSetImage( fileLevel.backgroundRui, "perkIconImage2", CharacterClass_GetRolePerkIconAtIndex(CharacterClass_GetRole( character ), 1 ) )
       
 
 	foreach ( func in file.Callbacks_OnCharacterModelChanged )
@@ -3364,12 +3855,7 @@ void function UpdatePlayerAnim( ItemFlavor character, int currentMenuState )
 		else
 		{
 			entity charNode = fileLevel.characterNode
-#if NX_PROG || PC_PROG_NX_UI
-			if( IsNxHandheldMode() )
-			{
-				charNode = fileLevel.nxCharacterNode
-			}
-#endif
+
 			                                                                                                                                                                    
 			PlayAnim( fileLevel.characterModel, "ACT_MP_MENU_MAIN_INTRO", charNode )
 			                                                                                                                                                                   
@@ -3399,12 +3885,7 @@ void function UpdatePlayerAnim( ItemFlavor character, int currentMenuState )
 		else
 		{
 			entity charNode = fileLevel.characterNode
-#if NX_PROG || PC_PROG_NX_UI
-			if( IsNxHandheldMode() )
-			{
-				charNode = fileLevel.nxCharacterNode
-			}
-#endif
+
 			                                                                                                                                                                       
 			PlayAnim( fileLevel.characterModel, "ACT_MP_MENU_READYUP_INTRO", charNode )
 			                                                                                                                                                                    
@@ -3872,12 +4353,7 @@ void function CreateNewCharacterModel( asset model )
 		fileLevel.characterModel.Destroy()
 
 	entity charNode = fileLevel.characterNode
-#if NX_PROG || PC_PROG_NX_UI
-	if( IsNxHandheldMode() )
-	{
-		charNode = fileLevel.nxCharacterNode
-	}
-#endif
+
 	fileLevel.characterModel = CreateClientSidePropDynamic( charNode.GetOrigin(), charNode.GetAngles(), model )
 	fileLevel.characterModel.MakeSafeForUIScriptHack()
 	fileLevel.characterModel.SetParent( charNode ) 
@@ -3894,7 +4370,12 @@ void function CreateNewLightRigModel()
 
 	entity targetBackground = GetEntByScriptName( BACKGROUND_ENT_NAME )
 
-	fileLevel.lightRigModel = CreateClientSidePropDynamic( targetBackground.GetOrigin(), targetBackground.GetAngles(), LIGHT_RIG_MDL )
+	vector targetBackgroundAngles = targetBackground.GetAngles()
+                   
+	targetBackgroundAngles = targetBackgroundAngles + <0, 17.502, 0>
+      
+
+	fileLevel.lightRigModel = CreateClientSidePropDynamic( targetBackground.GetOrigin(), targetBackgroundAngles, LIGHT_RIG_MDL )
 	fileLevel.lightRigModel.MakeSafeForUIScriptHack()
 	fileLevel.lightRigModel.SetParent( targetBackground )
 	fileLevel.lightRigModel.Hide()
@@ -4210,10 +4691,9 @@ void function UpdateCharacterDetailsMenu( var detailsRui, ItemFlavor character, 
 
 
                     
-                                                             
-                                                                           
+		string roleDesc = CharacterClass_GetCharacterPerkDescription( character )
       
-		string roleDesc = CharacterClass_GetCharacterRolePerkDesc( character )
+                                                                        
        
 	if ( roleDesc == "" )
 	{
@@ -4367,6 +4847,18 @@ bool function IsCharacterReselectEnabled()
 {
 	return GetCurrentPlaylistVarBool( "character_reselect_enabled", false )
 }
+
+#if SERVER
+                                                                       
+ 
+	                                                                                                                                                
+ 
+
+                                                                  
+ 
+	                                                       
+ 
+#endif          
 
 bool function SquadMuteLegendSelectEnabled()
 {

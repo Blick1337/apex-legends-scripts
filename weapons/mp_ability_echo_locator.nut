@@ -32,7 +32,7 @@ const float LOCK_FX_LIFETIME = 1.25
 const float TOTAL_FIRE_TIME_BUFFER = 1.75
 const float ECHO_LOCATOR_TUNING_DEATHFIELD_DAMAGE_SCALAR = 1.0
                                
-                                                                                                     
+const float ECHO_LOCATOR_MOVEMENT_SPEED_CHECK = 170                                                  
                                     
 
 const asset ECHO_LOCATOR_HEART_MODEL = $"mdl/props/pariah_heart/pariah_heart.rmdl"
@@ -117,7 +117,7 @@ struct
 	int echoLocatorHP
 	float echoLocatorSphereModelScale
                                
-                                  
+	bool useWalkSpeedForMovementCheck
                                     
 	#if CLIENT
 	array<entity> playersInsideEchoLocators
@@ -164,7 +164,7 @@ void function MpWeaponEchoLocator_Init()
 	file.echoLocatorSphereModelScale = file.echoLocatorRadius / 1050.0                                                                          
 	file.echoLocatorHP 		 = GetEchoLocatorHP()
                                 
-                                                                 
+	file.useWalkSpeedForMovementCheck = GetEchoLocatorUseWalkSpeed()
                                      
 
 	#if CLIENT
@@ -296,7 +296,7 @@ void function OnEchoLocatorPlanted( entity projectile, DeployableCollisionParams
 		                                     
 		                            
 		                                        
-		                                  
+		                                   
 		                               
 		                                      
 		                                                                   
@@ -323,6 +323,9 @@ void function OnEchoLocatorPlanted( entity projectile, DeployableCollisionParams
 		                                                                        
 		                                                              
 		                                      
+		                                                                                         
+		                                                     
+		                                                                                                                            
 
 		                            
 
@@ -374,6 +377,41 @@ void function OnEchoLocatorPlanted( entity projectile, DeployableCollisionParams
 }
 
 #if SERVER
+                                                                        
+ 
+	                                               
+		            
+
+	                                                         
+	 
+		                     
+		
+		                                       
+		                       
+		 
+			                
+		 
+		    
+		 
+			                                                                
+			                                     
+
+			                                                  
+			 
+				                   
+			 
+		 
+
+		                         
+		 
+			                                                   
+			            
+		 
+	 
+
+	           
+ 
+
                                                                         
  
 	                                     
@@ -1436,32 +1474,32 @@ bool function DoesPlayerPassEchoLocatorMovementCheck( entity player, float playe
 	if ( playerSpeed > 0 )
 	{
                                  
-                                          
-   
-                     
-   
-                           
-                                          
-                                     
-    
-                                                               
-     
-                                     
+		if ( file.useWalkSpeedForMovementCheck )
+		{
+			bool isADS = false
+			
+			if ( player.IsPlayer() )
+				isADS = PlayerIsInADS( player, false )
+			else if ( player.IsPlayerDecoy() )
+			{
+				if ( player.GetScriptName() == CONTROLLED_DECOY_SCRIPTNAME)
+				{
+					entity owner = player.GetOwner()
 
-                            
-      
-                                    
-      
-     
-    
-   
-                                                                    
-    
-               
-    
-   
-      
-   
+					if ( IsValid( owner ) )
+					{
+						isADS = PlayerIsInADS( owner )
+					}
+				}
+			}
+			
+			if ( playerSpeed >= ECHO_LOCATOR_MOVEMENT_SPEED_CHECK && !isADS )
+			{
+				return true
+			}
+		}
+		else
+		{
                                       
 			if ( player.IsPlayerDecoy() )
 			{
@@ -1484,7 +1522,7 @@ bool function DoesPlayerPassEchoLocatorMovementCheck( entity player, float playe
 				}
 			}
                                  
-   
+		}
                                       
 	}
 
@@ -1766,26 +1804,26 @@ void function EchoLocatorFootstepVFX_Thread( entity echoLocator )
 		}
 
                                   
-		                                                 
-		if ( firstLoopIteration )
-		{
-			foreach ( entity potentialVictim in validTouchingEnts )
-			{
-				bool isCombatDummie = IsCombatNPC( potentialVictim ) && IsTrainingDummie( potentialVictim )
+                                                   
+                           
+   
+                                                          
+    
+                                                                                               
 
-				if ( potentialVictim.IsPlayer() || isCombatDummie || potentialVictim.IsPlayerDecoy() )
-				{
-					printt("INITIAL LOCK VFX SPAWN")
-					lockFXID[potentialVictim].fxHandle = StartParticleEffectOnEntity( potentialVictim, GetParticleSystemIndex( ECHO_LOCATOR_TARGET_ANIMATED ), FX_PATTACH_POINT_FOLLOW, potentialVictim.LookupAttachment( "CHESTFOCUS" ) )
-					lockFXID[potentialVictim].initialLock = true
-					lastPingTimeForLoco[potentialVictim]  = Time()
-				}
-			}
-			if ( echoLocatorOwner && validTouchingEnts.len() > 0 )
-			{
-				EmitSoundOnEntity( GetLocalViewPlayer(), ECHO_LOCATOR_TARGET_ACQUIRED_SOUND )
-			}
-		}
+                                                                                          
+     
+                                     
+                                                                                                                                                                                                                           
+                                                 
+                                                   
+     
+    
+                                                         
+    
+                                                                                 
+    
+   
                                       
 
 		file.enemiesInsideEchoLocator[echoLocator] = validTouchingEnts.len()
@@ -2038,7 +2076,7 @@ void function EchoLocatorFootstepVFXClient( entity victim, int team )
 	if ( IsValid( traceResult.hitEnt ) )
 	{
 		                                                                                                                                                                                                      
-		entity mover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", traceResult.endPos, angles )
+		entity mover = CreateClientsideScriptMover( EMPTY_MODEL, traceResult.endPos, angles )
 		mover.SetParent( traceResult.hitEnt )
 		handle = StartParticleEffectOnEntity( mover, particleSystemID, FX_PATTACH_CUSTOMORIGIN_FOLLOW, ATTACHMENTID_INVALID )
 		thread DelayDestroy( mover )
@@ -2202,8 +2240,8 @@ int function GetEchoLocatorHP()
 }
 
                                
-                                          
- 
-                                                                     
- 
+bool function GetEchoLocatorUseWalkSpeed()
+{
+	return GetCurrentPlaylistVarBool( "seer_ult_speed_override", false )
+}
                                     

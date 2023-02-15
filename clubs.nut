@@ -182,6 +182,7 @@ global function Clubs_OpenJoinRequestDeniedDialog
 global function Clubs_ShouldShowClubJoinRequestDeniedDialog
 global function Clubs_OpenJoinReqsConfirmDialog
 global function Clubs_OpenReportClubConfirmDialog
+global function Clubs_OpenClubCreateBlockedByJoinDialog
 global function Clubs_OpenClubCreateBlockedByMatchmakingDialog
 global function Clubs_OpenClubEditBlockedByMatchmakingDialog
 global function Clubs_OpenClubManagementBlockedByMatchmakingDialog
@@ -304,7 +305,7 @@ global enum eClubSearchTagFlags
 	MODES_UNRANKED = (1 << 1)
 	MODES_DUOS = (1 << 2)
                         
-		MODES_ARENAS = (1 << 3)
+                         
        
 	MODES_ANY = (1 << 4)
 
@@ -2022,8 +2023,8 @@ const int MAX_PLACEMENT_FOR_FREEDM_CLUB_EVENT = 1
 		      
 
                         
-		                                                                      
-			      
+                                                                        
+         
        
 
                        
@@ -3327,6 +3328,16 @@ void function Clubs_OpenClubCreateBlockedByMatchmakingDialog()
 
 	OpenOKDialogFromData( dialogData )
 }
+
+void function Clubs_OpenClubCreateBlockedByJoinDialog()
+{
+	ConfirmDialogData dialogData
+	dialogData.headerText = "#LOBBY_CLUBS_CREATE"
+	dialogData.messageText = "#CLUB_DIALOG_CREATE_ALREADY"
+
+	OpenOKDialogFromData( dialogData )
+}
+
 
 void function Clubs_OpenClubEditBlockedByMatchmakingDialog()
 {

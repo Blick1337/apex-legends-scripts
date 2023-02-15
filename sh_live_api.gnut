@@ -153,6 +153,7 @@ var function LiveAPI_GetPlayerIdentityTable( entity player )
 		int sortedPlayerSquadIndex = playerSquad.find(player)
 		data.squadIndex <- sortedPlayerSquadIndex >= 0 ? sortedPlayerSquadIndex : EEH_GetTeamMemberIndex( ehi )
 
+		data.hardwareId <- player.GetHardwareName()
 		data.nucleusHash <- player.GetHashedEadpUserIdStr()
 
 		if ( LoadoutSlot_IsReady( ehi, Loadout_Character() ) )

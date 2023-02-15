@@ -74,8 +74,8 @@ global function GetPlayerLadderPosFromEHI
 global function GetPlayerRankScorePrevSeasonFromEHI
 global function GetPlayerLadderPosPrevSeasonFromEHI
                        
-global function GetPlayerArenasRankScoreFromEHI
-global function GetPlayerArenasLadderPosFromEHI
+                                               
+                                               
       
 #endif
 #if UI
@@ -442,31 +442,31 @@ int function EHI_GetRankedLadderPosPrevSeason( EHI ent )
 
                        
 
-#if SERVER || CLIENT || UI
-int function EHI_GetArenasRankScore( EHI ent )
-{
-	#if SERVER
-		                        
-		                                      
-	#elseif CLIENT || UI
-		Assert( ent != EHI_null )
-		return GetEHIScriptStruct( ent ).arenasRankScore
-	#endif
-}
-#endif
+                          
+                                              
+ 
+           
+                          
+                                        
+                     
+                           
+                                                  
+       
+ 
+      
 
-#if SERVER || CLIENT || UI
-int function EHI_GetArenasRankedLadderPos( EHI ent )
-{
-	#if SERVER
-		                        
-		                                            
-	#elseif CLIENT || UI
-		Assert( ent != EHI_null )
-		return GetEHIScriptStruct( ent ).arenasRankedLadderPosition
-	#endif
-}
-#endif
+                          
+                                                    
+ 
+           
+                          
+                                              
+                     
+                           
+                                                             
+       
+ 
+      
 
                             
 
@@ -959,23 +959,23 @@ int function GetPlayerLadderPosPrevSeasonFromEHI( EHI playerEHI )
 
                        
 
-#if CLIENT
-int function GetPlayerArenasRankScoreFromEHI( EHI playerEHI )
-{
-	int rankScore = EHI_GetArenasRankScore( playerEHI )
+          
+                                                             
+ 
+                                                    
 
-	return rankScore
-}
-#endif
+                 
+ 
+      
 
-#if CLIENT
-int function GetPlayerArenasLadderPosFromEHI( EHI playerEHI )
-{
-	int rankScore = EHI_GetArenasRankedLadderPos( playerEHI )
+          
+                                                             
+ 
+                                                          
 
-	return rankScore
-}
-#endif
+                 
+ 
+      
 
                             
 

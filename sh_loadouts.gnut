@@ -61,6 +61,7 @@ global function IsItemFlavorGRXUnlockedForLoadoutSlot
 global function IsItemFlavorGRXUnlockedForLoadoutSlotHelper
 global function GetUnlockedItemFlavorsForLoadoutSlot
 global function GetRandomGoodItemFlavorForLoadoutSlot
+global function GetMostPlayedCharacterItemFlavor
 global function GetDefaultItemFlavorForLoadoutSlot
 global function ConvertItemFlavorToLoadoutSlotContentsIndex
 global function IsValidLoadoutSlotContentsIndexForItemFlavor
@@ -108,12 +109,12 @@ const bool LOADOUTS_DBG = false
                       
 global const string LOADOUT_TREE_TOP_TIER = "! general"
 
-                                                    
+                                                               
                                 
                                       
                                                                                                                                                                                                                          
 
-                                         
+                                                    
                                                                         
 
 global typedef LoadoutEntry_IsSlotLocked bool functionref( EHI playerEHI )
@@ -741,7 +742,7 @@ int function LoadoutSlot_GetRawStorageContents( EHI playerEHI, LoadoutEntry entr
 
 	int slotContentsIndex = GetLoadoutSlotContentsIndexInternal( playerEHI, entry )
 
-	                                           
+	                                                          
 	#if CLIENT || SERVER
 		if ( GetCurrentPlaylistVarBool( "loadouts_performance_ops_v1", true ) )
 	#elseif UI
@@ -1222,27 +1223,31 @@ array<ItemFlavor> function GetUnlockedItemFlavorsForLoadoutSlot( EHI playerEHI, 
 	return flavors
 }
 
-
-ItemFlavor function GetRandomGoodItemFlavorForLoadoutSlot( EHI playerEHI, LoadoutEntry entry, bool onlyValidateGRX = false, array<ItemFlavor> exceptions = [] )
+void function RemoveNonShippingCharacters( array<ItemFlavor> characterList )
 {
-	#if LOADOUTS_DBG
-		                          
-	#endif
-
-	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
-
-	array<ItemFlavor> randomListCopy
-	randomListCopy = clone entry.validItemFlavorList
-	for ( int i = 0; i < exceptions.len(); i++ )
+	foreach( ItemFlavor character in characterList )
 	{
-		if ( randomListCopy.contains( exceptions[ i ] ) )
+		if ( !CharacterClass_GetIsShippingCharacter( character ) )
 		{
-			randomListCopy.fastremovebyvalue( exceptions[ i ] )
+			characterList.fastremovebyvalue( character )
 		}
 	}
-	randomListCopy.randomize()
+}
 
-	foreach ( ItemFlavor flav in randomListCopy )
+void function RemoveExceptions( array<ItemFlavor> listCopy, array<ItemFlavor> exceptions = [] )
+{
+	for ( int i = 0; i < exceptions.len(); i++ )
+	{
+		if ( listCopy.contains( exceptions[ i ] ) )
+		{
+			listCopy.fastremovebyvalue( exceptions[ i ] )
+		}
+	}
+}
+
+ItemFlavor function GetFirstValidItemFlavor( EHI playerEHI, LoadoutEntry entry, array<ItemFlavor> itemFlavors , bool onlyValidateGRX = false )
+{
+	foreach ( ItemFlavor flav in itemFlavors )
 	{
 		if ( ItemFlavor_GetType( flav ) == eItemType.character_execution && CharacterExecution_IsNotEquippable( flav ) )
 			continue
@@ -1258,9 +1263,82 @@ ItemFlavor function GetRandomGoodItemFlavorForLoadoutSlot( EHI playerEHI, Loadou
 				return flav
 		}
 	}
-
-	Assert( false, "Could not find a random unlocked item flavor for loadout slot: " + entry.id )
+	Assert( false, "Could not find an unlocked item flavor for loadout slot: " + entry.id )
 	unreachable
+}
+
+
+
+ItemFlavor function GetRandomGoodItemFlavorForLoadoutSlot( EHI playerEHI, LoadoutEntry entry, bool onlyValidateGRX = false, array<ItemFlavor> exceptions = [] )
+{
+	#if LOADOUTS_DBG
+		                          
+	#endif
+
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	array<ItemFlavor> randomListCopy
+	randomListCopy = clone entry.validItemFlavorList
+
+	RemoveExceptions( randomListCopy, exceptions )
+
+	randomListCopy.randomize()
+
+	ItemFlavor returnItem = GetFirstValidItemFlavor( playerEHI, entry, randomListCopy, onlyValidateGRX )
+	return returnItem
+}
+
+
+ItemFlavor function GetMostPlayedCharacterItemFlavor( EHI playerEHI, LoadoutEntry entry, bool onlyValidateGRX = false, array<ItemFlavor> exceptions = [] )
+{
+	#if LOADOUTS_DBG
+		                          
+	#endif
+
+	Assert( entry.type == eLoadoutEntryType.ITEM_FLAVOR )
+
+	array<ItemFlavor> characterListCopy
+	characterListCopy = clone entry.validItemFlavorList
+
+	RemoveExceptions( characterListCopy, exceptions )
+
+	RemoveNonShippingCharacters( characterListCopy )
+
+	characterListCopy.sort( int function( ItemFlavor character1, ItemFlavor character2 ) : ( playerEHI ) {
+
+		string characterRef1 = ItemFlavor_GetGUIDString( character1 )
+		int charGames1       = GetStat_Int( FromEHI( playerEHI ), ResolveStatEntry( CAREER_STATS.character_games_played, characterRef1 ) )
+
+		string characterRef2 = ItemFlavor_GetGUIDString( character2 )
+		int charGames2       = GetStat_Int( FromEHI( playerEHI ), ResolveStatEntry( CAREER_STATS.character_games_played, characterRef2 ) )
+
+		int diff = charGames2 - charGames1                                                  
+
+		return diff
+	} )
+
+
+#if LOADOUTS_DBG
+	                                                  
+	                                                    
+	 
+		                                                             
+		                                                            
+		                                                                                                                            
+		                                                               
+	 
+#endif
+
+	ItemFlavor returnItem = GetFirstValidItemFlavor( playerEHI, entry, characterListCopy, onlyValidateGRX )
+
+#if LOADOUTS_DBG
+		                                                                
+		                                                              
+		                                                                                                                                    
+		                                                                                                                 
+#endif
+
+	return returnItem
 }
 
 
@@ -1396,7 +1474,11 @@ void function ShLoadouts_OnPlayerEHICreated( EHI player, bool thisCallIsHappenin
 	                          
 	                          
 
+                      
+	                                                                                                             
+     
 	                                             
+      
 	 
 		                 
 		                    
@@ -1585,12 +1667,12 @@ int function GetLoadoutSlotContentsIndexInternal( EHI playerEHI, LoadoutEntry en
 
 		                         
 		 
-			                                                                                                           
+			                                                                                                                          
 			 
 				                
 					                                      
 			 
-			                                                           
+			                                                                          
 			 
 				                                      
 			 
@@ -1635,7 +1717,7 @@ int function GetLoadoutSlotContentsIndexInternal( EHI playerEHI, LoadoutEntry en
 					return SLOT_CONTENTS_INTEGER_OFFSET
 				}
 			}
-			else                                                       
+			else                                                                      
 			{
 				return SLOT_CONTENTS_SENTINEL_NOTREADY
 			}
@@ -1690,14 +1772,14 @@ int function GetLoadoutSlotContentsIndexFromPersistence( EHI playerEHI, LoadoutE
 	if ( slotContentsIndex == PERSISTENT_DATA_INVALID_SENTINEL )
 	{
 		#if SERVER
-			                                                                                                           
+			                                                                                                                          
 			 
 				                
 					                
 						                                                                                   
 				      
 			 
-			                                                           
+			                                                                          
 			 
 				                                                                                                                                                             
 			 
@@ -1710,12 +1792,12 @@ int function GetLoadoutSlotContentsIndexFromPersistence( EHI playerEHI, LoadoutE
 		if ( !IsValidItemFlavorGUID( slotContentsIndex ) )
 		{
 			#if SERVER
-				                                                                                                           
+				                                                                                                                          
 				 
 					                
 						                                                                                                           
 				 
-				                                                           
+				                                                                          
 				 
 					                                                                                                                                                             
 				 
@@ -2043,7 +2125,7 @@ void function RefreshLoadoutSlotInternal( EHI playerEHI, LoadoutEntry entry, tab
 
 	if ( slotContentsIndex != SLOT_CONTENTS_SENTINEL_NOTREADY && slotContentsIndex != SLOT_CONTENTS_SENTINEL_INVALID )
 	{
-		Signal( GetEHISignalDummy( playerEHI ), "Loadout_" + entry.id + "_Ready" )                                                                           
+		Signal( GetEHISignalDummy( playerEHI ), "Loadout_" + entry.id + "_Ready" )
 	}
 
 	if ( slotContentsIndex == SLOT_CONTENTS_SENTINEL_NOTREADY || slotContentsIndex == SLOT_CONTENTS_SENTINEL_INVALID )
@@ -2054,7 +2136,7 @@ void function RefreshLoadoutSlotInternal( EHI playerEHI, LoadoutEntry entry, tab
 	{
 		ItemFlavor slotContents = ConvertLoadoutSlotContentsIndexToItemFlavor( entry, slotContentsIndex )
 
-		                                                                                                                                                                 
+		                                                                                                                                                                            
 		                                                                                                                                                                        
 		if ( IsLoadoutSlotActive( playerEHI, entry ) )
 		{
@@ -2278,7 +2360,7 @@ array<ItemFlavor> function GetLoadoutItemsSortedForMenu( LoadoutEntry entry, int
 }
 #endif      
 
-                                                                                                                                                               
+                                                                                                                                                                          
                                                                                                                                                                         
 bool function IsLoadoutSlotActive( EHI playerEHI, LoadoutEntry entry, LoadoutEntry ornull entryToNotCheck = null )
 {
@@ -2313,7 +2395,7 @@ bool function IsLoadoutSlotActive( EHI playerEHI, LoadoutEntry entry, LoadoutEnt
 	return true
 }
 
-                                                                              
+                                                                                         
 bool function IsLoadoutSlotCurrentlyNetworked( EHI playerEHI, LoadoutEntry entry, LoadoutEntry ornull entryToNotCheck = null )
 {
 	#if LOADOUTS_DBG

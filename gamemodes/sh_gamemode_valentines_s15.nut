@@ -408,7 +408,7 @@ bool function IsPairInRangeForProximityBuff( entity player1, entity player2 )
 	float zHeight    = 0.0
 	if ( GetCurrentPlaylistVarBool( VALENTINES_TOGETHER_DISTANCE_IS_2D_PLAYLIST_VAR, true ) )
 	{
-		maxZHeight = GetCurrentPlaylistVarFloat( VALENTINES_TOGETHER_DISTANCE_Z_CLAMP_PLAYLIST_VAR, file.togetherSquareDist )
+		maxZHeight = GetCurrentPlaylistVarFloat( VALENTINES_TOGETHER_DISTANCE_Z_CLAMP_PLAYLIST_VAR, file.togetherDist )
 		if ( maxZHeight != 0.0 )
 		{
 			zHeight = fabs( from1To2.z )

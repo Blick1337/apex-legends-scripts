@@ -41,23 +41,23 @@ void function GameModes_Init_SV_CL()
 #endif
 
                        
-	gameMode = GAMEMODE_ARENAS
-	#if SERVER
-		                                                         
-		                                                                           
-		                                                                           
-		                                          
-	#elseif CLIENT
-		GameMode_AddClientInit( gameMode, ClGamemodeSurvival_Init )
-		GameMode_SetScoreboardSetupFunc( gameMode, Arenas_ScoreboardSetup )
-	#endif
-	#if !UI
-		GameMode_AddSharedInit( gameMode, GamemodeSurvivalShared_Init )
+                           
+           
+                                                           
+                                                                             
+                                                                             
+                                            
+               
+                                                             
+                                                                     
+       
+        
+                                                                 
 
-		#if R2_SCOREBOARD
-			GameMode_SetScoreCompareFunc( gameMode, CompareAssaultScore )
-		#endif
-	#endif
+                   
+                                                                
+        
+       
       
 
                         

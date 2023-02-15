@@ -81,7 +81,12 @@ const string EMOTE_PIN_ACTION_INTERRUPT 			= "interrupted"
                                                      
                                                                      
                                            
-                                      
+                                        
+
+                                                                                      
+                                                                                        
+
+                                                                     
       
 
 #endif
@@ -185,6 +190,11 @@ struct
 
 	#if SERVER
 		                              	                  
+
+                      
+			                                               
+			                                                       
+        
 	#endif
 
 	#if CLIENT
@@ -241,8 +251,13 @@ void function ShEmotes_Init()
 	                             
 
                      
-                                        
-                                    
+		                                      
+		                                                   
+
+		                                  
+
+		                                                                                                      
+		                                                                                                                  
        
 #endif          
 
@@ -359,7 +374,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 	 
 		                                                          
 
-		                                           
+		                                                          
 		                                                                       
 		 
 			                                                                
@@ -382,7 +397,7 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 	 
 		                                                          
 
-		                                           
+		                                                          
 		                                                                       
 		 
 			                                                                
@@ -1128,6 +1143,8 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 	if ( IsEmoteEnabledForPodiumScreen() && !CanLocalClientPerformPodiumScreenEmote() )
 		RuiSetBool( GetPodiumSequenceRui(), "emoteAvailable", false )
 
+	bool isLocalPlayerModel = ( GetPodiumScreenCharacterModelForEHI( LocalClientEHI() ) == model )
+
 	string anim3p     = CharacterQuip_GetAnim3p( item )
 	string loopAnim3p = CharacterQuip_GetAnimLoop3p( item )
 
@@ -1175,7 +1192,9 @@ void function ModelPerformEmote( entity model, ItemFlavor item, entity mover, bo
 			}
 			else
 			{
-				thread PodiumPromptFlourish()
+				if ( isLocalPlayerModel )
+					thread PodiumPromptFlourish()
+
 				WaitSignal( model, SIGNAL_EMOTE_FLOURISH )
 			}
 
@@ -1808,9 +1827,9 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
 			                            
 			     
                     
-                        
-                               
-        
+		                      
+			                            
+			     
       
 		        
 		 
@@ -1890,135 +1909,148 @@ float function DEV_CharacterEmote_GetCustomAnimSequenceTime( string animName )
                     
                                                                                                                       
  
-                                  
-                                                         
+	                                 
+	                                                        
 
-                                                                                                   
+	                                                                                                  
 
-                                   
-                           
+	                                  
+	                          
 
-                           
-                                      
+	                          
+		                                    
 
-                             
-                                      
+	                            
+		                                    
 
-                                   
-                                                                            
+	                                  
+	                                                                           
  
 
                                                                                                                 
  
-                                      
-                               
-                                 
-                                      
+	                                     
+	                              
+	                                
+	                                     
 
-             
-                                      
-   
-                                                               
-                                                                                                        
-                                                                  
+	            
+		                                    
+		 
+			                                                            
+			                                                                                                     
+			  	                                                            
+			                           
+		 
+	 
 
-                                
-                                                
-   
-  
+	                                        
+	                                                                         
+
+	                                                                                                                              
+
+	                               
+	 
+		                                                               
+
+		                                      
+		                                         
+		                                                          
+
+		            
+		                  
+		                                                                 
+		                                                                                     
+		 
+			                                                                         
+			                                                         
+		 
+		    
+		 
+			                                                    
+		 
+		                                       
+
+		                
+		                                                                                                                          
+		                                                                                                                          
+		                                                                                                                          
+		                                                                                                                          
+
+		                  
+		                    
+		                     
+		                   
+		                      
+
+		                                                                                                        
+
+		                                
+		 
+			                                                                           
+			                                                                              
+			 
+				                                                 
+				                           
+				     
+			 
+			                                                   
+		 
+
+		                                                            
+		                                       
+
+		                          
+			                              
+		    
+			                          
+	 
+	    
+	 
+		                                                                  
+		                                                                                    
+		                                                                          
+
+		                                                          
+		                          
+	 
+ 
 
                                          
-                                                                          
+ 
+	                       
+		      
 
-                                                                                                                               
+	                                                   
+	                                                                            
 
-                                
-  
-                                                                 
-
-                                        
-                                           
-
-              
-                    
-                                                                   
-                                                                                       
-   
-                                                                            
-                                                            
-   
-      
-   
-                                                       
-   
-                                         
-
-                  
-                                                                                                                            
-                                                                                                                            
-                                                                                                                            
-                                                                                                                            
-
-                    
-                      
-                       
-                     
-                        
-
-                                                                                                          
-
-                                  
-   
-                                                                              
-                                                                                 
-    
-                                                     
-                               
-         
-    
-                                                      
-   
-
-                                                              
-                                         
-
-                            
-                                  
-      
-                              
-  
-     
-  
-                                                                    
-                                                                                      
-                                                                            
-                             
-  
+	                                                                                                                     
+	              
  
 
                                                    
  
-                           
-              
+	                          
+		            
 
-                         
-              
+	                        
+		            
 
-                          
-                                                                                                                                                                         
-              
+	                         
+	                                                                                                                                                                        
+		            
 
-            
+	           
  
 
                                                                                
  
-                                                                            
-                                                                                    
+	                                                                           
+	                                                                                   
 
-                                                               
+	                                                              
 
-                                                                                                         
+	                                                                                                        
  
 
       

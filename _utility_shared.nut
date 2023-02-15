@@ -136,6 +136,12 @@ global struct UpdraftTriggerSettings
 	float liftExitDuration         = 2.5                   		                                                                                     
 }
 
+global struct PotentialTargetData
+{
+	entity target
+	float score
+}
+
 const array<string> ALLOWED_SCRIPT_PARENT_ENTS = [
 	"hatch_bunker_entrance_model_z16",
 	"hatch_bunker_entrance_model_z6",
@@ -203,6 +209,10 @@ void function InitWeaponScripts()
                                
       
 
+                                 
+                                 
+       
+
 	MpWeaponSentinel_Init()
                    
                     
@@ -261,12 +271,16 @@ void function InitWeaponScripts()
 		MpWeaponSeerHeirloomPrimary_Init()
        
                      
-                              
-                                         
+		MeleeWraithKunai_rt01_Init()
+		MpWeaponWraithKunai_rt01_Primary_Init()
        
                      
                          
                                    
+       
+                     
+                             
+                                       
        
 	MeleeGibraltarClub_Init()
 	MpWeaponGibraltarClubPrimary_Init()
@@ -292,6 +306,7 @@ void function InitWeaponScripts()
        
 
 	MpWeaponEmoteProjector_Init()
+	MpGenericOffhand_Init()
                        
                            
                                                               
@@ -390,10 +405,8 @@ void function InitWeaponScripts()
                         
                             
                             
-                              
-                              
                             
-                            
+                                
        
 
                         
@@ -432,6 +445,9 @@ void function InitWeaponScripts()
                           
                           
                            
+                            
+                              
+                          
        
 
                
@@ -518,7 +534,7 @@ void function InitWeaponScripts()
        
 
                                
-                              
+		MpWeaponNemesis_Init()
        
 
                         
@@ -1306,6 +1322,20 @@ bool function LegalOrigin( vector origin )
 	return true
 }
 
+bool function LegalAngles( vector angles )
+{
+	if ( fabs( angles.x ) > 360 )
+		return false
+
+	if ( fabs( angles.y ) > 360 )
+		return false
+
+	if ( fabs( angles.z ) > 360 )
+		return false
+
+	return true
+}
+
 
 vector function AnglesOnSurface( vector surfaceNormal, vector playerVelocity )
 {
@@ -1347,8 +1377,8 @@ bool function ControlPanel_IsValidModel( entity controlPanel )
 	validModels.append( "mdl/props/specter_shack_control/specter_shack_control.rmdl" )
 
                     
-                                                                            
-                                                                              
+		validModels.append( "mdl/props/recon_beacon_dish/recon_beacon_dish.rmdl" )
+		validModels.append( "mdl/props/controller_console/controller_console.rmdl" )
        
 
 	return validModels.contains( string( controlPanel.GetModelName() ) )
@@ -5584,7 +5614,12 @@ bool function CanAttachToWeapon( string attachment, string weaponName )
 	if ( !SURVIVAL_Loot_IsRefValid( attachment ) )
 		return false
 
-	if ( SURVIVAL_Weapon_IsAttachmentLocked( weaponName ) && !IsArenaMode() )
+	bool isValidMode = true
+                        
+                                         
+       
+
+	if ( SURVIVAL_Weapon_IsAttachmentLocked( weaponName ) && isValidMode )
 	{
 		if ( SURVIVAL_IsAttachmentPointLocked( weaponName, GetAttachPointForAttachmentOnWeapon( weaponName, attachment ) ) )
 			return false
@@ -5597,32 +5632,13 @@ bool function CanAttachToWeapon( string attachment, string weaponName )
 	return (aData.compatibleWeapons.contains( weaponName ))
 }
 
-
 string function GetBaseWeaponRef( string weaponRef )
 {
-                                 
-                                                                   
-                                                                                            
-       
-
-                                
-		if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_CUPID ) != -1 )
-			return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_CUPID.len()) )
-       
-	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL ) != -1 )
-		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_GOLDPAINTBALL.len()) )
-	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_GOLD ) != -1 )
-		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_GOLD.len()) )
-	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_WHITESET ) != -1 )
-		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_WHITESET.len()) )
-	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_BLUESET ) != -1 )
-		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_BLUESET.len()) )
-	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_PURPLESET ) != -1 )
-		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_PURPLESET.len()) )
-	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_PURPLEPAINTBALL ) != -1 )
-		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_PURPLEPAINTBALL.len()) )
-	if ( weaponRef.find( WEAPON_LOCKEDSET_SUFFIX_BLUEPAINTBALL ) != -1 )
-		return weaponRef.slice( 0, weaponRef.len() - (WEAPON_LOCKEDSET_SUFFIX_BLUEPAINTBALL.len()) )
+	if ( SURVIVAL_Loot_IsRefValid( weaponRef ) )
+	{
+		LootData weaponData = SURVIVAL_Loot_GetLootDataByRef( weaponRef )
+		return weaponData.baseWeapon != "" ? weaponData.baseWeapon : weaponRef                                                            
+	}
 	return weaponRef
 }
 
@@ -6838,4 +6854,35 @@ void function ManageJitterVFX_Thread()
 		#endif
 		intervalB = RandomFloatRangeSeeded( seed, phaseTwo_Lower, phaseTwo_Upper )
 	}
+}
+
+bool function IsUltimateOffCooldown( entity player )
+{
+	if ( !IsValid( player ) || !player.IsPlayer() )
+		return false
+
+	entity ultWeapon = player.GetOffhandWeapon( OFFHAND_ULTIMATE )
+	bool ultReady = false
+
+	if ( IsValid( ultWeapon ) )
+	{
+		int ammoReq  = ultWeapon.GetAmmoPerShot()
+		int currAmmo = ultWeapon.GetWeaponPrimaryClipCount()
+		if ( currAmmo >= ammoReq )
+		{
+			ultReady = true
+		}
+	}
+
+	return ultReady
+}
+
+int function SortByScore( PotentialTargetData a,  PotentialTargetData b )
+{
+	if ( a.score > b.score )
+		return -1
+	else if ( a.score < b.score )
+		return 1
+
+	return 0
 }

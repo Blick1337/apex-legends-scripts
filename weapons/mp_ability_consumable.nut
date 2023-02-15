@@ -582,20 +582,18 @@ void function OnWeaponActivate_Consumable( entity weapon )
 		printt( format( "[CONSUMABlE-%s] OnWeaponActivate_Consumable: Add mod (%s)", weaponOwner.GetPlayerName(), modName ) )
 	}
 
-                    
-	    #if SERVER
-			                                                       
-		                                  
-		     
-			                                             
-			                                                                      
-			                                                                                     
+#if SERVER
+	                                                       
+	                              
+	 
+		                                         
+		                                                                  
+		                                                                                 
 
-			                                             
-				                                                                                                              
-		     
-	    #endif
-          
+		                                         
+			                                                                                                          
+	 
+#endif
 
 	ConsumablePersistentData useData
 #if CLIENT
@@ -715,6 +713,10 @@ void function OnWeaponDeactivate_Consumable( entity weapon )
 {
 	entity weaponOwner = weapon.GetOwner()
 
+	              
+	if ( !IsValid( weaponOwner ) )
+		return
+
 	ConsumablePersistentData useData
 
 	#if SERVER
@@ -767,9 +769,7 @@ void function OnWeaponDeactivate_Consumable( entity weapon )
 		                                                               
 			                                                                   
 
-                     
-		                           
-           
+	                           
 	#endif          
 
 	#if CLIENT
@@ -1716,7 +1716,6 @@ void function ServerToClient_Valentines_UltAccelChargePartner()
 
                                                                                                                           
  
-	                           
 	                         
 		      
 
@@ -1951,7 +1950,7 @@ void function ServerToClient_Valentines_UltAccelChargePartner()
 
 			                                                               
 
-			                   
+			                                                                          
 			 
 				                                                                        
 
@@ -1986,6 +1985,12 @@ void function ServerToClient_Valentines_UltAccelChargePartner()
  
 	                                                                                                                      
 	                                             
+
+                       
+            
+                                                           
+        
+       
  
 
                                                                                                  
@@ -2273,6 +2278,10 @@ int function TryUseConsumable( entity player, int consumableType )
 	{
 		if ( player.ContextAction_IsRodeo() )
 			break         
+                      
+                                                                                                                                             
+                 
+        
 
 		return eUseConsumableResult.DENY_NONE
 	}

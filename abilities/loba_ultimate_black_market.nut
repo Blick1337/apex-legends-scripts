@@ -125,9 +125,9 @@ void function LobaUltimateBlackMarket_LevelInit()
 			"int", 0, 4096                    
 		)
 
-		Remote_RegisterServerFunction( BLACK_MARKET_OPEN_CMD, "entity" )
-		Remote_RegisterServerFunction( BLACK_MARKET_CLOSE_CMD, "entity" )
-		Remote_RegisterServerFunction( "ClientCallback_TryPickupBlackMarket", "entity" )
+		Remote_RegisterServerFunction( BLACK_MARKET_OPEN_CMD, "typed_entity", "prop_loot_grabber" )
+		Remote_RegisterServerFunction( BLACK_MARKET_CLOSE_CMD, "typed_entity", "prop_loot_grabber" )
+		Remote_RegisterServerFunction( "ClientCallback_TryPickupBlackMarket", "typed_entity", "prop_loot_grabber" )
 	#endif
 
 	#if SERVER
@@ -518,23 +518,33 @@ void function PlacementProxyThread( entity weapon, entity player )
 	                                                                                 
 	 
 		                                                      
-		                                                                                                                       
+		                            
 		 
-			                                                 
+			                                                                 
+			 
+				                                                         
+				 
+					                                                 
 
-			                                           
-				                                                
-					                             
-						                     
-				   
-				                                              
-					                                      
-				                                                              
+					                                           
+						                                                
+							                             
+								                     
+						   
+						                                              
+							                                      
+						                                                              
+					    
+				 
+				                                       
+				 
+					                                            
+				 
+			 
 			    
-		 
-		                                       
-		 
-			                                            
+			 
+				                     
+			 
 		 
 	 
 
@@ -1170,7 +1180,7 @@ array<LootRef> function GetBlackMarketUseItemRefs( entity blackMarket, entity us
 
 	                                      
 
-	                                                                                                 
+	                                                                                                                    
 	                                             
 		                                             
  

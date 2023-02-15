@@ -1,5 +1,7 @@
 global function OnWeaponPrimaryAttack_care_package_medic
-
+#if SERVER
+                                                             
+#endif
                    
 	#if SERVER
 	                                                
@@ -44,7 +46,9 @@ struct
 		"incapshield",
 		"backpack",
 	]
-
+#if SERVER
+	                                                                                               
+#endif
 } file
 
 var function OnWeaponPrimaryAttack_care_package_medic( entity weapon, WeaponPrimaryAttackParams attackParams )
@@ -61,15 +65,13 @@ var function OnWeaponPrimaryAttack_care_package_medic( entity weapon, WeaponPrim
 		                                    
 		                                    
 
-		                               
-
 		                                   
                               
-                                                                         
-    
-                                                                
-    
-       
+			                                                                      
+			 
+				                                                            
+			 
+			    
         
 			 
 				                                                       
@@ -79,38 +81,11 @@ var function OnWeaponPrimaryAttack_care_package_medic( entity weapon, WeaponPrim
 		                                                                
 		                                                        
 		                                                              
-		                                    
-
-                         
-			                    
-			 
-				                                               
-				                                
-			 
-        
-                          
-			                              
-			 
-				                                                             
-				                                
-			 
-        
-                          
-			                       
-			 
-				                                                
-				                                
-			 
-        
-                        
-			                                   
-			 
-				                                                      
-				                                
-			 
-        
 
 		                               
+		                                                      
+			                                                                
+		    
 			                                                                
 
 		                                                                       
@@ -411,64 +386,13 @@ var function OnWeaponPrimaryAttack_care_package_medic( entity weapon, WeaponPrim
 	                          
 	                                                         
  
-
-                       
-                                                                     
- 
-	                        
-	                                       
-	                                              
-	                                               
-	                                                         
- 
-      
-
-                        
-                                                                                    
- 
-	                        
-	                              
-	 
-		                                                                                                                                
-		                                                                                             
-		                                                                                                                                
-		                                                                                           
-		                                                                               
-		                                                                
-		                                                                  
-		                                                                    
-	 
-	    
-	 
-		                                                   
-		                                                     
-		                                                       
-	 
-
-	                                                         
- 
-      
-
-                        
-                                                                      
- 
-	                        
-	                                    
-	                                     
-	                                      
-	                                                         
- 
-      
-
-                      
-                                                                            
- 
-	                        
-	                                             
-	                                              
-	                                               
-	                                                         
- 
-      
-
 #endif         
+
+#if SERVER
+                                                                                                                      
+ 
+	                                               
+ 
+#endif
+
+

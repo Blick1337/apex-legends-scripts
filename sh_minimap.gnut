@@ -59,9 +59,9 @@ global enum eMinimapObject_prop_script
        
 	SURVEY_BEACON,
                     
-                         
-               
-             
+	NEXT_ZONE_SURVEY_BEACON,
+	MUNITIONS_BOX,
+	SUPPORT_BIN,
        
 	CRYPTO_DRONE,
 	RAMPART_WALL,
@@ -95,8 +95,8 @@ global enum eMinimapObject_prop_script
 		CRAFTING_ZONE,
        
                         
-		CASH_STATION,
-		LOOT_BIN,
+               
+           
        
                       
 		HOVER_VEHICLE_SPAWNPOINT,
@@ -139,6 +139,10 @@ global enum eMinimapObject_prop_script
              
        
 
+                     
+              
+       
+
 	COUNT
 }
 
@@ -167,104 +171,6 @@ void function MinimapShared_Init()
 
 	RegisterMinimapMaterial( "minimap_default", $"vgui/hud/minimap_default" )
 
-	                                                                               
-	                                                                                 
-	                                                                           
-
-	                                                                                   
-	                                                                                             
-	                                                                                       
-
-	                                                                                   
-	                                                                                             
-	                                                                                       
-
-	                                                                                   
-	                                                                                             
-	                                                                                       
-
-	                                                                                             
-	                                                                                               
-	                                                                                         
-
-	                                                                                   
-	                                                                                     
-	                                                                               
-
-	                                                                                  
-	                                                                           
-	                                                                     
-
-	                                                                                        
-	                                                                                       
-	                                                                                 
-
-	                                                                                   
-	                                                                             
-	                                                                       
-
-	                                                                                    
-	                                                                               
-	                                                                         
-
-	                                                                                               
-	                                                                                             
-	                                                                                            
-
-	                                                                                               
-	                                                                                             
-	                                                                                            
-
-	                                                                                               
-	                                                                                             
-	                                                                                            
-
-	                                                                                               
-	                                                                                             
-	                                                                                            
-
-	                                                                                               
-	                                                                                             
-	                                                                                            
-
-	            
-	                     
-	                                                    
-	                                                                    
-	                                                                 
-	                                                                  
-	                                                               
-	                                                               
-	                                                                   
-	                                                                
-	                                                                
-	                                                          
-
-	                                                                           
-	                                                                        
-	                                                           
-	                                                        
-
-	                 
-	                                                         	                                                                  
-	                                                             
-	                                                                      
-	                                                                     
-	                                                                        
-	                                                                 
-	                                                                    
-	                                                                    
-	                                                               
-	                                                                  
-	                                                              
-	                                                              
-	                                                              
-	                                                              
-
-	                                
-	        
-	        
-
 	level.allowRegisterMinimapMaterials = false
 	file.allowRegisterMinimapRuis = false
 }
@@ -284,12 +190,6 @@ void function RegisterMinimapMaterial( string materialRef, asset material )
 	Assert( level.allowRegisterMinimapMaterials )
 
 	level.minimapMaterials[ materialRef ] <- material
-
-	            
-	                     
-	  	                                    
-	        
-	        
 }
 
 
@@ -308,66 +208,22 @@ void function UpdatePlayerMinimapMaterials( entity player )
 {
 	float titanscale = MINIMAP_TITAN_SCALE
 	float pilotscale = MINIMAP_PILOT_SCALE
-	                                                                    
-	                                                                     
-	                                                              
-	                                                               
-	                                                              
 
 	player.Minimap_SetClampToEdge( true )
 	player.Minimap_SetAlignUpright( false )
 	if ( player.IsTitan() )
 	{
-		                     
-		  	                                                           
-		  	                                                           
-		  	                    
-		  	                                                                
-		  	                  
-		  		                                                     
-		        
-
 		player.Minimap_SetObjectScale( titanscale )
 		player.Minimap_SetZOrder( MINIMAP_Z_PLAYER )
 	}
 	else
 	{
-		                     
-		  	                                                           
-		  	                                                           
-		  	                    
-		  	                                                                
-		  	                  
-		  		                                                                     
-		        
-
 		player.Minimap_SetObjectScale( pilotscale )
 		player.Minimap_SetZOrder( MINIMAP_Z_PLAYER )
 	}
-
-	                     
-	  	                                                                
-	        
 }
 
 #if SERVER
-                                           
- 
-	                                        
-	                                                                                                                                             
-   
-
-                                         
- 
-	                
-	                   
-
-	                                
-	                                                 
-
-	                                                                                                                     
-   
-
                                                
  
 	                    

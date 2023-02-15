@@ -5,11 +5,13 @@ string function GetGamemodeLocKey()
 	if (IsRankedGame())
 		return "#PL_Ranked_Leagues"
 
-	if (IsArenasRankedGame())
-		return "#GAMEMODE_ARENAS_RANKED"
+                       
+                          
+                                  
 
-	if (IsArenaMode())
-		return "#GAMEMODE_ARENAS"
+                   
+                           
+      
 
 	if (GetCurrentPlaylistVarBool("is_elite_game", false))
 		return "#CAN_ELITE"
@@ -98,15 +100,17 @@ PresenceState function ClientCodeCallback_GetPresenceState( string mapName )
 
 	if ( GetLocalClientPlayer() )
 	{
-		if ( IsArenaMode() )
-		{
-			int playerTeam = GetLocalClientPlayer().GetTeam()
-			state.teams_friendlyScore = Arenas_GetTeamWins( playerTeam )
-			state.teams_enemyScore = Arenas_GetTeamWins( Arenas_GetOpposingTeam( playerTeam) )
-			state.layout = "#RICHPRESENCE_PLAYING_MULTIPLAYER_SHORTPLUS"
-			state.substitutionMode = eRichPresenceSubstitutionMode.MODE_MAP_FRIENDLYSCORE_ENEMYSCORE
-			return state
-		}
+                       
+                      
+   
+                                                    
+                                                               
+                                                                                     
+                                                               
+                                                                                           
+               
+   
+      
 
                         
 		if ( Control_IsModeEnabled() )
@@ -118,7 +122,7 @@ PresenceState function ClientCodeCallback_GetPresenceState( string mapName )
 				playerAlliance = ALLIANCE_A
 
 			int enemyAlliance = AllianceProximity_GetOtherAlliance( playerAlliance )
-			int maxScore = Control_GetScoreLimit()
+			int maxScore = GetScoreLimit_FromPlaylist()
 
 			if ( maxScore > 0 )
 			{

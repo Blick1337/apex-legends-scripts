@@ -12,7 +12,7 @@ global function TrackingVisionUpdatePlayerConnected
 const TRACKING_VISION_FX = $"P_phase_shift_main"
 const TRACKING_VISION_LOOP_FX = $"P_hunt_trail_CP"
 
-const int TRACKING_VISION_HUNT_MODE_DRAW_DIST_MULT = 2
+global const int TRACKING_VISION_HUNT_MODE_DRAW_DIST_MULT = 2
 
 const float TRACKING_VISION_UPDATE_INTERVAL = 0.25
 
@@ -47,10 +47,6 @@ struct TrackingVisionDrawInfo
 	int    drawSize = -1
 	asset  icon
 	string displayText
-                                              
-                         
-                         
-      
 }
 
 struct FootstepParticleData
@@ -949,14 +945,6 @@ void function TrackingVisionCreatePOIBlueprint( entity waypoint, int poiEventID,
         
       
 
-                                              
-                                                                     
-                                                                               
-                                                                                        
-                                                                         
-        
-      
-
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_BLACK_HOLE:
 			waypoint.WaypointAddFlag( WPF_VISBILITY_LOS | WPF_VISIBILITY_SONAR | WPF_DEPLOYABLE )
 			waypoint.WaypointSetCheckDist( TRACKING_VISION_DRAW_DIST_MAX )
@@ -1573,22 +1561,6 @@ void function TrackingVision_GetDrawInfo( entity waypoint, TrackingVisionDrawInf
         
       
 
-                                              
-                                                                     
-                                                  
-                                                       
-                                                                     
-                            
-        
-                                                                               
-                                                  
-                                                       
-                                                                     
-                            
-                            
-        
-      
-
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_BLACK_HOLE:
 			drawInfo.drawSize = eTrackingPOIDrawSize.NORMAL
 			drawInfo.icon = $"rui/hud/poi_icons/poi_horizon_ult"
@@ -1744,6 +1716,7 @@ void function TrackingVision_GetDrawInfo( entity waypoint, TrackingVisionDrawInf
 			drawInfo.icon = $"rui/hud/poi_icons/poi_white_raven"
 			drawInfo.displayText = "#WPN_WRECKING_BALL_PATH"
 			break
+
 
                  
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_NEWCASTLE_ARMORED_LEAP_START:
@@ -1926,10 +1899,6 @@ int function GetPingTypeFromPOIType( entity waypoint )
 		case eTrackingVisionNetworkedPOITypes.PLAYER_ABILITY_COVER_WALL:
                
                                                                    
-      
-                                              
-                                                                     
-                                                                               
       
                
                                                                      
@@ -2155,10 +2124,6 @@ void function TrackingVision_CreateGenericTrackerMarker( entity waypoint )
 	RuiSetString( rui, "objectText", drawInfo.displayText )
 	RuiSetImage( rui, "iconImage", drawInfo.icon )
 	RuiSetInt( rui, "drawSize", drawInfo.drawSize )
-                                              
-                                                           
-                                                           
-      
 
 	int waypointID = waypoint.WaypointGetID()
 	Assert ( !( waypointID in file.trackedPOIRui ), "Rui already exists for POI with id " + waypointID )

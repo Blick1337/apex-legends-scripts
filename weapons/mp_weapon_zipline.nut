@@ -4,6 +4,7 @@
        
 
                                                        
+                                                
                     
                                                
       
@@ -14,7 +15,7 @@ global function OnWeaponPrimaryAttack_weapon_zipline
 global function OnProjectileCollision_weapon_zipline
 global function OnWeaponRaise_weapon_zipline
                     
-                                                     
+    global function OnWeaponDeactivate_weapon_zipline
       
 
 #if CLIENT
@@ -26,22 +27,32 @@ const ZIPLINE_STATION_MODEL_HORIZONTAL = $"mdl/industrial/zipline_arm.rmdl"
 const ZIPLINE_TEMP_ZIPLINE_GUN_STATION_MODEL = $"mdl/props/pathfinder_zipline/pathfinder_zipline.rmdl"
 const ZIPLINE_TEMP_ZIPLINE_GUN_STATION_WALL_MODEL = $"mdl/props/pathfinder_zipline/pathfinder_zipline.rmdl"
                     
-                                        
+    const asset TEMP_ZIPLINE_RANGE_FX = $"P_ar_zipline_range"
+    const string ZIPLINE_EXTENSION_SOUND = "pathfinder_zipline_cable_extension"
+    const string ZIPLINE_USABLE_SOUND = "pathfinder_zipline_cable_tension"
+    const vector ZIPLINE_BEGIN_STATION_TOP_ROPE_OFFSET = <0.0, 0.0, 21.3>                                                                                                                                                                                                                                                                         
      
-    const float ZIPLINE_DIST_MIN = 350.0
+                                        
+                                          
       
-const float ZIPLINE_DIST_MAX = 10000.0
 const ZIPLINE_STATION_EXPLOSION = $"p_impact_exp_small_full"
 const float ZIPLINE_REFUND_TIME = 3
 const float ZIPLINE_AUTO_DETACH_DISTANCE = 100.0
-const int ZIPLINE_MAX_IN_WORLD = 20
+const int ZIPLINE_MAX_IN_WORLD = 10
 const string ZIPLINE_START_SCRIPTNAME = "zipline_start"
+
+#if DEV
+                    
+const bool DEBUG_ZIPLINE_AUDIO_LINE = false
+      
+#endif
 
 struct
 {
     table<int, entity> activeWeaponBolts
                         
-                                             
+        array<entity>    pathfinderZiplines
+        bool             weaponAlreadyActive
           
 } file
 
@@ -52,13 +63,15 @@ void function MpWeaponZipline_Init()
     PrecacheModel( ZIPLINE_TEMP_ZIPLINE_GUN_STATION_MODEL )
     PrecacheModel( ZIPLINE_TEMP_ZIPLINE_GUN_STATION_WALL_MODEL )
     PrecacheParticleSystem( ZIPLINE_STATION_EXPLOSION )
+    PrecacheParticleSystem( TEMP_ZIPLINE_RANGE_FX )
 
     PrecacheMaterial( $"cable/zipline" )
+    PrecacheMaterial( $"cable/zipline_active" )
 
                         
-                  
-                                          
-              
+        #if CLIENT
+        RegisterSignal( "ClearZiplineUI" )
+        #endif
           
 }
 
@@ -66,6 +79,62 @@ void function MpWeaponZipline_Init()
                                                                                                              
  
 	        
+ 
+
+                                                                  
+ 
+	                                                                                                
+ 
+
+                                                               
+ 
+	                                                                  
+	                               
+		            
+
+	                                         
+	 
+		                                     
+		                                  
+	 
+	                                              
+	 
+		                                     
+		                                  
+	 
+	                                              
+	 
+		                                     
+		                                  
+	 
+	                                              
+	 
+		                                     
+		                                  
+	 
+	                                              
+	 
+		                                     
+		                                  
+	 
+	                                              
+	 
+		           
+	 
+	    
+	 
+		                                  
+	 
+
+	                                                            
+	                                                            
+	                                                                                        
+	                                          
+	                          
+		                    
+
+	                                                   
+	           
  
 #endif              
 
@@ -121,6 +190,7 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 
 	weapon.EmitWeaponNpcSound( LOUD_WEAPON_AI_SOUND_RADIUS_MP, 0.2 )
 	entity weaponOwner = weapon.GetWeaponOwner()
+	int weaponOwnerTeam = weaponOwner.GetTeam()
 
 	bool shouldCreateProjectile = false
 	if ( IsServer() || weapon.ShouldPredictProjectiles() )
@@ -139,15 +209,23 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 		fireGrenadeParams.lagCompensated = true
 		fireGrenadeParams.useScriptOnDamage = true
 		fireGrenadeParams.isZiplineGrenade = true
+                      
+		fireGrenadeParams.ziplineGrenadeRopeMaterial = "cable/zipline_active"
+       
+                                                                 
+        
 
 		entity projectile = weapon.FireWeaponGrenade( fireGrenadeParams )
 
 		#if SERVER
+                       
+			                                                        
+         
 			                                         
 			                                       
 			                                            
 			                             
-			                                               
+			                                                                
 			                                                      
 
 			                                                          
@@ -156,9 +234,9 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 			PlayerUsedOffhand( weaponOwner, weapon )
 		#endif          
                      
-            
-                                   
-        
+		#if CLIENT
+		weapon.Signal( "ClearZiplineUI" )
+		#endif
        
 	}
 
@@ -256,11 +334,14 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
 
 	                                                
                      
-                                                    
+	                                                   
+	                                                       
+	                                                          
+      
+                                             
        
 	                                   
 	                                               
-	                                           
 	                                                                         
 	                                                                                         
 	                                                                                   
@@ -302,7 +383,7 @@ var function OnWeaponPrimaryAttack_weapon_zipline( entity weapon, WeaponPrimaryA
                     
                                                                
      
-                                                       
+    	                                                  
      
       
 
@@ -357,11 +438,20 @@ void function OnProjectileCollision_weapon_zipline( entity projectile, vector po
 									                                          
 									 
 										                                                          
-										                                                                 
+                               
+                                                                               
+                
 									 
 									                               
 
 									                                         
+                             
+										                                                                                                   
+										       
+										                               
+											                                                                                            
+										      
+               
 								 
 							 
 						 
@@ -407,50 +497,53 @@ void function OnCreateClientOnlyModel_weapon_zipline( entity weapon, entity mode
 		DeployableModelInvalidHighlight( model )
 	}
                     
-                                                               
-     
+	if ( !file.weaponAlreadyActive )
+    	thread WeaponActiveVFXThread_Client( weapon )
+}
 
-                                                                                 
-     
-                                     
-                                   
-                                    
-                                         
+void function WeaponActiveVFXThread_Client( entity weapon )
+{
+	file.weaponAlreadyActive = true
+	entity owner = weapon.GetOwner()
+	owner.EndSignal( "OnDestroy" )
+	weapon.EndSignal( "OnDestroy" )
+	weapon.EndSignal( "ClearZiplineUI" )
 
-                                                                                        
-                                       
-                                                                
-                                                                
-                                                               
-                                                                                                                                          
+	var overlayRui = CreateCockpitPostFXRui( $"ui/zipline_placement.rpak", HUD_Z_BASE )
+	RuiSetVisible( overlayRui, false )
+	RuiSetBool( overlayRui, "useWeaponCycleToCancel", GetKeyCodeForBinding( "weaponCycle", IsControllerModeActive().tointeger() ) != -1 )
 
-                 
-                                         
+	int fxId = GetParticleSystemIndex( TEMP_ZIPLINE_RANGE_FX )
+	int pulseVFX  = StartParticleEffectOnEntity( owner, fxId, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
+                     
+	    float ziplineRange = GetWeaponInfoFileKeyField_GlobalFloat(weapon.GetWeaponClassName(), "zipline_distance_max")
+	    EffectSetControlPointVector( pulseVFX, 1, <ziplineRange, 0, 0> )
+      
+                                                                         
        
-                              
 
-                                      
-       
-      
+	OnThreadEnd(
+		function() : ( weapon, overlayRui, pulseVFX )
+		{
+			if( IsValid( weapon ) )
+				RuiDestroyIfAlive( overlayRui )
+			if ( EffectDoesExist( pulseVFX ) )
+				EffectStop( pulseVFX, false, true )
+			file.weaponAlreadyActive = false
+		}
+	)
 
-                  
-      
-                                       
-
-                                                                                                                                                                                            
-                                                                       
-
-                                                                                                                           
-                                                       
-
-                 
-      
+	while( true )
+	{
+		RuiSetVisible( overlayRui, true )
+		WaitFrame()
+	}
       
 }
 #endif
 
 #if SERVER
-                                                                 
+                                                                                      
  
 	                                                               
 
@@ -492,13 +585,20 @@ void function OnCreateClientOnlyModel_weapon_zipline( entity weapon, entity mode
 	                                                     
 	                                                                                                                    
 	                                                               
-	                                                              
+                      
+                                                                   
+       
 	                                                                              
 	                                                                                     
 
 	                                   
 	                                         
 	                                                                                                                                                                
+
+
+                     
+	                                                                                 
+       
  
 
                                                                                                                      
@@ -528,10 +628,10 @@ void function OnWeaponRaise_weapon_zipline( entity weapon )
 }
 
                     
-                                                                    
-     
-               
-                                      
-           
-     
+    void function OnWeaponDeactivate_weapon_zipline( entity weapon )
+    {
+    	#if CLIENT
+    	weapon.Signal( "ClearZiplineUI" )
+    	#endif
+    }
       

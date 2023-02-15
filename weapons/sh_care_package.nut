@@ -126,6 +126,12 @@ CarePackagePlacementInfo function GetCarePackagePlacementInfo( entity player )
 	const MAX_UP_ANGLE = -20
 	const MAX_DOWN_ANGLE = 75
 	const VELOCITY_MULTIPLIER = 800
+                             
+		const MAX_UP_ANGLE_FAST = -10
+		const MAX_DOWN_ANGLE_FAST = 70
+		const VELOCITY_MULTIPLIER_FAST = 1600
+		const TRACE_TIME_FAST = 1.6
+       
 	const TRACE_TIME = 1.25
 	const MIN_DIST_SQR = 72 * 72
 	const PARENT_VELOCITY = <0, 0, 0>
@@ -140,15 +146,32 @@ CarePackagePlacementInfo function GetCarePackagePlacementInfo( entity player )
 	vector placementAngles = ClampAngles( VectorToAngles( flatForward ) + <0, 180, 0> )
 
 	vector eyeAngles = player.EyeAngles()
-	float pitch = GraphCapped( eyeAngles.x, MAX_UP_ANGLE, MAX_DOWN_ANGLE, 0, 1 )
-	pitch = PlacementEasing( pitch )
 
-	float clampedPitch = GraphCapped( pitch, 0, 1, MAX_UP_ANGLE, MAX_DOWN_ANGLE )
-	vector clampedEyeAngles = < clampedPitch, eyeAngles.y, eyeAngles.z >
+	GravityLandData landData
+                             
+		if ( GetCurrentPlaylistVarBool( "lifeline_res_slow_disabled", true ) )
+		{
+			float pitch = GraphCapped( eyeAngles.x, MAX_UP_ANGLE_FAST, MAX_DOWN_ANGLE_FAST, 0, 1 )
+			pitch = PlacementEasing( pitch )
 
-	vector objectVelocity = AnglesToForward( clampedEyeAngles ) * VELOCITY_MULTIPLIER
-	GravityLandData landData = GetGravityLandData( startPos, PARENT_VELOCITY, objectVelocity, TRACE_TIME, false )
+			float clampedPitch = GraphCapped( pitch, 0, 1, MAX_UP_ANGLE_FAST, MAX_DOWN_ANGLE_FAST )
+			vector clampedEyeAngles = < clampedPitch, eyeAngles.y, eyeAngles.z >
+			vector objectVelocity = AnglesToForward( clampedEyeAngles ) * VELOCITY_MULTIPLIER_FAST
 
+			landData = GetGravityLandData( startPos, PARENT_VELOCITY, objectVelocity, TRACE_TIME_FAST, false )
+		}
+		else
+       
+		{
+			float pitch = GraphCapped( eyeAngles.x, MAX_UP_ANGLE, MAX_DOWN_ANGLE, 0, 1 )
+			pitch = PlacementEasing( pitch )
+
+			float clampedPitch = GraphCapped( pitch, 0, 1, MAX_UP_ANGLE, MAX_DOWN_ANGLE )
+			vector clampedEyeAngles = < clampedPitch, eyeAngles.y, eyeAngles.z >
+			vector objectVelocity = AnglesToForward( clampedEyeAngles ) * VELOCITY_MULTIPLIER
+
+			landData = GetGravityLandData( startPos, PARENT_VELOCITY, objectVelocity, TRACE_TIME, false )
+		}
 	TraceResults traceResults = landData.traceResults
 
 	vector origin = traceResults.endPos

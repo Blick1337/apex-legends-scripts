@@ -19,10 +19,12 @@ global function ServerCallback_FreeDMScoreEvent
                              
 
                          
-                       
-                                     
-                                                                                 
-                                                      
+int bulletColorSeed = 0
+bool showTrainingHitIndicators = false                                                                                                    
+const asset TARGET_SPINNING_MODEL = $"mdl/barriers/shooting_range_target_02.rmdl"
+global function UICallback_ToggleTrainingHitIndicators
+global function SCB_ShowHitMarks_Set_ByNetvar
+global function ShouldShowTrainingHitIndicators
       
 
 const bool RUI_ENABLED = true
@@ -312,11 +314,11 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 			shieldLevel = shieldData.tier                                             
 		}
                            
-                                                          
-   
-                                 
-                                      
-   
+		else if ( victim.IsNPC() && IsTrainingDummie( victim ) )
+		{
+			shieldIcon = DUMMY_SHIELD_ICON
+			shieldLevel = victim.GetGrade() + 1
+		}
         
 	}
 
@@ -445,29 +447,6 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 		RuiSetBool( hitDotRui, "isCrit", isHeadShot || isCritShot )
 	}
 
-	                  
-                          
-                                                                                                                    
-
-  
-                                                                                                           
-                                           
-                                                  
-                                                  
-                                                    
-                                                             
-
-                                                                                       
-   
-                                                                 
-   
-
-                   
-                       
-                                                            
-                                                      
-  
-       
 
 	const float FDT_DURATION = 1.0
 	const float FDT_STACK_THRESHOLD = 0.25
@@ -603,31 +582,14 @@ void function DamageFlyout( float damageAmount, vector damagePosition, entity vi
 	flyoutData.lastDamageFlyoutDamage = int( flyoutData.lastDamageFlyoutDamage + damageAmount )
 }
 
-                         
-                                                                            
- 
-                                            
-                                               
-
-                                                                                                                       
-                               
-                           
-  
-                                                                              
-                                                         
-             
-  
- 
-      
-
 bool function ShouldShowProjectileHitDot( int damageType, entity weapon )
 {
 	if ( !IsValid( weapon ) )
 		return false
 
                           
-                                         
-              
+	if ( ShouldShowTrainingHitIndicators() )
+		return false
        
 
 	#if DEV
@@ -640,19 +602,19 @@ bool function ShouldShowProjectileHitDot( int damageType, entity weapon )
 }
 
                          
-                                                
- 
-                              
-              
+bool function ShouldShowTrainingHitIndicators ()
+{
+	if (!IsFiringRangeGameMode())
+		return false
 
-                                
-              
+	if (!showTrainingHitIndicators)
+		return false
 
-                                     
-              
+	if (!FiringRangeHasHitIndictators())
+		return false
 
-            
- 
+	return true
+}
       
 
 int function GetArmorLevelFromDamageFlags( int damageFlags )
@@ -811,7 +773,7 @@ void function ServerCallback_ControlScoreEvent( int scoreEventId, bool isExpEven
 	}
 	else
 	{
-		vector friendlyObjectiveCol = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
+		vector friendlyObjectiveCol = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED )
 		Obituary_Print_Localized( messageText,friendlyObjectiveCol, friendlyObjectiveCol )
 	}
 }
@@ -835,11 +797,14 @@ void function ServerCallback_FreeDMScoreEvent( int scoreEventId )
       
 
                          
-                                                       
- 
-                                                       
+void function UICallback_ToggleTrainingHitIndicators ()
+{
+	showTrainingHitIndicators = !( FRS_NetVar_Get_Bool( GetLocalViewPlayer(), eFRSettingType.SHOWHITMARKS ) )
+	Remote_ServerCallFunction( "UCB_SV_FRSetting_HitMarks_Toggle" )
+}
 
-                                                                       
-                                       
- 
+void function SCB_ShowHitMarks_Set_ByNetvar()
+{
+	showTrainingHitIndicators = FRS_NetVar_Get_Bool( GetLocalViewPlayer(), eFRSettingType.SHOWHITMARKS )
+}
       

@@ -226,7 +226,8 @@ entity function ReleaseDrone( entity weapon, WeaponPrimaryAttackParams attackPar
 
 	if ( deployable )
 	{
-		deployable.SetAngles( <0, angles.y - 180, 0> )
+		float yAngle = Clamp( angles.y - 180, -360.0, 360.0 )
+		deployable.SetAngles( <0, yAngle, 0> )
 		#if SERVER
 			                        
 				                                                              
@@ -1554,10 +1555,13 @@ void function DeployableMedic_HealVisualsEnabled( entity ent, int statusEffect, 
 	Assert( !EffectDoesExist( file.healFxHandle ), "tried to start a second screen fx" )
 
 	int fxID = GetParticleSystemIndex( FX_DRONE_MEDIC_HEAL_COCKPIT_FX )
-	file.healFxHandle = StartParticleEffectOnEntity( cockpit, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
-	EffectSetIsWithCockpit( file.healFxHandle, true )
+	int healFxHandle = StartParticleEffectOnEntity( cockpit, fxID, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID )
+	EffectSetIsWithCockpit( healFxHandle, true )
+	file.healFxHandle = healFxHandle
 
 	Chroma_StartHealingDroneEffect()
+
+	thread DeployableMedic_HealVisualsThread( player, healFxHandle, statusEffect )
 }
 
 void function DeployableMedic_HealVisualsDisabled( entity ent, int statusEffect, bool actuallyChanged )
@@ -1574,6 +1578,25 @@ void function DeployableMedic_HealVisualsDisabled( entity ent, int statusEffect,
 	EffectStop( file.healFxHandle, false, true )
 
 	Chroma_EndHealingDroneEffect()
+}
+
+void function DeployableMedic_HealVisualsThread( entity viewPlayer, int fxHandle, int statusEffect )
+{
+	EndSignal( viewPlayer, "OnDeath" )
+
+	OnThreadEnd(
+		function() : ( viewPlayer, fxHandle )
+		{
+			if ( EffectDoesExist( fxHandle ) )
+				EffectStop( fxHandle, false, true )
+
+			if ( file.healFxHandle != -1 )
+				file.healFxHandle = -1
+		}
+	)
+
+	while ( StatusEffect_HasSeverity( viewPlayer, statusEffect ) )
+		WaitFrame()
 }
 
 bool function CanDeployHealDrone( entity player )

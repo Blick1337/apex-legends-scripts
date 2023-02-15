@@ -19,16 +19,16 @@ global function GeneratePlayersInViewInfo
 #endif         
 global const float HEARTBEAT_SENSOR_NATURAL_RANGE = 75 / INCHES_TO_METERS            
                                
-                                                                  
-                                                           
-                                                                                                                                                                                                                                                                                                                              
-                                                                                                                                                      
-                                                                                          
-     
+global const float HEARTBEAT_SENSOR_INITIAL_ACTIVATION_DELAY_DEFAULT = 0.4
 global const float HEARTBEAT_SENSOR_PING_INTERVAL_MIN = 0.4
-global const float HEARTBEAT_SENSOR_PING_INTERVAL_MAX = 1.75
-const float HEARTBEAT_SENSOR_STARTUP_TARGET_DELAY_MIN = HEARTBEAT_SENSOR_PING_INTERVAL_MIN                                                                                           
+global const float HEARTBEAT_SENSOR_PING_INTERVAL_MAX = 1.65                                                                                                                                                                                                                                                                  
+const float HEARTBEAT_SENSOR_STARTUP_TARGET_DELAY_MIN = 1.0                                                                                           
 const float HEARTBEAT_SENSOR_STARTUP_TARGET_DELAY_MAX = HEARTBEAT_SENSOR_PING_INTERVAL_MAX
+     
+                                                           
+                                                            
+                                                                                                                                                                                     
+                                                                                          
                                     
 
 const float TICK_RATE = 0.01
@@ -71,6 +71,9 @@ const bool HEARTBEAT_SENSOR_DEBUG = false
 const bool HEARTBEAT_SENSOR_DEBUG_VERBOSE = false
 const bool HEARTBEAT_SENSOR_WEAPON_MODS_DEBUG = false
 const bool HEARTBEAT_SENSOR_STAT_TRACKING_DEBUG = false
+                               
+const bool DEBUG_HEARTBEAT_SENSOR_DELAY = false
+      
                                    
 const bool HEARTBEAT_SENSOR_COMMS_DEBUG = false
                                         
@@ -252,7 +255,9 @@ void function PlayerZoomInCallback( entity player )
 			thread TurretHeartbeatSensor_Thread( player )
 		}
 	}
-	#endif         
+	#elseif SERVER
+	                                       
+	#endif
 }
 
 #if CLIENT
@@ -319,7 +324,9 @@ void function PlayerZoomOutCallback( entity player )
 	{
 		player.Signal("EndHeartbeatSensorUI")
 	}
-	#endif         
+	#elseif SERVER
+	                                          
+	#endif
 }
 
 void function OnWeaponActivate_ability_heartbeat_sensor( entity weapon )
@@ -333,30 +340,52 @@ void function OnWeaponActivate_ability_heartbeat_sensor( entity weapon )
 		return
 
                                 
-                                                              
+	thread DelayedActivateHeartbeatSensor_Thread( player, false )
       
-	ActivateHeartbeatSensor( player, false )
+                                         
        
 }
                                
-                                                                                  
- 
-                               
-                                 
-                                                 
+void function DelayedActivateHeartbeatSensor_Thread( entity player, bool fromTac )
+{
+	EndSignal( player, "OnDeath" )
+	EndSignal( player, "OnDestroy" )
+	EndSignal( player, "DeactivateHeartbeatSensor" )
 
-                                                                     
-                            
-  
-                        
-         
-                                        
-         
-             
-  
+	float delayTime = Time() + HEARTBEAT_SENSOR_INITIAL_ACTIVATION_DELAY_DEFAULT
 
-                                           
- 
+	entity viewWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
+	if ( IsValid( viewWeapon ) && !DoesWeaponTriggerMeleeAttack( viewWeapon ) )
+	{
+		float raiseTime = viewWeapon.GetWeaponSettingFloat( eWeaponVar.raise_time )
+		if ( raiseTime > 0.0 )
+		{
+			#if DEV
+				if ( DEBUG_HEARTBEAT_SENSOR_DELAY )
+					printt( FUNC_NAME() + "Setting delay to: " + ( raiseTime * 0.5 ) )
+			#endif
+			delayTime = Time() + ( raiseTime * 0.5 )
+		}
+	}
+	#if DEV
+	else
+	{
+		if ( DEBUG_HEARTBEAT_SENSOR_DELAY )
+			printt( FUNC_NAME() + "Setting delay to: " + HEARTBEAT_SENSOR_INITIAL_ACTIVATION_DELAY_DEFAULT )
+	}
+	#endif
+
+	while( Time() < delayTime )
+	{
+		if( !IsValid(player) )
+			return
+		if ( !PlayerIsInADS( player, false ) )
+			return
+		WaitFrame()
+	}
+
+	ActivateHeartbeatSensor( player, fromTac )
+}
       
 
 void function OnWeaponDeactivate_ability_heartbeat_sensor( entity weapon )
@@ -594,7 +623,7 @@ void function InitializeHeartbeatSensorUI( entity player )
 		file.heartbeatSensorRui = CreateCockpitRui( $"ui/heartbeat_sensor_waveform_radial.rpak" )
 		RuiSetGameTime( file.heartbeatSensorRui, "startTime", Time() )
                                  
-                                                              
+		RuiSetBool( file.heartbeatSensorRui, "alternateMode", true )
         
 		entity activeWeapon = player.GetActiveWeapon( eActiveInventorySlot.mainHand )
 		thread CL_HeartSeekerRUIThread( player, activeWeapon )
@@ -618,8 +647,6 @@ void function ActivateHeartbeatSensor( entity player, bool fromTac )
 
 			                                                       
 		 
-
-		                                       
 	#endif         
 	#if CLIENT
 		entity localViewPlayer = GetLocalViewPlayer()
@@ -946,9 +973,6 @@ void function DeactivateHeartbeatSensor( entity player, bool fromTac )
 {
 	player.Signal("DeactivateHeartbeatSensor")
 
-	#if SERVER
-		                                          
-	#endif         
 	#if CLIENT
 		if ( player == GetLocalViewPlayer() )
 		{
@@ -1113,7 +1137,7 @@ void function ManageVictims_Thread( entity player )
          
 
                    
-				if ( IsValid( victimInfo.player ) && FerroWall_BlockScan( player.GetOrigin(), victimInfo.player.GetOrigin() ) )
+				if ( IsValid( victimInfo.player ) && FerroWall_BlockScan( player.EyePosition(), victimInfo.player.GetWorldSpaceCenter() ) )
 					continue
          
 
@@ -1507,7 +1531,6 @@ void function CL_HeartSeekerRUIThread( entity player, entity weapon )
 	                                                                                                             
 	weaponFireDelay += 0.3
 
-	                                                      
 	RuiSetFloat( file.heartbeatSensorRui, "weaponFireDelay", weaponFireDelay )
 	RuiSetFloat( file.heartbeatSensorRui, "offset", offset )
 	RuiSetFloat( file.heartbeatSensorRui, "heartbeatSensorNaturalRange", file.heartbeatSensorRange )

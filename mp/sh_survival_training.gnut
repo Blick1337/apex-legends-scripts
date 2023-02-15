@@ -35,7 +35,6 @@ global function ServerCallback_SetCommsDialogueEnabled
 
 const string RESPAWN_CHAMBER_TARGET_NAME = "TrainingRespawnChamber"
 global const string DEATH_BOX_TARGETNAME_TRAINING = "player_death_box_training"
-global const string FIRINGRANGE_PLAYLIST_NAME = "survival_firingrange"
 
 const string SURVIVAL_TRAINING_MOVER_SCRIPTNAME = "survival_training_mover"
 
@@ -560,7 +559,7 @@ void function TrainingEndTimeChanged( entity player, float new )
 			RuiSetGameTime( rui, "quitTime", Time() )
 			RuiSetBool( rui, "countUp", true )
 			                                  
-			StartMatchmakingStandard( FIRINGRANGE_PLAYLIST_NAME )
+			StartMatchmakingStandard( PLAYLIST_FIRING_RANGE )
 		}
 		else if ( !Training_IsFTUEEnabled() )
 		{

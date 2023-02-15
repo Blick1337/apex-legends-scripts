@@ -233,7 +233,7 @@ void function ChatMenuButton_Down( entity player )
 		if ( ms < ePlayerMatchState.SKYDIVE_PRELAUNCH )
 			return
 	}
-	else if ( FiringRange_IsPlayerInFinale() )
+	else if ( IsEventFinale() )
 	{
 		return
 	}
@@ -338,7 +338,6 @@ void function CommsMenu_OpenMenuForPingReply( entity player, entity wp )
 
 void function CommsMenu_OpenMenuTo( entity player, int chatPage, int commsMenuStyle, bool debounce = true )
 {
-	printf("CRAFTING TEST TEST TEST")
 	                             
 	CommsMenu_Shutdown( true )
 
@@ -647,29 +646,35 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 
 		case eChatPage.BLEEDING_OUT:
 		{
-			results.append( MakeOption_CommsAction( eCommsAction.QUICKCHAT_BLEEDOUT_HELP ) )
-                                
-				results.append( MakeOption_Ping( ePingType.I_GO ) )
-         
-			results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )
-			                                                                                      
                                
-                                  
+                                                                               
      
+                                                                                     
+                                                                 
                                                                         
                                                                   
                                                                
      
-                                                                                         
+                                                                                    
+     
+                                                            
+                                                                        
+                                                                  
+                                                                                     
+                                                                 
+     
+        
+				results.append( MakeOption_CommsAction( eCommsAction.QUICKCHAT_BLEEDOUT_HELP ) )
+				results.append( MakeOption_Ping( ePingType.I_GO ) )
+				results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )
          
-
 		}
 			break
 
 		case eChatPage.PING_MAIN_1:
 		{
                                
-                                                                             
+                                                                               
      
                                                              
                                                                       
@@ -680,7 +685,7 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
                                                                     
                                                                    
      
-                                                                                                                                                                                                               
+                                                                                                                                                                                                                 
      
                                                                  
                                                                   
@@ -691,7 +696,7 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
                                                                   
                                                                     
      
-                                                                                                                                                                                                               
+                                                                                                                                                                                                                 
      
                                                                  
                                                                   
@@ -702,7 +707,18 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
                                                                   
                                                                     
      
-                                                                                                                                                                                                     
+                                                                                                                                                                                                                 
+     
+                                                                
+                                                                    
+                                                                 
+                                                                 
+                                                                  
+                                                                  
+                                                                  
+                                                                    
+     
+                                                                                                                                                                                                       
      
                                                              
                                                                      
@@ -728,14 +744,24 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 
 		case eChatPage.PING_SKYDIVE:
 		{
-			results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )
-			results.append( MakeOption_Ping( ePingType.I_GO ) )
                                
-                                  
+                                                                               
      
+                                                                 
+                                                        
                                                               
                                                             
      
+                                                                                    
+     
+                                                            
+                                                              
+                                                        
+                                                                 
+     
+        
+				results.append( MakeOption_Ping( ePingType.ENEMY_GENERAL ) )
+				results.append( MakeOption_Ping( ePingType.I_GO ) )
          
 		}
 			break
@@ -828,22 +854,14 @@ array<CommsMenuOptionData> function BuildMenuOptions( int chatPage )
 				for ( int i = 0; i < data.numSlots; i++ )
 				{
                         
-                                    
-      
-                                                                                                                 
-       
-                                                        
-       
-      
-                                               
-      
-                                                                                                                                                         
-                                                             
-       
-                                                        
-       
-      
-         
+					if( data.category == "banner" )
+					{
+						if ( Perk_CanBuyExpiredBanners( player ) || Perks_DoesPlayerHavePerk( player, ePerkIndex.BANNER_CRAFTING ) )
+						{
+							results.append( MakeOption_CraftItem( counter ) )
+						}
+					}
+					else
            
 					results.append( MakeOption_CraftItem( counter ) )
 					counter++
@@ -999,16 +1017,16 @@ string[2] function GetPromptsForMenuOption( int index )
 					}
 				}
                        
-                                                  
-     
-                               
-                                                            
-     
-                                                                 
-     
-                                            
-                                                                                                          
-     
+				else if ( validItems[0] == "expired_banners" )
+				{
+					promptTexts[0] = Localize( "#BANNER" )
+					promptTexts[1] = Localize( "#REPLICATER_CRAFT_BANNER_DESCRIPTION" )
+				}
+				else if( validItems[0] == "next_care_package_drop_location" )
+				{
+					promptTexts[0] = "Future Care Packages"
+					promptTexts[1] = "Reveals the drop locations of the next available round of care packages on the map"
+				}
           
 				else
 				{
@@ -1069,7 +1087,7 @@ LootData function GetLootdataForMenuOption( int index )
 			if ( validItems[0] != "evo_points" )
 			{
                    
-                                                                                                    
+				if ( validItems[0] != "expired_banners" &&  validItems[0] != "next_care_package_drop_location" )
        
 				 {
 
@@ -1562,8 +1580,6 @@ void function ShowCommsMenu( int chatPage )
 
 	for ( int idx = 0; idx < MAX_COMMS_MENU_OPTIONS; ++idx )
 	{
-
-		                               
 		RuiDestroyNestedIfAlive( rui, "iconHandle" + idx )
 
 		if ( idx >= s_currentMenuOptions.len() )
@@ -1741,7 +1757,7 @@ bool function CommsMenu_HandleKeyInput( int key )
 {
 	Assert( IsCommsMenuActive() )
 
-	if ( IsSpectating() )
+	if ( GetLocalClientPlayer() != GetLocalViewPlayer() )
 		return false
 
 	if ( PingSecondPageIsEnabled() )
@@ -2104,7 +2120,7 @@ void function SetCurrentChoice( int choice )
 					if ( exceptionIndex < attachmentTagData.exceptionToTheRuleForThisWeaponClass.len() - 1 && tagIndex < MAX_ATTACHMENT_TAGS - 1 )
 						exceptionName += ","
 
-					                                                                                                                                                         
+					                                                                                                                                                   
 					                                                                                                                                                              
 					                      
 					  	            
@@ -2169,7 +2185,7 @@ bool function CommsMenu_HandleMoveInputControllerOnly( float x, float y )
 
 bool function CommsMenu_HandleViewInput( float x, float y )
 {
-	if ( IsSpectating() )
+	if ( GetLocalClientPlayer() != GetLocalViewPlayer() )
 		return false
 
 	                                              
@@ -2634,7 +2650,7 @@ bool function IsCommsMenuActive()
 bool function CommsMenu_CanUseMenu( entity player, int menuType = eChatPage.DEFAULT)
 {
                  
-	if ( menuType == eChatPage.CRAFTING && IsSpectating() )
+	if ( menuType == eChatPage.CRAFTING && GetLocalClientPlayer() != GetLocalViewPlayer() )
 	{
 		                      
 	}
@@ -2678,7 +2694,7 @@ bool function CommsMenu_CanUseMenu( entity player, int menuType = eChatPage.DEFA
 	if ( IsPlayerInCryptoDroneCameraView( player ) )
 		return false
 
-	if ( FiringRange_IsPlayerInFinale() )
+	if ( IsEventFinale() )
 		return false
 
 	return true

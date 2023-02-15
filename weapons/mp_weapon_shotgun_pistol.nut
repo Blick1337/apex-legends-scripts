@@ -46,6 +46,16 @@ int function Fire_ShotgunPistol( entity weapon, WeaponPrimaryAttackParams attack
 
 	float speedScale  = 1.0
 	bool ignoreSpread = true
+
+                                 
+                                                                                                                                                    
+   
+                     
+                     
+                       
+   
+       
+
 	weapon.FireWeapon_Default( attackParams.pos, attackParams.dir, speedScale, patternScale, ignoreSpread )
 
 	return weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )

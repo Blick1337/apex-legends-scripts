@@ -21,6 +21,7 @@ global const int ANNOUNCEMENT_STYLE_GOT_TREASURE_PACK = 11
 global const int ANNOUNCEMENT_STYLE_GENERIC_WARNING = 12
 global const int ANNOUNCEMENT_STYLE_ROUND_WON = 13
 global const int ANNOUNCEMENT_STYLE_RATING_LEADER = 14
+global const int ANNOUNCEMENT_STYLE_TDM_ROUND_WON = 15
 
 const float ANNOUNCEMENT_DURATION =  16.0
 const ASSET_ANNOUNCEMENT_ICON = $"rui/hud/gametype_icons/ltm/ltm_logo"
@@ -256,12 +257,15 @@ void function Announcement_SetUseColorOnSubtext( AnnouncementData announcement, 
 }
 
 
-void function AnnouncementMessage( entity player, string messageText, string subText = "", vector titleColor = <1, 1, 1> )
+void function AnnouncementMessage( entity player, string messageText, string subText = "", vector titleColor = <1, 1, 1>, int annoucementStyle = -1 )
 {
 	if ( player != GetLocalClientPlayer() )
 		return
 
 	AnnouncementData announcement = CreateAnnouncementMessage( player, messageText, subText, titleColor )
+
+	if(annoucementStyle != -1)
+		Announcement_SetStyle( announcement, annoucementStyle )
 
 	if ( InitializeAnnouncement_ShouldDisplayNow( announcement, messageText, subText, titleColor ) )
 	{
@@ -635,6 +639,15 @@ void function AnnouncementMessage_DisplayOnHud( AnnouncementData announcement )
 			RuiSetFloat( rui, "startTime", Time() )
 			RuiSetString( rui, "messageText", Localize( announcement.messageText ) )
 			RuiSetString( rui, "subText", Localize( announcement.subText ) )
+
+			EmitSoundOnEntity( player, announcement.soundAlias )
+			break
+		case ANNOUNCEMENT_STYLE_TDM_ROUND_WON:
+			customAnnouncement = true
+			rui = RuiCreate( $"ui/tdm_roundwon_noti.rpak", clGlobal.topoFullScreen, RUI_DRAW_POSTEFFECTS, 0 )
+
+			RuiSetFloat( rui, "startTime", Time() )
+			RuiSetString( rui, "messageText", Localize( announcement.messageText ) )
 
 			EmitSoundOnEntity( player, announcement.soundAlias )
 			break

@@ -14,8 +14,10 @@ const string STORE_BACKGROUND_ENT_NAME = "store_inspect_bg_target"
 const asset STORE_BACKGROUND_SMOKE_MODEL = $"mdl/levels_terrain/mp_lobby/mp_lobby_bundle_store_smoke.rmdl"
 const asset STORE_BACKGROUND_GEO_MODEL = $"mdl/levels_terrain/mp_lobby/mp_lobby_bundle_store_bg.rmdl"
 
-const asset ARENAS_BACKGROUND_SMOKE_MODEL = $"mdl/levels_terrain/mp_lobby/mp_character_select_smoke.rmdl"
-const asset ARENAS_BACKGROUND_GEO_MODEL = $"mdl/levels_terrain/mp_lobby/mp_character_select_geo.rmdl"
+                       
+                                                                                                         
+                                                                                                     
+      
 #endif                    
 
 #if CLIENT
@@ -35,8 +37,10 @@ const asset SHADOW_TRAIL_FX = $"P_Bshadow_body"
 const asset SHADOW_EYE_FX = $"P_BShadow_eye"
       
 
-const asset ARENAS_ROOM_SPARKS = $"P_menu_arena_BG_embers_fall"
-const vector ARENAS_ROOM_SPARKS_COLOR = <255, 124, 60>
+                       
+                                                               
+                                                      
+      
 
 const array<asset> STORE_BACKGROUND_FX_TIERS =
 [
@@ -221,25 +225,25 @@ struct
 
 		entity storeBackgroundModelGeo
 		entity storeBackgroundModelSmoke
-		entity arenasBackgroundModelGeo
-		entity arenasBackgroundModelSmoke
+                        
+                                 
+                                   
+                                         
+       
+
 		string storePlayingAudioAlias
 		int    storeBackgroundFXHandle = -1
-
-		int arenasRankedBackgroundFXHandle = -1
 
 		MenuModelData playCharacter
 		MenuModelData customizeCharacter
 		MenuModelData customizeWeapon
 		MenuModelData questGoalModelData
 		MenuModelData storeInspectModelData
-                
 		MenuModelData appliedStickerModelData
 		MenuModelData flatStickerModelData
 
 		int currentStickerObjectType = -1
 		int currentStickerInstance = -1
-                      
 
 		int baseFXHandle = -1
 
@@ -323,10 +327,8 @@ global function UIToClient_PreviewCharacterSkin
 global function UIToClient_PreviewCharacterSkinFromCharacterSkinPanel
 global function UIToClient_PreviewWeaponSkin
 global function UIToClient_PreviewStoreItem
-                
 global function UIToClient_PreviewFlatSticker
 global function UIToClient_PreviewAppliedSticker
-                      
 global function UIToClient_ResetWeaponRotation
 global function UIToClient_PartyMemberGetFocus
 global function UIToClient_PartyMemberLoseFocus
@@ -411,8 +413,10 @@ void function ShMenuModels_UIInit()
 	                                                                                                                           
 	                                             
 	                                           
-	                                              
-	                                            
+                        
+                                               
+                                             
+       
  
 #endif
 
@@ -434,7 +438,9 @@ void function ClMenuModels_Init()
 	  	                                          
 	        
 
-	PrecacheParticleSystem( ARENAS_ROOM_SPARKS )
+                        
+                                             
+       
 
 	RegisterSignal( "ChangedTeam" )
 	RegisterSignal( "EndSetPresentationType" )
@@ -445,7 +451,9 @@ void function ClMenuModels_Init()
 	RegisterSignal( "EndGunCharmScaleLerp" )
 	RegisterSignal( "EndCameraZoom" )
 	RegisterSignal( "EndCameraLockZoom" )
-	RegisterSignal( "EndArenasRankedBackgroundFX" )
+                       
+                                                
+      
 	RegisterSignal( "EndPendingItemInspectThreads" )
 	RegisterSignal( "StopShowingModelInfo" )
 
@@ -967,14 +975,15 @@ void function InitPresentationData()
 		pd.startFunc = StartPresentation_CLUBS_DISCOVERY
 	}
 
-	{
-		PresentationDef pd = file.presentationData[ePresentationType.ARENAS_RANKED]
-		pd.modelData = null
-		pd.startFunc = StartArenasRankedBackground
-		pd.endFunc = EndArenasRankedBackground
-	}
+                        
+  
+                                                                             
+                     
+                                            
+                                        
+  
+       
 
-                
 	{
 		PresentationDef pd = file.presentationData[ePresentationType.APPLIED_STICKER_INJECTOR]
 		pd.modelData = file.appliedStickerModelData
@@ -1002,7 +1011,6 @@ void function InitPresentationData()
 		pd.startFunc = StartPresentation_FLAT_STICKER
 		pd.endFunc = EndPresentation_FLAT_STICKER
 	}
-                      
 
 	Menu_InitPresentationDataFromCameraSettings()
 }
@@ -1241,6 +1249,15 @@ void function StartPresentation_WEAPON_CHARMS()
 
 void function EndPresentation_WEAPON_CHARMS()
 {
+	                                                                           
+	                                                                                                                                
+	                                                                                                                          
+	                                                                                          
+	if( file.currentPresentationType == file.desiredPresentationType )
+	{
+		return;
+	}
+	
 	entity weaponModel = ModelData_GetModel( file.customizeWeapon )
 	entity weaponMover = ModelData_GetMover( file.customizeWeapon )
 	entity charm       = GetCharmForWeaponEntity( weaponModel )
@@ -1252,27 +1269,33 @@ void function EndPresentation_WEAPON_CHARMS()
 
 	if ( ( file.desiredPresentationType != ePresentationType.WEAPON_SKIN  ) )
 	{
-		                                          
-		int cameraTargetIndex    = eCameraTargetNames.customize_weapon_camera_target
+		int cameraTargetIndex = eCameraTargetNames.customize_weapon_camera_target
+
 		entity cameraTarget      = file.cameraTargets[ cameraTargetIndex ]
 		vector cameraStartOrigin = file.cameraStartOriginsAngles[ cameraTargetIndex ]["origin"]
+		vector cameraStartAngles = file.cameraStartOriginsAngles[ cameraTargetIndex ]["angles"]
 
 		                                                                                                                  
 		string attachmentName = "MENU_ROTATE"
 		int attachID          = weaponModel.LookupAttachment( attachmentName )
 		vector attachOrigin   = weaponModel.GetAttachmentOrigin( attachID )
+
 		weaponModel.ClearParent()
-		weaponMover.SetOrigin( attachOrigin )
+		weaponMover.SetOrigin( ModelData_GetBaseOrigin( file.customizeWeapon ) )
 		weaponModel.SetParent( weaponMover )
 
 		                                                                                              
+		file.cameraZoomData.lastVal = 0.0
 		file.cameraZoomData.mover.NonPhysicsStop()
 		weaponMover.NonPhysicsStop()
 
-		file.cameraZoomData.mover.NonPhysicsMoveTo( cameraStartOrigin, CHARM_CAMERA_ZOOM_DURATION, 0.0, CHARM_CAMERA_ZOOM_DURATION * 0.25 )
+		cameraTarget.ClearParent()
+		cameraTarget.SetOrigin( cameraStartOrigin)
+		cameraTarget.SetAngles( cameraStartAngles )
 
 		file.cameraZoomedToGunCharm = false
 	}
+
 	ModelData_SetBaseAngles( file.customizeWeapon, WEAPON_BASE_ANGLES )
 	ModelData_SetBaseRotationDelta( file.customizeWeapon, WEAPON_BASE_ROTATION_DELTA )
 }
@@ -1302,54 +1325,56 @@ void function EndPresentation_STORE_INSPECT()
 	CameraZoomThreadEnd()
 }
 
-void function StartArenasRankedBackground()
-{
-	thread StartArenasRankedBackgroundFX()
-}
+                       
+                                           
+ 
+                                       
+ 
 
-void function StartArenasRankedBackgroundFX( )
-{
-	EndSignal( level, "EndArenasRankedBackgroundFX" )
-	FlagWait( "EntitiesDidLoad" )
+                                              
+ 
+                                                  
+                              
 
-	file.arenasBackgroundModelGeo.Show()
-	file.arenasBackgroundModelSmoke.Show()
+                                     
+                                       
 
-	if ( IsValid( file.arenasBackgroundModelSmoke ) )
-		file.arenasBackgroundModelSmoke.SetSkin( GetArenasSmokeSkinIndex() )
+                                                  
+                                                                      
 
-	if ( IsValid( file.arenasBackgroundModelGeo ) )
-		file.arenasBackgroundModelGeo.SetSkin( GetArenasBackgroundSkinIndex() )
+                                                
+                                                                         
 
-	entity targetBackground   = GetEntByScriptName( STORE_BACKGROUND_ENT_NAME )
+                                                                            
 
-	if ( EffectDoesExist( file.arenasRankedBackgroundFXHandle ) )
-		EffectStop( file.arenasRankedBackgroundFXHandle, true, false )
+                                                              
+                                                                
 
-	file.arenasRankedBackgroundFXHandle = StartParticleEffectInWorldWithHandle( GetParticleSystemIndex( ARENAS_ROOM_SPARKS ), targetBackground.GetOrigin(), targetBackground.GetAngles() )
-	EffectSetControlPointVector( file.arenasRankedBackgroundFXHandle, 1, ARENAS_ROOM_SPARKS_COLOR )
-	EffectSetDontKillForReplay( file.arenasRankedBackgroundFXHandle )
+                                                                                                                                                                                       
+                                                                                                
+                                                                  
 
-	int FXHandle = file.arenasRankedBackgroundFXHandle
+                                                   
 
-	OnThreadEnd(
-		function() : ( FXHandle )
-		{
-			if ( EffectDoesExist( FXHandle ) )
-				EffectStop( FXHandle, true, false )
+             
+                           
+   
+                                     
+                                       
 
-			file.arenasBackgroundModelGeo.Hide()
-			file.arenasBackgroundModelSmoke.Hide()
-		}
-	)
+                                       
+                                         
+   
+  
 
-	WaitForever()
-}
+              
+ 
 
-void function EndArenasRankedBackground()
-{
-	Signal( level, "EndArenasRankedBackgroundFX" )
-}
+                                         
+ 
+                                               
+ 
+      
 
                               
                           
@@ -1383,7 +1408,6 @@ void function StartPresentation_CLUBS_LANDING()
 	mrvn.Anim_Play( "mrvn_underworld_bartender" )
 }
 
-                
 void function StartPresentation_APPLIED_STICKER()
 {
 	                                                                                      
@@ -1423,7 +1447,6 @@ void function EndPresentation_FLAT_STICKER()
 	                                                                                            
 	ModelData_GetMover( file.customizeWeapon ).SetOrigin( GetEntByScriptName( "customize_weapon_ref" ).GetOrigin() )
 }
-                      
 
 void function EnableLobbyMenuCameraZoom()
 {
@@ -1568,9 +1591,7 @@ void function InitMenuEntities()
 	#endif
 
 	Assert( MenuMapEntitiesExist() )
-	
 
-	                                                    
 	if ( IsEventLobbyActive() )
 		ApplyEventPositioning()
 
@@ -1622,13 +1643,13 @@ void function InitMenuEntities()
 
 	refEnt = GetEntByScriptName( "customize_character_ref" )
                    
-                                                       
+	refEnt.SetOrigin( refEnt.GetOrigin()  + <-20, 0, -2 > )
       
 	ModelData_SetBaseOrigin( file.customizeCharacter, refEnt.GetOrigin() )
                    
-                                                                 
+	ModelData_SetBaseAngles( file.customizeCharacter, <0, -100, 0> )
      
-	ModelData_SetBaseAngles( file.customizeCharacter, <0, -120, 0> )
+                                                                 
       
 	baseRotationDelta[0] = 0
 	baseRotationDelta[1] = 0
@@ -1665,7 +1686,6 @@ void function InitMenuEntities()
 	CreateMenuSubModel( file.questGoalModelData, $"mdl/dev/empty_model.rmdl" )
 	ModelData_CreateMover( file.questGoalModelData )
 
-                
 	refEnt = GetEntByScriptName( "customize_weapon_ref" )                                                 
 	ModelData_SetBaseOrigin( file.appliedStickerModelData, refEnt.GetOrigin() + <3.25, 0, 2.5> )
 	ModelData_SetBaseAngles( file.appliedStickerModelData, <0, 0, 0> )
@@ -1676,7 +1696,6 @@ void function InitMenuEntities()
 	ModelData_SetBaseAngles( file.flatStickerModelData, <0, 255, 0> )
 	model = CreateMenuModel( file.flatStickerModelData, $"mdl/dev/empty_model.rmdl" )
 	ModelData_CreateMover( file.flatStickerModelData )
-                      
 
 	                                                                            
 	                                                                              
@@ -1715,19 +1734,21 @@ void function EntitiesDidLoad()
 		file.storeBackgroundModelSmoke.MakeSafeForUIScriptHack()
 		file.storeBackgroundModelSmoke.Hide()
 
-		file.arenasBackgroundModelGeo = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), ARENAS_BACKGROUND_GEO_MODEL )
-		file.arenasBackgroundModelGeo.kv.solid = 0
-		file.arenasBackgroundModelGeo.kv.disableshadows = 1
-		file.arenasBackgroundModelGeo.kv.fadedist = -1
-		file.arenasBackgroundModelGeo.MakeSafeForUIScriptHack()
-		file.arenasBackgroundModelGeo.Hide()
+                        
+                                                                                                                                                                 
+                                            
+                                                     
+                                                
+                                                         
+                                      
 
-		file.arenasBackgroundModelSmoke = CreateClientSidePropDynamic( targetBackground.GetOrigin() - offset, targetBackground.GetAngles(), ARENAS_BACKGROUND_SMOKE_MODEL )
-		file.arenasBackgroundModelSmoke.kv.solid = 0
-		file.arenasBackgroundModelSmoke.kv.disableshadows = 1
-		file.arenasBackgroundModelSmoke.kv.fadedist = -1
-		file.arenasBackgroundModelSmoke.MakeSafeForUIScriptHack()
-		file.arenasBackgroundModelSmoke.Hide()
+                                                                                                                                                                     
+                                              
+                                                       
+                                                  
+                                                           
+                                        
+       
 	#endif
 }
 
@@ -1812,11 +1833,8 @@ void function UpdateMenuCharacterModelInternal( int overrideCharacterFlavorGUID 
 			if ( ItemFlavor_GetCharacterRef( character ) == file.DEV_characterOffsetCharacter )
 				offset = file.DEV_characterOffset
 		#endif       
-#if NX_PROG || PC_PROG_NX_UI
-	ModelData_GetMover( expect MenuModelData( file.presentationData[ file.currentPresentationType ].modelData ) ).SetOrigin( base + offset + (IsNxHandheldMode() ? <15,10,0> : <0,0,0> ) )
-#else
-	ModelData_GetMover( expect MenuModelData( file.presentationData[ file.currentPresentationType ].modelData ) ).SetOrigin( base + offset )
-#endif
+
+		ModelData_GetMover( expect MenuModelData( file.presentationData[ file.currentPresentationType ].modelData ) ).SetOrigin( base + offset )
 
 	}
 
@@ -1843,7 +1861,6 @@ void function UIToClient_PreviewCharacterEmote( int guid, int overrideCharacterF
 		EffectSetControlPointVector( file.baseFXHandle, 1, ItemFlavor_GetQualityColor( flav ) )
 }
 
-                
 void function UIToClient_PreviewFlatSticker( SettingsAssetGUID itemFlavorGUID )
 {
 	ItemFlavor stickerItem = GetItemFlavorByGUID( itemFlavorGUID )
@@ -1920,7 +1937,6 @@ void function UIToClient_PreviewAppliedSticker( SettingsAssetGUID itemFlavorGUID
 		Sticker_OnPlaced( file.currentStickerInstance, Sticker_FlashOnLoadComplete )
 	}
 }
-                      
 
 void function UIToClient_PreviewCharacterSkin( int guid, int overrideCharacterFlavorGUID )
 {
@@ -1958,11 +1974,9 @@ void function TransitionStoreBackgroundColors( ItemFlavor itemFlav )
 	if ( IsValid( file.storeBackgroundModelGeo ) )
 		file.storeBackgroundModelGeo.SetSkin( rarityIdx )
 
-                
 	                                                                               
 	if ( ItemFlavor_GetType( itemFlav ) == eItemType.sticker )
 		return
-                      
 
 	entity model         = ModelData_GetModel( file.storeInspectModelData )
 	bool includeChildren = true
@@ -3120,7 +3134,6 @@ void function UpdateStoreItemDisplay_StandingEmote( ItemFlavor item )
 		thread ModelPerformEmote( model, item, mover, false, true )
 }
 
-                
 void function UpdateStoreItemDisplay_Sticker( ItemFlavor item )
 {
 	Assert( ItemFlavor_GetType( item ) == eItemType.sticker )
@@ -3144,7 +3157,6 @@ void function UpdateStoreItemDisplay_Sticker( ItemFlavor item )
 	Sticker_CreateFlashData( stickerInstance, model, eMenuModelFlashType.DEFAULT, flashColor )
 	Sticker_OnPlaced( stickerInstance, Sticker_FlashOnLoadComplete )
 }
-                      
 
 
 void function UIToClient_PreviewStoreItem( SettingsAssetGUID itemFlavorGUID, bool isSingleItem = false )
@@ -3262,14 +3274,12 @@ void function UIToClient_PreviewStoreItem( SettingsAssetGUID itemFlavorGUID, boo
 			UpdateStoreItemDisplay_StandingEmote( item )
 			break
 
-                
 		case eItemType.sticker:
 			autoRotate = false
 			DisableModelTurn()
 			EnableTurnLockout()
 			UpdateStoreItemDisplay_Sticker( item )
 			break
-                      
 	}
 
 	ModelData_ResetRotation( file.storeInspectModelData )

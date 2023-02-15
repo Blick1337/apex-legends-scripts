@@ -122,11 +122,11 @@ const asset WINTEREXPRESS_ROTATIONS_DATATABLE = $"datatable/gamemode_winterexpre
 const asset WINTEREXPRESS_LOADOUTS_DATATABLE = $"datatable/gamemode_winterexpress_selectable_loadouts.rpak"
       
                     
-                                                                                      
-                                                                                       
+const asset TDM_ROTATIONS_DATATABLE = $"datatable/gamemode_tdm_loadout_rotations.rpak"
+const asset TDM_LOADOUTS_DATATABLE = $"datatable/gamemode_tdm_selectable_loadouts.rpak"
 
-                                                                                                
-                                                                                                 
+const asset TDM_SWAT_ROTATIONS_DATATABLE = $"datatable/gamemode_tdm_swat_loadout_rotations.rpak"
+const asset TDM_SWAT_LOADOUTS_DATATABLE = $"datatable/gamemode_tdm_swat_selectable_loadouts.rpak"
       
 
 global const string NETVAR_LOADOUT_CURRENT_ROTATION_INDEX_NAME = "loadoutCurrentRotationIndex"
@@ -240,6 +240,7 @@ struct {
 		asset loadoutsDatatable = LOADOUTSELECTION_LOADOUTS_DATATABLE
 		table<int, LoadoutSelectionCategory > loadoutSlotIndexToCategoryDataTable
 		array<LoadoutSelectionCategory> loadoutCategories
+		int maxLoadoutsPerCategory = 0
 		bool areLoadoutsPopulated = false
 		table< int, WeaponLoadout > loadoutSlotIndexToWeaponLoadoutTable
 		table<string, array<string> > weaponUpgrades
@@ -283,7 +284,7 @@ void function LoadoutSelection_Init()
 		LoadoutSelection_RegisterLoadoutData()
 		LoadoutSelection_RegisterLoadoutDistribution()
 		#if SERVER
-			                                                            
+			                                                           
 			                                                                           
 			                                        
 		#endif          
@@ -340,19 +341,19 @@ void function LoadoutSelection_SetDatatableAssets()
        
 
                      
-                       
-  
-                            
-   
-                                                         
-                                                        
-   
-      
-   
-                                                    
-                                                   
-   
-  
+	if ( GetTDMIsActive())
+	{
+		if ( TDM_IsSWATLoadout() )
+		{
+			file.rotationsDatatable = TDM_SWAT_ROTATIONS_DATATABLE
+			file.loadoutsDatatable  = TDM_SWAT_LOADOUTS_DATATABLE
+		}
+		else
+		{
+			file.rotationsDatatable = TDM_ROTATIONS_DATATABLE
+			file.loadoutsDatatable  = TDM_LOADOUTS_DATATABLE
+		}
+	}
        
 }
 #endif                    
@@ -455,6 +456,8 @@ void function LoadoutSelection_RegisterLoadoutData()
 
 		file.loadoutSlotIndexToCategoryDataTable[ index ] <- item
 		file.loadoutCategories.append( item )
+		if ( item.loadoutContentNames.len() >  file.maxLoadoutsPerCategory)
+			file.maxLoadoutsPerCategory = item.loadoutContentNames.len()
 		index++
 	}
 
@@ -1076,7 +1079,7 @@ void function LoadoutSelection_PopulateLoadouts()
 	                                                                                                                            
 	if ( file.areLoadoutsPopulated )
 		return
-
+	
 	#if CLIENT
 		                                                                   
 		file.maxLoadoutCountRegular = 0
@@ -1175,7 +1178,13 @@ string function LoadoutSelection_GetWeaponRefByIndex( int loadoutIndex, int weap
 {
 	WeaponLoadout weaponLoadoutData = LoadoutSelection_GetWeaponLoadoutByLoadoutSlotIndex( loadoutIndex )
 	array<string> weaponRefs = weaponLoadoutData.weaponRefs
-	Assert( weaponRefs.len() >= weaponIndex, "LoadoutSelection_GetWeaponRefByIndex the weapon index passed from the menu " + weaponIndex + " is greater than the number of weapon refs " + weaponRefs.len() + " in slot " + loadoutIndex )
+
+	                                                                                                                                      
+	Assert( weaponRefs.len() > weaponIndex, "LoadoutSelection_GetWeaponRefByIndex the weapon index ( " + weaponIndex + " ) passed in is greater than the number of weapon refs " + weaponRefs.len() + " in slot " + loadoutIndex )
+
+	if ( weaponRefs.len() <= weaponIndex )
+		return ""
+
 	return weaponRefs[weaponIndex]
 }
 #endif                    
@@ -1246,11 +1255,11 @@ int function LoadoutSelection_GetSelectedLoadoutSlotIndex_CL_UI()
 #if SERVER
                                                        
  
-	                                        
+	                                       
 		      
 
 	                         
-	                                                       
+	                                                      
 	 
 		                        
 	 
@@ -1345,7 +1354,16 @@ int function LoadoutSelection_GetWeaponCountByLoadoutIndex( int loadoutIndex )
 	                 
 
 	                                                               
-		                                                                                                           
+	 
+		                                                                              
+		                                                               
+			                                                       
+
+		                     
+			              
+
+		                                                        
+	 
 
 	                                                                   
 	                                                                  
@@ -1882,6 +1900,10 @@ void function LoadoutSelection_RefreshAllUILoadoutInfo()
                                                                                                                                  
 void function ServerCallback_LoadoutSelection_UpdateSelectedLoadoutInfo( int selectedLoadout )
 {
+	if ( !file.areLoadoutsPopulated )
+	{
+		LoadoutSelection_PopulateLoadouts()
+	}
 	if ( selectedLoadout < 0 || selectedLoadout >= LOADOUTSELECTION_MAX_TOTAL_LOADOUT_SLOTS )
 		return
 
@@ -1916,7 +1938,6 @@ void function UICallback_LoadoutSelection_BindWeaponRui( var element, int loadou
 
 	if ( weaponIndex in data.weaponIndexToScopePreferenceTable  )
 		opticsIndex = data.weaponIndexToScopePreferenceTable[ weaponIndex ]
-
 	thread LoadoutSelection_BindWeaponButton_Thread( player, element, rui, loadoutIndex, weaponIndex, entVar, opticsIndex )
 }
 #endif          
@@ -2023,7 +2044,6 @@ void function LoadoutSelection_BindWeaponButton_Thread( entity player, var eleme
 							}
 
 							weaponName = data.pickupString
-
 							if ( lootTier == 0 )
 							{
 								for ( int i = 0; i < baseWeaponData.supportedAttachments.len(); ++i )
@@ -2487,23 +2507,26 @@ void function UICallback_LoadoutSelection_BindOpticSlotButton( var button, int s
 	{
 		string weaponRef = LoadoutSelection_GetWeaponRefByIndex( file.selectedLoadoutForOptic, selectedWeapon )
 
-		foreach ( upgrade in file.weaponUpgrades[ weaponRef ] )
+		if ( SURVIVAL_Loot_IsRefValid( weaponRef ) )
 		{
-			if ( !SURVIVAL_Loot_IsRefValid( upgrade ) )
-				continue
-
-			LootData attachData = SURVIVAL_Loot_GetLootDataByRef( upgrade )
-			if ( attachData.attachmentStyle.find( "sight" ) >= 0 )
+			foreach ( upgrade in file.weaponUpgrades[ weaponRef ] )
 			{
-				equippedOptic = attachData.index
-				break
-			}
-		}
+				if ( !SURVIVAL_Loot_IsRefValid( upgrade ) )
+					continue
 
-		if ( SURVIVAL_Loot_IsRefValid( optics[opticIndex] ) )
-		{
-			LootData data = SURVIVAL_Loot_GetLootDataByRef( optics[opticIndex] )
-			isActive = equippedOptic == data.index
+				LootData attachData = SURVIVAL_Loot_GetLootDataByRef( upgrade )
+				if ( attachData.attachmentStyle.find( "sight" ) >= 0 )
+				{
+					equippedOptic = attachData.index
+					break
+				}
+			}
+
+			if ( SURVIVAL_Loot_IsRefValid( optics[opticIndex] ) )
+			{
+				LootData data = SURVIVAL_Loot_GetLootDataByRef( optics[opticIndex] )
+				isActive = equippedOptic == data.index
+			}
 		}
 	}
 
@@ -2524,6 +2547,9 @@ void function UICallback_LoadoutSelection_OnRequestOpenScopeSelection( var butto
 	string weaponRef0 = LoadoutSelection_GetWeaponRefByIndex( loadoutIndex, 0 )
 	string weaponRef1 = LoadoutSelection_GetWeaponRefByIndex( loadoutIndex, 1 )
 
+
+	if ( !SURVIVAL_Loot_IsRefValid( weaponRef0 ) && !SURVIVAL_Loot_IsRefValid( weaponRef1 ) )
+		return
 
 	if ( !( weaponRef0 in file.weaponUpgrades ) && !( weaponRef1 in file.weaponUpgrades ) )
 		return
@@ -2575,8 +2601,6 @@ void function UICallback_LoadoutSelection_OnOpticSlotButtonClick( var opticButto
 	                                                       
 	if ( opticIndex >= optics.len() || opticIndex < 0 || opticIndex > LOADOUTSELECTION_MAX_SCOPE_INDEX )
 		return
-
-	string itemRef = LoadoutSelection_GetWeaponRefByIndex( loadoutIndex, weaponIndex )
 
 	if ( SURVIVAL_Loot_IsRefValid( optics[ opticIndex ] ) || optics[ opticIndex ] == "" )
 	{
@@ -2689,7 +2713,7 @@ void function UICallback_LoadoutSelection_OpticSelectDialogueClose()
 	 
 
 	                                                           
-	                           
+	                                                               
 	 
 		                                                                  
 		 

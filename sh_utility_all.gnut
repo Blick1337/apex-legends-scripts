@@ -582,6 +582,13 @@ bool function Freelance_IsHubLevel()
 	return false
 }
 
+                            
+bool function IsOrientationMatch()
+{
+	return GetCurrentPlaylistName() == PLAYLIST_NEW_PLAYER_ORIENTATION
+}
+                                 
+
 
 bool function Is2TeamPvPGame()
                                                                                              
@@ -749,6 +756,68 @@ bool function Control_IsModeEnabled()
 {
 	return GetCurrentPlaylistVarBool( "is_control_game", false )
 }
+
+                       
+bool function Anniversary_ForceDisableAnniversary()
+{
+	return GetCurrentPlaylistVarBool( "anniversary_dressing_disable", false )
+}
+
+bool function Anniversary_IsGoldTakeoverEnabled()
+{
+	if ( GetCurrentPlaylistVarBool( "anniversary_is_goldblack_theme_enabled", false ) )
+		return true
+
+	if ( CalEvent_IsActive( GetItemFlavorByAsset( $"settings/itemflav/calevent/s16ce01/collection.rpak" ), GetUnixTimestamp() ) )
+		return true
+
+	                                                                 
+	                                                                                                                               
+	   		           
+
+	return false
+}
+
+bool function Anniversary_IsBeachPartyEnabled()
+{
+	if (  GetCurrentPlaylistVarBool( "anniversary_is_beachparty_enabled", false ) )
+		return true
+
+	                                                                 
+	                                                                                                                               
+	   		           
+
+	return false
+}
+
+#if SERVER
+                                         
+ 
+	                                                                                    
+	                                                                                    
+	                                                                                      
+	                                          
+	 
+		                     
+		 
+			                 
+			        
+		 
+
+		                    
+		 
+			                                          
+			                                                 
+		 
+
+		                                           
+		                          
+		                                                                                                  
+	 
+ 
+#endif
+      
+
 
                       
 bool function WinterExpress_IsModeEnabled()
@@ -933,6 +1002,12 @@ int function GetWeaponInfoFileKeyField_GlobalInt( string ref, string variable )
 	return expect int( val )
 }
 
+int function GetWeaponInfoFileKeyField_WithMods_GlobalInt( string ref, array<string> mods, string variable )
+{
+	var val = GetWeaponInfoFileKeyField_WithMods_Global( ref, mods, variable )
+	Assert( val != null, "Weapon key \"" + variable + "\" does not exist in weapon \"" + ref + "\" !" )
+	return expect int( val )
+}
 
 int function GetWeaponInfoFileKeyField_GlobalInt_WithDefault( string ref, string variable, int defaultVal )
 {
@@ -1993,28 +2068,33 @@ bool function IsFiringRangeGameMode()
 	return GetCurrentPlaylistVarBool( "survival_firingrange", false )
 }
 
+bool function IsEventFinale()
+{
+	return GetCurrentPlaylistVarBool( "is_event_finale", false )
+}
+
 bool function FiringRangeHasFriendlyFire()
 {
 	return GetCurrentPlaylistVarBool( "firingrange_has_friendlyfire", true )
 }
 
                          
-                                           
- 
-                                                                
- 
+bool function FiringRangeHasInfiniteClips()
+{
+	return GetCurrentPlaylistVarBool( "has_infinite_clips", false )
+}
 
-                                            
- 
-                                                                   
- 
+bool function FiringRangeHasHitIndictators()
+{
+	return GetCurrentPlaylistVarBool ( "hud_training_hit_dots", true )
+}
       
 
-                        
-                                          
- 
-                                                                 
- 
+                         
+bool function FiringRangeHasDynamicStats()
+{
+	return GetCurrentPlaylistVarBool ("has_fr_dynamic_stats", true )
+}
       
 
 bool function FreelanceSystemsAreEnabled()

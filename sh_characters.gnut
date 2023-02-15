@@ -26,18 +26,18 @@ global function CharacterClass_GetCharacterLockedPortrait
 global function CharacterClass_GetCharacterUnlockedStoreIcon
 global function CharacterClass_GetCharacterRoleImage
                     
-global function CharacterClass_GetCharacterRolePerkDesc
+                                                       
      
-                                                       
-                                      
-                                                          
-                                                       
-                                                       
-                                                       
-                                           
-                                              
-                                          
-                                           
+global function CharacterClass_GetGalleryRoleBackground
+global function SortByRoleAndMenuIndex
+global function CharacterClass_GetCharacterPerkDescription
+global function CharacterClass_GetRolePerkDescriptionAtIndex
+global function CharacterClass_GetRolePerkShortDescriptionAtIndex
+global function CharacterClass_GetRoleTitle
+global function CharacterClass_GetRoleSubtitle
+global function CharacterClass_GetRolePerkIconAtIndex
+global function CharacterClass_GetRoleIcon
+global function CharacterClass_GetRoleColor
       
 global function CharacterClass_GetReadyUpVoicelineEventList
 global function CharacterClass_IsAvailable
@@ -95,7 +95,7 @@ global enum eCharacterClassRole
 	UNDECIDED,
 	OFFENSE,
                     
-             
+		SKIRMISHER,
        
 	RECON,
 	DEFENSE,
@@ -107,7 +107,7 @@ const table<int, asset> CHARACTER_ROLE_ICONS = {
 	[eCharacterClassRole.UNDECIDED] = $"",
 	[eCharacterClassRole.OFFENSE]   = $"rui/menu/character_select/utility/util_role_offense",
                     
-                                                                                          
+		[eCharacterClassRole.SKIRMISHER]   = $"rui/hud/tactical_icons/tactical_mirage_in_world",
        
 	[eCharacterClassRole.DEFENSE]   = $"rui/menu/character_select/utility/util_role_defense",
 	[eCharacterClassRole.SUPPORT]   = $"rui/menu/character_select/utility/util_role_support",
@@ -115,77 +115,77 @@ const table<int, asset> CHARACTER_ROLE_ICONS = {
 }
 
                    
-                                                    
-                                        
-                                                                                      
-                                                                                          
-                                                                                      
-                                                                                      
-                                                                                    
- 
+const table<int, asset> CHARACTER_ROLE_ICONS_NEW = {
+	[eCharacterClassRole.UNDECIDED]		= $"",
+	[eCharacterClassRole.OFFENSE]   	= $"rui/menu/character_select/utility/role_offense",
+	[eCharacterClassRole.SKIRMISHER] 	= $"rui/menu/character_select/utility/role_skirmisher",
+	[eCharacterClassRole.DEFENSE]   	= $"rui/menu/character_select/utility/role_defense",
+	[eCharacterClassRole.SUPPORT]   	= $"rui/menu/character_select/utility/role_support",
+	[eCharacterClassRole.RECON]     	= $"rui/menu/character_select/utility/role_recon",
+}
 
-                                                        
-                                       
-                                                                      
-                                                                
-                                                                    
-                                                                
-                                                                   
- 
+const table<int, string> CHARACTER_ROLE_DESCRIPTIONS = {
+	[eCharacterClassRole.UNDECIDED]  = "",
+	[eCharacterClassRole.OFFENSE]    = "#CARE_PACKAGE_INSIGHT_PERK_DESC",
+	[eCharacterClassRole.SKIRMISHER] = "#MUNITIONS_DROP_PERK_DESC",
+	[eCharacterClassRole.DEFENSE]    = "#BEACON_CIRCLE_SCAN_PERK_DESC",
+	[eCharacterClassRole.SUPPORT]    = "#EXTRA_BIN_LOOT_PERK_DESC",
+	[eCharacterClassRole.RECON]      = "#BEACON_ENEMY_SCAN_PERK_DESC",
+}
 
-                                                        
-                                       
-                                                                 
-                                                                    
-                                                                    
-                                                                 
-                                                               
- 
+const table<int, string> CHARACTER_ROLE_SHORT_DESC_1 = {
+	[eCharacterClassRole.UNDECIDED]  = "",
+	[eCharacterClassRole.OFFENSE]    = "#ROLE_ASSAULT_SHORT_DESC_1",
+	[eCharacterClassRole.SKIRMISHER] = "#ROLE_SKIRMISHER_SHORT_DESC_1",
+	[eCharacterClassRole.DEFENSE]    = "#ROLE_CONTROLLER_SHORT_DESC_1",
+	[eCharacterClassRole.SUPPORT]    = "#ROLE_SUPPORT_SHORT_DESC_1",
+	[eCharacterClassRole.RECON]      = "#ROLE_RECON_SHORT_DESC_1",
+}
 
-                                                        
-                                       
-                                                                 
-                                                                    
-                                                                    
-                                                                 
-                                                               
- 
+const table<int, string> CHARACTER_ROLE_SHORT_DESC_2 = {
+	[eCharacterClassRole.UNDECIDED]  = "",
+	[eCharacterClassRole.OFFENSE]    = "#ROLE_ASSAULT_SHORT_DESC_2",
+	[eCharacterClassRole.SKIRMISHER] = "#ROLE_SKIRMISHER_SHORT_DESC_2",
+	[eCharacterClassRole.DEFENSE]    = "#ROLE_CONTROLLER_SHORT_DESC_2",
+	[eCharacterClassRole.SUPPORT]    = "#ROLE_SUPPORT_SHORT_DESC_2",
+	[eCharacterClassRole.RECON]      = "#ROLE_RECON_SHORT_DESC_2",
+}
 
-                                                        
-                                       
-                                                                 
-                                                                    
-                                                                    
-                                                                 
-                                                               
- 
+const table<int, string> CHARACTER_ROLE_SHORT_DESC_3 = {
+	[eCharacterClassRole.UNDECIDED]  = "",
+	[eCharacterClassRole.OFFENSE]    = "#ROLE_ASSAULT_SHORT_DESC_3",
+	[eCharacterClassRole.SKIRMISHER] = "#ROLE_SKIRMISHER_SHORT_DESC_3",
+	[eCharacterClassRole.DEFENSE]    = "#ROLE_CONTROLLER_SHORT_DESC_3",
+	[eCharacterClassRole.SUPPORT]    = "#ROLE_SUPPORT_SHORT_DESC_3",
+	[eCharacterClassRole.RECON]      = "#ROLE_RECON_SHORT_DESC_3",
+}
 
-                                                  
-                                       
-                                                    
-                                                       
-                                                       
-                                                    
-                                                  
- 
+const table<int, string> CHARACTER_ROLE_TITLES = {
+	[eCharacterClassRole.UNDECIDED]  = "",
+	[eCharacterClassRole.OFFENSE]    = "#ROLE_ASSAULT",
+	[eCharacterClassRole.SKIRMISHER] = "#ROLE_SKIRMISHER",
+	[eCharacterClassRole.DEFENSE]    = "#ROLE_CONTROLLER",
+	[eCharacterClassRole.SUPPORT]    = "#ROLE_SUPPORT",
+	[eCharacterClassRole.RECON]      = "#ROLE_RECON",
+}
 
-                                                     
-                                       
-                                                             
-                                                                
-                                                                
-                                                             
-                                                           
- 
+const table<int, string> CHARACTER_ROLE_SUBTITLES = {
+	[eCharacterClassRole.UNDECIDED]  = "",
+	[eCharacterClassRole.OFFENSE]    = "#ROLE_ASSAULT_SUBTITLE",
+	[eCharacterClassRole.SKIRMISHER] = "#ROLE_SKIRMISHER_SUBTITLE",
+	[eCharacterClassRole.DEFENSE]    = "#ROLE_CONTROLLER_SUBTITLE",
+	[eCharacterClassRole.SUPPORT]    = "#ROLE_SUPPORT_SUBTITLE",
+	[eCharacterClassRole.RECON]      = "#ROLE_RECON_SUBTITLE",
+}
 
-                                                  
-                                            
-                                                          
-                                                        
-                                                         
-                                                         
-                                                        
- 
+const table<int, vector> CHARACTER_ROLE_COLORS = {
+	[eCharacterClassRole.UNDECIDED]  = <0,0,0>,
+	[eCharacterClassRole.OFFENSE]    = < 0.95, 0.52, 0.007 >,
+	[eCharacterClassRole.SKIRMISHER] = < 0.7, 0.68, 0.21 >,
+	[eCharacterClassRole.DEFENSE]    = < 0.27, 0.54, 0.73 >,
+	[eCharacterClassRole.SUPPORT]    = < 0.36, 0.68, 0.28 >,
+	[eCharacterClassRole.RECON]      = < 0.82, 0.4, 0.95 >,
+}
       
 
 global struct CharacterMenuLightData
@@ -252,7 +252,7 @@ struct CharacterDamageStruct
 struct FileStruct_LifetimeLevel
 {
 	LoadoutEntry& characterSelectionSlot
-	array< string > charactersWithStatsGUIDStrings                                                                                                                   
+	array< string > charactersWithStatsGUIDStrings                                                                                                             
 	table<string, ItemFlavor> characterRefMap
 	table<ItemFlavor, int> characterFlavorSortOrdinalMap
 	array< ItemFlavor > nonGRXCharacters
@@ -264,7 +264,7 @@ struct
 	table<int, string> characterRolePerkDesc
 	table<string, CharacterDamageStruct> characterDamageData
                     
-                                              
+		table<ItemFlavor, int>	characterRoleOverride
        
 } file
 
@@ -287,13 +287,13 @@ void function ShCharacters_LevelInit()
 	AddCallback_OnItemFlavorRegistered( eItemType.character, OnItemFlavorRegistered_Character )
 
                      
-		file.characterRolePerkDesc = {
-			[eCharacterClassRole.UNDECIDED] = "Undecided Role",
-			[eCharacterClassRole.OFFENSE] = "",
-			[eCharacterClassRole.DEFENSE] = "",
-			[eCharacterClassRole.RECON] = "#RECON_PERK_DESC",
-			[eCharacterClassRole.SUPPORT] = "",
-		}
+                                
+                                                      
+                                      
+                                      
+                                                    
+                                      
+   
        
 }
 #endif
@@ -320,7 +320,7 @@ void function OnRegisterRootItemFlavors()
 		#endif
 	}
 	#if SERVER
-		                                                                                                           
+		                                                                                                                          
 			                                                                                                 
 	#endif
 	fileLevel.characterSelectionSlot = entry
@@ -402,27 +402,32 @@ void function OnItemFlavorRegistered_Character( ItemFlavor character )
 	#endif
 
                     
-                                                                
+		string characterName = ItemFlavor_GetCharacterRef( character )
 
-                                                                                  
-                                                  
-                                                                       
+		if( S16_PathfinderSkirmisherPassiveActive() && characterName.find( "character_pathfinder" ) >= 0 )
+		{
+			file.characterRoleOverride[character] <- eCharacterClassRole.SKIRMISHER
+		}
 
-                                                                                
-                                                  
-                                                                         
+		string overrideString = GetCurrentPlaylistVarString( "role_override_recon", "" )
+		if ( overrideString.find( characterName ) >= 0 )
+			file.characterRoleOverride[ character ] <- eCharacterClassRole.RECON
 
-                                                                             
-                                                  
-                                                                         
+		overrideString = GetCurrentPlaylistVarString( "role_override_controller", "" )
+		if ( overrideString.find( characterName ) >= 0 )
+			file.characterRoleOverride[ character ] <- eCharacterClassRole.DEFENSE
 
-                                                                                
-                                                  
-                                                                            
+		overrideString = GetCurrentPlaylistVarString( "role_override_assault", "" )
+		if ( overrideString.find( characterName ) >= 0 )
+			file.characterRoleOverride[ character ] <- eCharacterClassRole.OFFENSE
 
-                                                                             
-                                                  
-                                                                         
+		overrideString = GetCurrentPlaylistVarString( "role_override_skirmisher", "" )
+		if ( overrideString.find( characterName ) >= 0 )
+			file.characterRoleOverride[ character ] <- eCharacterClassRole.SKIRMISHER
+
+		overrideString = GetCurrentPlaylistVarString( "role_override_support", "" )
+		if ( overrideString.find( characterName ) >= 0 )
+			file.characterRoleOverride[ character ] <- eCharacterClassRole.SUPPORT
        
 }
 #endif
@@ -479,7 +484,7 @@ string function ItemFlavor_GetCharacterRef( ItemFlavor flavor )
 	 
 	                                                                                                                                                                                                                    
 
-	                                                                                                                                                                      
+	                                                                                                                     
 	                                                           
 	                                                                                         
 	                           
@@ -556,9 +561,9 @@ int function CharacterClass_GetRole( ItemFlavor flavor )
 	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
 
                     
-                                                                                                                         
-                                             
-                                              
+		                                                                                                                       
+		if ( flavor in file.characterRoleOverride )
+			return file.characterRoleOverride[ flavor ]
        
 
 	return eCharacterClassRole[GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "role" )]
@@ -702,40 +707,40 @@ asset function CharacterClass_GetGalleryPortraitBackground( ItemFlavor flavor )
 }
 
                    
-                                                                            
- 
-                                                              
+asset function CharacterClass_GetGalleryRoleBackground ( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
 
-         
+	int role
 
-                                            
-                                             
-     
-                                                                                              
+	if ( flavor in file.characterRoleOverride )
+		role = file.characterRoleOverride[ flavor ]
+	else
+		role = eCharacterClassRole[GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "role" )]
 
-               
-  
-                                                              
-  
-                    
-  
-                                                                 
-  
-                    
-  
-                                                            
-  
-                    
-  
-                                                              
-  
-                    
-  
-                                                              
-  
+	if (role == 1)
+	{
+		return $"rui/menu/buttons/lobby_character_select/offense_bg"
+	}
+	else if (role == 2)
+	{
+		return $"rui/menu/buttons/lobby_character_select/skirmisher_bg"
+	}
+	else if (role == 3)
+	{
+		return $"rui/menu/buttons/lobby_character_select/recon_bg"
+	}
+	else if (role == 4)
+	{
+		return $"rui/menu/buttons/lobby_character_select/defense_bg"
+	}
+	else if (role == 5)
+	{
+		return $"rui/menu/buttons/lobby_character_select/support_bg"
+	}
 
-                                                             
- 
+	return $"rui/menu/buttons/lobby_character_select/offense_bg"
+}
       
 
 asset function CharacterClass_GetCharacterSelectPortrait( ItemFlavor flavor )
@@ -769,79 +774,82 @@ asset function CharacterClass_GetCharacterRoleImage( ItemFlavor flavor )
 	int role = CharacterClass_GetRole( flavor )
 
                    
-                                      
+	return CharacterClass_GetRoleIcon( role )
      
-	return CHARACTER_ROLE_ICONS[role]
+                                  
       
 }
 
                     
-string function CharacterClass_GetCharacterRolePerkDesc( ItemFlavor flavor )
-{
-	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
-
-	int role = CharacterClass_GetRole( flavor )
-	return file.characterRolePerkDesc[role]
-}
-     
-                                                                                                    
-                                                                                                                     
-                                                                               
+                                                                            
  
                                                               
 
                                             
-                                         
- 
-
-                                                                   
- 
-                                              
-
-                                         
- 
-
-                                                                   
- 
-                                              
-
-                                         
- 
-
-                                                                   
- 
-                                              
-
-                                         
- 
-
-                                                       
- 
                                         
-
-                                   
  
+     
+string function CharacterClass_GetCharacterPerkDescription( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.character )
 
-                                                          
- 
-                                           
+	int role                   = CharacterClass_GetRole( flavor )
+	ClassRoleSettingsInfo info = Perks_GetSettingsInfoForClassRole( role )
 
-                                      
- 
+	return info.fullDescription
+}
 
-                                                       
- 
-                                        
+string function CharacterClass_GetRolePerkDescriptionAtIndex( int role, int index = 0 )
+{
+	ClassRoleSettingsInfo info = Perks_GetSettingsInfoForClassRole( role )
+	if( index >= info.perks.len() )
+		return ""
+	PerkSettingsInfo perkInfo = Perks_GetSettingsInfoForPerk( info.perks[index] )
+	return perkInfo.description
+}
 
-                                   
- 
+string function CharacterClass_GetRolePerkShortDescriptionAtIndex( int role, int index = 0 )
+{
+	ClassRoleSettingsInfo info = Perks_GetSettingsInfoForClassRole( role )
+	if( index >= info.perks.len() )
+		return ""
+	PerkSettingsInfo perkInfo = Perks_GetSettingsInfoForPerk( info.perks[index] )
+	return perkInfo.shortDescription
+}
 
-                                                     
- 
-                                           
+string function CharacterClass_GetRoleTitle( int role )
+{
+	ClassRoleSettingsInfo info = Perks_GetSettingsInfoForClassRole( role )
+	return info.name
+}
 
-                                      
- 
+string function CharacterClass_GetRoleSubtitle( int role )
+{
+	ClassRoleSettingsInfo info = Perks_GetSettingsInfoForClassRole( role )
+	return info.shortDescription
+}
+
+vector function CharacterClass_GetRoleColor( int role )
+{
+	ClassRoleSettingsInfo info = Perks_GetSettingsInfoForClassRole( role )
+	return info.uiColor
+}
+
+asset function CharacterClass_GetRoleIcon( int role )
+{
+	Assert( role in CHARACTER_ROLE_ICONS_NEW )
+	ClassRoleSettingsInfo info = Perks_GetSettingsInfoForClassRole( role )
+	return info.icon
+}
+
+asset function CharacterClass_GetRolePerkIconAtIndex( int role, int index = 0 )
+{
+	ClassRoleSettingsInfo info = Perks_GetSettingsInfoForClassRole( role )
+	if( index >= info.perks.len() )
+		return $""
+	PerkSettingsInfo perkInfo = Perks_GetSettingsInfoForPerk( info.perks[index] )
+	return perkInfo.icon
+}
       
 
 array<string> function CharacterClass_GetReadyUpVoicelineEventList( ItemFlavor flavor )
@@ -1062,9 +1070,9 @@ array<ItemFlavor> function GetCharacterButtonOrder( array<ItemFlavor> allCharact
 
 	array<ItemFlavor> sortedCharacters = clone allCharacters
                     
-                                                 
+		sortedCharacters.sort( SortByRoleAndMenuIndex )
       
-		sortedCharacters.sort( SortByMenuButtonIndex )
+                                                
        
 
 	return sortedCharacters
@@ -1105,36 +1113,36 @@ int function SortByMenuButtonIndex( ItemFlavor a, ItemFlavor b )
 }
 
                    
-                                                                 
- 
-                                                    
-                                                    
-                                         
-                                         
+int function SortByRoleAndMenuIndex( ItemFlavor a, ItemFlavor b )
+{
+	int aIndex = CharacterClass_GetMenuButtonIndex( a )
+	int bIndex = CharacterClass_GetMenuButtonIndex( b )
+	int aClass = CharacterClass_GetRole( a )
+	int bClass = CharacterClass_GetRole( b )
 
-                      
-           
+	if ( aClass < bClass)
+		return -1
 
-                      
-          
+	if ( aClass > bClass)
+		return 1
 
-                      
-  
-                                     
-           
+	if (aClass == bClass)
+	{
+		if ( aIndex == -1 && bIndex != -1 )
+			return 1
 
-                                     
-            
+		if ( aIndex != -1 && bIndex == -1 )
+			return -1
 
-                        
-           
+		if ( aIndex > bIndex )
+			return 1
 
-                        
-            
-  
+		if ( aIndex < bIndex )
+			return -1
+	}
 
-         
- 
+	return 0
+}
       
 
 #if SERVER || CLIENT

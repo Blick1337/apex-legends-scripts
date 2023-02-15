@@ -46,13 +46,14 @@ global function DEV_IsValidGRXRef
 global function GRXOffer_IsFullyClaimed
 global function GRXOffer_GetOwnedItemsCount
 global function GRXOffer_ContainsPack
+                    
+                                          
+      
 global function GRXOffer_ContainsEventPack
 global function GRXOffer_ContainsThematicPack
 global function GRXOffer_ContainsEventThematicPack
 global function GRXOffer_GetSpecialPackName
-                
 global function GRXOffer_GetSpecialPackContainsStickers
-      
 global function GRXOffer_GetSpecialPackContainsSkydives
 global function GRXOffer_GetSpecialPackCountShownOnMOTD
 global function GRXOffer_GetBundleOfferRestrictions
@@ -80,12 +81,14 @@ global function IsGRXOperationDone
                                 
                                                
                                           
+                                                 
+                                             
                                           
-                                        
                                                  
                                          
                                         
                                             
+                                     
 #endif
 
 #if CLIENT
@@ -144,9 +147,11 @@ global function GRXPack_GetCustomCountTextCol
 
 #if DEV
 #if SERVER
+                                  
                                               
                                     
                                         
+                                   
 #elseif CLIENT
 global function DEV_GRX_ForcePackResults
 #elseif UI
@@ -159,7 +164,7 @@ global function DEV_GRX_PreviewStoreItem
 #endif
 
 
-                   
+                                             
 #if SERVER
                                                  
                                                
@@ -192,7 +197,6 @@ global const int MAX_REWARDS_PER_REWARD_SEQ_CALL = 255
 const int QUEUED_REWARDS_MAX_COUNT = 12
 const int QUEUED_REWARDS_MAX_ITEMS_COUNT = 1
 
-
 #if SERVER                                                                                                                              
                                                      
 #elseif UI
@@ -200,7 +204,6 @@ const int GRX_SCRIPT_QUERY_IDENTIFIER_START_INDEX = INT_MIN
 #endif
 
 const bool GRX_DEBUG_PRINTS = true
-
 
                       
                       
@@ -346,8 +349,11 @@ global struct PurchaseDialogConfig
 	ItemFlavor ornull     flav = null
 	GRXScriptOffer ornull offer = null
                
-	          
+	                               
 	GiftingFriend ornull friend = null
+                     
+                                                         
+       
       
 	        
 	int           quantity = 1
@@ -416,6 +422,8 @@ global int GRX_QA_ITEM = -1
 	                                                                              
 	                                                                                    
 	                                              
+	                                                                                            
+	                                                                                          
 
  
 #endif
@@ -1225,6 +1233,17 @@ bool function GRXOffer_ContainsPack( GRXScriptOffer offer )
 
 	return false
 }
+                    
+                                                               
+ 
+                                                          
+  
+                                                                       
+               
+  
+            
+ 
+      
 #endif
 
 #if UI
@@ -1256,7 +1275,6 @@ bool function GRXOffer_ContainsThematicPack( GRXScriptOffer offer )
 #if UI
 bool function GRXOffer_ContainsEventThematicPack( GRXScriptOffer offer )
 {
-	                                                                                                           
 	foreach ( ItemFlavor outputFlav in offer.output.flavors )
 	{
 		if ( ItemFlavor_GetGRXMode( outputFlav ) == eItemFlavorGRXMode.PACK && ItemFlavor_GetAccountPackType( outputFlav ) == eAccountPackType.EVENT_THEMATIC )
@@ -1281,7 +1299,6 @@ string function GRXOffer_GetSpecialPackName( GRXScriptOffer offer )
 }
 #endif
 
-                
 #if UI
 bool function GRXOffer_GetSpecialPackContainsStickers( GRXScriptOffer offer )
 {
@@ -1295,7 +1312,6 @@ bool function GRXOffer_GetSpecialPackContainsStickers( GRXScriptOffer offer )
 	return hasStickers
 }
 #endif
-                          
 
 #if UI
 bool function GRXOffer_GetSpecialPackContainsSkydives( GRXScriptOffer offer )
@@ -2351,6 +2367,58 @@ void function GRXDbg( entity player, string label, ... )
 
 
 #if DEV && SERVER
+                                                                                            
+ 
+	                                                    
+		                        
+			                                
+
+		                                              
+		                                 
+		                                                  
+		                                                 
+		              
+		                                   
+		                             
+
+		                           
+		 
+			                            
+			 
+				        
+				                           
+				                                                                  
+				 
+					                             
+
+					                                      
+						           
+
+					                                     
+
+					                                      
+						           
+
+					                                    
+					                                                                 
+					                                                                                      
+						                                       
+					  
+					                                             
+
+					                                                                   
+						           
+
+					             
+					                            
+				   
+			 
+
+			             
+		 
+	   
+ 
+
                                                              
                                                                 
                                                        
@@ -2648,31 +2716,11 @@ void function GRXDbg( entity player, string label, ... )
  
 	                                
 	                                    
+	                                                                                        
 	                                                  
 
 	                                                                 
  
-#endif
-
-
-#if SERVER
-                                             
-                                                            
-   
-  	                                               
-  		      
-  
-  	                                                                    
-  
-  	                                    
-  	                                                                                              
-  	                                                                                                  
-  	 
-  		                                                                                                              
-  	 
-  
-  	                            
-   
 #endif
 
 
@@ -2684,6 +2732,8 @@ void function GRXDbg( entity player, string label, ... )
 		                                            
 			                                            
 	 
+
+	                               
  
 #endif
 
@@ -2850,16 +2900,34 @@ void function UpdatePlayerGRXScriptState( entity player, GRXUserInfo ornull code
 	bool isFirstTimeClean = false
 	if ( willConsiderInventoryReady )
 	{
-		if ( !wasConsideringInventoryReady )
-		{
-			scriptState.isInventoryReady = true
+		#if SERVER
+			                                    
+			 
+				                                   
+				                                            
+			 
+		#elseif UI
+			if ( !wasConsideringInventoryReady )
+				scriptState.isInventoryReady = true
+
+			bool updateCurrencyUI = false
+			foreach ( int idx, int balance in scriptState.balances )
+			{
+				if ( balance != codeUserInfo.balances[ idx ] )
+				{
+					updateCurrencyUI = true
+					break
+				}
+			}
 			scriptState.balances = codeUserInfo.balances
-		}
+			if ( updateCurrencyUI )
+				UpdateActiveUserInfoPanels()
+		#endif
 
 		#if SERVER
 			                                                                                                                         
 			 
-				                                                                          
+				                                                                    
 				                                                                          
 				                                                
 			 
@@ -2876,10 +2944,10 @@ void function UpdatePlayerGRXScriptState( entity player, GRXUserInfo ornull code
 					                                                                                              
 						            
 
-					                                                                             
-					                                                                            
-					                                                                            
-					                           	                                
+					                                                                        
+					                                                                       
+					                                                                       
+					                      	                                
 				 
 			#endif
 		}
@@ -2932,10 +3000,6 @@ void function UpdatePlayerGRXScriptState( entity player, GRXUserInfo ornull code
 			"areOffersReady", scriptState.areOffersReady )
 	}
 #endif
-
-	                                                                                                                                                          
-	                    
-	             
 
 	#if SERVER
 		                                   
@@ -3396,7 +3460,7 @@ void function WORKAROUND_CallOperationDoFuncOnFrameEnd( ScriptGRXOperationInfo o
 			                       
 
 			                                                                                
-			                                                                                                                                   
+			                                                                                                                             
 			 
 				                                                         
 				        
@@ -3699,7 +3763,7 @@ void function HandleGRXQueryCompleted( entity player, int queryScriptId, int que
 	 
 		                                              
 
-		                                                                                                                            
+		                                                                                                                                    
 		                     
 		                                                              
 		 
@@ -3881,10 +3945,10 @@ void function UICodeCallback_GRXGetOfferCompleted( GRXGetOfferInfo getOfferInfo 
 
                
 #if UI
-void function UICodeCallback_GRXCheckForGiftsCompleted( int batchCounter, int totalNumBatches, array< GRXGiftingInboxInfo > giftingInboxInfos )
+void function UICodeCallback_GRXCheckForGiftsCompleted( int batchCounter, int totalNumBatches, GRXScriptInboxMessage inboxMessage )
 {
-	                                                                                                                     
-	CacheGiftingInboxInfos( batchCounter, totalNumBatches, giftingInboxInfos )
+	                                         
+	ProcessGiftingInboxMessage( batchCounter, totalNumBatches, inboxMessage )
 }
 #endif
       
@@ -4116,7 +4180,7 @@ void function HandleGRXOffersRefreshed( int offersState, array< GRXCraftingOffer
 		{
 			string ref = codeOffer.attrs["prereq"]
 
-			                                                                                                                            
+			                                                                                                                                    
 			ItemFlavor prereqFlav
 			bool foundPrereq
 			foreach ( ItemFlavor iterFlav in GetAllItemFlavorsCosmetic() )
@@ -4537,7 +4601,7 @@ void function ClientCodeCallback_GRXPackOpened( array<int> balanceDiffs, array<i
 	                                                                  
 	 
 		                                                   
-			                                                                                                                                       
+			                                                                                                                                  
 
 		                                            
 
@@ -4854,9 +4918,20 @@ void function ClientCodeCallback_GRXPackOpened( array<int> balanceDiffs, array<i
  
 #endif
 
+#if SERVER
+                                                                                                                                                                                          
+ 
+	                                                                                                                                                                 
+	 
+		                                                                                                                              
+		      
+	 
+	                                                                                                             
+ 
+#endif
 
 #if SERVER
-                                                                                                                                                                 
+                                                                                                                                                                                          
  
 	                      
 	                                                                                                                                                           
@@ -4883,15 +4958,37 @@ void function ClientCodeCallback_GRXPackOpened( array<int> balanceDiffs, array<i
 			 
 		 
 	 
+	                
+	 
+		                                                                                                                             
+	 
+	    
+	 
+		                                                                                                                      
+	 
+ 
+#endif
 
+#if SERVER
+                                                                                                                                                                 
+ 
+	                                                                                                                       
+ 
+#endif
+
+#if SERVER
+                                                                                                                                                                        
+ 
 	                                                                                                                      
  
 #endif
 
-
 #if SERVER
                                                                           
  
+	                         
+		                                                                     
+
 	                                                                  
 		      
 
@@ -5124,32 +5221,6 @@ bool function GRX_CheckBundleAndUpdateOfferPrices( GRXScriptOffer offer )
  
 #endif
 
-#if SERVER
-                                                                                                                                                   
- 
-	                 
-		      
-
-	                             
-
-	                                        
-	 
-		                                                  
-			      
-		                                                 
-		                                
-	 
-
-	                                
-	                                                            
-	                                                                                                       
-	 
-		                                                                  
-	  
-
-	                                             
- 
-#endif
 
 #if SERVER
                                                             
@@ -5172,7 +5243,7 @@ bool function GRX_CheckBundleAndUpdateOfferPrices( GRXScriptOffer offer )
 #if UI
 table<int, int> function GRX_GetPostGameRewards()
 {
-	                                                                                                                       
+	                                                                                                     
 	                                                                                                                                         
 	table<int, int> postGameRewards = {}
 	entity player = GetLocalClientPlayer()
@@ -5269,3 +5340,38 @@ int function GRX_GetGiftingLimitResetDate()
 }
 #endif
                       
+
+#if DEV
+#if SERVER
+                                                                             
+ 
+	                                
+	                                                            
+	                                                                                 
+	 
+		                                                                     
+		                                                                                 
+	  
+	                                                                               
+		                                                                             
+		                           
+			      
+
+		                                          
+	  
+	                                                       
+	                                            
+ 
+#endif          
+#endif       
+
+#if SERVER
+                                                                                                                 
+                                                                                                                   
+                                                          
+ 
+	                                                                      
+	                                                                     
+	                                                                
+ 
+#endif

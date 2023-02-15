@@ -22,6 +22,7 @@ global function BattlePass_GetXPPurchaseFlav
 global function BattlePass_GetXPBoostFlav
 global function BattlePass_GetRerollFlav
 global function BattlePass_GetScheduleDatatable
+global function BattlePass_GetMilestoneDatatable
 global function BattlePass_GetBulletText
 global function BattlePass_ShouldEarnGrindForXP
 global function BattlePass_UseStarsToProgress
@@ -32,6 +33,9 @@ global function GetBattlePassMaxLevelIndex
 global function GetBattlePassMaxPurchaseLevels
 global function GetPlayerBattlePassPurchasableLevels
 global function GetRewardPromptLevelArray
+                    
+	global function GetMilestoneRepImageLevelArray
+      
 
 global function BattlePassPurchasedXP_GetXPAmount
 
@@ -684,6 +688,21 @@ array<int> function GetRewardPromptLevelArray( ItemFlavor pass )
 	}
 	return rtnArray
 }
+
+                    
+array<int> function GetMilestoneRepImageLevelArray( ItemFlavor pass, string arrayFieldName, string elementName )
+{
+	array<int> result
+
+	foreach ( var block in IterateSettingsAssetArray( ItemFlavor_GetAsset( pass ), arrayFieldName ) )
+	{
+		int level = GetSettingsBlockInt( block, elementName )
+		result.append( level )
+	}
+
+	return result
+}
+      
 #endif
 
 
@@ -724,7 +743,9 @@ array<BattlePassReward> function GetBattlePassBaseRewards( ItemFlavor pass )
 {
 	return GetBattlePassLevelRewards( pass, 0 )
 }
+#endif
 
+#if SERVER || CLIENT || UI
 array<BattlePassReward> function GetBattlePassPremiumRewards( ItemFlavor pass, int levelIndex, entity player = null )
 {
 	Assert( ItemFlavor_GetType( pass ) == eItemType.battlepass )
@@ -744,13 +765,13 @@ array<BattlePassReward> function GetBattlePassPremiumRewards( ItemFlavor pass, i
 
 	while ( rowIndex < numRows )
 	{
-		if ( currentLevel > levelIndex )
-			break;
-
 		asset rewardAsset = GetDataTableAsset( scheduleDT, rowIndex, GetDataTableColumnByName( scheduleDT, "reward" ) )
 		int rewardQty     = GetDataTableInt( scheduleDT, rowIndex, GetDataTableColumnByName( scheduleDT, "rewardQty" ) )
 		bool premium 	  = GetDataTableBool( scheduleDT, rowIndex, GetDataTableColumnByName( scheduleDT, "premium" ) )
-		currentLevel = GetDataTableInt( scheduleDT, rowIndex, GetDataTableColumnByName( scheduleDT, "levelIndex" ) )
+		currentLevel	  = GetDataTableInt( scheduleDT, rowIndex, GetDataTableColumnByName( scheduleDT, "levelIndex" ) )
+
+		if ( currentLevel > levelIndex )
+			break
 
 		if ( premium )
 		{
@@ -785,7 +806,9 @@ array<BattlePassReward> function GetBattlePassPremiumRewards( ItemFlavor pass, i
 
 	return rewardList
 }
+#endif
 
+#if SERVER || CLIENT || UI
 array<BattlePassReward> function GetBattlePassLevelRewards( ItemFlavor pass, int levelIndex, entity player = null )
 {
 	Assert( ItemFlavor_GetType( pass ) == eItemType.battlepass )
@@ -1024,6 +1047,14 @@ var function BattlePass_GetScheduleDatatable( ItemFlavor pass )
 }
 #endif
 
+#if SERVER || CLIENT || UI
+var function BattlePass_GetMilestoneDatatable( ItemFlavor pass )
+{
+	Assert( ItemFlavor_GetType( pass ) == eItemType.battlepass )
+
+	return GetDataTable( GetGlobalSettingsAsset( ItemFlavor_GetAsset( pass ), "milestoneScheduleDatatable" ) )
+}
+#endif
 
 #if SERVER || CLIENT || UI
 array<string> function BattlePass_GetBulletText( ItemFlavor pass, bool restricted )
@@ -1457,7 +1488,7 @@ ItemFlavor function DEV_BattlePass( EHI playerEHI = EHI_null )
 	                                                 
 	                                            
                     
-                                                
+	                                               
       
 	                       
 

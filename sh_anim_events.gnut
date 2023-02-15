@@ -88,11 +88,19 @@ void function AnimEvents_Init()
 	RegisterImpactTable( "pilot_footstep_emote" )
 	RegisterImpactTable( "jump_pad_bounce_no_sound" )
 	RegisterImpactTable( "melee_human" )
+	RegisterImpactTable( "fuse_flag" )
 
 	AddGlobalAnimEvent( "hide", GlobalAnimEvent_Hide )
 	AddGlobalAnimEvent( "show", GlobalAnimEvent_Show )
 
 	AddGlobalAnimEvent( "hide_reliable", GlobalAnimEvent_HideReliable )
+
+	#if CLIENT
+		AddGlobalAnimEvent( "loot_bin_open_top", GlobalAnimEventClient_LootBinOpeningTop )
+		AddGlobalAnimEvent( "loot_bin_open_bottom", GlobalAnimEventClient_LootBinOpeningBottom )
+		AddGlobalAnimEvent( "loot_bin_open_all", GlobalAnimEventClient_LootBinOpeningAll )
+	#endif
+
 	AddGlobalAnimEventTokenize( "hide_bodygroup_reliable", GlobalAnimEvent_HideBodygroupReliable )
 	AddGlobalAnimEventTokenize( "end_hide_bodygroup_reliable", GlobalAnimEvent_EndHideBodygroupReliable )
 
@@ -535,6 +543,32 @@ void function GlobalAnimEvent_HideReliable( entity ent )
 
 	thread __ReliableCallbackThread( ent, ["HideReliable"], HideEnt, ShowEnt )
 }
+
+
+#if CLIENT
+void function GlobalAnimEventClient_LootBinOpeningTop( entity ent )
+{
+
+	if ( IsValid( ent ) )
+		CL_LootBinOpening( ent, eLootBinSequenceKind.OPEN_REGULAR )
+}
+
+
+void function GlobalAnimEventClient_LootBinOpeningBottom( entity ent )
+{
+
+	if ( IsValid( ent ) )
+		CL_LootBinOpening( ent, eLootBinSequenceKind.OPEN_SECRET )
+}
+
+
+void function GlobalAnimEventClient_LootBinOpeningAll( entity ent )
+{
+
+	if ( IsValid( ent ) )
+		CL_LootBinOpening( ent, eLootBinSequenceKind.OPEN_BOTH )
+}
+#endif          
 
 
 void function HideEnt( entity ent )

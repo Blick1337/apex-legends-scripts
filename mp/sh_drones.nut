@@ -14,6 +14,9 @@
 global function ShDrones_Init
 global function ShDrones_IsValidDrone
 global function ShDrones_IsValidDroneMover
+                    
+                                                
+      
 global function ShDrones_DroneSpawned
 
 #if CLIENT
@@ -51,6 +54,9 @@ global enum eDroneType
 	INVALID,
 	LOOT_DRONE,
 	AD_DRONE,
+                     
+                    
+       
 	_count
 }
 
@@ -196,6 +202,12 @@ int function GetDroneTypeFromDroneEntity( entity droneEnt )
 	{
 		droneType = eDroneType.AD_DRONE
 	}
+                     
+                                                                                                                                                                   
+  
+                                           
+  
+       
 
 	return droneType
 }
@@ -213,6 +225,12 @@ int function GetDroneTypeFromDroneMover( entity droneEnt )
 	{
 		droneType = eDroneType.AD_DRONE
 	}
+                     
+                                                                                                                             
+  
+                                           
+  
+       
 
 	return droneType
 }
@@ -260,6 +278,9 @@ void function SetDroneTrailFX( DroneClientData droneData )
 	                                                                                         
 	switch( droneType )
 	{
+                      
+                                     
+        
 		case eDroneType.LOOT_DRONE:
 			SetLootDroneTrailFX( droneData )
 			break
@@ -283,6 +304,9 @@ void function ServerCallback_SetDroneTrailFXType( entity droneEnt, int trailType
 	                                                                                        
 	switch( clientData.droneType )
 	{
+                      
+                                     
+        
 		case eDroneType.LOOT_DRONE:
 			SetLootDroneTrailFXType( droneEnt, trailType )
 			break
@@ -361,3 +385,18 @@ bool function ShDrones_IsValidDroneMover( entity ent )
 
 	return isValidDroneMover
 }
+
+                    
+                                                            
+ 
+                       
+              
+
+                               
+
+                                                                          
+                          
+
+                         
+ 
+      

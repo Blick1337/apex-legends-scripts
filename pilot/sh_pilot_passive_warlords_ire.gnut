@@ -118,7 +118,10 @@ void function PassiveWarlordsIre_HighlightThink( entity target, float highlightD
 
 void function ServerCallback_WarlordsIre_HighlightTargetRemote( entity attacker, entity target, int damageType )
 {
-	PassiveWarlordsIre_OnLocalPlayerDidDamage( attacker, target, target.GetOrigin(), damageType, 0 )
+	if( IsValid( attacker ) && IsValid( target ) )
+	{
+		PassiveWarlordsIre_OnLocalPlayerDidDamage( attacker, target, target.GetOrigin(), damageType, 0 )
+	}
 }
 #endif
 

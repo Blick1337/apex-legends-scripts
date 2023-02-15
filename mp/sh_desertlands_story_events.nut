@@ -7,14 +7,14 @@ global function DesertlandsStoryEvents_Init
 #endif
 
                        
-       
-          
-                                                                     
-                                                       
-      
-      
+#if DEV
+#if SERVER
+	                                                                    
+	                                                      
+#endif
+#endif
 
-                                                                                      
+const asset ANNIVERSARY_SHIP_MDL = $"mdl/vehicle/goblin_dropship/goblin_dropship.rmdl"
       
 
 struct
@@ -53,13 +53,29 @@ void function DesertlandsStoryEvents_Init()
 	#endif
 
                         
-           
-                                                                                                                   
-   
-                                        
-                                                                                                           
-   
-       
+	#if SERVER
+		                                                                                                                   
+		 
+			                                     
+
+			                                                                                                             
+			                                                                        
+			               
+			 
+				       
+					                                                                                                        
+					     
+				       
+					                                                                  
+					     
+				       
+					                                                                 
+					     
+				        
+					     
+			 
+		 
+	#endif
        
 }
 
@@ -83,56 +99,69 @@ void function EntitiesDidLoad()
 #endif
 
                        
-          
+#if SERVER
                                                                                                              
  
-                  
-                                                        
+	                                                                            
+		                                                      
  
+
+                                                                            
+ 
+	                                                     
+	                                                                                 
+		                                                      
+ 
+
 
                                                                     
  
-                                                   
-                                                   
-                                                   
+	                                                  
+	                                                  
+	                                                  
  
 
                                                              
  
-                                                                                                    
-                                           
+	                                                                                                   
+	                                          
 
-             
-                           
-   
-                             
-                      
-   
-  
+	            
+		                         
+		 
+			                          
+				                  
+		 
+	 
 
-                    
-             
-  
-         
-                                              
-        
-         
-                                              
-        
-         
-                                              
-        
-          
-        
-  
+	                   
+	            
+	 
+		       
+			                                           
+			     
+		       
+			                                           
+			     
+		       
+			                                           
+			     
+		        
+			     
+	 
 
-                     
-  
-                    
-        
-  
+	                    
+	 
+		                  
+		      
+	 
 
-                                         
+	                                          
+	 
+		                         
+	 
+
+	                                        
  
-      
+#endif
       

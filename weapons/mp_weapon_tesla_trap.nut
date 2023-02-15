@@ -1739,6 +1739,10 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 	                                   
 	                                                                                                      
 
+	                                                                                                       
+	                        
+	                        
+
 	                
 	 
 		                      
@@ -2304,7 +2308,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
 		                                   
 		                                   
 		              	                                    
-		              	                                                                                               
+		              	                                                                                                             
 
 		   	  	                                         
 				                                          
@@ -2360,7 +2364,7 @@ void function TeslaTrap_PlacementProxy( entity weapon, entity player, asset mode
                                                                                                      
  
 	                                                
-	                                                                                                                                                                                      
+	                                                                                                                                                                                                                             
 	                                                                                     
 	                                                        
 
@@ -4304,7 +4308,7 @@ bool function TeslaTrap_CanLink_ObjectPlacer( vector trapPos, vector trapUp, ent
 		return false
 
 	                                                               
-	int beamCount = TeslaTrap_GetLinkLOSBeamCount( trapPos, trapUp, otherOrigin, otherTrap.GetUpVector() )
+	int beamCount = TeslaTrap_GetLinkLOSBeamCount( trapPos, trapUp, otherOrigin, otherTrap.GetUpVector(), null, otherTrap )
 	if ( beamCount < TESLA_TRAP_LINK_FX_MIN )
 		return false
 
@@ -4360,7 +4364,7 @@ bool function TeslaTrap_CanLink( entity trap, vector trapPos, vector trapUp, ent
 		return false
 
 	                                                               
-	int beamCount = TeslaTrap_GetLinkLOSBeamCount( trapPos, trapUp, otherOrigin, otherTrap.GetUpVector() )
+	int beamCount = TeslaTrap_GetLinkLOSBeamCount( trapPos, trapUp, otherOrigin, otherTrap.GetUpVector(), trap, otherTrap )
 	if ( beamCount < TESLA_TRAP_LINK_FX_MIN )
 		return false
 
@@ -4389,7 +4393,7 @@ bool function TeslaTrap_CanDeploy( entity trap, vector testPos, vector testUp, e
 	return true
 }
 
-int function TeslaTrap_GetLinkLOSBeamCount( vector mainOrigin, vector mainUp, vector otherOrigin, vector otherUp )
+int function TeslaTrap_GetLinkLOSBeamCount( vector mainOrigin, vector mainUp, vector otherOrigin, vector otherUp, entity mainTrap, entity otherTrap )
 {
 	if ( IsValid( file.framePlacementInfo ) )
 	{
@@ -4400,6 +4404,10 @@ int function TeslaTrap_GetLinkLOSBeamCount( vector mainOrigin, vector mainUp, ve
 	array<entity> ignoreEnts = GetPlayerArray_Alive()
 	ignoreEnts.extend( GetAllPropDoors() )
 	ignoreEnts.extend( GetAllDeathBoxes() )
+	if( IsValid( mainTrap ) )
+		ignoreEnts.append( mainTrap )
+	if( IsValid( otherTrap ) )
+		ignoreEnts.append( otherTrap )
 
 	for ( int i = 1; i <= TESLA_TRAP_LINK_FX_COUNT; i++ )
 	{

@@ -40,6 +40,10 @@ int LIFELINE_DRONE_EYEGLOW_FX_IDX = -1
 const int LIFELINE_DRONE_OFFLINE_SKIN = 0
 const int LIFELINE_DRONE_ONLINE_SKIN = 1
 
+const asset WRAITH_KUNAI_MDL = $"mdl/props/kunai/kunai.rmdl"
+const int WRAITH_KUNAI_SKIN = 0
+const int WRAITH_KUNAI_SKIN_NEW = 1
+
   
 struct {
 	table<string, void functionref(ScriptAnimWindow, var, entity)> createPropScriptCallbackMap
@@ -58,6 +62,10 @@ void function ShAnimWindows_LevelInit()
 	#if CLIENT
 		RegisterAnimWindowScriptCallback( "add_glad_card_rui", AddGladCardRUIToProp )
 		RegisterAnimWindowScriptCallback ( BLOODHOUND_BIRD_KEY, AnimWindow_SetBloodhoundRavenPropSkin )
+                     
+                             
+                                                                                     
+        
 	#endif
 
 	#if SERVER || CLIENT
@@ -178,6 +186,95 @@ void function CreateGladCardRui( entity prop )
 }
 #endif
 
+                   
+          
+                                                                                               
+ 
+                                   
+ 
+
+                                                
+ 
+                              
+                                  
+
+                                         
+
+                              
+        
+
+                        
+        
+
+                                     
+
+                      
+                           
+                           
+
+                      
+                                          
+                                           
+
+                         
+
+                                                                                      
+                                    
+
+                                                                                                          
+                                                                                          
+
+              
+                                 
+   
+                    
+                              
+   
+  
+
+                                                   
+
+                                     
+
+                         
+                     
+                          
+  
+                        
+                                  
+   
+                                               
+                         
+    
+                                                
+                    
+    
+   
+                                       
+   
+                                             
+                         
+    
+                                                   
+                    
+    
+   
+                                       
+   
+                                            
+                         
+    
+                                                   
+                    
+    
+   
+
+             
+  
+ 
+                
+      
+
 #if CLIENT
 void function CreateTeaseRui( entity prop, asset ruiAsset, int logId )
 {
@@ -229,6 +326,17 @@ void function AnimWindow_CreateProp_Precache( var settingsBlock )
 	{
 		PrecacheModel( GetSettingsBlockAsset( settingsBlock, "modelName" ) )
 	}
+	else if ( selectModelFrom == eAnimWindowCreatePropModelSelectionStrategy.SCRIPT_KEY )
+	{
+		switch ( GetSettingsBlockString( settingsBlock, "modelScriptKey" ) )
+		{
+			case "wraith_kunai":
+			{
+				PrecacheModel( WRAITH_KUNAI_MDL )
+				break
+			}
+		}
+	}
 }
 
 
@@ -263,6 +371,7 @@ void function AnimWindow_CreateProp_Start( ScriptAnimWindow window, var settings
 		  	                                                                                                                           
 		        
 
+		SetTeam( prop, window.ent.GetTeam() )
 		prop.kv.renderamt = window.ent.kv.renderamt
 		prop.CopyHighlightState( window.ent )
 		if ( window.ent.IsHidden() )
@@ -288,7 +397,7 @@ void function AnimWindow_CreateProp_Start( ScriptAnimWindow window, var settings
 		prop.SetSkin( window.ent.GetSkin() )
 		prop.SetCamo( window.ent.GetCamo() )
 	}
-	else
+	else if ( selectModelFrom != eAnimWindowCreatePropModelSelectionStrategy.SCRIPT_KEY )
 	{
 		string characterSkinName = window.ent.GetSkinNameByIndex( window.ent.GetSkin() )
 		int characterCamo = window.ent.GetCamo()
@@ -378,6 +487,28 @@ void function SetModelOnPropByScriptKey( entity propEnt, string key, entity pare
 			propEnt.SetSkin( LIFELINE_DRONE_ONLINE_SKIN )
 			break
 
+		case "wraith_kunai":
+			propEnt.SetModel( WRAITH_KUNAI_MDL )
+#if CLIENT
+			bool usesNewKunai = false;
+			ItemFlavor ornull meleeSkinFlavor = parentEnt.e.animWindowMeleeSkinItemFlavor
+			if ( meleeSkinFlavor != null )
+			{
+				expect ItemFlavor( meleeSkinFlavor )
+				string skinname = MeleeSkin_GetMainWeaponClassname( meleeSkinFlavor )
+				usesNewKunai = skinname == "mp_weapon_wraith_kunai_rt01_primary"
+			}
+
+			if ( usesNewKunai )
+			{
+				propEnt.SetSkin( WRAITH_KUNAI_SKIN_NEW )
+			}
+			else
+			{
+				propEnt.SetSkin( WRAITH_KUNAI_SKIN )
+			}
+			break
+#endif         
 		default:
 			Assert( false, "Unknown script key for CreateProp anim window: " + key )
 			break

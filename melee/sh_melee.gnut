@@ -134,7 +134,9 @@ void function OnItemFlavorRegistered_Character( ItemFlavor characterClass )
 		return !IsLobby()
 	}
 	entry.associatedCharacterOrNull = characterClass
-	entry.networkTo                 = eLoadoutNetworking.PLAYER_EXCLUSIVE
+	entry.networkTo                 = eLoadoutNetworking.PLAYER_GLOBAL
+	entry.networkVarName			= "MeleeSkin"
+	entry.stryderCharDataArrayIndex = ePlayerStryderCharDataArraySlots.MELEE_SKIN
 	fileLevel.characterMeleeSkinLoadoutEntryMap[characterClass] <- entry
 
 	#if SERVER && DEV
@@ -492,30 +494,26 @@ void function CodeCallback_OnMeleePressed( entity attacker, entity meleeInputWea
 			eyeTraceHitPos = eyeTrace.endPos
 
                 
-			if( !IsValid( lungeTarget ) )
+			TraceResults rebuiltDoorTrace = TraceLine(
+				attacker.EyePosition(), attacker.EyePosition() + 150.0 * attacker.GetViewVector(),
+				[ attacker ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE
+			)
+
+			if( rebuiltDoorTrace.fraction <= eyeTrace.fraction && IsValid( rebuiltDoorTrace.hitEnt ) && IsRebuiltDoor( rebuiltDoorTrace.hitEnt ) )
 			{
-				eyeTrace = TraceLine(
-					attacker.EyePosition(), attacker.EyePosition() + 150.0 * attacker.GetViewVector(),
-					[ attacker ], TRACE_MASK_SHOT, TRACE_COLLISION_GROUP_NONE
-				)
-				lungeTarget = eyeTrace.hitEnt
-				eyeTraceHitPos = eyeTrace.endPos
+				lungeTarget = rebuiltDoorTrace.hitEnt
+				eyeTraceHitPos = rebuiltDoorTrace.endPos
 			}
       
 		}
 
                   
-		if ( doorLungeEnabled && IsValid( lungeTarget ) && ( IsDoor( lungeTarget ) || lungeTarget.GetTargetName() == PASSIVE_REINFORCE_REBUILT_DOOR_SCRIPT_NAME ) )
+		if ( doorLungeEnabled && IsValid( lungeTarget ) && ( IsDoor( lungeTarget ) || IsRebuiltDoor( lungeTarget ) ) )
        
                                                                             
         
 		{
 			meleeAttackWeapon.AddMod( "proto_door_kick" )
-
-			if ( !meleeAttackWeapon.HasMod( "melee_crypto_drone" ) && !meleeAttackWeapon.HasMod( "melee_valk_helmet" ) && !meleeAttackWeapon.HasMod( "melee_loba_blunt" ) && !meleeAttackWeapon.HasMod( "melee_seer_heart" ) && !meleeAttackWeapon.HasMod( "melee_seer_kick" ) )
-			{
-				meleeAttackWeapon.AddMod( "proto_door_kick_impact_table" )
-			}
 
 			attacker.Lunge_SetTargetPosition( <eyeTraceHitPos.x, eyeTraceHitPos.y, lungeTarget.GetWorldSpaceCenter().z - 52 > )                             
 			attacker.Lunge_SetSmoothTime( 0.7 )
@@ -524,9 +522,6 @@ void function CodeCallback_OnMeleePressed( entity attacker, entity meleeInputWea
 		else if ( meleeAttackWeapon.HasMod( "proto_door_kick" ) )
 		{
 			meleeAttackWeapon.RemoveMod( "proto_door_kick" )
-			
-			if ( meleeAttackWeapon.HasMod( "proto_door_kick_impact_table" ) )
-				meleeAttackWeapon.RemoveMod( "proto_door_kick_impact_table" )
 		}
 	}
 
@@ -590,7 +585,7 @@ void function CodeCallback_OnMeleeReleased( entity player, entity weapon )
 
 
 #if SERVER || CLIENT
-void function CodeCallback_OnMeleeAttackAnimEvent( entity attacker, entity meleeAttackWeapon )
+		void function CodeCallback_OnMeleeAttackAnimEvent( entity attacker, entity meleeAttackWeapon, int impactTableOverride )
 {
 	Assert( IsValid( attacker ) )
 
@@ -620,7 +615,7 @@ void function CodeCallback_OnMeleeAttackAnimEvent( entity attacker, entity melee
 	vector startPosition                  = expect vector(legacyTraceResults.startPosition)
 	bool shouldHitForward                 = expect bool(legacyTraceResults.hitWithFlatTrace)
 	vector hitNormal                      = Normalize( startPosition - endPosition )
-	int meleeAttackWeaponImpactTableIndex = meleeAttackWeapon.GetImpactTableIndex()
+	int meleeAttackWeaponImpactTableIndex = impactTableOverride >= 0 ? impactTableOverride : meleeAttackWeapon.GetImpactTableIndex()
 
 	#if SERVER
 		                                                           

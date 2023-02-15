@@ -8,18 +8,26 @@ global function Sh_Squads_Init
       
 #endif
 
-#if CLIENT
-global function Squads_GetSquadUIIndex
+#if CLIENT || UI
+global function Squads_GetMax
+global function Squads_GetSquadName
+global function Squads_GetSquadNameLong
 global function Squads_GetSquadIcon
 global function Squads_GetSquadColor
 global function Squads_GetNonLinearSquadColor
-global function Squads_GetSquadName
-global function Squads_GetSquadNameLong
+#endif
+
+#if CLIENT
+global function Squads_GetSquadUIIndex
 global function Squads_GetTeamsUIId
+global function Squads_GetReorderedTeamsUIId
 
 global function SetCustomPlayerInfo
 global function ServerCallback_Squad_SetIsNessie
 
+#endif
+
+#if CLIENT || UI
 const int  MAX_NUMBER_SQUADS = 4
 
 const asset[ MAX_NUMBER_SQUADS ] SQUAD_ICONS = [
@@ -126,6 +134,7 @@ void function Squads_RegisterNetworking()
 		                                      
 		                                            
 	 
+
 	                                                                    
 	 
 		                                                        
@@ -154,31 +163,30 @@ void function Cl_Squads_Init()
 #if CLIENT
 int function Squads_GetSquadUIIndex(int squadIndex)
 {
-	int uiTeamId = Squads_GetTeamsUIId( squadIndex )
-	int index    = Squads_GetArrayIndexForTeam( uiTeamId )
+	int index    = Squads_GetArrayIndexForTeam( squadIndex )
 	Assert( index >= 0, "Local Squad index out of range. Original index = " + squadIndex )
 
 	return index
 }
 #endif
 
-#if CLIENT
-vector function Squads_GetSquadColor( int squadIndex )
+#if CLIENT || UI
+vector function Squads_GetSquadColor( int squadIndex, bool forceWinterExpress = false  )
 {
-	return SrgbToLinear( Squads_GetNonLinearSquadColor( squadIndex )/255 )
+	return SrgbToLinear( Squads_GetNonLinearSquadColor( squadIndex, forceWinterExpress )/255 )
 }
 #endif
 
-#if CLIENT
-vector function Squads_GetNonLinearSquadColor( int squadIndex )
+#if CLIENT || UI
+vector function Squads_GetNonLinearSquadColor( int squadIndex, bool forceWinterExpress = false )
 {
 	bool skipNessie = false
 
                        
-		skipNessie = WinterExpress_IsModeEnabled()
+		skipNessie = WinterExpress_IsModeEnabled() || forceWinterExpress
        
 
-	if( squadIndex == file.squadIdIsNessie && !skipNessie)
+	if( squadIndex + TEAM_IMC == file.squadIdIsNessie && !skipNessie)
 		return GetKeyColor( COLORID_LTM_SQUAD_0_EASTEREGG )
 
 
@@ -193,43 +201,52 @@ vector function Squads_GetNonLinearSquadColor( int squadIndex )
 }
 #endif
 
-#if CLIENT
-asset function Squads_GetSquadIcon( int squadIndex )
+#if CLIENT || UI
+asset function Squads_GetSquadIcon( int squadIndex, bool forceWinterExpress = false )
 {
                        
-		if( WinterExpress_IsModeEnabled() )
+		if( WinterExpress_IsModeEnabled() || forceWinterExpress )
 			return WINTER_EXPRESS_SQUAD_ICONS[ squadIndex ]
        
 
-	if( squadIndex == file.squadIdIsNessie )
+	if( squadIndex + TEAM_IMC == file.squadIdIsNessie )
 		return $"rui/gamemodes/tdm/tdm_squad_icon0_easteregg"
 
 	return SQUAD_ICONS[ squadIndex ]
 }
 #endif
 
-#if CLIENT
-string function Squads_GetSquadName( int squadIndex )
+#if CLIENT || UI
+string function Squads_GetSquadName( int squadIndex, bool forceWinterExpress = false )
 {
                        
-		if( WinterExpress_IsModeEnabled() )
+		if( WinterExpress_IsModeEnabled() || forceWinterExpress  )
 			return WINTER_EXPRESS_SQUAD_NAMES[ squadIndex ]
        
 
-	if( squadIndex == file.squadIdIsNessie )
+	if( squadIndex + TEAM_IMC == file.squadIdIsNessie )
 		return "#TEAM_NAME_0_EASTEREGG"
 
 	return SQUAD_NAMES[ squadIndex ]
 }
+#endif
 
-string function Squads_GetSquadNameLong( int squadIndex )
+#if CLIENT || UI
+int function Squads_GetMax()
+{
+	return MAX_NUMBER_SQUADS
+}
+#endif
+
+#if CLIENT || UI
+string function Squads_GetSquadNameLong( int squadIndex, bool forceWinterExpress = false )
 {
                        
-		if( WinterExpress_IsModeEnabled() )
+		if( WinterExpress_IsModeEnabled() || forceWinterExpress  )
 			return WINTER_EXPRESS_SQUAD_NAMES_LONG[ squadIndex ]
        
 
-	if( squadIndex == file.squadIdIsNessie )
+	if( squadIndex + TEAM_IMC == file.squadIdIsNessie )
 		return "#TEAM_NAME_LONG_0_EASTEREGG"
 
 
@@ -245,20 +262,20 @@ void function SetCustomPlayerInfo( entity player )
 		return
 
 	int team   = player.GetTeam()
-	if( team == TEAM_SPECTATOR )
+	if( team == TEAM_SPECTATOR || team == TEAM_UNASSIGNED )
 		return
 
 	int myTeam = localPlayer.GetTeam()
 	int squadIndex = Squads_GetSquadUIIndex( team )
-
 	if( squadIndex >= 0 && squadIndex < MAX_NUMBER_SQUADS )
 	{
 		SetCustomPlayerInfoColor( player, Squads_GetNonLinearSquadColor( squadIndex ) )
 		player.SetTargetInfoIcon( Squads_GetSquadIcon( squadIndex ) )
 
+		vector color = Squads_GetSquadColor( squadIndex )
+		player.SetTargetInfoIconColor( color, 1.0 )
 		if( team == myTeam )
 		{
-			vector color = Squads_GetSquadColor( squadIndex )
 			SetUnitFrameCustomColor( player, color )
 			Minimap_SetPlayerColorOverride( player, color )
 		}
@@ -301,5 +318,13 @@ int function Squads_GetTeamsUIId( int team )
 	}
 
 	return teamsUIId
+}
+#endif
+
+#if CLIENT
+int function Squads_GetReorderedTeamsUIId( int team )
+{
+	int uiSquad = Squads_GetTeamsUIId( team )
+	return Squads_GetArrayIndexForTeam( uiSquad )
 }
 #endif

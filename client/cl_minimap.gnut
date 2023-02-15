@@ -44,6 +44,11 @@ global function Minimap_AddRuitPosition
 global function Minimap_AddCryptoPulseToMinimap
 global function Minimap_SetTintParams
 
+                   
+global function Minimap_AddCarePackageInsightIconAtPosition
+global function FullMap_AddCarePackageInsightIconAtPos
+      
+
 global function Minimap_SetDeathFieldRadius
 
 global function Fullmap_AddRui
@@ -1057,6 +1062,42 @@ var function Minimap_AddIconAtPosition( vector position, vector angles, asset ic
 	return rui
 }
 
+                   
+var function Minimap_AddCarePackageInsightIconAtPosition( vector position, vector angles, asset icon, float scale, vector iconColor )
+{
+	entity viewPlayer = GetLocalViewPlayer()
+	var rui = Minimap_CommonAdd( $"ui/minimap_square_care_package_insight.rpak", MINIMAP_Z_BASE + 20, position, angles )
+
+	RuiTrackInt( rui, "objectFlags", viewPlayer, RUI_TRACK_MINIMAP_FLAGS )
+	RuiTrackInt( rui, "customState", viewPlayer, RUI_TRACK_MINIMAP_CUSTOM_STATE )
+	RuiSetFloat3( rui, "objectPos", position )
+	                                                               
+	RuiSetFloat3( rui, "iconColor", iconColor )
+	RuiSetFloat2( rui, "iconScale", < scale, scale, 0 > )
+	RuiSetBool( rui, "alwaysShowOnMinimap", true )
+	RuiSetBool( rui, "useTeamColor", false )
+	RuiSetImage( rui, "defaultIcon", icon )
+	RuiSetImage( rui, "clampedDefaultIcon", $"" )
+
+	return rui
+}
+
+var function FullMap_AddCarePackageInsightIconAtPos( vector position, vector angles, asset icon, float scale, vector iconColor )
+{
+	var rui = FullMap_CommonAdd( $"ui/in_world_minimap_square_care_package_insight.rpak" )
+
+	RuiSetFloat3( rui, "objectPos", position )
+	RuiSetFloat3( rui, "objectAngles", angles )
+	RuiSetFloat3( rui, "objColor", iconColor )
+	RuiSetFloat( rui, "objectSize", scale )
+	RuiSetBool( rui, "doAnnounceEffect", true )
+	RuiSetImage( rui, "iconImage", icon )
+
+	Fullmap_AddRui( rui )
+	return rui
+}
+      
+
 var function Minimap_AddRuitPosition( vector position, vector angles, asset ruiAsset, float scale, vector iconColor )
 {
 	entity viewPlayer = GetLocalViewPlayer()
@@ -1716,7 +1757,10 @@ void function Fullmap_SetVisible( bool state )
 {
 	FullMap_UpdateTopologies()
 	SetFullmapRuiResolutionsToScreenSize()
-	UpdateSurveyBeaconHint()             
+
+                    
+                                      
+      
 
 	UpdateMapFeatures()
 	UpdateCameraVisibility()
@@ -1839,7 +1883,7 @@ void function UpdateFullmapRuiTracks()
 	RuiSetBool( viewPlayerRui, "useShadowFormFrame", viewPlayer.IsShadowForm() )
 
                     
-                                                                                                                                                           
+		RuiTrackBool( viewPlayerRui, "hasAltStatus", viewPlayer, RUI_TRACK_SCRIPT_NETWORK_VAR_BOOL, GetNetworkedVariableIndex( EXPIRED_BANNER_RECOVERY_NETVAR ) )
        
 
 	if ( IsValid( clientPlayer ) )
@@ -1881,9 +1925,10 @@ void function UpdateFullmapRuiTracks()
 				RuiSetBool( rui, "isJumpmaster", false )
 				RuiSetInt( rui, "frameSlot", slotIndex )
 			}
-			else if( Survival_IsJIPEnabled() && !IsFiringRangeGameMode() )
+			else if( GamemodeUtility_IsJIPEnabled() && !IsFiringRangeGameMode() )
 			{
-				RuiSetBool( jipRui, "isVisible", gamestateIsPlaying )
+				bool isObserver = GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR || GetLocalClientPlayer().GetTeam() == TEAM_UNASSIGNED
+				RuiSetBool( jipRui, "isVisible", gamestateIsPlaying && !isObserver )
 				RuiSetInt( jipRui, "frameSlot", slotIndex )
 				RuiSetString( jipRui, "name", Localize( "#JIP_SEARCHING_FOR_SHORT" ) )
 
@@ -1943,6 +1988,7 @@ void function UpdateFullmapRuiTracks()
 	string playlist = GetCurrentPlaylistName()
 	string playlistUiRules = GetPlaylistVarString( playlist, "ui_rules", "" )
 	RuiSetBool( file.fullmap_legendRui, "rulesEnabled", playlistUiRules != "" )
+	RuiSetBool( file.fullmap_legendRui, "isObserver", GetLocalClientPlayer().IsObserver() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR )
 	RuiTrackBool( file.fullmap_legendRui, "pingEnabled", viewPlayer, RUI_TRACK_SCRIPT_NETWORK_VAR_BOOL, GetNetworkedVariableIndex( "pingEnabled" ) )
 
 	                  

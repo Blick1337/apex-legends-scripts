@@ -337,15 +337,11 @@ void function AddRemoveSonarOverviewScanRUI( entity highlightEnt, int oldContext
 		                                                     
 		                      
                     
-                                                                                                   
-   
-         
-   
-                                                                                                               
-   
-                                                                                                                                
-   
-      
+		                                                                    	                                   
+		 
+			                                                                                                                             
+		 
+		    
       
 		                                                                      
 
@@ -603,7 +599,10 @@ void function EntitySonarDetectedEnabled( entity ent, int statusEffect, bool act
 			highlightColor = < 0.21, 0.79, 0.34 > * 0.1
 			highlightSound = "Canyonlands_Scr_Cryto_TT_Players_Indicator"
 		}
-
+                       
+		else if ( StatusEffect_HasSeverity( ent, eStatusEffect.mirage_detected ) )
+			highlightColor = <0, 0, 0>
+        
 		if ( IsValid( viewModelArm ) )
 			SonarViewModelHighlight( viewModelArm, highlightColor )
 
@@ -616,7 +615,10 @@ void function EntitySonarDetectedEnabled( entity ent, int statusEffect, bool act
 		if ( IsValid( predictedFirstPersonProxy ) )
 			SonarViewModelHighlight( predictedFirstPersonProxy, highlightColor )
 
-		EmitSoundOnEntity( ent, highlightSound )
+                     
+		if( !StatusEffect_HasSeverity( ent, eStatusEffect.perk_survey_beacon_scanned_visual ) )
+        
+			EmitSoundOnEntity( ent, highlightSound )
 		                                     
 	}
 	else if ( showThirdPersonHighlight )

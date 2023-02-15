@@ -16,10 +16,7 @@ global function Control_RegisterNetworking
                                         
                                             
 
-                                           
-
                                       
-                                               
 
                      
                                           
@@ -34,7 +31,6 @@ global function Control_RegisterNetworking
                                    
                                          
                                                 
-                                          
                                    
 #endif          
 
@@ -66,7 +62,6 @@ global function ServerCallback_Control_OnPlayerChoosingRespawnChoiceChanged
 global function ServerCallback_Control_NoVehiclesAvailable
 global function ServerCallback_Control_UpdatePlayerExpHUDWeaponEvo
 global function ServerCallback_Control_ProcessObjectiveStateChange
-global function ServerCallback_Control_DisplayMatchTimeLimitWarning
 global function ServerCallback_Control_DisplayIconAtPosition
 global function ServerCallback_Control_BountyActiveAlert
 global function ServerCallback_Control_BountyClaimedAlert
@@ -80,7 +75,6 @@ global function ServerCallback_Control_DisplayLockoutUnavailableWarning
 global function ServerCallback_Control_MRBTimedEvent_OnMRBPickedUp
 
 global function Control_OpenCharacterSelect
-global function Control_AnnouncementMessageWarning
 global function ServerCallback_Control_DisplaySpawnAlertMessage
 global function ServerCallback_Control_DisplayWaveSpawnBarStatusMessage
 
@@ -108,7 +102,6 @@ global function Control_ScoreboardUpdateHeader
 global function Control_IsPlayerInMapCameraView
 global function Control_CloseCharacterSelectOnlyIfOpen
 global function Control_GetObjectiveNameFromObjectiveID_Localized
-global function Control_GetColorVectorForObjectiveState
 #endif          
 
 
@@ -120,8 +113,6 @@ global function Control_IsSpawningOnObjectiveBAllowed
 
 #if CLIENT || SERVER
 global function Control_GetPlayerCountForFaction
-global function Control_GetTeamScore
-global function Control_GetScoreLimit
 global function Control_GetPlayerExpTotal
 global function Control_GetPlayerExpTier
 global function Control_DidPlayerPingSameObjective
@@ -136,7 +127,6 @@ global function Control_SetHomeBaseBadPlacesForMRBForAlliance
 global const float CONTROL_MESSAGE_DURATION = 5.0
 const float CONTROL_MESSAGE_DURATION_LONG = 11.0
 const float CONTROL_MESSAGE_DURATION_SHORT = 3.0
-const float CONTROL_MATCH_TIME_LIMIT_WARNING_TIME = 300.0                                                                       
 const float LEGEND_DIALOGUE_DELAY_POST_ANNOUNCER_DIALOGUE_SHORT = 2.5
 const float LEGEND_DIALOGUE_DELAY_POST_ANNOUNCER_DIALOGUE_LONG = 3.5
 const float ANNOUNCER_DIALOGUE_DELAY = 1.5
@@ -183,11 +173,12 @@ const int CONTROL_DEFAULT_MAX_PLAYERS = 18
                                                  
                                                      
                                          
-                                                 
                                                   
+                                                    
 #endif                     
 
 #if DEV
+	const bool CONTROL_SPAWN_DEBUGGING = false
 	const bool CONTROL_DETAILED_DEBUG = false                                                                                     
 	const bool CONTROL_DISPLAY_DEBUG_DRAWS = false                                                                     
 	const float CONTROL_DEBUG_DRAW_DISPLAY_TIME = 1000.0
@@ -289,8 +280,6 @@ global const int CONTROL_MAX_LOOT_TIER = 3
 global const int CONTROL_TEAMSCORE_LOCKOUTBROKEN = 50
 
 #if SERVER
-                                     	                                   
-
                                                                          
                                                                 
                                                         
@@ -385,7 +374,6 @@ const string CONTROL_SFX_CAPTURE_BONUS_CLAIMED_ENEMY = "Ctrl_CaptureBonus_Claime
             
 const string CONTROL_SFX_GAME_END_VICTORY = "Ctrl_Victory_1p"
 const string CONTROL_SFX_GAME_END_LOSS = "Ctrl_Loss_1p"
-const string CONTROL_SFX_MATCH_TIME_LIMIT = "Ctrl_Match_End_Warning_1p"
                                 
 const string CONTROL_FINAL_OBJECTIVE_BEING_CAPTURED_WARNING = "Ctrl_Match_End_Warning_1p"
                                     
@@ -467,17 +455,6 @@ global enum eControlSpawnWaypointUsage
 }
 #endif                
 
-#if CLIENT
-                                        
-global enum eControlObjectiveColorState
-{
-	NEUTRAL,
-	CONTESTED,
-	FRIENDLY_OWNED,
-	ENEMY_OWNED
-}
-#endif          
-
 enum eControlSpawnAlertCode
 {
 	SPAWN_FAILED,
@@ -505,15 +482,6 @@ enum eControlObjectivePingValue
 	DEFEND_B,
 	ATTACK_C,
 	DEFEND_C
-}
-
-enum eControlVictoryCondition
-{
-	UNKNOWN,
-	SCORE,
-	LOCKOUT,
-
-	_count
 }
 
 #if CLIENT
@@ -697,7 +665,7 @@ struct {
 		                                           
 
 		      
-        	                                                                                                 
+		                                                                                                 
 		                                               
 		                                                   
 		                                              
@@ -715,16 +683,13 @@ struct {
 		                                               
 
 		          
-		                                                   
 		                          
-		                                                       
 
 		       
-		                                    
 		                            
 		                                  
 		                                  
-		                                  
+		                                                                                                    
 
 		                  
 		                          
@@ -805,6 +770,7 @@ struct {
 
 	#if DEV && SERVER
 		                            
+		                               
 	#endif                 
 } file
 
@@ -854,34 +820,7 @@ void function Control_Init()
 		                                                                         
 		                                                                
 
-		                                           
-		                          
-		 
-			                                                                       
-
-			                                  
-			                                    
-			                                                 
-			                                      
-
-			                                     
-			                                              
-			                                           
-			                                                    
-
-			                                
-			                                    
-
-			                                     
-			                                                
-
-			                                                           
-			                                        
-
-                     
-				                                        
-                           
-		 
+		                                                               
 
 		                     
 		                                                                                                                     
@@ -919,9 +858,7 @@ void function Control_Init()
 	#endif                    
 
 	#if SERVER
-		                                        
-			                                             
-
+		                                                                          
 		                                                        
 
                        
@@ -930,7 +867,10 @@ void function Control_Init()
                                                              
                                                                                       
     
+       
+			                                                                                          
         
+
 		                             
 		                                                                                               
 
@@ -943,6 +883,7 @@ void function Control_Init()
 		                                                                            
 		                                                                                                 
 		                                                  
+		                                                              
 		                                                                               
 		                                                        
 
@@ -962,6 +903,8 @@ void function Control_Init()
 		                                                       
 		                                                                                       
 		                                                                                       
+
+		                                                                                 
 
 		                                            
 			                                                           
@@ -992,7 +935,6 @@ void function Control_Init()
 
 		                                                        
 
-		                                            
 		                                            
 		                                             
 
@@ -1091,15 +1033,13 @@ void function Control_Init()
 		RegisterSignal( "OnValidSpawnPointThreadStarted" )
 		RegisterSignal( "OnSpawnMenuClosed" )
 		RegisterSignal( "Control_OnObjectiveStateChanged_Client" )
+		RegisterSignal( "EndUpdateAllianceUIScoreGameState" )
+		RegisterSignal( "EndUpdateAllianceUIScoreMap" )
+
 
 		if ( Control_GetIsMRBTimedEventEnabled() )
 			Waypoints_RegisterCustomType( WAYPOINT_CONTROL_MRB, InstanceWPControlMRB)
 	#endif          
-
-
-	#if DEV && SERVER
-		                                                 
-	#endif                 
 
 	#if DEV
 		if ( CONTROL_DETAILED_DEBUG )
@@ -1152,7 +1092,6 @@ void function Control_RegisterNetworking()
 	RegisterNetworkedVariable( "Control_IsPlayerExemptFromWaveSpawn", SNDC_PLAYER_EXCLUSIVE, SNVT_BOOL, false )
 	RegisterNetworkedVariable( "Control_IsLateJoinPlayerFirstSpawn", SNDC_PLAYER_EXCLUSIVE, SNVT_BOOL, false )
 	RegisterNetworkedVariable( "Control_ObjectiveIndex", SNDC_PLAYER_EXCLUSIVE, SNVT_INT, -1)
-	RegisterNetworkedVariable( "deaths", SNDC_PLAYER_GLOBAL, SNVT_INT, 0 )
 	RegisterNetworkedVariable( "control_personal_score", SNDC_PLAYER_GLOBAL, SNVT_BIG_INT, 0 )
 	RegisterNetworkedVariable( "control_current_exp_total", SNDC_PLAYER_EXCLUSIVE, SNVT_BIG_INT, 0 )
 	RegisterNetworkedVariable( "control_current_exp_tier", SNDC_PLAYER_EXCLUSIVE, SNVT_INT, 0 )
@@ -1171,7 +1110,6 @@ void function Control_RegisterNetworking()
 	Remote_RegisterClientFunction( "ServerCallback_Control_NoVehiclesAvailable" )
 	Remote_RegisterClientFunction( "ServerCallback_Control_UpdatePlayerExpHUDWeaponEvo", "bool", "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_Control_ProcessObjectiveStateChange", "entity", "int", -1, 2, "int", ALLIANCE_NONE, 2, "int", ALLIANCE_NONE, 2, "int", ALLIANCE_NONE, 2, "int",ALLIANCE_NONE, 2, "bool" )
-	Remote_RegisterClientFunction( "ServerCallback_Control_DisplayMatchTimeLimitWarning", "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_Control_DisplayIconAtPosition", "vector", -1.0, 1.0, 32, "int", 0, eControlIconIndex._count, "int", INT_MIN, INT_MAX, "float", 0.0, FLT_MAX, 32 )
 	Remote_RegisterClientFunction( "ServerCallback_Control_BountyActiveAlert", "entity" )
 	Remote_RegisterClientFunction( "ServerCallback_Control_BountyClaimedAlert", "entity", "int", INT_MIN, INT_MAX, "int",ALLIANCE_NONE, 2  )
@@ -1190,7 +1128,7 @@ void function Control_RegisterNetworking()
 	Remote_RegisterClientFunction( "ServerCallback_Control_PlayCaptureZoneEnterExitSFX", "bool" )
 	Remote_RegisterClientFunction( "ServerCallback_Control_NewEXPLeader", "entity", "int", INT_MIN, INT_MAX )
 	Remote_RegisterClientFunction( "ServerCallback_Control_EXPLeaderKilled", "entity", "entity" )
-	Remote_RegisterClientFunction( "ServerCallback_PlayMatchEndMusic_Control", "int", 0, eControlVictoryCondition._count )
+	Remote_RegisterClientFunction( "ServerCallback_PlayMatchEndMusic_Control", "int", 0, eWinReason._count )
 	Remote_RegisterClientFunction( "ServerCallback_PlayPodiumMusic" )
 	Remote_RegisterClientFunction( "ServerCallback_Control_DisplayLockoutUnavailableWarning" )
 
@@ -1210,12 +1148,6 @@ void function Control_RegisterNetworking()
 		RegisterNetVarBoolChangeCallback( "Control_IsPlayerOnSpawnSelectScreen", ServerCallback_Control_OnPlayerChoosingRespawnChoiceChanged )
 		RegisterNetVarIntChangeCallback ( "control_current_exp_total", Control_UpdatePlayerExpHUD )
 	#endif          
-}
-
-                                                               
-int function Control_GetScoreLimit()
-{
-	return GetCurrentPlaylistVarInt( "control_score_limit", 250 )
 }
 
 bool function Control_ShouldShow2DMapIcons()
@@ -1351,39 +1283,9 @@ bool function Control_IsSpawningOnObjectiveBAllowed()
 #endif          
 
 #if SERVER
-                                                                                  
-                                                            
- 
-	                                                                              
- 
-#endif          
-
-#if SERVER
-                                                         
-                                                  
- 
-	                                                                   
- 
-#endif          
-
-#if SERVER
                                                                 
  
 	                                                                                          
- 
-#endif          
-
-#if SERVER
-                                                                                      
-                                          
- 
-	                                                                                                              
-
-	       
-		                                                                                                                             
-	             
-
-	                     
  
 #endif          
 
@@ -1556,38 +1458,6 @@ float function Control_GetMRBAirdropDelay()
 }
 #endif                    
 
-#if CLIENT
-                                                    
-vector function Control_GetColorVectorForObjectiveState( int objectiveState, bool isRuiUIColor = false )
-{
-	vector color
-
-	switch( objectiveState )
-	{
-		case eControlObjectiveColorState.NEUTRAL:
-			color = GetKeyColor( COLORID_COLORSWATCH_WHITE )
-			break
-		case eControlObjectiveColorState.CONTESTED:
-			color = GetKeyColor( COLORID_CONTROL_CONTESTED )
-			break
-		case eControlObjectiveColorState.FRIENDLY_OWNED:
-			color = GetKeyColor( COLORID_CONTROL_FRIENDLY )
-			break
-		case eControlObjectiveColorState.ENEMY_OWNED:
-			color = GetKeyColor( COLORID_CONTROL_ENEMY )
-			break
-		default:
-			color = GetKeyColor( COLORID_COLORSWATCH_WHITE )
-			break
-	}
-
-	if ( isRuiUIColor )
-		color = SrgbToLinear( color / 255 )
-
-	return color
-}
-#endif          
-
 #if UI
                                                                            
 array< aboutGamemodeDetailsTab > function Control_PopulateAboutText()
@@ -1611,7 +1481,7 @@ array< aboutGamemodeDetailsTab > function Control_PopulateAboutText()
 	int withSquadBonusEXPVal = GetCurrentPlaylistVarInt( "exp_value_playing_with_squad", 5 )
 
 	                                              
-	tab1.tabName = "#CONTROL_RULES_OVERVIEW_TAB_NAME"
+	tab1.tabName = "#GAMEMODE_RULES_OVERVIEW_TAB_NAME"
 	tab1Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_CAPTURING_HEADER", "#CONTROL_RULES_CAPTURING_BODY", $"rui/hud/gametype_icons/control/about_capture" ) )
 	tab1Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_RATINGS_HEADER", "#CONTROL_RULES_RATINGS_BODY", $"rui/hud/gametype_icons/control/about_ratings" ) )
 	tab1Rules.append( UI_GameModeRulesDialog_BuildDetailsData( "#CONTROL_RULES_TIMEDEVENT_HEADER", "#CONTROL_RULES_TIMEDEVENT_BODY", $"rui/hud/gametype_icons/control/about_events" ) )
@@ -2082,8 +1952,11 @@ array< aboutGamemodeDetailsTab > function Control_PopulateAboutText()
 
 	                             
 
+	                                                              
 	                                          
+	 
 		                                                                                                                            
+	 
  
 #endif          
 
@@ -2567,61 +2440,6 @@ array< aboutGamemodeDetailsTab > function Control_PopulateAboutText()
 #endif          
 
 #if SERVER
-                                                                
-                                      
-                                                    
-                                                    
- 
-	                                               
-
-	       
-		                                                                           
-	             
-
-	                              
-
-	            
-	               
-	 
-		                                   
-		       
-			                                                            
-		             
-
-		                               
-	 
-	 
-	
-	                                                                                                   
-
-	                                                                 
-	                                               
-	                                  
-	                                                  
-	                                                                                
-	                                                                                   
-
-	                                                                                                                             
-	                                                                       
-	 
-		                                                                 
-		                                                                                                       
-			                            
-
-		                                               
-		                                                                               
-			                            
-
-		                                                            
-		                                                        
-			                            
-
-		                         
-	 
- 
-#endif          
-
-#if SERVER
                                       
  
 	                                          
@@ -2833,11 +2651,8 @@ array< aboutGamemodeDetailsTab > function Control_PopulateAboutText()
 
 	                                                        
 	 
-		                           
-		 
-			                                                                            
-			                                                 
-		 
+		                                                                      
+		                                                 
 	 
  
 #endif          
@@ -2862,7 +2677,7 @@ void function Control_SetHomeBaseBadPlacesForMRBForAlliance( int alliance, array
                                                                      
  
 	                                                                                          
-	                                                                                       
+	                                                                                                   
 	                                
 	                                     
 
@@ -2882,7 +2697,7 @@ void function Control_SetHomeBaseBadPlacesForMRBForAlliance( int alliance, array
 #if SERVER
                                                           
  
-	                                                                                  
+	                                                                                              
 	                           
 	                                     
 	                                                       
@@ -2894,12 +2709,11 @@ void function Control_SetHomeBaseBadPlacesForMRBForAlliance( int alliance, array
 #endif          
 
 #if SERVER
-                                                                                    
+                                                                          
  
-	                                                                                          
+	                                                                                                      
 	                                   
 	                                     
-	                                           
 
 	                                                                         
 
@@ -2918,8 +2732,8 @@ void function Control_SetHomeBaseBadPlacesForMRBForAlliance( int alliance, array
 		                                        
 
 	                                                  
-	                                                                                                                                   
-		                                                                                                                             
+	                                                                                                                                  
+		                                                           
  
 #endif          
 
@@ -2931,8 +2745,12 @@ void function Control_SetHomeBaseBadPlacesForMRBForAlliance( int alliance, array
 	             
 
 	                                                 
+	 
 		                                                   
-	                                                         
+
+		                        
+			                                                         
+	 
  
 #endif          
 
@@ -2952,9 +2770,9 @@ void function Control_SetHomeBaseBadPlacesForMRBForAlliance( int alliance, array
 		 
 			                                                 
 			 
-				                                                                                                                                  
+				                                                                                                                                                                         
 				 
-					                                                                                                                            
+					                                                       
 					                                                                                              
 				 
 				                                                                 
@@ -3070,7 +2888,7 @@ void function Control_RegisterTimedEvents()
 		#endif          
 
 		#if CLIENT
-			airdropData.colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL )
+			airdropData.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
 			airdropData.eventName = "#EVENT_AIRDROP_NAME"
 			airdropData.eventDesc = "#EVENT_AIRDROP_DESC"
 			airdropData.shouldHideTimer = true
@@ -3097,7 +2915,7 @@ void function Control_RegisterTimedEvents()
 		#endif          
 
 		#if CLIENT
-			mrbEventData.colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL )
+			mrbEventData.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
 			mrbEventData.eventName = "#EVENT_STARTS_IN"
 			mrbEventData.eventDesc = "#EVENT_MRB_DESC"
 			mrbEventData.shouldHideTimer = false
@@ -3293,7 +3111,7 @@ void function Control_PingObjectiveFromObjID( int objID )
 	                                                             
 
 	                                                                                                                                                              
-	                                                                                  
+	                                                                                                                              
 	 
 		                                          
 		                                                                     
@@ -3310,14 +3128,24 @@ void function Control_PingObjectiveFromObjID( int objID )
 		                                                                   
 
 	                                                                                                                                                                                              
-	                                                              
+	                                                                      
 	 
 		                
 		                                                           
 		                                                                   
 	 
 
+	                                                                                                                                         
+	                                                            
+		                                                              
+ 
+#endif          
 
+#if SERVER
+                                                                    
+                                                          
+ 
+	                                                                                                                            
  
 #endif          
 
@@ -3677,7 +3505,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
 	                                                            
 	                                                
 
-	                                        
+	                                             
 	                                                                                    
 
 	                          
@@ -3686,8 +3514,6 @@ bool function Control_IsPointAnFOB( int pointIndex )
 		                                            
 		                                                
 	 
-
-	                                      
 
 	                                              
 	 
@@ -3727,15 +3553,15 @@ bool function Control_IsPointAnFOB( int pointIndex )
 		                          
 		                               
 
-		                                                     
-			                                          
+		                                                                    
+			                                                  
 
 		                                   
 		 
 			       
 				                                                                              
 			             
-			                                                                       
+			                                                        
 			     
 		 
 
@@ -3773,7 +3599,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
 		 
 
 		                    
-		                                                  
+		                                                                 
 		                                                            
 		 
 			                      
@@ -3802,75 +3628,6 @@ bool function Control_IsPointAnFOB( int pointIndex )
 
 		                               
 	 
- 
-#endif          
-
-#if SERVER
-                                                                                     
-                                             
- 
-	                                               
-
-	                                         
-	                                                          
-
-	       
-		                                                           
-		                                                               
-	                 
-
-	                                                  
-
-	                                                       
-	                            
-		      
-	
-	                                                                                                      
-	                                                                                                    
-	                                                                                                                                                                                            
-
-	       
-		                                                                                                                          
-	             
-
-	                                                                                                            
-	                                          
-
-	                                                                              
-	                                      
-	 
-		                        
-			                                                                                                     
-	 
-
-	       
-		                                                                                                                                                      
-	             
-
-	                                                                                 
-	                                          
-
-	                                                  
-	                                      
-	 
-		                        
-			                                                                                                    
-	 
-
-	       
-		                                                                           
-	             
-
-	                                                                                   
-	                             
-
-	                                                   
-	       
-		                                                                                                                           
-	             
-
-	                                         
-		                                                                                          
  
 #endif          
 
@@ -3977,7 +3734,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
                                                 
                                                                                                                
  
-	                                        
+	                                                
 		      
 
 	                         
@@ -4089,7 +3846,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
 	                     
 		      
 
-	                                        
+	                                                
 		      
 
 	                                          
@@ -4133,7 +3890,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
 			      
 	             
 
-	                                                                                                        
+	                                                                                                             
 	                                                
 
 	                              
@@ -4666,7 +4423,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
 	                         
 		      
 
-	                                        
+	                                                
 		      
 
 	                                 
@@ -4727,7 +4484,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
 	                                                                                                          
 		      
 
-	                                        
+	                                                
 		      
 
 	                                       
@@ -4752,13 +4509,13 @@ bool function Control_IsPointAnFOB( int pointIndex )
 	                                                                                                           
 	                                                                                                                                                                      
 
-	                                                           
+	                                                                                   
 
                                                                                                                                                                                                  
                                                                                                                                                                                                                               
                                                                                                                          
                                                                                                                      
-	                                  
+	                                                       
 	 
 		                             
 			                                                                                                         
@@ -4778,96 +4535,88 @@ bool function Control_IsPointAnFOB( int pointIndex )
 #endif          
 
 #if SERVER
-                                                                        
+                                                 
+                                                                            
  
-	                                               
+	                                                                  
+	                                                                                                                       
+ 
+#endif          
 
-	                                      
-	                                    
-	                                       
-	                                        
-		      
-
-	                                   
-
-	                                                                                                                                                        
-	                             
-
-	                                        
-	                                                      
-	                                       
-
-	                               
-	                               
-	                                 
-	 
-		                                                                           
-			                  
-		                                                                           
-			                  
-
-		                                                                                     
-
-		                                                                                                               
-		 
-			                                                  
-			 
-				                         
-					        
-
-				                               
-				                                          
-
-				                                 
-				                                                                  
-				                                     
-				                                                                                   
-			 
-		 
-	 
-
-	                                         
-
-	                                   
-	                                    
-	                                   
-	                                                                            
-	                                        
-
-	                                                                           
+#if SERVER
+                                                                              
+ 
+	                                                                             
 	                                          
 
 	                                                                                                            
 	                                                                                 
-	                                                         
+	                                                   
 	 
 		                                                                      
 		                                                                                                                                                 
-		                               
-		                                
-			                                                             
-		    
-			                                                             
-
+		                                                                                                            
 		                                                     
 	 
-	                                                                
+	                                                    
 	 
 		                                          
 		                                               
 		               
 		                                         
 	 
-	                                                                                                
+
+	                                                    
+	                                                   
+	                                                         
 	 
-		                              
+		                                     
+		 
+			                        
+			 
+				                                                    
+					                                                                                                  
+
+				                                                      
+					                                                                                                     
+			 
+		 
 	 
 
-	                                                                                                        
-	                                                      
-	                                           
+	                                    
+	                                     
+	 
+		                        
+			                                        
+	 
 
 	                                               
+	 
+		                                                                                  
+		                                               
+		 
+			                        
+				                                                           
+		 
+	 
+
+	                                 
+	                                                                                  
+		                                                     
+
+	                                                                                 
+	                                                      
+	 
+		                        
+		 
+			                                                                                                   
+			                                                                                                                                                    
+			                              
+			                                                            
+			                                                                                                       
+		 
+
+	 
  
 #endif          
 
@@ -4877,11 +4626,11 @@ bool function Control_IsPointAnFOB( int pointIndex )
 	               
 	                          
 	 
-		                                       
+		                               
 			                                         
 			     
 
-		                                         
+		                           
 			                                           
 			     
 		        
@@ -4894,9 +4643,17 @@ bool function Control_IsPointAnFOB( int pointIndex )
 #endif          
 
 #if SERVER
-                                               
+                                                                                                                                                              
+                                                     
  
-	                                   
+	                                                   
+	                                           
+	 
+		                         
+			        
+
+		                                                                         
+	 
  
 #endif          
 
@@ -4941,107 +4698,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
 		        
 
 	                                                                              
-	                                                             
- 
-#endif          
-
-#if SERVER
-                                                 
-                                                                 
- 
-	                                      
-	 
-		                        
-		 
-			                        
-			                               
-		 
-	 
-
-	                                                                  
-	                                  
-
-	                                                    
-	                                                         
-	 
-		                                      
-		 
-			                        
-			 
-				                                                    
-					                                                                                                  
-
-				                                                      
-					                                                                                                     
-			 
-		 
-	 
-
-	                                    
-	                                      
-	 
-		                        
-			                                        
-	 
-
-	                                                                                  
-	                                               
-	 
-		                        
-			                                                           
-	 
-
-	                                 
-	                                                                                  
-		                                                     
-
-	                                                
-	                                                               
-	 
-		                                                                                   
-		                           
-		  	        
-
-		                                                                 
-
-		                                        
-		                        
-		 
-			                                                                                                   
-			                                                                                                                                                    
-			                              
-			                                                            
-			                                                                                                          
-			                                                                                                                                   
-		 
-
-		                                                                                                            
-		                                         
-			        
-
-                        
-			                                                                                          
-				                                          
-                              
-
-		                                                                                    
-			                                                                                                            
-	 
-
-	                              
-
-	                                                                                                                                                                                
-	                                   
-
-	                                            
-	 
-		                         
-			        
-
-		                                                                         
-	 
-
-	                                   
+	                                                                     
  
 #endif          
 
@@ -5078,7 +4735,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
 	                                
 		      
 
-	                                        
+	                                                
 		      
 
 	                         
@@ -5102,7 +4759,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
 	                                
 		      
 
-	                                        
+	                                                
 		      
 
 	                         
@@ -5137,7 +4794,7 @@ bool function Control_IsPointAnFOB( int pointIndex )
                                                                           
                                                                                          
  
-	                                        
+	                                                
 		      
 
 	                                                                           
@@ -5165,6 +4822,8 @@ bool function Control_IsPointAnFOB( int pointIndex )
 	 
  
 #endif          
+
+
 
   
                                                                                                                                                                                                                         
@@ -5388,18 +5047,19 @@ void function Control_InstanceObjectivePing_Thread( entity wp )
 #if CLIENT
 void function SetupObjectiveWaypoint( entity wp, var rui )
 {
-	entity localPlayer = GetLocalViewPlayer()
-	if ( wp.GetWaypointType() == eWaypoint.CONTROL_OBJECTIVE && IsValid( localPlayer ) )
+	entity localViewPlayer = GetLocalViewPlayer()
+	if ( wp.GetWaypointType() == eWaypoint.CONTROL_OBJECTIVE && IsValid( localViewPlayer ) )
 	{
 		thread ManageObjectiveWaypoint( wp, rui )
 		int objectiveID = wp.GetWaypointInt( INT_OBJECTIVE_ID )
+		entity localPlayer = GetLocalClientPlayer()
 
 		RuiSetString( rui, "objectiveName", Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID ) )
 		RuiTrackFloat( rui, "capturePercentage", wp, RUI_TRACK_WAYPOINT_FLOAT, FLOAT_CAP_PERC )
 		RuiTrackInt( rui, "currentControllingTeam", wp, RUI_TRACK_WAYPOINT_INT, INT_TEAM_CAPTURING )
 		RuiTrackInt( rui, "currentOwner", wp, RUI_TRACK_WAYPOINT_INT, CONTROL_INT_OBJ_TEAM_OWNER )
 		RuiTrackInt( rui, "neutralPointOwnership", wp, RUI_TRACK_WAYPOINT_INT, CONTROL_INT_OBJ_NEUTRAL_TEAM_OWNER )
-		RuiSetInt( wp.wp.ruiHud, "yourTeamIndex", AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() ) )
+		RuiSetInt( wp.wp.ruiHud, "yourTeamIndex", AllianceProximity_GetAllianceFromTeamWithObserverCorrection( localPlayer.GetTeam() ) )
 		RuiTrackInt( rui, "team0PlayersOnObj", wp, RUI_TRACK_WAYPOINT_INT, INT_TEAM0_PLAYERSONOBJ )
 		RuiTrackInt( rui, "team1PlayersOnObj", wp, RUI_TRACK_WAYPOINT_INT, INT_TEAM1_PLAYERSONOBJ )
 
@@ -5490,21 +5150,21 @@ void function ManageObjectiveVFX_Client_Thread( entity wp )
 
 		                                                           
 		bool isPointContested = wp.GetWaypointInt( INT_TEAM0_PLAYERSONOBJ ) > 0 && wp.GetWaypointInt( INT_TEAM1_PLAYERSONOBJ ) > 0
-		vector vfxColor = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL )
+		vector vfxColor = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
 		int objectiveOwner = wp.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER )
 		int playerAlliance = AllianceProximity_GetAllianceFromTeam( player.GetTeam() )
 
 		if ( isPointContested )
 		{
-			vfxColor = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.CONTESTED )
+			vfxColor = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.CONTESTED )
 		}
 		else if ( objectiveOwner == playerAlliance )
 		{
-			vfxColor = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
+			vfxColor = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED )
 		}
 		else if ( objectiveOwner != playerAlliance && objectiveOwner != ALLIANCE_NONE )
 		{
-			vfxColor = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+			vfxColor = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 		}
 
 		                      
@@ -5600,14 +5260,15 @@ void function ObjectiveGameStateTrackerThink( entity wp, var gameStateRui, bool 
 	int waypointIndex = wp.GetWaypointInt( INT_OBJECTIVE_ID )
 	var mainTrackerRui = RuiCreateNested( gameStateRui, "objective" + waypointIndex, $"ui/control_mode_progress_tracker.rpak" )
 	entity localPlayer = GetLocalClientPlayer()
+	entity localPlayerView = GetLocalViewPlayer()
 
 	if ( !IsValid( localPlayer ) )
 		return
 
-	localPlayer.EndSignal( "OnDestroy" )
+	if( !GamemodeUtility_IsPlayerOnTeamObserver( localPlayer ) )
+		localPlayerView.EndSignal( "OnDestroy" )
 
 	              
-	RuiSetInt( mainTrackerRui, "yourTeamIndex", AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() ) )
 	RuiSetString( mainTrackerRui, "name", Control_GetObjectiveNameFromObjectiveID_Localized( waypointIndex ) )
 
 	RuiTrackFloat( mainTrackerRui, "capturePercentage", wp, RUI_TRACK_WAYPOINT_FLOAT, FLOAT_CAP_PERC )
@@ -5626,44 +5287,48 @@ void function ObjectiveGameStateTrackerThink( entity wp, var gameStateRui, bool 
 
 	while ( GetGameState() == eGameState.Playing )
 	{
-		                     
-		RuiSetFloat( mainTrackerRui, "iconScale", 0.7 )
-
-		int slot = OFFHAND_INVENTORY
-		entity weapon = localPlayer.GetOffhandWeapon( slot )
-		if( weapon != null )
+		localPlayerView = GetLocalViewPlayer()
+		if ( IsValid( localPlayerView ) )
 		{
-			switch ( weapon.GetWeaponSettingEnum( eWeaponVar.cooldown_type, eWeaponCooldownType ) )
+			int slot = OFFHAND_INVENTORY
+			entity weapon = localPlayerView.GetOffhandWeapon( slot )
+			if( weapon != null )
 			{
-				case eWeaponCooldownType.ammo:
-					int maxAmmoReady = weapon.UsesClipsForAmmo() ? weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) : weapon.GetWeaponPrimaryAmmoCountMax( weapon.GetActiveAmmoSource() )
-					int ammoPerShot = weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
+				switch ( weapon.GetWeaponSettingEnum( eWeaponVar.cooldown_type, eWeaponCooldownType ) )
+				{
+					case eWeaponCooldownType.ammo:
+						int maxAmmoReady = weapon.UsesClipsForAmmo() ? weapon.GetWeaponSettingInt( eWeaponVar.ammo_clip_size ) : weapon.GetWeaponPrimaryAmmoCountMax( weapon.GetActiveAmmoSource() )
+						int ammoPerShot = weapon.GetWeaponSettingInt( eWeaponVar.ammo_per_shot )
 
-					RuiSetInt( gameStateRui, "ultimateSegments", maxAmmoReady / ammoPerShot )
-					break
-				default:
-					RuiSetInt( gameStateRui, "ultimateSegments", 1 )
-					break
-			}
-		}
-		else
-			RuiSetInt( gameStateRui, "ultimateSegments", 1 )
-
-		if ( shouldTrackOnObjective )
-		{
-			if ( Control_Client_IsOnObjective( wp, localPlayer ) )
-			{
-				RuiSetBool( gameStateRui, "isOnObjective" + waypointIndex, true )
-				RuiSetBool( mainTrackerRui, "isOnObjective", true )
-				RuiSetFloat( mainTrackerRui, "iconScale", 1.35 )
+						RuiSetInt( gameStateRui, "ultimateSegments", maxAmmoReady / ammoPerShot )
+						break
+					default:
+						RuiSetInt( gameStateRui, "ultimateSegments", 1 )
+						break
+				}
 			}
 			else
+				RuiSetInt( gameStateRui, "ultimateSegments", 1 )
+
+			if ( shouldTrackOnObjective )
 			{
-				RuiSetBool( gameStateRui, "isOnObjective" + waypointIndex, false )
-				RuiSetBool( mainTrackerRui, "isOnObjective", false )
-				RuiSetFloat( mainTrackerRui, "iconScale", 0.7 )
+				if ( Control_Client_IsOnObjective( wp, localPlayerView ) )
+				{
+					RuiSetBool( gameStateRui, "isOnObjective" + waypointIndex, true )
+					RuiSetBool( mainTrackerRui, "isOnObjective", true )
+					RuiSetFloat( mainTrackerRui, "iconScale", 1.35 )
+				}
+				else
+				{
+					RuiSetBool( gameStateRui, "isOnObjective" + waypointIndex, false )
+					RuiSetBool( mainTrackerRui, "isOnObjective", false )
+					RuiSetFloat( mainTrackerRui, "iconScale", 0.7 )
+				}
 			}
 		}
+		                     
+
+		RuiSetInt( mainTrackerRui, "yourTeamIndex", AllianceProximity_GetAllianceFromTeamWithObserverCorrection( localPlayerView.GetTeam() ) )
 		if ( wp.GetWaypointFloat( FLOAT_BOUNTY_AMOUNT ) > 0 )
 			RuiSetBool( mainTrackerRui, "shouldPlayEmphasis", true )
 		else
@@ -5766,7 +5431,7 @@ void function ObjectiveScoreTrackerSetup( var rui )
 	for( int i = 0; i<2; i++ )
 	{
 		var childRui = RuiCreateNested( rui, "team" + i + "Tracker", $"ui/control_score_tracker.rpak" )
-		RuiSetFloat( childRui, "scoreLimit", float( Control_GetScoreLimit() ) )
+		RuiSetFloat( childRui, "scoreLimit", float( GetScoreLimit_FromPlaylist() ) )
 		RuiSetInt( childRui, "trackerIndex", i )
 
 		if ( i == 1 )
@@ -5799,24 +5464,58 @@ void function ObjectiveScoreTracker_PopulatePlayerData( var parentRui )
 		return                                                                                                                                                                
 
 	entity localPlayer = GetLocalClientPlayer()
-	int friendlyAlliance = AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() )
+
+	int friendlyAlliance = AllianceProximity_GetAllianceFromTeamWithObserverCorrection( localPlayer.GetTeam() )
 	int enemyAlliance = AllianceProximity_GetOtherAlliance( friendlyAlliance )
+
 	table<int, var> nestedRuiTable
-
 	if ( parentRui == ClGameState_GetRui() )
+	{
 		nestedRuiTable = file.scoreTrackerRui
+		localPlayer.Signal( "EndUpdateAllianceUIScoreGameState" )
+	}
 	else if ( parentRui == GetFullmapGamestateRui() )
+	{
 		nestedRuiTable = file.fullmapScoreTrackerRui
+		localPlayer.Signal( "EndUpdateAllianceUIScoreMap" )
+	}
 
-	RuiSetInt( nestedRuiTable[1], "yourTeamIndex", friendlyAlliance )
-	RuiSetInt( nestedRuiTable[0], "yourTeamIndex", enemyAlliance )
-	RuiTrackFloat( nestedRuiTable[1], "teamScore", localPlayer, RUI_TRACK_FRIENDLY_TEAM_SCORE )
-	RuiTrackFloat( nestedRuiTable[1], "opponentScore", localPlayer, RUI_TRACK_ENEMY_TEAM_SCORE )
-	RuiTrackFloat( nestedRuiTable[0], "teamScore", localPlayer, RUI_TRACK_ENEMY_TEAM_SCORE )
-	RuiTrackFloat( nestedRuiTable[0], "opponentScore", localPlayer, RUI_TRACK_FRIENDLY_TEAM_SCORE )
+	thread UpdateAllianceUIScore( parentRui, localPlayer, nestedRuiTable[1], nestedRuiTable[0], friendlyAlliance, enemyAlliance )            
+
 	Control_UpdateScoreGenerationOnClient()
 }
 #endif          
+
+#if CLIENT
+void function UpdateAllianceUIScore( var parentRui, entity player, var blueRui, var redRui, int blueTeam , int redTeam )
+{
+	if ( parentRui == ClGameState_GetRui() )
+		player.EndSignal( "EndUpdateAllianceUIScoreGameState" )
+	else if ( parentRui == GetFullmapGamestateRui() )
+		player.EndSignal( "EndUpdateAllianceUIScoreMap" )
+
+	player.EndSignal( "OnDestroy" )
+
+	while( GetGameState() == eGameState.Playing )
+	{
+		ControlTeamData blueData = file.teamData[ blueTeam ]
+		ControlTeamData redData = file.teamData[ redTeam ]
+
+		float blueScore =  float( blueData.teamScoreFromPoints + blueData.teamScoreFromBonus )
+		float redScore =  float( redData.teamScoreFromPoints + redData.teamScoreFromBonus )
+
+		RuiSetInt( blueRui, "yourTeamIndex", blueTeam )
+		RuiSetFloat( blueRui, "teamScore", blueScore )
+		RuiSetFloat( blueRui, "opponentScore", redScore )
+
+		RuiSetInt( redRui, "yourTeamIndex", redTeam )
+		RuiSetFloat( redRui, "teamScore", redScore )
+		RuiSetFloat( redRui, "opponentScore", blueScore )
+
+		WaitFrame()
+	}
+}
+#endif
 
 #if CLIENT
 void function ObjectiveScoreTracker_AnnouncementSetup( var parentRui )
@@ -5915,7 +5614,15 @@ void function Control_SetRatingsVisibility( entity player )
 		int gameState = GetGameState()
 
 		HudVisibilityStatus hudStatus = GetHudStatus( player )
-		RuiSetBool( rui, "shouldDisplayExpUI", Control_GetIsWeaponEvoEnabled() && hudStatus.mainHud && gameState >= eGameState.Playing )
+
+		if( IsPrivateMatch() && GetLocalClientPlayer().IsObserver() && GetLocalViewPlayer().GetTeam() == TEAM_SPECTATOR )
+		{
+			RuiSetBool( rui, "shouldDisplayExpUI", false )
+		}
+		else
+		{
+			RuiSetBool( rui, "shouldDisplayExpUI", Control_GetIsWeaponEvoEnabled() && hudStatus.mainHud && gameState >= eGameState.Playing )
+		}
 	}
 }
 #endif
@@ -5961,8 +5668,9 @@ void function Control_ObjectiveScoreTracker_UpdateAnnouncement( entity wp,
 		bool shouldForcePushAnnouncement,
 		bool shouldUseTimer )
 {
-	entity localPlayer = GetLocalViewPlayer()
-	if ( !IsValid( localPlayer ) )
+	entity localViewPlayer = GetLocalViewPlayer()
+	entity localClientPlayer = GetLocalClientPlayer()
+	if ( !IsValid( localViewPlayer ) )
 		return
 
 	if ( !file.currentAnnouncement.isInitialized || !IsValid(file.currentAnnouncement.wp ) )
@@ -5996,29 +5704,33 @@ void function Control_ObjectiveScoreTracker_UpdateAnnouncement( entity wp,
 	RuiSetFloat( GetFullmapGamestateRui(), "announcementLength", file.currentAnnouncement.displayLength )
 
 	entity linkedEnt = file.currentAnnouncement.wp.GetParent()
-	int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() )
+	int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )
 	vector colorOverride
 
 	if ( IsValid( linkedEnt ) )
 	{
 		int currentOwner = linkedEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER )
 		if ( currentOwner == ALLIANCE_NONE )
-			colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL )
+			colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
 		else
 		{
+			if( GamemodeUtility_IsPlayerOnTeamObserver( localClientPlayer ) )
+			{
+				colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
+			}
 			if ( yourTeamIndex == currentOwner )
 			{
-				colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
+				colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED )
 			}
 			else
 			{
-				colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+				colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 			}
 		}
 	}
 	else
 	{
-		colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL )
+		colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
 	}
 
 	RuiSetString( file.announcementRui, "mainText", mainText )
@@ -6101,13 +5813,13 @@ void function Control_CancelAnnouncementDisplay()
 void function Control_BountyInfoOverride_Thread( entity wp, TimedEventLocalClientData data )
 {
 	Assert( IsNewThread(), "Must be threaded off" )
-	entity localPlayer = GetLocalViewPlayer()
+	entity localViewPlayer = GetLocalViewPlayer()
 
-	if ( !IsValid( localPlayer ) )
+	if ( !IsValid( localViewPlayer ) )
 		return
 
 	EndSignal( wp, "OnDestroy" )
-	localPlayer.EndSignal( "OnDestroy" )
+	localViewPlayer.EndSignal( "OnDestroy" )
 
 	string originalName = data.eventName
 
@@ -6119,16 +5831,17 @@ void function Control_BountyInfoOverride_Thread( entity wp, TimedEventLocalClien
 		CONTROL_MESSAGE_DURATION_LONG,
 		false,
 		true,
-		Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL ))
+		GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL ))
 
 	while ( !IsValid( wp ) || !IsValid( wp.GetParent() ) )
 	{
 		WaitFrame()
 	}
 
-	localPlayer = GetLocalViewPlayer()
+	localViewPlayer = GetLocalViewPlayer()
+	entity localClientPlayer = GetLocalClientPlayer()
 
-	if ( !IsValid( localPlayer ) )
+	if ( !IsValid( localViewPlayer ) )
 		return
 
 	                                        
@@ -6137,13 +5850,13 @@ void function Control_BountyInfoOverride_Thread( entity wp, TimedEventLocalClien
 	int objectiveID = linkedEnt.GetWaypointInt( INT_OBJECTIVE_ID )
 	string objectiveName = Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID )
 	string eventName
-
-	if ( currentOwner == ALLIANCE_NONE )
+	if( GamemodeUtility_IsPlayerOnTeamObserver( localClientPlayer ) )
+		eventName = Localize( "#CONTROL_POINT_BOUNTY_CONTROL", objectiveName )                    
+	else if ( currentOwner == ALLIANCE_NONE )
 		eventName = Localize( "#CONTROL_POINT_BOUNTY_ATTACK", objectiveName )
 	else
 	{
-		int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() )
-
+		int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )
 		if ( yourTeamIndex == currentOwner )
 			eventName = Localize( "#CONTROL_POINT_BOUNTY_DEFEND", objectiveName )
 		else
@@ -6160,41 +5873,46 @@ void function Control_BountyInfoOverride_Thread( entity wp, TimedEventLocalClien
 											true )
 
 	                                             
-	while ( IsValid( localPlayer ) )
+	while ( IsValid( localViewPlayer ) )
 	{
 		linkedEnt = wp.GetParent()
 		if ( IsValid( linkedEnt ) )
 		{
 			currentOwner = linkedEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER )
-			if ( currentOwner == ALLIANCE_NONE )
+			if( GamemodeUtility_IsPlayerOnTeamObserver( localClientPlayer ) )
 			{
-				data.colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL )
+				data.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
+				data.eventName = Localize( "#CONTROL_POINT_BOUNTY_CONTROL", objectiveName )                                                                             
+			}
+			else if ( currentOwner == ALLIANCE_NONE )
+			{
+				data.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
 				data.eventName = Localize( "#CONTROL_POINT_BOUNTY_ATTACK", objectiveName )
 			}
 			else
 			{
-				int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() )                                   
+				int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )                                   
 				if ( yourTeamIndex == currentOwner )
 				{
-					data.colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
+					data.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED )
 					data.eventName = Localize( "#CONTROL_POINT_BOUNTY_DEFEND", objectiveName )
 				}
 				else
 				{
-					data.colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+					data.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 					data.eventName = Localize( "#CONTROL_POINT_BOUNTY_ATTACK", objectiveName )
 				}
 			}
 		}
 		else
 		{
-			data.colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL )
+			data.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
 			data.eventName = originalName
 		}
 
 		WaitFrame()
 
-		localPlayer = GetLocalViewPlayer()
+		localViewPlayer = GetLocalViewPlayer()
 	}
 }
 #endif          
@@ -6216,9 +5934,11 @@ void function Control_LockoutInfoOverride_Thread( entity wp, TimedEventLocalClie
 
 	float eventEnd = wp.GetWaypointGametime( TIMEDEVENT_WAYPOINT_EVENT_END_TIME )
 	int majorityTeam = wp.GetWaypointInt( 5 )
+	entity localViewPlayer = GetLocalViewPlayer()
+	entity localClientPlayer = GetLocalClientPlayer()
 
 	OnThreadEnd(
-		function() : ( wp, eventEnd, majorityTeam )
+		function() : ( wp, eventEnd, majorityTeam, localClientPlayer )
 		{
 			file.isLockout = false
 
@@ -6239,15 +5959,16 @@ void function Control_LockoutInfoOverride_Thread( entity wp, TimedEventLocalClie
 				if ( IsValid( localPlayer ) )
 				{
 					int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() )
+					string subText =  yourTeamIndex == majorityTeam ? Localize( "#CONTROL_LOCKOUT_ENEMY_CAPTURED_OBJ" ) : Localize( "#CONTROL_LOCKOUT_FRIENDLY_CAPTURED_OBJ" )
 					Control_ObjectiveScoreTracker_PushAnnouncement( null,
 						false,
 						Localize( "#CONTROL_LOCKOUT_ABORTED" ),
-						yourTeamIndex == majorityTeam ? Localize( "#CONTROL_LOCKOUT_ENEMY_CAPTURED_OBJ" ) : Localize( "#CONTROL_LOCKOUT_FRIENDLY_CAPTURED_OBJ" ),
+						GamemodeUtility_IsPlayerOnTeamObserver( localClientPlayer )? "": subText,
 						CONTROL_MESSAGE_DURATION_LONG,
 						CONTROL_MESSAGE_DURATION_LONG,
 						false,
 						false,
-						Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL ) )
+						GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL ) )
 
 					EmitUISound( CONTROL_SFX_LOCKOUT_ABORT )
 				}
@@ -6255,29 +5976,47 @@ void function Control_LockoutInfoOverride_Thread( entity wp, TimedEventLocalClie
 		}
 	)
 
-	entity localPlayer = GetLocalViewPlayer()
-
-	if ( IsValid( localPlayer ) )
+	if ( IsValid( localViewPlayer ) )
 	{
 		EmitUISound( CONTROL_SFX_LOCKOUT_START )
 
-		string eventDesc = Control_GetIsLockoutInstantWin() ? Localize( "#CONTROL_INSTALOCKOUT_EVENT_DESC" ) : Localize( "#CONTROL_LOCKOUT_EVENT_DESC" )
-		int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() )
-
-		if ( yourTeamIndex ==  majorityTeam )
+		string eventDesc  = Control_GetIsLockoutInstantWin() ? Localize( "#CONTROL_INSTALOCKOUT_EVENT_DESC" ) : Localize( "#CONTROL_LOCKOUT_EVENT_DESC" )
+		int yourTeamIndex = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )
+		if ( GamemodeUtility_IsPlayerOnTeamObserver( localClientPlayer ) )
 		{
-			string descDetails = Control_GetIsLockoutInstantWin() ? Localize( "#CONTROL_INSTALOCKOUT_INSTRUCTIONS_WINNINGTEAM" ) : Localize( "#CONTROL_LOCKOUT_INSTRUCTIONS_WINNINGTEAM" )
-			eventDesc = eventDesc + descDetails
-			data.eventDesc = eventDesc
-			data.colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
+			if ( majorityTeam == 0 )
+			{
+				string descDetails = Control_GetIsLockoutInstantWin() ? Localize( "#CONTROL_INSTALOCKOUT_INSTRUCTIONS_TEAM1" ) : ""
+				eventDesc = eventDesc + descDetails
+				data.eventDesc = eventDesc
+				data.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED )
+			}
+			else
+			{
+				string descDetails = Control_GetIsLockoutInstantWin() ? Localize( "#CONTROL_INSTALOCKOUT_INSTRUCTIONS_TEAM2" ) : ""
+				eventDesc = eventDesc + descDetails
+				data.eventDesc = eventDesc
+				data.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
+			}
 		}
 		else
 		{
-			string descDetails = Control_GetIsLockoutInstantWin() ? Localize( "#CONTROL_INSTALOCKOUT_INSTRUCTIONS_LOSINGTEAM" ) : Localize( "#CONTROL_LOCKOUT_INSTRUCTIONS_LOSINGTEAM" )
-			eventDesc = eventDesc + descDetails
-			data.eventDesc = eventDesc
-			data.colorOverride = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+			if ( yourTeamIndex ==  majorityTeam )
+			{
+				string descDetails = Control_GetIsLockoutInstantWin() ? Localize( "#CONTROL_INSTALOCKOUT_INSTRUCTIONS_WINNINGTEAM" ) : Localize( "#CONTROL_LOCKOUT_INSTRUCTIONS_WINNINGTEAM" )
+				eventDesc = eventDesc + descDetails
+				data.eventDesc = eventDesc
+				data.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED )
+			}
+			else
+			{
+				string descDetails = Control_GetIsLockoutInstantWin() ? Localize( "#CONTROL_INSTALOCKOUT_INSTRUCTIONS_LOSINGTEAM" ) : Localize( "#CONTROL_LOCKOUT_INSTRUCTIONS_LOSINGTEAM" )
+				eventDesc = eventDesc + descDetails
+				data.eventDesc = eventDesc
+				data.colorOverride = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
+			}
 		}
+
 
 		Control_ObjectiveScoreTracker_PushAnnouncement( wp,
 			true,
@@ -6314,7 +6053,7 @@ void function Control_PlayFinalObjectiveCapturingWarning( bool shouldDisplayMess
 
 	if ( shouldDisplayMessage )
 	{
-		Control_AnnouncementMessageWarning( player, Localize( "#CONTROL_INSTALOCKOUT_FINAL_OBJECTIVE_CAPTURE" ), Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED ), CONTROL_FINAL_OBJECTIVE_BEING_CAPTURED_WARNING, CONTROL_MESSAGE_DURATION_SHORT )
+		GamemodeUtility_AnnouncementMessageWarning( player, Localize( "#CONTROL_INSTALOCKOUT_FINAL_OBJECTIVE_CAPTURE" ), GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED ), CONTROL_FINAL_OBJECTIVE_BEING_CAPTURED_WARNING, CONTROL_MESSAGE_DURATION_SHORT )
 	}
 	else
 	{
@@ -6395,13 +6134,13 @@ void function ServerCallback_Control_ProcessObjectiveStateChange( entity objecti
 		if ( owner == ALLIANCE_NONE )
 		{
 			                       
-			Obituary_Print_Localized( Localize( "#CONTROL_UNCONTROLLED_POINT", objectiveName ), Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL ) )
+			Obituary_Print_Localized( Localize( "#CONTROL_UNCONTROLLED_POINT", objectiveName ), GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL ) )
 		}
 		else
 		{
 			                             
 			string teamName = localPlayerAlliance == owner ? "#PL_YOUR_TEAM" : "#PL_ENEMY_TEAM"
-			vector announcementColor = localPlayerAlliance == owner ? Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED ) : Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+			vector announcementColor = localPlayerAlliance == owner ? GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED ) : GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 			string soundAlias = localPlayerAlliance == owner ? CONTROL_SFX_ZONE_CAPTURED_FRIENDLY : CONTROL_SFX_ZONE_CAPTURED_ENEMY
 			Obituary_Print_Localized( Localize( "#CONTROL_CAPTURED_POINT", Localize( teamName ), objectiveName ), announcementColor )
 
@@ -6415,9 +6154,9 @@ void function ServerCallback_Control_ProcessObjectiveStateChange( entity objecti
 		{
 			                       
 			string teamName = localPlayerAlliance != capturer ? "#PL_YOUR_TEAM" : "#PL_ENEMY_TEAM"
-			vector announcementColor = localPlayerAlliance != capturer ? Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED ) : Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+			vector announcementColor = localPlayerAlliance != capturer ? GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED ) : GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 			string warningAnnouncement = "#CONTROL_OBJ_FLIPPED"
-			vector warningColor = localPlayerAlliance == capturer ? Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED ) : Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+			vector warningColor = localPlayerAlliance == capturer ? GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED ) : GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 			Obituary_Print_Localized( Localize( "#CONTROL_LOST_POINT", Localize( teamName ), objectiveName ), announcementColor )
 
 			EmitSoundOnEntity( objective, CONTROL_SFX_ZONE_NEUTRALIZED )
@@ -6437,7 +6176,10 @@ void function Control_UpdateScoreGenerationOnClient()
 	if ( !IsValid( localViewPlayer ) )
 		return
 
-	int localPlayerAlliance = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )
+	entity localPlayer = GetLocalClientPlayer()
+	bool isObserver = GamemodeUtility_IsPlayerOnTeamObserver( localPlayer )
+
+	int localPlayerAlliance = AllianceProximity_GetAllianceFromTeamWithObserverCorrection( localViewPlayer.GetTeam() )
 	int enemyAlliance = AllianceProximity_GetOtherAlliance( localPlayerAlliance )
 
 	                                                                                                                         
@@ -6521,7 +6263,7 @@ void function ServerCallback_Control_BountyClaimedAlert( entity wp, int bountyAm
 	string teamName = localPlayerAlliance == capturingTeam ? "#PL_YOUR_TEAM" : "#PL_ENEMY_TEAM"
 	teamName = Localize( teamName )
 	string announcementSFX = localPlayerAlliance == capturingTeam ? CONTROL_SFX_CAPTURE_BONUS_CLAIMED_FRIENDLY : CONTROL_SFX_CAPTURE_BONUS_CLAIMED_ENEMY
-	vector announcementColor = localPlayerAlliance == capturingTeam ? Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED ) : Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+	vector announcementColor = localPlayerAlliance == capturingTeam ? GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED ) : GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 	int objectiveID = wp.GetWaypointInt( INT_OBJECTIVE_ID )
 	string objectiveName = Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID )
 	Obituary_Print_Localized( Localize( "#CONTROL_POINT_BOUNTY_CLAIMED_SPECIFIC_OBIT", objectiveName, Localize( teamName ) ), announcementColor )
@@ -6542,7 +6284,7 @@ void function ServerCallback_Control_BountyActiveAlert( entity wp )
 
 	int localPlayerAlliance = AllianceProximity_GetAllianceFromTeam( localViewPlayer.GetTeam() )
 	int ownerTeam = wp.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER )
-	vector announcementColor = localPlayerAlliance == ownerTeam ? Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED ) : Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+	vector announcementColor = localPlayerAlliance == ownerTeam ? GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED ) : GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 	int objectiveID = wp.GetWaypointInt( INT_OBJECTIVE_ID )
 	string objectiveName = Control_GetObjectiveNameFromObjectiveID_Localized( objectiveID )
 
@@ -7040,35 +6782,7 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 	                               
 		      
 
-	                                                                                        
-	                                                                                                                           
-	                                                                                                                     
 	                                                                                         
-
-	                                                                                                                           
-	                                                                                                                                                          
-	 
-		                                                                                         
-		                                                                                         
-		                                 
-		 
-			                                                                           
-				                  
-			                                                                           
-				                  
-		 
-
-		                              
-		                                                                                        
-		                                                                                                                  
-		 
-			                                          
-			                                 
-			                                                                  
-			                                     
-			                                                                                   
-		 
-	 
 
 	                               
 		      
@@ -7091,7 +6805,7 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 		                                                          
 
 		                                                                              
-		                                                                                                                                
+		                                                                                                                               
 		                                                                                                         
 
 		                                                                                                                                   
@@ -7099,10 +6813,17 @@ string function Control_GetObjectiveNameFromObjectiveID( int objectiveID )
 			                                                  
 		 
 	 
+
+	                                                                                                                         
+	                                                                                                                                                                                          
+	                                                                                                                          
+	 
+		                        
+		                                                   
+	 
  
 #endif          
                             
-
 
                       
 #if CLIENT || SERVER
@@ -7394,39 +7115,6 @@ bool function Control_DidPlayerPingSameObjective( entity player, entity wp, enti
 #endif                    
 
 #if CLIENT || SERVER
-int function Control_GetTeamScore( int team )
-{
-	int allianceIndex = AllianceProximity_GetAllianceFromTeam( team )
-	return GetAllianceTeamsScore( allianceIndex )
-}
-#endif                    
-
-#if CLIENT || SERVER
-                                                                           
-int function Control_GetHighestCurrentScore()
-{
-	int scoreTeam1 = 0
-	int scoreTeam2 = 0
-
-	scoreTeam1 = GetAllianceTeamsScore( ALLIANCE_A )
-	scoreTeam2 = GetAllianceTeamsScore( ALLIANCE_B )
-
-	return maxint( scoreTeam1, scoreTeam2 )
-}
-#endif                    
-
-#if CLIENT || SERVER
-                                  
-                                                                                               
-int function Control_GetLeadingAlliance()
-{
-	int allianceAScore = GetAllianceTeamsScore( ALLIANCE_A )
-	int allianceBScore = GetAllianceTeamsScore( ALLIANCE_B )
-	return allianceAScore > allianceBScore ? ALLIANCE_A : ALLIANCE_B
-}
-#endif                    
-
-#if CLIENT || SERVER
                                                                                                                
 bool function Control_ShouldUseCatchupMechanics()
 {
@@ -7447,7 +7135,7 @@ int function Control_GetAllianceUsingCatchupMechanics()
 	                                                         
 	if ( scoreDifference > 0 )
 	{
-		losingAlliance = AllianceProximity_GetOtherAlliance( Control_GetLeadingAlliance() )
+		losingAlliance = AllianceProximity_GetOtherAlliance( GamemodeUtility_GetWinningAlliance() )
 
 		if ( scoreDifference >= Control_GetPointDiffForCatchupMechanics() )
 		{
@@ -7479,7 +7167,7 @@ int function Control_GetAllianceUsingCatchupMechanics()
 int function Control_GetMinHeldObjectivesToGenerateScore_ForAlliance( int alliance )
 {
 	int minNumOwnedObjectivesToGainScore = Control_GetMinHeldObjectivesToGenerateScore()
-	return ( minNumOwnedObjectivesToGainScore > 0 && ( !Control_GetIsMinHeldObjectivesOnlyForWinningTeam() || Control_ShouldUseCatchupMechanics() && Control_GetLeadingAlliance() == alliance ) ) ? minNumOwnedObjectivesToGainScore : 0
+	return ( minNumOwnedObjectivesToGainScore > 0 && ( !Control_GetIsMinHeldObjectivesOnlyForWinningTeam() || Control_ShouldUseCatchupMechanics() && GamemodeUtility_GetWinningAlliance() == alliance ) ) ? minNumOwnedObjectivesToGainScore : 0
 }
 #endif                    
 
@@ -7518,30 +7206,6 @@ int function Control_GetPlayerCountForFaction( int faction )
 	return numPlayersInFaction
 }
 #endif                    
-
-#if SERVER
-                                                                                                                                               
-                                             
- 
-	                                                              
-
-	                               
-	 
-		                                       
-			                                                     
-			     
-
-		                                         
-			                                                       
-			     
-		        
-			     
-	 
-
-
-	                       
- 
-#endif          
 
 #if CLIENT || SERVER
 int function Control_GetNumOwnedObjectivesByAlliance( int alliance )
@@ -7592,12 +7256,11 @@ int function Control_GetNumOwnedObjectivesByAlliance( int alliance )
 #if SERVER
                                                                                       
  
-	                                        
+	                                                
 		      
 
 	                        
 	 
-		                                                                          
 		                                                                             
 
 		                       
@@ -7675,12 +7338,14 @@ int function Control_GetNumOwnedObjectivesByAlliance( int alliance )
 		                                                                            
 			                                                  
 
-		                                         
+		                                                 
 			                                                                                                                                    
 
-		                                                           
-		                                  
+		                                                                                
+		                                                       
+		 
 			                                                                                                      
+		 
 
 		                                                   
 	 
@@ -7754,6 +7419,12 @@ int function Control_GetNumOwnedObjectivesByAlliance( int alliance )
 			                                                                                                                                   
 	 
 
+	                           
+	                                                                                                
+	                                                                                             
+	 
+		                                                                                                                                      
+	 
 
 	                                                                   
 	                                                                    
@@ -7798,27 +7469,11 @@ int function Control_GetNumOwnedObjectivesByAlliance( int alliance )
 		 
 	 
 
-	                                            
-	 
-		                                                                   
-
-		                       
-		 
-			                         
-			                                                                                                   
-			 
-				                                                                     
-				                                                                                                                      
-			 
-		 
-	 
-
 	                                                                                         
 	                                         
 	 
 		                                        
 	 
-
  
 #endif          
 
@@ -7883,7 +7538,7 @@ int function Control_GetNumOwnedObjectivesByAlliance( int alliance )
 
 	                                                                      
 	                                                                                                                                                                   
-	                                            
+	                                                    
 	 
 		                          
 		                                                     
@@ -8177,7 +7832,6 @@ int function Control_GetNumOwnedObjectivesByAlliance( int alliance )
 
 	                                                                                                       
 	                                                                      
-
 	                                                                                                                            
 
 	                                                             
@@ -8531,7 +8185,7 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
  
 	                                                                      
 	                                                                                                                                                                   
-	                                        
+	                                                
 		      
 
 	       
@@ -8579,7 +8233,6 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 #endif          
 
 #if SERVER
-                                         
                                                                                                                                          
  
 	                           
@@ -8626,10 +8279,10 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 
 		                                      
 
-		                              
-		 
-			                                                          
-		 
+		       
+			                              
+				                                                          
+		             
 
 		                         
 			                                                  
@@ -8656,7 +8309,6 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 	                     
 
 	                                                                                                                
-	                                              
  
 #endif          
 
@@ -8719,31 +8371,6 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 
 			           
 		 
-	 
- 
-#endif          
-
-#if SERVER
-                                                                   
-                                                                   
- 
-	                                                                                         
-		      
-
-	                                                                                                                      
-	                                                 
-	 
-		                                                                  
-		 
-			                                  
-			                                                                        
-			                                                             
-			                                                          
-		 
-	 
-	    
-	 
-		                                                           
 	 
  
 #endif          
@@ -8842,7 +8469,7 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 
 	                                                                      
 	                                                                                                                                                                   
-	                                        
+	                                                
 		            
 
 	                          
@@ -8863,6 +8490,22 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 	 
 
 	                                                                        
+
+	       
+		                                       
+		 
+			                                                    
+			 
+				                                                                                                                           
+				                                                     
+				                                                                                                                            
+			 
+			    
+			 
+				                                                                                                                                                                                                    
+			 
+		 
+	             
 
 	                         
 	 
@@ -8895,7 +8538,7 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 
 	                                                                      
 	                                                                                                                                                                   
-	                                        
+	                                                
 		            
 
 	       
@@ -8984,6 +8627,22 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 		                       
 	 
 
+	       
+		                                       
+		 
+			                                                            
+			 
+				                   
+				                                                                      
+				                                                                                                                                
+			 
+			    
+			 
+				                                                                                                                                                                                                        
+			 
+		 
+	             
+
 	                             
 	 
 		                                    
@@ -9013,7 +8672,7 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
  
 	                                                                      
 	                                                                                                                                                                   
-	                                        
+	                                                
 		      
 
 	                                                         
@@ -9131,7 +8790,7 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
  
 #endif          
 
-#if SERVER
+#if SERVER && DEV
                                                                                
  
 	                                               
@@ -9142,16 +8801,14 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 		                         
 			      
 
-		       
-			                         
-			 
-				                      
-				                                  
-					                                                                                                                              
+		                         
+		 
+			                      
+			                                  
+				                                                                                                                              
 
-				                                                                                     
-			 
-		             
+			                                                                                     
+		 
 	   
 
 	                             
@@ -9161,13 +8818,11 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 
 	       
 
-	       
-		                       
-		                                  
-			                                                                                                                                
-	             
+	                       
+	                                  
+		                                                                                                                                
  
-#endif          
+#endif                 
 
 #if SERVER
                                                                                                         
@@ -9332,13 +8987,15 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 #if SERVER
                                                                
  
-	                                                     
+	                                                      
  
 #endif          
 
 #if SERVER
-                                                                   
+                                                                    
  
+	                                               
+
 	                                                                          
 
 	                                                                      
@@ -9363,9 +9020,7 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 #if SERVER
                                                                              
  
-	                                         
-	                        
-		                                                                                                                             
+	                                                           
 
 	                                                        
 	 
@@ -9377,6 +9032,19 @@ entity function Control_GetEntityToSpawnOnFromRespawnChoice( entity wp, int resp
 		                                                               
 	 
 	                                                  
+ 
+#endif          
+
+#if SERVER
+                                                                                                                                                                                   
+                                                                         
+ 
+	                                               
+
+	           
+
+	                        
+		                                                        
  
 #endif          
 
@@ -9625,7 +9293,7 @@ void function Control_ManageRespawnWaypoint_Thread( entity wp )
 	if ( !IsValid( wp ) )
 		return
 
-	if ( Waypoint_GetPingTypeForWaypoint( wp ) != ePingType.SPAWN_REGION )
+	if ( Waypoint_GetPingTypeForWaypoint( wp ) != ePingType.PING_CONTROL_SPAWN_POINT )
 		return
 
 	while ( IsValid( wp ) && wp.wp.ruiHud == null )
@@ -9637,7 +9305,7 @@ void function Control_ManageRespawnWaypoint_Thread( entity wp )
 		return
 
 	int waypointType
-	if ( Waypoint_GetPingTypeForWaypoint( wp ) == ePingType.SPAWN_REGION )
+	if ( Waypoint_GetPingTypeForWaypoint( wp ) == ePingType.PING_CONTROL_SPAWN_POINT )
 	{
 		RuiSetFloat( wp.wp.ruiHud, "maxDrawDistance", 50000 )
 		RuiSetBool( wp.wp.ruiHud, "displayDistance", false )
@@ -9933,7 +9601,6 @@ void function Control_UpdatePlayerInfo_thread( var elem )
 void function ServerCallback_Control_TransferCameraData( vector cameraPosition, vector cameraAngles )
 {
 	entity player = GetLocalClientPlayer()
-
 	file.cameraLocation = cameraPosition
 	file.cameraAngles   = cameraAngles
 
@@ -9961,11 +9628,11 @@ void function ServerCallback_PlayMatchEndMusic_Control( int victoryCondition )
 	{
 		EmitSoundOnEntity( clientPlayer, CONTROL_SFX_GAME_END_VICTORY )
 
-		if ( victoryCondition == eControlVictoryCondition.LOCKOUT )
+		if ( victoryCondition == eWinReason.LOCKOUT )
 		{
 			EmitSoundOnEntity( clientPlayer, "Music_Ctrl_LockOut_Victory" )
 		}
-		else if ( victoryCondition == eControlVictoryCondition.SCORE )
+		else if ( victoryCondition == eWinReason.SCORE_LIMIT )
 		{
 			EmitSoundOnEntity( clientPlayer, "Music_Ctrl_RampUp_Victory" )
 		}
@@ -9974,7 +9641,7 @@ void function ServerCallback_PlayMatchEndMusic_Control( int victoryCondition )
 	{
 		EmitSoundOnEntity( clientPlayer, CONTROL_SFX_GAME_END_LOSS )
 
-		if ( victoryCondition == eControlVictoryCondition.LOCKOUT )
+		if ( victoryCondition == eWinReason.LOCKOUT )
 		{
 			EmitSoundOnEntity( clientPlayer, "Music_Ctrl_LockOut_Loss" )
 		}
@@ -11520,44 +11187,6 @@ void function ServerCallback_Control_NoVehiclesAvailable()
    
 
 #if CLIENT
-                                                                                                 
-void function ServerCallback_Control_DisplayMatchTimeLimitWarning( bool isFinalWarning )
-{
-	entity player = GetLocalViewPlayer()
-	if ( !IsValid( player ) )
-		return
-
-	                                                                                                 
-	if ( CONTROL_MATCH_TIME_LIMIT_WARNING_TIME < 60 )
-		return
-
-	string message = Localize( "#CONTROL_MATCH_TIMELIMIT_WARNING", CONTROL_MATCH_TIME_LIMIT_WARNING_TIME/ 60 )
-	if ( isFinalWarning )
-		message = Localize( "#CONTROL_MATCH_TIMELIMIT_GAMEEND" )
-
-	Control_AnnouncementMessageWarning( player, message, Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED ), CONTROL_SFX_MATCH_TIME_LIMIT, CONTROL_MESSAGE_DURATION )
-}
-#endif          
-
-#if CLIENT
-void function Control_AnnouncementMessageWarning( entity player, string messageText, vector titleColor, string soundAlias, float duration )
-{
-	AnnouncementData announcement = Announcement_Create( messageText )
-	Announcement_SetHeaderText( announcement, " " )
-	Announcement_SetSubText( announcement, " " )
-	Announcement_SetStyle( announcement, ANNOUNCEMENT_STYLE_GENERIC_WARNING )
-	Announcement_SetSoundAlias( announcement, soundAlias )
-	Announcement_SetPurge( announcement, true )
-	Announcement_SetPriority( announcement, 200 )                                                        
-	Announcement_SetDuration( announcement, duration )
-
-	Announcement_SetTitleColor( announcement, titleColor )
-	Announcement_SetVerticalOffset( announcement, 140 )
-	AnnouncementFromClass( player, announcement )
-}
-#endif          
-
-#if CLIENT
                                                                                
 void function ServerCallback_Control_AirdropNotification( bool areMultipleAirdropsIncoming )
 {
@@ -11589,7 +11218,7 @@ void function Control_UpdatePlayerExpHUD( entity player, int newExpTotal )
 	if ( !IsValid( player ) )
 		return
 
-	if ( player != GetLocalClientPlayer() )
+	if ( player != GetLocalViewPlayer() )
 		return
 
 	                            
@@ -11604,10 +11233,12 @@ void function Control_UpdatePlayerExpHUD( entity player, int newExpTotal )
 	{
 		Control_SetRatingsVisibility( player )
 		RuiSetBool( rui, "isMaxTier", isMaxTier )
-		RuiSetBool( rui, "isUltimateFull", Control_IsPlayerUltReady( player ) )
 		RuiSetInt( rui, "expTierColor", Control_GetPlayerExpTier( player ) )
 		RuiSetFloat( rui, "expTotal", currentTierExp )
 		RuiSetFloat( rui, "expTierThreshold", expTierThreshold )
+
+		if ( player == GetLocalClientPlayer() )
+			RuiSetBool( rui, "isUltimateFull", Control_IsPlayerUltReady( player ) )
 
 		if ( currentTierExp > 0 )
 			RuiSetGameTime( rui, "expGainedTime", Time() )
@@ -11712,13 +11343,13 @@ void function Control_DeathScreenUpdate( var rui )
 
 	string victoryCondition = Control_GetVictoryConditionForFlagset( squadData.gameResultFlags )
 	RuiSetString( rui, "victoryCondition", victoryCondition )
-	RuiSetString( rui, "headerText", titleString )                                                                                                                
+	RuiSetString( rui, "headerText", titleString )                                                                                                      
 	RuiSetString( rui, "killsText", killsText )
 
 	if ( victoryCondition == CONTROL_PIN_VICTORYCONDITION_SCORE )
 	{
 		RuiSetInt( rui, "losingScore", squadData.gameScoreFlags )
-		RuiSetInt( rui, "winningScore", Control_GetScoreLimit() )
+		RuiSetInt( rui, "winningScore", GetScoreLimit_FromPlaylist() )
 	}
 }
 #endif          
@@ -11791,6 +11422,8 @@ void function ServerCallback_Control_NewEXPLeader( entity expLeader, int exp )
 		announcement.duration = CONTROL_MESSAGE_DURATION
 		AnnouncementFromClass( localPlayer, announcement )
 	}
+
+	SquadLeader_UpdateAllUnitFramesRui()
 }
 #endif          
 
@@ -11810,7 +11443,7 @@ void function ServerCallback_Control_EXPLeaderKilled( entity attacker, entity ex
 	string expLeaderName = GetPlayerNameFromEHI( expLeaderEHI )
 	vector expLeaderNameColor = expLeader.GetTeam() == localPlayer.GetTeam() ? GetPlayerInfoColor( expLeader ) : <255, 255, 255>
 
-
+	SquadLeader_UpdateAllUnitFramesRui()
 	Obituary_Print_Localized( Localize( "#CONTROL_EXPLEADER_OBIT", expLeaderName ), expLeaderNameColor )
 	if ( localPlayer == attacker && attacker != expLeader )
 		AnnouncementMessageSweep( localPlayer, "#CONTROL_YOUKILLED_EXPLEADER", expLeaderName, expLeaderNameColor )
@@ -12056,8 +11689,9 @@ void function Thread_Control_InGameMapData()
 				screenPos[0] =  screenPos[0] / screenSize.width
 				screenPos[1] =  screenPos[1] / screenSize.height
 
-				int playerAlliance = AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() )
-				int yourTeamIndex = ( playerAlliance == 0 ) ? 0 : 1
+				int playerTeam = localPlayer.GetTeam()
+				int playerAlliance = AllianceProximity_GetAllianceFromTeam( playerTeam )
+				int yourTeamIndex = ( playerAlliance == ALLIANCE_A ) ? 0 : 1
 
 				string nameInformation = ""
 				asset waypointImage = $""
@@ -12103,7 +11737,7 @@ void function Thread_Control_InGameMapData()
 					isSpawnWaypoint = true
 					isValidNonHomeBaseSpawn = false
 					int waypointOwner = wp.GetWaypointInt( CONTROL_WAYPOINT_ALLIANCE_OWNER_INDEX )
-					bool shouldShowMRBIcon = waypointOwner == playerAlliance
+					bool shouldShowMRBIcon = waypointOwner == playerAlliance || playerTeam == TEAM_SPECTATOR
 					RuiSetBool( nestedRui, "isVisible", shouldShowMRBIcon )
 					float endTime = wp.GetWaypointFloat( CONTROL_MRB_SPAWN_WAYPOINT_ENDTIME )
 					RuiSetGameTime( nestedRui, "timerEndTime", endTime )
@@ -12132,7 +11766,7 @@ void function Thread_Control_InGameMapData()
 					int waypointOwner = wp.GetParent().GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER )
 					bool isFOB = Control_IsPointAnFOB( objID )
 					bool isFOBForLocalPlayer = isFOB && ( ( objID == 0 && yourTeamIndex == 0) || (objID != 0 && yourTeamIndex !=  0) )
-					bool isYourWaypoint = waypointOwner == playerAlliance
+					bool isYourWaypoint = waypointOwner == playerAlliance && playerTeam != TEAM_SPECTATOR
 					if ( isFOBForLocalPlayer )
 					{
 						RuiSetFloat2( file.inGameMapRui, "fobSpawnScreenspace", < screenPos[0], screenPos[1], 0.0 > )
@@ -12197,61 +11831,13 @@ ScoreboardData function Control_GetScoreboardData()
 	data.columnNumDigits.append( 3 )
 	data.columnDisplayIconsScale.append( 1.0 )
 
+	data.columnDisplayIcons.append( $"rui/hud/gamestate/player_damage_dealt_icon" )
+	data.columnDisplayIconsScale.append( 1.0 )
+	data.columnNumDigits.append( 4 )
+
 	data.numScoreColumns = data.columnDisplayIcons.len()
 
 	return data
-}
-#endif          
-
-#if CLIENT
-bool function BindTeamButtonCommon( var button, bool friendly )
-{
-	array<entity> teamPlayers = GetTeamPlayers( friendly )
-
-	int row = int( Hud_GetScriptID( button ) )
-
-	if ( row >= teamPlayers.len() )
-	{
-		Hud_Hide( button )
-		return false
-	}
-
-	Hud_Show( button )
-
-	return true
-}
-#endif          
-
-#if CLIENT
-array<entity> function GetTeamPlayers( bool friendly )
-{
-	if ( IsLocalPlayerOnTeamSpectator() )
-		return []
-
-	array<entity> friendlies = GetPlayerArrayOfTeam( GetLocalClientPlayer().GetTeam() )
-
-	int enemyTeam = GetOtherTeam( GetLocalClientPlayer().GetTeam() )
-	array<entity> enemies = GetPlayerArrayOfTeam( enemyTeam )
-
-	if ( Control_IsModeEnabled() )
-	{
-		friendlies.clear()
-		enemies.clear()
-		foreach( matchPlayer in GetPlayerArray() )
-		{
-			if ( IsValid( matchPlayer ) && AllianceProximity_GetAllianceFromTeam( matchPlayer.GetTeam() ) == AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() ) )
-			{
-				friendlies.append( matchPlayer )
-			}
-			else if ( IsValid( matchPlayer ) )
-			{
-				enemies.append( matchPlayer )
-			}
-		}
-	}
-
-	array<entity> teamPlayers = friendly ?friendlies : enemies
-	return teamPlayers
 }
 #endif          
 
@@ -12269,6 +11855,9 @@ array< string > function Control_GetPlayerScores( entity player )
 	string kills = string( player.GetPlayerNetInt( "kills" ) )
 	scores.append( kills )
 
+	string damage = string( player.GetPlayerNetInt( "damageDealt" ) )
+	scores.append( damage )
+
 	return scores
 }
 #endif          
@@ -12283,6 +11872,19 @@ array< entity > function Control_SortPlayersByScore( array< entity > teamPlayers
 
 			if ( int (aScores[0] ) > int( bScores[0] ) ) return -1
 			else if ( int( aScores[0] ) < int( bScores[0] ) ) return 1
+
+			int aKills = a.GetPlayerNetInt( "kills" )
+			int bKills = b.GetPlayerNetInt( "kills" )
+
+			if ( aKills > bKills ) return -1
+			else if ( aKills < bKills ) return 1
+
+			int aDamage = a.GetPlayerNetInt( "damageDealt" )
+			int bDamage = b.GetPlayerNetInt( "damageDealt" )
+
+			if ( aDamage > bDamage ) return -1
+			else if ( aDamage < bDamage ) return 1
+
 			return 0
 		}
 	)
@@ -12294,16 +11896,20 @@ array< entity > function Control_SortPlayersByScore( array< entity > teamPlayers
 #if CLIENT
 void function Control_ScoreboardUpdateHeader( var headerRui, var frameRui,  int team )
 {
-	bool isFriendly = team == AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() )
+	bool isFriendly = team == AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
 
-	if( headerRui != null )
+	if( IsPrivateMatch() && GetLocalClientPlayer().IsObserver() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR )
+	{
+		isFriendly = team == ALLIANCE_A
+	}
+	else if( headerRui != null )
 	{
 		RuiSetString( headerRui, "headerText", Localize( isFriendly ? "#ALLIES" : "#ENEMIES" ) )
 	}
 
 	int winningTeam = -1
 	if( ( GetAllianceTeamsScore( ALLIANCE_A ) + GetAllianceTeamsScore( ALLIANCE_B ) ) > 0 )
-		winningTeam = Control_GetLeadingAlliance()
+		winningTeam = GamemodeUtility_GetWinningAlliance()
 
 	RuiSetBool( headerRui, "isWinning", ( winningTeam == team ) )
 
@@ -12323,11 +11929,16 @@ void function Control_ScoreboardUpdateHeader( var headerRui, var frameRui,  int 
 #if CLIENT
 vector function Control_ScoreboardGetTeamColor( int team )
 {
-	bool isFriendly = team == AllianceProximity_GetAllianceFromTeam( GetLocalClientPlayer().GetTeam() )
+	bool isFriendly = team == AllianceProximity_GetAllianceFromTeam( GetLocalViewPlayer().GetTeam() )
 
-	vector color  = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED, true )
+	if( IsPrivateMatch() && GetLocalClientPlayer().IsObserver() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR )
+	{
+		isFriendly = team == ALLIANCE_A
+	}
+
+	vector color  = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED, true )
 	if( !isFriendly )
-		color  = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED, true )
+		color  = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED, true )
 
 	return color
 }
@@ -12361,10 +11972,10 @@ bool function Control_IsPlayerInMapCameraView ( entity player )
                                                                                                   
                                             
  
-	                                      
+	                                                         
 	 
-		                                                                                                                                                                                                 
-		                                                                                                                                                                                                 
+		                                                                                                                                                                                              
+		                                                                                                                                                                                              
 	 
  
 #endif          
@@ -12422,8 +12033,7 @@ bool function Control_IsPlayerInMapCameraView ( entity player )
 		 
 			                                                                                                                                    
 			                                                                                                                                                                                                                        
-			                                                                      
-				                                                                                                                            
+			                                                       
 		 
 	 
 
@@ -12446,7 +12056,8 @@ bool function Control_IsPlayerInMapCameraView ( entity player )
 		                                                                                      
 		 
 			                                                    
-			                                                                                                                            
+
+			                                                       
 		 
 	 
 
@@ -12698,11 +12309,11 @@ void function UICallback_Control_Loadouts_OnClosed()
 		 
 			                                                  
 			                                                                         
-
+			
 			                                                                      
 			                                           
 			 
-				                                                                                                                                                  
+				                                                                                                                                                                                                               
 				 
 					                                              
 				 
@@ -12907,7 +12518,7 @@ float function Control_GetEXPPercentToNextTier( entity player )
                                           
 bool function Control_IsPlayerUltReady( entity player )
 {
-	if ( !IsValid( player ) )
+	if ( !IsValid( player )  )
 		return 	false
 
 	entity ultimateWeapon = player.GetOffhandWeapon( OFFHAND_ULTIMATE )
@@ -13026,7 +12637,7 @@ bool function Control_IsPlayerUltReady( entity player )
 	                         
 		      
 
-	                                                         
+	                                                                     
 	                             
 	                               
 
@@ -13216,7 +12827,7 @@ bool function Control_IsPlayerUltReady( entity player )
 	                                                                                                                                  
 		                      
 
-	                                        
+	                                                
 		                      
 
 	                                                                 
@@ -13225,6 +12836,11 @@ bool function Control_IsPlayerUltReady( entity player )
 		                                                                 
 
 	                                                             
+	                                                                                                         
+	                                                                                             
+	                                                                              
+	                                                                                                                                     
+	                                                                                                                                                                                                   
 
 	                                                                     
 	                     
@@ -13321,30 +12937,55 @@ bool function Control_IsPlayerUltReady( entity player )
 			                                                                                                         
 			                                                                     
 			                         
-			                                                   
 
-			                
+			                                                                                                                                            
+			                                                                  
+			                                                                                                                                                                        
+			                                                                                                                  
+			                                                         
+				                                                                                                                                                        
+
+			                                                                       
+
+			                                                                    
 			 
-				                                               
-				                                                
-				                                         
-
-				                                                                       
-				                                                           
-					                                     
-			 
-
-
-			                                                                                                                                                                                
-			                                                     
-			 
-				                                                                 
+				                                             
+				                             
 				 
-					                                                                         
+					                                                                                
+					 
+						                                                            
+							                                                                              
+					 
+					    
+					 
+						                                                                               
+					 
 				 
-				    
+
+				                                                                                  
+				                
 				 
-					                                                                                              
+					                                                            
+					                                                             
+					                                                      
+
+					                                                                       
+					                                                                        
+						                                                  
+				 
+
+				                                                                                                                                                                                
+				                                             
+				 
+					                                                                 
+					 
+						                                                                                                   
+					 
+					    
+					 
+						                                                                                                                        
+					 
 				 
 			 
 			                      
@@ -13546,9 +13187,9 @@ const float CONTROL_TOTALSCOREPERCENTAGE_THRESHOLD_FOR_TIMEDEVENTS = 0.75
                                                                 
 bool function Control_TimedEventStartValidation( float eventLength, bool testForLockout = true )
 {
-	int scoreLimit = Control_GetScoreLimit()
+	int scoreLimit = GetScoreLimit_FromPlaylist()
 	float timedEventLimit = scoreLimit * CONTROL_TOTALSCOREPERCENTAGE_THRESHOLD_FOR_TIMEDEVENTS
-	bool isScoreUnderThreshold = Control_GetHighestCurrentScore() < timedEventLimit
+	bool isScoreUnderThreshold = GamemodeUtility_GetWinningTeamOrAllianceScore() < timedEventLimit
 
 	return ( !file.isLockout || !testForLockout ) && isScoreUnderThreshold
 }
@@ -13583,10 +13224,10 @@ const int CONTROL_OBJECTIVE_COUNT = 3
                                                                                                                                                              
 bool function Control_isValidMatchStateForLockout( float eventLength, bool shouldTestForActiveLockout )
 {
-	int scoreLimit = Control_GetScoreLimit()
+	int scoreLimit = GetScoreLimit_FromPlaylist()
 	int scorePerSec = CONTROL_OBJECTIVE_COUNT * CONTROL_TEAMSCORE_PER_POINT
 	int lockoutLimit = scoreLimit - ( CONTROL_TIMEDEVENT_THRESHOLD_PTS_BUFFER + int( scorePerSec * eventLength ) )
-	bool isScoreUnderThreshold = Control_GetHighestCurrentScore() < lockoutLimit
+	bool isScoreUnderThreshold = GamemodeUtility_GetWinningTeamOrAllianceScore() < lockoutLimit
 
 	return isScoreUnderThreshold && Control_TimedEventStartValidation( eventLength, shouldTestForActiveLockout )
 }
@@ -13616,7 +13257,7 @@ void function ServerCallback_Control_DisplayLockoutUnavailableWarning()
                                         
                                                                 
  
-	                                        
+	                                             
 	                                                                               
 	                                                                                                                                                       
 	                                                                                          
@@ -13748,7 +13389,7 @@ void function ServerCallback_Control_DisplayLockoutUnavailableWarning()
 	                                                         
 
 	                                     
-	                                         
+	                                                 
 		                                                                                                                               
 
 	                                      
@@ -13874,7 +13515,7 @@ void function ServerCallback_Control_DisplayLockoutUnavailableWarning()
 	                                                                       
 	                                         
 
-	                                                                              
+	                                                                                      
 	 
 		                                                                                                                        
 		                                                                                  
@@ -13899,7 +13540,7 @@ void function ServerCallback_Control_DisplayLockoutUnavailableWarning()
 			                                                
 		             
 
-		                                                                          
+		                                                     
 	 
 	    
 	 
@@ -14022,7 +13663,7 @@ void function ServerCallback_Control_DisplayLockoutUnavailableWarning()
 		                                                                                            
 	 
 
-	                                         
+	                                                 
 	 
 		                                                                                                                       
 		                                                             
@@ -14262,14 +13903,14 @@ void function ServerCallback_Control_DisplayLockoutUnavailableWarning()
  
 	                                               
 
-	                                                         
+	                                                                     
 
 	                                             
 	                                                                                                                    
 	                                    
 
 	                  
-	                                                                                                                                                                                                
+	                                                                                                                                                                                                                                    
 	                                                                               
 		                                                     
 
@@ -14453,6 +14094,35 @@ void function ServerCallback_Control_DisplayLockoutUnavailableWarning()
  
 #endif          
 
+#if SERVER
+                                                                                   
+ 
+	                  
+	                   
+	                    
+
+	                              
+	 
+		                                                                                                                                
+		                                                                                             
+		                                                                                                                                
+		                                                                                           
+		                                                                               
+		                                                       
+		                                                         
+		                                                           
+	 
+	    
+	 
+		                                          
+		                                            
+		                                              
+	 
+
+	                              
+ 
+#endif          
+
 #if CLIENT
                                                                                       
 const float CONTROL_MRB_AIRDROP_ICON_ZOFFSET = 200.0
@@ -14568,7 +14238,7 @@ void function Control_MRBTimedEvent_InfoOverride_Thread( entity wp, TimedEventLo
 		TIMED_EVENT_DISPLAY_BUFFER,
 		false,
 		true,
-		Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL ) )
+		GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL ) )
 
 	wait TIMED_EVENT_DISPLAY_BUFFER
 
@@ -14606,9 +14276,11 @@ void function Control_MRBTimedEvent_InfoOverride_Thread( entity wp, TimedEventLo
 	}
 
 	int lastMRBState
-	vector friendlyObjectiveCol = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
-	vector enemyObjectiveCol = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
-	vector neutralObjectiveCol = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.NEUTRAL )
+	entity localClientPlayer = GetLocalClientPlayer()
+	bool isLocalClientObserver = GamemodeUtility_IsPlayerOnTeamObserver( localClientPlayer )
+	vector friendlyObjectiveCol = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED )
+	vector enemyObjectiveCol = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
+	vector neutralObjectiveCol = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL )
 	                                                           
 	while( wp.GetWaypointInt( TIMEDEVENT_WAYPOINT_INT_EVENT_PHASE ) == eControlMRBTimeEventPhase.MRB_IN_PLAY )
 	{
@@ -14626,17 +14298,17 @@ void function Control_MRBTimedEvent_InfoOverride_Thread( entity wp, TimedEventLo
 				case eControlMRBTimeEventMRBState.PERSONAL_HELD:
 					data.eventDesc = Localize( "#CONTROL_MRB_INSTRUCTIONS_YOU_HELD" )
 					EmitUISound( CONTROL_SFX_MRB_STATUS_UPDATE )
-					data.colorOverride = friendlyObjectiveCol
+					data.colorOverride = ( isLocalClientObserver )?neutralObjectiveCol :friendlyObjectiveCol
 					break
 				case eControlMRBTimeEventMRBState.FRIENDLY_HELD:
-					data.eventDesc = Localize( "#CONTROL_MRB_INSTRUCTIONS_TEAM_HELD" )
+					data.eventDesc = ( isLocalClientObserver )? Localize( "#CONTROL_MRB_INSTRUCTIONS_YOU_HELD" ) :Localize( "#CONTROL_MRB_INSTRUCTIONS_TEAM_HELD" )
 					EmitUISound( CONTROL_SFX_MRB_STATUS_UPDATE )
-					data.colorOverride = friendlyObjectiveCol
+					data.colorOverride = ( isLocalClientObserver )? neutralObjectiveCol :friendlyObjectiveCol
 					break
 				case eControlMRBTimeEventMRBState.ENEMY_HELD:
-					data.eventDesc = Localize( "#CONTROL_MRB_INSTRUCTIONS_ENEMY_HELD" )
+					data.eventDesc = ( isLocalClientObserver )? Localize( "#CONTROL_MRB_INSTRUCTIONS_YOU_HELD" ) :Localize( "#CONTROL_MRB_INSTRUCTIONS_ENEMY_HELD" )
 					EmitUISound( CONTROL_SFX_MRB_STATUS_UPDATE_ENEMY )
-					data.colorOverride = enemyObjectiveCol
+					data.colorOverride = ( isLocalClientObserver )? neutralObjectiveCol :enemyObjectiveCol
 					break
 				default:
 					data.eventDesc = Localize( "#EVENT_MRB_DESC" )
@@ -14742,7 +14414,7 @@ void function Control_MRBTimedEvent_InfoOverride_Thread( entity wp, TimedEventLo
 	 
 
 	                                         
-	                                         
+	                                                 
 		                                                                                                                               
 
 	                                                                                                       
@@ -14822,7 +14494,7 @@ void function Control_MRBTimedEvent_InfoOverride_Thread( entity wp, TimedEventLo
  
 	                                               
 	                                         
-	                                                          
+	                                                                      
 
 	            
 		               
@@ -14849,7 +14521,7 @@ void function Control_MRBTimedEvent_InfoOverride_Thread( entity wp, TimedEventLo
 		                                                       
 
 		                                        
-		                                         
+		                                                 
 			                                                                                                                                                                        
 	 
 
@@ -14867,7 +14539,7 @@ void function Control_MRBTimedEvent_InfoOverride_Thread( entity wp, TimedEventLo
 		                                        
 		 
 			                                       
-			                                         
+			                                                 
 				                                                                                                                                      
 		 
 
@@ -14891,7 +14563,7 @@ void function Control_MRBTimedEvent_InfoOverride_Thread( entity wp, TimedEventLo
 		             
 
 		                                        
-		                                         
+		                                                 
 			                                                                                                                                     
 	 
  
@@ -15002,7 +14674,7 @@ void function Control_MRBTimedEvent_ManageMRBIcons_Thread( entity wp, bool shoul
 	if ( shouldUpdateIconBasedOnMRBState )
 	{
 		                                                                                                                                                                                                            
-		vector enemyIconColor = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED, true )
+		vector enemyIconColor = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED, true )
 		mapIconEnemyRui = CreateWaypointRui( $"ui/control_teammate_loc_icon.rpak", CONTROL_TEAMMATE_ICON_SORTING )
 		RuiSetColorAlpha( mapIconEnemyRui, "teammateIconColor", enemyIconColor, 1.0 )
 		RuiTrackFloat3( mapIconEnemyRui, "teammateLocation", wp, RUI_TRACK_ABSORIGIN_FOLLOW )
@@ -15128,8 +14800,8 @@ void function Control_MRBTimedEvent_SetMRBIconValues( var rui, int mrbOwnershipS
 	vector blackColor = SrgbToLinear( GetKeyColor( COLORID_COLORSWATCH_BLACK ) / 255.0 )
 	vector greyColor = SrgbToLinear( <131, 134, 137> / 255.0 )
 	vector whiteColor = SrgbToLinear( GetKeyColor( COLORID_COLORSWATCH_WHITE ) / 255.0 )
-	vector friendlyIconColor = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED, true )
-	vector enemyIconColor = Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED, true )
+	vector friendlyIconColor = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED, true )
+	vector enemyIconColor = GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED, true )
 
 	if ( shouldDoFullSetup )
 	{
@@ -15196,7 +14868,7 @@ void function Control_MRBTimedEvent_SetMRBIconValues( var rui, int mrbOwnershipS
 	                            
 	 
 		                                                                       
-		                                                                                                   
+		                                                                                                           
 		 
 			                                                                                                                                     
 			                                                                                     
@@ -15629,7 +15301,7 @@ int function Control_GetMRBPlacementStateFromHomeBasePositionChecks( int current
                                                              
  
 	                              
-	                                                                                  
+	                                                                                              
 	                           
 	                                     
 
@@ -15877,7 +15549,7 @@ int function Control_GetMRBPlacementStateFromHomeBasePositionChecks( int current
 		                                                                    
 	 
 
-	                                                       
+	                                                            
 	                                           
  
 #endif                 
@@ -15892,11 +15564,11 @@ int function Control_GetMRBPlacementStateFromHomeBasePositionChecks( int current
 
 #if DEV && SERVER
                         
-                                                                                                                                     
+                                                                                                                             
  
-	                                                                                  
+	                                                                    
 	 
-		                                                                                                                                                                                                                                                                                      
+		                                                                                                                                                                                                                                                  
 		      
 	 
 
@@ -15913,16 +15585,7 @@ int function Control_GetMRBPlacementStateFromHomeBasePositionChecks( int current
 	 
 
 	                                                          
-	                                                             
- 
-#endif                 
-
-#if DEV && SERVER
-                           
-                                                 
- 
-	                                                                     
-	                                                           
+	                                                      
  
 #endif                 
 
@@ -15959,7 +15622,7 @@ int function Control_GetMRBPlacementStateFromHomeBasePositionChecks( int current
 
 	                                                          
 	                               
-	                                                          
+	                                                                      
 
 	                                    
 	 
@@ -15986,6 +15649,17 @@ int function Control_GetMRBPlacementStateFromHomeBasePositionChecks( int current
  
 #endif                 
 
+#if DEV && SERVER
+                                                                                                                                                     
+                                                                                                                                                         
+                                                                              
+ 
+	                                             
+	                                                                                                  
 
+	                          
+		                                                                                                                                                           
+ 
+#endif                 
 
                              

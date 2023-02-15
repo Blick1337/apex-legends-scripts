@@ -756,7 +756,7 @@ bool function FerroWall_BlockScan( vector startPos, vector endPos )
  
 	                                    
 	                               
-	                             
+	                                     
 
 	                                                      
 		                                                                             
@@ -2323,6 +2323,8 @@ array<entity> function GetFerroWallIgnoreArray()
 	ignoreArray.extend( GetPlayerDecoyArray() )												               
 	ignoreArray.extend( GetEntArrayByScriptName( "LootRoller" ) )
 	ignoreArray.extend( GetAllDeathBoxes() )
+	ignoreArray.extend( GetEntArrayByScriptName( WORKBENCH_CLUSTER_SCRIPTNAME ) )
+	ignoreArray.extend( GetEntArrayByScriptName( HOVER_VEHICLE_SCRIPTNAME ) )
 
 	return ignoreArray
 }

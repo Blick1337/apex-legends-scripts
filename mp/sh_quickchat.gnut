@@ -227,7 +227,12 @@ void function ShQuickchat_Init()
 	#endif
 
 	#if SERVER
+                                 
+			                                                                               
+        
 		                                                                             
+		                                                                                    
+		                                                                                      
 	#endif
 
 	#if SERVER || CLIENT
@@ -383,10 +388,10 @@ array<string> function GetSubjectNamesForCommsAction( int commsAction, entity su
 	}
 
                     
-                                                                                                                                                 
-  
-                                                                 
-  
+	if( ( commsAction == eCommsAction.REPLY_CAREPACKAGE_INSIGHT || commsAction == eCommsAction.REPLY_CAREPACKAGE_INSIGHT_LOOTED ) && itemRef != "" )
+	{
+		return [SURVIVAL_Loot_GetLootDataByRef( itemRef ).pickupString]
+	}
        
 
 	if ( subjectEnt.IsPlayer() )
@@ -562,15 +567,15 @@ vector function GetSubjectColorForCommsAction( entity subjectEnt, string itemRef
 			{
 				if ( subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) == ALLIANCE_NONE )
 				{
-					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+					return GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 				}
 				else if ( IsTeamInAlliance( player.GetTeam(), subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) ) )
 				{
-					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
+					return GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED )
 				}
 				else if ( !IsTeamInAlliance( player.GetTeam(), subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) ) )
 				{
-					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+					return GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 				}
 			}
 			break
@@ -616,11 +621,11 @@ vector function GetSecondarySubjectColorForCommsAction( entity subjectEnt, entit
 				}
 				else if ( IsTeamInAlliance( player.GetTeam(), subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) ) )
 				{
-					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.FRIENDLY_OWNED )
+					return GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED )
 				}
 				else if ( !IsTeamInAlliance( player.GetTeam(), subjectEnt.GetWaypointInt( CONTROL_INT_OBJ_TEAM_OWNER ) ) )
 				{
-					return Control_GetColorVectorForObjectiveState( eControlObjectiveColorState.ENEMY_OWNED )
+					return GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED )
 				}
 			}
 			break
@@ -845,13 +850,13 @@ float function GetCooldownTimeForCommsAction( int commsAction )
 			return 0.7
       
                          
-                                                     
-             
+		case eCommsAction.FIRING_RANGE_TARGET_SPEED_CHANGE:
+			return 0.9
       
                    
-                                              
-                                                     
-             
+		case eCommsAction.REPLY_CAREPACKAGE_INSIGHT:
+		case eCommsAction.REPLY_CAREPACKAGE_INSIGHT_FUTURE:
+			return 0.5
       
                        
                                                       
@@ -1782,18 +1787,18 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 	                                                                
 
                    
-                 
-                                                                   
-  
-                                                                    
-                   
-  
+	                
+	                                                                  
+	 
+		                                                                  
+		                 
+	 
+	    
+	 
+		                                                                                       
+	 
      
-  
-                                                                                         
-  
-     
-	                                                                                           
+                                                                                            
       
 
                              
@@ -1929,8 +1934,8 @@ void function AddCallback_OnQuickchatEvent( int index, void functionref(entity, 
 			                                                                                                                                
        
                          
-                                                     
-                                                       
+		                                                   
+			                                                    
       
 	 
 
@@ -1955,7 +1960,7 @@ void function RunQuickChatCallbacks( entity player, int commsAction, entity subj
 #if SERVER
                                                                                      
  
-	                                                                             
+	                        
 		                                      
  
 #endif

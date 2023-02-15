@@ -99,17 +99,21 @@ void function ServerCallback_LiveAPI_LogNetwork_MatchSetup( string playlistName,
 
 void function LiveAPI_OnPlayerConnectionStateChanged( entity player )
 {
-	if( !IsValid( player ) || !player.IsPlayer() )
-		return
-
-	if( player.IsConnectionActive() )
+	if( IsValid( player ) && player.IsPlayer() && player.IsConnectionActive() )
 	{
-		file.connectedPlayers.append( player )
-		LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.playerConnected, [ LiveAPI_GetPlayerIdentityTable( player ) ], [ "player" ] )
+		if( !file.connectedPlayers.contains( player ) )
+		{
+			file.connectedPlayers.append( player )
+			LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.playerConnected, [ LiveAPI_GetPlayerIdentityTable( player ) ], [ "player" ] )
+		}
 	}
-	else if( file.connectedPlayers.contains( player ) )
+	else
 	{
-		file.connectedPlayers.fastremovebyvalue( player )
+		LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.playerDisconnected, [ LiveAPI_GetPlayerIdentityTable( player ), true ], [ "player", "canReconnect" ] )
+		if( file.connectedPlayers.contains( player ) )
+		{
+			file.connectedPlayers.fastremovebyvalue(player)
+		}
 	}
 }
 
@@ -373,7 +377,7 @@ void function LiveAPI_OnPlayerDisconnected( entity player )
 		return
 	}
 
-	LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.playerDisconnected, [ LiveAPI_GetPlayerIdentityTable( player ) ], [ "player" ] )
+	LiveAPI_WriteLogUsingCustomFieldNames( eLiveAPI_EventTypes.playerDisconnected, [ LiveAPI_GetPlayerIdentityTable( player ), false ], [ "player", "canReconnect" ] )
 }
                   
 

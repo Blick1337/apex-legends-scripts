@@ -75,19 +75,25 @@ const float PHASE_TUNNEL_PLACEMENT_HEIGHT_CROUCHING = 20
 
                                  
                     
-                                                                                 
-                                              
+const float PHASE_TUNNEL_LIFETIME = 45.0                                         
+const float PHASE_TUNNEL_MAX_DISTANCE = 6000.0
+const float PHASE_TUNNEL_LONG_DISTANCE = 3000.0
      
-const float PHASE_TUNNEL_LIFETIME = 60.0
-const float PHASE_TUNNEL_MAX_DISTANCE = 3000.0
+                                        
+                                              
       
                     
-                                                     
-                                                     
+const float PHASE_TUNNEL_SPEED_INCREMENT_AMOUNT = 0.1
+const float PHASE_TUNNEL_SPEED_INCREMENT_PERCENT = 20
       
 const float PHASE_TUNNEL_VALIDITY_TEST_TIME = 0.25
 const float PHASE_TUNNEL_TELEPORT_TRAVEL_TIME_MIN = 0.3
-const float PHASE_TUNNEL_TELEPORT_TRAVEL_TIME_MAX = 2.0
+                    
+const float PHASE_TUNNEL_TELEPORT_TRAVEL_TIME_LONG = 2.0
+const float PHASE_TUNNEL_TELEPORT_TRAVEL_TIME_MAX = 3.5
+     
+                                                       
+      
 const float PHASE_TUNNEL_TELEPORT_DBOUNCE = 0.5
 const float PHASE_TUNNEL_TELEPORT_DBOUNCE_PROJECTILE = 1.0
 const float PHASE_TUNNEL_USE_COOLDOWN_TIME = 0.25
@@ -99,7 +105,7 @@ const bool PHASE_TUNNEL_DEBUG_DRAW_PROJECTILE_TELEPORT = false
 const bool PHASE_TUNNEL_DEBUG_DRAW_PLAYER_TELEPORT = false
 
                     
-                                                     
+const bool PHASE_TUNNEL_SPEED_INCREMENT_DEBUG = false
       
 global struct PhaseTunnelPathNodeData
 {
@@ -192,6 +198,7 @@ struct
 		                                                      
 		                                                     
 		                                                            
+		                  						                        
 	#endif         
 } file
 
@@ -297,7 +304,9 @@ bool function OnWeaponChargeBegin_weapon_phase_tunnel( entity weapon )
 	float shiftTime = PHASE_TUNNEL_PLACEMENT_DURATION
 
 	                                
-
+#if SERVER
+	                                              
+#endif
 	if ( IsAlive( player ) )
 	{
 		if ( player.IsPlayer() )
@@ -321,6 +330,7 @@ bool function OnWeaponChargeBegin_weapon_phase_tunnel( entity weapon )
 				                                    
 					            
 
+				                                             
 				                                             
 
 				                       
@@ -359,9 +369,10 @@ void function OnWeaponChargeEnd_weapon_phase_tunnel( entity weapon )
 	#if SERVER
 		                                  
 		 
-			                        
+			                                                                         
 			 
 				                                               
+				                                              
 			 
 
 			                                    
@@ -1378,6 +1389,7 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 	                      
 	                                    
 	                               
+	                          
 
 	              
 	                                               
@@ -1735,8 +1747,13 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 		                                                                        
 	 
 
-	                                                                                                                                                    
-	                                                                                                                                                  
+                     
+	                                                                                                                                                                           
+	                                                                                                                                                                         
+      
+                                                                                                                                                     
+                                                                                                                                                   
+       
 
 	                                                                                                                                                                                   
 	                                                                                                                                                                            
@@ -1765,25 +1782,25 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 		 
 	 
                     
-                                          
+	                                         
 
-                                              
-                         
-                       
+	                                             
+	                        
+	                      
 
-             
-                                                   
-   
-                          
-    
-                                            
-     
-                                                  
-                                                                   
-     
-    
-   
-  
+	            
+		                                                 
+		 
+			                       
+			 
+				                                        
+				 
+					                                             
+						                                                             
+				 
+			 
+		 
+	 
       
 
 	              
@@ -1865,34 +1882,34 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 
 
                         
-                                                              
-                                                                                        
+					                                                         
+					                                                                                   
 
-            
-                                               
-       
-                                                                                                                             
-                                                                              
-       
-           
+					       
+						                                         
+						 
+							                                                                                                                      
+							                      	                                           		   
+						 
+					      
 
-                                                                             
-      
-                             
-       
-                                               
-        
-                                                     
-         
-                                                                      
-                                 
-        
+					                                                                        
+					 
+						                       
+						 
+							                                        
+							 
+								                                             
+								 
+									                                                             
+								                         
+							 
 
-                                  
-                                                                    
-                                                                                                                   
-       
-      
+							                           
+							                                                             
+							                                                                                                            
+						 
+					 
           
 
 				                                              
@@ -1906,7 +1923,7 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 	 
  
 
-                                                                                                                                                  
+                                                                                                                                                                                           
  
 	                    
 	 
@@ -1947,6 +1964,14 @@ var function OnWeaponPrimaryAttack_ability_phase_tunnel( entity weapon, WeaponPr
 
 		                                      
 	 
+                     
+		                                                                                                                             
+		                                            
+		 
+			                                                        
+				                                                                                                                                                                                    
+		 
+       
 
 	                                                        
 	                                                                 

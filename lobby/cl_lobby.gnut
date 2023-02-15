@@ -1,4 +1,3 @@
-
 global function Lobby_AddLocalPlayer
 global function AddCallback_OnPlayerAddedToLobby
 global function Lobby_SetBannerSkin
@@ -6,12 +5,35 @@ global function Lobby_SetBannerSkin
 global function DEV_SetLobbyBannerSkin
 #endif
 
+                       
+global function Lobby_AnniversaryConfettiOnReady
+
+const array< asset > LOBBY_ANNIVERSARY_BALLOON_MDLS =
+[
+	$"mdl/celebration/float_balloons/wraith_float_balloon_01.rmdl",
+ 	$"mdl/celebration/float_balloons/wattson_float_balloon_01.rmdl",
+ 	$"mdl/celebration/float_balloons/revenant_float_balloon_01.rmdl",
+ 	$"mdl/celebration/float_balloons/octane_float_balloon_01.rmdl",
+ 	$"mdl/celebration/float_balloons/mirage_float_balloon_01.rmdl",
+ 	$"mdl/celebration/float_balloons/loba_float_balloon_01.rmdl",
+ 	$"mdl/celebration/float_balloons/ash_float_balloon_01.rmdl",
+ 	$"mdl/celebration/float_balloons/bloodhound_float_balloon_01.rmdl",
+ 	$"mdl/celebration/float_balloons/lifeline_float_balloon_01.rmdl"
+]
+
+      
+
+
                                                                       
 const int LOBBY_BANNER_DEFAULT_SKIN_INDEX = 0
 const int LOBBY_BANNER_ARENAS_SKIN_INDEX = 1
 const int LOBBY_BANNER_CONTROL_SKIN_INDEX = 2
 const int LOBBY_BANNER_LTM_SKIN_INDEX = 3
 const int LOBBY_BANNER_FREEDM_SKIN_INDEX = 4
+                       
+const int LOBBY_BANNER_BG_DEFAULT_SKIN_INDEX = 5
+      
+
 
 struct
 {
@@ -21,6 +43,13 @@ struct
 	#if DEV
 		bool overrideLobbyBanner = false
 	#endif
+
+                        
+	array <entity> confettiNodes
+	float confettiCooldown = 0
+	bool balloonCreated = false
+	int conffettiFxParticleIndex = -1
+       
 } file
 
 void function Lobby_AddLocalPlayer()
@@ -45,6 +74,79 @@ void function Lobby_AddLocalPlayer()
 		func( player )
 
 	CacheLobbyBannerEnt()
+
+                        
+	CacheAnniversaryConfettiEnt()
+
+	if ( !file.balloonCreated )
+	{
+		array< entity > balloonNodes = GetEntArrayByScriptName( "anniversary_lobby_balloon" )
+		if ( balloonNodes.len() == 1 )
+		{
+			asset balloon = LOBBY_ANNIVERSARY_BALLOON_MDLS.getrandom()
+			entity balloonEnt = CreateClientSidePropDynamic( balloonNodes[0].GetOrigin(), balloonNodes[0].GetAngles(), balloon )
+			balloonEnt.SetModelScale(0.16)
+			balloonEnt.SetSkin(1)
+		}
+
+
+
+		array< entity > apexBalloonNodes = GetEntArrayByScriptName( "anniversary_lobby_apexballoon" )
+		if ( apexBalloonNodes.len()== 1 )
+		{
+			entity apexBalloonEnt = CreateClientSidePropDynamic( apexBalloonNodes[0].GetOrigin(), <0, 0, 0>, $"mdl/celebration/float_balloons/apexlogo_float_balloon_01.rmdl" )
+			apexBalloonEnt.SetModelScale(0.40)
+
+
+			if ( Anniversary_IsGoldTakeoverEnabled() )
+			{
+				apexBalloonEnt.SetSkin( 3 )
+			}
+			else
+			{
+				apexBalloonEnt.SetSkin( 2 )
+			}
+		}
+
+		file.balloonCreated = true
+	}
+
+	if ( Anniversary_IsGoldTakeoverEnabled() )
+	{
+		array< entity > eventProps = GetEntArrayByScriptName( "lobby_ground_confetti" )
+		foreach ( eventProp in eventProps )
+		{
+			if ( IsValid ( eventProp ) )
+				eventProp.SetSkin(1)
+		}
+	}
+
+	if ( !Anniversary_IsBeachPartyEnabled() )
+	{
+		array< entity > beachEventProps = GetEntArrayByScriptName( "lobby_beach_prop" )
+		foreach ( beachEventProp in beachEventProps )
+		{
+			if ( IsValid ( beachEventProp ) )
+				beachEventProp.Destroy()
+		}
+
+		array< entity > beachEventLaternProps = GetEntArrayByScriptName( "lobby_beach_lantern" )
+		foreach ( beachEventLaternProp in beachEventLaternProps )
+		{
+			if ( IsValid ( beachEventLaternProp ) )
+				beachEventLaternProp.Destroy()
+		}
+	}
+	else
+	{
+		array< entity > beachEventLaternProps = GetEntArrayByScriptName( "lobby_beach_lantern" )
+		foreach ( beachEventLaternProp in beachEventLaternProps )
+		{
+			if ( IsValid ( beachEventLaternProp ) )
+				beachEventLaternProp.SetSkin(2)
+		}
+	}
+       
 }
 
 void function AddCallback_OnPlayerAddedToLobby( void functionref( entity ) onPlayerAddedToLobbyCallback )
@@ -76,11 +178,17 @@ void function Lobby_SetBannerSkin( string playlist )
 
 	string playlistName = GetParty().playlistName
 
-	int skinIndex = LOBBY_BANNER_DEFAULT_SKIN_INDEX
-	if( playlist != "" && GetPlaylistGamemodeByIndex( playlist, 0 ) == GAMEMODE_ARENAS )
-		skinIndex = LOBBY_BANNER_ARENAS_SKIN_INDEX
-	else if ( GetPlaylistVarBool( playlistName, "is_limited_mode", false ) )
+                        
+	int skinIndex = ( Anniversary_IsGoldTakeoverEnabled() ) ? LOBBY_BANNER_BG_DEFAULT_SKIN_INDEX : LOBBY_BANNER_DEFAULT_SKIN_INDEX
+      
+                                                
+       
+	if ( GetPlaylistVarBool( playlistName, "is_limited_mode", false ) )
 		skinIndex = LOBBY_BANNER_LTM_SKIN_INDEX
+                        
+                                                                                          
+                                            
+       
                          
 	else if ( playlist != "" && GetPlaylistGamemodeByIndex( playlist, 0 ) == GAMEMODE_CONTROL )
 		skinIndex = LOBBY_BANNER_CONTROL_SKIN_INDEX
@@ -120,3 +228,52 @@ void function DEV_SetLobbyBannerSkin( int i )
 	file.overrideLobbyBanner = true
 }
 #endif
+
+                       
+void function CacheAnniversaryConfettiEnt()
+{
+	asset confettiFx = ( Anniversary_IsGoldTakeoverEnabled() ) ? $"P_S16_lobby_confetti_bg" : $"P_S16_lobby_confetti"
+	PrecacheParticleSystem( confettiFx )
+	file.conffettiFxParticleIndex = GetParticleSystemIndex( confettiFx )
+	file.confettiNodes = GetEntArrayByScriptName( "anniversary_lobby_fx" )
+}
+
+void function Lobby_AnniversaryConfettiOnReady()
+{
+	if (  file.confettiNodes.len() == 0 )
+		return
+
+	float now = ClientTime()
+
+	if ( now < (file.confettiCooldown + 3.0))
+		return
+
+	file.confettiCooldown = now
+
+	thread function() : ()
+	{
+		array<int> effectHandles
+		OnThreadEnd(
+			function() : ( effectHandles )
+			{
+				foreach ( effectHandle in effectHandles )
+				{
+					if ( EffectDoesExist( effectHandle ) )
+						EffectStop ( effectHandle, true, true )
+				}
+
+			}
+		)
+
+		foreach ( node in file.confettiNodes)
+		{
+			if ( IsValid ( node ) )
+			{
+				effectHandles.append( StartParticleEffectOnEntity( node, file.conffettiFxParticleIndex, FX_PATTACH_ABSORIGIN_FOLLOW, ATTACHMENTID_INVALID ) )
+			}
+		}
+
+		wait 6.0
+	}()
+}
+      

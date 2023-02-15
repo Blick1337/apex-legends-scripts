@@ -25,7 +25,7 @@ const string EXPLOSIVE_HOLD_VENT_SMOKE_SCRIPTNAME = "explosive_hold_vent_fx_help
 const string EXPLOSIVE_HOLD_ATTACHMENTS_PARENT_SCRIPTNAME = "explosive_hold_attachments_parent"
 
 const string EXPLOSIVE_HOLD_WEAPON_LOOT_GROUP = "Weapon_Medium"
-const string EXPLOSIVE_HOLD_ATTACHMENTS_LOOT_GROUP = "Explosive_Hold_Attachments"
+global const string EXPLOSIVE_HOLD_ATTACHMENTS_LOOT_GROUP = "Explosive_Hold_Attachments"
 
 const string DOOR_DENY_SOUND = "menu_deny"
 const string GRENADE_DETONATE_SOUND = "Loot_ExplosiveHold_Explosion_3p"
@@ -768,6 +768,10 @@ void function ExplosiveHoldDoor_DisplayRui( entity ent, entity player, var rui, 
 	 
 
 	                                                        
+
+	          
+		                                                                                                   
+	      
 
 	                                        
 	                                                                          

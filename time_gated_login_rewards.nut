@@ -67,7 +67,18 @@ array<ItemFlavor> function GetActiveLoginEvents( int t )
 	                             
 		      
 
+	                                                                                                                                                             
+	                                      
+		      
+
 	                                                                                
+
+	                               
+	                                                                                                    
+	                                                                                                                                                   
+	                                               
+	                                                                                                                                           
+	                                                                                                                                           
 
 	                                              
 		      
@@ -94,71 +105,71 @@ array<ItemFlavor> function GetActiveLoginEvents( int t )
 		 
 
 		                                        
-		                                                                                                                             
-		                
-		                                                                                    
-		    
-		   		                                        
-		       
-
-		                   
-		                   
-		              
-		                    
-			                                                 
-		                                  
+		                                                                                                                       
+		                                                                                                  
+		                                   
 		 
-			                          
+			                                                                                                       
+			                                                                                         
+
+			              
+			                    
+				                                                 
+			                                  
+			 
+				                          
+				                                        
+				 
+					                                                                 
+						        
+
+					                                                                    
+					 
+						                                                
+							        
+					 
+
+					                                              
+					 
+						                                                                                  
+						                                                         
+						 
+							                                        
+							 
+								                                    
+								                                    
+								     
+							 
+						 
+					 
+					    
+					 
+						                                     
+						                                   
+					 
+				 
+
+				                      
+				                       
+				                                
+				                                
+				                                 
+
+				                      
+				                       
+				                                            
+				                                             
+
+				        
+			 
 			                                        
 			 
-				                                                                 
-					        
-
-				                                                                    
-				 
-					                                                
-						        
-				 
-
-				                                              
-				 
-					                                                                                  
-					                                                         
-					 
-						                                        
-						 
-							                                    
-							                                    
-							     
-						 
-					 
-				 
-				    
-				 
-					                                     
-					                                   
-				 
+				        
 			 
-
-			                      
-			                       
-			                                
-			                                
-			                                 
-
-			                      
-			                       
-			                                            
-			                                             
-
-			        
 		 
-		                                        
-		 
-			        
-		    
 		                                      
 
+		                      
 		                                        
 		 
 			                                                              

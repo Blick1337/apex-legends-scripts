@@ -126,25 +126,24 @@ void function SV_CL_Init()
 	ShPassives_Init()
 	ShCharacterAbilities_LevelInit()
                     
-              
-                        
-                          
-                                
-                               
-                            
-                          
-                           
-                            
-                             
-                            
+		Perks_Init()
+		Perk_BeaconScan_Init()
+		Perk_ExtraBinLoot_Init()
+		Perk_CarePackageInsight_Init()
+		Perk_DefensiveEvoBoost_Init()
+		Perk_ExtraFirepower_Init()
+		Perk_KillBoostUlt_Init()
+		Perk_MunitionsDrop_Init()
+		Perk_WeaponInfusion_Init()
+		Perk_DeathBoxInsight_Init()
+		Perk_SupportLootbin_Init()
 
-                         
+		Sh_MunitionsDrop_Init()
        
 
                     
                    
        
-
 	ShCharacterCosmetics_LevelInit()
 	ShCalEvent_LevelInit()
 	Vouchers_LevelInit()
@@ -155,18 +154,20 @@ void function SV_CL_Init()
 	StoryChallengeEvents_Init()
 	ShSkydiveTrails_LevelInit()
 	Sh_Ranked_ItemRegistrationInit()                                           
-                        
+
+                      
 		Sh_ArenasRanked_ItemRegistrationInit()                                           
-		Sh_Arenas_ItemRegistrationInit()
+       
+
+                        
+                                  
        
 	ShWeapons_LevelInit()
 	ShWeaponCosmetics_LevelInit()
 	ShGladiatorCards_LevelInit()
 	ShQuips_LevelInit()
 	ShSkydiveEmotes_LevelInit()
-                 
-		ShStickers_LevelInit()
-       
+	ShStickers_LevelInit()
 	ShMythics_LevelInit()
 	ShLoadscreen_Init()
 	ShLoadscreen_LevelInit()
@@ -212,7 +213,7 @@ void function SV_CL_Init()
 	ShStats_LevelInit()
 	ShChallenges_LevelInit_PostStats()
 	Sh_Ranked_Init()                                                                                                                
-                        
+                      
 		Sh_ArenasRanked_Init()                                                                                                                
        
 	ShDoors_Init()
@@ -295,6 +296,7 @@ void function SV_CL_Init()
 
 	ShLootBin_Init()
 	ShFlyers_Init()
+	GamemodeUtility_Init()
 
                   
 		ShGameModeShadowSquad_Init()
@@ -325,8 +327,12 @@ void function SV_CL_Init()
 		ShSniperTowers_Init()
        
 
+                     
+                    
+       
+
                         
-		ShGamemodeArenas_Init()
+                         
        
 
                        
@@ -458,6 +464,10 @@ void function SV_CL_Init()
                        
        
 
+                    
+                   
+       
+
                            
                                 
                                
@@ -517,7 +527,7 @@ void function SV_CL_Init()
 	Sh_SkydiveLaunchers_Init()
 
                                               
-                         
+	Sh_TrackingVision_Init()
       
 
 	Armor_ShieldRegen_Init()
@@ -754,7 +764,6 @@ void function Client_Init()
 	                                                                                                                                                                     
 	                                                                                                                                                                     
 	  
-
 	Cl_DeathScreen_Init()
 	ClAnim_Init()
 	CLUtilityMenu_Init()
@@ -800,6 +809,8 @@ void function Client_Init()
 	ClObituary_Init()
 	ClGameState_Init()
 	                        
+
+	CLUI_Ranked_Init()
 
 	ClMinimap_Init()
 	Cl_FullmapInit()
@@ -857,6 +868,7 @@ void function Shared_Lobby_Init()
 	                                                                                                                                                                                                                                                                     
 	  
 
+
 	ShEHI_LevelInit_Begin()
 	ShUtilityAll_Init()
 	Utility_Shared_Init()
@@ -870,25 +882,29 @@ void function Shared_Lobby_Init()
 
 #if CLIENT
 	AnimEvents_Init()
+	Teams_RegisterSignals()
 #endif
 
 	ShGamepad_LevelInit()
 	ShItems_LevelInit_Begin()
 	ShGRX_LevelInit()
+	#if SERVER
+		                   
+	#endif
 	Entitlements_LevelInit()
 	ShLoadouts_LevelInit_Begin()
 	ShCharacters_LevelInit()
 	ShPassives_Init()
 	ShCharacterAbilities_LevelInit()
                     
-              
-                        
-                          
-                               
-                                
-                            
-                          
-                            
+		Perks_Init()
+		Perk_BeaconScan_Init()
+		Perk_ExtraBinLoot_Init()
+		Perk_DefensiveEvoBoost_Init()
+		Perk_CarePackageInsight_Init()
+		Perk_ExtraFirepower_Init()
+		Perk_KillBoostUlt_Init()
+		Perk_SupportLootbin_Init()
        
 	ShCharacterCosmetics_LevelInit()
 	ShCalEvent_LevelInit()
@@ -900,7 +916,7 @@ void function Shared_Lobby_Init()
 	StoryChallengeEvents_Init()
 	ShSkydiveTrails_LevelInit()
 	Sh_Ranked_ItemRegistrationInit()                                           
-                        
+                      
 		Sh_ArenasRanked_ItemRegistrationInit()                                           
        
 	ShWeapons_LevelInit()
@@ -908,9 +924,7 @@ void function Shared_Lobby_Init()
 	ShGladiatorCards_LevelInit()
 	ShQuips_LevelInit()
 	ShSkydiveEmotes_LevelInit()
-                 
-		ShStickers_LevelInit()
-       
+	ShStickers_LevelInit()
 	ShMythics_LevelInit()
 	ShLoadscreen_Init()
 	ShLoadscreen_LevelInit()
@@ -937,7 +951,10 @@ void function Shared_Lobby_Init()
 	ShStats_LevelInit()
 	ShChallenges_LevelInit_PostStats()
 	Sh_Ranked_Init()                                                                                                                
-                        
+	#if CLIENT
+		CLUI_Ranked_Init()
+	#endif
+                      
 		Sh_ArenasRanked_Init()                                                                                                                
        
 

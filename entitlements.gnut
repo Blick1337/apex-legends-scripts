@@ -31,6 +31,7 @@ global function DEV_OpenHijackedEntitlementRedeemPopup
                                                       
                                              
                                                        
+                                                  
 #endif
 
 table<entity, bool> checkedPlayerRewardsSet = {}
@@ -39,6 +40,7 @@ global table<string, array< ItemFlavor > > eaAccessRewardRefs
 global table<string, array< ItemFlavor > > psPlusRewardRefs
 
 global table< int, table<ItemFlavor, array< ItemFlavor > > > entitlementRewardMap
+global table< int, table<ItemFlavor, array< int > > > entitlementRewardCountsMap
 
 global table<entity, bool> playersToCheckForUpgrade
 global array< ItemFlavor > upgradableAccessRewardRefs
@@ -54,6 +56,9 @@ array< DialogQueueEntry > dialogQueue
 #endif
 
 const string GENERIC_ACKNOWLEDGEMENT_PVAR = "genericEntitlementsAcknowledgement"
+
+const string entitlementSequenceNameTemplate = "%s_SequenceRewardVariable"
+const string entitlementPersistenceStructName = "entitlementsSequenceRewards"
 
 enum eEntitlementType
 {
@@ -77,9 +82,11 @@ void function Entitlements_LevelInit()
 	fileLevel = newFileLevel
 
 	entitlementRewardMap.clear()
+	entitlementRewardCountsMap.clear()
 	for ( int entitlementType = 0; entitlementType < eEntitlementType._COUNT; entitlementType++ )
 	{
 		entitlementRewardMap[entitlementType] <- {}
+		entitlementRewardCountsMap[entitlementType] <- {}
 	}
 
 	                                                            
@@ -124,6 +131,7 @@ void function Entitlements_LevelInit()
 #if SERVER
                                                                       
  
+
 	                                        
 		      
 
@@ -219,6 +227,92 @@ void function Entitlements_LevelInit()
 #endif
 
 #if SERVER
+                                                             
+                                                                         
+ 
+	                                        
+	 
+		                                      
+		 
+			           
+		 
+	 
+	            
+ 
+#endif
+
+#if SERVER
+                                                                           
+                                                                                                               
+ 
+	                                                                                                                                   
+		                                                   
+	                                     
+	                                                                                   
+	                                                                                    
+	                                          
+	 
+		                                          
+	 
+	                   
+ 
+#endif
+
+#if SERVER
+                                                                                                                                         
+ 
+	                         
+	 
+		                                   
+		 
+			                                                      
+			      
+		 
+		                                   
+		 
+			                                                                                     
+			                                                          
+				                                                 
+			      
+		 
+	 
+ 
+#endif
+
+#if SERVER
+                                                                                                                 
+                                                                                                                     
+                                                
+                                                                                                                                                        
+ 
+	                                
+	                                       
+	                                                        
+	                                                                                                           
+	                                                                                                         
+	 
+		                                                                         
+												                                                              
+		                                                                                                                                      
+	  
+	                                                                                                                                  
+		                                                                               
+		                           
+		 
+			      
+		 
+
+		                                                
+		 
+			                                            
+		 
+		                                                                                              
+	   
+	                                             
+ 
+#endif
+
+#if SERVER
                                             
  
 	                            
@@ -226,8 +320,17 @@ void function Entitlements_LevelInit()
 	 
 		                                                                        
 		                                                              
+		 
 			        
+		 
 
+		                                                                     
+		                                                                   
+		                                                
+		 
+			                                                                                                                                                                  
+			        
+		 
 		                                         
 		 
 			                                                                                                                                       
@@ -247,7 +350,6 @@ void function Entitlements_LevelInit()
 
 				                                            
 
-				                                                                                         
 				                                                      
 			  
 			                                                         
@@ -275,6 +377,19 @@ void function Entitlements_LevelInit()
 		 
 			                                                                          
 			                                                                        
+			                                                        
+			 
+				        
+			 
+
+			                                                                     
+			                                                                   
+			                                                
+			 
+				                                                                                                                                                                
+				        
+			 
+
 			                                                                       
 
 			                                         
@@ -392,7 +507,6 @@ void function Entitlements_LevelInit()
 	 
  
 #endif
-
 
 #if SERVER
                                                             
@@ -822,9 +936,9 @@ void function EntitlementRegister( ItemFlavor flavor )
 {
 	int entitlementType = Entitlement_GetEntitlementType( flavor )
 	entitlementRewardMap[entitlementType][flavor] <- []
+	entitlementRewardCountsMap[entitlementType][flavor] <- []
 }
 #endif
-
 
 #if SERVER
                                     
@@ -836,6 +950,19 @@ void function EntitlementRegister( ItemFlavor flavor )
 		 
 			                                                                                        
 			                                                                           
+
+			                                                             
+
+			                                                                       
+
+			                         
+			 
+				                                                                                                                
+				                                                                    
+				                                                                        
+					                                                                                                                                                              
+			 
+			                                                                                     
 		 
 	 
  
@@ -960,7 +1087,7 @@ void function QueueEntitlementMenu( asset entitlementAsset, string persistenceVa
 	                                               
 		      
 
-	                                                                                                                          
+	                                                                                                                    
 	                                      
 	 
 		                                                      
@@ -988,12 +1115,28 @@ void function QueueEntitlementMenu( asset entitlementAsset, string persistenceVa
  
 #endif          
 
-
 #if SERVER && DEV
                                         
  
-	                                                      
+	                                                                                                                   
+	                                                                                          
+	 
+		                                                                       
+		                                                                                                    
+		 
+			                                                                                        
+			                                          
+			 
+				                                                                                                                                  
+				                                             
+				     
+			 
+		 
+	 
+	                       
 
+	                                                      
+	                                                                                            
 	                                           
 	                                                                                          
 	 
@@ -1005,9 +1148,7 @@ void function QueueEntitlementMenu( asset entitlementAsset, string persistenceVa
 
 		                                               
 	 
-
 	                                                         
-
 	                           
  
 #endif                 

@@ -449,7 +449,10 @@ void function OnDeployableShieldPlanted( entity projectile )
 		 
 	 
 
+	                      
 	                        
+	                          
+	                          
 	                          
 	                                                
 
@@ -475,6 +478,26 @@ void function OnDeployableShieldPlanted( entity projectile )
 
 		                                   
 			     
+
+		                                                   
+		                                                
+		                  
+		 
+
+			                                                       
+			                
+			 
+				                               
+				                
+			 
+
+			                                                      
+			 
+				     
+			 
+		 
+		    
+			                 
 
 		           
 	 

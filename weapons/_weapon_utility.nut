@@ -211,6 +211,7 @@ global const string MARKSMANS_TEMPO_FADEOFF_ON_PERFECT_MOMENT_SETTING = "marksma
 global const string MARKSMANS_TEMPO_FADEOFF_ON_FIRE_SETTING = "marksmans_tempo_fadeoff_on_fire"
 global const string MARKSMANS_TEMPO_FADEOFF_THREAD_ABORT = "marksmans_tempo_fadeoff_abort"
 global const string ENERGIZE_STATUS_RUI_ABORT_SIGNAL = "EnergizRuiThinkAbortSignal"
+global const string WEAPON_CHARGED_RUI_ABORT_SIGNAL = "ChargedRuiThinkAbortSignal"
 global function MarksmansTempo_Validate
 global function MarksmansTempo_OnActivate
 global function MarksmansTempo_OnDeactivate
@@ -1732,7 +1733,7 @@ bool function PlantStickyEntity( entity ent, DeployableCollisionParams cp, vecto
 		else
 			ent.SetParent( cp.hitEnt )	                                                                 
 
-		if ( cp.hitEnt.IsPlayer() )
+		if ( cp.hitEnt.IsPlayer() || IsDoor( cp.hitEnt ) || IsReinforced (cp.hitEnt))
 			thread HandleDisappearingParent( ent, cp.hitEnt )
 	}
 
@@ -1785,6 +1786,8 @@ bool function IsABaseGrenade( entity ent )
                                                                       
  
 	                                
+	                                  
+	                                                         
 	                            
 
 	            
@@ -5008,7 +5011,7 @@ int function GetNeededEnergizeConsumableCount( entity weapon, entity player )
 	                                                      
 	{
 		if ( consumableRef == "health_pickup_combo_small" )
-			requiredCountWithPassive = player.HasPassive( ePassives.PAS_BONUS_SMALL_HEAL ) ? maxint( 0, consumableRequiredCount - 1 ) : consumableRequiredCount
+			requiredCountWithPassive = player.HasPassive( ePassives.PAS_BONUS_SMALL_HEAL ) ? maxint( 1, consumableRequiredCount - 1 ) : consumableRequiredCount
 	}
 
 	return requiredCountWithPassive
@@ -6130,11 +6133,17 @@ void function KineticLoaderChokeGraceWindow_ServerThink( entity player, entity w
 #if CLIENT
 void function ServerCallback_KineticLoaderReloadedThroughSlide( entity weapon, int ammoToLoadTotal )
 {
+	if ( !IsValid( weapon ) )
+		return
+
 	file.weaponReloadedThroughSlideTable[weapon] <- true
 	file.weaponAmmoToLoadTotalTable[weapon] <- ammoToLoadTotal
 }
 void function ServerCallback_KineticLoaderReloadedThroughSlideEnd( entity weapon )
 {
+	if ( !IsValid( weapon ) )
+		return
+
 	if( weapon in file.weaponReloadedThroughSlideTable )
 		delete file.weaponReloadedThroughSlideTable[ weapon ]
 

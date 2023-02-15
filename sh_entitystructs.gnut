@@ -43,7 +43,7 @@ global struct EHIScriptStruct
 	           
 	#if SERVER
 		                        
-		                                                                                            
+		                                                                                                       
 	#endif
 	#if SERVER || CLIENT || UI
 		table<int, array<void functionref( EHI, ItemFlavor )> > itemFlavorLoadoutSlotChangedCallbacksMap
@@ -75,7 +75,7 @@ global struct EHIScriptStruct
 	int rankScorePrevSeason = -1                                   
 	int rankedLadderPositionPrevSeason = -1                                         
 
-                        
+                      
 		int arenasRankScore = 0                                
 		int arenasRankedLadderPosition = -1                                         
        

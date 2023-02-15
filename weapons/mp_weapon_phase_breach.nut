@@ -31,7 +31,11 @@ const float PHASE_BREACH_SPEED = 1200.0
 const float PHASE_BREACH_TRAVEL_TIME_MIN = 0.3
 const float PHASE_BREACH_TRAVEL_TIME_MAX = 1.8
 const float PHASE_BREACH_PORTAL_LIFETIME = 15.0
+                
+                                                     
+     
 const float PHASE_BREACH_MAX_2D_DIST_DEFAULT = 2500.0
+      
 const float PHASE_BREACH_MAX_ANGLE_FOR_FULL_DIST_DEFAULT = 45.0
 const bool  PHASE_BREACH_ALLOW_START_ON_MOVERS_DEFAULT = true
 const bool  PHASE_BREACH_ALLOW_END_ON_MOVERS_DEFAULT = true

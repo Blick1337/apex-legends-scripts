@@ -1,7 +1,7 @@
 global function GetCharacterButtonRows
                    
-                                            
-                                    
+global function GetCharacterButtonRowsByRole
+global function GetCharacterRoleSize
       
 global function GetCharacterButtonRowSizes
 global function LayoutCharacterButtons
@@ -13,6 +13,7 @@ global function LocalizeAndShortenNumber_Float
 #endif
 global function IsTenThousandOrMore
 
+const bool SHORTEN_NUMBER_DBG = false
 
 struct RowData
 {
@@ -52,62 +53,62 @@ array< array<var> > function GetCharacterButtonRows( array<var> buttons )
 }
 
                    
-                                                                                                                   
- 
-                                                               
+array< array<var> > function GetCharacterButtonRowsByRole( array<var> buttons, array<ItemFlavor> orderedCharacter )
+{
+	array<int> rowSizes = GetCharacterRoleSize( orderedCharacter )
 
-                                        
- 
+	return GetButtonRows(rowSizes, buttons)
+}
 
 
-                                                                              
- 
-                      
-                         
-                    
-                      
-                      
+array<int> function GetCharacterRoleSize( array<ItemFlavor> orderedCharacter )
+{
+	int offenseAmount = 0
+	int skirmisherAmount = 0
+	int reconAmount = 0
+	int defenseAmount = 0
+	int supportAmount = 0
 
-                                          
-  
-                                                       
+	foreach ( character in orderedCharacter )
+	{
+		int characterRole = CharacterClass_GetRole(character)
 
-                         
-   
-                  
-   
-                              
-   
-                     
-   
-                              
-   
-                
-   
-                              
-   
-                  
-   
-                              
-   
-                  
-   
-  
+		if (characterRole == 1)
+		{
+			offenseAmount++
+		}
+		else if (characterRole == 2)
+		{
+			skirmisherAmount++
+		}
+		else if (characterRole == 3)
+		{
+			reconAmount++
+		}
+		else if (characterRole == 4)
+		{
+			defenseAmount++
+		}
+		else if (characterRole == 5)
+		{
+			supportAmount++
+		}
+	}
 
-                    
-                       
-                                
-                          
-                                   
-                     
-                              
-                       
-                                
-                       
-                                
+	array<int> rowSizes
+	if (offenseAmount > 0)
+		rowSizes.append(offenseAmount)
+	if (skirmisherAmount > 0)
+		rowSizes.append(skirmisherAmount)
+	if (reconAmount > 0)
+		rowSizes.append(reconAmount)
+	if (defenseAmount > 0)
+		rowSizes.append(defenseAmount)
+	if (supportAmount > 0)
+		rowSizes.append(supportAmount)
 
-                
- 
+	return rowSizes
+}
       
 
 
@@ -192,9 +193,9 @@ void function LayoutCharacterButtons( array< array<var> > buttonRows )
 	int spaceShift         = int( buttonWidth * 0.6237113402061856 )
 	int rowShift
                    
-                       
+	rowShift           = 0
      
-	rowShift           = int( buttonWidth * 0.2061855670103093 )
+                                                             
       
 
 	                                     
@@ -259,27 +260,27 @@ void function LayoutCharacterButtons( array< array<var> > buttonRows )
 		SetNav( row )
 
                    
-                         
+	SetNavUpDown(buttonRows)
      
-	array< array<var> > buttonColumns
-	int numColumns = baseRow.len()
+                                  
+                               
 
-	                                                                        
-	for ( int cIndex = 0; cIndex < numColumns; cIndex++ )
-	{
-		array<var> column
-		foreach ( rIndex, row in buttonRows )
-		{
-			int desiredIndex = rowData[rIndex].hasLeadingSpace ? cIndex - 1 : cIndex
-			if ( desiredIndex >= 0 && desiredIndex < row.len())
-				column.append( row[desiredIndex] )
-		}
+                                                                         
+                                                      
+  
+                   
+                                       
+   
+                                                                           
+                                                      
+                                      
+   
 
-		buttonColumns.append( column )
-	}
+                                
+  
 
-	foreach ( column in buttonColumns )
-		SetNav( column )
+                                    
+                  
       
 
 }
@@ -363,7 +364,9 @@ string function LocalizeAndShortenNumber_Int( int number, int maxDisplayIntegral
                                                                                       
 string function LocalizeAndShortenNumber_Float( float number, int maxDisplayIntegral = 3, int maxDisplayDecimal = 0 )
 {
-	printf( "ShortenNumberDebug: Shortening %f with max Integrals of %i and max decimals of %i\n", number, maxDisplayIntegral, maxDisplayDecimal )
+	#if SHORTEN_NUMBER_DBG
+		                                                                                                                                              
+	#endif
 
 	if ( number == 0.0 )
 		return "0"
@@ -379,12 +382,16 @@ string function LocalizeAndShortenNumber_Float( float number, int maxDisplayInte
 
 	if ( digits > maxDisplayIntegral )
 	{
-		printf( "ShortenNumberDebug: Number too large for display (%i digits). Shortening to 3 digits\n", digits )
+		#if SHORTEN_NUMBER_DBG
+			                                                                                                          
+		#endif
 		float displayIntegral = integral / pow( 10, (digits - 3) )
 		displayIntegral = floor( displayIntegral )
 		integralString = format( "%0.0f", displayIntegral )
 
-		printf( "ShortenNumberDebug: Number shortened to %s", integralString )
+		#if SHORTEN_NUMBER_DBG
+			                                                                      
+		#endif
 
 		if ( digits/16 >= 1 )
 			integralSuffixLocKey = "#STATS_VALUE_QUADRILLIONS"
@@ -407,7 +414,9 @@ string function LocalizeAndShortenNumber_Float( float number, int maxDisplayInte
 		string separatedIntegralString = ""
 		int integralsAdded = 0
 
-		printf( "ShortenNumberDebug: Adding integral separators to %s\n", integralString )
+		#if SHORTEN_NUMBER_DBG
+			                                                                                  
+		#endif
 
 		for ( int i = integralString.len(); i > 0; i-- )
 		{
@@ -422,17 +431,23 @@ string function LocalizeAndShortenNumber_Float( float number, int maxDisplayInte
 				separatedIntegralString = num + separatedIntegralString
 			}
 
-			printf( "ShortenNumberDebug: Separated Integral Progress: %s\n", separatedIntegralString )
+			#if SHORTEN_NUMBER_DBG
+				                                                                                          
+			#endif
 		}
 
-		printf( "ShortenNumberDebug: Separated Integral String Complete: %s\n", separatedIntegralString )
+		#if SHORTEN_NUMBER_DBG
+			                                                                                                 
+		#endif
 		integralString = separatedIntegralString
 	}
 
 	string decimalString = ""
 	if ( integralString.len() <= 3 && integralString != "0" && digits > 3 )
 	{
-		printf( "ShortenNumberDebug: Four or larger digit number shrunk to 3 or fewer digits! Making the number a decimal and adding a suffix (value = %s, digits = %i, maxDisplayIntegral = %i)\n", integralString, digits, maxDisplayIntegral )
+		#if SHORTEN_NUMBER_DBG
+			                                                                                                                                                                                                                                         
+		#endif
 
 		int separatorPos
 		if ( maxDisplayIntegral == 3 )
@@ -454,7 +469,9 @@ string function LocalizeAndShortenNumber_Float( float number, int maxDisplayInte
 	{
 		float decimal = number % 1                                                                         
 		decimalString = string( decimal )
-		printf( "ShortenNumberDebug: decimalString = %s\n", decimalString )
+		#if SHORTEN_NUMBER_DBG
+			                                                                   
+		#endif
 		if ( decimalString.find( "0." ) != -1 )
 			decimalString = decimalString.slice( 2 )
 	}
@@ -513,7 +530,9 @@ string function LocalizeAndShortenNumber_Float( float number, int maxDisplayInte
 
 	if ( maxDisplayDecimal > 0 && decimalString != "" )
 	{
-		printf( "ShortenNumberDebug: Attaching decimal value %s to final display %s (original number = %f)\n", decimalString, finalDisplayNumber, number )
+		#if SHORTEN_NUMBER_DBG
+			                                                                                                                                                  
+		#endif
 		finalDisplayNumber += decimalSeparator + decimalString
 	}
 

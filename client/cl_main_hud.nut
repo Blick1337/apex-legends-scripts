@@ -664,6 +664,7 @@ void function InitCrosshair()
 	file.crosshairPriorityOrder.append( crosshairPriorityLevel.MENU )
 	file.crosshairPriorityOrder.append( crosshairPriorityLevel.PREMATCH )
 	file.crosshairPriorityOrder.append( crosshairPriorityLevel.TITANHUD )
+	file.crosshairPriorityOrder.append( crosshairPriorityLevel.POSTMATCH )
 	file.crosshairPriorityOrder.append( crosshairPriorityLevel.DEFAULT )
 
 	foreach ( priority in file.crosshairPriorityOrder )

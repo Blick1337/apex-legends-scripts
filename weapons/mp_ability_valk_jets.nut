@@ -74,7 +74,8 @@ void function MpAbilityValkJets_Init()
 	#endif
 	#if CLIENT
 		RegisterNetworkedVariableChangeCallback_bool( "valkTrackingActive", OnValkTrackingChanged )
-
+		AddCallback_CreatePlayerPassiveRui( Valk_CreateJetPackRui )
+		AddCallback_DestroyPlayerPassiveRui( Valk_DestroyJetPackRui )
 		file.colorCorrection = ColorCorrection_Register( "materials/correction/launch_hud.raw_hdr" )
 	#endif
 	
@@ -213,14 +214,17 @@ void function ValkTeammateStartTracking( entity valk )
 
 void function Valk_CreateJetPackRui( entity player )
 {
-	if ( file.jetPackRui != null )
-		return
+	if ( PlayerHasPassive( player, ePassives.PAS_VALK ) )
+	{
+		if ( file.jetPackRui != null )
+			return
 
-	file.jetPackRui = CreateCockpitRui( $"ui/valk_jets_meter.rpak" )
+		file.jetPackRui = CreateCockpitRui( $"ui/valk_jets_meter.rpak" )
 
-	RuiTrackFloat( file.jetPackRui, "chargeFrac", player, RUI_TRACK_GLIDE_METER_FRACTION )
-	RuiTrackFloat( file.jetPackRui, "bleedoutEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
-	RuiTrackFloat( file.jetPackRui, "reviveEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "reviveEndTime" ) )
+		RuiTrackFloat( file.jetPackRui, "chargeFrac", player, RUI_TRACK_GLIDE_METER_FRACTION )
+		RuiTrackFloat( file.jetPackRui, "bleedoutEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "bleedoutEndTime" ) )
+		RuiTrackFloat( file.jetPackRui, "reviveEndTime", player, RUI_TRACK_SCRIPT_NETWORK_VAR, GetNetworkedVariableIndex( "reviveEndTime" ) )
+	}
 }
 
 var function Valk_GetJetPackRui()
@@ -228,12 +232,15 @@ var function Valk_GetJetPackRui()
 	return file.jetPackRui
 }
 
-void function Valk_DestroyJetPackRui()
+void function Valk_DestroyJetPackRui( entity player )
 {
-	if ( file.jetPackRui != null )
+	if( !PlayerHasPassive( player, ePassives.PAS_VALK ) )
 	{
-		RuiDestroyIfAlive( file.jetPackRui )
-		file.jetPackRui = null
+		if ( file.jetPackRui != null )
+		{
+			RuiDestroyIfAlive( file.jetPackRui )
+			file.jetPackRui = null
+		}
 	}
 }
 

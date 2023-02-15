@@ -35,6 +35,8 @@ global function CharacterSkin_HasMenuCustomLighting
 global function CharacterSkin_GetCharacterSelectLabelColorOverride
 global function CharacterSkin_HasStoryBlurb
 global function CharacterSkin_GetStoryBlurbBodyText
+global function HoloSpray_HasStoryBlurb
+global function HoloSpray_GetStoryBlurbBodyText
 global function CharacterSkin_GetSubQuality
 global function CharacterKillQuip_GetCharacterFlavor
 global function CharacterEmoteIcon_GetCharacterFlavor
@@ -839,6 +841,21 @@ bool function CharacterSkin_ShouldHideIfLocked( ItemFlavor flavor )
 	return GetGlobalSettingsBool( ItemFlavor_GetAsset( flavor ), "shouldHideIfLocked" )
 }
 #endif
+
+bool function HoloSpray_HasStoryBlurb( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.emote_icon )
+
+	return ( HoloSpray_GetStoryBlurbBodyText( flavor ) != "" )
+}
+
+
+string function HoloSpray_GetStoryBlurbBodyText( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.emote_icon )
+
+	return GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "customSkinMenuBlurb" )
+}
 
 #if DEV && CLIENT
 void function DEV_TestCharacterSkinData()

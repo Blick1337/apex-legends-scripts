@@ -43,9 +43,14 @@ global function OnAirdropUse
                                          
                                           
                                               
+                                          
                                                      
                                   
                                             
+                                    
+                                         
+                                                        
+                                                
              
 
 #endif          
@@ -177,9 +182,9 @@ struct
 		                                                                  
 		       
 			                       
-			                                 
-			                                  
-			                                       
+			                                   
+			                                    
+			                                
 		      
 
 		                                                                                                                                                    
@@ -340,6 +345,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	                                                                                                                
 	                                                                                                                             
 	                      					                     
+	                             				                                    
 	                  						                                  
 
                                
@@ -380,11 +386,14 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 		                  
 		       
 			                   
-				                                                                                                                                                                              
+			 
+				                            
+				                                                                                                                                                                                                       
+			 
 			    
 		      
 		 
-			                                                                                                                                                                           
+			                                                                                                                                                                                                    
 		 
 		                                                                               
 			                                                       
@@ -657,7 +666,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 
 		                                              
 
-		                                                                            
+		                                                                                          
 
 		                                                                      
 			                        
@@ -676,10 +685,35 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 		      
 
 	                                                
-		                                                                             
-	    
-		                                                                                           
+	 
+		                                                     
+		                                                            
 
+		                                                   
+		 
+			                                    
+			                                                                              
+			                                                                
+		 
+	 
+	    
+	 
+		                                                                   
+		                                                            
+
+		                                                   
+		 
+			                                    
+			                                                                              
+			                                                                
+		 
+	 
+
+	                                                 
+ 
+
+                                                     
+ 
 	                                                 
  
 
@@ -696,24 +730,20 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 			                                                          
 			                                                           
 		 
-
-		                                                                 
-			                                                                     
 	 
 
 	                                            
 		      
 
 	                                                
-
-	                                                                                                              
+	                                                                              
  
 
                                               
  
 	                                          
 	 
-		                                                            
+		                                                                  
 
 		                                             
 		 
@@ -744,11 +774,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 			                                                          
 			                                                           
 		 
-
-		                                                                 
-			                                                                     
 	 
-
 
 	                                                      
 	 
@@ -761,20 +787,28 @@ entity function GetAirdropForHitEnt( entity hitEnt )
  
 	                                                                               
 
-	                                                                                                                                  
+	                                  
+	                                 
+	 
+		                                                                                                                                        
+	 
+	    
+	 
+		                                                                                                           
+	 
 	                                   
 	                                  
 
 	                            
 	 
-		                                                                                    
+		                                                                                          
 
 		                                                                                     
 		                                                                                                    
 	 
 	    
 	 
-		                                                                                  
+		                                                                                        
 
 		                                                                                   
 		                                                                                                  
@@ -796,7 +830,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	                                                                                  
 
 	                  
-	                                                                                                                                                                           
+	                                                                                                                                                                               
 
 	                            
 	 
@@ -807,14 +841,14 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 		                                   
 		                                  
 
-		                                                                                        
+		                                                                                              
 	 
 	    
 	 
 		                                                                                       
 		                                                                                                      
 
-		                                                                                      
+		                                                                                            
 	 
  
 
@@ -872,7 +906,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	 
 		                                                   
 		 
-			                                                                                        
+			                                                                                              
 
 			                                                                                                           
 			                                                                               
@@ -917,6 +951,33 @@ entity function GetAirdropForHitEnt( entity hitEnt )
  
 	                      
  
+
+                                                    
+ 
+	                                  
+ 
+
+                                         
+ 
+                    
+		                            
+       
+
+	                                                       
+	 
+		                                      
+		                         
+			                 
+		                                
+	 
+
+	                                                               
+	 
+		                                        
+	 
+
+
+ 
              
 
                                                 
@@ -928,6 +989,30 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	 
 	      
  
+
+       
+                                                       
+ 
+	                                                                               
+
+	                                         
+ 
+
+                                                                         
+ 
+	                           
+	                                                                      
+
+	                                    
+	                                    
+
+	                                                                                              
+
+	                                                                                     
+	                     
+ 
+      
+
 
                                                                             
  
@@ -979,7 +1064,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	                  
  
 
-                                                                                                                                
+                                                                                                                                                         
  
 	                    					                   
 	                                       	          
@@ -1027,6 +1112,12 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	 
 
 	                                  
+
+	       
+		                 
+			                                  
+	             
+
               
                                                                                                                                     
                                      
@@ -1077,6 +1168,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 
 	                                                               
 	 
+		                                              
 		                                                                             
 	 
 	    
@@ -1099,7 +1191,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	                       
 
                     
-                                            
+	                                           
        
 
 	                                                            
@@ -1160,7 +1252,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	                                            
 
 	                                                               
-		                                                                           
+		                                                                                 
 
 
 	                                                                            
@@ -1442,15 +1534,15 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 				 
 			 
                         
-				                                                                                                                               
-				                                      
-				 
-					                                                
-					 
-						                                                                                                                                       
-						                                 
-					 
-				 
+                                                                                                                                   
+                                          
+     
+                                                     
+      
+                                                                                                                                             
+                                       
+      
+     
          
 
 			                                                                            
@@ -1485,8 +1577,24 @@ entity function GetAirdropForHitEnt( entity hitEnt )
     
                                         
      
-                                                                                                                                              
-                                      
+                                                     
+      
+                                                                                                                                                  
+                                       
+      
+
+                                                   
+      
+                                                                                                                                                 
+                                       
+      
+
+         
+      
+                                                                                                                                                   
+                                       
+      
+
      
     
                                    
@@ -1517,11 +1625,18 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	 
 
                     
-                                                   
-  
-                                   
+	                                                  
+	 
+		                              
+	 
+       
+
+                          
+                                        
+   
                       
-  
+                                   
+   
        
 
 	                                                          
@@ -1577,33 +1692,35 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 
 	                                                                                                                   
 
-	                                                                                                
-	                                                            
-	 
-		                                     
-		                                                                                      
-		                 	                                              
-		                 	                                   
+                        
+                                                                                                 
+                                                             
+  
+                                       
+                                                                                        
+                                                                  
+                                                       
 
-		                                                                        
-		                                                                                 
+                                                                          
+                                                                                   
 
-		                                  
-		 
-			                                                                                       
+                                    
+   
+                                                                                          
 
-			                      
-			 
-				                                                                     
-				                                                                                                  
-				                   
-				 
-					                                                                       
-					                                    
-				 
-			 
-		 
-	 
+                         
+    
+                                                                         
+                                                                                                      
+                       
+     
+                                                                            
+                                         
+     
+    
+   
+  
+       
 
                 
 	                 
@@ -1614,6 +1731,14 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	                                                  
 	                          
 	                                       
+	
+	                                     
+	                                        
+	 
+		                              
+		                                                                          
+	 
+
 
                 
 	                  
@@ -1683,7 +1808,7 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 	             
  
 
-                                                                                                                                                                                
+                                                                                                                                                                                                                    
  
 	                                                                  
 	                                                                                                                                  
@@ -1692,6 +1817,16 @@ entity function GetAirdropForHitEnt( entity hitEnt )
 
 	                            
 	                                         
+                             
+		                                                                      
+		 
+			                            
+			 
+				                                  
+				                                                      
+			 
+		 
+       
 
 	                                
 	                                  

@@ -133,10 +133,12 @@ void function RumbleForPilotDamage( float damageAmount, int damageType, int dama
 
 	if ( isDeathField )
 	{
+		                                                                                                     
 		Rumble_Play( "death_field_pain", {} )
 		return
 	}
 
+	                                                                                                      
 	Rumble_Play( "rumble_pilot_hurt", {} )
 }
 
@@ -459,7 +461,7 @@ void function GrenadeArrowThink( entity player, entity grenade, float damageRadi
 {
 	EndSignal( grenade, "OnDeath" )                                           
 	EndSignal( grenade, "OnDestroy" )
-                        
+                                 
                                              
        
 	EndSignal( player, "OnDeath" )

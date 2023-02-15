@@ -115,8 +115,9 @@ const string VANTAGE_COMPANION_PATHFIND_DURING_COMBAT_PLAYLIST_VAR = "vantage_co
 const string VANTAGE_COMPANION_PATHFIND_MAX_LENGTH_RATIO_PLAYLIST_VAR = "vantage_companion_pathfind_max_ratio"
 const string VANTAGE_COMPANION_PATHFIND_MAX_TIME_DIFF_PLAYLIST_VAR = "vantage_companion_pathfind_max_diff"
 
-const string VANTAGE_COMPANION_PATHFINDING_ROUTE_CLEARED_SIGNAL = "vantage_companion_pathfinding_route_cleared"
+global const string VANTAGE_COMPANION_PATHFINDING_ROUTE_CLEARED_SIGNAL = "vantage_companion_pathfinding_route_cleared"
 const float VANTAGE_COMPANION_PATHFINDING_NODE_COMPLETION_DIST = 16
+const int VANTAGE_COMPANION_PATHFINDING_BAIL_CONDITION = ePathfindingBailCondition.TIME_AND_RATIO
 
 const int VANTAGE_COMPANION_MAX_PATH_LEN = 30
 const float VANTAGE_COMPANION_INIT_HEIGHT_OFFSET = 50
@@ -185,29 +186,20 @@ array<string> sPlayerLaunchStateStrings =
 ]
 #endif
 
-struct CompanionData
+
+struct EchoCompanionData
 {
 	int    playerLaunchState
 
-#if SERVER
-	                   
-	                            
+	#if SERVER
+		                   
+		                            
 
-	                        
-	                               
-	                   
-	                      
-	                         
-	                     
-	                        
-	                        
-	                                
+		                     		                             
+		                        
+		                          
 
-	                     
-	                        
-	                          
-
-#endif
+	#endif
 }
 
 array<string> sOrderTypeStrings =
@@ -242,6 +234,7 @@ struct OrderPosData
 struct
 {
 	table<entity, CompanionData> companionData
+	table<entity, EchoCompanionData> echoData
 
 	float TUNING_VANTAGE_COMPANION_RANGE_BASE
 	float TUNING_VANTAGE_COMPANION_RANGE_MAX
@@ -290,6 +283,9 @@ void function VantageCompanion_Init()
 	AddCreateCallback( "script_mover", VantageCompanion_OnPropScriptCreated )
 	RegisterConCommandTriggeredCallback( "+scriptCommand5", AttemptRecallCompanion )
 	AddCallback_OnWeaponStatusUpdate( VantageCompanion_WeaponStatusCheck )
+
+	AddCallback_CreatePlayerPassiveRui( CreateVantageTacticalRui_Internal )
+	AddCallback_DestroyPlayerPassiveRui( DestroyVantageTacticalRui )
 #endif
 }
 
@@ -302,7 +298,8 @@ OrderPosData function FindEchoOrderPos( entity player )
 {
 	OrderPosData orderPosData
 #if SERVER
-	                                                               
+	                                   		                            
+	                                  		                       
 #endif         
 
 	#if DEV
@@ -608,79 +605,22 @@ OrderPosData function FindEchoOrderPos( entity player )
 		                   
 	 
 
+
+
+	                             
+	                                                                  
+
+	                                                                                                                               
+
 	                                                                                                           
 	                                                                                                                
 	                                                                                                                            
 	 
-		                                 
-		                                                 
-		                                                                
 
-		               
-		                            
-		                                                      
+		                                                    
+		                                
 		 
-			                                                                           
-		 
-		                                          
-		 
-			                                                                                                    
-			 
-				                       
-				                              
-				                                    
-				                                                                                                                                                   
-				       
-					           
-				                
-				                                  
-				 
-					                                                                        
-					                      
-				 
-			 
-		 
-		    
-		 
-			                                                                                                                                                                     
-			                                
-			                       
-			                                    
-			                                                                                                                                          
-			       
-				           
-			                
-
-			                                  
-			 
-				                                                             
-
-				                                                                                                                                                 
-				       
-					           
-				                
-
-				                                
-				 
-					                      
-					                                                                                                                                   
-					                              
-					                                                                                               
-
-					                                                                                                                                                
-
-					                                   
-					 
-						                       
-					 
-				 
-			 
-		 
-
-		                      
-		 
-			                                                  
-			                                                               
+			                                                     
 			                                                                                              
 			                                           
 			                                                
@@ -702,88 +642,31 @@ OrderPosData function FindEchoOrderPos( entity player )
 		 
 	 
 
+	                                                 
 	                               
 	 
 		                   
 	 
 
-	                                                                                                           
-	                                         
-	                                                                                                                                                                                    
-	                                    
-
-	                                                  
-	                                                                                                                                                                                    
-	                                          
-
-	       
-		                                         
-		 
-			                                                                                    
-			                                                                                             
-		 
-	                
-
-	                                                                                                                                           
-
-	                          
-	 
-		                   
-	 
-
-	                                                              
-	 
-		                   
-	 
-
-	                                                                             
-	                                                                                
-
-	                                                                                                                          
-	                                                                          
-			                   
-
-	                                                                                                                      
-	                                                                                                                
-
-	                                                                                       
-	                                                           	                            
-
-	       
-		                                         
-		 
-			                                                                                                                                                                            
-		 
-	                
-
-
-	                                                                                           
+	                                
 		                   
 
-	       
-		                                         
-		 
-			                                                   
-		 
-	      
-
-	                                                 
-	                                                                     
+	                                                     
+	                                                                         
 	                                                
 
-	                           
-	                                               
-	                                                                 
-	 
-		                                                      
-	 
+	                                       
+	                                                                                                              
+
 	                                                                                                  
 
 	                                                                                               
 	                                   
 	                                                                                          
-	                                                                   
 
+	                                  
+	                                                                                                                                
+	  
 	       
 		                                         
 		 
@@ -809,102 +692,6 @@ OrderPosData function FindEchoOrderPos( entity player )
 
 	return orderPosData
 }
-
-#if SERVER
-                                                                                                
- 
-	                                               
-	                             
-	                               
-	                                                 
-	                                                                      
-	                             
-
-	                                                                                                                
-	                                                                                                                 
-	                
-	                                                               
-	                
-	                
-	                         
-	                    
-	                    
-	                 
-	                                                                     
-	 
-		                                                 
-		                                                         
-		                                               
-		                                                   
-
-		                                                   
-		 
-			                                                                               
-			                                                  
-		 
-		                                                       
-		 
-			                                                                                       
-			                                                      
-		 
-
-		       
-			                                         
-			 
-				                    
-				                                                                               
-			 
-		                
-
-		                                                 
-		                                                     
-		                    
-		                                                    
-		 
-			                                                                                                        
-			                                                                                                                                  
-			                                                                        
-			 
-				                                                  
-				                                                                           
-				                                                      
-				                                 
-				                   
-			 
-			                                                                             
-			 
-				                                                      
-				                                                                       
-				                                                  
-				                                 
-				                   
-			 
-			                   
-			 
-				                                                                                                                                                                                 
-
-				                                   
-				 
-					                                                  
-					                                                      
-					                                                                      
-					                                                                                                                  
-				 
-			 
-			       
-				                                         
-				 
-					                                                            
-					                                                                                  
-					                                                                        
-				 
-			                
-		 
-
-		           
-	 
- 
-#endif             
 
 vector function VantageCompanion_FindAndDisplayOrderPos( entity player )
 {
@@ -946,17 +733,17 @@ void function VantageCompanion_OrderCompanion( entity player, bool showAR = true
 
 void function VantageCompanion_SetPlayerLaunchState( entity player, int launchState )
 {
-	if ( player in file.companionData )
+	if ( player in file.echoData )
 	{
-		file.companionData[player].playerLaunchState = launchState
+		file.echoData[player].playerLaunchState = launchState
 	}
 }
 
 int function VantageCompanion_GetPlayerLaunchState( entity player )
 {
-	if ( player in file.companionData )
+	if ( player in file.echoData )
 	{
-		return file.companionData[player].playerLaunchState
+		return file.echoData[player].playerLaunchState
 	}
 
 	return ePlayerLaunchState.NONE
@@ -1079,6 +866,25 @@ void function TestCompanionSendPoint_Thread( entity player, entity echoEnt )
 
 }
 
+CompanionFlightParams function GetVantageCompanionFlightData()
+{
+	CompanionFlightParams flightData
+
+	flightData.boundsMin			= VANTAGE_COMPANION_BOUND_MINS
+	flightData.boundsMax			= VANTAGE_COMPANION_BOUND_MAXS
+	flightData.entSpeed				= VANTAGE_COMPANION_BASE_SPEED
+	flightData.initHeightOffset		= VANTAGE_COMPANION_INIT_HEIGHT_OFFSET
+	flightData.minHeightOffset		= ECHO_ORDER_MIN_HEIGHT
+	flightData.finalOffset			= VANTAGE_COMPANION_FINAL_HEIGHT_OFFSET
+	flightData.maxPathLength 		= VANTAGE_COMPANION_MAX_PATH_LEN
+	flightData.maxLengthRatio 		= GetCurrentPlaylistVarFloat( VANTAGE_COMPANION_PATHFIND_MAX_LENGTH_RATIO_PLAYLIST_VAR, 1.6 )
+	flightData.maxTimeDiff 			= GetCurrentPlaylistVarFloat( VANTAGE_COMPANION_PATHFIND_MAX_TIME_DIFF_PLAYLIST_VAR, 1.8 )
+	flightData.doorErrorRadius		= VANTAGE_COMPANION_DOOR_ERROR_RADIUS
+	flightData.doorEnterHeight		= VANTAGE_COMPANION_ENTER_DOOR_HEIGHT
+	flightData.eBailCondition		= VANTAGE_COMPANION_PATHFINDING_BAIL_CONDITION
+
+	return flightData
+}
 
 entity function VantageCompanion_GetEnt( entity player )
 {
@@ -1177,6 +983,9 @@ vector function Launch_CalcLaunchToPos( entity player, entity echoEnt )
 	                               
 	                                               
 
+	                              
+	                                     
+
 	                                                        
  
 
@@ -1194,6 +1003,7 @@ vector function Launch_CalcLaunchToPos( entity player, entity echoEnt )
 	              
 	                     
 	                                                               
+	                                                         
 
 	                                                                                 
 
@@ -1264,9 +1074,9 @@ vector function Launch_CalcLaunchToPos( entity player, entity echoEnt )
 			                                 
 			                                   
 		 
-		                                                     
+		                                                
 		 
-			                                                 
+			                                            
 			 
 				                                                                                           
 
@@ -1284,14 +1094,14 @@ vector function Launch_CalcLaunchToPos( entity player, entity echoEnt )
 				                                                      
 			 
 		 
-		                                                       
+		                                                  
 		 
 			                                         
 			                                                                                             
 
 			                                     
 
-			                                                               
+			                                                          
 			                                          
 
 			                                                      
@@ -1341,144 +1151,8 @@ vector function Launch_CalcLaunchToPos( entity player, entity echoEnt )
 
 		                                                                         
 		              
-		                                                  
-		 
-			                                               
-			                                  
-			                   
+		                                                                                       
 
-			                                                          
-			                                                                                                                                                                                           
-			                           
-			 
-				       
-					                                         
-					 
-						                                                                         
-						                                                          
-
-						                                                                                                   
-						 
-							                                                                                
-						 
-					 
-				                
-
-				                            
-				                                       
-				                                           
-				                                                                  
-			 
-
-			                     
-			                                                                                                                         
-			                                                     
-			 
-				                                                                                 
-				                        
-					     
-				               
-				                                                      
-				                              
-				                                                            
-				                                                                                   
-				                                                          
-				 
-					     
-				 
-
-				                                                                                                 
-				                                                         
-				                                                                                                                                                           
-				                          
-				 
-					       
-						                                         
-						 
-							                                                                                                      
-							                                                        
-						 
-					                
-					     
-				 
-
-				       
-					                                         
-					 
-						                                                                                                     
-						                                                          
-						                                                                                                                   
-						                                                                                          
-						                                                           
-						                                                             
-					 
-				                
-
-				                                      
-				                                         
-				                                                
-
-				                                                                                                             
-				                                                                                                                                           
-				                            
-			 
-
-			                                                                                             
-			                             
-			 
-				                                                                                                                                                         
-
-				                                                                                                            
-				                                                
-				                          
-				                                        
-				 
-					                                                                                                            
-				 
-				                                                                      
-				 
-					                                               
-				 
-
-				                                                                                                               
-				                                                                                
-						                       
-						                                                                                                                
-				 
-					       
-						                                         
-						 
-							                                                                   
-							                                                                                                                     
-						 
-					                
-
-					                                      
-					                                         
-					                                                
-					                                                  
-					 
-						                                                          
-
-						                                                                                                                    
-						                                                                                                                                                          
-					 
-				 
-			 
-
-			                                                   
-			 
-				                                       
-
-				       
-					                                         
-					 
-						                                                                                                  
-						                                                             
-					 
-				                
-			 
-		 
 
 		                                                                         
 		                                               
@@ -1802,10 +1476,10 @@ vector function Launch_CalcLaunchToPos( entity player, entity echoEnt )
 	                          
 		      
 
-	                                          
+	                                     
 	 
-		                                                                
-				                                                                                
+		                                                           
+				                                                                           
 		 
 			                                                                                                                                      
 
@@ -1879,9 +1553,9 @@ vector function Launch_CalcLaunchToPos( entity player, entity echoEnt )
 
                                                                                          
  
-	                                   
+	                              
 	 
-		                                                          
+		                                                     
 	 
 	    
 	 
@@ -2305,6 +1979,9 @@ void function VantageCompanion_OnPropScriptCreated( entity echoEnt )
 		CompanionData newData
 		file.companionData[echoEnt.GetOwner()] <- newData
 
+		EchoCompanionData newEchoData
+		file.echoData[echoEnt.GetOwner()] <- newEchoData
+
 		if ( echoEnt.GetOwner() == GetLocalViewPlayer() )
 		{
 			thread VantageCompanion_CreateHUDMarker( echoEnt )
@@ -2345,7 +2022,7 @@ void function VantageCompanion_CreateHUDMarker( entity echoEnt )
 	int locLineFXHandle
 	int locEndFXHandle
 
-	locLineFXMover = CreateClientsideScriptMover( $"mdl/dev/empty_model.rmdl", <0, 0, 0>, <0, 0, 0> )
+	locLineFXMover = CreateClientsideScriptMover( EMPTY_MODEL, <0, 0, 0>, <0, 0, 0> )
 	locLineFXMover.SetParent( echoEnt )
 
 	int arID = GetParticleSystemIndex( FX_LOC_LINE )
@@ -2382,7 +2059,7 @@ void function VantageCompanion_CreateHUDMarker( entity echoEnt )
 		entity vantagePlayer = echoEnt.GetOwner()
 		if( IsValid( vantagePlayer ) )
 		{
-			if ( vantagePlayer in file.companionData )
+			if ( vantagePlayer in file.echoData )
 			{
 				int companionState    = vantagePlayer.GetPlayerNetInt( VANTAGE_COMPANION_STATE_NETINT )
 				int playerLaunchState = VantageCompanion_GetPlayerLaunchState( vantagePlayer )
@@ -2544,14 +2221,20 @@ var function GetVantageTacticalRui()
 #endif
 
 #if CLIENT
-void function CreateVantageTacticalRui_Internal()
+void function CreateVantageTacticalRui_Internal( entity player )
 {
-	if( file.vantageTacticalRui == null )
-	{
-		file.vantageTacticalRui = CreateCockpitPostFXRui( $"ui/vantage_companion_tactical.rpak", HUD_Z_BASE )
-	}
+	if( file.vantageTacticalRui != null )
+		return
 
-	UpdateVantageTacticalRui()
+	if ( PlayerHasPassive( player, ePassives.PAS_VANTAGE ) )
+	{
+		if ( file.vantageTacticalRui == null )
+		{
+			file.vantageTacticalRui = CreateCockpitPostFXRui( $"ui/vantage_companion_tactical.rpak", HUD_Z_BASE )
+		}
+
+		UpdateVantageTacticalRui()
+	}
 }
 #endif
 
@@ -2617,13 +2300,15 @@ void function TrackVantageAnimatedTacticalRuiOffhandWeapon()
 			{
 				RuiTrackFloat( file.vantageTacticalRui, "clipAmmoFrac", offhandWeapon, RUI_TRACK_WEAPON_CLIP_AMMO_FRACTION )
 
-				if ( IsArenaMode() )
-				{
-					RuiTrackFloat( file.vantageTacticalRui, "maxMagAmmo", offhandWeapon, RUI_TRACK_WEAPON_CLIP_AMMO_MAX )
-					RuiTrackFloat( file.vantageTacticalRui, "maxAmmo", offhandWeapon, RUI_TRACK_WEAPON_AMMO_MAX )
-					RuiTrackFloat( file.vantageTacticalRui, "stockpileFrac", offhandWeapon, RUI_TRACK_WEAPON_REMAINING_AMMO_FRACTION )
-					RuiSetBool( file.vantageTacticalRui, "displayStockpileCharges", true )
-				}
+                           
+                        
+     
+                                                                                                          
+                                                                                                  
+                                                                                                                       
+                                                                           
+     
+          
 			}
 		}
 	}
@@ -2631,12 +2316,15 @@ void function TrackVantageAnimatedTacticalRuiOffhandWeapon()
 #endif
 
 #if CLIENT
-void function DestroyVantageTacticalRui()
+void function DestroyVantageTacticalRui( entity player )
 {
-	if ( file.vantageTacticalRui != null )
+	if ( !PlayerHasPassive( player, ePassives.PAS_VANTAGE ) )
 	{
-		RuiDestroy( file.vantageTacticalRui )
-		file.vantageTacticalRui = null
+		if ( file.vantageTacticalRui != null )
+		{
+			RuiDestroy( file.vantageTacticalRui )
+			file.vantageTacticalRui = null
+		}
 	}
 }
 #endif

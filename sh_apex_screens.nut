@@ -654,12 +654,11 @@ ApexScreenState function ClApexScreens_GetCustomBannerScreen( string teaseScreen
                                      
  
 	                                                                     
+	                                                                
+		      
 
 	                           
 	                                                      
-
-	                                                                
-		      
 
 	       
 		                                  
@@ -695,7 +694,7 @@ ApexScreenState function ClApexScreens_GetCustomBannerScreen( string teaseScreen
 				        
 				        
 			 
-			                                                                
+			                                                                  
 
 			                                                              
 		 
@@ -1156,6 +1155,9 @@ struct DelayedScreenContentData
 
 void function UpdateScreensContent( array<ApexScreenState> screenList )
 {
+	if ( GetGameState() >= eGameState.WinnerDetermined )
+		return
+
 	array<DelayedScreenContentData> delayedData = []
 
 	entity localViewPlayer = GetLocalViewPlayer()

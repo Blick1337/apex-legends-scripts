@@ -36,11 +36,14 @@ global function AllianceProximity_GetAllianceScoreDifference
 #if SERVER
                                                                   
                                                                         
+                                                                
+                                                                       
 #endif          
 
 #if CLIENT
 global function AllianceProximity_ManageIconVisibility_Thread
 global function AllianceProximity_GetUIAllianceFromTeam
+global function AllianceProximity_GetAllianceFromTeamWithObserverCorrection
 global function AllianceProximity_GetUIAlliance
 #endif          
 
@@ -59,15 +62,26 @@ struct {
 		bool isMinimapDisabled
 	#endif                    
 
+	#if SERVER
+		                                          
+		                                                                                                                                                                                               
+	#endif          
+
 } file
 
                                 
 void function AllianceProximity_Init()
 {
-	printf( "ALLIANCE PROXIMITY: Running Init" )
+	#if DEV
+		printf( "ALLIANCE PROXIMITY: Running Init" )
+	#endif       
+
 	                                                                                                                           
 	file.maxAlliances = GetCurrentPlaylistVarInt( "max_alliances", 0 )
-	Assert( file.maxAlliances <= 0 || file.maxAlliances <= GetCurrentPlaylistVarInt( "max_teams", 0 ), "Trying to use Alliances but have set more alliances ( " + file.maxAlliances + " ) than squads ( " + GetCurrentPlaylistVarInt( "max_teams", 0 ) + " )" )
+
+	#if DEV
+		Assert( file.maxAlliances <= 0 || file.maxAlliances <= GetCurrentPlaylistVarInt( "max_teams", 0 ), "ALLIANCE PROXIMITY: Trying to use Alliances but have set more alliances ( " + file.maxAlliances + " ) than squads ( " + GetCurrentPlaylistVarInt( "max_teams", 0 ) + " )" )
+	#endif       
 
 	                                                         
 	if ( !AllianceProximity_IsUsingAlliances() )
@@ -140,9 +154,28 @@ int function AllianceProximity_GetAllianceFromTeam( int team )
 	if( team == TEAM_SPECTATOR )
 		return ALLIANCE_NONE
 
-	Assert( AllianceProximity_IsTeamInAnAlliance( team ), "Attempted to get an Alliance from a Team that isn't in the teamToAllianceTable, probably didn't run the AllianceProximity_SetTeamsToAlliances function first" )
+	#if DEV
+		Assert( AllianceProximity_IsTeamInAnAlliance( team ), "ALLIANCE PROXIMITY: Attempted to get an Alliance from a Team that isn't in the teamToAllianceTable, probably didn't run the AllianceProximity_SetTeamsToAlliances function first" )
+	#endif       
+
 	return file.teamToAllianceTable[ team ]
 }
+
+#if CLIENT
+int function AllianceProximity_GetAllianceFromTeamWithObserverCorrection( int team )
+{
+	entity localPlayer = GetLocalClientPlayer()
+	bool isObserver = false
+
+	if( IsValid( localPlayer ) )
+	{
+		isObserver = localPlayer.GetTeam() == TEAM_SPECTATOR || localPlayer.GetTeam() == TEAM_UNASSIGNED
+	}
+
+	return ( isObserver )? 0: AllianceProximity_GetAllianceFromTeam( localPlayer.GetTeam() )
+
+}
+#endif
 
 #if CLIENT
 int function AllianceProximity_GetUIAllianceFromTeam( int team )
@@ -201,7 +234,9 @@ int function AllianceProximity_GetOtherAlliance( int alliance )
                                                                                                                            
 int function AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( EHI playerEHI )
 {
-	Assert(  EHIHasValidScriptStruct( playerEHI ), "Attempted to run AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI on an Invalid playerEHI" )
+	#if DEV
+		Assert(  EHIHasValidScriptStruct( playerEHI ), "ALLIANCE PROXIMITY: Attempted to run AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI on an Invalid playerEHI" )
+	#endif       
 
 	int team = EHI_GetTeam( playerEHI )
 
@@ -368,19 +403,94 @@ array<int> function AllianceProximity_GetLivingPlayerTeamsInSameAllianceAsTeam( 
                                           
 array<int> function AllianceProximity_GetTeamsInAlliance( int alliance )
 {
-	Assert( alliance in file.allianceToTeamsTable , "Attempted to get teams from an Alliance that isn't in the allianceToTeamsTable, probably didn't run the AllianceProximity_SetTeamsToAlliances function first" )
+	#if DEV
+		Assert( alliance in file.allianceToTeamsTable , "ALLIANCE PROXIMITY: Attempted to get teams from an Alliance that isn't in the allianceToTeamsTable, probably didn't run the AllianceProximity_SetTeamsToAlliances function first" )
+	#endif       
 
 	return file.allianceToTeamsTable[ alliance ]
 }
 
+#if SERVER
+                                                                 
+                                                                                                                       
+                                                                
+ 
+	       
+		                                                                                                                                                                                          
+	             
+
+	                                                                     
+	                                           
+
+	                                                         
+	                                                                                                                                                                         
+	                                         
+	 
+		                                                                                                                
+	 
+
+	                                 
+	 
+		                                                                   
+
+		       
+			                                                                                                                                                                                                                                          
+		             
+
+		                                                                          
+
+		                                                                                                               
+		 
+			                                                                
+			                                      
+			 
+				                         
+					        
+
+				                               
+				                                          
+
+				                                 
+				                                                                  
+				                                     
+				                                                                                   
+			 
+		 
+	 
+
+	                                         
+ 
+#endif          
+
                                                                                                                                                                                         
 int function AllianceProximity_GetRepresentativeTeamForAlliance( int alliance )
 {
+#if SERVER
+	                                         
+	 
+		       
+			                                                                                                                                                                                                                                                         
+		             
+		                                                     
+	 
+#endif          
+
 	array<int> teamsInAlliance = AllianceProximity_GetTeamsInAlliance( alliance )
-	Assert( teamsInAlliance.len() > 0, "AllianceProximity_GetRepresentativeTeamForAlliance tried to get a team from an alliance but there are no teams in alliance " + alliance )
+
+	#if DEV
+		Assert( teamsInAlliance.len() > 0, "AllianceProximity_GetRepresentativeTeamForAlliance tried to get a team from an alliance but there are no teams in alliance " + alliance )
+	#endif       
 
 	return teamsInAlliance[ 0 ]
 }
+
+#if SERVER
+                                                                                                                         
+                                                                       
+ 
+	                                         
+ 
+#endif          
 
 #if SERVER || CLIENT
                                                             
@@ -429,7 +539,10 @@ void function AllianceProximity_SetTeamsToAlliances()
 
 	foreach ( team in allTeams )
 	{
-		printf( "ALLIANCE PROXIMITY: Putting team " + team + " on Alliance " + allianceIndex )
+		#if DEV
+			printf( "ALLIANCE PROXIMITY: Putting team " + team + " on Alliance " + allianceIndex )
+		#endif       
+
 		#if SERVER
 			                                                
 		#endif          

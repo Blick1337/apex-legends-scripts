@@ -261,7 +261,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_panic_button( entity weapon )
 		                                            
 		                                                                                                   
 			                       
-				                                                     
+				                                                    
 		   
 	 
  

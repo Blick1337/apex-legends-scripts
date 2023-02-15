@@ -106,7 +106,11 @@ struct
 		                     
 		                 
 		                 
-		                              
+                  
+                                    
+       
+		                                  
+        
 
 		                       
 		                       
@@ -363,7 +367,11 @@ void function OnProjectileCollision_arc_bolt( entity projectile, vector pos, vec
 
 	                                                                                    
 
-	                                                         
+                    
+                                                              
+         
+    	                                                         
+          
 	           
  
 

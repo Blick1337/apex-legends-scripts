@@ -1,0 +1,1197 @@
+                                                                                                          
+                                                                                                                                 
+                                                                                                        
+                                                                                                                        
+
+global function GamemodeUtility_Init
+global function GamemodeUtility_RegisterNetworking
+
+#if SERVER
+                                                                                                                                                                                     
+                                                                                               
+                                                                                                                                                                                                                                                             
+                                                                                                                                      
+                                                                                                                                      
+                                                              	                                                                                                                                  
+                                                                                                                                   
+                                                                                                                                   
+                                                                                                                                                   
+                                                                                                          
+                                                                                                                                                                         
+                                                                                            
+                                                                                                                                                                                                                            
+#endif          
+
+#if CLIENT || SERVER
+global function GamemodeUtility_GetTeamOrAllianceScore                                                                                                          
+global function GamemodeUtility_GetAllianceScoreFromTeam                                                  
+global function GamemodeUtility_GetScoreDifference	                                                                                                                                                           
+global function GamemodeUtility_GetScoreDifferenceBetweenTeams	                                                                                           
+global function GamemodeUtility_GetWinningTeamOrAlliance	                                                                                          
+global function GamemodeUtility_GetWinningTeam	                                      
+global function GamemodeUtility_GetWinningAlliance	                                          
+global function GamemodeUtility_GetWinningTeamOrAllianceScore	                                                                                                           
+global function GamemodeUtility_IsJIPEnabledInPlaylist	                                                             
+global function GamemodeUtility_IsJIPEnabled	                                                               
+#endif                    
+
+#if CLIENT
+global function GamemodeUtility_ServerCallback_DisplayMatchTimeLimitWarning	                                                                                                                                          
+global function GamemodeUtility_AnnouncementMessageWarning	                                                                            
+global function GamemodeUtility_GetColorVectorForCaptureObjectiveState	                                                                                                                                              
+global function GamemodeUtility_IsPlayerOnTeamObserver	                                                                                                                                              
+global function GamemodeUtility_GetLocalTeamPlayers                                                                                                                                                   
+#endif          
+
+#if DEV && SERVER
+                           
+                                                          	                                                                                                                
+                                                         	                                                                                                            
+#endif                 
+
+const float UNSET_PLAYLIST_VAR_FLOAT = -1
+const int UNSET_PLAYLIST_VAR_INT = -1
+
+
+#if SERVER
+                                                                                        
+                      
+                                      
+                                                        
+                                                        
+                                                 
+                                                     
+
+                                                                                                                                                                  
+#endif          
+
+#if CLIENT || SERVER
+const float GAMEMODEUTILITY_DEFAULT_MESSAGE_DURATION = 5.0                                                   
+const float GAMEMODEUTILITY_MATCH_TIME_LIMIT_WARNING_TIME = 300.0                                                                       
+#endif                    
+
+#if CLIENT
+const string SFX_MATCH_TIME_LIMIT = "Ctrl_Match_End_Warning_1p"	                                                      
+#endif          
+
+#if CLIENT
+                                                                              
+global enum eGamemodeUtilityCaptureObjectiveColorState
+{
+	NEUTRAL,
+	CONTESTED,
+	FRIENDLY_OWNED,
+	ENEMY_OWNED
+}
+#endif          
+
+struct {
+	#if SERVER
+	                                                      	                                                                  
+
+	          
+	                                                                                                                                               
+
+	                   
+	                                                                                      
+
+	                                                                                                                                                                                                         
+	#endif          
+} file
+
+void function GamemodeUtility_Init()
+{
+	#if SERVER
+		                                                 
+			                                   
+
+		                                                        
+		                                                                                    
+		                                                                  
+		                                               
+			                                                     
+
+		                                                            
+		
+		                                                                                                                  
+		                                                                                                            
+		 
+			                                           
+			                                           
+		 
+
+                        
+			                                           
+				                                                                                                     
+                                  
+
+	#endif          
+
+	#if DEV && SERVER
+		                                                         
+	#endif                 
+}
+
+void function GamemodeUtility_RegisterNetworking()
+{
+	Remote_RegisterClientFunction( "GamemodeUtility_ServerCallback_DisplayMatchTimeLimitWarning", "bool" )
+
+#if CLIENT || SERVER
+	                                             
+	if ( !IsEliminationBased() )
+		RegisterNetworkedVariable( "deaths", SNDC_PLAYER_GLOBAL, SNVT_INT, 0 )
+#endif                    
+}
+
+                                                                                                                        
+                                                                                                                        
+                             
+                                                                                                                        
+                                                                                                                        
+
+#if SERVER
+                                                                
+                                                        
+ 
+	                                                                      
+ 
+#endif          
+
+#if SERVER || CLIENT
+bool function GamemodeUtility_IsJIPEnabled()
+{
+	return GetConVarBool( "match_jip" ) && GamemodeUtility_IsJIPEnabledInPlaylist()
+}
+#endif                    
+
+#if SERVER || CLIENT
+                                                    
+bool function GamemodeUtility_IsJIPEnabledInPlaylist()
+{
+	return GetCurrentPlaylistVarBool( "match_jip", false )
+}
+#endif                    
+
+#if SERVER
+                                                                                                                                         
+                                                                    
+ 
+	                                                                                         
+ 
+#endif          
+
+#if SERVER
+                                                                                        
+                                                    
+ 
+	                                                                             
+ 
+#endif          
+
+#if SERVER
+                                                                                                         
+                                                          
+ 
+	                                                                              
+ 
+#endif          
+
+#if SERVER
+                                                                                                                                                 
+                                                                 
+ 
+	                                                                                      
+ 
+#endif          
+
+#if SERVER
+                                                                                                                                                                                                                
+                                                                   
+ 
+	                                                                                           
+ 
+#endif          
+
+#if SERVER
+                                                                                      
+                                                  
+ 
+	                                                                                                                                         
+
+	       
+		                                                                                                                              
+	             
+
+	                     
+ 
+#endif          
+
+#if SERVER
+                                                               
+ 
+	                                                                                
+ 
+#endif         
+
+#if SERVER
+                                                                                               
+                                                                  
+ 
+	                                                                                
+ 
+#endif         
+
+#if SERVER
+                                                                                               
+                                                                  
+ 
+	                                                                                 
+ 
+#endif         
+
+#if SERVER
+                                                              
+ 
+	                                                                               
+ 
+#endif         
+
+#if SERVER
+                                                                                              
+                                                                 
+ 
+	                                                                               
+ 
+#endif         
+
+#if SERVER
+                                                                                              
+                                                                 
+ 
+	                                                                                
+ 
+#endif         
+
+                                                                                                                        
+                                                                                                                        
+                         
+                                                                                                                        
+                                                                                                                        
+
+#if SERVER
+                                                                                                                                                
+                                                                                                        
+ 
+	                                     
+ 
+#endif          
+
+                                                                                                                        
+                                                                                                                        
+                     
+                                                                                                                        
+                                                                                                                        
+
+#if SERVER
+                                                  
+ 
+	                                                              
+	                                                          
+	                           
+		                                                              
+ 
+#endif          
+
+#if SERVER
+                                      
+                                                                
+ 
+	                         
+		      
+
+	                                                                                                                     
+	                                   
+		                                                      
+ 
+#endif          
+
+#if SERVER
+                                   
+                                                                                              
+ 
+	                                                            
+	                                                 
+		                                                                          
+ 
+#endif          
+
+
+                                                                                                                        
+                                                                                                                        
+                    
+                                                                                                                        
+                                                                                                                        
+
+#if SERVER
+                                                            
+                                                 
+ 
+	                                   
+	                                                                       
+	                                  
+	                                    
+	                                                 
+	                                      
+
+	                                     
+	                                              
+	                                           
+	                                                    
+
+	                                
+	                                    
+
+	                                     
+	                                                
+
+	                                                           
+	                                        
+
+                   
+		                                        
+                         
+
+	                                                   
+	                                                
+	                                      
+	                                       
+	                                           
+ 
+#endif           
+
+#if SERVER
+                                                                                     
+                                                                            
+ 
+	       
+		                                               
+	             
+
+	                                         
+	                                                                      
+
+	       
+		                                                           
+		                                                                       
+
+		                                                                                            
+		                                                                                                                          
+		                                                                                                                                                                                                              
+
+		                                                  
+		                                                
+		                                                                                                                                                                                                                                                                             
+		                                                                                                                                           
+	             
+
+	                                                                                                            
+
+	                                                                                                            
+	                                          
+
+	                                                                              
+	                                                   
+	                                     
+	 
+		                        
+			                                                                                                             
+	 
+
+	       
+		                                                                                                                                                                       
+	             
+
+	                                                                                 
+	                                                  
+
+	                                                  
+	                                  
+	                                     
+	 
+		                        
+			                                                                                                            
+	 
+
+	       
+		                                                                                    
+	             
+
+	                                                                                   
+	                                             
+
+	                                                   
+	       
+		                                                                                                                                    
+	             
+
+	                                                                            
+	                                                   
+		                                                                                                   
+ 
+#endif          
+
+#if CLIENT
+                                                                                                 
+void function GamemodeUtility_ServerCallback_DisplayMatchTimeLimitWarning( bool isFinalWarning )
+{
+	entity player = GetLocalViewPlayer()
+	if ( !IsValid( player ) )
+		return
+
+	                                                                                                 
+	if ( GAMEMODEUTILITY_MATCH_TIME_LIMIT_WARNING_TIME < 60 )
+		return
+
+	string message = Localize( "#CONTROL_MATCH_TIMELIMIT_WARNING", GAMEMODEUTILITY_MATCH_TIME_LIMIT_WARNING_TIME/ 60 )
+	if ( isFinalWarning )
+		message = Localize( "#CONTROL_MATCH_TIMELIMIT_GAMEEND" )
+
+	GamemodeUtility_AnnouncementMessageWarning( player, message, GamemodeUtility_GetColorVectorForCaptureObjectiveState( eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED ), SFX_MATCH_TIME_LIMIT, GAMEMODEUTILITY_DEFAULT_MESSAGE_DURATION )
+}
+#endif          
+
+#if SERVER
+                                                                                          
+                                             
+                                                            
+ 
+	       
+		                                               
+
+		                                                                                    
+	             
+
+	                                     
+
+	            
+		               
+		 
+			                                   
+			       
+				                                                                     
+			             
+
+			                                      
+		 
+	 
+
+	                                                                                                   
+
+	                                                                 
+	                                               
+
+	                                                                                                
+	                                                                                                       
+	                                                              
+	                                                                          
+
+	                              
+		                         
+
+	                                                                   
+	                                                          
+	                                                                                                                                                                                                                                    
+
+	                                                                             
+	                                                                                            
+	                                                                         
+	                 
+	 
+		                                                
+		                                    
+			                                     
+	 
+
+	                                            
+
+	                                                                                
+	                                                                             
+	                                                            
+	                                                                
+	                                                                          
+	                                                                    
+
+	                                  
+	                                                                                                                                    
+	                                                                                                                                                 
+		                            
+
+	                                                                                                                             
+	                                                                        
+	 
+		                                                                 
+		                                                                                               
+			                            
+
+		                                               
+		                                                                                             
+			                            
+
+		                                                            
+		                                                        
+			                            
+
+		                                                                                   
+		                                                                      
+			                            
+
+		                                
+	 
+ 
+#endif          
+
+#if SERVER
+                                                           
+ 
+	       
+		                                                                                                                                                                                              
+	             
+
+	                                     
+ 
+#endif          
+
+#if CLIENT || SERVER
+                                                                                                                   
+int function GamemodeUtility_GetScoreDifference()
+{
+	if ( AllianceProximity_IsUsingAlliances() )
+		return AllianceProximity_GetAllianceScoreDifference()
+
+	return GamemodeUtility_GetScoreDifferenceBetweenTeams()
+}
+#endif                    
+
+#if CLIENT || SERVER
+                                                                                                  
+int function GamemodeUtility_GetScoreDifferenceBetweenTeams()
+{
+	int lowestScore = -1
+	int highestScore = 0
+	int currentTeamScore = 0
+	array < int > allTeamsArray = GetAllTeams()
+
+	foreach( team in allTeamsArray )
+	{
+		currentTeamScore = GameRules_GetTeamScore( team )
+		lowestScore = currentTeamScore < lowestScore || lowestScore == -1 ? currentTeamScore : lowestScore
+		highestScore = currentTeamScore > highestScore ? currentTeamScore : highestScore
+	}
+
+	return highestScore - lowestScore
+}
+#endif                    
+
+#if CLIENT || SERVER
+                                              
+                                                                                                                                 
+                                                                                                                                                                            
+int function GamemodeUtility_GetWinningTeamOrAlliance()
+{
+	if ( AllianceProximity_IsUsingAlliances() )
+		return GamemodeUtility_GetWinningAlliance()
+
+	return GamemodeUtility_GetWinningTeam()
+}
+#endif                    
+
+#if CLIENT || SERVER
+                                  
+int function GamemodeUtility_GetWinningTeam()
+{
+	int winningTeam = TEAM_INVALID
+	int highestScore = -1
+	int currentScoreBeingTested = 0
+	array <int> allTeamsArray = GetAllTeams()
+
+	foreach( team in allTeamsArray )
+	{
+		if ( !GameRules_IsTeamIndexValid( team ) )
+			continue
+
+		currentScoreBeingTested = GameRules_GetTeamScore( team )
+		if ( currentScoreBeingTested > highestScore || highestScore == -1 )
+		{
+			winningTeam = team
+			highestScore = currentScoreBeingTested
+		}
+	}
+
+	#if DEV
+		                                                                 
+		if ( winningTeam == TEAM_INVALID )
+			Warning( "GAMEMODE UTILITY: Using GamemodeUtility_GetWinningTeam function and it is returning an Invalid Team. Make sure you have valid teams in game." )
+	#endif       
+
+
+	return winningTeam
+}
+#endif                    
+
+#if CLIENT || SERVER
+                                      
+int function GamemodeUtility_GetWinningAlliance()
+{
+	int winningAlliance = ALLIANCE_NONE
+	int highestScore = -1
+	int currentScoreBeingTested = 0
+	array < int > allAlliancesArray = AllianceProximity_GetAllAlliances()
+
+	foreach( alliance in allAlliancesArray )
+	{
+		currentScoreBeingTested = GetAllianceTeamsScore( alliance )
+		if ( currentScoreBeingTested > highestScore || highestScore == -1 )
+		{
+			winningAlliance = alliance
+			highestScore = currentScoreBeingTested
+		}
+	}
+
+	#if DEV
+		                                                                     
+		if ( winningAlliance == ALLIANCE_NONE )
+			Warning( "GAMEMODE UTILITY: Using GamemodeUtility_GetWinningAlliance function and it is returning an Invalid Alliance. Make sure you have valid alliances in game." )
+	#endif       
+
+	return winningAlliance
+}
+#endif                    
+
+#if CLIENT || SERVER
+                                                              
+int function GamemodeUtility_GetWinningTeamOrAllianceScore()
+{
+	int winningTeamOrAlliance = GamemodeUtility_GetWinningTeamOrAlliance()
+
+	return GamemodeUtility_GetTeamOrAllianceScore( winningTeamOrAlliance )
+}
+#endif                    
+
+#if CLIENT || SERVER
+                                               
+int function GamemodeUtility_GetTeamOrAllianceScore( int teamOrAlliance )
+{
+	int teamScore = 0
+
+	if ( teamOrAlliance != TEAM_INVALID )
+	{
+		if ( AllianceProximity_IsUsingAlliances() )
+		{
+			teamScore = GetAllianceTeamsScore( teamOrAlliance )
+		}
+		else
+		{
+			teamScore = GameRules_GetTeamScore( teamOrAlliance )
+		}
+	}
+
+	return teamScore
+}
+#endif                    
+
+#if CLIENT || SERVER
+                                                                                                                           
+int function GamemodeUtility_GetAllianceScoreFromTeam( int team )
+{
+	int allianceIndex = AllianceProximity_GetAllianceFromTeam( team )
+	return GetAllianceTeamsScore( allianceIndex )
+}
+#endif                    
+
+#if SERVER
+                                                      
+                                                                                                                                                                                           
+                                                                                                                                                                    
+ 
+	                                    
+	                                                
+		      
+
+	                                   
+	                                                                                                                                    
+ 
+#endif          
+
+#if SERVER
+                                                                                                                                                                           
+ 
+	       
+		                                               
+	             
+
+	                                                                                                                                                        
+	                             
+	                                                   
+	                                     
+	 
+		                        
+		 
+			                        
+			                               
+		 
+	 
+
+	                                                                                                              
+	                                                                                   
+	                                            
+
+	                      
+	                                           
+	 
+		                               
+
+		                                                                                                                                              
+		                                                  
+
+		                                                
+		                                                                                       
+			                                                                                              
+	 
+
+	                                     
+	                                                                  
+
+	                                  
+	                                                    
+		                                           
+
+	                                                                                                                                                                           
+	                                                 
+		                                                           
+
+	                                                
+
+	                                                 
+	                                                                                 
+	                                                      
+	 
+		                                                                                                  
+		                                                                 
+
+		                        
+		 
+			                                                                                                                                   
+
+			                                         
+			                                         
+			 
+                          
+					                                                                                          
+						                                          
+                                
+
+				                                                                                    
+					                                                                                                            
+			 
+		 
+	 
+
+	                                         
+	                              
+
+	                                                                                                                                                               
+	                                     
+
+	                                   
+ 
+#endif          
+
+
+
+#if SERVER
+                                                       
+ 
+	                                   
+ 
+#endif          
+
+                      
+#if SERVER
+                                                                                                                                                                  
+                                                                                                                          
+ 
+	                                            
+		      
+
+	                         
+		      
+
+	                                                                                  
+	                                                                                                                           
+	                                                                                                                     
+	                                                                                                                           
+	                                                                                                                                                                         
+		                                                  
+ 
+#endif          
+                            
+
+
+#if CLIENT
+                                                                         
+void function GamemodeUtility_AnnouncementMessageWarning( entity player, string messageText, vector titleColor, string soundAlias, float duration )
+{
+	AnnouncementData announcement = Announcement_Create( messageText )
+	Announcement_SetHeaderText( announcement, " " )
+	Announcement_SetSubText( announcement, " " )
+	Announcement_SetStyle( announcement, ANNOUNCEMENT_STYLE_GENERIC_WARNING )
+	Announcement_SetSoundAlias( announcement, soundAlias )
+	Announcement_SetPurge( announcement, true )
+	Announcement_SetPriority( announcement, 200 )                                                        
+	Announcement_SetDuration( announcement, duration )
+
+	Announcement_SetTitleColor( announcement, titleColor )
+	Announcement_SetVerticalOffset( announcement, 140 )
+	AnnouncementFromClass( player, announcement )
+}
+#endif          
+
+#if CLIENT
+                                                                                                                                                                               
+vector function GamemodeUtility_GetColorVectorForCaptureObjectiveState( int objectiveState, bool isRuiUIColor = false )
+{
+	vector color
+
+	switch( objectiveState )
+	{
+		case eGamemodeUtilityCaptureObjectiveColorState.NEUTRAL:
+			color = GetKeyColor( COLORID_COLORSWATCH_WHITE )
+			break
+		case eGamemodeUtilityCaptureObjectiveColorState.CONTESTED:
+			color = GetKeyColor( COLORID_CONTROL_CONTESTED )
+			break
+		case eGamemodeUtilityCaptureObjectiveColorState.FRIENDLY_OWNED:
+			color = GetKeyColor( COLORID_CONTROL_FRIENDLY )
+			break
+		case eGamemodeUtilityCaptureObjectiveColorState.ENEMY_OWNED:
+			color = GetKeyColor( COLORID_CONTROL_ENEMY )
+			break
+		default:
+			color = GetKeyColor( COLORID_COLORSWATCH_WHITE )
+			break
+	}
+
+	if ( isRuiUIColor )
+		color = SrgbToLinear( color / 255 )
+
+	return color
+}
+#endif          
+
+#if CLIENT
+bool function GamemodeUtility_IsPlayerOnTeamObserver( entity player )
+{
+	if( !IsValid( player ) )
+		return false
+
+	return player.GetTeam() == TEAM_SPECTATOR
+}
+#endif
+
+#if CLIENT
+                                                                                                                   
+                                                   
+array<entity> function GamemodeUtility_GetLocalTeamPlayers( bool friendly )
+{
+	                                                                                                                       
+	int localPlayerTeam = GetLocalClientPlayer().GetTeam()
+	if ( IsLocalPlayerOnTeamSpectator() )
+		localPlayerTeam = TEAM_IMC
+
+	                                                                                                                            
+	int teamOrAllianceToReturn
+	array<entity> localTeamPlayersArray
+
+	if ( AllianceProximity_IsUsingAlliances() )
+	{
+		int localPlayerAlliance = AllianceProximity_GetAllianceFromTeamWithObserverCorrection( localPlayerTeam )
+		                                                                                                                                                                                                 
+		teamOrAllianceToReturn = friendly ? localPlayerAlliance : AllianceProximity_GetOtherAlliance( localPlayerAlliance )
+		localTeamPlayersArray = AllianceProximity_GetAllPlayersInAlliance( teamOrAllianceToReturn, false )
+	}
+	else
+	{
+		teamOrAllianceToReturn = friendly ? localPlayerTeam : GetOtherTeam( localPlayerTeam )
+		localTeamPlayersArray = GetPlayerArrayOfTeam( teamOrAllianceToReturn )
+	}
+
+	return localTeamPlayersArray
+}
+#endif
+
+#if SERVER
+                                                                   
+                                                                           
+ 
+	                                                                                         
+		      
+
+	                                                                                                                      
+	                                                 
+	 
+		                                                                  
+		 
+			                                  
+			                                                                        
+			                                                             
+			                                                          
+		 
+	 
+	    
+	 
+		                                                           
+	 
+ 
+#endif          
+
+#if SERVER
+                                                                                                                                
+                                                                                                                                                                      
+                                             
+                                                                                                                                                                                                   
+ 
+	                    
+	                                                             
+	 
+		                                                                                                                 
+
+		                                         
+			                                         
+	 
+
+	              
+ 
+#endif         
+
+#if SERVER
+                                              
+                                                              
+ 
+	                                                       
+ 
+#endif          
+
+#if SERVER
+                                                                                               
+ 
+	                                              
+	 
+		                                                          
+		                                                
+
+		                                           
+		 
+			                                                                            
+			                                                                                                   
+
+			                                               
+			 
+				                                             
+
+				                                                                
+					                                                                                                           
+			 
+		 
+		    
+		 
+			                                                        
+
+			                                                                 
+				                                                                                                                      
+		 
+	 
+ 
+#endif          
+
+#if SERVER
+                                                                                
+                                                                     
+ 
+	                   
+
+	                                               
+		      
+
+	                              
+	                               
+
+	               
+	               
+	                                                              
+	                                                              
+
+	                                                              
+	                                                                
+
+	                                                                                                                                             
+	                                                                                                   
+
+	                                                                                                                                                                                                                 
+	 
+		                                                                                                                              
+		                                                                   
+	 
+
+	            
+		                                           
+		 
+			                          
+			 
+				                      
+			 
+
+			                          
+			 
+				                      
+			 
+		 
+	 
+
+	                            
+ 
+#endif          
+
+#if SERVER
+                                                                                                                               
+                                                                                                                                      
+                                                                                                                                                                                   
+                                                                                                                                                                          
+ 
+	                                                                                                                              
+	                                                               
+		      
+
+	                                                                                                      
+	                                                 
+	                                                          
+		      
+
+	                 
+	 
+		                                              
+		 
+			                                                
+				                                      
+		 
+
+		                                           
+			                                                                   
+	 
+	    
+	 
+		                                              
+		 
+			                                               
+				                                       
+		 
+
+		                                            
+			                                                        
+	 
+ 
+#endif          
+
+                                                                                                                        
+                                                                                                                        
+                
+                                                                                                                        
+                                                                                                                        
+
+#if DEV && SERVER
+                                                                                                                                               
+                                                 
+                                                          
+ 
+	                                                  
+	 
+		                                                                                                                 
+		      
+	 
+
+	                                                                                     
+
+	                           
+	 
+		                                                                                                                               
+
+		                                                                                             
+
+		                                                                                             
+		                                                                     
+		 
+			                                                                                             
+			                                           
+
+			                                                                                                                                         
+			                                                                                         
+		 
+	 
+ 
+#endif                 
+
+#if DEV && SERVER
+                                                                                                                                                                 
+                                                                                              
+ 
+	                                                                                 
+	                                                                                                                      
+	                                                                          
+	                                
+	                                        
+	                                                                                           
+
+	                                         
+	                                                                                                              
+	                                                                           
+
+	                                         
+	                                                                                                              
+	                                                                           
+
+	                                                                     
+	                                                                                                              
+	                                                                           
+
+	                                                    
+	                                          
+	 
+		                                         
+	 
+
+	                        
+ 
+#endif                 
+
+
+#if DEV && SERVER
+                                                                                                                                                                                 
+                                                                                                                  
+ 
+	                                
+	                                    
+	 
+		                                  
+	 
+
+	                           
+ 
+#endif                 
+
+#if DEV && SERVER
+                           
+                                                         
+ 
+	                                                                              
+	                                                                   
+ 
+#endif                 

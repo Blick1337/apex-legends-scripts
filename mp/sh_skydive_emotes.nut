@@ -182,7 +182,6 @@ int function SkydiveEmote_GetSortOrdinal( ItemFlavor item )
 	 
 		                                     
 		                                                          
-		                                                                                          
 	 
  
 #endif

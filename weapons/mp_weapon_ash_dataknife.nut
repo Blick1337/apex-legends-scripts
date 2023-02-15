@@ -664,20 +664,7 @@ void function OnWaypointDestroyed( entity wp )
 
 bool function UseAlternatePassiveActivation()
 {
-	if ( GameRules_GetGameMode() == GAMEMODE_ARENAS )
-		return true
-
-                         
-		if ( GameRules_GetGameMode() == GAMEMODE_CONTROL )
-			return true
-       
-
-                        
-		if ( FreeDM_IsActiveGameMode() )
-			return true
-       
-
-	return false
+	return GetCurrentPlaylistVarBool( "ash_use_alternate_passive_activation", false )
 }
 
 #if SERVER

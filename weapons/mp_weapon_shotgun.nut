@@ -44,7 +44,7 @@ void function UpdateDoubleTapShotgunBoltPairing( entity weapon )
 	const string DOUBLE_TAP_SUFFIX = "_double_tap"
 	array<string> levels = ["l1", "l2", "l3"]
                           
-                       
+		levels.append( "l4" )
        
 
 	                                                                                                                                                                                                                

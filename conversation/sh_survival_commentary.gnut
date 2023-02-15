@@ -211,35 +211,35 @@ global enum eSurvivalCommentaryBucket
       
 
                        
-	ROUND1,
-	ROUND2,
-	ROUND3,
-	ROUND4,
-	ROUND5,
-	ROUND6,
-	ROUND7,
-	ROUND8,
-	ROUND9,
-	ROUND_FINAL,
-	ROUND_PREPARE,
-	ONE_TEAM_WINNING,
-	MATCH_POINT,
-	MATCH_POINT_TIED,
-	MATCH_POINT_SQUAD,
-	MATCH_POINT_ENEMY,
-	SUDDEN_DEATH,
-	SCORE_CLOSE,
-	WINNER_HAS_HORIZON,
-	ROUND_WON,
-	ROUND_LOST,
-	ROUND_PERFECT,
-	ROUND_FLAWLESS,
-	ROUND_CLUTCH,
-	MATCH_STOMP,
-	MATCH_COMEBACK,
-	MATCH_SHUTOUT,
-	DOUBLE_KILL,
-	TRIPLE_KILL,
+        
+        
+        
+        
+        
+        
+        
+        
+        
+             
+               
+                  
+             
+                  
+                   
+                   
+              
+             
+                    
+           
+            
+               
+                
+              
+             
+                
+               
+             
+             
       
 
                               
@@ -311,7 +311,7 @@ global enum eSurvivalHostType
       
 	MIRAGE,
                        
-	ARENAS,
+        
       
 	MAGGIE,
 	_count
@@ -832,8 +832,8 @@ int function ConvertHostStringToEnum( string hostName )
 			return eSurvivalHostType.AI
 
                        
-		case "#HOST_ARENAS":
-			return eSurvivalHostType.ARENAS
+                      
+                                  
       
 
                                                

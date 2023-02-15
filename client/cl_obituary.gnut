@@ -95,7 +95,10 @@ ObitEntityInfo function Obituary_GetEntityInfo( entity ent, int damageSourceId, 
 	info.displayName = names.attackerName
 	info.petDisplayName = names.attackerPetName
 
-	entity localPlayer = GetLocalViewPlayer()
+	entity localViewPlayer = GetLocalViewPlayer()
+	entity localClientPlayer = GetLocalClientPlayer()
+	int entTeam = ent.GetTeam()
+	int localViewPlayerTeam = localViewPlayer.GetTeam()
 
 	if ( ent.IsNPC() )
 	{
@@ -107,22 +110,32 @@ ObitEntityInfo function Obituary_GetEntityInfo( entity ent, int damageSourceId, 
 		{
 			info.displayColor = GetPlayerInfoColor( ent )
 
-				if ( GetCurrentPlaylistVarBool( "show_team_color_obituary_enemies_red", false) && !IsFriendlyTeam( localPlayer.GetTeam(), ent.GetTeam() ) )
+				if ( GetCurrentPlaylistVarBool( "show_team_color_obituary_enemies_red", false) && !IsFriendlyTeam( localViewPlayerTeam, entTeam ) )
 				{
 					info.displayColor = OBITUARY_COLOR_ENEMY
 				}
 		}
 		else
 		{
-			info.displayColor = localPlayer.GetTeam() == ent.GetTeam() ? GetPlayerInfoColor( ent ) : <255, 255, 255>                              
+			info.displayColor = localViewPlayerTeam == entTeam ? GetPlayerInfoColor( ent ) : <255, 255, 255>                              
 		}
 	}
 
 	                                                                                                             
-	if ( AllianceProximity_IsUsingAllianceProximity() )
+	if ( AllianceProximity_IsUsingAlliances() )
 	{
-		if ( localPlayer.GetTeam() != ent.GetTeam() && IsFriendlyTeam( localPlayer.GetTeam(), ent.GetTeam() ) )
+		if ( !AllianceProximity_IsTeamInAnAlliance( entTeam ) )                                                                                   
+		{
+			info.displayColor = <255, 255, 255>
+		}
+		else if ( GamemodeUtility_IsPlayerOnTeamObserver( localClientPlayer )  )                                               
+		{
+			info.displayColor = Teams_GetTeamColor( AllianceProximity_GetAllianceFromTeam( entTeam ) ) * 255
+		}
+		else if ( localViewPlayerTeam != entTeam && IsFriendlyTeam( localViewPlayerTeam, entTeam ) )                                                         
+		{
 			info.displayColor = TEAM_COLOR_FRIENDLY
+		}
 	}
 	
 	return info
@@ -331,10 +344,12 @@ bool function ShouldShowRankBadges ( entity attacker, bool isDownShot )
 		return false
 	}
 
-	if (IsArenaMode())
-	{
-		return false
-	}
+                        
+                   
+  
+              
+  
+       
 
 	if ( !IsValid( attacker )  )
 	{

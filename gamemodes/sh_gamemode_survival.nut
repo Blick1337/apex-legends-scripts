@@ -46,14 +46,11 @@ global function Survival_IsPlayerHealing
 global function PlayerIsMarkedAsCanBeRespawned
 
 global function IsSurvivalMode
-global function Survival_IsJIPEnabled
-global function Survival_IsJIPEnabledInPlaylist
 #endif
 
 #if SERVER
                                        
                                      
-                                      
 #endif
 
 #if UI
@@ -213,7 +210,7 @@ void function GamemodeSurvivalShared_Init()
 		Sh_RespawnBeacon_Init()
 
                      
-                          
+		Perk_MunitionsBox_Init()
         
 
 		MobileRespawnBeacon_Init()
@@ -315,8 +312,8 @@ bool function Survival_PlayerCanDrop( entity player )
 	  	            
 
                        
-	if( IsArenaMode() && !GamePlaying() )
-		return false
+                                      
+              
       
 
 	if ( player.ContextAction_IsActive() && !player.ContextAction_IsRodeo() )
@@ -876,29 +873,3 @@ bool function IsSquadDataPersistenceEmpty( entity player )
       
  
 #endif          
-
-#if SERVER
-                                                    
- 
-	       
-		                                                                                                                                                                     
-	             
-
-	                                     
- 
-#endif          
-
-#if SERVER || CLIENT
-bool function Survival_IsJIPEnabled()
-{
-	return GetConVarBool( "match_jip" ) && Survival_IsJIPEnabledInPlaylist()
-}
-#endif                    
-
-#if SERVER || CLIENT
-                                                    
-bool function Survival_IsJIPEnabledInPlaylist()
-{
-	return GetCurrentPlaylistVarBool( "match_jip", false )
-}
-#endif                    

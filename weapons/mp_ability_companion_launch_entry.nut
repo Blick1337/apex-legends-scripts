@@ -10,8 +10,11 @@ bool function OnWeaponAttemptOffhandSwitch_companion_launch_entry( entity weapon
 	if ( !IsValid( player ) )
 		return false
 
-	                                             
-	  	            
+	if ( player.IsInputCommandHeld( IN_PING ) || player.IsInputCommandPressed( IN_PING ) )
+	{
+		                                                          
+		return false
+	}
 
 	if ( VantageCompanion_GetPlayerLaunchState( player ) != ePlayerLaunchState.NONE )
 		return false

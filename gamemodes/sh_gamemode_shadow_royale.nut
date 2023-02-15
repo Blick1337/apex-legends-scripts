@@ -159,7 +159,7 @@ void function ShadowRoyale_OnPlaying()
 		SetMapFeatureItem( 1000, "#SHADOWROYALE_SHADOW_SPAWN_FRIEND", "#SHADOWROYALE_SHADOW_SPAWN_FRIEND_DESC", ICON_SPAWN_SHADOW_FRIEND )
 	}
 
-	                                                                       
+	                        
 	DeathScreen_SetDataRuiAssetForGamemode( DEATH_SCREEN_RUI )
 }
 #endif         

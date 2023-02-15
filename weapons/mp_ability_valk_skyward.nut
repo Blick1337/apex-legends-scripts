@@ -31,10 +31,9 @@ const asset SKYWARD_JUMPJETS_ENEMY = $"P_valk_jet_fly_ON"
 const asset SKYWARD_AFTERBURNER_FX = $"P_valk_launch_eng"
 const asset SKYWARD_RADIUS_FX = $"P_radius_marker"
 const float SKYWARD_LAUNCH_TIME = 5.0
-const float SKYWARD_LAUNCH_TIME_ARENAS = 2.0
 const float SKYWARD_LAUNCH_SLOW_TIME = 1.83
-const float SKYWARD_LAUNCH_SLOW_TIME_ARENAS = 0.67
 const float SKYWARD_TEAMMATE_ALIGN_TIME = 1
+const float SKYWARD_REFUND_AMOUNT = 0.75
 
 
 const float SKYWARD_ALLY_USE_DEBOUNCE_TIME = 1
@@ -42,7 +41,6 @@ const float SKYWARD_VALK_USE_DEBOUNCE_TIME = 0.5
 
 const float SKYWARD_RADIUS = 300.0
 const float SKYWARD_MAX_HEIGHT = 4500
-const float SKYWARD_MAX_HEIGHT_ARENAS = 1800
 
 const float SKYWARD_WAIT_TIME_BEFORE_LAUNCH = 2.0
 
@@ -256,7 +254,7 @@ bool function OnWeaponAttemptOffhandSwitch_ability_valk_skyward( entity weapon )
 	}
 
 	                                            
-	if ( tactical.IsBurstFireInProgress() )
+	if ( IsValid( tactical ) && tactical.IsBurstFireInProgress() )
 		return false
 
 	if ( owner.IsPhaseShifted() )
@@ -648,8 +646,10 @@ var function OnWeaponPrimaryAttack_ability_valk_skyward( entity weapon, WeaponPr
 		 
 			                  
 		 
-		                                                                                              
+		                                                                                                     
 	 
+
+	                                                                                              
 
 	                                                   
 	                
@@ -1103,16 +1103,7 @@ void function ValkUlt_Canceled( entity player )
 	if ( weaponName != "mp_ability_valk_skyward" )
 		return
 
-
-	float refundAmount = 0.75
-
-	if ( IsArenaMode() )
-		refundAmount = 1.0
-
-                            
-        if ( Control_IsModeEnabled() )
-            refundAmount = 1.0
-                                  
+	float refundAmount = GetCurrentPlaylistVarFloat( "valk_ult_cancel_refund_amount", SKYWARD_REFUND_AMOUNT )
 
 	if ( IsValid( offhandWeapon ) )
 		offhandWeapon.SetWeaponPrimaryClipCount( int( offhandWeapon.GetWeaponPrimaryClipCountMax() * refundAmount ) )
@@ -1483,7 +1474,7 @@ void function ValkUlt_ClientOnlyIdleLoop1P( entity owner )
 #endif
 
 #if SERVER
-                                                                                                                                 
+                                                                                                                                                 
  
 	                                          
 	                                                                                  
@@ -1491,7 +1482,11 @@ void function ValkUlt_ClientOnlyIdleLoop1P( entity owner )
 	                                                        
 	                                                         
 
-	                                                     
+	                
+		                                                                       
+	    
+		                                                     
+	
 	                     
 	                            
 
@@ -1504,8 +1499,14 @@ void function ValkUlt_ClientOnlyIdleLoop1P( entity owner )
 				                                   
 		 
 	 
+	
 	                  
-	                                                      
+	
+	                
+		                                                                        
+	    
+		                                                      
+	
 	                          
 	                  
  
@@ -1606,7 +1607,12 @@ void function UpdateValkFlightRui( entity player, bool isInAir )
 		else
 			thread Valk_DisableHudColorCorrection()
 
-		if ( !IsArenaMode() && IsValid( GetCompassRui() ) )
+		bool isValidMode = true
+                        
+                                         
+       
+
+		if ( isValidMode && IsValid( GetCompassRui() ) )
 			RuiSetBool( GetCompassRui(), "isValkAirborn", showValkRui )
 
 		if ( isValk )
@@ -1703,16 +1709,8 @@ array<float> function GetValkLaunchTimes()
 {
 	array<float> launchTimes
 
-	if ( !IsArenaMode() )
-	{
-		launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_launch_time", SKYWARD_LAUNCH_TIME ) )
-		launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_slow_up_time", SKYWARD_LAUNCH_SLOW_TIME ) )
-	}
-	else
-	{
-		launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_launch_time", SKYWARD_LAUNCH_TIME_ARENAS ) )
-		launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_slow_up_time", SKYWARD_LAUNCH_SLOW_TIME_ARENAS ) )
-	}
+	launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_launch_time", SKYWARD_LAUNCH_TIME ) )
+	launchTimes.append( GetCurrentPlaylistVarFloat( "valk_ult_slow_up_time", SKYWARD_LAUNCH_SLOW_TIME ) )
 
 	return launchTimes
 }
@@ -1767,14 +1765,7 @@ bool function IsThisPlayerInDeployState( entity player )
 
 float function GetValkUltMaxHeight()
 {
-	float totalUpDistance
-
-	if ( !IsArenaMode() )
-		totalUpDistance = GetCurrentPlaylistVarFloat( "valk_ult_up_distance", SKYWARD_MAX_HEIGHT )
-	else
-		totalUpDistance = GetCurrentPlaylistVarFloat( "valk_ult_up_distance_arenas", SKYWARD_MAX_HEIGHT_ARENAS )
-
-	return totalUpDistance
+	return GetCurrentPlaylistVarFloat( "valk_ult_up_distance", SKYWARD_MAX_HEIGHT )
 }
 
 #if SERVER

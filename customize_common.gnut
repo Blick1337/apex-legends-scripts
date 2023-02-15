@@ -683,11 +683,7 @@ void function CustomizeButton_OnRightClick( var button )
 {
 	CustomizeButtonContext cbc = fileLevel.activeCustomizeButtons[button]
 
-                 
 	if ( cbc.loadoutEntries.len() > 1 || ItemFlavor_GetType( cbc.itemFlavor ) == eItemType.sticker )
-      
-                                    
-       
 	{
 		                                   
 		bool wasEquipped = false
@@ -705,13 +701,11 @@ void function CustomizeButton_OnRightClick( var button )
 						PlayPreviewSound( cbc.itemFlavor )
 						RequestSetItemFlavorLoadoutSlot( LocalClientEHI(), loadoutEntry, flavor )
 
-                      
 						if ( ItemFlavor_GetType( cbc.itemFlavor ) == eItemType.sticker && cbc.previewItemCb != null )
 						{
 							cbc.previewItemCb( flavor )
 							UpdateFooterOptions()
 						}
-                            
 
 						break
 					}
@@ -1675,11 +1669,9 @@ asset function CustomizeMenu_GetRewardButtonImage( ItemFlavor flavor )
 			buttonImage = $"rui/menu/challenges/challenges_icon_levelup"
 			break
 
-                
 		case eItemType.sticker:
 			buttonImage = $"rui/menu/buttons/battlepass/sticker"
 			break
-                      
 
 		default:
 			Warning( "Unknown item type passed to CustomizeMenu_GetRewardButtonImage() " + DEV_GetEnumStringSafe( "eItemType", itemType ) )
@@ -1785,11 +1777,9 @@ asset function CustomizeMenu_GetGenericRewardButtonImage( ItemFlavor flavor )
 			buttonImage = $"rui/menu/challenges/challenges_icon_levelup"
 			break
 
-                
 		case eItemType.sticker:
 			buttonImage = $"rui/menu/buttons/battlepass/sticker"
 			break
-                      
 
 		default:
 			Warning( "Unknown item type passed to CustomizeMenu_GetRewardButtonImage() " + DEV_GetEnumStringSafe( "eItemType", itemType ) )

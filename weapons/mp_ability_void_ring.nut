@@ -66,7 +66,9 @@ const asset VOID_RING_BEAM_WARNING_FX = $"P_wpn_voidring_dmg_warning_beam"
                                                                 
 const asset VOID_RING_DESTROY_FX = $"P_wpn_voidring_exp"
 const asset VOID_RING_SHIELD_FX = $"P_wpn_voidring_shield"
+const asset VOID_RING_HEATWAVE_FX = $"P_wpn_heatwave_shield"
 const asset VOID_RING_DMG_PULSE_FX = $"P_wpn_voidring_dmg_pulse"
+const asset VOID_RING_HEATWAVE_DMG_PULSE_FX = $"P_wpn_heatwave_dmg_pulse"
 const asset VOID_RING_SHIELD_WARNING_FX = $"P_wpn_voidring_dmg_warning"
 const asset VOID_RING_FLARE_SHIELD_FX = $"P_wpn_voidring_fury_shield"
 const asset VOID_RING_FLARE_DMG_PULSE_FX = $"P_wpn_voidring_fury_dmg_pulse"
@@ -157,6 +159,10 @@ void function VOID_RING_Init()
 	PrecacheParticleSystem( VOID_RING_FLARE_SHIELD_WARNING_FX )
 	PrecacheParticleSystem( VOID_RING_POV_WPN_FX )
 	PrecacheParticleSystem( VOID_RING_3P_WPN_FX )
+                         
+                                                
+                                                          
+      
 
 	Remote_RegisterClientFunction( "ServerToClient_VoidRingHintDetection", "entity" )
 	Remote_RegisterClientFunction( "ServerToClient_VoidRingHintCancelDetection", "entity" )
@@ -209,6 +215,12 @@ bool function OnWeaponAttemptOffhandSwitch_void_ring( entity weapon )
 {
 	return true
 }
+
+int function VoidRing_GetVoidRingRadius()
+{
+	return GetCurrentPlaylistVarInt(  "void_ring_radius_overide", VOID_RING_RADIUS )
+}
+
 
 void function OnWeaponReadyToFire_void_ring (entity weapon )
 {
@@ -555,6 +567,11 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 
 		              		                                                                         
 		                	                                                
+		                           
+                          
+                                                              
+       
+
 		                  	                                                                            
 
 		                                               
@@ -565,12 +582,9 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 		                                                                  
 		                                                               
 
-		                                                                                                  
-		 
-			                                              
-		 
-		    
-			                                               
+		                                                                                                                                        
+
+		                                                             
 
 		           
 	 
@@ -613,6 +627,16 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 
 	            
  
+                         
+                                                                       
+ 
+                        
+              
+
+                                   
+
+ 
+      
 
                                    
                                    
@@ -628,13 +652,13 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 
 	             
 	                                      
-	            		                                    
+	            		                                                 
 
 
 	                                           
 	                                       
 	                                            
-	                	                   
+	                	                               
 	                	                        
 	              		                                                         
 
@@ -644,11 +668,19 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 	                  		                                          
 	                    	                                                                                                                                                      
 	             			                                               
+                          
+                      
+                                                               
+       
 	                 		                                             
 	                      	                                                   
 	                    	                                                     
 	                      	                                                 
 	                		                                                  
+                          
+                      
+                                                                           
+       
 	                 		                                                       
 
 	              			                                                     
@@ -1117,7 +1149,7 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 	                          
 	                              
 	 
-		                                                                                        
+		                                                                                                     
 	 
 
 	                                                       
@@ -1508,8 +1540,8 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
 	                                                                                                                                                         
 	                                                                                             
 
-	                                                                                                                                                             
-	                                                                                                                                                              
+	                                                                                                                                                                          
+	                                                                                                                                                                          
 
 	                                           
 
@@ -1584,6 +1616,12 @@ void function OnVoidRingPlanted( entity projectile, DeployableCollisionParams co
                                   
        
 
+                          
+                                                        
+                                                   
+                                  
+       
+
 	                               
 	 
 		                                                                                                                                       
@@ -1650,12 +1688,13 @@ void function ShowVoidRingRadius( entity weapon )
 
 	int fxHandle = -1
 	int fxPovHandle = -1
+	int voidRingRadius = VoidRing_GetVoidRingRadius()
 
 	if ( IsValid( weapon ) )
 	{
 		fxHandle = StartParticleEffectInWorldWithHandle( GetParticleSystemIndex( VOID_RING_PREVIEW_RING_FX ), weapon.GetMostRecentGrenadeImpactPos(), ZERO_VECTOR )
-		EffectSetControlPointVector( fxHandle, 1, <VOID_RING_RADIUS - VOID_RING_AR_RADIUS_OFFSET, 0, 0> )
-		EffectSetControlPointVector( fxHandle, 2, <VOID_RING_RADIUS, 0, 0> )                            
+		EffectSetControlPointVector( fxHandle, 1, < voidRingRadius  - VOID_RING_AR_RADIUS_OFFSET, 0, 0> )
+		EffectSetControlPointVector( fxHandle, 2, < voidRingRadius , 0, 0> )                            
 
 		                                                                                        
 		fxPovHandle = weapon.PlayWeaponEffectReturnViewEffectHandle( VOID_RING_POV_WPN_FX, $"", "fx_beam" )

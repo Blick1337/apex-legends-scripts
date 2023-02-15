@@ -14,6 +14,7 @@ global function Crafting_DoesPlayerOwnItem
                                             
                                                 
                                               
+                                                    
 
                                        
                                                 
@@ -35,9 +36,11 @@ global function Crafting_DoesPlayerOwnItem
                                                             
                                                          
 
-                            
-                                                                
+                   
+                                             
       
+
+                                                                
 
        
                                               
@@ -77,9 +80,7 @@ global function ServerCallback_PromptWorkbench
 global function ServerCallback_PromptAllWorkbenches
 global function ServerCallback_UpdateWorkbenchVars
 
-                            
 global function ServerCallback_Crafting_Notify_Player_On_Obit
-      
 
 global function Crafting_OnMenuItemSelected
 global function Crafting_OnWorkbenchMenuClosed
@@ -89,6 +90,7 @@ global function ServerCallback_SetCraftingIndexForSpectator
 
 global function MarkNextStepForPlayer
 global function MarkAllWorkbenches
+global function DestroyWorkbenchMarkers
 
 global function Crafting_GetWorkbenchTitleString
 global function Crafting_GetWorkbenchDescString
@@ -211,10 +213,13 @@ const int MAX_ARMOR_EVO_TIER = 5
 global const int CRAFTING_AMMO_MULTIPLIER = 3
 global const int CRAFTING_AMMO_MULTIPLIER_SMALL = 2
 
-                            
+                                  
+const float IDEAL_END_FLAT_LENGTH = 27
+const vector IDEAL_END_TRACE_OFFSET_START = <0, 0, 72>
+const vector IDEAL_END_TRACE_OFFSET_END = <0, 0, -32>
+
                    
 global const float CRAFTING_OBIT_DEBOUNCE_PERIOD = 1.0
-      
 
                 
                                             
@@ -244,7 +249,7 @@ global enum eCraftingRotationStyle
 	LOADOUT_BASED,
 	SEASONAL,
                     
-       
+		PERK,
        
 	                                  
 	                
@@ -262,7 +267,6 @@ global enum eCraftingRandomization
 	COUNT_
 }
 
-                            
 enum eCrafting_Obit_NotifyType
 {
 	IS_CRAFTING_ITEM,
@@ -270,7 +274,6 @@ enum eCrafting_Obit_NotifyType
 	IS_REQUESTING_MATERIALS,
 	COUNT_
 }
-      
 
 global struct CraftingBundle
 {
@@ -311,7 +314,6 @@ struct WorkbenchData
 	bool isCrafting = false
 }
 
-                            
 struct CraftingItemInfo
 {
 	int index
@@ -320,7 +322,7 @@ struct CraftingItemInfo
 	bool canBuy
 	bool canAfford
 }
-      
+
 
                 
       
@@ -380,6 +382,7 @@ struct {
 	#if SERVER
 	                               			              
 	             				   			              
+	             				   			                         
 	                               			                  
 	                                     	                           
 	                     		   			               
@@ -390,9 +393,7 @@ struct {
 
 	     							                         
 
-                             
 	                                            
-       
 
                            
 	               					                      
@@ -406,12 +407,10 @@ struct {
 
 	bool craftingBetterSpectatorEnabled = false
 
-                             
-		bool crafting_obit_notify = true
-       
+	bool crafting_obit_notify = true
 
 	#if DEV
-		bool devPrintsOn = true
+		bool devPrintsOn = false
 	#endif
 } file
 
@@ -425,19 +424,9 @@ void function Crafting_Init()
 	                                                                                        
 	file.harvestersTeamUse 	= GetCurrentPlaylistVarBool( "harvesters_teamuse", true )
 
-        
-        
-                                                                                                          
-      
-                                                                                                           
-       
-      
-		file.craftingBetterSpectatorEnabled	= GetCurrentPlaylistVarBool( "crafting_use_better_specating", false )
-       
+	file.craftingBetterSpectatorEnabled	= GetCurrentPlaylistVarBool( "crafting_use_better_specating", true )
 
-                             
-		file.crafting_obit_notify = GetCurrentPlaylistVarBool( "crafting_obit_notify", true )
-       
+	file.crafting_obit_notify = GetCurrentPlaylistVarBool( "crafting_obit_notify", true )
 
 	#if SERVER
 		                                        
@@ -587,10 +576,8 @@ void function Crafting_RegisterNetworking()
 	Remote_RegisterClientFunction( "MarkAllWorkbenches" )
 	Remote_RegisterClientFunction( "MarkNextStepForPlayer", "entity" )
 
-                            
 	Remote_RegisterClientFunction( "ServerCallback_Crafting_Notify_Player_On_Obit", "entity", "int", 0, eCrafting_Obit_NotifyType.COUNT_, "int", 0, 256, "int", 0, 128, "int", -1, MAX_ARMOR_EVO_TIER + 1 )
 	Remote_RegisterServerFunction( "ClientCallback_Crafting_Notify_Teammates_On_Obit", 		  "int", 0, eCrafting_Obit_NotifyType.COUNT_, "int", 0, 256, "int", 0, 128, "int", -1, MAX_ARMOR_EVO_TIER + 1 )
-      
 
 	#if CLIENT
 	AddOnSpectatorTargetChangedCallback( Crafting_OnSpectateTargetChanged )
@@ -623,18 +610,6 @@ void function RegisterCraftingData()
 		item.index = i
 
 		item.category = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "category" ) )
-
-                     
-                                 
-                                                          
-    
-            
-    
-                                                                
-    
-            
-    
-        
 
 		string rotationStyle = GetDataTableString( dataTable, i, GetDataTableColumnByName( dataTable, "rotationStyle" ) )
 		item.rotationStyle = GetRotationStyleEnumFromString( rotationStyle )
@@ -1277,6 +1252,11 @@ void function Crafting_OnGameStatePlaying_Thread()
 	                                                     
  
 
+                                                             
+ 
+	                                     
+ 
+
        
                                            
  
@@ -1735,10 +1715,6 @@ void function PlayHarvesterIdleFX( entity harvester )
 
 	EndSignal( harvester, "OnDestroy", "HarvesterDisabled", "HarvesterStopFX" )
 
-	#if DEV
-	DEV_Crafting_Print( "FX: harvester idle FX START")
-	#endif
-
 	int attachId = harvester.LookupAttachment( "FX_INSIDE" )
 	int idleFx = StartParticleEffectOnEntity( harvester, GetParticleSystemIndex( HARVESTER_IDLE_FX ), FX_PATTACH_POINT_FOLLOW, attachId )
 
@@ -1747,9 +1723,6 @@ void function PlayHarvesterIdleFX( entity harvester )
 		{
 			if ( IsValid( idleFx ) )
 			{
-				#if DEV
-				DEV_Crafting_Print( "FX: harvester idle FX END")
-				#endif
 				EffectStop( idleFx, false, true )
 			}
 		}
@@ -2231,7 +2204,6 @@ void function CreateHarvesterWorldIcon( entity harvester )
 	file.harvesterRuiTable[harvester] <- rui
 }
 
-                            
 void function ServerCallback_Crafting_Notify_Player_On_Obit( entity notifyingPlayer, int notifyType, int cost, int itemIndex, int evoTier )
 {
 	if( !file.crafting_obit_notify )
@@ -2256,8 +2228,7 @@ void function ServerCallback_Crafting_Notify_Player_On_Obit( entity notifyingPla
 	array< string > obit_SpecialCategories = [
 		"evo",
                      
-           
-                 
+			"banner"
         
 	]
 
@@ -2312,14 +2283,10 @@ void function Crafting_Obit_Notify_Single( entity notifyingPlayer, int notifyTyp
 	}
 
                     
-                               
-  
-                                                
-  
-                                     
-  
-                                
-  
+	else if( itemRef == "banner" )
+	{
+		itemName = Localize( "#CRAFTING_ITEM_BANNER" )
+	}
        
 	else if ( SURVIVAL_Loot_IsRefValid( itemRef ) )
 	{
@@ -2348,7 +2315,7 @@ void function Crafting_Obit_Notify_Single( entity notifyingPlayer, int notifyTyp
 		}
 	}
 }
-      
+
 
 #endif          
 
@@ -2707,8 +2674,6 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 	                                                                             
 		      
 
-	                                       
-
 	                                          
 	                                                                                                
 
@@ -2723,9 +2688,6 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 
 		                                                                                                        
 	 
-
-	                                                         
-		                                                                
 
 	                               
 
@@ -2751,7 +2713,7 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
                                                                                     
                                        
 
-			                                                                                            
+			                                                                 
 
 			                                     
 		        
@@ -2761,7 +2723,7 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 	 
  
 
-                                                                                                                                                                   
+                                                                                                                        
  
 	                                                             
 	                                                                          
@@ -2798,20 +2760,24 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 
 
 		                          
-		                                                
 		                                                     
+		                                                     
+		                                                         
+			                                                   
 
 		                  
-		                                                                                                                                                                    
+		                                                                                                                                                                                                        
 		                                                                               
+		 
+			                                                     
 			                                                       
+		 
 
 		       
 			                    
 			 
 				                                                                                                      
 				                                                                           
-
 			 
 		            
 
@@ -2819,8 +2785,8 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 
 		                                                             
 
-		                                                                          
-		                                                       
+		                                                                                               
+		                                                            
 
 		                        
 	 
@@ -2828,7 +2794,7 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 	                                                                            
  
 
-                                                                                              
+                                                                                                                       
  
 	                                                           
 	                                                                                                        
@@ -2842,6 +2808,11 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 	                             
 	                                                 
 	                                      
+
+	       
+		                 
+			                               
+	             
 
 	                                
 
@@ -2879,6 +2850,11 @@ bool function Crafting_IsPlayerAtWorkbench( entity player )
 	                                                               
 	                                         
 	                                                                         
+
+	       
+		                 
+			                                         
+	             
 
 	                                                                                                
 
@@ -3342,13 +3318,7 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 
 			                              
 			 
-				                             
-				                                                                                                                                                               
-				                                                                                    
-				                    
-
-				                              
-				                                                                       
+				                                            
 
 				          
 					                                                 
@@ -3590,10 +3560,11 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 			                                    
 		 
                      
-                                                                          
-   
-                            
-   
+		                                     
+		 
+			                         
+			                         
+		 
         
 		    
 		 
@@ -3609,11 +3580,9 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 
 	                                                                                                                                                                                           
 
-                             
 	                                                
-		                               
-			                                                                                                                    
-       
+	                               
+		                                                                                                                    
 
 	                                              
 	                        
@@ -3649,59 +3618,56 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	                              
 		                                                     
 
-                    
-                                       
-  
-                                                                
-  
-       
-
 	                                                           
 
                                          
-                           
-                                       
-  
-                      
-  
+	                          
+	                                
+	                               
+	 
+		                                                 
+		                              
+			                    
 
-                    
-                                 
-                                
-  
-                                                   
-                                
-                       
-  
-       
-
-                    
-  
-                                         
-                                                             
-
-        
-
-                         
-                                                
+		                                    
+		 
+			                                                               
+			                                                      
+			 
+				                                        
+			 
+		 
 
 
-                     
-                                                             
-   
-                                                             
-    
-                      
-         
-    
-   
+	 
 
-                                                       
-                              
-                                                           
+	                   
+	 
+		                                       
+		                                                           
 
-        
-  
+		      
+
+		                       
+		                                              
+
+
+		                   
+		                                                           
+		 
+			                                                          
+			 
+				                  
+				     
+			 
+		 
+
+		                                                     
+		                            
+		                                                         
+
+		      
+	 
        
 
 	                                             
@@ -3736,13 +3702,13 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 	 
 
                     
-                                
-  
-                                                   
-   
-                                            
-   
-  
+	                               
+	 
+		                                                 
+		 
+			                                         
+		 
+	 
        
 
 	                                                                                                                      
@@ -3755,10 +3721,10 @@ ExtendedUseSettings function WorkbenchExtendedUseSettings( entity ent, entity pl
 		 
 
                      
-                                 
-   
-                                                                          
-   
+		                               
+		 
+			                                                                       
+		 
         
 
 		                               
@@ -4016,23 +3982,18 @@ array< string > function GenerateCraftingItemsInCategory( entity player, Craftin
 	}
 
                     
-                                                       
-  
-                                                                                                                                                         
-   
-                                                                  
-                              
-   
-                                                                                                                               
-   
-                                                                  
-                              
-   
-      
-   
-            
-   
-  
+	if ( craftingRotation == eCraftingRotationStyle.PERK )
+	{
+		if ( categoryToCheck.category == "banner" && ( Perk_CanBuyExpiredBanners( player ) || Perks_DoesPlayerHavePerk( player, ePerkIndex.BANNER_CRAFTING ) ) )
+		{
+			CraftingBundle bundle = GetBundleForCategory( categoryToCheck )
+			return bundle.itemsInBundle
+		}
+		else
+		{
+			return []
+		}
+	}
        
 
 	if ( craftingRotation == eCraftingRotationStyle.LOADOUT_BASED )
@@ -4064,7 +4025,6 @@ array< string > function GenerateCraftingItemsInCategory( entity player, Craftin
 	return listToCheck
 }
 
-                            
 void function Crafting_Obit_Items_Notify_Teammates( entity notifyingplayer, int notifyType, int cost, int itemIndex, int evoTier = -1 )
 {
 	if( file.crafting_obit_notify )
@@ -4078,7 +4038,6 @@ void function Crafting_Obit_Items_Notify_Teammates( entity notifyingplayer, int 
 		#endif
 	}
 }
-      
 
 CraftingBundle function GetBundleForCategory( CraftingCategory categoryToCheck )
 {
@@ -4145,8 +4104,8 @@ bool function CheckCraftingRotation( int craftingRotation )
 		return true
 
                     
-                                                       
-             
+	if ( craftingRotation == eCraftingRotationStyle.PERK )
+		return true
        
 
 	                                  
@@ -4198,10 +4157,6 @@ bool function CheckCraftingRotation( int craftingRotation )
 	 
 		                                          
 	 
-
-	       
-		                                             
-	             
 
 	                                          
 	 
@@ -4265,20 +4220,7 @@ bool function CheckCraftingRotation( int craftingRotation )
 
 			                              
 			 
-				                                 
-				                                                                                                                                                                  
-				                                                                                                         
-				                    
-
-				                              
-				                                                                                                   
-				                                      
-
-				                                                                                               
-				                                                                                                                                
-				                             
-
-				                                                                  
+				                                                
 			 
 
 			                                         
@@ -4308,6 +4250,23 @@ bool function CheckCraftingRotation( int craftingRotation )
 	                                     
  
 
+                                                                                   
+ 
+	                                 
+	                                                                                                                                                               
+	                                                                                    
+	                    
+	                              
+
+	                                                                                                   
+
+	                                                                                               
+	                                                                                                                                                                 
+	                             
+
+	                                                                                         
+ 
+
        
                                                             
  
@@ -4325,7 +4284,6 @@ bool function CheckCraftingRotation( int craftingRotation )
  
       
 
-                            
                                                                                                                                          
  
 	                                
@@ -4377,7 +4335,6 @@ bool function CheckCraftingRotation( int craftingRotation )
 	                                                     
 	                                                    
  
-      
 
 #endif          
 
@@ -4474,9 +4431,9 @@ array<string> function Crafting_GetLootDataFromIndex( int index, entity player )
 	}
 
                     
-                                                                                                                          
+		if ( item.category == "ammo" || item.category == "evo" || item.category == "banner" )
       
-		if ( item.category == "ammo" || item.category == "evo" )
+                                                          
        
 			return validItemList
 
@@ -4503,6 +4460,37 @@ CraftingCategory ornull function GetCategoryForIndex( int index )
 
 	return null
 }
+
+                   
+#if SERVER
+                                                                           
+ 
+	                                                             
+
+	                           
+	 
+		                                                                                                                         
+		                                                     
+		                         
+	 
+ 
+
+                                                                        
+ 
+	                                                                          
+	                            
+		           
+
+	                                                                                  
+	                                         
+
+	                                                                                                                                                                                                                                                                    
+	                                                                
+
+	                        
+ 
+#endif
+      
 
 
 #if CLIENT
@@ -4896,17 +4884,11 @@ vector function GetCraftingColor()
                                               
 void function Crafting_Workbench_OpenCraftingMenu( entity workbench )
 {
-	#if DEV
-		DEV_Crafting_Print( "CRAFTING - OPEN MENU" )
-	#endif       
 	CommsMenu_Shutdown( false )
 	HideScoreboard()
 
 	if ( !CommsMenu_CanUseMenu( GetLocalViewPlayer(), eChatPage.CRAFTING ) )
 	{
-		#if DEV
-			DEV_Crafting_Print( "CRAFTING - CAN'T USE MENU" )
-		#endif       
 		return
 	}
 
@@ -4931,27 +4913,12 @@ void function Crafting_WorkbenchSpecatorMonitorUI_Thread( entity workbench )
 	EndSignal( GetLocalClientPlayer(), "crafting_kill_spectator_thread" )
 	EndSignal( workbench, "OnDestroy" )
 
-	bool showingMenu = true
-	while ( true )
+	while ( !IsSpectatingThirdPerson() )
 	{
 		WaitFrame()
-		if ( IsSpectatingThirdPerson() )
-		{
-			if ( showingMenu )
-			{
-				showingMenu = false
-				Crafting_Workbench_CloseCraftingMenu()
-			}
-		}
-		else
-		{
-			if ( !showingMenu )
-			{
-				showingMenu = true
-				Crafting_Workbench_OpenCraftingMenu( workbench )
-			}
-		}
 	}
+
+	Crafting_Workbench_CloseCraftingMenu()
 }
 
 bool function Crafting_OnMenuItemSelected( int index, var menuRui )
@@ -4995,20 +4962,13 @@ bool function Crafting_OnMenuItemSelected( int index, var menuRui )
 			                                                         
 		}
                      
-                                        
-   
-                                             
-                 
-       
-                  
-   
-                                              
-   
-                                                                           
-                 
-       
-                  
-   
+		else if (  item.category == "banner" )
+		{
+			if ( Perk_CanBuyExpiredBanners( player ) )
+				canBuy = true
+			else
+				canBuy = false
+		}
         
 	}
 	else
@@ -5031,7 +4991,6 @@ bool function Crafting_OnMenuItemSelected( int index, var menuRui )
 		RuiSetGameTime( bundle.attachedRui[index], "invalidSelectionTime", Time() )
 		RuiSetGameTime( menuRui, "invalidSelectionTime", Time() )
 
-                              
 		                                                                        
 		if( file.crafting_obit_notify )
 		{
@@ -5041,7 +5000,6 @@ bool function Crafting_OnMenuItemSelected( int index, var menuRui )
 				Crafting_Obit_Items_Notify_Teammates( player, eCrafting_Obit_NotifyType.IS_REQUESTING_MATERIALS, materialsNeeded, index )
 			}
 		}
-        
 
 		return false
 	}
@@ -5052,9 +5010,6 @@ bool function Crafting_OnMenuItemSelected( int index, var menuRui )
 
 void function TryCloseCraftingMenu()
 {
-	#if DEV
-		DEV_Crafting_Print( "CRAFTING - TRY CLOSE" )
-	#endif       
 	if ( GetLocalClientPlayer() == GetLocalViewPlayer() )
 	{
 		Crafting_Workbench_CloseCraftingMenu()
@@ -5070,9 +5025,6 @@ void function TryCloseCraftingMenu()
 
 void function TryCloseCraftingMenuForSpectator_Thread()
 {
-	#if DEV
-		DEV_Crafting_Print( "CRAFTING - PRE WAIT CLOSE" )
-	#endif       
 	wait 0.2
 	Signal(GetLocalClientPlayer(), "crafting_kill_spectator_thread")
 	Crafting_Workbench_CloseCraftingMenu()
@@ -5080,9 +5032,6 @@ void function TryCloseCraftingMenuForSpectator_Thread()
 
 void function ServerCallback_SetCraftingIndexForSpectator( int index )
 {
-	#if DEV
-		DEV_Crafting_Print( "CRAFTING - SETTING INDEX" )
-	#endif       
 	if ( !IsSpectating() )
 		return
 
@@ -5091,9 +5040,6 @@ void function ServerCallback_SetCraftingIndexForSpectator( int index )
 
 void function Crafting_Workbench_CloseCraftingMenu( )
 {
-	#if DEV
-		DEV_Crafting_Print( "CRAFTING - CLOSE MENU" )
-	#endif       
 	if ( !IsCommsMenuActive() )
 		return
 	if ( CommsMenu_GetCurrentCommsMenu() != eCommsMenuStyle.CRAFTING )
@@ -5176,7 +5122,7 @@ void function SetupProgressWaypoint_Internal( entity waypoint )
 	RuiSetString( waypoint.wp.ruiHud, "pingPromptForOwner", Localize( "#CRAFTING_PROMPT" ) )
 	RuiSetBool( waypoint.wp.ruiHud, "reverseProgress", false )
 	RuiSetBool( waypoint.wp.ruiHud, "iconColorOverride", true )
-	RuiSetFloat3( waypoint.wp.ruiHud, "iconColor", (GetKeyColor( COLORID_LOOT_TIER0 + waypoint.GetWaypointInt( 5 ) ) / 255.0) )
+	RuiSetFloat3( waypoint.wp.ruiHud, "iconColor", Crafting_GetWaypointColor( waypoint ) )
 
 	RuiTrackGameTime( waypoint.wp.ruiHud, "captureEndTime", waypoint, RUI_TRACK_WAYPOINT_GAMETIME, RUI_TRACK_INDEX_CAPTURE_END_TIME )
 	RuiTrackFloat( waypoint.wp.ruiHud, "captureTimeRequired", waypoint, RUI_TRACK_WAYPOINT_FLOAT, RUI_TRACK_INDEX_REQUIRED_TIME )
@@ -5201,7 +5147,7 @@ void function PlayWorkbenchPrintingFX( entity waypoint, string animIndex )
 
 	int attachId = workbench.LookupAttachment( "FX_DOOR_OPEN_" + animIndex )
 	int fxHandle = StartParticleEffectOnEntity( workbench, GetParticleSystemIndex( WORKBENCH_PRINTING_FX ), FX_PATTACH_POINT_FOLLOW, attachId )
-	vector lootTier = GetFXRarityColorForTier( waypoint.GetWaypointInt( 5 ) )
+	vector lootTier = Crafting_GetWaypointColor( waypoint )
 
 	EffectSetControlPointVector( fxHandle, 1, lootTier )
 
@@ -5214,6 +5160,25 @@ void function PlayWorkbenchPrintingFX( entity waypoint, string animIndex )
 	)
 
 	WaitForever()
+}
+
+vector function Crafting_GetWaypointColor( entity waypoint, bool isVFX = false )
+{
+	switch( waypoint.GetWaypointInt( 6 ) )
+	{
+		case 1:          
+			return SrgbToLinear( GetKeyColor( COLORID_HUD_HEAL_COLOR ) / 255.0 )
+			break
+		case 0:
+		default:
+			if( isVFX )
+				return GetFXRarityColorForTier( waypoint.GetWaypointInt( 5 ) )
+			else
+				return ( GetKeyColor( COLORID_LOOT_TIER0 + waypoint.GetWaypointInt( 5 ) ) / 255.0 )
+			break
+	}
+
+	return ( GetKeyColor( COLORID_LOOT_TIER0 + waypoint.GetWaypointInt( 5 ) ) / 255.0 )
 }
 
 void function ServerCallback_UpdateWorkbenchVars()
@@ -5294,9 +5259,9 @@ void function Crafting_PopulateItemRuiAtIndex( var rui, int index )
 	int cost
 	bool canBuy = true
                     
-                                                                                                                                                                
+		if ( validItemList.len() != 0 && item.category != "evo" && item.category != "banner" && item.category != "event_special" )
       
-		if ( validItemList.len() != 0 && item.category != "evo" )
+                                                           
        
 	{
 		foreach ( ref in validItemList )
@@ -5368,36 +5333,21 @@ void function Crafting_PopulateItemRuiAtIndex( var rui, int index )
 		}
 	}
                     
-                                                                   
-   
-                                                
-                                                                             
-                                       
+		else if ( validItemList.len() != 0 && item.category == "banner" )
+		{
+			cost = item.itemToCostTable[validItemList[0]]
+			RuiSetImage( rui, "icon", $"rui/hud/gametype_icons/survival/perk_craftable_banner_double_generic" )
+			RuiSetBool( rui, "isWeapon", false )
 
-                                                           
-    
-                 
-    
-       
-    
-                  
-    
-   
-                                                                         
-   
-                                                
-                                                                                    
-                                       
-
-                                                                                         
-    
-                 
-    
-       
-    
-                  
-    
-   
+			if ( Perk_CanBuyExpiredBanners( GetLocalViewPlayer() ) )
+			{
+				canBuy = true
+			}
+			else
+			{
+				canBuy = false
+			}
+		}
        
 	else
 	{
@@ -5706,12 +5656,8 @@ void function Update_CraftingItems_Availabilities()
                                                       
 
                                                                                                                                            
-                                
-                                                                                   
-                                   
-                                                                                                                                                                     
-                                                                                      
-                      
+
+                                                           
 
                                             
    

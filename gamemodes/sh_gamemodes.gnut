@@ -134,7 +134,7 @@ global enum eGameModes
 	                  					  
 	GAMEMODE_FREELANCE_ID = 3,
                        
-	ARENAS_ID				= 4,
+                  
       
                         
 	CONTROL_ID				= 5,
@@ -145,11 +145,22 @@ global enum eGameModes
 	_count,
 }
 
+                                                                     
+global enum eWinReason
+{
+	DEFAULT,
+	SCORE_LIMIT,
+	TIME_LIMIT,
+	ELIMINATION,
+	LOCKOUT,                                                                                
+	_count
+}
+
 const table<string, int> gameModesStringToIdMap = {
 	[ TEAM_DEATHMATCH ] 					= eGameModes.TEAM_DEATHMATCH_ID,
 	[ SURVIVAL ]							= eGameModes.SURVIVAL_ID,
                        
-	[ GAMEMODE_ARENAS ]						= eGameModes.ARENAS_ID,
+                                                 
       
                         
 	[ GAMEMODE_CONTROL ]					= eGameModes.CONTROL_ID,
@@ -219,6 +230,12 @@ void function GameModes_Init()
 #endif
       
 
+                                 
+       
+                                                                                                                       
+       
+      
+
 	#if CLIENT
 		RegisterSignal( "GameModes_CompletedResolutionCleanup" )
 		GameMode_OverrideCompletedResolutionCleanupFunc( GameModes_DefaultCompletedResolutionCleanupFunc )
@@ -227,17 +244,17 @@ void function GameModes_Init()
 
 
                        
-	gameMode = GAMEMODE_ARENAS
-	GamemodeSettings arenas = GameMode_Create( gameMode )
-	GameMode_SetName( gameMode, "#GAMEMODE_ARENAS" )
-	GameMode_SetGameModeAnnouncement( gameMode, "ffa_modeDesc" )
-	GameMode_SetDesc( gameMode, "#GAMEMODE_ARENAS_DESC" )
-	GameMode_SetIcon( gameMode, $"vgui/burncards/burncard_group_icon_weapons" )
-	GameMode_SetDefaultScoreLimits( gameMode, 50, 10 )
-	GameMode_SetDefaultTimeLimits( gameMode, 30, 0.0 )
-	GameMode_AddScoreboardColumnData( gameMode, "#SCOREBOARD_PILOT_KILLS", PGS_PILOT_KILLS, 2 )
-	GameMode_SetColor( gameMode, [147, 204, 57, 255] )
-	GameMode_SetWinBy2Rules( gameMode, 3, 3 )
+                           
+                                                      
+                                                 
+                                                             
+                                                      
+                                                                            
+                                                   
+                                                   
+                                                                                            
+                                                   
+                                          
       
 
                         
@@ -286,6 +303,12 @@ void function GameModes_Init()
 	GameMode_SetTimedEventsEnabled( gameMode, true )
 	#if UI
 		AddCallback_UI_GameModeRulesDialog_PopulateTabsForMode( FreeDM_PopulateAboutText, GAMEMODE_FREEDM )
+	#endif      
+      
+
+                    
+	#if UI
+		AddCallback_UI_GameModeRulesDialog_PopulateTabsForMode( TDM_PopulateAboutText, TEAM_DEATHMATCH )
 	#endif      
       
 
@@ -769,11 +792,7 @@ float function GameMode_GetLoadoutSelectTime()
 #if CLIENT
 bool function GameMode_DoesModeDisplayIconsForAllFriendlyTeams( string mode )
 {
-                         
-		if ( mode == GAMEMODE_CONTROL )
-			return true
-       
-	return false
+	return AllianceProximity_IsUsingAlliances()
 }
 #endif          
 

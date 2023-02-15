@@ -231,7 +231,12 @@ void function UpdateCommonScoreRuiTracking( var rui, entity player )
 	RuiTrackInt( rui, "killCount", player, RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "kills" ) )
 	RuiTrackInt( rui, "damageDealt", player, RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "damageDealt" ) )
 
-	if ( IsRankedGame() && !IsArenaMode() )
+	bool isValidMode = true
+                        
+                                         
+       
+
+	if ( IsRankedGame() && isValidMode )
 	{
 		RuiTrackInt( rui, "participationCount", player, RUI_TRACK_SCRIPT_NETWORK_VAR_INT, GetNetworkedVariableIndex( "kill_participation" ) )
 	}
@@ -427,8 +432,8 @@ void function ClGameStateThink_WaitingForPlayers( entity player )
 			string waitingForPlayersSound = WAITING_FOR_PLAYERS_COUNTDOWN_SOUND
 
                           
-				if( IsArenaMode() )
-					waitingForPlayersSound = ARENAS_WAITING_FOR_PLAYERS_COUNTDOWN_SOUND
+                       
+                                                                        
          
 
 			EmitSoundOnEntity( player, waitingForPlayersSound )
@@ -638,6 +643,7 @@ void function ClGameState_Changed( entity playerEnt, int newVal )
 			break
 
 		case eGameState.WaitingForPlayers:
+			ClearCrosshairPriority( crosshairPriorityLevel.POSTMATCH )
 			break
 
 		case eGameState.PickLoadout:
@@ -673,6 +679,7 @@ void function ClGameState_Changed( entity playerEnt, int newVal )
 			break
 
 		case eGameState.Playing:
+			ClearCrosshairPriority( crosshairPriorityLevel.POSTMATCH )
 			ClearCrosshairPriority( crosshairPriorityLevel.PREMATCH )
 			                                         
 			if ( file.letterBoxRui != null )
@@ -701,6 +708,7 @@ void function ClGameState_Changed( entity playerEnt, int newVal )
 			break
 
 		case eGameState.Resolution:
+			SetCrosshairPriorityState( crosshairPriorityLevel.POSTMATCH, CROSSHAIR_STATE_HIDE_ALL )
 			ResetReconnectParametersAsync()
 			                                              
 			break

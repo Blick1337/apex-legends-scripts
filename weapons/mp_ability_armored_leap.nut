@@ -171,7 +171,7 @@ const int ARMORED_LEAP_REFUND_AMOUNT_FRAC 					= 85
 const int CASTLE_WALL_SHIELD_ANCHOR_HEALTH 						= 750	         
 const int CASTLE_WALL_MAX_NUM_CASTLES							= 1
 const float CASTLE_WALL_SPAWN_OFFSET 							= 50	                                            
-const float CASTLE_WALL_SPAWN_GROUND_CHECK_DIST 				= 50
+const float CASTLE_WALL_SPAWN_GROUND_CHECK_DIST 				= 100
 const float CASTLE_WALL_SPAWN_OFFSET_STEP 						= 10
 const float CASTLE_WALL_SPAWN_UPTRACE_OFFSET 					= 32
 const float CASTLE_WALL_SHIELD_THICKNESS 						= 5
@@ -229,7 +229,7 @@ const float CASTLE_SNAKE_DROP_TEST_HEIGHT_MAX 					= 100
                                                    
 const float CASTLE_WALL_ALLY_OBJECT_DESTROYED_RADIUS 			= 35
 const float CASTLE_WALL_ALLY_OBJECT_DESTROYED_REFUND_TIME 		= 15
-const float CASTLE_WALL_ALLY_OBJECT_DESTROYED_REFUND_FRAC 		= 0.75                    
+const float CASTLE_WALL_ALLY_OBJECT_DESTROYED_REFUND_FRAC 		= 0.95                    
 
                             
 const float ARMORED_LEAP_MAX_TARGETING_DIRECTION_RANGE 			= 2500
@@ -423,6 +423,12 @@ enum eAnchorType
 	_count
 }
 
+struct ArmoredLeapPhaseChangeData
+{
+	int oldPhase
+	int newPhase
+}
+
 struct
 {
 	                         
@@ -463,6 +469,7 @@ struct
 	table<entity, bool> threatVisionActive = {}
 	table<entity, bool> isTargetPlacementActive = {}
 	table<entity, bool> allyIsInDanger = {}
+	table<entity, bool> ultDeployed = {}
 
 	bool allowStartOnMovers 		= ARMORED_LEAP_ALLOW_START_ON_MOVERS_DEFAULT
 	bool allowEndOnMovers 			= ARMORED_LEAP_ALLOW_END_ON_MOVERS_DEFAULT
@@ -498,6 +505,8 @@ struct
 		var visorRui = null
 		int currentArmoredLeapPhase = PLAYER_ARMORED_LEAP_PHASE_NONE
 	#endif
+
+	table< entity, array< ArmoredLeapPhaseChangeData > > armoredLeapPhaseChangeQueue
 
 } file
 
@@ -574,8 +583,11 @@ void function MpAbilityArmoredLeap_Init()
 	RegisterSignal( "ArmoredLeap_StartArrivalPhase" )
 	RegisterSignal( "ArmoredLeap_EndArrivalPhase" )
 	RegisterSignal( "ArmoredLeap_Interrupted" )
+	RegisterSignal( "NewcastlePassiveEnd" )
 
 	AddCallback_PlayerCanUseZipline( ArmoredLeap_CanUseZipline )
+
+	AddCallback_OnPassiveChanged( ePassives.PAS_AXIOM, OnNewcastlePassiveChanged )
 
 	#if SERVER
 		                                                                                             
@@ -645,6 +657,26 @@ void function MpAbilityArmoredLeap_Init()
 	file.hasVisorThreatDetection	= GetCurrentPlaylistVarBool( "newcastle_hasVisorThreat", VISOR_THREAT_DETECTION )
 }
 
+void function OnNewcastlePassiveChanged( entity player, int passive, bool didHave, bool nowHas )
+{
+	if ( !IsAlive( player ) )
+		return
+
+	if ( didHave )
+	{
+		player.Signal( "NewcastlePassiveEnd" )
+		
+		if ( player in file.armoredLeapPhaseChangeQueue )
+			delete file.armoredLeapPhaseChangeQueue[player]
+	}
+
+	if ( nowHas )
+	{
+		array< ArmoredLeapPhaseChangeData > data
+		file.armoredLeapPhaseChangeQueue[player] <- data
+		thread ArmoredLeapPhaseChangeQueueProcessor_Thread( player )
+	}
+}
 
 void function OnWeaponActivate_ability_armored_leap( entity weapon )
 {
@@ -798,6 +830,7 @@ var function OnWeaponPrimaryAttack_ability_armored_leap( entity weapon, WeaponPr
 	file.currentArmoredLeapPhase = PLAYER_ARMORED_LEAP_PHASE_NONE
 	#endif
 
+
 	thread ArmoredLeap_Master_Thread( player, info.finalPos, info.airPos, info.hitEnt )
 
 	Signal( player, "StopArmoredLeapTargetPlacement" )
@@ -843,6 +876,11 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 	vector startpoint = player.GetOrigin()
 	table<entity, bool> didUltDeployOnInterrupted
 	didUltDeployOnInterrupted[player] <- false
+	table<entity, int > lastMovementPhase
+
+	file.ultDeployed[player] <- false
+
+	thread ArmoredLeap_CheckForUpdraft_Thread( player )                                                                                  
 
 	#if SERVER
 
@@ -964,6 +1002,16 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 							                                                               
 							                                                 
 						 
+					 
+				 
+
+				                                                           
+				                                                                                                                                    
+				                                
+				 
+					                               
+					 
+						                                                 
 					 
 				 
 				#endif
@@ -1305,6 +1353,10 @@ void function ArmoredLeap_Master_Thread( entity player, vector endPoint, vector 
 			                                                
 			      
 		 
+
+		                                                                                                                 
+		                                                                                                                                     
+		                                         
 	#endif
 
 	waitthread ArmoredLeap_ReturnControlToPlayerAfterDelay( player, ARMORED_LEAP_RECOVERY_TIME )
@@ -1340,7 +1392,7 @@ bool function WasArmoredLeapInterrupted( entity player, table signalData )
 #if SERVER
                                                
  
-	                                                                                                                                                                                                                                                                                   
+	                                                                                                                                                                                                                                                                                                   
 	                                                                                                                                            
 	 
 		                                                   
@@ -1349,10 +1401,13 @@ bool function WasArmoredLeapInterrupted( entity player, table signalData )
 			                            
 			                                 
 
+			                                
+
 			           
 		 
 	 
 
+	                                                                                              
 	            
  
 
@@ -1460,6 +1515,7 @@ void function ArmoredLeap_LaunchPrep_Thread( entity player, vector endPoint, vec
 	EndSignal( player, "OnDeath" )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
 	EndSignal( player, "Interrupted" )
 
 	#if SERVER
@@ -1523,6 +1579,7 @@ void function ArmoredLeap_LaunchHoverPrep_Thread( entity player, vector endPoint
 	EndSignal( player, "OnDeath" )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
 	EndSignal( player, "Interrupted" )
 
 	if( !IsValid( player ) )
@@ -1597,6 +1654,7 @@ void function ArmoredLeap_LaunchToAirPosition( entity player, entity mover, vect
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
 	EndSignal( player, "ArmoredLeap_AirLaunchComplete" )
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
 	EndSignal( player, "Interrupted" )
 
 	if ( !IsValid( player ) )
@@ -1726,9 +1784,11 @@ void function ArmoredLeap_SlamToGroundPosition( entity player, entity mover, vec
 	EndSignal( player, "BleedOut_OnStartDying" )
 	EndSignal( player, "ArmoredLeap_GroundDiveComplete" )
 	EndSignal( player, "ArmoredLeap_LeapComplete" )
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
 	player.EndSignal( "ArmoredLeap_StartArrivalPhase" )
 	player.EndSignal( "ArmoredLeap_Interrupted" )
 	player.EndSignal( "Interrupted" )
+
 
 	endPoint = endPoint + ARMORED_LEAP_ENDPOINT_BUFFER                                                                 
 	float dist = Distance( player.GetOrigin(), endPoint )
@@ -1915,6 +1975,7 @@ void function ArmoredLeap_ReturnControlToPlayerAfterDelay( entity player, float 
 	EndSignal( player, "OnDeath" )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
 	EndSignal( player, "Interrupted" )
 
 	OnThreadEnd(
@@ -1956,6 +2017,7 @@ void function ArmoredLeap_CameraRecoveryDelay( entity player, float delay )
 	EndSignal( player, "OnDeath" )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
 	EndSignal( player, "Interrupted" )
 
 	OnThreadEnd(
@@ -1986,59 +2048,100 @@ void function CodeCallback_ArmoredLeapPhaseChange( entity player, int newArmored
 		printt( FUNC_NAME() + " got code callback for player: " + player.GetPlayerName() + " phase is: " + armoredLeapPhaseToStringMap[newArmoredLeapPhase] + " old phase is: " + armoredLeapPhaseToStringMap[oldArmoredLeapPhase] )
 	#endif
 
-	switch( oldArmoredLeapPhase )
-	{
-		case PLAYER_ARMORED_LEAP_PHASE_PREP:
-			player.Signal( "ArmoredLeap_EndPrepPhase" )
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR:
-			player.Signal( "ArmoredLeap_EndTravelAirPhase" )
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR_HOVER:
-			player.Signal( "ArmoredLeap_EndTravelAirHoverPhase" )
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_GROUND:
-			player.Signal("ArmoredLeap_EndTravelGroundPhase")
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_ARRIVAL:
-			player.Signal( "ArmoredLeap_EndArrivalPhase" )
-			break
-	}
+	ArmoredLeapPhaseChangeData data
+	data.oldPhase = oldArmoredLeapPhase
+	data.newPhase = newArmoredLeapPhase
+	if ( player in file.armoredLeapPhaseChangeQueue )
+		file.armoredLeapPhaseChangeQueue[player].insert( 0, data )
+}
 
-	switch( newArmoredLeapPhase )
-	{
-		case PLAYER_ARMORED_LEAP_PHASE_PREP:
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR:
-			player.Signal( "ArmoredLeap_StartTravelAirPhase", { interrupted = false } )
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR_HOVER:
-			player.Signal( "ArmoredLeap_StartTravelAirHoverPhase", { interrupted = false } )
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_GROUND:
-			player.Signal( "ArmoredLeap_StartTravelGroundPhase", { interrupted = false } )
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_ARRIVAL:
-			player.Signal( "ArmoredLeap_StartArrivalPhase", { interrupted = false } )
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_NONE:
-			player.Signal( "ArmoredLeap_LeapComplete", { interrupted = false } )
-			break
-		case PLAYER_ARMORED_LEAP_PHASE_INTERRUPTED:
-			player.Signal( "ArmoredLeap_Interrupted", { interrupted = true } )
-			#if SERVER
-			                                                                                                                                         
-			                                                                                                                  
-			                                                                                        
-			#endif         
-			break
-	}
+                                                                                                                                                                 
+                                                                                                                            
+                                                                                                                                                                        
+                                                                                                                                                                             
+                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                                       
+                                                                                                       
+void function ArmoredLeapPhaseChangeQueueProcessor_Thread( entity player )
+{
+	Assert ( IsNewThread(), "Must be threaded off." )
+	player.EndSignal( "OnDestroy" )
+	player.EndSignal( "NewcastlePassiveEnd" )
 
-	#if SERVER
-	                                                           
-	#elseif CLIENT
-	file.currentArmoredLeapPhase = newArmoredLeapPhase
-	#endif
+	while ( true )
+	{
+		if ( player in file.armoredLeapPhaseChangeQueue )
+		{
+			if ( file.armoredLeapPhaseChangeQueue[player].len() > 0 )
+			{
+				ArmoredLeapPhaseChangeData phaseChangeToProcess = file.armoredLeapPhaseChangeQueue[player].pop()
+
+				int oldArmoredLeapPhase = phaseChangeToProcess.oldPhase
+				int newArmoredLeapPhase = phaseChangeToProcess.newPhase
+
+				#if DEV
+				if ( DEBUG_PHASE_CHANGES )
+					printt( FUNC_NAME() + " OldPhase: " + oldArmoredLeapPhase + " NewPhase: " + newArmoredLeapPhase )
+				#endif
+
+				switch( oldArmoredLeapPhase )
+				{
+					case PLAYER_ARMORED_LEAP_PHASE_PREP:
+						player.Signal( "ArmoredLeap_EndPrepPhase" )
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR:
+						player.Signal( "ArmoredLeap_EndTravelAirPhase" )
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR_HOVER:
+						player.Signal( "ArmoredLeap_EndTravelAirHoverPhase" )
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_GROUND:
+						player.Signal("ArmoredLeap_EndTravelGroundPhase")
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_ARRIVAL:
+						player.Signal( "ArmoredLeap_EndArrivalPhase" )
+						break
+				}
+
+				switch( newArmoredLeapPhase )
+				{
+					case PLAYER_ARMORED_LEAP_PHASE_PREP:
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR:
+						player.Signal( "ArmoredLeap_StartTravelAirPhase", { interrupted = false } )
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_AIR_HOVER:
+						player.Signal( "ArmoredLeap_StartTravelAirHoverPhase", { interrupted = false } )
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_TRAVEL_GROUND:
+						player.Signal( "ArmoredLeap_StartTravelGroundPhase", { interrupted = false } )
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_ARRIVAL:
+						player.Signal( "ArmoredLeap_StartArrivalPhase", { interrupted = false } )
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_NONE:
+						player.Signal( "ArmoredLeap_LeapComplete", { interrupted = false } )
+						break
+					case PLAYER_ARMORED_LEAP_PHASE_INTERRUPTED:
+						player.Signal( "ArmoredLeap_Interrupted", { interrupted = true } )
+						#if SERVER
+						                                                                                                                                         
+						                                                                                                                  
+						                                                                                        
+						#endif         
+						break
+				}
+
+				#if SERVER
+					                                                           
+				#elseif CLIENT
+					file.currentArmoredLeapPhase = newArmoredLeapPhase
+				#endif
+			}
+		}
+
+		WaitFrame()
+	}
 }
 
                                                                                                     
@@ -2190,6 +2293,30 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 	return false
 }
 
+void function ArmoredLeap_CheckForUpdraft_Thread( entity player )
+{
+	EndSignal( player, "OnDeath" )
+	EndSignal( player, "OnDestroy" )
+	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "ArmoredLeap_LeapComplete")
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
+	EndSignal( player, "Interrupted" )
+
+	while(true)
+	{
+		if( !IsValid( player ) )
+			return
+
+		if( player.Player_IsInsideUpdraftTrigger() )
+		{
+			Signal( player,"ArmoredLeap_LeapComplete" )
+			return
+		}
+
+		WaitFrame()
+	}
+}
+
 
 #if DEV
 #if SERVER
@@ -2198,6 +2325,7 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 	                              
 	                                
 	                                            
+	                                                 
 	                                              
 
 	                        
@@ -2225,6 +2353,7 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 	                                                  
 	                                                         
 	                                              
+	                                                 
 	                                  
 
 	                         
@@ -2279,6 +2408,7 @@ bool function ArmoredLeap_IsInterrupted( entity player, vector destination )
 	                              
 	                                
 	                                            
+	                                                 
 	                                  
 
 	                                                                  
@@ -2554,6 +2684,7 @@ void function ArmoredLeap_CreateAllyRescueHud( entity allyTarget, entity player 
 	player.EndSignal( "OnDeath" )
 	player.EndSignal( "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
 
 	allyTarget.EndSignal( "OnDeath" )
 	allyTarget.EndSignal( "OnDestroy" )
@@ -2596,6 +2727,7 @@ void function ArmoredLeap_TargetPlacementTracking_Thread( entity ent )
 	EndSignal( ent, "OnDeath" )
 	EndSignal( ent, "OnDestroy" )
 	EndSignal( ent, "BleedOut_OnStartDying" )
+	EndSignal( ent, "DeathTotem_PreRecallPlayer" )
 	EndSignal( ent, "StopArmoredLeapTargetPlacement" )                                                           
 	EndSignal( ent, "ArmoredLeap_LeapComplete" )
 	EndSignal( ent, "ArmoredLeap_Interrupted" )
@@ -2719,9 +2851,10 @@ void function ArmoredLeap_SetAllyTargetAndLKP( entity ent, ArmoredLeapTargetInfo
 	{
 		file.allyTarget[ent] <- targetAlly
 		vector allyEndPos = targetAlly.GetOrigin() + < 0,0,5 >                           
+		bool inPhaseShift = targetAlly.IsPhaseShifted()
 
 		TraceResults groundTrace = TraceLine( allyEndPos, allyEndPos + <0,0,-1000>, ignoreArray, TRACE_MASK_ABILITY, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )
-		if( groundTrace.fraction < 1 )                                           
+		if( groundTrace.fraction < 1 || inPhaseShift )                                           
 		{
 			entity hitEnt = groundTrace.hitEnt
 			                                                                                                                                               
@@ -2787,9 +2920,10 @@ vector function ArmoredLeap_GetUpdatedLKP( entity player, vector airPoint, vecto
 		{
 			array<entity> ignoreArray = ArmoredLeapIgnoreArray()
 			vector adjustedEndPos = file.allyTarget[player].GetOrigin() + < 0,0,5 >                           
+			bool inPhaseShift = file.allyTarget[player].IsPhaseShifted()
 
 			TraceResults groundTrace = TraceLine( adjustedEndPos, adjustedEndPos + <0,0,-1000>, ignoreArray, TRACE_MASK_ABILITY, TRACE_COLLISION_GROUP_PLAYER_MOVEMENT )                                   
-			if( groundTrace.fraction < 1 )                                           
+			if( groundTrace.fraction < 1 && !inPhaseShift )                                           
 			{
 				adjustedEndPos = groundTrace.endPos + < 0,0,5 >
 				float dist2D = Distance2D( airPoint, adjustedEndPos )
@@ -2841,6 +2975,8 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 	player.EndSignal( "OnDeath" )
 	player.EndSignal( "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
+
 	EndSignal( player, "VisorMode_DeActivate" )
 	EndSignal( player, "ArmoredLeap_LeapComplete" )
 	EndSignal( player, "ArmoredLeap_Interrupted" )
@@ -3116,7 +3252,7 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 			if( ally == player )
 				continue
 
-			if( IsValid(ally)  )                       
+			if( IsValid( ally )  )
 			{
 				                                                             
 				                                                                                                               
@@ -3126,16 +3262,25 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 					if( ally in allyRui )
 					{
 						var oldRui = allyRui[ally]
-						ruis.fastremovebyvalue( oldRui )                                                                                              
-						RuiDestroyIfAlive( oldRui )
+
+						if( ruis.contains(oldRui) )
+							ruis.fastremovebyvalue( oldRui )                                                                                              
+
+						if( oldRui != null )
+							RuiDestroyIfAlive( oldRui )
+
+						allyRui[ally] = null
 					}
 					continue
 				}
 
-				if( !(ally in allyRui) )
+				if( !( ally in allyRui ) )
 				{
-					allyRui[ally] <- CreateCockpitRui( $"ui/ally_hint_target.rpak", HUD_Z_BASE )
-					ruis.append( allyRui[ally] )
+					if( team == allyTeam || ally == allyTarget )
+					{
+						allyRui[ally] <- CreateCockpitRui( $"ui/ally_hint_target.rpak", HUD_Z_BASE )
+						ruis.append( allyRui[ally] )
+					}
 				}
 
 				entity wp
@@ -3143,14 +3288,17 @@ void function ArmoredLeap_AR_Placement_Thread( entity weapon )
 				{
 					wp = file.bleedoutWP[ally]
 				}
-				
-				if( allyRui[ally] == null )
-					continue
+
+				if( ally in allyRui )
+				{
+					if( allyRui[ally] == null )
+						continue
+				}
 
 				ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( ally ), Loadout_Character() )
 
 				RuiSetBool( allyRui[ally], "isVisible", true )   
-				RuiSetBool( allyRui[ally], "isTarget", ally == allyTarget)
+				RuiSetBool( allyRui[ally], "isTarget", ally == allyTarget && info.hasAlly )
 				RuiSetBool( allyRui[ally], "isVisible", IsAlive( ally ) )
 				RuiSetImage( allyRui[ally], "legendIcon", CharacterClass_GetGalleryPortrait( character ) )
 				RuiSetFloat( allyRui[ally], "bleedoutEndTime", ally.GetPlayerNetTime( "bleedoutEndTime" ) )
@@ -3326,6 +3474,7 @@ void function ArmoredLeap_VisionMode_Thread( entity player )
 	EndSignal( player, "OnDeath" )
 	EndSignal( player, "OnDestroy" )
 	EndSignal( player, "BleedOut_OnStartDying" )
+	EndSignal( player, "DeathTotem_PreRecallPlayer" )
 	EndSignal( player, "ArmoredLeap_LeapComplete" )
 	EndSignal( player, "StopArmoredLeapTargetPlacement" )
 
@@ -6018,9 +6167,10 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 
 			                   	                                                  
 
-			            		               
-			               		                     
-			                 	       
+			            			               
+			               			                     
+			                    	                     
+			                 		       
 
 			                                                                                            
 			                                                                                                                                        
@@ -6089,6 +6239,12 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 				                             
 				                              
 			 
+                   
+			                                                                    
+			 
+				             
+			 
+         
 		 
 	 
  
@@ -6106,6 +6262,10 @@ vector function SnakeWall_GetBestDownTracePosition( vector nextValidPos, vector 
 	                                                                            					              
 	                                                                                           		                
 	                                                                               					          
+	                                                                               					          
+                 
+		                                              					              
+       
 	                                                 												               
 	                                             
 	                                               

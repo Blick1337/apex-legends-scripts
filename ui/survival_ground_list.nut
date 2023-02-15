@@ -664,9 +664,11 @@ void function UpdateSurvivalGroundList( SurvivalGroundListUpdateParams params )
 
 	bool isBlackMarket = (deathBox.GetNetworkedClassName() == "prop_loot_grabber")
                     
+                               
                       
    
-                                                      
+                                                        
+                                    
    
        
 	                                                              
@@ -776,6 +778,12 @@ void function UpdateSurvivalGroundList( SurvivalGroundListUpdateParams params )
 		{
 			shouldBeVisible = (entryData.totalCount > 0 || !entryData.wasLastLootPickedUpByLocalPlayer)
 		}
+                   
+                                                                     
+   
+                          
+   
+      
 
 		DeathBoxListPanelItem ornull item = DeathBoxListPanel_GetItemByKey( fileLevel.listPanel, entryData.key )
 		if ( shouldBeVisible )
@@ -901,7 +909,7 @@ void function UpdateSurvivalGroundList( SurvivalGroundListUpdateParams params )
 					icon = ItemFlavor_GetIcon( expect ItemFlavor( weaponFlav ) )
 
 				ammoIcon = lootFlavor.fakeAmmoIcon == $"" ? $"rui/hud/gametype_icons/survival/sur_ammo_unique" : lootFlavor.fakeAmmoIcon
-				string ammoType = GetWeaponAmmoType( lootFlavor.baseWeapon )
+				string ammoType = GetWeaponAmmoType( lootFlavor.ref )
 				if ( GetWeaponInfoFileKeyField_GlobalBool( lootFlavor.baseWeapon, "uses_ammo_pool" ) )
 				{
 					LootData ammoData = SURVIVAL_Loot_GetLootDataByRef( ammoType )
@@ -1411,7 +1419,6 @@ void function PerformItemAction( DeathBoxListPanelItem item, bool isAltAction, b
 void function ClientToUI_RestrictedLootConfirmDialog_Open( bool isBlackMarketOwner, int restrictedLootType )
 {
 	ConfirmDialogData data
-	                                                                                                               
 	array<string> dialogArray = SURVIVAL_Loot_GetRestrictedDialogArray( restrictedLootType )
 	data.headerText = Localize( dialogArray[0] )
 
@@ -1551,7 +1558,7 @@ bool function OnItemKeyEvent( DeathBoxListPanelData listPanelData, DeathBoxListP
 		return true
 	}
 
-	                                                                                                             
+	                                                                                                       
 	                                                                    
 	   
 	  	                                  
@@ -1800,7 +1807,9 @@ void function UIToClient_SurvivalGroundList_UpdateQuickSwapItem( var button, int
 	RuiSetImage( buttonRui, "iconImage", lootFlavor.hudIcon )
 	RuiSetInt( buttonRui, "lootTier", lootFlavor.tier )
 	RuiSetInt( buttonRui, "count", item.count )
-	RuiSetInt( buttonRui, "maxCount", SURVIVAL_GetInventorySlotCountForPlayer( viewPlayer, lootFlavor ) )
+	int maxCount = SURVIVAL_GetInventorySlotCountForPlayer( viewPlayer, lootFlavor )
+	RuiSetInt( buttonRui, "maxCount", maxCount )
+	RuiSetInt( buttonRui, "ordinaryMaxCount", lootFlavor.lootType == eLootType.AMMO ? lootFlavor.inventorySlotCount : maxCount )
 	RuiSetInt( buttonRui, "numPerPip", lootFlavor.lootType == eLootType.AMMO ? lootFlavor.countPerDrop : 1 )
 
 	ToolTipData toolTipData

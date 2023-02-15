@@ -3,17 +3,25 @@ global function Teams_AddCallback_ScoreboardData
 global function Teams_AddCallback_PlayerScores
 global function Teams_AddCallback_SortScoreboardPlayers
 global function Teams_AddCallback_Header
+global function Teams_AddCallback_ScoreboardTitle
 global function Teams_AddCallback_GetTeamColor
+global function Teams_AddCallback_OnPlayerClick
+global function Teams_AddCallback_IsEnabled
 global function Teams_PopulatePlayerRow
 global function Teams_PopulateHeaderRui
 global function Teams_GetMaxTeamSize
+global function Teams_GetTeamColor
 
 global function UICallback_ScoreboardMenu_BindTeamHeader
 global function UICallback_ScoreboardMenu_BindTeamRow
 global function UICallback_Scoreboard_OnReportClicked
 
 global function ClientCallback_Teams_SetScoreboardData
+global function ClientCallback_Teams_SetScoreboardTitle
 global function ClientCallback_Teams_CloseScoreboard
+global function ClientCallback_Teams_OnPlayerClicked
+
+global function IsLocalPlayerOnTeamSpectatorWithCallback
 
 global struct ScoreboardData
 {
@@ -33,6 +41,7 @@ global struct TeamsScoreboardPlayerStats
 global struct TeamsScoreboardPlayer
 {
 	EHI playerEHI                           
+	entity player
 
 	string playerName
 	string platformIcon
@@ -71,6 +80,11 @@ struct {
 	array< entity > functionref( array< entity >, ScoreboardData ) Callback_SortScoreboardPlayers
 	void functionref( var, var, int ) Callback_Header
 	vector functionref( int ) Callback_GetTeamColor
+	string functionref() Callback_ScoreboardTitle
+	vector functionref( EHI ) Callback_OnPlayerClick
+	bool functionref() Callback_IsEnabled
+
+	CustomMatch_LobbyState CustomMatchData
 } file
 
 void function Teams_RegisterSignals()
@@ -80,7 +94,7 @@ void function Teams_RegisterSignals()
 
 	AddClientCallback_OnResolutionChanged( Teams_OnResolutionChanged )
 
-	AddCallback_GameStateEnter( eGameState.WinnerDetermined, Teams_OnWinnerDetermined )
+	AddCallback_GameStateEnter( eGameState.Resolution, Teams_OnResolution )
 }
 
 void function Teams_OnResolutionChanged()
@@ -89,6 +103,12 @@ void function Teams_OnResolutionChanged()
 }
 
            
+void function Teams_AddCallback_ScoreboardTitle( string functionref() callbackFunc )
+{
+	Assert( !IsValid( file.Callback_ScoreboardTitle ), "ScoreboardTitle already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
+	file.Callback_ScoreboardTitle = callbackFunc
+}
+
 void function Teams_AddCallback_ScoreboardData( ScoreboardData functionref(  ) callbackFunc )
 {
 	Assert( !IsValid( file.Callback_ScoreboardData ), "ScoreboardData already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
@@ -119,10 +139,27 @@ void function Teams_AddCallback_GetTeamColor(  vector functionref( int ) callbac
 	file.Callback_GetTeamColor = callbackFunc
 }
 
+void function Teams_AddCallback_OnPlayerClick(  vector functionref( EHI ) callbackFunc )
+{
+	Assert( !IsValid( file.Callback_OnPlayerClick ), "_OnPlayerClick already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
+	file.Callback_OnPlayerClick = callbackFunc
+}
+
+void function Teams_AddCallback_IsEnabled(  bool functionref() callbackFunc )
+{
+	Assert( !IsValid( file.Callback_IsEnabled ), "_IsEnabled already has a callback function - " + string( callbackFunc ) + ", ensure this is only called once" )
+	file.Callback_IsEnabled = callbackFunc
+}
+
+void function IsLocalPlayerOnTeamSpectatorWithCallback( var button )
+{
+	RunUIScript( "SetPlayerTooltipAfterCallback", button, IsLocalPlayerOnTeamSpectator() )
+}
+
          
 ScoreboardData function GetScoreboardData()
 {
-	if( IsValid(file.Callback_ScoreboardData) )
+	if( IsValid(file.Callback_ScoreboardData) && !IsObserverInStartOfPrivateGame() )
 	{
 		return file.Callback_ScoreboardData()
 	}
@@ -139,7 +176,7 @@ ScoreboardData function GetScoreboardData()
 
 array<string> function GetPlayerScores( entity player )
 {
-	if( IsValid(file.Callback_PlayerScores) )
+	if( IsValid(file.Callback_PlayerScores) && !IsObserverInStartOfPrivateGame() )
 	{
 		return file.Callback_PlayerScores( player )
 	}
@@ -153,11 +190,21 @@ array<string> function GetPlayerScores( entity player )
 	unreachable
 }
 
+bool function IsObserverInStartOfPrivateGame()
+{
+	return IsPrivateMatch() && GetLocalClientPlayer().IsObserver() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR && GetGameState() < eGameState.Playing
+}
+
+bool function IsObserverInPrivateGame()
+{
+	return IsPrivateMatch() && GetLocalClientPlayer().IsObserver() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR
+}
+
 TeamsScoreboardPlayer function GetPlayer( int teamIndex, int row )
 {
 	TeamsScoreboardPlayer data
 
-	if ( (GetGameState() >= eGameState.WinnerDetermined) )
+	if ( (GetGameState() >= eGameState.Resolution) )
 	{
 		if( teamsScoreboardCachedData.teamsOfPlayers.len() > teamIndex )
 		{
@@ -185,7 +232,7 @@ TeamsScoreboardPlayer function GetPlayer( int teamIndex, int row )
 
 int function ScoreboardMenu_GetTeamSize( int teamIndex )
 {
-	if ( (GetGameState() >= eGameState.WinnerDetermined) )
+	if ( (GetGameState() >= eGameState.Resolution) )
 	{
 		array<TeamsScoreboardPlayer> cachedTeamData = teamsScoreboardCachedData.teamsOfPlayers[teamIndex]
 		return cachedTeamData.len()
@@ -212,7 +259,15 @@ array<entity> function ScoreboardMenu_GetPlayersOnTeam( int teamIndex )
 		teamPlayers = GetPlayerArrayOfTeam( teamIndex + 2 )
 	}
 
-	if( IsValid(file.Callback_SortScoreboardPlayers) )
+	if( IsObserverInStartOfPrivateGame() )
+	{
+		teamPlayers.sort( SortPlayersByLockStep )
+	}
+	else if( IsObserverInPrivateGame() )
+	{
+		teamPlayers.sort( SortPlayersByName )
+	}
+	else if( IsValid(file.Callback_SortScoreboardPlayers) )
 	{
 		ScoreboardData data = GetScoreboardData()
 		teamPlayers = file.Callback_SortScoreboardPlayers( teamPlayers, data )
@@ -260,27 +315,53 @@ void function ClientCallback_Teams_SetScoreboardData( var panel )
 			localPlayerTeamIndex = localplayer.GetTeam() - 2
 	}
 
-	                                                                  
-	int mode = 0
-	if( IsArenaMode() )
-		mode = 1
-	else if( Control_IsModeEnabled() )
-		mode = 2
-                         
-	else if( IsGunGameActive() )
-		mode = 3
-       
-                       
-	else if( WinterExpress_IsModeEnabled() )
-		mode = 4
-       
+	                                                                              
+	int mode = GetCurrentPlaylistVarInt( "scoreboard_mode_id", 0 )
 	RunUIScript( "UI_SetScoreboardTeamData", panel, GetTeamCount(), Teams_GetMaxTeamSize(), localPlayerTeamIndex, mode )
 
 }
 
-void function ClientCallback_Teams_CloseScoreboard( )
+                  
+void function ClientCallback_Teams_SetScoreboardTitle( var panel )
+{
+	string titleText = ""
+	if( IsValid(file.Callback_ScoreboardTitle) )
+	{
+		titleText = file.Callback_ScoreboardTitle()
+	}
+
+	RunUIScript( "UI_SetScoreboardTitle", panel, titleText )
+}
+
+void function ClientCallback_Teams_CloseScoreboard()
 {
 	Signal( clGlobal.levelEnt, "Teams_HideScoreboard" )
+}
+
+void function ClientCallback_Teams_OnPlayerClicked(  int teamIndex, int row  )
+{
+	TeamsScoreboardPlayer data = GetPlayer( teamIndex, row )
+
+	if( IsPrivateMatch() && GetLocalClientPlayer().IsObserver() && GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR && GetGameState() < eGameState.Resolution )
+	{
+		entity player = data.player
+		if ( !IsValid( player ) )
+			return
+
+		if ( !IsAlive( player ) )
+			return
+
+		if ( GetLocalClientPlayer().GetObserverTarget() == player )
+			return
+
+		Remote_ServerCallFunction( "ClientCallback_PrivateMatchChangeObserverTarget", player )
+		RunUIScript( "ClosePrivateMatchGameStatusMenu", null )
+	}
+	else
+	{
+		if( IsValid( file.Callback_OnPlayerClick ) && data.isValid )
+			file.Callback_OnPlayerClick( data.playerEHI )
+	}
 }
 
               
@@ -303,7 +384,7 @@ void function UICallback_Scoreboard_OnReportClicked( var button, int teamIndex, 
 }
 
             
-void function Teams_OnWinnerDetermined()
+void function Teams_OnResolution()
 {
 	                              
 	teamsScoreboardCachedData.teamsOfPlayers.clear()                                       
@@ -341,7 +422,6 @@ void function Thread_Teams_PopulateHeaderRui(var header, var frame, int teamInde
 		Teams_PopulateHeaderRui( headerRui, teamIndex, data, rowWidth )
 		Teams_PopulateFrameRui( frameRui, teamIndex, data, rowWidth )
 
-		TeamsScoreboardPlayer playerData = GetPlayer( teamIndex, 0 )
 		int team = Teams_NormalizeTeamIndex( teamIndex )
 
 		if( IsValid(file.Callback_Header) )
@@ -370,9 +450,20 @@ void function Teams_PopulateHeaderRui( var scoreHeaderRui, int teamIndex, Scoreb
 	if( IsValid(file.Callback_GetTeamColor) )
 		teamColor = file.Callback_GetTeamColor( Teams_NormalizeTeamIndex( teamIndex ) )
 	else
-		teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+		teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex + TEAM_IMC) / 255.0 )
 
 	RuiSetColorAlpha( scoreHeaderRui, "teamColor", teamColor, 1 )
+}
+
+vector function Teams_GetTeamColor( int teamIndex )
+{
+	vector teamColor
+	if( IsValid(file.Callback_GetTeamColor) )
+		teamColor = file.Callback_GetTeamColor( Teams_NormalizeTeamIndex( teamIndex ) )
+	else
+		teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex + TEAM_IMC) / 255.0 )
+
+	return teamColor
 }
 
 void function Teams_PopulateFrameRui( var scoreFrameRui, int teamIndex, ScoreboardData data, float rowWidth )
@@ -381,7 +472,7 @@ void function Teams_PopulateFrameRui( var scoreFrameRui, int teamIndex, Scoreboa
 	if( IsValid(file.Callback_GetTeamColor) )
 		teamColor = file.Callback_GetTeamColor( Teams_NormalizeTeamIndex( teamIndex ) )
 	else
-		teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+		teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex + TEAM_IMC ) / 255.0 )
 
 	RuiSetColorAlpha( scoreFrameRui, "teamColor", teamColor, 1 )
 }
@@ -405,24 +496,36 @@ int function Teams_NormalizeTeamIndex( int teamIndex )
 TeamsScoreboardPlayer function GetTeamsScoreboardPlayer( entity player )
 {
 	TeamsScoreboardPlayer data
-
+	
 	EHI playerEHI = ToEHI( player )
+
 	entity localPlayer = GetLocalViewPlayer()
 	int localTeam = localPlayer.GetTeam()
 
 	ItemFlavor character = LoadoutSlot_GetItemFlavor( playerEHI, Loadout_Character() )
 
 	data.playerEHI = playerEHI
+	data.player = player
 	data.playerName = GetPlayerNameFromEHI( playerEHI )
 	data.playerImage = CharacterClass_GetGalleryPortrait( character )
+
+	if( IsObserverInStartOfPrivateGame() && IsValid( player ) )
+	{
+		int lockStepIndex = GetGlobalNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_INDEX )
+		int playerLockStepIndex = player.GetPlayerNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_PLAYER_INDEX )
+
+		if(  lockStepIndex <= playerLockStepIndex )
+			data.playerImage  = $""
+	}
+
 	data.playerBG = CharacterClass_GetGalleryPortraitBackground( character )
 	data.isRatingLeader = GradeFlagsHas( player, eTargetGrade.EXP_LEADER )
 	data.isKillLeader = GradeFlagsHas( player, eTargetGrade.CHAMP_KILLLEADER )
 	data.isLocalPlayer = player == localPlayer
 
-	data.respawnStatus = (GetGameState() >= eGameState.WinnerDetermined)? 0 : player.GetPlayerNetInt( "respawnStatus" )
-	data.isDisconnected = (GetGameState() >= eGameState.WinnerDetermined)? false : !player.IsConnectionActive()
-	data.bleedoutEndTime = (GetGameState() >= eGameState.WinnerDetermined)? 0 : int( player.GetPlayerNetTime( "bleedoutEndTime" ) )
+	data.respawnStatus = (GetGameState() >= eGameState.Resolution)? 0 : player.GetPlayerNetInt( "respawnStatus" )
+	data.isDisconnected = (GetGameState() >= eGameState.Resolution)? false : !player.IsConnectionActive()
+	data.bleedoutEndTime = (GetGameState() >= eGameState.Resolution)? 0 : int( player.GetPlayerNetTime( "bleedoutEndTime" ) )
 
 	data.customCharacterColor = SrgbToLinear( GetPlayerInfoColor( player ) / 255.0 )
 	data.useCustomCharacterColor = localTeam == player.GetTeam()
@@ -444,7 +547,7 @@ TeamsScoreboardPlayer function GetTeamsScoreboardPlayer( entity player )
 		else
 		{
 			data.isFriendly = AllianceProximity_GetAllianceFromTeam( player.GetTeam() ) == AllianceProximity_GetAllianceFromTeam( localTeam )
-			if ( (GetGameState() >= eGameState.WinnerDetermined) )
+			if ( (GetGameState() >= eGameState.Resolution) )
 			{
 				data.useCustomCharacterColor = AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( ToEHI( localPlayer ) ) == AllianceProximity_GetOriginalPlayerTeam_FromPlayerEHI( playerEHI )
 			}
@@ -485,11 +588,22 @@ void function Threaded_PopulateRowForPlayer( var panel, var button, int teamInde
 		Hud_Show( button )
 		if ( data.isValid )
 		{
+			bool isEnabled = true
+			if( IsObserverInStartOfPrivateGame() )
+				isEnabled = !IsObserverInStartOfPrivateGame()
+			else if( IsValid( file.Callback_IsEnabled ) )
+				isEnabled = file.Callback_IsEnabled()
+
+			if( isEnabled )
+				RunUIScript( "UI_ToggleReportTooltip", button, !data.isLocalPlayer )
+			else
+				RunUIScript( "UI_ToggleReportTooltip", button, false )
+
+			Hud_SetEnabled( button, isEnabled )
 			Hud_SetLocked( button, false )
-			Hud_SetEnabled( button, true )
 			                                         
 
-			RunUIScript( "UI_ToggleReportTooltip", button, !data.isLocalPlayer )
+
 			RuiSetBool( rui, "isEmpty", false )
 			RuiSetString( rui, "status", "" )
 			Teams_PopulatePlayerRow( rui, data, rowWidth )
@@ -498,7 +612,7 @@ void function Threaded_PopulateRowForPlayer( var panel, var button, int teamInde
 		else
 		{
 			int teamSize = ScoreboardMenu_GetTeamSize( teamIndex )
-			bool modeHasJIP = Survival_IsJIPEnabled()
+			bool modeHasJIP = GamemodeUtility_IsJIPEnabled() && !IsPrivateMatch()
 			RunUIScript( "UI_ToggleReportTooltip", button, false )
 			Hud_SetLocked( button, true )
 			Hud_SetEnabled( button, false )
@@ -513,7 +627,7 @@ void function Threaded_PopulateRowForPlayer( var panel, var button, int teamInde
 				if( IsValid(file.Callback_GetTeamColor) )
 					teamColor = file.Callback_GetTeamColor( Teams_NormalizeTeamIndex( teamIndex ) )
 				else
-					teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex ) / 255.0 )
+					teamColor = SrgbToLinear( GetSkydiveSmokeColorForTeam( teamIndex + TEAM_IMC ) / 255.0 )
 
 				RuiSetColorAlpha( rui, "playerImageTint", teamColor, 1.0 )
 			}
@@ -572,4 +686,29 @@ void function Teams_PopulatePlayerRow( var rui, TeamsScoreboardPlayer data, floa
 	RuiSetBool( rui, "isJIP", false )
 	RuiSetColorAlpha( rui, "playerImageTint", < 1.0, 1.0, 1.0 >, 1.0 )
 	RuiSetColorAlpha( rui, "enemyBackgroundColor", data.enemyBackgroundColor, 1.0 )
+}
+
+int function SortPlayersByLockStep( entity a, entity b )
+{
+	int aStepIndex = a.GetPlayerNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_PLAYER_INDEX )
+	int bStepIndex = b.GetPlayerNetInt( CHARACTER_SELECT_NETVAR_LOCK_STEP_PLAYER_INDEX )
+
+	if ( aStepIndex > bStepIndex )
+		return 1
+
+	if ( aStepIndex < bStepIndex )
+		return -1
+
+	return 0
+}
+
+int function SortPlayersByName( entity a, entity b )
+{
+	if ( a.GetPlayerName() > b.GetPlayerName() )
+		return 1
+
+	if ( a.GetPlayerName() < b.GetPlayerName() )
+		return -1
+
+	return 0
 }

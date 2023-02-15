@@ -50,6 +50,7 @@ struct
 	table<entity, asset>  customPlayerInfoTreatment
 	table<entity, vector> customCharacterColor
 	table<entity, asset>  customCharacterIcon
+	table<entity, string> characterRefTable
 
 	var minimalMicRui
 } file
@@ -104,17 +105,41 @@ void function OnPlayerDestroyed( entity player )
 
 void function OnPlayerClassChanged( entity player )
 {
-	if ( PlayerHasUnitFrame( player ) && player.GetPlayerSettings() != SPECTATOR_SETTINGS )
+	                                                                                                                                                                         
+	                                                                                                                                                                              
+	                             
+	ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
+	string characterRef  = ItemFlavor_GetCharacterRef( character ).tolower()
+
+	bool characterChanged = true
+
+	if ( characterRef != "" )
 	{
-		SetUnitFrameOwner( GetUnitFrame( player ), player, GetLocalViewPlayer() )
+		if ( !( player in file.characterRefTable ) )
+			file.characterRefTable[player] <- characterRef
+		else
+		{
+			if ( file.characterRefTable[player] == characterRef )
+				characterChanged = false
+			else
+				file.characterRefTable[player] = characterRef
+		}
 	}
-	else if ( PlayerShouldHaveUnitFrame( player ) )
+
+	if ( characterChanged )
 	{
-		                                              
-		CreateTeamUnitFrame( player )
+		if ( PlayerHasUnitFrame( player ) && player.GetPlayerSettings() != SPECTATOR_SETTINGS )
+		{
+			SetUnitFrameOwner( GetUnitFrame( player ), player, GetLocalViewPlayer() )
+		}
+		else if ( PlayerShouldHaveUnitFrame( player ) )
+		{
+			                                              
+			CreateTeamUnitFrame( player )
+		}
+		if ( GetCurrentPlaylistVarBool( "minimal_mic_hud_enabled", false ) )
+			RefreshMinimalMicRui()
 	}
-	if ( GetCurrentPlaylistVarBool( "minimal_mic_hud_enabled", false ) )
-		RefreshMinimalMicRui()
 }
 
 
@@ -308,7 +333,7 @@ void function UpdateJIPUnitFrames()
 {
 	int maxTeamSize = GetMaxTeamSizeForPlaylist( GetCurrentPlaylistName() )
 
-	if(Survival_IsJIPEnabled())
+	if(GamemodeUtility_IsJIPEnabled())
 	{
 		int teamSize = (maxTeamSize - 1)
 		int teammatesMissing = teamSize - file.teamUnitFrames.len()                                                         
@@ -344,6 +369,12 @@ void function CreateJIPUnitFrame( int teammateNumber = 0)
 		return
 
 	if ( teammateNumber in file.JIPUnitFrames )
+		return
+
+	if( IsPrivateMatch() )                            
+		return
+
+	if( GetLocalClientPlayer().GetTeam() == TEAM_SPECTATOR || GetLocalClientPlayer().GetTeam() == TEAM_UNASSIGNED )
 		return
 
 	asset unitFrameAsset = GetJIPUnitFrameAssetForGameMode()
@@ -434,6 +465,7 @@ void function CreateTeamUnitFrame( entity player )
 	SetUnitFrameOwner( unitFrame, player, GetLocalViewPlayer() )
 	SetUnitFramePosition( unitFrame )
 	UpdateEquipmentSlot( player, unitFrame.rui )
+	SquadLeader_UpdateUnitFrameRui(  player, rui )
 }
 
 int function SquadMemberIndexSort( entity a, entity b )
@@ -502,7 +534,7 @@ void function SetUnitFrameOwner( UnitFrameDef unitFrame, entity ent, entity view
 void function SetUnitFrameDataFromOwner( var rui, entity ent, entity localPlayer, bool forceUpdate = false )
 {
 	EndSignal( ent, "OnDestroy" )                                                                           
-
+	
 	Assert ( IsNewThread(), "Must be threaded off." )
 
 	while ( !EHIHasValidScriptStruct( ToEHI( ent ) ) )
@@ -558,8 +590,16 @@ void function SetUnitFrameDataFromOwner( var rui, entity ent, entity localPlayer
                                                                                                                     
        
 
+	int observerMode = 0
+	bool isObserverInFlyMode = false
 
-	if (!SquadInfoIsDisabled())
+	if( IsValid( localPlayer ) )
+	{
+		observerMode = localPlayer.GetObserverMode()
+		isObserverInFlyMode =  localPlayer.GetTeam() == TEAM_SPECTATOR && ( observerMode == OBS_MODE_ROAMING || observerMode == OBS_MODE_CHASE )
+	}
+
+	if (!SquadInfoIsDisabled() && !isObserverInFlyMode)
 	{
 		RuiSetBool( rui, "isVisible", true )
 	}
@@ -571,17 +611,26 @@ void function SetUnitFrameDataFromOwner( var rui, entity ent, entity localPlayer
 	RuiTrackInt( rui, "squadID", ent, RUI_TRACK_SQUADID )
 
                     
-                                                     
-                                                                                                                              
+		if( IsValid( localPlayer ) )
+		{
+			bool localPlayerCanCraftBanners = Perks_DoesPlayerHavePerk( localPlayer, ePerkIndex.BANNER_CRAFTING )
+			RuiSetBool( rui, "bannerCraftable", localPlayerCanCraftBanners )
 
-                                                       
-   
-                                                                      
-                                                   
-                                                                                                                                                   
-   
+			asset classIcon = CharacterClass_GetCharacterRoleImage( character )
+			RuiSetAsset( rui, "customSmallIcon", classIcon )
+
+			if ( localPlayer.p.activePerks.len() > 0 )
+			{
+				RuiTrackBool( rui, "hasAltStatus", localPlayer, RUI_TRACK_SCRIPT_NETWORK_VAR_BOOL, GetNetworkedVariableIndex( EXPIRED_BANNER_RECOVERY_NETVAR ) )
+			}
+		}
        
-	                                           
+
+	if ( ent in file.customCharacterColor )                          
+	{
+		RuiSetColorAlpha( rui, "customCharacterColor", file.customCharacterColor[ent], 1.0 )
+		RuiSetBool( rui, "useCustomCharacterColor", true )
+	}
 }
 
 void function SetUnitFrameDataFromRAS( var rui, entity ent, bool forceUpdate = false )
@@ -596,7 +645,15 @@ void function SetUnitFrameDataFromRAS( var rui, entity ent, bool forceUpdate = f
 void function OnInUseHealingKitTypeChanged( entity player, int kitType )
 {
 	asset hudIcon = $""
+	float endTime = 0.0
 
+	entity weapon = player.GetOffhandWeapon( OFFHAND_SLOT_FOR_CONSUMABLES )
+	if( IsValid( weapon ) )
+	{
+		float raiseTime       = weapon.GetWeaponSettingFloat( eWeaponVar.raise_time )
+		float chargeTime      = weapon.GetWeaponSettingFloat( eWeaponVar.charge_time )
+		endTime = Time() + raiseTime + chargeTime
+	}
 	if ( kitType != -1 )
 	{
 		if ( WeaponDrivenConsumablesEnabled() )
@@ -618,6 +675,7 @@ void function OnInUseHealingKitTypeChanged( entity player, int kitType )
 		if ( framePlayer != player )
 			continue
 		RuiSetImage( frame.rui, "healTypeIcon", hudIcon )
+		RuiSetFloat( frame.rui, "consumableEndTime", endTime )
 		RuiSetBool( frame.rui, "consumablePanelVisible", hudIcon != $"" )
 		break
 	}
@@ -662,7 +720,7 @@ void function OnPlayerEquippedWeaponChanged( entity player, int newWeaponRef )
 					hudIcon = weaponData.fakeAmmoIcon
 
 				RuiSetImage( frame.rui, ammoTypeIcon, hudIcon )
-				RuiSetBool( frame.rui, ammoTypeIconBool, true )
+				RuiSetBool( frame.rui, ammoTypeIconBool, GetShowUnitFrameAmmoTypeIcons() )
 			}
 		}
 	}
@@ -760,6 +818,11 @@ bool function PlayerShouldHaveUnitFrame( entity player )
 
 	if ( playerTeam != viewer.GetTeam() )
 		return false
+                                  
+	                                                                                                                         
+	if ( GetCurrentPlaylistVarBool( "is_hardcore_mode", false ))
+		return false
+      
 
 	int gameState = GetGameState()
 	if ( gameState < eGameState.Playing && !IsFiringRangeGameMode() )
@@ -888,17 +951,23 @@ void function SetUnitFrameShadowFormState( entity player, bool state )
 
 void function SetUnitFrameCustomColor( entity player, vector color )
 {
-	foreach ( unitframePlayer, unitFrame in file.teamUnitFrames )
+	if( file.teamUnitFrames.len() > 0 )
 	{
-		if ( player == unitframePlayer )
+		foreach ( unitframePlayer, unitFrame in file.teamUnitFrames )
 		{
-			if ( !(player in file.customCharacterColor) )
-				file.customCharacterColor[player] <- color
-			file.customCharacterColor[player] = color
-			RuiSetColorAlpha( unitFrame.rui, "customCharacterColor", color, 1.0 )
-			RuiSetBool( unitFrame.rui, "useCustomCharacterColor", true )
+			if ( player == unitframePlayer )
+			{
+				if ( !(player in file.customCharacterColor) )
+					file.customCharacterColor[player] <- color
+				file.customCharacterColor[player] = color
+				RuiSetColorAlpha( unitFrame.rui, "customCharacterColor", color, 1.0 )
+				RuiSetBool( unitFrame.rui, "useCustomCharacterColor", true )
+			}
 		}
 	}
+	else if ( !(player in file.customCharacterColor) )
+		file.customCharacterColor[player] <- color
+
 }
 
 

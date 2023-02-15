@@ -10,6 +10,7 @@ global function SwitchDeathScreenTab
 global function SetDeathScreenTabTitle
 global function DeathScreenUpdate
 global function DeathScreenCreateNonMenuBlackBars
+global function UpdateBlackBarRui
 global function DeathScreen_RespawnStatusChanged
 global function PopulatePlayerStatsRui
 global function ClearPlayerStatsRui
@@ -38,6 +39,9 @@ global function UICallback_SelectRecapBlock
 global function UICallback_NextRecapBlock
 global function UICallback_PrevRecapBlock
 global function UICallback_TryPingRespawn
+                   
+global function UICallback_TryPingReplicator
+      
 global function UICallback_OnResolutionChange
 
 global function IsViewingSquadSummary
@@ -254,6 +258,10 @@ void function DeathScreenDelayedSwitchToTab( int tab, float delay )
 	{
 		RunUIScript( "UI_EnableDeathScreenTab", tab, true )
 		SwitchDeathScreenTab( tab )
+
+		entity player = GetLocalClientPlayer()
+		int spectatorTargetCount = player.GetPlayerNetInt( "spectatorTargetCount" )
+		RunUIScript( "UI_DeathScreenSetSpectateTargetCount", spectatorTargetCount )
 	}
 }
 
@@ -492,6 +500,9 @@ void function DeathScreen_RespawnStatusChanged( entity player, int new )
 		RunUIScript( "UI_UpdateDeathScreenSpectatePanel" )
 	}
 
+                    
+		RunUIScript( "UI_DeathScreenSetBannerCraftingStatus", Perk_CanTeammateCraftPlayerBanner( player ) )
+       
 	RunUIScript( "UI_DeathScreenSetRespawnStatus", new )
 }
 
@@ -618,7 +629,7 @@ void function DeathScreenUpdateChangeLegend( entity player )
 	bool validGameState = GetGameState() >= eGameState.Playing && GetGameState() < eGameState.WinnerDetermined
 	bool isControl  = Control_IsModeEnabled()
 
-	if( GetCurrentPlaylistVarBool( "character_reselect_enabled", false ) && validGameState && !isControl )
+	if( IsCharacterReselectEnabled() && validGameState && !isControl )
 	{
 		Hud_Show( file.changeLegendButton )
 		ItemFlavor character = LoadoutSlot_GetItemFlavor( ToEHI( player ), Loadout_Character() )
@@ -757,7 +768,11 @@ void function DeathScreenUpdateHeader( var headerElem )
 	RuiSetBool( headerRui, "shadowMode", false )
 
 	RuiSetBool( headerRui, "isSoloMode", IsSoloMode() )
-	RuiSetBool( headerRui, "isArenaMode", IsArenaMode() )
+                        
+                                                       
+      
+		RuiSetBool( headerRui, "isArenaMode", false )
+       
 	RuiSetBool( headerRui, "isControlMode", Control_IsModeEnabled())
 
 	if ( animateBanner )
@@ -1012,8 +1027,8 @@ asset function GetDataRuiAssetForGamemode()
 		return $"ui/header_data_solo.rpak"
 
                         
-		if ( IsArenaMode() )
-			return $"ui/arenas_squad_summary_header_data.rpak"
+                      
+                                                     
        
 
                          
@@ -1368,6 +1383,13 @@ void function UICallback_TryPingRespawn()
 	TryPingRespawnItem( clientPlayer )
 }
 
+                   
+void function UICallback_TryPingReplicator()
+{
+	entity clientPlayer = GetLocalClientPlayer()
+	TryPingRespawnItem( clientPlayer )
+}
+      
 
 void function UICallback_OnResolutionChange()
 {
@@ -1415,6 +1437,9 @@ void function UICallback_OnResolutionChange()
 
 	SetCurrentAttackerEHandle( file.currentAttackerEHandle )
 
+                    
+		RunUIScript( "UI_DeathScreenSetBannerCraftingStatus", Perk_CanTeammateCraftPlayerBanner( player ) )
+       
 	int respawnStatus = player.GetPlayerNetInt( "respawnStatus" )
 	RunUIScript( "UI_DeathScreenSetRespawnStatus", respawnStatus )
 
@@ -1593,7 +1618,6 @@ void function PopulatePlayerStatsRui( var gladCardRui, int index, bool connected
 	}
 	else if ( file.useModeSpecificDisplayData )
 	{
-		                                                 
 		                                                  
 
 		                
@@ -2071,7 +2095,7 @@ void function DeathRecapShow( var recapElem )
 		if ( ! EEHHasValidScriptStruct( damageBlock.victimEHandle ) )
 		{
 			                                                                                          
-			                                                                                              
+			                                                                                        
 			                                                 
 			Warning( "Could not find victimEHandle key %d in eehScriptStructMap", damageBlock.victimEHandle )
 			RuiSetBool( blockRui, "display", false )
@@ -2185,6 +2209,8 @@ void function PlayRecapAnimSounds( entity player )
 
 		wait ACTIVATION_INTERVAL
 	}
+	if( file.deathRecapDamageBlocks.len() <= 3 )
+		wait 0.6                                                         
 }
 
 

@@ -41,6 +41,12 @@ global const string LOOT_DRONE_MODEL_SCRIPTNAME = "LootDroneModel"
 global const string LOOT_DRONE_MOVER_SCRIPTNAME = "LootDroneMover"
 global const string LOOT_DRONE_ROTATOR_SCRIPTNAME = "LootDroneRotator"
 
+                    
+                                                                                  
+                                                                                  
+                                                                                      
+      
+
 void function ShLootDrones_Init()
 {
 	PrecacheModel( LOOT_DRONE_MODEL )

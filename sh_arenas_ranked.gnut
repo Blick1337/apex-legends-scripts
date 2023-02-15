@@ -84,7 +84,6 @@ global function ShArenasRanked_RegisterNetworkFunctions
 
 #if UI
 global function IsArenasRankedPlaylist
-global function IsLastPlaylistArenasMode
 global function ArenasRanked_SetupMenuGladCardForUIPlayer
 global function ArenasRanked_SetupMenuGladCardFromCommunityUserInfo		                                                                       
 global function ArenasRanked_ManageDialogFlow
@@ -98,6 +97,7 @@ global function ArenasRanked_IsShowingMatchSummary
 #endif
 
 const ARENAS_RANKED_SEASON_10_GUIDSTRING = "SAID00926519318"
+const ARENAS_RANKED_SEASON_15_GUIDSTRING = "SAID00058416642"
 
 global const int ARENAS_RANKED_MIN_SCORE = 1                         
 global const int ARENAS_RANKED_PLACEMENT_SCORE = 0
@@ -185,7 +185,6 @@ void function Sh_ArenasRanked_Init()
 		                                                                     
 		                                                                             
 
-		                                                                    
 		                                                                    
 		                                                                                      
 
@@ -986,26 +985,6 @@ var function ArenasRanked_GetHistoricalRankedPersistenceData( entity player, str
 }
 
 
-SharedRankedDivisionData function ArenasRanked_GetNewDivisionForNewSeasonReset( entity player, ItemFlavor newRankedPeriod )
-{
-	string newRankedPeriodRef = ItemFlavor_GetGUIDString( newRankedPeriod )
-	
-	                                
-	SharedRankedDivisionData newDivData = file.historicalRankedDivisions[ newRankedPeriodRef ][ 0 ]
-	return newDivData
-}
-
-
-SharedRankedDivisionData function ArenasRanked_GetNewDivisionForSeasonSplitReset( entity player, ItemFlavor rankedPeriod )
-{
-	string rankedPeriodRef = ItemFlavor_GetGUIDString( rankedPeriod )
-
-	                           
-	SharedRankedDivisionData newDivData = file.historicalRankedDivisions[ rankedPeriodRef ][ 0 ]
-	return newDivData
-}
-
-
 int function GetPlayerArenasRankScore( entity player )
 {
 #if UI
@@ -1090,11 +1069,13 @@ bool function ArenasRanked_DidPlayerEverHaveAFullTeam( entity player )
 
 bool function ArenasRanked_IsMatchOverForPlayer( entity player )
 {
-	if ( Arenas_IsMatchComplete() )
-		return true
+                        
+                                
+             
 
-	if ( Arenas_IsFinalRound() && !IsAlive( player ) )
-		return true
+                                                   
+             
+       
 
 	return false
 }
@@ -1205,7 +1186,7 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 	                                                                                                                                              
 
 	                                                                                                                       
-		                                                                                                                                                                                                                               
+		                                                                                                                                                                                                                                     
  
 
                                                                                                                                                                                                                                                                                              
@@ -1244,7 +1225,7 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 			                                   
 
 			                                                                                                                        
-				                                                                                                                                                                                                                                
+				                                                                                                                                                                                                                                      
 		 
 
 		                                        
@@ -1370,74 +1351,6 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 	                   
  
                                                                                                            
-
-  
-                                                                                    
- 
-	                                             
-	 
-		                     
-		 
-			                                                                                                                          
-			                                                                                                                                           
-
-			                                                                                                    
-			                                                                                
-			                                                                                                                     
-			                                                                                                                            
-			                                                                                                                
-		 
-		    
-		 
-			                                                                                                                 
-			 
-				                                                                  
-				                                                                                                              
-				                                                                                                                     
-				                                                                                                             
-				                                                                                                         
-			 
-		 
-
-		                                                          
-		                                                   
-		                                                                  
-		                                                                                                                                                                                                   
-	 
- 
-  
-  
-                                                            
-                                   
- 
-	                                             
-	 
-		                                                                                                                          
-		                                                                              
-		                                                                                                          
-		                                                                                                            
-		                                                                                                        
-		                                                                                                                                 
-		                                                                                                             
-
-		                                                          
-		                                                   
-		                                                                  
-	 
- 
-  
-  
-                                                                 
-                                   
- 
-	                                             
-	 
-		                                                                                                                          
-		                                                                              
-		                                                                                                            
-	 
- 
-  
                
 
 
@@ -1475,7 +1388,9 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 	                                                                           
 	                                                                                      
 
-	                                                                                                                                                                                                               
+                       
+                                                                                                                                                                                                                
+      
 
 	                                                                                                 
 
@@ -1771,33 +1686,6 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 
 		                                                                   
 	 
-	                                       
-	 
-		                                                                                                                   
-		                                                                                                                      
-		                                                                   
-
-		                    
-		                                                   
-		 
-			                                                                                                              
-			              
-				                                                                
-		 
-		                                                                                                                      
-
-		                                                                        
-		                                                                               
-		                                                                                                          
-		                                                                                                                                  
-
-		                                                         
-			                                                         
-
-		                                                                                                             
-		                                                                                                                        
-		                                              
-	 
  
 
                                                                                                                                                                   
@@ -1839,65 +1727,6 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
                                                               
  
 	       
-		                                    
-			      
-	      
-
-	                 
-		      
-
-	                       
-		      
-
-	                                                                                                     
-		      
-
-	                                                                                                           
-	                                                                                                                 
-		      
-
-	                                                                                                                 
-	 
-		                                                                  
-		                                                                            
-			        
-
-		                                                                                                                               
-		                   
-		                                                                                         
-		 
-			                                                                                                              
-			                                                                                        
-		 
-
-		               
-		                                                                                
-		 
-			                                                                                                              
-			                                                                                        
-		 
-
-		                                                                                        
-		                                                                            
-		 
-			                                                                  
-			                                                                                         
-			                                                                                                             
-			                                                                                                                                         
-			                                           
-			 
-				                                                                                                                                  
-				                                                                     
-					                                                                                                                                                                  
-			 
-		 
-	 
- 
-
-
-                                                              
- 
-	       
 		                                                               
 		                                    
 			      
@@ -1917,42 +1746,10 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 		      
 	 
 
-	                                     
-		                                                             
-
-	                                                                                                                                                                                                                   
-	 
-		                                                                                                                          
-		                                                                                                                         
-			      
-
-		                                                                                        
-		                                                                                                                                                  
-		                                                                                                                                     
-
-		                                                                                                     
-
-		                                     
-			      
-
-		                                                                                                                                                  
-		 
-			                                                                                                                           
-			                                                                                                                
-			                                                                                                                                
-			                                                                            
-			                                                                                                                     
-			      
-		 
-		    
-		 
-			                                                               
-		 
-
+	                                                                       
 		      
-	 
 
-	                                                                                                                          
+	                                                                                                                                 
 
 	                                                                                                     
 
@@ -1965,11 +1762,16 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 		                                                                   
 		                                                                                                                                 
 
-		                                                                                                         
-			        
+		                                                                    
+		                                                                                            
+		                                         
+		                                                                                                                             
+		 
+			                                                                                                         
+				        
+		 
 
 		                                                                                 
-
 		                                                                                                                                                                                                                                                                      
 		 
 			                                         
@@ -1998,26 +1800,20 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 			 
 		 
 
-		                                                                                                  
+		                                                                                                         
 		                                                                                               
 			      
 
-		                                                   
-		 
-			                                                                                                                                                                         
-			 
-				                                                                                                                                                                        
-				                                                                                                                                                                  
-				                                                         
-			 
-		 
+		                                                                                           
+			                                                                      
 	 
  
 
-                                                                                                
+                                                                                                                      
  
 	                                                                 
-	                                                                                                                                                                                                              
+	                                                            
+		                                                                                                                                                                                                              
 
 	                         
 	 
@@ -2026,8 +1822,8 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 
 		        
 			                                                                                 
-			                                                                                              
-			                                                                                                                                   
+			                      
+				                                   
 
 			                                   
 			 
@@ -2049,63 +1845,28 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 					                             
 					                                  
 					 
-						                                                                                                                                                     
+						                                                                                                                     
 						                                                                                                                                 
-						                                                                                                                                          
+						                                                                                                                
 					 
 					    
 					 
 						                                                                                    
 					 
-
-
-					                               
-					                                                                                                                                                                                                                                     
-					                                                                                                          
-					                                                         
-
-					                                  
-						                                                                                                                                       
-					    
-						                                                                                                         
-
-					                                                                                                                      
 				 
 			 
 		     
 	 
 
-	                                                                                 
-	                                                        
-	                                                      				            
-	                                                            		                               
-	                                                           			                                               
-	                                                                	  
-
-	                                                                                                           
-	                                                                                    
-	                                         
-
-	                                                                                                                          
-	                          
-	                                         
-		                                                                                                                       
-
-	                    
+	                                                                        
+	                                                                               
 	 
-		                                                                              
-		                                                                                             
-		                                                                                
-		                                 
-		 
-			                                                                                                                       
-			                                                                                                                              
-			                                                                                                           
-		 
-	 
+		                                                                   
+		                                                                                                           
 
-	                                                                  
-		                                                                                          
+		                                                                  
+			                                                                                          
+	 
 
 	           
  
@@ -2123,26 +1884,15 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 	                             
 	                                  
 	 
-		                                                                                                                                   
+		                                                                                                   
 		                                                                                                               
-		                                                                                                                                 
+		                                                                                                       
 	 
 	    
 	 
 		                                                                           
 	 
 
-	                               
-	                                                                                                                            
-	                                                                                                            
-
-	                                  
-		                                                                                                                                       
-	    
-		                                                                                                         
-
-	                                        
-	                                                                                                                      
 	                                                                                                                     
 	                                                                                                        
 	                                                                                    
@@ -2155,13 +1905,6 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 
 	                                                                                                                          
 	                                                       
-	                                                                       
-	 
-		                                                                                                                        
-		                                                                              
-		                                                                                                                              
-		                                                                                                        
-	 
 
 	                
 		                                                                                          
@@ -2217,7 +1960,6 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 		                                                 
 
 		                                                                  
-		                                                                                                                                                                                                                                                                                  
 		                                                                                      
 		 
 			        
@@ -2483,12 +2225,12 @@ var function GetArenasRankedPersistenceData( entity player, string persistenceFi
 		 
 			                                                                                                       
 			                                                                                          
-			                                                                                                                                        
+			                                                                                                        
 
 			                                                   
 			 
 				                                                                                                                    
-				                                                                                                                                  
+					                                                                                                        
 			 
 		 
 
@@ -2860,26 +2602,9 @@ bool function ArenasRanked_ManageDialogFlow( bool rankedSplitChangeAudioPlayed =
 		Remote_ServerCallFunction( "ClientCallback_ArenasRankedPeriodRewardAcknowledged", earliestRankedPeriod )
 		ArenasRanked_MarkRankedRewardsGivenNotified( earliestRankedPeriod )
 
-		ItemFlavor rankedPeriodToAcknowledgeReward                      = GetItemFlavorByGUID( ConvertItemFlavorGUIDStringToGUID( earliestRankedPeriod ) )
-		                                                                             
-		ItemFlavor ornull activeRankedPeriod = GetActiveRankedPeriodByType( GetUnixTimestamp(), eItemType.calevent_rankedperiod )
-		SharedRankedDivisionData rankedDivisionForFollowingRankedPeriod = Ranked_GetNewDivisionForNewSeasonReset( GetLocalClientPlayer(), expect ItemFlavor(activeRankedPeriod) )
+		ItemFlavor rankedPeriodToAcknowledgeReward = GetItemFlavorByGUID( ConvertItemFlavorGUIDStringToGUID( earliestRankedPeriod ) )
 
-		string unlockMessage
-		Assert( IsPersistenceAvailable() )
-		                                                                                                                                               
-		                                                                  
-		 
-			                                                            
-			                                                                                         
-			                                                                                                                                                                                                
-				                                                                                                                               
-		 
-		      
-		{
-			unlockMessage = Localize( "#RANKED_REWARDS_GIVEN_DIALOG_MESSAGE", Localize( ItemFlavor_GetShortName( rankedPeriodToAcknowledgeReward ) ),
-				Localize( rankedDivisionForFollowingRankedPeriod.divisionName ), Localize( ItemFlavor_GetShortName( expect ItemFlavor(activeRankedPeriod) ) ) )
-		}
+		string unlockMessage = Localize( "#FINAL_RANKED_ARENAS_SEASON_THANK_YOU_FOR_PLAYING" )
 
 		if( !rankedSplitChangeAudioPlayed )
 			PlayLobbyCharacterDialogue( "glad_rankNewSeason", 1.7 )                      
@@ -2891,38 +2616,6 @@ bool function ArenasRanked_ManageDialogFlow( bool rankedSplitChangeAudioPlayed =
 
 		result = true
 	}
-	else if ( ArenasRanked_NeedToNotifySplitReset() )
-	{
-		string rankedSplitResetAcknowledgePersistenceField = ArenasRanked_GetSplitResetAcknowledgePersistenceField()
-		SetDialogFlowPersistenceTables( "starterAcknowledged", true )
-		Remote_ServerCallFunction( "ClientCallback_ArenasRankedSplitResetAcknowledged" )
-
-		                                                                             
-		ItemFlavor ornull activeRankedPeriod = GetActiveRankedPeriodByType( GetUnixTimestamp(), eItemType.calevent_rankedperiod )
-		expect ItemFlavor ( activeRankedPeriod )
-		Assert( SharedRankedPeriod_HasSplits( activeRankedPeriod ) && SharedRankedPeriod_IsSecondSplitActive( activeRankedPeriod ) )
-		SharedRankedDivisionData newRankedDivisionAfterSplit = GetCurrentRankedDivisionFromScore( GetPlayerRankScore( GetLocalClientPlayer() ) )
-		string resetMessage                                  = Localize( "#RANKED_SPLIT_RESET_DIALOG_MESSAGE", Localize( newRankedDivisionAfterSplit.divisionName ) )
-
-		if( !rankedSplitChangeAudioPlayed )
-			PlayLobbyCharacterDialogue( "glad_rankNewSplit", 1.7 )                       
-
-		PromoDialog_OpenHijackedUM( Localize( "#RANKED_SPLIT_RESET_DIALOG_HEADER" ), resetMessage, "ranked_split" )
-		IncrementNumDialogFlowDialogsDisplayed()
-
-		DialogFlow_DidCausePotentiallyInterruptingPopup()
-
-		result = true
-	}
-	                                                                                                                                         
-	 
-		                                                                                 
-		                                                            
-		                                                                                        
-		                                                                                                 
-		                                                                                                                                     
-		                                        
-	   
 
 	return result
 }
@@ -2939,10 +2632,6 @@ bool function ArenasRanked_HasRankedPeriodMarkedForRewardAcknowledgement()
 
 	                                                         
 	ItemFlavor rankedPeriodToAcknowledgeReward = GetItemFlavorByGUID( ConvertItemFlavorGUIDStringToGUID( earliestRankedPeriod ) )
-	ItemFlavor ornull followingRankedPeriod    = GetFollowingRankedPeriod( rankedPeriodToAcknowledgeReward )
-
-	if ( followingRankedPeriod == null )
-		return false
 
 	file.arenasRankedPeriodToAcknowledgeRewards = earliestRankedPeriod
 	return true
@@ -3083,21 +2772,6 @@ bool function IsArenasRankedPlaylist( string playlist )
 {
 	return GetPlaylistVarBool( playlist, "is_arenas_ranked", false )
 }
-
-
-bool function IsLastPlaylistArenasMode()
-{
-	string playlist = string( GetPersistentVar( "lastPlaylist" ) )
-
-	                                                              
-	if( GetPlaylistIndexForName( playlist ) == -1 || Playlist_ShouldBeHiddenForScheduleBlocks( playlist ) )
-		return false
-
-	                                                  
-	Assert( GetPlaylistGamemodesCount( playlist ) == 1, "This function need to be fixed to support multiple gamemodes per playlist" )
-	return GetPlaylistGamemodeByIndex( playlist, 0 ) == GAMEMODE_ARENAS
-}
-
 
 bool function ArenasRanked_ShouldUpdateWithComnunityUserInfo( int score, int ladderPosition )
 {

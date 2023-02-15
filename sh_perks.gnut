@@ -1,0 +1,979 @@
+global asset PERK_MINIMAP_OBJECT = $"ui/minimap_square_perk_icon.rpak"
+global asset PERK_FULL_MINIMAP_OBJECT = $"ui/in_world_minimap_square_perk_icon.rpak"
+global asset PERK_IN_WORLD_HUD_OBJECT = $"ui/in_world_perk_icon_marker.rpak"
+
+#if CLIENT
+global const float NON_INTERACTIBLE_PERK_MINIMAP_OPACITY = .5
+global const vector NON_INTERACTIBLE_PERK_MINIMAP_COLOR =  <.25, .25, .25>
+global const vector INTERACTIBLE_PERK_MINIMAP_COLOR = <1, 1, 1>
+global const float PERK_HIGHLIGHT_DEGREES = 3
+global const float PERK_ENT_MAX_PING_DISTANCE = 3000
+
+global function Perks_UpdateNonInteractiblePerkMinimapIcons
+#endif
+
+global function Perks_Init
+global function Perks_RegisterClassPerk
+global function Perks_Enabled
+global function Perks_GetSettingsInfoForClassRole
+global function Perks_GetSettingsInfoForPerk
+
+#if SERVER || CLIENT
+global function Perks_DoesPlayerHavePerk
+global function Perks_AddMinimapEntityForPerk
+global function Perks_GetIconForPerk
+#endif
+
+#if SERVER
+                                           
+                                                  
+                                                      
+                                      
+#endif
+
+#if CLIENT
+global function ServerToClient_HidePerkPropMinimapVisibility
+global function Perks_UpdateHighlightedPerkIcon
+global function Perks_GetPerkPingInfo
+global function Perks_GetActivePerksFromPlayerLoadout
+global function Perks_PerkPropPinged
+global function Perks_PingTypeToPingIcon
+global function Perks_SetHighlightedPerkIcon
+global function Perks_SetWorldspaceIconVisibility
+#endif
+
+                                                 
+                                                                                                                                                                                                 
+                                                                          
+                                                                                                                    
+
+global enum ePerkIndex
+{
+	                                                                                            
+	INVALID = -1,
+	BEACON_SCAN,
+	EXTRA_BIN_LOOT,
+	DEFENSIVE_EVO_BOOST,
+	EXTRA_FIREPOWER,
+	KILL_BOOST_ULT,
+	BEACON_ENEMY_SCAN,
+	CARE_PACKAGE_INSIGHT,
+	MUNITIONS_DROP,
+	WEAPON_INFUSION,
+	MUNITIONS_BOX,
+	BANNER_CRAFTING,
+	COUNT	                  
+}
+
+global struct PerkInfo
+{
+	int perkId = ePerkIndex.INVALID
+
+	#if SERVER || CLIENT
+	void functionref( entity, string ) activateCallback
+	void functionref( entity ) deactivateCallback
+	void functionref( var, entity) ruiThinkThread
+	array<entity> minimapEntities
+	table<entity, array<int> > teamsToHideMinimapEntitiesFrom
+	int minimapStateIndex = -1
+	int minimapPingType = -1
+	bool hideFromTeammates = false
+	bool trackEntityPosition = false
+	string mapFeatureTitle
+	string mapFeatureDescription
+	#endif
+	#if CLIENT
+	bool functionref( entity ) canPingEnt = null
+	vector functionref( entity ) getPingPosition = null
+	float functionref( entity ) getPingMaxDistance = null
+	float worldspaceIconUpOffset = 0
+	#endif
+}
+
+global struct ClassRoleSettingsInfo
+{
+	array<int> perks
+
+	                                                                                                                              
+	                                                                
+	string name
+	string fullDescription
+	string shortDescription
+	vector uiColor
+	asset icon
+}
+
+global struct PerkSettingsInfo
+{
+	asset icon
+	asset mapIcon
+	asset smallMapIcon
+	string description
+	string shortDescription
+	string perkPropName
+}
+
+#if CLIENT
+global struct PerkPingInfo
+{
+	entity ent
+	int pingType
+	float originUpOffset
+}
+#endif
+
+struct
+{
+	table< int, ClassRoleSettingsInfo >  classRoleToSettingsTable
+	table< int, PerkSettingsInfo  >		 perkToPerkSettingsTable
+	table< int, PerkInfo > 				 perkInfoTable
+	table< ItemFlavor, int > 		 	 characterToRoleTable
+	#if CLIENT
+	table< entity, bool > 			  	 worldspacePerkIconVisibility
+	table< entity, var >				 entityToWorldSpaceicon
+	array< entity >					     pingedPerkProps
+	PerkPingInfo 						 highlightedEnt
+	#endif
+} file
+
+void function Perks_Init()
+{
+	                                                                                                         
+	AddCallback_RegisterRootItemFlavors( OnRegisterRootItemFlavors )
+	AddCallback_OnItemFlavorRegistered( eItemType.character_class, OnItemFlavorRegistered_Class )
+	AddCallback_OnItemFlavorRegistered( eItemType.character_perk, OnItemFlavorRegistered_Perk )
+
+	if ( !Perks_Enabled() )
+		return
+
+	RegisterSignal( "UpdatePerkMinimapVisibility" )
+	RegisterSignal( "HidePerkMinimapVisibility" )
+
+	#if SERVER || CLIENT
+		AddCallback_PlayerClassActuallyChanged( OnPlayerClassChanged )
+		Remote_RegisterClientFunction( "ServerToClient_HidePerkPropMinimapVisibility", "entity", "int", 0, ePerkIndex.COUNT )
+		Remote_RegisterServerFunction( "Perks_ClientToServer_MinimapIconPinged", "entity" )
+	#endif
+	#if SERVER
+		                                                                                            
+	#endif
+	#if CLIENT
+		RegisterSignal( "PerkPropPinged" )
+		RegisterSignal( "PerkPropPingDestroyed" )
+
+		AddCallback_OnFindFullMapAimEntity( GetPerkPropUnderAim, PingPerkPropUnderAim )
+	#endif
+
+	AddCallbackOrMaybeCallNow_OnAllItemFlavorsRegistered( InitializePerkTables )
+}
+
+void function OnRegisterRootItemFlavors()
+{
+	foreach ( asset characterClass in GetBaseItemFlavorsFromArray( "classes" ) )
+	{
+		if ( characterClass == $"" )
+			continue
+
+		ItemFlavor ornull classOrNull = RegisterItemFlavorFromSettingsAsset( characterClass )
+	}
+}
+
+void function OnItemFlavorRegistered_Class( ItemFlavor characterClass )
+{
+	array<int> perks = []
+	asset classAsset = ItemFlavor_GetAsset( characterClass )
+
+#if UI || CLIENT
+	string name = GetGlobalSettingsString( classAsset, "localizationKey_NAME" )
+	string fullDescription = "`1" + Localize( name ) + "`0:"
+#endif
+
+
+	foreach ( var perkBlock in IterateSettingsAssetArray( classAsset, "perks" ) )
+	{
+		asset settingsAsset = GetSettingsBlockAsset( perkBlock, "flavor" )
+		if ( settingsAsset != $"" )
+		{
+			ItemFlavor ornull perk = RegisterItemFlavorFromSettingsAsset( settingsAsset )
+			if ( perk != null )
+			{
+				expect ItemFlavor( perk )
+				int perkIndex = Perks_GetPerkIndex( perk )
+				Assert( perkIndex != ePassives.INVALID )                                              
+				perks.append( perkIndex )
+
+#if UI || CLIENT
+				string shortDesc = GetGlobalSettingsString( ItemFlavor_GetAsset( perk ), "localizationKey_DESCRIPTION_SHORT" )
+				fullDescription += " "
+				fullDescription += Localize( shortDesc )
+#endif
+			}
+		}
+	}
+
+	ClassRoleSettingsInfo settingsInfo
+	settingsInfo.perks = perks
+
+#if UI || CLIENT
+	string shortDescription = GetGlobalSettingsString( classAsset, "localizationKey_DESCRIPTION_SHORT" )
+	asset icon = GetGlobalSettingsAsset( classAsset, "icon" )
+	vector color = GetGlobalSettingsVector( classAsset, "uiColor" )
+	settingsInfo.fullDescription = fullDescription
+	settingsInfo.shortDescription = shortDescription
+	settingsInfo.icon = icon
+	settingsInfo.name = name
+	settingsInfo.uiColor = color
+#endif
+
+	int role = eCharacterClassRole[GetGlobalSettingsString( classAsset, "role" )]
+	file.classRoleToSettingsTable[role] <- settingsInfo
+}
+
+void function OnItemFlavorRegistered_Perk( ItemFlavor characterPerk )
+{
+	asset perkAsset = ItemFlavor_GetAsset( characterPerk )
+	string description = GetGlobalSettingsString( perkAsset, "localizationKey_DESCRIPTION_LONG" )
+	string shortDescription = GetGlobalSettingsString( perkAsset, "localizationKey_DESCRIPTION_SHORT" )
+	string perkPropName = GetGlobalSettingsString( perkAsset, "localizationKey_PropName" )
+	asset icon = GetGlobalSettingsAsset( perkAsset, "icon" )
+	asset mapIcon = GetGlobalSettingsAsset( perkAsset, "tagIcon" )
+	asset smallMapIcon = GetGlobalSettingsAsset( perkAsset, "fullmapSmallIcon" )
+
+
+	PerkSettingsInfo settingsInfo
+	settingsInfo.icon = icon
+	settingsInfo.description = description
+	settingsInfo.shortDescription = shortDescription
+	settingsInfo.mapIcon = mapIcon
+	settingsInfo.smallMapIcon = smallMapIcon
+	settingsInfo.perkPropName = perkPropName
+
+	int perkIndex = Perks_GetPerkIndex( characterPerk )
+	file.perkToPerkSettingsTable[perkIndex] <- settingsInfo
+}
+
+
+ClassRoleSettingsInfo function Perks_GetSettingsInfoForClassRole( int role )
+{
+	if( role in file.classRoleToSettingsTable )
+		return file.classRoleToSettingsTable[role]
+	ClassRoleSettingsInfo emptyResult
+	return emptyResult
+}
+
+PerkSettingsInfo function Perks_GetSettingsInfoForPerk( int perk )
+{
+	return file.perkToPerkSettingsTable[perk]
+}
+
+int function Perks_GetPerkIndex( ItemFlavor flavor )
+{
+	Assert( ItemFlavor_GetType( flavor ) == eItemType.character_perk )
+
+	string perkRef = GetGlobalSettingsString( ItemFlavor_GetAsset( flavor ), "perkScriptRef" )
+	if ( perkRef == "" )
+		return ePerkIndex.INVALID
+
+	Assert( perkRef in ePerkIndex, "Unknown passive script ref: " + perkRef )
+	return ePerkIndex[perkRef]
+}
+
+bool function Perks_Enabled()
+{
+	return !GetCurrentPlaylistVarBool( "disable_all_perks", false )
+}
+
+void function InitializePerkTables()
+{
+	                                                     
+	#if UI
+		file.characterToRoleTable.clear()		                                                                                                                     
+	#endif
+
+	array<ItemFlavor> characterArray = GetAllCharacters()
+	                                                      
+	foreach( character in characterArray )
+	{
+		int characterRole = CharacterClass_GetRole( character )
+		                                            
+		file.characterToRoleTable[character] <- characterRole
+	}
+}
+
+void function Perks_RegisterClassPerk( PerkInfo perkToRegister )
+{
+	Assert( perkToRegister.perkId > ePerkIndex.INVALID && perkToRegister.perkId < ePerkIndex.COUNT, "Registering perk with invalid ID" )
+	file.perkInfoTable[ perkToRegister.perkId ] <- perkToRegister
+
+	#if CLIENT
+
+	if( !IsLobby() && perkToRegister.minimapStateIndex >= 0 && Perks_Enabled() )
+	{
+		int perkId = perkToRegister.perkId
+		void functionref( entity, var ) registerFunc = void function( entity ent, var rui ) : ( perkId ) {
+			PerkInfo perkInfo = file.perkInfoTable[perkId]
+			PerkSettingsInfo settingsInfo =  Perks_GetSettingsInfoForPerk( perkId )
+			asset perkImage = settingsInfo.mapIcon
+			asset smallIcon = settingsInfo.smallMapIcon
+			if( smallIcon != "" )
+			{
+				RuiSetImage( rui, "smallIcon", smallIcon )
+				RuiSetBool( rui, "hasSmallIcon", true )
+			}
+			RuiSetImage( rui, "defaultIcon", perkImage )
+			RuiSetImage( rui, "clampedDefaultIcon", $"" )
+			RuiSetBool( rui, "useTeamColor", false )
+			RuiSetInt( rui, "lootTier", 0 )
+			thread Perks_MinimapPackage_ListenToClassChanges( ent, rui, perkId )
+		}
+
+		RegisterMinimapPackage( "prop_script", perkToRegister.minimapStateIndex, PERK_MINIMAP_OBJECT, registerFunc, PERK_FULL_MINIMAP_OBJECT, registerFunc )
+	}
+	#endif
+}
+
+
+#if SERVER || CLIENT
+asset function Perks_GetIconForPerk( int perk )
+{
+	PerkSettingsInfo info = Perks_GetSettingsInfoForPerk( perk )
+	return info.icon
+}
+
+asset function Perks_GetMapIconForPerk( int perk )
+{
+	PerkSettingsInfo info = Perks_GetSettingsInfoForPerk( perk )
+	return info.mapIcon
+}
+
+void function OnPlayerClassChanged( entity player )
+{
+	                                                                                                                                             
+	                                                                                     
+
+	array<int> perksToClear = player.p.activePerks
+	player.p.activePerks = []
+	foreach( int activePerkIndex in perksToClear )
+	{
+		if ( activePerkIndex > ePerkIndex.INVALID && activePerkIndex < ePerkIndex.COUNT )
+		{
+			Assert( activePerkIndex in file.perkInfoTable, "Trying to deactivate a perk that doesn't exist in the table, ID = " + activePerkIndex )
+
+			if ( file.perkInfoTable[ activePerkIndex ].deactivateCallback != null )
+				file.perkInfoTable[ activePerkIndex ].deactivateCallback( player )
+		}
+	}
+
+	                                      
+	                                    
+	EHI playerEHI = ToEHI( player )
+	LoadoutEntry loadoutCharacter = Loadout_Character()
+
+	thread ApplyPerkWhenCharacterFlavorIsKnown( player, playerEHI, loadoutCharacter )
+}
+
+void function ApplyPerkWhenCharacterFlavorIsKnown( entity player, EHI playerEHI, LoadoutEntry entry )
+{
+	                                                                                                                                                
+	ItemFlavor characterItemFlavor = LoadoutSlot_WaitForItemFlavor( playerEHI, entry )
+	if ( !IsValid( player ) )
+		return
+
+	Assert( characterItemFlavor in file.characterToRoleTable, "Trying to activate perks but character " + ItemFlavor_GetCharacterRef( characterItemFlavor ) + " wasn't in perk table\nNeed to run pdef_autogen" )
+
+	string characterName = ItemFlavor_GetCharacterRef( characterItemFlavor )
+	array<string> nameSplit = split( characterName, "_" )
+	if ( nameSplit.len() >= 2 )
+		characterName = nameSplit[ 1 ]
+
+
+	int roleIndex = file.characterToRoleTable[ characterItemFlavor ]
+	if( roleIndex in file.classRoleToSettingsTable )
+	{
+		array<int> perks = file.classRoleToSettingsTable[roleIndex].perks
+		player.p.activePerks = perks
+		foreach ( int perkIndex in perks )
+		{
+			PerkInfo perk = file.perkInfoTable[perkIndex]
+			if ( perk.activateCallback != null )
+				perk.activateCallback( player, characterName )
+		}
+	}
+
+	#if SERVER
+	                                                        
+	#endif
+
+	#if CLIENT
+		entity localPlayer = GetLocalViewPlayer()
+		if( localPlayer.GetTeam() == player.GetTeam() )
+		{
+			Perks_UpdatePerkPropMinimapVisibility( localPlayer )
+			Perks_UpdatePerkPropMapFeatureVisibility( localPlayer )
+		}
+
+
+	#endif
+}
+
+bool function Perks_DoesPlayerHavePerk( entity player, int perkIndex )
+{
+	Assert( IsValid( player ) )
+	if ( !IsValid( player ) )
+		return false
+
+	return player.p.activePerks.contains( perkIndex )
+}
+
+void function Perks_AddMinimapEntityForPerk( int perkId, entity ent )
+{
+	file.perkInfoTable[perkId].minimapEntities.append( ent )
+
+	#if SERVER
+		                                                                    
+		                            
+		 
+			                                               
+			                                         
+			                                   
+		 
+	#endif
+
+	#if CLIENT
+	if( Perks_ShouldLocalPlayerSeeMinimapHudForPerk( perkId ) )
+	{
+		bool hasPerk = Perks_DoesPlayerHavePerk( GetLocalViewPlayer(), perkId )
+		Perks_SetupWorldspacePerkIcon( ent, file.perkInfoTable[perkId], hasPerk )
+	}
+	#endif
+}
+
+bool function Perks_CanTeamSeePerkProp( int team, int perkId )
+{
+	array<entity> teamPlayers = GetPlayerArrayOfTeam( team )
+	foreach ( entity player in teamPlayers )
+	{
+		if( Perks_DoesPlayerHavePerk( player, perkId ) )
+		{
+			return true
+		}
+	}
+	return false
+}
+
+bool function Perks_IsEntHiddenFromTeam( entity ent, int team, PerkInfo info )
+{
+	return ( ent in info.teamsToHideMinimapEntitiesFrom && info.teamsToHideMinimapEntitiesFrom[ent].contains( team ) )
+}
+
+int function GetPingTypeForEntity( entity ent )
+{
+	foreach( perk in file.perkInfoTable )
+	{
+		if( perk.minimapEntities.contains( ent ) )
+		{
+			return perk.minimapPingType
+		}
+	}
+	return -1
+}
+#endif
+
+#if SERVER
+                                                          
+ 
+	                                           
+	 
+		                                            
+	 
+ 
+
+                                                              
+ 
+	                                              
+	 
+		                                
+			        
+		                                                                
+		                                          
+		                                                       
+		 
+			                                                                                            
+			                     
+			 
+				                            
+				 
+					                                                        
+					                                        
+					 
+						                                                     
+						 
+							                                                        
+						 
+					 
+				 
+				    
+				 
+					                                              
+				 
+			 
+			    
+			 
+				                                        
+			 
+		 
+	 
+ 
+
+                                                                   
+ 
+	                                           
+	 
+		                              
+	 
+
+	                                                                   
+
+	                                                 
+	                           
+	 
+		                                                                                               
+	 
+ 
+
+                                                                                    
+ 
+	                                                                         
+	 
+		                                                                    
+	 
+
+	                              
+	                                                                             
+
+	                                                        
+	 
+		                                                                                                    
+	 
+ 
+
+                                                                                        
+ 
+	                                                  
+		      
+	                                                 
+	                  
+		      
+	                                                                                                                        
+ 
+
+                                                    
+ 
+	                                                   
+	                                                                                      
+	                                                      
+		                                                     
+	                                    
+ 
+#endif
+
+#if CLIENT
+
+var function Perk_CreateClientSideHUDMarker( asset hudImage, entity minimapObj, float upOffset, bool trackPosition )
+{
+	entity localViewPlayer = GetLocalViewPlayer()
+	vector pos             = minimapObj.GetOrigin()
+	var rui                = CreateFullscreenRui( PERK_IN_WORLD_HUD_OBJECT, RuiCalculateDistanceSortKey( localViewPlayer.EyePosition(), pos ) )
+	RuiSetImage( rui, "beaconImage", hudImage )
+	RuiSetGameTime( rui, "startTime", Time() )
+	if( trackPosition )
+	{
+		RuiTrackFloat3( rui, "pos", minimapObj, RUI_TRACK_ABSORIGIN_FOLLOW  )
+	}
+	else
+	{
+		RuiSetFloat3( rui, "pos", pos )
+	}
+	RuiSetFloat( rui, "upOffset", upOffset )
+	RuiKeepSortKeyUpdated( rui, true, "pos" )
+	RuiSetBool( rui, "isVisible", true )
+
+	return rui
+}
+
+void function Perks_SetupWorldspacePerkIcon( entity ent, PerkInfo perk, bool hasPerk )
+{
+	asset perkImage = Perks_GetIconForPerk( perk.perkId )
+	var rui = Perk_CreateClientSideHUDMarker( perkImage, ent, perk.worldspaceIconUpOffset, perk.trackEntityPosition )
+	file.entityToWorldSpaceicon[ent] <- rui
+	thread Perks_WorldspaceUseIconThink( ent, perk, hasPerk, rui )
+}
+
+void function Perks_WorldspaceUseIconThink( entity ent, PerkInfo perk, bool hasPerk, var rui )
+{
+	ent.EndSignal( "OnDestroy" )
+	ent.EndSignal( "HidePerkMinimapVisibility" )
+	clGlobal.levelEnt.EndSignal( "UpdatePerkMinimapVisibility" )
+
+	float alpha = hasPerk ? 1.0 : NON_INTERACTIBLE_PERK_MINIMAP_OPACITY
+	RuiSetFloat( rui, "alphaMultiplier", alpha )
+	vector color = hasPerk ? INTERACTIBLE_PERK_MINIMAP_COLOR : NON_INTERACTIBLE_PERK_MINIMAP_COLOR
+	RuiSetFloat3( rui, "iconColor", color )
+
+	PerkSettingsInfo info = Perks_GetSettingsInfoForPerk( perk.perkId )
+	RuiSetString( rui, "descriptiveTextLocString", info.perkPropName )
+	if( hasPerk )
+	{
+		file.worldspacePerkIconVisibility[ent] <- true
+		RuiSetBool( rui, "isVisible", true )
+		thread ListenForPerkPinged( ent, rui )
+	}
+	else
+	{
+		thread Perks_UpdateNonInteractiblePerkMinimapIcons( ent, rui )
+	}
+
+	if( perk.ruiThinkThread != null )
+	{
+		thread perk.ruiThinkThread( rui, ent )
+	}
+
+	OnThreadEnd( void function() : ( ent, rui ) {
+		RuiDestroyIfAlive( rui )
+		delete file.entityToWorldSpaceicon[ent]
+		if( file.highlightedEnt.ent == ent )
+		{
+			file.highlightedEnt.ent = null
+		}
+	} )
+
+	WaitForever()
+}
+
+void function ListenForPerkPinged( entity prop, var rui )
+{
+	prop.EndSignal( "OnDestroy" )
+	prop.EndSignal( "HidePerkMinimapVisibility" )
+	clGlobal.levelEnt.EndSignal( "UpdatePerkMinimapVisibility" )
+
+	while( true )
+	{
+		prop.WaitSignal( "PerkPropPinged" )
+		file.worldspacePerkIconVisibility[prop] <- false
+		RuiSetBool( rui, "isVisible", false )
+		prop.WaitSignal( "PerkPropPingDestroyed" )
+		file.worldspacePerkIconVisibility[prop] <- true
+		RuiSetBool( rui, "isVisible", true )
+	}
+}
+
+bool function Perks_ShouldLocalPlayerSeeMinimapHudForPerk( int perkId )
+{
+	entity localPlayer = GetLocalViewPlayer()
+	PerkInfo perkInfo = file.perkInfoTable[perkId]
+	if( perkInfo.hideFromTeammates )
+	{
+		return Perks_DoesPlayerHavePerk( localPlayer, perkId )
+	}
+	else
+	{
+		int team = localPlayer.GetTeam()
+		return Perks_CanTeamSeePerkProp( team, perkId )
+	}
+	return false
+}
+
+void function ServerToClient_HidePerkPropMinimapVisibility( entity prop, int perkId )
+{
+	if( !IsValid( prop ) )
+		return
+	prop.Signal( "HidePerkMinimapVisibility" )
+	file.perkInfoTable[perkId].minimapEntities.fastremovebyvalue(prop)
+}
+
+void function Perks_UpdatePerkPropMinimapVisibility( entity player )
+{
+	clGlobal.levelEnt.Signal( "UpdatePerkMinimapVisibility" )
+
+	foreach( PerkInfo perk in file.perkInfoTable )
+	{
+		ArrayRemoveInvalid( perk.minimapEntities )
+		bool shouldSee = Perks_ShouldLocalPlayerSeeMinimapHudForPerk( perk.perkId )
+		if( !shouldSee )
+			continue
+
+		bool hasPerk = Perks_DoesPlayerHavePerk( GetLocalViewPlayer(), perk.perkId )
+		foreach( entity prop in perk.minimapEntities )
+		{
+			if( Perks_IsEntHiddenFromTeam( prop, player.GetTeam(), perk ) )
+				continue
+			Perks_SetupWorldspacePerkIcon( prop, perk, hasPerk )
+		}
+	}
+}
+
+void function Perks_UpdatePerkPropMapFeatureVisibility( entity player )
+{
+	foreach( PerkInfo perk in file.perkInfoTable )
+	{
+		RemoveMapFeatureItemByName( perk.mapFeatureTitle )
+
+		bool shouldSee = Perks_DoesPlayerHavePerk( GetLocalViewPlayer(), perk.perkId )
+
+		if( shouldSee )
+			Perks_AppendMapFeatureBasedOnPerk( perk )
+	}
+}
+
+void function Perks_AppendMapFeatureBasedOnPerk( PerkInfo perk )
+{
+	asset icon = Perks_GetIconForPerk( perk.perkId )
+
+	switch( perk.perkId )
+	{
+		case ePerkIndex.EXTRA_BIN_LOOT:
+		case ePerkIndex.BEACON_ENEMY_SCAN:
+		case ePerkIndex.CARE_PACKAGE_INSIGHT:
+		case ePerkIndex.MUNITIONS_BOX:
+		case ePerkIndex.BEACON_SCAN:
+			SetMapFeatureItem( 100, perk.mapFeatureTitle, perk.mapFeatureDescription, icon )
+			break
+	}
+
+}
+
+void function Perks_UpdateNonInteractiblePerkMinimapIcons( entity minimapEnt, var rui )
+{
+	minimapEnt.EndSignal( "OnDestroy" )
+	minimapEnt.EndSignal( "HidePerkMinimapVisibility" )
+	clGlobal.levelEnt.EndSignal( "UpdatePerkMinimapVisibility" )
+
+	while( true )
+	{
+		entity localPlayer = GetLocalViewPlayer()
+		bool isVisible = false
+		if( localPlayer.IsEntAlive() && !file.pingedPerkProps.contains( minimapEnt ) )
+		{
+			vector vecToBox = localPlayer.GetOrigin() - minimapEnt.GetOrigin()
+			float distSquared = LengthSqr( vecToBox )
+			float maxDistSquared = 1000 * 1000
+
+			isVisible = distSquared < maxDistSquared && PlayerCanSee( localPlayer, minimapEnt, true, 40, true )
+		}
+		file.worldspacePerkIconVisibility[minimapEnt] <- isVisible
+		RuiSetBool( rui, "isVisible", isVisible )
+
+		Wait( .5 )
+	}
+}
+
+void function Perks_MinimapPackage_ListenToClassChanges( entity ent, var rui, int perkIndex )
+{
+	EndSignal( ent, "OnDestroy" )
+
+	while( true )
+	{
+		entity localPlayer = GetLocalViewPlayer()
+		bool canUsePerk = Perks_DoesPlayerHavePerk( localPlayer, perkIndex )
+		vector color = canUsePerk ? INTERACTIBLE_PERK_MINIMAP_COLOR : NON_INTERACTIBLE_PERK_MINIMAP_COLOR
+		RuiSetFloat3( rui, "iconColor", color )
+		clGlobal.levelEnt.WaitSignal( "UpdatePerkMinimapVisibility" )
+	}
+}
+
+entity function GetPerkPropUnderAim( vector worldPos, float worldRange )
+{
+	entity closestEnt = null
+	float closestDistSqr = FLT_MAX
+	float worldRangeSqr = worldRange * worldRange
+	foreach( PerkInfo perk in file.perkInfoTable )
+	{
+		if( !Perks_ShouldLocalPlayerSeeMinimapHudForPerk( perk.perkId ) )
+			continue
+		if( perk.minimapStateIndex == -1 )
+			continue
+		ArrayRemoveInvalid( perk.minimapEntities )
+		foreach( entity ent in perk.minimapEntities )
+		{
+			if( Perks_IsEntHiddenFromTeam( ent, GetLocalViewPlayer().GetTeam(), perk ) )
+				continue
+			vector entPos = ent.GetOrigin()
+			entPos.z = 0
+			float distSqr = Distance2DSqr( worldPos, entPos )
+			if( distSqr > worldRangeSqr )
+				continue
+			if( distSqr > closestDistSqr )
+				continue
+			closestDistSqr = distSqr
+			closestEnt = ent
+		}
+	}
+	return closestEnt
+}
+
+bool function PingPerkPropUnderAim( entity ent )
+{
+	entity player = GetLocalClientPlayer()
+
+	if ( !IsValid( player ) || !IsAlive( player ) )
+		return false
+
+	if ( !IsPingEnabledForPlayer( player ) )
+		return false
+
+
+	int pingType = GetPingTypeForEntity( ent )
+	if( pingType == -1 )
+		return false
+
+	Remote_ServerCallFunction( "Perks_ClientToServer_MinimapIconPinged", ent )
+
+	EmitSoundOnEntity( GetLocalViewPlayer(), PING_SOUND_LOCAL_CONFIRM )
+
+	return true
+}
+
+void function Perks_SetWorldspaceIconVisibility( entity ent, bool visible )
+{
+	if( !( ent in file.entityToWorldSpaceicon ) )
+		return
+
+	RuiSetBool( file.entityToWorldSpaceicon[ent], "isVisibleOverride", visible )
+}
+
+void function Perks_SetHighlightedPerkIcon( entity ent, int perkIndex )
+{
+	if( file.highlightedEnt.ent != ent )
+	{
+		if( IsValid( file.highlightedEnt.ent ) )
+		{
+			RuiSetBool( file.entityToWorldSpaceicon[file.highlightedEnt.ent], "isHighlighted", false )
+		}
+		file.highlightedEnt.ent = ent
+		if( perkIndex in file.perkInfoTable )
+		{
+			PerkInfo perk = file.perkInfoTable[perkIndex]
+			file.highlightedEnt.pingType = perk.minimapPingType
+			file.highlightedEnt.originUpOffset = perk.worldspaceIconUpOffset
+		}
+		if( IsValid( file.highlightedEnt.ent ) )
+		{
+			RuiSetBool( file.entityToWorldSpaceicon[file.highlightedEnt.ent], "isHighlighted", true )
+		}
+	}
+}
+
+bool function Perks_UpdateHighlightedPerkIcon()
+{
+	entity player = GetLocalClientPlayer()
+	vector playerEyePos = player.EyePosition()
+	vector viewVector = player.GetViewVector()
+	float minDot = deg_cos( PERK_HIGHLIGHT_DEGREES  )
+	float bestDot = 0
+	entity bestEnt = null
+	int bestPerkIndex = -1
+
+	foreach( PerkInfo perk in file.perkInfoTable )
+	{
+		if( !Perks_ShouldLocalPlayerSeeMinimapHudForPerk( perk.perkId ) )
+			continue
+		ArrayRemoveInvalid( perk.minimapEntities )
+		foreach( entity ent in perk.minimapEntities )
+		{
+			if( Perks_IsEntHiddenFromTeam( ent, GetLocalViewPlayer().GetTeam(), perk ) )
+				continue
+			if( !(ent in file.worldspacePerkIconVisibility) || !file.worldspacePerkIconVisibility[ent] || !( ent in file.entityToWorldSpaceicon ) )
+				continue
+			if( perk.canPingEnt != null && !perk.canPingEnt( ent ) )
+				continue
+			vector iconPos
+			if( perk.getPingPosition != null )
+			{
+				iconPos = perk.getPingPosition( ent ) + <0,0,perk.worldspaceIconUpOffset>
+			}
+			else
+			{
+				iconPos = ent.GetOrigin() + <0,0,perk.worldspaceIconUpOffset>
+			}
+			float pingDistance = PERK_ENT_MAX_PING_DISTANCE
+			if( perk.getPingMaxDistance != null )
+				pingDistance = perk.getPingMaxDistance( ent )
+			if( DistanceSqr( iconPos, playerEyePos ) > pingDistance * pingDistance )
+				continue
+			vector eyeToIcon = iconPos - playerEyePos
+			vector eyeToIconNormalized = Normalize( eyeToIcon )
+			float dot = DotProduct( eyeToIconNormalized, viewVector )
+			if( dot < minDot || dot < bestDot )
+				continue
+
+			bestDot = dot
+			bestEnt = ent
+			bestPerkIndex = perk.perkId
+		}
+	}
+
+	Perks_SetHighlightedPerkIcon( bestEnt, bestPerkIndex )
+	return bestEnt != null
+}
+
+PerkPingInfo function Perks_GetPerkPingInfo()
+{
+	return file.highlightedEnt
+}
+
+                                                                                     
+                                                                                                         
+array<int> function Perks_GetActivePerksFromPlayerLoadout( entity player )
+{
+	if( !IsValid( player ) )
+		return []
+
+	EHI playerEHI = ToEHI( player )
+	LoadoutEntry loadoutCharacter = Loadout_Character()
+	ItemFlavor characterItemFlavor = LoadoutSlot_WaitForItemFlavor( playerEHI, loadoutCharacter )
+
+	if( !(characterItemFlavor in file.characterToRoleTable) )
+	{
+		return []
+	}
+
+	int roleIndex = file.characterToRoleTable[characterItemFlavor]
+	return file.classRoleToSettingsTable[roleIndex].perks
+}
+
+void function Perks_PerkPropPinged( entity prop, entity wp )
+{
+	if ( !Perks_Enabled() )
+		return
+	
+	prop.Signal( "PerkPropPinged" )
+	file.pingedPerkProps.append( prop )
+	wp.WaitSignal( "OnDestroy" )
+	file.pingedPerkProps.fastremovebyvalue( prop )
+	prop.Signal( "PerkPropPingDestroyed" )
+}
+
+asset function Perks_PingTypeToPingIcon( int pingType )
+{
+	int perkIndex = ePerkIndex.INVALID
+	switch( pingType )
+	{
+		case ePingType.SURVEYBEACON:
+			perkIndex = ePerkIndex.BEACON_ENEMY_SCAN
+			break
+		case ePingType.MUNITIONS_BOX:
+			perkIndex = ePerkIndex.MUNITIONS_BOX
+			break
+		case ePingType.ENCRYPTED_CONSOLE:
+			perkIndex = ePerkIndex.BEACON_SCAN
+			break
+		case ePingType.SUPPORT_BOX:
+			perkIndex = ePerkIndex.EXTRA_BIN_LOOT
+			break
+	}
+	if( perkIndex == ePerkIndex.INVALID )
+		return $""
+
+	return Perks_GetIconForPerk( perkIndex )
+}
+#endif

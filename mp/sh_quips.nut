@@ -142,7 +142,7 @@ void function RegisterEquippableQuipsForCharacter( ItemFlavor characterClass, ar
 
 	fileLevel.loadoutCharacterFavoredQuipMap[characterClass] <- []
 
-	                                                                                  
+	                                                                            
 	for ( int favQuipIndex = 0; favQuipIndex < MAX_FAVORED_QUIPS; favQuipIndex++ )
 	{
 		LoadoutEntry entry = RegisterLoadoutSlot( eLoadoutEntryType.ITEM_FLAVOR, "favoredQuip_" + favQuipIndex + "_for_" + ItemFlavor_GetGUIDString( characterClass ), eLoadoutEntryClass.CHARACTER )
